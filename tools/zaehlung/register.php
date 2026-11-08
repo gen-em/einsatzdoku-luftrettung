@@ -650,6 +650,18 @@ return [
  'regel' => ['art' => 'muster', 'muster' => '~is_string\(\s*\$_(?:POST|GET)\s*\[~'],
  'start' => 2, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
+['kennung' => 'Z50', 'paket' => 'OF-03',
+ 'beschreibung' => 'TT.MM.JJJJ von Hand zerlegt statt datum_de_lesen()/post_datum()',
+ 'grund' => 'Konzept OF, E-OF-44: Die Datumsfelder zeigen seit Web 24.4 TT.MM.JJJJ; '
+          . 'umgerechnet wird EINMAL, in eingabe_lib.php (Server) und '
+          . 'EdFormat.datumLesen() (Browser). Ein createFromFormat mit d.m.Y '
+          . 'anderswo waere die zweite Umrechnung, und zwei laufen auseinander '
+          . '(T.M.JJJJ, 31.02.). Start 0, gezaehlt am 08.11.2026.',
+ 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
+ 'ausser' => ['server/eingabe_lib.php'],
+ 'regel' => ['art' => 'muster', 'muster' => '~createFromFormat\(\s*[\'"]!?d\.m\.Y~'],
+ 'start' => 0, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
 /* ---- Spuren --------------------------------------------------------------- */
 
 ['kennung' => 'Z49', 'paket' => 'RD-04',

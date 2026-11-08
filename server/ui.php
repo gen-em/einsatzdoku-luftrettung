@@ -2391,9 +2391,14 @@ function ui_bereichszeile(string $aktiv): void
  *              Protokollseite): aktive Pille mit Kreuz, der Verweis nimmt
  *              ihn weg
  *   auswahl    optional ['name', 'label', 'wert', 'optionen' => [Wert =>
- *              Text]] — ein Auswahlfeld in der Filterreihe; mit Skript
+ *              Text], 'kurz' (Name auf der Pille), 'weg' (Verweis ohne die
+ *              Auswahl)] — ein Auswahlfeld in der Filterreihe; mit Skript
  *              (`assets/listenkopf.js`) schickt es sofort ab, ohne steht
  *              ein Knopf „Filtern" daneben
+ *   filter[]   dazu 'vorgabe' => true (kein gesetzter Filter, z. B. „Alle")
+ *              und 'weg' (Verweis, der den aktiven Filter zuruecknimmt)
+ *   treffer    optional, fertiger Text neben den gesetzten Filtern
+ *              („18 von 2.580")
  * ------------------------------------------------------------------------ */
 function ui_listenkopf(array $o): void
 {
@@ -2417,12 +2422,52 @@ function ui_listenkopf(array $o): void
        . '" value="' . ui_e((string)($s['wert'] ?? '')) . '" placeholder="'
        . ui_e((string)($s['platzhalter'] ?? '')) . '" autocomplete="off"></div>' . "\n";
     echo '    <button class="knopf knopf-neutral nur-vorlesen" type="submit">Suchen</button>' . "\n";
-    echo "  </form>\n";
 
     $filter = (array)($o['filter'] ?? []);
     $auswahl = $o['auswahl'] ?? null;
+    /* DER FILTERKNOPF (Konzept OF, OF-03, E-OF-18, Bild OF-P22-B). Neben dem
+     * Suchfeld, so hoch wie es, mit der Zahl der GESETZTEN Filter; er klappt
+     * die Filterreihe auf. Gesetzt ist ein aktiver Filter, der nicht die
+     * Vorgabe ist (`vorgabe` => true, etwa „Alle"), und eine Auswahl mit
+     * Wert. Die gesetzten stehen darunter als Pillen mit Kreuz — ihr Verweis
+     * (`weg`, sonst `href`) nimmt sie zurueck —, daneben die Trefferzahl.
+     * OHNE SKRIPT ist der Knopf verborgen und die Reihe offen;
+     * `assets/listenkopf.js` dreht das um. Er merkt sich nichts: Wer
+     * filtert, sieht seine Filter als Pillen. */
+    $gesetzt = [];
+    foreach ($filter as $f) {
+        if (!empty($f['aktiv']) && empty($f['vorgabe'])) {
+            $gesetzt[] = ['text' => (string)$f['text'], 'href' => (string)($f['weg'] ?? $f['href'])];
+        }
+    }
+    if (is_array($auswahl) && (string)($auswahl['wert'] ?? '') !== '' && isset($auswahl['weg'])) {
+        $gesetzt[] = ['text' => (string)($auswahl['kurz'] ?? $auswahl['label'] ?? '') . ': '
+                              . (string)($auswahl['optionen'][$auswahl['wert']] ?? $auswahl['wert']),
+                      'href' => (string)$auswahl['weg']];
+    }
+    $reiheId = $id . '-filter';
     if ($filter || $auswahl) {
-        echo '  <div class="filterreihe">' . "\n";
+        echo '    <button type="button" class="knopf knopf-neutral filterknopf" hidden'
+           . ' data-filterknopf aria-expanded="true" aria-controls="' . ui_e($reiheId) . '">'
+           . ui_symbol('filter') . '<span>Filter</span>'
+           . ($gesetzt ? '<span class="plakette plakette-blau">' . count($gesetzt) . '</span>' : '')
+           . "</button>\n";
+    }
+    echo "  </form>\n";
+    if ($gesetzt || !empty($o['treffer'])) {
+        echo '  <div class="filtergesetzt">' . "\n";
+        foreach ($gesetzt as $g) {
+            echo '    <a class="listenfilter aktiv" href="' . ui_e($g['href']) . '"><span>'
+               . ui_e($g['text']) . '</span>' . ui_symbol('schliessen', '', 'Filter entfernen') . "</a>\n";
+        }
+        if (!empty($o['treffer'])) {
+            echo '    <span class="listenzahl">' . ui_e((string)$o['treffer']) . "</span>\n";
+        }
+        echo "  </div>\n";
+    }
+
+    if ($filter || $auswahl) {
+        echo '  <div class="filterreihe" id="' . ui_e($reiheId) . '" data-filterreihe>' . "\n";
         foreach ($filter as $f) {
             $aktiv = !empty($f['aktiv']);
             echo '    <a class="listenfilter' . ($aktiv ? ' aktiv' : '') . '" href="'
@@ -2449,9 +2494,9 @@ function ui_listenkopf(array $o): void
             echo '    ' . ui_knopf(['text' => 'Filtern', 'art' => 'neutral', 'typ' => 'submit',
                                    'attr' => ' form="' . ui_e($id) . '" data-absenden-knopf'])
                . "\n";
-            echo '    <script src="' . ui_e(ui_asset('assets/listenkopf.js')) . '" defer></script>' . "\n";
         }
         echo "  </div>\n";
+        echo '  <script src="' . ui_e(ui_asset('assets/listenkopf.js')) . '" defer></script>' . "\n";
     }
     echo "</div>\n";
 }
@@ -2546,10 +2591,12 @@ function ui_zeitraumwahl(array $o): void
     echo '  <div class="zeitraumwahl-felder" data-zeitraum>' . "\n";
     foreach (['von' => 'Von', 'bis' => 'Bis'] as $name => $text) {
         $fid = $id . '-' . $name;
+        /* TT.MM.JJJJ (Konzept OF, E-OF-54); `statistik_zeitraum()` liest
+         * beide Formen. */
         echo '    <div class="feld"><label class="feld-label" for="' . ui_e($fid) . '">' . $text
-           . '</label><input class="feld-eingabe" type="date" id="' . ui_e($fid) . '" name="'
-           . $name . '" value="' . ui_e((string)($o[$name] ?? '')) . '"'
-           . (!empty($o['max']) ? ' max="' . ui_e((string)$o['max']) . '"' : '') . "></div>\n";
+           . '</label>' . ui_datum_eingabe(['id' => $fid, 'name' => $name,
+                                           'wert' => (string)($o[$name] ?? ''),
+                                           'max' => $o['max'] ?? null]) . "</div>\n";
     }
     echo '    ' . ui_knopf(['text' => 'Anwenden', 'art' => 'neutral', 'typ' => 'submit',
                            'attr' => ' data-absenden-knopf']) . "\n";
@@ -2815,10 +2862,49 @@ function ui_aktionen(array $o): string
  * einmal auseinandergelaufen: `file` fehlte, `time` stand da, ohne dass es
  * irgendwo benutzt wird.
  * ------------------------------------------------------------------------ */
+/**
+ * Das Datumsfeld (Konzept OF, OF-03, E-OF-06, -44): ein Textfeld mit der
+ * Maske `TT.MM.JJJJ`, ohne Kalender, `--feld-datum` breit. Nimmt den Wert
+ * als 'JJJJ-MM-TT' und zeigt ihn deutsch; `min` und `max` (ISO) gehen als
+ * `data-min` / `data-max` an `assets/datumsfeld.js`. Gelesen wird der Wert
+ * mit `post_datum()` / `get_datum()` (Server) bzw. `EdFormat.datumLesen()`
+ * (Browser). Ohne Skript prüft `pattern` die Form.
+ *
+ * EINE STELLE FÜR ALLE ACHT: `ui_feld(['art' => 'date'])`, die Zeitraumwahl
+ * und die Felder, die eine Seite von Hand setzt (Suche, Geburtsdatum),
+ * holen ihr Markup hier.
+ *
+ * $o: id, name, wert (ISO), min, max, pflicht (bool), attr, klasse
+ */
+function ui_datum_eingabe(array $o): string
+{
+    static $skriptGeladen = false;
+    $attr = (string)($o['attr'] ?? '');
+    if (!empty($o['pflicht'])) { $attr .= ' required'; }
+    foreach (['min', 'max'] as $g) {
+        if (!empty($o[$g])) { $attr .= ' data-' . $g . '="' . ui_e((string)$o[$g]) . '"'; }
+    }
+    $html = '<input class="feld-eingabe feld-datum' . (!empty($o['klasse']) ? ' ' . ui_e((string)$o['klasse']) : '')
+          . '" type="text" inputmode="numeric" autocomplete="off" maxlength="10"'
+          . ' placeholder="TT.MM.JJJJ" pattern="\d{1,2}\.\d{1,2}\.\d{4}"'
+          . ' title="Datum als TT.MM.JJJJ"'
+          . (!empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '')
+          . (!empty($o['name']) ? ' name="' . ui_e((string)$o['name']) . '"' : '')
+          . ' value="' . ui_e(datum_de((string)($o['wert'] ?? '')) ?: (string)($o['wert'] ?? '')) . '"'
+          . $attr . '>';
+    if (!$skriptGeladen) {
+        $skriptGeladen = true;
+        $html .= '<script src="' . ui_e(ui_asset('assets/datumsfeld.js')) . '" defer></script>';
+    }
+    return $html;
+}
+
 function ui_feld(array $o): void
 {
     /* $o: name, id, label, label_zusatz (gedämpft, in der Beschriftung),
      *     art (text|email|number|date|password|file|select|textarea), wert,
+     *     min, max (nur date, ISO — seit Web 24.4 ein Textfeld TT.MM.JJJJ,
+     *     ui_datum_eingabe()),
      *     optionen, zeilen (nur textarea, Vorgabe 3), platzhalter, pflicht,
      *     klein, klasse (an der HÜLLE .feld, nicht am Eingabefeld), attr
      *
@@ -2856,6 +2942,10 @@ function ui_feld(array $o): void
   <?php elseif ($art === 'textarea'): ?>
     <textarea class="feld-eingabe feld-mehrzeilig" id="<?= ui_e($id) ?>"
               name="<?= ui_e($name) ?>" rows="<?= (int)($o['zeilen'] ?? 3) ?>"<?= $attr ?>><?= ui_e((string)($o['wert'] ?? '')) ?></textarea>
+  <?php elseif ($art === 'date'): ?>
+    <?= ui_datum_eingabe(['id' => $id, 'name' => $name, 'wert' => (string)($o['wert'] ?? ''),
+                          'min' => $o['min'] ?? null, 'max' => $o['max'] ?? null,
+                          'attr' => $attr]) ?>
   <?php else: ?>
     <input class="feld-eingabe" type="<?= ui_e($art) ?>" id="<?= ui_e($id) ?>"
            name="<?= ui_e($name) ?>" value="<?= ui_e((string)($o['wert'] ?? '')) ?>"<?= $attr ?>>
@@ -3392,7 +3482,8 @@ function ui_geocoder_bootstrap(): void
 }
 
 /**
- * Der Hinweis unter dem Ortsfeld — EINMAL je Seite.
+ * Der Hinweis am Ortsfeld — EINMAL je Seite, seit Web 24.4 als Zeichen neben
+ * der Lupe (Markup zurück, nicht ausgegeben).
  *
  * WARUM NUR EINMAL. „Ein Hinweis am Ortsfeld" heisst es im Auftrag, und beim
  * Einsatzformular waeren das drei gleiche Saetze auf einer Seite. Auf
@@ -3408,16 +3499,33 @@ function ui_geocoder_bootstrap(): void
  * Ist die Suche aus, erscheint er GAR NICHT: Er sagt aus, dass etwas das
  * Geraet verlaesst — und dann verlaesst nichts das Geraet.
  */
-function ui_geocoder_hinweis(): void
+function ui_geocoder_hinweis(): string
 {
+    /* EIN ZEICHEN STATT EINES SATZES (Konzept OF, OF-03, E-OF-07). Bis Web
+     * 24.3 stand der Satz zur Adresssuche als Kleinzeile unter dem ersten
+     * Ortsfeld einer Seite — auf dem Einsatzformular mitten zwischen zwei
+     * Feldern, bei jedem Einsatz. Jetzt steht neben der Lupe dieses Feldes ein
+     * Zeichen `hinweis`; der Satz erscheint als Meldung darunter beim
+     * Darüberfahren, beim Fokus und beim Antippen (`assets/ortsfeld.js`) und
+     * hängt per `aria-describedby` am Knopf, liest sich also auch ohne
+     * Öffnen vor. Weiter EINMAL je Seite, am ersten Ortsfeld; ist die
+     * Adresssuche aus, fehlt das Zeichen wie vorher der Satz. Kein `title`
+     * am Knopf: Er stuende ein zweites Mal im Vorlesetext. */
     static $schon = false;
-    if ($schon) { return; }
+    if ($schon) { return ''; }
     require_once __DIR__ . '/geocoder_lib.php';
-    if (!geocoder_an()) { return; }
+    if (!geocoder_an()) { return ''; }
     $schon = true;
-    echo '<p class="feld-klein loc-datenschutz">Vorschläge und Umkehrsuche kommen von '
-       . ui_e(geocoder_host()) . '; getippter Text verlässt das Gerät. '
-       . 'Abschalten: Einstellungen → Profil, Karte „Datenschutz".</p>' . "\n";
+    $satz = 'Vorschläge und Umkehrsuche kommen von ' . geocoder_host()
+          . '; getippter Text verlässt das Gerät. '
+          . 'Abschalten: Einstellungen → Profil, Karte „Datenschutz".';
+    return '<div class="ortsfeld-hinweis">'
+         . '<button type="button" class="knopf knopf-symbol ortsfeld-hinweis-knopf"'
+         . ' aria-describedby="geo-hinweis" aria-expanded="false">'
+         . ui_symbol('hinweis', 'symbol-gross')
+         . '<span class="nur-vorlesen">Hinweis zur Adresssuche</span></button>'
+         . '<div class="ortsfeld-hinweis-text loc-datenschutz" id="geo-hinweis" role="tooltip" hidden>'
+         . ui_meldung_markup('info', $satz) . '</div></div>';
 }
 
 function ui_ortsfeld(array $o): void
@@ -3493,6 +3601,7 @@ function ui_ortsfeld(array $o): void
           <button type="button" class="knopf knopf-symbol" id="<?= e($p) ?>lupe"
                   title="Suchen"><?= ui_symbol('lupe', 'symbol-gross') ?><span
                   class="nur-vorlesen">Suchen</span></button>
+          <?= ui_geocoder_hinweis() ?>
           <?php if ($mitWahl) { $pinKnopf(); } ?>
         </div>
     <?php else: ?>
@@ -3516,6 +3625,7 @@ function ui_ortsfeld(array $o): void
           <button type="button" class="knopf knopf-symbol" id="<?= e($p) ?>lupe"
                   title="Suchen"><?= ui_symbol('lupe', 'symbol-gross') ?><span
                   class="nur-vorlesen">Suchen</span></button>
+          <?= ui_geocoder_hinweis() ?>
           <?php if ($mitWahl) { $pinKnopf(); } ?>
         </div>
     <?php endif; ?>
@@ -3532,7 +3642,6 @@ function ui_ortsfeld(array $o): void
       <?php /* Bestätigte Koordinaten stehen als Chip UNTER dem Textfeld, nicht
                darin — sonst vernichtet die erste getippte Bezeichnung sie. */ ?>
       <div class="rmchips" id="<?= e($p) ?>chips"></div>
-      <?php ui_geocoder_hinweis(); ?>
       <input type="hidden" id="<?= e($p) ?>lat"
              <?= isset($o['lat_name']) ? 'name="' . e((string)$o['lat_name']) . '"' : '' ?>
              value="<?= e((string)($o['lat'] ?? '')) ?>">

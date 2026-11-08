@@ -256,7 +256,8 @@ ui_seite_start(['titel' => 'Protokoll']);
         'versteckt' => ['r' => $reiter, 'z' => $tage ?: '', 'konto' => $konto ?: ''],
         'filter' => $pillen,
         'auswahl' => $arten ? ['name' => 'art', 'label' => 'Art des Ereignisses', 'wert' => $art,
-                               'optionen' => ['' => 'Alle Arten'] + $arten] : null,
+                               'optionen' => ['' => 'Alle Arten'] + $arten,
+                               'kurz' => 'Art', 'weg' => protokoll_weg(['art' => ''])] : null,
     ]);
     ?>
     <?php if ($liste['fehler'] !== null): ?>

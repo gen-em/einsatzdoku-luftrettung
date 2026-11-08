@@ -120,7 +120,7 @@
    * ZEICHENGLEICH, UND ZWAR NACHGESEHEN: `EdFormat.tag` prueft ohne
    * Dollarzeichen und nimmt deshalb auch einen ISO-Zeitstempel an, den der
    * alte Rumpf verworfen hat. An allen fuenf Aufrufstellen kann keiner
-   * ankommen -- `pat.dob` entsteht nur aus einem `<input type="date">` oder
+   * ankommen -- `pat.dob` entsteht nur aus dem Datumsfeld (TT.MM.JJJJ, seit Web 24.4 ueber `EdFormat.datumLesen()` als ISO) oder
    * aus dem Parser `dateFull`, `t.day` in import_ui.js nur aus `dateIso`,
    * `dateNoYear` oder `dateFull`. Alle vier liefern zehn Zeichen oder gar
    * nichts. Der Leerfall bleibt der Leerstring; den gibt `EdFormat.tag` ohne

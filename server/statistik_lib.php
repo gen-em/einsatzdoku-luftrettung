@@ -66,8 +66,13 @@ const STAT_WAHL_VORGABE = 30;
 function statistik_zeitraum(array $q): array
 {
     $vorgabe = ['art' => 'fenster', 't' => STAT_WAHL_VORGABE, 'tage' => STAT_WAHL_VORGABE];
-    $von = trim((string)($q['von'] ?? ''));
-    $bis = trim((string)($q['bis'] ?? ''));
+    /* TT.MM.JJJJ aus der Zeitraumwahl, JJJJ-MM-TT aus einem Verweis — beides
+     * gilt (Konzept OF, E-OF-54, `datum_de_lesen()`). Was keines ist, bleibt
+     * stehen und faellt unten als ungueltig auf. */
+    $von = trim(is_string($q['von'] ?? null) ? $q['von'] : '');
+    $bis = trim(is_string($q['bis'] ?? null) ? $q['bis'] : '');
+    $von = datum_de_lesen($von) ?? $von;
+    $bis = datum_de_lesen($bis) ?? $bis;
     if ($von === '' && $bis === '') {
         $t = (int)($q['t'] ?? STAT_WAHL_VORGABE);
         return isset(STAT_WAHL[$t]) ? ['art' => 'fenster', 't' => $t, 'tage' => $t] : $vorgabe;

@@ -215,6 +215,17 @@ function zeit_relativ(?string $utc): string
 }
 
 /**
+ * Ein Kalendertag 'JJJJ-MM-TT' als 'TT.MM.JJJJ' — der Wert eines Datumsfelds
+ * (Konzept OF, OF-03, E-OF-44). Leer, wenn es kein Tag ist. Gegenstück zu
+ * `datum_de_lesen()` in `eingabe_lib.php`; im Browser `EdFormat.tag()`.
+ */
+function datum_de(?string $iso): string
+{
+    if ($iso === null || !preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $iso, $m)) { return ''; }
+    return $m[3] . '.' . $m[2] . '.' . $m[1];
+}
+
+/**
  * Der heutige Kalendertag in der APP-Zeitzone, als 'Y-m-d'.
  *
  * WARUM ES DIE FUNKTION GIBT: `date('Y-m-d')` nimmt die

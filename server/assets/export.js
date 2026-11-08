@@ -1494,8 +1494,10 @@
         var fmt = gewaehltesFormat();
 
         var alles = document.querySelector('input[name="exp_zr"]:checked').value === 'all';
-        var von = alles ? null : $('exp_von').value;
-        var bis = alles ? null : $('exp_bis').value;
+        /* Die Felder zeigen TT.MM.JJJJ (Konzept OF, E-OF-54); verglichen
+           und gefiltert wird mit ISO. */
+        var von = alles ? null : EdFormat.datumLesen($('exp_von').value);
+        var bis = alles ? null : EdFormat.datumLesen($('exp_bis').value);
         if (!alles && (!von || !bis)) {
             setState('Bitte Von- und Bis-Datum angeben (oder „Alles" wählen).');
             return;

@@ -1830,8 +1830,12 @@ Uhrzeiten stehen immer im **24-Stunden-Format `HH:MM`**, unabhängig davon, wie
 dein Gerät sonst eingestellt ist. Du kannst einfach die Ziffern tippen: aus
 `930` wird `09:30`, aus `9` wird `09:00`, der Doppelpunkt setzt sich von
 selbst. Ergibt die Eingabe keine gültige Uhrzeit, färbt sich das Feld rot, und
-gespeichert wird sie nicht. Datumsfelder bleiben die gewohnten Kalenderfelder
-deines Geräts.
+gespeichert wird sie nicht. **Daten tippst du als `TT.MM.JJJJ`** (seit Web
+24.4.0), überall in der Anwendung gleich und ohne Kalender: Aus `07112026`
+wird `07.11.2026`, aus `7.1.2026` beim Verlassen des Felds `07.01.2026`.
+Beim Geburtsdatum genügt ein zweistelliges Jahr — `23.04.33` wird
+`23.04.1933`, weil 2033 in der Zukunft läge. Ein Tag, den es nicht gibt,
+färbt das Feld rot.
 
 Gespeichert wird über die **Speichern-Leiste**, die am unteren Rand erscheint,
 sobald du etwas geändert hast (seit Web 9.4.0) — vorher gibt es nichts zu
@@ -1857,11 +1861,13 @@ auch eine zweistellige Jahreszahl (z. B. „23.04.33") — die Anwendung ergänz
 automatisch das plausible Jahrhundert. Der Einsatzort sucht beim Tippen: Ab
 drei Buchstaben erscheinen Adressvorschläge (OpenStreetMap); die Auswahl
 eines Vorschlags speichert die Koordinaten und setzt den Pin auf den Karten.
-Freitext ohne Vorschlag geht auch — dann ohne Pin. **Unter dem ersten
-Ortsfeld einer Seite** steht eine Kleinzeile, die den Adressdienst beim Namen
-nennt und sagt, was ihn erreicht; sie fehlt, wenn die Adresssuche
-abgeschaltet ist (Abschnitt 3.1a). Sie steht nur einmal je Seite — auf der
-Standortseite wären es sonst zehn gleiche Sätze.
+Freitext ohne Vorschlag geht auch — dann ohne Pin. **Neben der Lupe des
+ersten Ortsfelds einer Seite** steht ein kleines Infozeichen (seit Web
+24.4.0; bis dahin eine Kleinzeile darunter). Fährst du darüber, tippst es an
+oder springst mit der Tabulatortaste darauf, nennt es den Adressdienst beim
+Namen und sagt, was ihn erreicht; Esc schließt den Satz wieder. Es fehlt,
+wenn die Adresssuche abgeschaltet ist (Abschnitt 3.1a), und steht nur einmal
+je Seite — auf der Standortseite wären es sonst zehn gleiche Zeichen.
 
 **So wird eine Vorschlagsliste bedient** (seit Web 15.7.0 überall dieselbe —
 Einsatzort, Abfahrtort, Transportziel, Besatzung, weitere Rettungsmittel).
@@ -4379,6 +4385,9 @@ eigene Backups macht, fragt die Person.
 
 Darunter die Liste selbst.
 
+- **Die Filter liegen hinter dem Knopf „Filter"** rechts neben dem Suchfeld
+  (seit Web 24.4.0). Ist einer gesetzt, steht er unter der Suche als Pille
+  mit Kreuz, daneben wie viele Konten passen („4 von 12").
 - **Suchen** nach Name oder E-Mail-Adresse. Das Feld steht seit Web 15.4.1 in
   einer eigenen Zeile über den Filtern — vorher standen beide nebeneinander,
   und bei üblicher Schreibtischbreite fiel der letzte Filter allein in eine
@@ -5203,6 +5212,10 @@ Angaben, die nicht in den Satz passen.
   365 Tage. Ohne Auswahl siehst du alles, was noch da ist.
 - **Art:** ein Auswahlfeld, das sofort filtert.
 - **Ein zweiter Klick auf die aktive Pille** nimmt den Zeitraum zurück.
+- **Zeitraum und Art liegen hinter dem Knopf „Filter"** rechts neben dem
+  Suchfeld (seit Web 24.4.0); seine Zahl sagt, wie viele Filter gesetzt
+  sind. Die gesetzten stehen unter der Suche als Pillen mit Kreuz — das
+  Kreuz nimmt den Filter zurück, ohne dass du den Knopf öffnen musst.
 - **50 Einträge je Seite**; darunter die Seitenwahl.
 - **Ein Wechsel des Reiters beginnt neu:** Suche, Zeitraum, Art und
   Kontofilter gelten nur im Reiter, in dem sie gesetzt wurden.

@@ -404,7 +404,10 @@ export const wege = [
     async fahren(k) {
       const e = await einsaetze(k);
       await k.gehZu(formular(k, e.ohneSpur));
-      await k.seite.locator('.loc-datenschutz').first().scrollIntoViewIfNeeded();
+      /* Seit Web 24.4 ist der Hinweis ein Zeichen neben der Lupe, sein Satz
+       * ein verborgener Tooltip (E-OF-07): ins Bild geholt wird das Zeichen,
+       * gezaehlt und gelesen wird weiter `.loc-datenschutz`. */
+      await k.seite.locator('.ortsfeld-hinweis-knopf').first().scrollIntoViewIfNeeded();
       await k.seite.waitForTimeout(200);
       const b = await k.seite.evaluate(() => {
         const n = document.querySelectorAll('.loc-datenschutz');

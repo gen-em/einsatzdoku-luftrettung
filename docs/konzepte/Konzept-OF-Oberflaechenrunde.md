@@ -43,7 +43,7 @@ es im Kopf von `server/version.php`.
 | NV-04 | Schmale Breiten: Bereichszeile rollt, Rahmenkarte ohne Rand, Schublade mit drei Bereichen; die Übersicht bleibt (E-OF-50) | Opus · keine | **erledigt** 08.11.2026 (ohne Codeänderung, E-OF-63) |
 | OF-01 | Regeln für alle Seiten: eine rechte Kante, Felder 36 rem (E-OF-31); Speicherknopf im Abschnitt oder Speicherleiste (E-OF-32, E-OF-41); Handbuch-Verweise raus, das „?“ öffnet das Kapitel der Seite (E-OF-02, -56); ein Satz je Karte (OF-P-10, -15); drei Messungen im Bilderlauf (E-OF-49, Nr. 530) | Opus · keine | **erledigt** 08.11.2026 (Web 24.2.0) |
 | OF-02 | Bausteine I: Klappkarte mit Stand und Plakette (E-OF-42); Segmentwahl abwählbar und senkrecht mittig (OF-P-05, E-OF-33); Zeile mit Plakette und Knopf auf einer Linie (OF-P-08); sechs neue Zeichen | Opus · keine | **erledigt** 08.11.2026 (Web 24.3.0) |
-| OF-03 | Bausteine II, Eingabe: Datumsfeld `TT.MM.JJJJ` an allen acht Stellen (E-OF-06, -44, -54); Ortsfeld-Hinweis als Zeichen (E-OF-07); Listenkopf mit Filterknopf (E-OF-18) | Opus · keine | offen |
+| OF-03 | Bausteine II, Eingabe: Datumsfeld `TT.MM.JJJJ` an allen acht Stellen (E-OF-06, -44, -54); Ortsfeld-Hinweis als Zeichen (E-OF-07); Listenkopf mit Filterknopf (E-OF-18) | Opus · keine | **erledigt** 08.11.2026 (Web 24.4.0) |
 | OF-04 | Einstellungen: Profil mit Zweitfaktor „ein Satz plus Verwalten“ (E-OF-19); Geräte nach Typ, Koppeln im Dialog (E-OF-25); Import / Export „erst wählen, dann füllen“ (E-OF-26); Backup (E-OF-52, OF-P-15) | Opus · keine | offen |
 | OF-05 | Verwaltung: Kontenliste ohne Spalte „Öffnen“ (E-OF-53); Demo-Konto als Karte unter Installation, ein Schalter statt zwei (E-OF-08, E-OF-46) | Opus · keine | offen |
 | OF-06 | Betrieb: Status „Probleme zuerst“ (E-OF-20; Q-OF-02 → OF-M1); Hintergrundjobs (E-OF-10, -21); Servereinstellungen als Klappkarten (E-OF-22); Komplett-Backup (E-OF-23); Backup-Ziele an beiden Orten, die Seite entfällt (E-OF-24, E-OF-45) | Opus · **gefächert** nach OF-M1: je ein Agent für Status, Hintergrundjobs, Servereinstellungen und Komplett-Backup samt Ziele; `ui.php`, `style.css`, `status_lib.php`, Texte und Prüfarbeit seriell | offen |
@@ -51,8 +51,8 @@ es im Kopf von `server/version.php`.
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | offen |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
-**In Arbeit:** OF-03 Bausteine II. **Erledigt:** OF-00, NV-01 bis NV-04
-(das Gerüst), OF-01, OF-02. **Je Paket mitzunehmen:** seine Zeilen unter
+**In Arbeit:** OF-04 Einstellungen. **Erledigt:** OF-00, NV-01 bis NV-04
+(das Gerüst), OF-01 bis OF-03. **Je Paket mitzunehmen:** seine Zeilen unter
 `seitenregeln` in `tools/screenshots/ausnahmen.json` (E-OF-65) — OF-04
 Profil, Geräte, Backup, Import / Export, Standorte; OF-05 Kontoseite,
 Protokoll-Archiv; OF-06 Jobs, Sicherheit, Servereinstellungen; OF-07
@@ -785,6 +785,7 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-66 | OF-01: Die Handbuchmarken stehen als Zuordnung Menüpunkt → Marke in `ui_hilfe_marke()`, nicht als sechstes Glied der Punkt-Tupel — die Tupel werden an fünf Stellen positionsweise gelesen. Seiten mit eigenem Kapitel (Kontoseite, Sicherheit, die Diensttage-Seiten, Suche) geben `hilfe` an `ui_geruest_start()` | Umsetzung, 08.11.2026 |
 | E-OF-67 | OF-01: Die Speicherleiste bekommt ihre Form jetzt (Fläche, bündig, „Geändert: …“ als Vorgabe jeder Formularleiste); welche Seite Knöpfe im Abschnitt und welche die Leiste trägt, entscheidet das Paket der Seite (Profil OF-04, Installation OF-05, Servereinstellungen OF-06), wie Abschnitt 5 es sagt. „Ungespeichert“ der Rechtstexte wird „Geändert“ | Umsetzung, 08.11.2026 |
 | E-OF-68 | OF-02: `vorschau` heißt `stand` bei allen **neun** Verwendern, nicht bei dreien (Abschnitt 5 zählte drei); `.karte-vorschau` heißt `.karte-stand`. Das Öffnen „nach dem Absenden“ macht ein Gerüstskript `klappkarte.js` am Anker der Adresse, nicht der Server — die Seiten leiten nach dem Speichern auf `#k-…` um, und den Anker sieht nur der Browser; dasselbe Skript öffnet die Karte beim Sprung über eine Sprungmarke. Die Leertaste der abwählbaren Segmentwahl behandelt `segment.js` selbst, weil Chromium und WebKit auf einem gewählten Radio keinen Klick auslösen | Umsetzung, 08.11.2026 |
+| E-OF-69 | OF-03: (1) Datumsformatieren bleibt bei den vorhandenen `EdFormat.tag()` (Browser) und kommt als `datum_de()` nach `format_lib.php` (Register: Text aus Zeitpunkt → `format_lib`); nur das Lesen steht in `eingabe_lib.php` (`datum_de_lesen()`, `post_datum()`, `get_datum()`) und als `EdFormat.datumLesen()`. Beide Formen gelten beim Lesen; ein Wert, der kein Tag ist, geht unverändert an die Prüfung der Seite. Die Suche trägt in der Adresse weiter ISO (Art `datum`), damit verschickte Links gelten. (2) Das Zeichen zur Adresssuche bleibt **einmal je Seite** am ersten Ortsfeld, wie der Satz vorher; der Tooltip ist so breit wie die Feldzeile, kein `title` am Knopf (er stünde zweimal im Vorlesetext). (3) Der Filterknopf ist ein Knopf mit `aria-expanded`, kein `<details>`: Knopf neben dem Suchfeld und Reihe darunter liegen nicht in einem Kasten. „Gesetzt“ heißt aktiv und nicht `vorgabe`; die Pille nimmt über `weg` zurück | Umsetzung, 08.11.2026 |
 | E-OF-48 | Papierkorb: Das Artzeichen des Diensttags (`ohne-zuordnung`, Hubschrauber, Fahrzeug) steht vor dem Datum wie in Leiste und Vorschlägen — so zeigt es das freigegebene Bild; „entfernt“ in E-OF-30 meint die Stelle neben den Knöpfen. Will die Betreiberin es im Papierkorb ganz weglassen, ist das eine Zeile | Konzept, aus E-OF-30 (F-OF-16) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
@@ -1117,4 +1118,77 @@ ungeplant. Kontrast 60 / 0.
 **Nicht geprüft:** eine Klappkarte mit Plakette im Bild (erster Verwender
 OF-06); die abwählbare Segmentwahl in einer echten Seite (erster Verwender
 OF-07, P-OF-11); Bilderlauf, Barrierefreiheit und Bedienprobe (E-OF-60).
+
+### OF-03 Bausteine II — Eingabe (08.11.2026, Web 24.4.0)
+
+**Was getan ist.** Datumsfeld: `ui_datum_eingabe()` (Textfeld,
+`inputmode=numeric`, `pattern`, `data-min`/`data-max`), `ui_feld(['art' =>
+'date'])` nutzt es; `assets/datumsfeld.js` (delegiert; Punkte beim Tippen,
+Auffüllen, ISO-Einfügen, Markierung); `--feld-datum`; Umrechnung nach
+E-OF-69, Registerzeile **Z50**. Die acht Stellen: Diensttag anlegen,
+Datum ändern, Ankündigung „Sichtbar bis“, Rechtstext-Stand (samt Vorschau
+im Browser), Suche von/bis (Art `datum`), Export von/bis, Geburtsdatum
+(Anzeige, Alter, Zweistellig-Regel jetzt auf TT.MM.JJ beim Verlassen,
+Verschließen als ISO), Zeitraumwahl der Statistik (`statistik_lib.php`
+liest beide Formen, `listenkopf.js` schickt erst bei zwei gültigen Tagen).
+Ortsfeld: `ui_geocoder_hinweis()` gibt Knopf und Tooltip zurück, beide
+Fassungen von `ui_ortsfeld()` setzen ihn neben die Lupe; Verhalten in
+`ortsfeld.js`. Listenkopf: Filterknopf, `.filtergesetzt`, `vorgabe`, `weg`,
+`treffer`, `auswahl.kurz`/`weg`; Verwender NutzerInnen und Protokoll;
+`listenkopf.js` mit Ladesperre. Nebenbei: `.listen-form-felder` mit
+`minmax(0,1fr)` (siehe Probleme). Prüfmittel: Bilderlauf
+(`suchzwilling` für den Filterknopf), Bedienprobe (Statistik tippt
+TT.MM.JJJJ; Protokoll öffnet den Filterknopf; ap2 und ap5 zählen sichtbare
+Meldungen bzw. holen das Zeichen ins Bild); `vollstaendigkeit-ohne-regel`
+um `ortsfeld-hinweis-knopf`. Doku: Design.md 9.7, 9.13, 9.18a, 9.18b,
+Verlauf; Handbuch (Zeiten/Daten, Ortsfeld, NutzerInnen, Protokoll);
+Technik (Baum, Zentralisierungstabelle); CHANGELOG; `version.php` 24.4.0.
+
+**Gemessen.** Datumsfeld auf „Diensttag anlegen“, **drei Engines gleich**:
+„07112026“ → „07.11.2026“; „7.1.2026“ → beim Verlassen „07.01.2026“;
+„31022026“ → rot, „Bitte ein Datum als TT.MM.JJJJ eintragen.“; „2026-03-01“
+eingefügt → „01.03.2026“; Breite 120–125 px, `type=text`. Ende zu Ende:
+„05102026“ getippt, abgeschickt → `index.php?d=…`, Titel „Montag,
+05.10.2026“. PHP: `datum_de_lesen()` auf 07.11.2026 / 7.1.2026 /
+2026-11-07 / 31.02.2026 / leer / 07112026 → ISO, ISO, ISO, null, null,
+null. Z50: Muster trifft `'d.m.Y'` und `"!d.m.Y"`, nicht `'!Y-m-d'`; 50
+Registerzeilen, 0 über der Decke. Ortsfeld (Einsatzformular, drei
+Engines): ein Zeichen, kein Satz mehr in der Seite, verborgen zu Beginn,
+Fokus zeigt, Esc schließt, Darüberfahren zeigt, Beschreibung am Knopf
+beginnt mit „Vorschläge und Umkehrsuche kommen von ph…“; Tooltip 482 px
+breit ab der Feldkante (erster Versuch 576 px ab x = 169, also über der
+Leiste — an der Zeile ausgerichtet). Filterknopf (Protokoll `z=7`,
+NutzerInnen `f=nie`): sichtbar, 48 px, Reihe zu, „Filter 1“, Pillen „7
+Tage“ bzw. „nie Konto-Backup“ + „4 von 4“; Klick auf/zu mit
+`aria-expanded`, **ohne Skript Knopf verborgen und Reihe offen — drei
+Engines gleich**. Bild gegen `OF-P22-B`. Riegel **24 von 24**
+(`vollstaendigkeit` zuerst rot: `ortsfeld-hinweis-knopf`). Stilvergleich
+146 / 146 / 153, die neuen durchgesehen, 0 ungeplant. Kontrast 60 / 0.
+**Bilderlauf** (Chromium, drei Breiten): 258 Bilder, Überlauf 0,
+Konsolenfehler 0, Knöpfe 0, Seitenregeln 0 Befunde / 31 ausgenommen.
+**Bedienprobe** (Chromium): 72 von 77 im ganzen Lauf, die 5 übrigen
+danach allein mit gesetzter Demo-Marke grün — zusammen 77 von 77, aber
+aus **zwei** Läufen.
+
+**Probleme.** (1) Der erste Bilderlauf meldete **21 Knöpfe falscher
+Höhe** — meine Erweiterung `suchzwilling` griff mit `.listensuche` auch den
+verborgenen Suchknopf; eingegrenzt auf `.listensuche .filterknopf`. (2)
+**Überlauf 8 px bei 360 px** auf der Standortseite: Das neue Zeichen machte
+die Ortsfeldzeile breiter, und die automatische Rasterspalte der
+Formularfelder folgte ihr (336 → 356 px); behoben mit `minmax(0,1fr)` —
+danach 360 / 390 / 768 ohne Überlauf, Stilvergleich nur die
+Spaltenangabe auf zwei Seiten. (3) Bedienprobe: `ap2-hinweis-am-ortsfeld`
+holte den jetzt verborgenen Satz ins Bild (Zeitüberschreitung),
+`ap5-dialog-anlegen…` zählte die verborgene Tooltip-Meldung als Meldung am
+Seitenkopf — beide auf das Sichtbare umgestellt. (4) Fünf Wege des ganzen
+Laufs fielen einem **Demo-Reset mitten im Lauf** zum Opfer (der
+Prüfstand schiebt die Demo-Marke, mein Handlauf nicht); allein mit Marke
+grün. (5) Viele Anmeldungen in kurzer Zeit sperrten das Demo-Konto
+(Ratenschutz, wie vorgesehen); weitergeprüft mit dem Konto der
+BetreiberIn, Anlage danach mit `--neu`.
+
+**Nicht geprüft:** das Geburtsdatum Ende zu Ende im Einsatzformular
+(Verschließen und Öffnen); die Ankündigung „Sichtbar bis“ und der
+Rechtstext-Stand im Bild; Bilderlauf, Barrierefreiheit und Bedienprobe in
+Firefox und WebKit (E-OF-60).
 

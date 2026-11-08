@@ -117,6 +117,9 @@ export const wege = [
 
         const knopfVerborgen = await k.seite.evaluate(() =>
           !!document.querySelector('[data-absenden-knopf]')?.hidden);
+        /* Seit Web 24.4 liegt die Filterreihe hinter dem Filterknopf
+         * (Konzept OF, E-OF-18) — erst aufklappen, wie es eine Person tut. */
+        await k.seite.click('[data-filterknopf]');
         await Promise.all([
           k.seite.waitForNavigation({ waitUntil: 'domcontentloaded' }),
           k.seite.selectOption('select[data-absenden]', 'wartung_an'),

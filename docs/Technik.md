@@ -51,7 +51,9 @@ Daten erst nach Server-Bestätigung.
 │   │                       transaktion_lib.php ein
 │   ├── eingabe_lib.php    post_text(), get_text(): ein Formularfeld als
 │   │                       Text, sonst die Vorgabe — auch bei einer Liste
-│   │                       (Nr. 355, seit Web 23.6.5). LAEDT NICHTS; db.php
+│   │                       (Nr. 355, seit Web 23.6.5); post_datum(),
+│   │                       get_datum(): TT.MM.JJJJ oder ISO als ISO (seit
+│   │                       Web 24.4.0). LAEDT NICHTS; db.php
 │   │                       und install.php binden sie ein
 │   ├── transaktion_lib.php Der EINE Transaktionsrahmen db_transaktion()
 │   │                       (Schritt 15 AP5, E-ZE-20). Bis Web 20.37.2 in
@@ -546,6 +548,10 @@ Daten erst nach Server-Bestätigung.
 │   ├── assets/            style.css (Schriften werden lokal ausgeliefert, s. u.),
 │   │                      crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
 │   │                      zeitfeld.js (Zeiteingabe im 24-Stunden-Format, s. u.),
+│   │                      datumsfeld.js (Datumseingabe TT.MM.JJJJ, seit Web 24.4.0),
+│   │                      segment.js (abwählbare Segmentwahl, seit Web 24.3.0),
+│   │                      klappkarte.js (Gerüst: öffnet die Klappkarte, auf die
+│   │                        der Anker zeigt, seit Web 24.3.0),
 │   │                      keyguard.js (Bindung/Lebensdauer des Inhaltsschlüssels),
 │   │                      pwquality.js (Passwortgüte), patient.js, daylist.js, confirm.js,
 │   │                      menue.js (Einstellungsleiste: Blöcke klappen, Unterpunkte),
@@ -6454,6 +6460,7 @@ zusammengeführt und, wichtiger, ein **Maß** dafür angelegt.
 | Schema fragen | `db_hat_tabelle/spalte/index()` | 9 eigene `information_schema` |
 | Transaktion | `db_transaktion()` | 33 eigene `beginTransaction()` |
 | Formularfeld als Text lesen — seit Web 23.6.5 | `post_text()`, `get_text()` (`eingabe_lib.php`) | 149 `(string)($_POST[…])`/`($_GET[…])`, 3 eigene Hüllen (`$feld` zweimal, `konten_param()`); eine Liste (`feld[]=x`) gab eine Warnung im Reiter System oder, ohne Cast an eine `string`-Funktion, eine 500 (Nr. 355, Z47, Z48) |
+| Datum aus einem Formularfeld lesen — seit Web 24.4.0 | `datum_de_lesen()`, `post_datum()`, `get_datum()` (`eingabe_lib.php`), im Browser `EdFormat.datumLesen()`; Anzeige `datum_de()` bzw. `EdFormat.tag()` | Die Datumsfelder zeigen `TT.MM.JJJJ` statt `<input type="date">` (Konzept OF, E-OF-44); beide Formen gelten beim Lesen. Eine zweite Umrechnung mit `createFromFormat('d.m.Y')` zählt Z50 |
 | Kindtabellen eines Einsatzes | `einsatz_lib.php` | 30 eigene `INSERT`/`DELETE` |
 | Spalten von `missions` | `mf_spalten($zweck)` | 12 Handlisten |
 | Zahl, Größe, Zeit (PHP) | `format_lib.php` | 4 Byte-Formatierer, 2 Zeitformen, 27 `number_format` |

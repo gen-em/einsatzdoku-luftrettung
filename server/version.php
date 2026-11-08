@@ -8776,4 +8776,15 @@ declare(strict_types=1);
  *   der Abstand fuer die Plaketten am Fuss der Einsatzkarte traf bis dahin
  *   jede Zeile in einer Karte. Sechs Zeichen aus Tabler (filter, restore,
  *   download, upload, moon, sun). Neben; kein Schema. */
-const WEB_VERSION = '24.3.0';
+/* 24.4.0 — BAUSTEINE II, EINGABE (Schritt 27, Konzept OF, OF-03; E-OF-06,
+ *   -07, -18, -44, -54). Das Datumsfeld ist an allen acht Stellen ein
+ *   Textfeld TT.MM.JJJJ (`ui_datum_eingabe()`, `assets/datumsfeld.js`)
+ *   statt `<input type="date">`. Umgerechnet wird einmal: `datum_de()`,
+ *   `datum_de_lesen()`, `post_datum()`, `get_datum()` auf dem Server
+ *   (Registerzeile Z50), `EdFormat.datumLesen()` im Browser; beide Formen
+ *   gelten beim Lesen, und die Adressen der Suche tragen weiter ISO. Am
+ *   Ortsfeld steht der Satz zur Adresssuche als Zeichen mit Tooltip statt
+ *   als Kleinzeile. Der Listenkopf (Protokoll, NutzerInnen) hat einen
+ *   Filterknopf; gesetzte Filter stehen als Pillen mit Kreuz darunter. Neben;
+ *   kein Schema. */
+const WEB_VERSION = '24.4.0';

@@ -49,7 +49,7 @@ $eingabe = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $text  = post_text('text');
-    $stand = trim(post_text('stand'));
+    $stand = post_datum('stand');
     $mangel = rt_pruefen($text, $stand);
     if ($mangel !== null) {
         $error = $name . ': ' . $mangel;

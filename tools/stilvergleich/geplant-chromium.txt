@@ -21,6 +21,9 @@ katalog.html  div.akkordeon-zeile <div.leiste-gruppe>  :  height, width
 katalog.html  div.bereich-zahl <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, outline
 katalog.html  div.eintrag.aktiv <div>  :  border-color, border-left, border-left-color
 katalog.html  div.feld-eingabe <div.rahmenkarte-abschnitte>  :  max-width, width
+katalog.html  div.feld-eingabe.feld-datum <div>  :  font, font-variant-numeric, max-width, width
+katalog.html  div.filtergesetzt <div>  :  align-items, column-gap, display, flex-wrap, gap
+katalog.html  div.filterknopf <div.listensuche>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, column-gap, font, font-weight, gap, width
 katalog.html  div.form-raster-einspaltig <div.rahmenkarte-abschnitte>  :  max-width, width
 katalog.html  div.fuss-seite <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, border-width, color, height, outline
 katalog.html  div.fuss-version <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, outline
@@ -43,7 +46,11 @@ katalog.html  div.leiste-gruppe-aktiv <div>  :  height
 katalog.html  div.leiste-liste <div.leiste-spalte>  :  width
 katalog.html  div.leiste-spalte <div.rahmen-bereiche>  :  background, border, border-color, border-right, border-width, display, flex, height, width
 katalog.html  div.leiste-spalte <div>  :  background, border, border-color, border-right, border-width, display, flex, height, width
+katalog.html  div.meldung <div.ortsfeld-hinweis-text>  :  box-shadow, margin, margin-bottom
 katalog.html  div.nur-vorlesen <div>  :  bottom, inset, top
+katalog.html  div.ortsfeld-hinweis <div>  :  flex
+katalog.html  div.ortsfeld-hinweis-text <div>  :  bottom, inset, left, margin, margin-top, position, right, top, z-index
+katalog.html  div.ortsfeld-zeile <div>  :  bottom, inset, left, position, right, top
 katalog.html  div.rahmen <div>  :  height, padding, padding-bottom, padding-left, padding-right, padding-top
 katalog.html  div.rahmen-bereiche <div>  :  height
 katalog.html  div.rahmenkarte <div.rahmen>  :  align-items, background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, border-top-color, border-width, display, flex, height, min-height, min-width, overflow, overflow-x, overflow-y, width
@@ -75,26 +82,33 @@ katalog.html  input.schalter-box <div>  :  bottom, inset, top
 katalog.html  input.segment-box <div>  :  bottom, inset, top
 katalog.html  input.wahl-box <div>  :  bottom, inset, top
 seiten.html[einsatz.php]  div#plaketten.zeile-plaketten <div.karte-inhalt>  :  align-items
+seiten.html[einstellungen.php]  div.listen-form-felder <form>  :  grid-template-columns
+seiten.html[import.php]  div#exp_zeitraum_row.listen-form-felder <div>  :  grid-template-columns
 seiten.html[suche.php]  div#filterplaketten.zeile-plaketten.filterplaketten <div>  :  align-items
+seiten.html[ui.php]  a.><span>.<div.class= <div.filtergesetzt>  :  display
 seiten.html[ui.php]  a.akkordeon-uebersicht <div.akkordeon-rahmen>  :  inset, left
 seiten.html[ui.php]  a.eintrag.eintrag-anlegen <div.leiste-fuss>  :  width
 seiten.html[ui.php]  a.eintrag.eintrag-leise <div.leiste-fuss>  :  width
 seiten.html[ui.php]  a.eintrag.eintrag-offen <div.leiste-fuss>  :  width
+seiten.html[ui.php]  a.listenfilter.aktiv <div.filtergesetzt>  :  display
 seiten.html[ui.php]  aside#leiste.leisteX <div.leiste-spalte>  :  width
 seiten.html[ui.php]  details.akkordeon.leiste-gruppeX <div.leiste-liste>  :  width
 seiten.html[ui.php]  details.akkordeonX <div.akkordeon-rahmen>  :  width
 seiten.html[ui.php]  div <scriptx>  :  width
 seiten.html[ui.php]  div#Xchips.rmchips <div.loc-widget.X>  :  width
+seiten.html[ui.php]  div#geo-hinweis.ortsfeld-hinweis-text.loc-datenschutz <div.ortsfeld-hinweis>  :  position, z-index
 seiten.html[ui.php]  div.akkordeon-rahmen <div.leiste-liste>  :  width
 seiten.html[ui.php]  div.demo-hinweis <aside.leisteX>  :  width
 seiten.html[ui.php]  div.demo-hinweis.hinweis-umgebung <aside.leisteX>  :  width
 seiten.html[ui.php]  div.feldX <aside.leisteX>  :  width
+seiten.html[ui.php]  div.filtergesetzt <button.knopf.knopf-neutral.filterknopf>  :  align-items, column-gap, display, flex-wrap, gap
 seiten.html[ui.php]  div.leiste-fuss <aside.leisteX>  :  width
 seiten.html[ui.php]  div.leiste-liste <aside.leisteX>  :  width
 seiten.html[ui.php]  div.leiste-spalte <div.rahmenkarteX>  :  background, border, border-color, border-right, border-width, display, flex, height, width
 seiten.html[ui.php]  div.loc-widget.X <aside.leisteX>  :  width
 seiten.html[ui.php]  div.loc-widget.X <div.loc-widget.X>  :  width
-seiten.html[ui.php]  div.ortsfeld-zeile <div.loc-widget.X>  :  width
+seiten.html[ui.php]  div.ortsfeld-hinweis <h1>  :  flex
+seiten.html[ui.php]  div.ortsfeld-zeile <div.loc-widget.X>  :  bottom, inset, left, position, right, top, width
 seiten.html[ui.php]  div.schalter <aside.leisteX>  :  width
 seiten.html[ui.php]  div.segmentXX <aside.leisteX>  :  width
 seiten.html[ui.php]  div.speichern <aside.leisteX>  :  background, border, border-color, border-radius, border-top, border-top-color, border-width, box-shadow, padding, padding-left, padding-right
@@ -112,6 +126,7 @@ seiten.html[ui.php]  h2.leiste-kopfzeile <aside.leisteX>  :  width
 seiten.html[ui.php]  h2.leiste-kopfzeile <div>  :  width
 seiten.html[ui.php]  input#X.feld-eingabe <div.feldX>  :  width
 seiten.html[ui.php]  input#Xaddr <div.ortsfeld-zeile>  :  width
+seiten.html[ui.php]  input.feld-eingabe.feld-datum.<span>.<a.class= <a.listenfilter.><span>.<div.class=>  :  font, font-variant-numeric
 seiten.html[ui.php]  label <div.loc-widget.X>  :  width
 seiten.html[ui.php]  label.feld-label <div.feldX>  :  width
 seiten.html[ui.php]  label.feld-label <div.loc-widget.X>  :  width
@@ -132,7 +147,7 @@ seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-leise>  :  width
 seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-offen>  :  width
 seiten.html[ui.php]  span.fuss-version <p.fuss-zeile>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, outline
 seiten.html[ui.php]  span.karte-stand <span.karte-zahl>  :  text-align
-seiten.html[ui.php]  span.nur-vorlesen <button.knopf.knopf-symbol>  :  inset, left
+seiten.html[ui.php]  span.nur-vorlesen <button.knopf.knopf-symbol>  :  bottom, inset, left, top
 seiten.html[ui.php]  span.nur-vorlesen <span>  :  inset, right
 seiten.html[ui.php]  span.wahl-text <label.wahl-zeile>  :  width
 seiten.html[ui.php]  summary.akkordeon-zeile <details.akkordeon.akkordeon-monatX>  :  width

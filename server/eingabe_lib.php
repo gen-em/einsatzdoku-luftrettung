@@ -42,3 +42,55 @@ function get_text(string $schluessel, string $vorgabe = ''): string
     $v = $_GET[$schluessel] ?? null;
     return is_string($v) ? $v : $vorgabe;
 }
+
+
+/* ---------------------------------------------------------------------------
+ * EIN DATUM LESEN — `TT.MM.JJJJ` oder `JJJJ-MM-TT` (Konzept OF, OF-03,
+ * E-OF-06, -44, -54).
+ *
+ * WARUM HIER. Die Datumsfelder sind seit Web 24.4 Textfelder mit der Maske
+ * `TT.MM.JJJJ` statt `<input type="date">`, das je nach Browser
+ * „dd/mm/yyyy" zeigte und einen Kalender aufklappte. Gespeichert und geprueft
+ * wird weiter `JJJJ-MM-TT`; die Umrechnung steht EINMAL, hier. Das Register
+ * (`tools/zaehlung/register.php`) zaehlt `createFromFormat('d.m.Y'…)`
+ * ausserhalb dieser Datei.
+ *
+ * BEIDE FORMEN GELTEN: Eine Probe, ein altes Lesezeichen oder ein Aufruf ohne
+ * Skript schickt ISO, das Feld schickt die deutsche Form. Ein Tag, den es
+ * nicht gibt (31.02.), ist keiner.
+ * ------------------------------------------------------------------------ */
+
+/** 'TT.MM.JJJJ' (auch 'T.M.JJJJ') oder 'JJJJ-MM-TT' als 'JJJJ-MM-TT', sonst null. */
+function datum_de_lesen(string $text): ?string
+{
+    $t = trim($text);
+    if (preg_match('/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/', $t, $m)) {
+        [$tag, $monat, $jahr] = [(int)$m[1], (int)$m[2], (int)$m[3]];
+    } elseif (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $t, $m)) {
+        [$jahr, $monat, $tag] = [(int)$m[1], (int)$m[2], (int)$m[3]];
+    } else {
+        return null;
+    }
+    if (!checkdate($monat, $tag, $jahr)) { return null; }
+    return sprintf('%04d-%02d-%02d', $jahr, $monat, $tag);
+}
+
+/**
+ * Ein Datumsfeld aus `$_POST`: als 'JJJJ-MM-TT', wenn es ein Tag ist — sonst
+ * der Text unveraendert (getrimmt). So meldet die Pruefung der Seite
+ * (`pruef_kalendertag()` und andere) einen falschen Wert weiter mit ihrem
+ * eigenen Satz, statt dass er hier still zu leer wird.
+ */
+function post_datum(string $schluessel, string $vorgabe = ''): string
+{
+    $t = post_text($schluessel, $vorgabe);
+    return datum_de_lesen($t) ?? trim($t);
+}
+
+/** Dasselbe fuer `$_GET`. */
+function get_datum(string $schluessel, string $vorgabe = ''): string
+{
+    $t = get_text($schluessel, $vorgabe);
+    return datum_de_lesen($t) ?? trim($t);
+}
+

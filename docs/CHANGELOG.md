@@ -14,6 +14,24 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.4.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — Daten tippt man überall als TT.MM.JJJJ** (Schritt 27). Die
+  Datumsfelder zeigten je nach Browser „dd/mm/yyyy“ oder „mm/dd/yyyy“,
+  klappten einen Kalender auf und schnitten am Schreibtisch das Jahr ab.
+  Jetzt sind es an allen acht Stellen — vom Diensttag bis zum Geburtsdatum —
+  Textfelder, die beim Tippen die Punkte setzen, wie die Zeitfelder den
+  Doppelpunkt. Gespeichert wird wie bisher; geteilte Suchlinks bleiben
+  gültig.
+- **Web — weniger Text über den Listen und am Ortsfeld** (Schritt 27). Im
+  Protokoll und in der NutzerInnen-Liste liegen die Filter hinter einem Knopf
+  „Filter“ mit der Zahl der gesetzten; die gesetzten stehen als Pillen mit
+  Kreuz unter der Suche. Der Satz zur Adresssuche, der im Einsatzformular
+  zwischen zwei Feldern stand, ist ein Infozeichen neben der Lupe, das ihn
+  bei Bedarf zeigt.
+
 ## [Web 24.3.0] — unveröffentlicht
 
 ### Hinzugefügt

@@ -1873,7 +1873,9 @@ for (const eintrag of liste) {
            * sichert eine MINDESTflaeche; groesser ist kein Verstoss, nur
            * ungleich. Damit die Zahl im Bericht trotzdem etwas heisst, wird
            * dieser eine Fall benannt statt stillschweigend geduldet. */
-          suchzwilling: !!el.closest('.suchzeile'),
+          /* Seit Web 24.4 auch der Filterknopf im Listenkopf (E-OF-18) —
+           * nur er, nicht der verborgene Suchknopf daneben. */
+          suchzwilling: !!el.closest('.suchzeile') || el.matches('.listensuche .filterknopf'),
         })),
     })).catch(() => ({ scrollWidth: 0, innerWidth: b, knoepfe: [], taeter: null,
                        ausbruch: [], karten: 0, rollen: [] }));

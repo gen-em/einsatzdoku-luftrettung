@@ -466,7 +466,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
-144 Token in 21 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+145 Token in 21 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Leitwerte**
 
@@ -507,7 +507,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--linie` | `var(--genem-linie)` | 48 |  |
-| `--linie-stark` | `var(--genem-linie-stark)` | 20 |  |
+| `--linie-stark` | `var(--genem-linie-stark)` | 21 |  |
 | `--mechanik` | `var(--genem-sand)` | 11 |  |
 
 **Aktion — Dunkelblau**
@@ -613,8 +613,8 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 87 |  |
-| `--abstand-2` | `8px` | 125 |  |
+| `--abstand-1` | `4px` | 88 |  |
+| `--abstand-2` | `8px` | 127 |  |
 | `--abstand-3` | `12px` | 167 |  |
 | `--abstand-4` | `16px` | 75 |  |
 | `--abstand-5` | `24px` | 38 |  |
@@ -644,6 +644,7 @@ auseinanderlaufen kann.
 | `--blatt-zeile` | `50px` | 1 | Zeilenhöhe im Aktionsblatt |
 | `--unterpunkt` | `28px` | 2 | Sprungmarke unter dem Menüpunkt |
 | `--feld-breit` | `36rem` | 2 | Höchstbreite eines Felds: Listensuche, Felder der Einstellungen |
+| `--feld-datum` | `calc(11ch + 2 * var(--abstand-3) + 2 * var(--strich))` | 1 |  |
 | `--uebersicht-spalte` | `240px` | 1 | schmalste Spalte der Einstellungs-Übersicht |
 | `--suchfeld` | `48px` | 2 | das große Suchfeld |
 | `--symbol-klein` | `16px` | 11 | Zusatzzeichen an einer Beschriftung |
@@ -711,7 +712,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--dauer` | `.24s` | 9 |  |
 | `--schleier` | `rgba(26,46,77,.55)` | 2 | Dunkelblau, halbdurchsichtig |
-| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 7 |  |
+| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 8 |  |
 | `--schatten-hoch` | `0 8px 28px rgba(26,5,0,.22)` | 3 |  |
 | `--auf-dunkel-leise` | `rgba(255,255,255,.55)` | 2 |  |
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 3 |  |
@@ -1120,14 +1121,14 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `drucken.svg` | Tabler Icons „printer" (MIT) | 3 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
-| `filter.svg` | Tabler Icons „filter" (MIT) | 11 |
+| `filter.svg` | Tabler Icons „filter" (MIT) | 12 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 22 |
 | `haken.svg` | Tabler Icons „check" (MIT) | 38 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
 | `herunterladen.svg` | Tabler Icons „download" (MIT) | 3 |
 | `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 18 |
-| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 37 |
+| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 38 |
 | `hochladen.svg` | Tabler Icons „upload" (MIT) | 0 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
@@ -1152,7 +1153,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `punkte.svg` | Tabler Icons „dots" (MIT) | 70 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
-| `schliessen.svg` | Tabler Icons „x" (MIT) | 15 |
+| `schliessen.svg` | Tabler Icons „x" (MIT) | 16 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
 | `server.svg` | Tabler Icons „server" (MIT) | 21 |
@@ -1284,31 +1285,32 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2187 |
 | `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2242 |
 | `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2299 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2398 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2470 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2528 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2574 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2608 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2680 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2704 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2746 |
-| `ui_feld()` | `.feld` | ja (+28 Unterklassen) | 2818 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2883 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2927 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2997 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 3041 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3140 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3210 |
-| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3251 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3343 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3381 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3411 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3423 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3566 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3645 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2403 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2515 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2573 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2621 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2655 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2727 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2751 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2793 |
+| `ui_datum_eingabe()` | `.datum-eingabe` | **keine** | 2879 |
+| `ui_feld()` | `.feld` | ja (+30 Unterklassen) | 2902 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2973 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 3017 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 3087 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 3131 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3230 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3300 |
+| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3341 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3433 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3471 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3502 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3531 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3675 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3754 |
 
-54 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
-**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
+55 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
+**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_datum_eingabe()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
 
 ### 9.1 Karte — der Inhaltsblock
 
@@ -1654,10 +1656,27 @@ Skript.
 ```html
 <div class="feld">
   <label class="feld-label" for="f-x">Datum <span class="feld-klein-inline">optional</span></label>
-  <input class="feld-eingabe" type="date" id="f-x" name="x">
+  <input class="feld-eingabe feld-datum" type="text" inputmode="numeric" placeholder="TT.MM.JJJJ"
+         pattern="\d{1,2}\.\d{1,2}\.\d{4}" id="f-x" name="x">
   <p class="feld-klein">Hinweis unter dem Feld.</p>
 </div>
 ```
+
+**Das Datumsfeld ist ein Textfeld `TT.MM.JJJJ`** (seit Web 24.4.0, Konzept
+OF, OF-03, E-OF-06, -44, -54): `ui_feld(['art' => 'date'])` bzw.
+`ui_datum_eingabe()` — an allen acht Stellen, auch Geburtsdatum,
+Suchfilter, Export und Zeitraumwahl. Bis dahin `<input type="date">`, das je
+nach Browser „dd/mm/yyyy" zeigte, einen Kalender aufklappte und schmal das
+Jahr abschnitt. `assets/datumsfeld.js` setzt die Punkte beim Tippen wie
+`zeitfeld.js` die Doppelpunkte, füllt beim Verlassen auf („7.1.2026" →
+„07.01.2026"), macht aus einem eingefügten ISO-Datum die deutsche Form und
+markiert einen Tag, den es nicht gibt; `data-min` / `data-max` (ISO)
+grenzen ein. Breite `--feld-datum` (11 ch plus Innenabstand und Rand),
+Ziffern gleich breit. **Umgerechnet wird einmal:** `datum_de()`
+(`format_lib.php`) und `datum_de_lesen()` / `post_datum()` / `get_datum()`
+(`eingabe_lib.php`, Registerzeile Z50) auf dem Server, `EdFormat.tag()` /
+`EdFormat.datumLesen()` im Browser — das Geburtsdatum nur dort, weil es
+verschlüsselt wird. Beide Formen gelten beim Lesen.
 
 **Platzhalter tragen ausschließlich Phantasienamen** (E-S3-13). Ein
 Platzhalter ist ein Beispiel, kein Vorschlag: Steht dort der Name der echten
@@ -1993,8 +2012,16 @@ Mindestlänge.
 > eingetippten Buchstaben dorthin. Stehen bereits Koordinaten, ruht die Suche
 > ganz — die Formaterkennung läuft lokal und hat Vorrang.
 
-**Die Kleinzeile darunter nennt den Dienst — einmal je Seite** (Web 15.8.0,
-`ui_geocoder_hinweis()`, `.loc-datenschutz`). Nicht je Feld: Auf der
+**Ein Zeichen neben der Lupe nennt den Dienst — einmal je Seite** (seit Web
+24.4.0, Konzept OF, E-OF-07; bis dahin die Kleinzeile darunter, Web 15.8.0,
+`ui_geocoder_hinweis()`, `.loc-datenschutz`). Das Zeichen `hinweis` ist ein
+Knopf; sein Satz liegt als Meldung `info` in einem Tooltip unter der
+Feldzeile (`.ortsfeld-hinweis-text`, `role="tooltip"`, über
+`aria-describedby` am Knopf, also auch ohne Öffnen vorgelesen) und erscheint
+beim Darüberfahren, beim Fokus und beim Antippen; Esc und Verlassen
+schließen ihn (`assets/ortsfeld.js`). Die Breite ist die der Feldzeile — am
+Zeichen ausgerichtet ragte er über die Leiste. Einmal je Seite und nicht je
+Feld aus demselben Grund wie zuvor: Nicht je Feld: Auf der
 Standortseite steht ein Ortsfeld je Standort **und** je Zielklinik, das wären
 zehn gleiche Sätze und mehr. Zehnmal derselbe Datenschutzhinweis ist keine
 Auskunft mehr, sondern Tapete. Sie steht am **ersten** Ortsfeld der Seite und
@@ -2222,6 +2249,18 @@ gerenderte Liste im Browser ausdünnt, ist der Kartenfilter — 9.32.
 der Höchstbreite `--feld-breit`, 36 rem), darunter `.filterreihe` mit
 `flex-wrap`.
 
+**Mit Filterknopf** (seit Web 24.4.0, Konzept OF, OF-03, E-OF-18, Bild
+OF-P22-B): Hat die Liste Filter, steht rechts neben dem Suchfeld der Knopf
+„Filter" (`.filterknopf`, Zeichen `filter`, so hoch wie das Suchfeld, Rand
+`--linie-stark`, fett) mit der Zahl der **gesetzten** Filter als Plakette;
+das Suchfeld füllt dann die Zeile. Er klappt die `.filterreihe` auf und zu
+(`aria-expanded`, `assets/listenkopf.js`); ohne Skript ist er verborgen und
+die Reihe offen. Gesetzt ist ein aktiver Filter, der nicht die Vorgabe ist
+(`vorgabe`), und eine Auswahl mit Wert; sie stehen unter der Suche als
+Pillen mit Kreuz (`.filtergesetzt`, Verweis `weg`), daneben die Trefferzahl
+(`treffer`, „4 von 12"). Verwender: Protokoll und NutzerInnen; die Suche hat
+ihre eigene Filterleiste.
+
 **Bis Web 15.4.0 rückten beide ab 1024 px nebeneinander**, das Suchfeld auf
 `flex:0 1 26rem`. Gemessen an der NutzerInnen-Liste mit fünf Filtern (zusammen
 789 px): Bei 1440, 1280 und 1024 px fiel der letzte Filter allein in eine
@@ -2263,7 +2302,7 @@ hält die Klassen außerhalb von `ui.php` auf **null**.
 freigegeben mit Q-R4-16). Betrieb → Statistik wählt ihren Zeitraum in einer
 Reihe zwischen Kennzahlen und Reitern: links die festen Fenster als
 **Pillen der Filterreihe** (9.18a), rechts zwei **Datumsfelder**
-(`.feld-eingabe type=date`, Beschriftung klein und gedämpft daneben statt
+(seit Web 24.4.0 das Datumsfeld `TT.MM.JJJJ` aus 9.7 — bis dahin `.feld-eingabe type=date`; abgeschickt wird erst, wenn beide einen gültigen Tag tragen —, Beschriftung klein und gedämpft daneben statt
 darüber) und ein **neutraler Knopf** „Anwenden". Ein eigener Zeitraum steht
 als **aktive Pille mit Kreuz** hinter dem Knopf; ihr Verweis nimmt ihn weg.
 Die Reihe bricht am Ende, wie die Filterreihe.
@@ -3672,6 +3711,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 24.4.0 (Schritt 27, Konzept OF, OF-03)** | **9.7:** Datumsfeld `TT.MM.JJJJ` (`ui_datum_eingabe()`, `.feld-datum`, `--feld-datum`) an allen acht Stellen. **9.13:** Zeichen statt Kleinzeile am Ortsfeld, der Satz als Tooltip. **9.18a:** Filterknopf mit gesetzten Filtern als Pillen. Neues abgeleitetes Maß `--feld-datum`; kein neuer Baustein — alle drei mit den Mockups freigegeben. |
 | **Web 24.2.0–24.3.0 (Schritt 27, Konzept OF, OF-01 und OF-02)** | **6:** Erklärtext ohne Verweis, das „?" öffnet das Kapitel; drei Seitenregeln im Bilderlauf. **9.9** Speicherleiste als Auswahlfläche am Rand. **4:** `--feld-breit` statt `--listensuche-breit`. **9.1:** Klappkarte mit Stand und Plakette (`stand` statt `vorschau`). **9.2:** Plakette und Knopf auf einer Linie. **9.7:** Segmentwahl abwählbar. **8:** sechs Zeichen (`filter`, `wiederherstellen`, `herunterladen`, `hochladen`, `mond`, `sonne`), freigegeben mit den Mockups. Kein neuer Baustein. |
 | **Web 24.1.0 (Schritt 27, Konzept OF, NV-03)** | **9.25:** Am Schreibtisch nur der aktive Block (`.leiste-gruppe-aktiv`), Schublade unverändert; aktiver Eintrag, markierte Zeitraumzeile und Vorschlag **ohne Strich**, der Vorschlag auf Blau 100 statt Rauch (E-OF-16); Sprungmarken nur zu sichtbaren Karten. **3.4:** zwei Paare neu beschrieben (der Strich, den sie nannten, ist fort; die Paare tragen andere Stellen). **10.1:** „Abmelden" nur in der Leiste (E-OF-27). Kein neuer Baustein, kein Token. |
 | **Web 23.12.0–24.0.0 (Schritt 27, Konzept OF, NV-01 und NV-02)** | **9.37:** Bereichszeile als zweite Lage des Reiter-Bausteins, Reiter 700 / 48 px (`--bereiche`) / Unterstrich 3 px (`--strich-reiter`) für beide Ebenen (E-OF-17, -40). **10.1:** Rahmenkarte um Leiste und Inhalt, Abschnitte statt Karten im Bereich Einstellungen (E-NV-01, -03, E-OF-36 bis -38); Fußzeile dunkelblau (E-OF-34). Neue Token `--bereiche` und das abgeleitete `--strich-reiter`; kein neuer Baustein — Bereichszeile und Rahmenkarte sind mit den Mockups NV und OF freigegeben (Konzept OF). |

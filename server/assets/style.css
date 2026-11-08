@@ -504,6 +504,10 @@
   --blatt-zeile:50px;                  /* Zeilenhöhe im Aktionsblatt */
   --unterpunkt:28px;                   /* Sprungmarke unter dem Menüpunkt */
   --feld-breit:36rem;                  /* Höchstbreite eines Felds: Listensuche, Felder der Einstellungen */
+  /* DAS DATUMSFELD (Konzept OF, OF-03, E-OF-44): zehn Zeichen „TT.MM.JJJJ"
+   * plus ein Zeichen Luft, dazu Innenabstand und Rand des Felds — eine
+   * Rechnung, keine neue Zahl. */
+  --feld-datum:calc(11ch + 2 * var(--abstand-3) + 2 * var(--strich));
   --uebersicht-spalte:240px;           /* schmalste Spalte der Einstellungs-Übersicht */
   --suchfeld:48px;                     /* das große Suchfeld */
   --symbol-klein:16px;                 /* Zusatzzeichen an einer Beschriftung */
@@ -1942,6 +1946,22 @@ a.zeile:hover .zeile-weiter{color:var(--text-link-hover)}
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius-klein);
 }
+/* Das Datumsfeld ist so breit wie sein Inhalt, nicht wie die Spalte
+ * (Konzept OF, E-OF-44); Ziffern gleich breit, damit 11.11. und 08.08. nicht
+ * verschieden breit stehen. */
+.feld-eingabe.feld-datum{width:var(--feld-datum);max-width:100%;font-variant-numeric:tabular-nums}
+
+/* DAS ZEICHEN ZUR ADRESSSUCHE neben der Lupe (Konzept OF, E-OF-07): Der Satz
+ * steht als Meldung `info` unter der Feldzeile, so breit wie sie, über dem,
+ * was darunter liegt. An der Zeile, nicht am Zeichen ausgerichtet: am Zeichen
+ * und 36 rem breit ragte er links über die Leiste. */
+.ortsfeld-zeile{position:relative}
+.ortsfeld-hinweis{flex:0 0 auto}
+.ortsfeld-hinweis-text{
+  position:absolute;top:100%;left:0;right:0;z-index:20;
+  margin-top:var(--abstand-1);
+}
+.ortsfeld-hinweis-text .meldung{margin:0;box-shadow:var(--schatten)}
 /* GESPERRT MUSS GESPERRT AUSSEHEN.
  * `.feld-eingabe` setzt Flaeche und Schrift selbst und ueberschreibt damit
  * die Graufaerbung, die der Browser einem `disabled` gibt — ein einzeln
@@ -4227,7 +4247,12 @@ h1 + .seiten-erklaerung{margin-top:0}
   font-size:var(--groesse-3);color:var(--text-titel);
   margin:0 0 var(--abstand-2);
 }
-.listen-form-felder{display:grid;gap:var(--abstand-3)}
+/* `minmax(0,1fr)` STATT DER AUTOMATISCHEN SPALTE: Die richtete sich nach dem
+ * breitesten Kind — seit das Ortsfeld neben der Lupe das Zeichen zur
+ * Adresssuche traegt (Web 24.4, E-OF-07), drueckte dessen Zeile die Spalte
+ * bei 360 px auf 356 statt 336 px, und die Seite lief 8 px ueber. Jetzt gibt
+ * das Eingabefeld der Zeile nach (`min-width:0`). */
+.listen-form-felder{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--abstand-3)}
 .listen-form-fuss{display:flex;flex-wrap:wrap;gap:var(--abstand-2);margin-top:var(--abstand-4)}
 /* Zwei Formulare in einem Abschnitt (Nr. 480): „Nachtragen vom Blatt" traegt
  * bei „beide abweichend" zwei, und der Knopf des ersten klebte an der
@@ -4239,7 +4264,7 @@ h1 + .seiten-erklaerung{margin-top:0}
 /* Ab 720 px stehen Name und Lage nebeneinander — sie gehören
  * zusammen und passen in eine Zeile. */
 @media (min-width:720px){
-  .listen-form-felder{grid-template-columns:1fr 1fr;align-items:start}
+  .listen-form-felder{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
 }
 
 /* Der Vorbelegungsstern in der Zeile: Dunkelblau, weil er eine Auszeichnung
@@ -4521,6 +4546,18 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
  * erreichbar), und er funktioniert ohne Skript. Der aktive trägt die
  * Auswahlfläche — dieselbe Auszeichnung wie die aktive Kennzahl. */
 .filterreihe{display:flex;flex-wrap:wrap;gap:var(--abstand-2)}
+/* DER FILTERKNOPF IM LISTENKOPF (Konzept OF, OF-03, E-OF-18, Bild OF-P22-B):
+ * rechts neben dem Suchfeld, so hoch wie es (die benannte Ausnahme der
+ * Suchseite, `.filterknopf`), kraeftiger Rand, fett, mit dem Filterzeichen
+ * und der Zahl der gesetzten Filter. Mit ihm fuellt das Suchfeld die Zeile
+ * wie im freigegebenen Bild; ohne Skript ist er verborgen, und die Zeile
+ * behaelt ihre Hoechstbreite nicht — die Reihe steht dann offen darunter. */
+.listensuche:has([data-filterknopf]){max-width:none}
+.listensuche .suchfeld{flex:1 1 auto}
+.listensuche .filterknopf{border-color:var(--linie-stark);font-weight:700;gap:var(--abstand-2)}
+/* Die gesetzten Filter als Pillen mit Kreuz unter der Suche, daneben die
+ * Trefferzahl. */
+.filtergesetzt{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2)}
 /* Ein Auswahlfeld in der Filterreihe („Art") ist so hoch wie ein
  * Filter und nur so breit, wie es muss. */
 .filterreihe .feld-eingabe{width:auto;min-width:12rem;flex:0 1 auto}

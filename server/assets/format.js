@@ -107,6 +107,24 @@
       return t.slice(8, 10) + '.' + t.slice(5, 7) + '.' + t.slice(0, 4);
     },
 
+    /**
+     * Gegenrichtung zu `tag()`: 'TT.MM.JJJJ' (auch 'T.M.JJJJ') oder
+     * 'JJJJ-MM-TT' als 'JJJJ-MM-TT', sonst ''. Ein Tag, den es nicht gibt
+     * (31.02.), ist keiner. Das Datumsfeld (Konzept OF, OF-03, E-OF-44)
+     * zeigt die deutsche Form; wer seinen Wert liest, liest ihn hierueber --
+     * auf dem Server `datum_de_lesen()` in `eingabe_lib.php`.
+     */
+    datumLesen: function (text) {
+      const t = String(text == null ? '' : text).trim();
+      let m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(t), j, mo, d;
+      if (m) { d = +m[1]; mo = +m[2]; j = +m[3]; }
+      else if ((m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t))) { j = +m[1]; mo = +m[2]; d = +m[3]; }
+      else { return ''; }
+      const probe = new Date(Date.UTC(j, mo - 1, d));
+      if (probe.getUTCFullYear() !== j || probe.getUTCMonth() !== mo - 1 || probe.getUTCDate() !== d) { return ''; }
+      return String(j).padStart(4, '0') + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    },
+
     /** Tag ohne Jahr, 'TT.MM.' -- fuer Extremwerte, deren Jahr im Titel steht. */
     tagKurz: function (iso, leer) {
       const t = String(iso == null ? '' : iso);

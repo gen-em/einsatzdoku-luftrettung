@@ -629,7 +629,11 @@ ui_seite_start(['titel' => 'NutzerInnen']);
          * nach Konto-Backups bleiben: Sehen darf er den Stand. */
         if ($nurSupport && $key === 'admins') { continue; }
         $pillen[] = ['text' => $text, 'aktiv' => $filter === $key, 'zahl' => (int)$zahlen[$key],
-                     'href' => konten_weg(['f' => $key === 'alle' ? '' : $key, 's' => ''])];
+                     'href' => konten_weg(['f' => $key === 'alle' ? '' : $key, 's' => '']),
+                     /* „Alle" ist kein gesetzter Filter; die anderen nimmt
+                      * das Kreuz ihrer Pille zurück (Filterknopf, E-OF-18). */
+                     'vorgabe' => $key === 'alle',
+                     'weg' => konten_weg(['f' => '', 's' => ''])];
     }
     ui_listenkopf([
         'form_id' => 'f-kontensuche',
@@ -639,6 +643,8 @@ ui_seite_start(['titel' => 'NutzerInnen']);
                         'sort' => $sort !== 'konto' ? $sort : '',
                         'dir' => $ab ? 'ab' : ''],
         'filter' => $pillen,
+        'treffer' => ($q !== '' || $filter !== 'alle')
+            ? zahl_text($treffer) . ' von ' . zahl_text($gesamt['konten']) : '',
     ]); ?>
 
     <?php if (!$zeilen): ?>

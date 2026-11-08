@@ -11,10 +11,31 @@
  * steht in der Filterreihe, das Formular um das Suchfeld herum — im Bild
  * sind es zwei Zeilen, im Formular eine Anfrage.
  *
- * Dazu die Zeitraumwahl der Statistik (unten).
+ * Dazu die Zeitraumwahl der Statistik (unten) und, seit Web 24.4, der
+ * Filterknopf (Konzept OF, E-OF-18): Ohne Skript ist er verborgen und die
+ * Filterreihe offen; hier wird er gezeigt, die Reihe zugeklappt, und ein
+ * Klick klappt sie auf und zu. Gemerkt wird nichts — gesetzte Filter stehen
+ * als Pillen unter der Suche.
+ *
+ * EINMAL JE SEITE: Listenkopf und Zeitraumwahl binden das Skript beide ein.
  */
 (function () {
   'use strict';
+  if (window.EdListenkopfGeladen) { return; }
+  window.EdListenkopfGeladen = true;
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-filterknopf]'), function (knopf) {
+    var reihe = document.getElementById(knopf.getAttribute('aria-controls'));
+    if (!reihe) { return; }
+    knopf.hidden = false;
+    reihe.hidden = true;
+    knopf.setAttribute('aria-expanded', 'false');
+    knopf.addEventListener('click', function () {
+      var auf = reihe.hidden;
+      reihe.hidden = !auf;
+      knopf.setAttribute('aria-expanded', auf ? 'true' : 'false');
+    });
+  });
 
   Array.prototype.forEach.call(document.querySelectorAll('select[data-absenden]'), function (feld) {
     var form = feld.form;
@@ -37,7 +58,9 @@
    * kein Verlassen. */
   Array.prototype.forEach.call(document.querySelectorAll('[data-zeitraum]'), function (paar) {
     var form = paar.closest('form');
-    var felder = paar.querySelectorAll('input[type="date"]');
+    /* Seit Web 24.4 Textfelder TT.MM.JJJJ (`.feld-datum`, E-OF-54); abgeschickt
+     * wird erst, wenn beide einen gueltigen Tag tragen. */
+    var felder = paar.querySelectorAll('input.feld-datum');
     if (!form || felder.length !== 2) { return; }
     var stand = function () { return felder[0].value + '|' + felder[1].value; };
     var vorher = stand();
@@ -46,7 +69,8 @@
     });
     paar.addEventListener('focusout', function (e) {
       if (e.relatedTarget && paar.contains(e.relatedTarget)) { return; }
-      if (!felder[0].value || !felder[1].value || stand() === vorher) { return; }
+      if (!EdFormat.datumLesen(felder[0].value) || !EdFormat.datumLesen(felder[1].value)
+          || stand() === vorher) { return; }
       vorher = stand();
       if (typeof form.requestSubmit === 'function') { form.requestSubmit(); }
       else { form.submit(); }

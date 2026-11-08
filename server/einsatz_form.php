@@ -1253,7 +1253,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
         </div>
         <div class="fld-reihe">
           <label>Geburtsdatum<?= $SCHLOSS ?>
-            <input type="date" id="pat_dob" max="<?= e(heute_lokal()) ?>"></label>
+            <?= ui_datum_eingabe(['id' => 'pat_dob', 'max' => heute_lokal()]) ?></label>
           <label>Alter<?= $SCHLOSS ?>
             <input type="number" id="pat_age" min="0" max="120" step="1">
             <span class="feld-klein-inline" id="agehint"></span></label>
@@ -2114,7 +2114,7 @@ async function patLaden(){
     if (o.mission_no != null) document.getElementById('pat_mission_no').value = o.mission_no;
     if (o.last != null) document.getElementById('pat_last').value = o.last;
     if (o.first != null) document.getElementById('pat_first').value = o.first;
-    if (o.dob != null) document.getElementById('pat_dob').value = o.dob;
+    if (o.dob != null) document.getElementById('pat_dob').value = EdFormat.tag(o.dob, o.dob);
     if (o.dx != null) document.getElementById('pat_dx').value = o.dx;
     if (o.site_desc != null) document.getElementById('pat_site_desc').value = o.site_desc;
     if (o.age != null) document.getElementById('pat_age').value = o.age;
@@ -2157,7 +2157,11 @@ document.getElementById('unlockbtn').addEventListener('click', () => patLaden())
 // Geburtsdatum gesetzt ist. Ohne Geburtsdatum (unbekannte Person) bleibt es
 // von Hand eintragbar.
 function zeigeAlter(){
-  const dob = document.getElementById('pat_dob').value.trim();
+  /* Das Feld zeigt TT.MM.JJJJ (Konzept OF, E-OF-44); gerechnet wird mit ISO.
+     Die Umrechnung steht hier im Browser, weil das Geburtsdatum
+     verschluesselt wird und den Server nie im Klartext erreicht. */
+  const dob = EdFormat.datumLesen(document.getElementById('pat_dob').value)
+           || document.getElementById('pat_dob').value.trim();
   const feld = document.getElementById('pat_age');
   const hint = document.getElementById('agehint');
   const berechnet = EdPat.alterAm(dob, MISSION_DAY);
@@ -2170,22 +2174,23 @@ function zeigeAlter(){
     hint.textContent = dob !== '' ? 'Geburtsdatum unvollständig' : '';
   }
 }
-// Zweistellige Jahreszahlen (z. B. "23.04.33"): Der native Date-Picker
-// liefert dafuer teils "0033-04-23" statt "1933-04-23". Korrektur per
-// gleitender Fensterregel: zunaechst 2000+JJ; laege das Datum damit in der
-// Zukunft, stattdessen 1900+JJ. Greift vor der Altersberechnung; die
-// bestehende max-Grenze (heute) des Feldes bleibt unangetastet.
+// Zweistellige Jahreszahlen (z. B. "23.04.33"): gleitende Fensterregel —
+// zunaechst 2000+JJ; laege das Datum damit in der Zukunft, stattdessen
+// 1900+JJ. Bis Web 24.3 korrigierte das hier, was der native Kalender aus
+// "33" machte ("0033-04-23"); seit dem Datumsfeld TT.MM.JJJJ (Konzept OF,
+// E-OF-44) greift sie auf die deutsche Form und erst beim VERLASSEN des
+// Feldes (`change`) — beim Tippen von "19…" fuhre sie sonst dazwischen.
 function korrigiereZweistelligesJahr(){
   const feld = document.getElementById('pat_dob');
-  const m = feld.value.match(/^(\d{1,4})-(\d{2})-(\d{2})$/);
-  if (!m || parseInt(m[1], 10) >= 100) return;
-  const jj = parseInt(m[1], 10);
+  const m = feld.value.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{2})$/);
+  if (!m) return;
+  const jj = parseInt(m[3], 10);
+  const tt = m[1].padStart(2, '0'), mm = m[2].padStart(2, '0');
   let jahr = 2000 + jj;
-  const kandidat = `${String(jahr).padStart(4, '0')}-${m[2]}-${m[3]}`;
-  if (new Date(kandidat + 'T00:00:00') > new Date()) { jahr = 1900 + jj; }
-  feld.value = `${String(jahr).padStart(4, '0')}-${m[2]}-${m[3]}`;
+  if (new Date(`${jahr}-${mm}-${tt}T00:00:00`) > new Date()) { jahr = 1900 + jj; }
+  feld.value = `${tt}.${mm}.${jahr}`;
 }
-document.getElementById('pat_dob').addEventListener('input', () => { korrigiereZweistelligesJahr(); zeigeAlter(); });
+document.getElementById('pat_dob').addEventListener('input', zeigeAlter);
 document.getElementById('pat_dob').addEventListener('change', () => { korrigiereZweistelligesJahr(); zeigeAlter(); });
 zeigeAlter();
 
@@ -2222,7 +2227,14 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
   const missionNo = document.getElementById('pat_mission_no').value.trim();
   const last  = document.getElementById('pat_last').value.trim();
   const first = document.getElementById('pat_first').value.trim();
-  const dob   = document.getElementById('pat_dob').value.trim();
+  /* TT.MM.JJJJ im Feld, ISO im Blob (E-OF-44); ein Wert, der kein Tag ist,
+     haelt das Datumsfeld schon an (`setCustomValidity`, datumsfeld.js). */
+  const dobFeld = document.getElementById('pat_dob').value.trim();
+  const dob   = dobFeld === '' ? '' : EdFormat.datumLesen(dobFeld);
+  if (dobFeld !== '' && dob === '') {
+    document.getElementById('pat_dob').reportValidity();
+    return;
+  }
   const dx    = document.getElementById('pat_dx').value.trim();
   const siteDesc = document.getElementById('pat_site_desc').value.trim();
   const age   = document.getElementById('pat_age').value.trim();

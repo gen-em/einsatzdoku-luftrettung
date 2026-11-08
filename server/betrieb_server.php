@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
     } else {
         $ankForm = ['text' => post_text('ank_text'),
                     'ton'  => post_text('ank_ton', 'info'),
-                    'tag'  => trim(post_text('ank_bis')),
+                    'tag'  => post_datum('ank_bis'),
                     'zeit' => trim(post_text('ank_bis_zeit'))];
         require_once __DIR__ . '/validate_lib.php';
         $bisUtc = pruef_ortszeit_zu_utc($ankForm['tag'], $ankForm['zeit'], 0, 'Sichtbar bis');

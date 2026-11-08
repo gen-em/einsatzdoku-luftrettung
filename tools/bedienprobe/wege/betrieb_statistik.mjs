@@ -17,6 +17,8 @@
 
 const VON = '2026-03-01';
 const BIS = '2026-05-31';
+const VON_DE = '01.03.2026';
+const BIS_DE = '31.05.2026';
 
 export const wege = [
   {
@@ -35,15 +37,18 @@ export const wege = [
 
       /* Von füllen und nach Bis wechseln: kein Abschicken. */
       const vorher = s.url();
-      await s.locator('#f-zeitraum-von').fill(VON);
+      /* Getippt wie von Hand: TT.MM.JJJJ (seit Web 24.4, Konzept OF, E-OF-54);
+       * die Adresse traegt nach dem Abschicken die deutsche Form, der Reiter
+       * danach wieder ISO (statistik_lib.php baut ihn). */
+      await s.locator('#f-zeitraum-von').fill(VON_DE);
       await s.locator('#f-zeitraum-bis').focus();
       await s.waitForTimeout(400);
       if (s.url() !== vorher) { fehlt.push('der Wechsel von „Von" nach „Bis" hat abgeschickt'); }
 
       /* Bis füllen und das Paar verlassen: abschicken. */
-      await s.locator('#f-zeitraum-bis').fill(BIS);
+      await s.locator('#f-zeitraum-bis').fill(BIS_DE);
       await Promise.all([
-        s.waitForURL(/von=2026-03-01/, { timeout: 15000 }).catch(() => {}),
+        s.waitForURL(/von=(2026-03-01|01\.03\.2026)/, { timeout: 15000 }).catch(() => {}),
         s.locator('#inhalt .reiter-punkt').first().focus(),
       ]);
       const eigen = await s.evaluate(() => ({
@@ -65,7 +70,7 @@ export const wege = [
         kennzahl: [...document.querySelectorAll('.kennzahl')].map((t) => t.textContent.replace(/\s+/g, ' ').trim()).pop(),
       }));
       teile.push(`eigen: ${eigen.url}, Spalten ${eigen.spalten.join(' / ')}, Pille „${eigen.pille}"`);
-      if (!/von=2026-03-01/.test(eigen.url) || !/bis=2026-05-31/.test(eigen.url)) {
+      if (!/von=(2026-03-01|01\.03\.2026)/.test(eigen.url) || !/bis=(2026-05-31|31\.05\.2026)/.test(eigen.url)) {
         fehlt.push('das Verlassen des Paars hat nicht abgeschickt');
       }
       if (!eigen.titel.includes('Einsätze im Zeitraum')) { fehlt.push('Karte „Einsätze im Zeitraum" fehlt'); }
