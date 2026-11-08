@@ -34,10 +34,11 @@ async function offeneListen(seite) {
 /** Das Transportziel sichtbar machen: `show_if` haengt an der Transportart. */
 async function transportzielAuf(seite) {
   await seite.evaluate(() => {
-    const s = document.querySelector('select[name="f_transport_mode"]');
-    if (s && s.value === 'ambulant') {
-      s.value = 'air';
-      s.dispatchEvent(new Event('change', { bubbles: true }));
+    /* Seit Web 24.8.0 eine Segmentwahl (Radiofelder) statt einer Liste
+       (Konzept OF, E-OF-33); `click()` loest `change` aus wie die Hand. */
+    const amb = document.querySelector('input[name="f_transport_mode"][value="ambulant"]');
+    if (amb && amb.checked) {
+      document.querySelector('input[name="f_transport_mode"][value="air"]').click();
     }
   });
   await seite.waitForTimeout(150);

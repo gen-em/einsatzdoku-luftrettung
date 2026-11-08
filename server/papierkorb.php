@@ -122,9 +122,12 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
     <?php ui_titelzeile(['titel' => 'Papierkorb']); ?>
     <?php ui_meldung(null, $fehler, 'info', '    '); ?>
 
-    <p class="seiten-erklaerung">Gelöschtes bleibt <?= TRASH_DAYS ?> Tage hier und
-       wird danach automatisch endgültig entfernt. Wiederherstellen ist jederzeit
-       möglich; endgültig löschen ist es nicht.</p>
+    <?php /* EIN SATZ (Design.md 6, OF-07; bis Web 24 zwei). Dass
+             „Endgültig löschen" nicht umkehrbar ist, sagt die Rueckfrage
+             dahinter als Meldung — dort, wo es entschieden wird. */ ?>
+    <p class="seiten-erklaerung">Gelöschtes bleibt <?= TRASH_DAYS ?> Tage hier
+       und lässt sich bis dahin wiederherstellen; danach wird es automatisch
+       endgültig entfernt.</p>
 
     <?php if (!$trashDays && !$trashMissions): ?>
       <?= ui_meldung_markup('info', 'Der Papierkorb ist leer.') ?>
@@ -156,15 +159,22 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
             <input type="hidden" name="action" value="restore_day">
             <input type="hidden" name="d" value="<?= $tid ?>">
           </form>
+          <?php /* DAS ARTZEICHEN STEHT VORN, vor dem Datum — wie in der
+                   Leiste und in den Vorschlaegen (E-OF-48, OF-07). Bis Web 24
+                   stand es in `plaketten`, also rechts neben den Knoepfen, und
+                   las sich dort wie ein Teil der Handlung (F-OF-16). */ ?>
           <?php ui_zeile([
+              'vorn'  => ui_artzeichen($t['kind'] === null ? null : (string)$t['kind'], '',
+                                       $t['vehicle_typ'] === null ? null : (string)$t['vehicle_typ']),
               'text'  => dt_lesbar($t, true),
               'klein' => implode(' · ', $klein),
-              'plaketten' => ui_artzeichen($t['kind'] === null ? null : (string)$t['kind'], '',
-                                           $t['vehicle_typ'] === null ? null : (string)$t['vehicle_typ']),
               'aktionen' => ui_zeilenaktionen([
                   'titel' => dt_lesbar($t, true),
                   'eintraege' => [
-                      ['text' => 'Wiederherstellen', 'symbol' => 'zurueck',
+                      /* `wiederherstellen` (Tabler „restore", E-OF-30) statt
+                       * `zurueck`: Der Pfeil nach links heisst sonst „zur
+                       * vorigen Seite". */
+                      ['text' => 'Wiederherstellen', 'symbol' => 'wiederherstellen',
                        'form' => 'f-tag-' . $tid],
                       ['text' => 'Endgültig löschen', 'symbol' => 'korb', 'art' => 'gefahr',
                        'href' => 'papierkorb.php?action=purge_day&d=' . $tid],
@@ -197,7 +207,7 @@ ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
               'aktionen' => ui_zeilenaktionen([
                   'titel' => $bez,
                   'eintraege' => [
-                      ['text' => 'Wiederherstellen', 'symbol' => 'zurueck',
+                      ['text' => 'Wiederherstellen', 'symbol' => 'wiederherstellen',
                        'form' => 'f-eins-' . $mid],
                       ['text' => 'Endgültig löschen', 'symbol' => 'korb', 'art' => 'gefahr',
                        'href' => 'papierkorb.php?action=purge_mission&id=' . $mid],

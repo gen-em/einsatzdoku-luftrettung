@@ -1218,9 +1218,12 @@ aus; seit Web 9.0.0 sind es gezeichnete Symbole, die sich mitfärben.)
 Über allem steht die **Titelzeile** (seit Web 9.2.0): Wochentag und Datum
 als Überschrift, darunter Rettungsmittel, Standort und Dienstbeginn in
 einer Zeile. Rechts daneben öffnet der Knopf **„···"** das Aktionsblatt des
-Tages mit **„Einsatz nachtragen"**, **„Diensttag-Daten bearbeiten"**,
+Tages mit **„Einsatz nachtragen"**, **„Einsatz aus GPS-Daten
+ausschneiden"** (Abschnitt 4.1b, nur an Tagen mit Ruhesegment),
+**„Diensttag-Daten bearbeiten"**,
 **„Datum ändern"** (Abschnitt 4.2a), **„Anderen Diensttag aufnehmen"**
-(Abschnitt 4.5a), **„GPS-Daten als GPX"** (Abschnitt 4.1a) und **„Tag löschen"**
+(Abschnitt 4.5a), **„GPS-Daten als GPX"** (Abschnitt 4.1a), **„GPX
+importieren"** (Abschnitt 4.1c) und **„Tag löschen"**
 (Abschnitt 8). Auf dem Handy fährt
 das Blatt von unten herein, am Desktop steht es als Menü am Knopf; Escape
 schließt es, die Tastatur bedient es vollständig. Rechts neben dem Menü
@@ -1388,8 +1391,10 @@ Pro Tag:
 Erreichbar über **„···" → „GPS-Daten als GPX"**. Die Seite zeigt oben die Karte
 des Tages und darunter **jede Aufzeichnung als eigene Zeile**, in der
 Reihenfolge, in der der Tag verlaufen ist: Ruhezeit, Einsatz, Ruhezeit,
-Einsatz. Einsätze tragen ihre Nummer. Je Zeile stehen Zeitraum, Punktzahl und,
-wo zutreffend, die Plakette **„ausgedünnt"**.
+Einsatz. Einsätze tragen ihre Nummer. Je Zeile stehen Zeitraum und
+Punktzahl. Ob eine Aufzeichnung schon ausgedünnt ist, zeigt die Seite seit
+Web 24.8.0 nicht mehr an; die GPX-Datei trägt es weiter in sich (Dateiname
+und Kennzeichnung je Track, siehe unten).
 
 Wer auf eine Zeile zeigt, sieht auf der Karte, welche Linie gemeint ist; ein
 Klick zoomt auf sie. **GPX** lädt genau diese Aufzeichnung herunter.
@@ -1435,8 +1440,13 @@ auf der Uhr einen Knopf gedrückt. Er fehlt also in der Liste — aber der
 Ruhezeit gebucht. Wer den Einsatz einfach nachträgt, bekommt einen Einsatz
 ohne GPS-Daten, und die Fahrt bleibt als Ruhezeit stehen.
 
-Unter der Einsatzliste steht deshalb die Karte **„Ruhesegmente"**: jede
-Aufzeichnung zwischen den Einsätzen mit Zeitraum, Dauer und Punktzahl.
+Dafür gibt es im Aktionsmenü des Diensttags (**„···"**) den Eintrag
+**„Einsatz aus GPS-Daten ausschneiden"**, direkt unter „Einsatz nachtragen".
+Er steht nur an Tagen, die Aufzeichnung zwischen den Einsätzen haben, und
+öffnet unter der Einsatzliste die Karte **„Ruhesegmente"**: jede solche
+Aufzeichnung mit Zeitraum, Dauer und Punktzahl. Hat der Tag genau ein
+Segment, ist dessen Schneide-Bereich gleich aufgeklappt. *(Bis Web 24.8.0
+stand die Karte an jedem Tag mit Ruhesegment fest unter der Einsatzliste.)*
 
 **So geht es:**
 
@@ -1511,8 +1521,9 @@ GPS-Daten willst du nicht behalten, den echten Dienst daneben aber schon.
 Dafür steht im selben aufgeklappten Bereich neben „Einsatz erzeugen" der rote
 Knopf **„Zeitraum löschen"**:
 
-1. **„Schneiden"** an der Zeile des Segments, Beginn und Ende des Zeitraums
-   eintragen — wie beim Schneiden.
+1. **„Einsatz aus GPS-Daten ausschneiden"**, dann **„Schneiden"** an der
+   Zeile des Segments, Beginn und Ende des Zeitraums eintragen — wie beim
+   Schneiden.
 2. **„Zeitraum löschen"**. Die Anwendung fragt nach und nennt, wie viele
    Punkte zwischen welchen Uhrzeiten wegfallen.
 3. Nach **„Löschen"** sind diese Punkte **endgültig** fort; es gibt kein
@@ -1584,6 +1595,8 @@ die Datei zu verwerfen; wie viele es waren, steht in der Rückmeldung.
 
 Nach dem Import steht das neue Segment beziehungsweise der Einsatz an seiner
 Stelle in der Tagesansicht, und die Rückmeldung nennt Punktzahl und Zeitraum.
+Beim Import als Ruhesegment öffnet sich dazu die Karte „Ruhesegmente", denn
+dort steht die Rückmeldung, und dort schneidest du die Einsätze heraus.
 Der Diensttag verlängert sich, wenn die Aufzeichnung über seinen bisherigen Zeitraum
 hinausreicht.
 
@@ -1642,10 +1655,12 @@ weiter, und das sendet. Der Unterschied sagt, **wo du getippt hast**, nicht
 welches Gerät hochgeladen hat.
 
 Trägt der Einsatz GPS-Daten, steht dort außerdem die Plakette
-**„GPS-Daten"** — und ob die Aufzeichnung noch vollständig ist oder bereits
-**ausgedünnt** (das geschieht sechs Monate nach dem Einsatz, siehe
-Abschnitt 9). Dann heißt die Plakette **„GPS-Daten ausgedünnt"** und ist
-orange.
+**„GPS-Daten"**. Ob die Aufzeichnung schon ausgedünnt ist (das geschieht
+sechs Monate nach dem Einsatz, siehe Abschnitt 9), sagt sie seit
+Web 24.8.0 nicht mehr: Die orange Plakette „GPS-Daten ausgedünnt" las sich
+wie eine Warnung, und es ist keine — die Aufzeichnung ist vollständig in
+der Form, die bleibt. Die GPX-Datei trägt die Angabe weiter (Abschnitt
+4.1a).
 
 **Seit Web 15.9.0 steht keine Zahl mehr darin.** Bis dahin hieß sie
 „Spur · 852 Punkte" bzw. „Spur ausgedünnt · 113 von 443 Punkten". Die Zahlen
@@ -1676,8 +1691,9 @@ ist danach nicht noch einmal nötig.
 **Einsatz** und **PatientIn** tragen im Kopf die blaue Plakette
 **„verschlüsselt"**, und die einzelnen geschützten Zeilen — Einsatzort,
 Beschreibung, manueller Abfahrtort, Diagnose, Name, Geburtsdatum, Alter und
-die Notizen des Einsatzes — tragen daneben ein kleines
-**Schloss**. Die Plakette sagt „hier stehen verschlüsselte Angaben", das
+die Notizen des Einsatzes — tragen vor ihrer Beschriftung ein kleines
+**Schloss** (seit Web 24.8.0 in einer eigenen schmalen Spalte, damit die
+Werte in einer Flucht beginnen; bis dahin stand es hinter dem Wort). Die Plakette sagt „hier stehen verschlüsselte Angaben", das
 Schloss sagt „diese hier". Auch die **Einsatznummer** trägt es (seit
 Web 19.1.1) — sie ist seit langem verschlüsselt, war aber die einzige Zeile
 des Blocks ohne das Zeichen. Der **manuelle Abfahrtort** steht seit
@@ -1689,13 +1705,15 @@ Die Angaben selbst stehen in **vier Karten**:
 - **Einsatz**: Einsatzort (darunter klein Höhe — sofern luftgebunden und aus
   dem Track ermittelbar —, Luftlinie und Strecke), Beschreibung des
   Einsatzorts, Abfahrtort (nur bei „Manueller Ort", Abschnitt 4.3),
-  Diagnose, Notizen, weitere Rettungsmittel. Am Fuß der Karte
-  stehen **Plaketten**: Winde (mit Cycles), Bergwacht (mit Bereitschaft),
-  Sekundär, Fehleinsatz — nur was zutrifft.
+  Diagnose, Notizen, weitere Rettungsmittel.
 - **PatientIn**: Einsatznummer, Name, Geburtsdatum mit Alter. Diese
   geschützten Angaben erscheinen **nur hier**, nicht in den Übersichten.
-- **Transport**: Transportart (mit NA-Begleitung in derselben Zeile), Ziel,
-  Schockraum.
+- **Einsatz und Transport**: Transportart (mit NA-Begleitung in derselben
+  Zeile), Ziel, Schockraum, „Namen / Infos" der Bergwacht; am Fuß der Karte
+  stehen **Plaketten**: Winde (mit Cycles), Bergwacht (mit Bereitschaft),
+  Sekundär, Fehleinsatz — nur was zutrifft. *(Bis Web 24.8.0 hieß die Karte
+  „Transport", und die Plaketten standen in der Karte „Einsatz" — im
+  Formular gehören ihre Schalter aber hierher.)*
 - **Besatzung**: die für **diesen Einsatz** gültige Besatzung — normalerweise
   die des Diensttags, bei einer abweichenden Besatzung (Abschnitt 4.3) die
   abweichende Person, klein gekennzeichnet mit „(abweichend vom Diensttag)".
@@ -1789,17 +1807,20 @@ in dieser Reihenfolge:
 1. **PatientIn** — Einsatznummer, Nachname, Vorname, Geburtsdatum, Alter,
    Diagnose, **Einsatzort**, Beschreibung des Einsatzorts, Abfahrtort
    (alles gemeinsam Ende-zu-Ende-verschlüsselt)
-2. **Einsatz** — Sekundärtransport, Fehleinsatz, Windeneinsatz und Bergwacht
-   als **Schalter**; die Detailfelder eines eingeschalteten Schalters
-   (Cycles, Bereitschaft …) erscheinen eingerückt hinter einer orangen Linie
-3. **Transport** — Transportart, NA-Begleitung, Transportziel, Schockraum
-4. **Weitere Rettungsmittel** — Rettungsmittel (RTW, NEF, RTH …), weitere
+2. **Einsatz und Transport** (seit Web 24.8.0 eine Karte, vorher zwei) —
+   oben Sekundärtransport und Fehleinsatz als **Schalter** nebeneinander,
+   darunter die **Transportart** als drei Tasten Luft · Boden · Ambulant,
+   dann Transportziel, NA-Begleitung und Schockraum; Windeneinsatz und
+   Bergwacht folgen als Schalter, die Detailfelder eines eingeschalteten
+   Schalters (Cycles, Bereitschaft …) erscheinen eingerückt hinter einer
+   Linie
+3. **Weitere Rettungsmittel** — Rettungsmittel (RTW, NEF, RTH …), weitere
    NotärztIn
-5. **Abweichende Besatzung** — zugeklappt mit der Vorschau „vom Diensttag";
+4. **Abweichende Besatzung** — zugeklappt mit der Vorschau „vom Diensttag";
    mit gespeicherter Abweichung offen
-6. **Notizen** — seit Web 19 **verschlüsselt** wie die Patientendaten
-7. **Einsatzphasen**
-8. **Reanimation** — zugeklappt („keine"), mit Bestand offen
+5. **Notizen** — seit Web 19 **verschlüsselt** wie die Patientendaten
+6. **Einsatzphasen**
+7. **Reanimation** — zugeklappt („keine"), mit Bestand offen
 
 Unter dem Titel steht ein Satz zu den beiden Zeichen an den Feldern, mit einem
 Verweis auf ihre Erklärung am Ende dieses Abschnitts (**Schloss und
@@ -1998,7 +2019,10 @@ Luftlinienlänge ein — eine Luftlinie und eine gefahrene Strecke sind nicht
 dieselbe Größe.
 
 **Transport.** Die **Transportart** (Luft, Boden, Ambulant) — bis Web 6.3.0
-schlicht „Transport" — steuert, was darunter erscheint: Bei Luft und Boden die **NA-Begleitung**, die **Zielklinik** samt
+schlicht „Transport" — wählst du seit Web 24.8.0 mit drei Tasten statt einer
+Auswahlliste; ein zweiter Klick auf die gewählte Taste nimmt die Wahl zurück
+(dann ist die Transportart offen, wie früher „–"). Sie steuert, was darunter
+erscheint: Bei Luft und Boden die **NA-Begleitung**, die **Zielklinik** samt
 Koordinaten und den **Schockraum**; bei „Ambulant" — die PatientIn wurde nicht
 transportiert — entfallen alle drei. Die Zielklinik ist seit Web 22.1.0
 verschlüsselt (Schloss): Sie steht erst nach dem Entsperren im Feld, ihr Pin
@@ -3398,8 +3422,11 @@ automatisch endgültig weg.
   und die Diensttag-Angaben. Beim Wiederherstellen kehrt alles gemeinsam zurück.
 - **Papierkorb:** eigene Seite, erreichbar über das Papierkorb-Symbol unten in
   der Diensttage-Leiste (gedämpft, solange nichts darin liegt) — je eine Karte
-  für gelöschte Diensttage und einzeln gelöschte Einsätze. Zu jedem Eintrag
-  stehen „Wiederherstellen" und „Endgültig löschen" bereit; auf schmalen
+  für gelöschte Diensttage und einzeln gelöschte Einsätze. Ein gelöschter
+  Diensttag trägt vor dem Datum das Zeichen seines Rettungsmittels, wie in
+  der Diensttage-Leiste. Zu jedem
+  Eintrag stehen „Wiederherstellen" (Zeichen: kreisender Pfeil) und
+  „Endgültig löschen" bereit; auf schmalen
   Geräten hinter dem **⋯** am rechten Rand der Zeile. Endgültiges Löschen führt
   auf eine Seite, die den Umfang beziffert, und ist unwiderruflich.
 

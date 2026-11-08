@@ -15,3 +15,5 @@ den keine Fundstelle mehr braucht, ist selbst ein Befund.
 |---|---|
 | `leaflet-interactive` | Vergibt Leaflet an jedes klickbare Kartenelement (`server/assets/vendor/leaflet/`); `zeitraum.php` lässt einen Klick darauf die Fixierung einer Kachel nicht lösen. |
 | `leaflet-marker-icon` | Vergibt Leaflet an das Bild jeder Stecknadel (`server/assets/vendor/leaflet/`); dieselbe Stelle in `zeitraum.php`. |
+| `leaflet-control-layers-list` | Vergibt Leaflet an die Liste der Ebenenwahl (`server/assets/vendor/leaflet/`); `map_layers.js` setzt davor die Überschrift „Kartenart“ (Konzept OF, E-OF-29). |
+| `leaflet-control-layers-toggle` | Vergibt Leaflet an den Knopf der Ebenenwahl (`server/assets/vendor/leaflet/`); `map_layers.js` legt das App-Zeichen `karte` hinein (Konzept OF, E-OF-29). |

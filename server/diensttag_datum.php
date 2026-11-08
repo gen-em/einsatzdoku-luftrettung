@@ -60,10 +60,10 @@ ui_seite_start(['titel' => 'Datum des Diensttags ändern']);
   ]); ?>
   <?php ui_meldung(null, $fehler, 'info', '  '); ?>
 
-  <p class="seiten-erklaerung">Diese Handlung ist für den Fall gedacht, dass
-     <strong>die Uhr falsch gestellt war</strong>. Dann sind Datum und Uhrzeit
-     gemeinsam falsch — deshalb <strong>wandern alle Zeitstempel mit</strong>,
-     um dieselbe Zahl von Tagen. Die abgelesenen Uhrzeiten bleiben stehen.</p>
+  <?php /* EIN SATZ (Design.md 6, OF-07; bis Web 24 drei). */ ?>
+  <p class="seiten-erklaerung">Für eine <strong>falsch gestellte Uhr</strong>:
+     Alle Zeitstempel <strong>wandern um dieselbe Zahl von Tagen mit</strong>,
+     die abgelesenen Uhrzeiten bleiben stehen.</p>
 
   <?php ui_karte_start(['titel' => 'Diensttag ' . dt_lesbar($tag, true)]); ?>
 

@@ -4452,12 +4452,16 @@ einem Archiv. Bis Web 22.2.0 ging er zusätzlich durch eine HTTP-Kopfzeile.
 waren sie eine schwarze Linie, ohne Zeile, ohne Popup; `api/day.php` lieferte
 nicht einmal ihre Kennung. *(Seit Web 12.6.0 gilt das nur noch für die Karte
 selbst: Die Tagesansicht führt sie als eigene Karte „Ruhesegmente" — dort wird
-geschnitten, siehe 4.11.)* Ein Knopf je Ruhesegment hätte nirgendwo hingekonnt
+geschnitten, siehe 4.11. Seit Web 24.8.0 steht diese Karte nur auf Abruf da:
+Der Eintrag „Einsatz aus GPS-Daten ausschneiden" im Aktionsmenü, die Adresse
+`index.php?d=…#ruheliste` und eine Rückmeldung von Schnitt oder GPX-Import
+blenden sie ein, E-OF-05.)* Ein Knopf je Ruhesegment hätte nirgendwo hingekonnt
 — die Abnahme verlangt den Abruf aber „je Einsatz **und** je Ruhesegment".
 
 `tag_spuren.php` gibt beiden dieselbe Identität: die Karte des Tages, darunter
-jede Spur als eigene Zeile — nummeriert wie in der Tagesansicht, mit Stufe,
-Punktzahl und Abruf. Zeigen hebt die zugehörige Linie hervor, ein Klick zoomt
+jede Spur als eigene Zeile — nummeriert wie in der Tagesansicht, mit
+Punktzahl und Abruf (bis Web 24.8.0 auch mit der Plakette „ausgedünnt“,
+E-OF-12; die Stufe trägt die GPX-Datei). Zeigen hebt die zugehörige Linie hervor, ein Klick zoomt
 auf sie.
 
 **Die Liste steht chronologisch, nicht nach Art gruppiert.** Der erste Entwurf
@@ -6383,14 +6387,18 @@ nachgezogen werden.
 
 | Schlüssel | Wirkung |
 |---|---|
-| `gruppe` | Formulargruppe (`einsatz`, `transport`, `bergrettung`, `mittel`, `besatzung`, `notizen`). Nur an Feldern der obersten Ebene; Unterfelder folgen ihrem Elternfeld. Ohne Angabe landet das Feld in der Auffanggruppe „Weitere Angaben" — es verschwindet also nicht. |
-| `nebeneinander` | Unmittelbar aufeinanderfolgende Felder mit diesem Schlüssel teilen sich eine Zeile (`.fld-reihe`). Bewusst nur unmittelbare Nachbarn: Sonst hinge die Anordnung davon ab, was dazwischen steht. |
+| `gruppe` | Formulargruppe (`einsatz`, `bergrettung`, `mittel`, `besatzung`, `notizen`; bis Web 24.8.0 dazu `transport`, seither steht die Transportart in `einsatz` und die Karte heißt „Einsatz und Transport“, E-OF-33). Nur an Feldern der obersten Ebene; Unterfelder folgen ihrem Elternfeld. Ohne Angabe landet das Feld in der Auffanggruppe „Weitere Angaben" — es verschwindet also nicht. |
+| `nebeneinander` | Unmittelbar aufeinanderfolgende Felder mit diesem Schlüssel teilen sich eine Zeile (`.fld-reihe`). Bewusst nur unmittelbare Nachbarn: Sonst hinge die Anordnung davon ab, was dazwischen steht. Seit Web 24.8.0 auch für Schalter und Unterfelder (bis dahin war der Schlüssel an Schaltern ohne Wirkung); ein Schalter mit Kindern gehört nicht in eine Reihe. |
+| `darstellung` | `'segment'` an einem `select` mit festen `options`: abwählbare Segmentwahl statt Auswahlliste (Design.md 9.7, seit Web 24.8.0). Abgewählt sendet sie den leeren Wert wie früher „–“; Name, Werte und Spalte bleiben gleich. Nicht für `options_src`. |
+| `einzug` | `false` an einem Feld mit `children`: Die Unterfelder stehen ohne Einzug und Randstrich darunter (kein `.childfields`, seit Web 24.8.0). `show_if` wirkt unverändert. |
 | `vorbelegt_bei` | Checkbox setzt sich, sobald ein anderes Feld einen genannten Wert annimmt — **nur solange niemand sie von Hand angefasst hat** und **nur beim Nachtragen**. Wirkt ausschliesslich im Browser. |
 | `such_label` | Beschriftung des Suchfeldes eines Ortsfelds (`loc`). |
 
-Drei Helfer in `einsatz_form.php` werten das aus: `$gruppeFelder()` holt die
-Felder einer Gruppe, `$gruppeRendern()` gibt sie samt `.fld-reihe`-Klammerung
-aus, `$gruppeSichtbar()` beantwortet, ob eine Gruppe überhaupt etwas zu zeigen
+Vier Helfer in `einsatz_form.php` werten das aus: `$gruppeFelder()` holt die
+Felder einer Gruppe, `$felderRendern()` gibt eine Feldliste samt
+`.fld-reihe`-Klammerung aus — für die Gruppe wie für Unterfelder, seit
+Web 24.8.0 eine Stelle statt drei gleichlautender Schleifen —,
+`$gruppeRendern()` ruft es für eine Gruppe, `$gruppeSichtbar()` beantwortet, ob eine Gruppe überhaupt etwas zu zeigen
 hat. Letzteres fragt nach **sichtbaren** Feldern (Gates plus „belegt", siehe
 4.16): Die Gruppe „Bergrettung" besteht aus zwei Feldern, die beide an einer
 Fähigkeit hängen — an einem NEF-Dienst wäre sie ein Rahmen mit Überschrift und

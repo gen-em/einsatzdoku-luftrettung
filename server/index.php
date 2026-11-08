@@ -283,6 +283,18 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
           <?= ui_aktionen(['titel' => 'Diensttag', 'id' => 'dayblatt', 'eintraege' => [
             ['text' => 'Einsatz nachtragen', 'symbol' => 'plus', 'anlegen' => true,
              'href' => 'einsatz_form.php', 'attr' => 'id="addmission-menu"'],
+            /* DER WEG ZUM SCHNITT (E-OF-05, Konzept OF, OF-07). Bis Web 24
+             * stand die Segmentliste als eigene Karte „Ruhesegmente" immer
+             * unter der Einsatzliste — an jedem Tag, auch an dem, an dem
+             * nichts zu schneiden war. Jetzt ist sie ein Weg aus dem Menue:
+             * Der Eintrag blendet DIESELBE Karte ein (`#ruheliste`, gebaut von
+             * `assets/schneiden.js`) und rollt zu ihr; ist es genau ein
+             * Segment mit Punkten, klappt er dessen Schneide-Bereich gleich
+             * auf. Neben „Einsatz nachtragen", weil beide einen Einsatz
+             * anlegen. Verborgen, solange der Tag kein Segment hat —
+             * `loadDay()` entscheidet das, wie die Karte es vorher tat. */
+            ['text' => 'Einsatz aus GPS-Daten ausschneiden', 'symbol' => 'karte',
+             'href' => '#ruheliste', 'attr' => 'id="dayschneiden" hidden'],
             ['text' => 'Diensttag-Daten bearbeiten', 'symbol' => 'stift',
              'href' => '#tagdaten', 'attr' => 'data-tagdaten-bearbeiten'],
             ['text' => 'Datum ändern', 'symbol' => 'kalender',
@@ -293,20 +305,18 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
              * ueber eine eigene Seite und nicht ueber je einen Knopf an der
              * Linie: Ruhesegmente haben in der Tagesansicht keine Zeile und
              * kein Popup, ein Knopf haette dort nirgendwo hingekonnt. Das
-             * Symbol `karte` kommt aus dem vorhandenen Vorrat — fuer
-             * „herunterladen" gibt es keines, und ein neues Zeichen braucht
-             * dieselbe Freigabe wie ein neuer Baustein. */
-            ['text' => 'GPS-Daten als GPX', 'symbol' => 'karte',
+             * Zeichen ist seit OF-07 `herunterladen` (E-OF-11); bis dahin
+             * stand hier `karte`, weil es keines gab. */
+            ['text' => 'GPS-Daten als GPX', 'symbol' => 'herunterladen',
              'href' => 'tag_spuren.php?d=' . (int)$selDay, 'attr' => 'id="dayspurenlink"'],
             /* GPX HEREIN. Es steht neben „GPS-Daten als GPX" —
              * hinaus und herein sind dieselbe Sache in zwei Richtungen, und
              * wer den einen Weg sucht, sucht dort auch den anderen. Kein
              * Verweis, sondern ein Knopf: Der Import ist ein Dialog auf
              * dieser Seite (zwei Angaben, eine Handlung, Design.md 9.11) und
-             * kein Seitenwechsel. Symbol `karte` wie beim Abruf; fuer
-             * „hochladen" gibt es keines im Vorrat, und ein neues Zeichen
-             * braucht dieselbe Freigabe wie ein neuer Baustein. */
-            ['text' => 'GPX importieren', 'symbol' => 'karte',
+             * kein Seitenwechsel. Zeichen `hochladen`, das Gegenstueck zum
+             * Abruf (E-OF-11, seit OF-07; bis dahin `karte` wie dort). */
+            ['text' => 'GPX importieren', 'symbol' => 'hochladen',
              'href' => '#', 'attr' => 'id="daygpximport"'],
             ['text' => 'Tag löschen', 'symbol' => 'korb', 'gefahr' => true,
              'href' => 'diensttag_loeschen.php?d=' . (int)$selDay, 'attr' => 'id="daydellink"'],
@@ -414,9 +424,13 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
             <input type="text" name="adhoc_base_name" id="adhoc-base" maxlength="120"
                    autocomplete="off" placeholder="Auswahl oder freier Text">
             <input type="hidden" name="adhoc_base_id" id="adhoc-base-id" value=""></label>
-          <p class="feld-hinweis">Dieses Rettungsmittel wird nur an diesem Diensttag
-            gespeichert — es entsteht kein Stammdatensatz. Die Besatzung hat die
-            Rollen der gewählten Betriebsart.</p>
+          <?php /* EIN SATZ (Design.md 6, OF-07): Er traegt jetzt auch, was
+                   bis Web 24 der Hinweis unter den Besatzungsfeldern sagte —
+                   die Rollen folgen der Betriebsart. Beide zusammen waren am
+                   Ad-hoc-Tag drei Saetze in einer Karte. */ ?>
+          <p class="feld-hinweis">Gilt nur an diesem Diensttag, ohne
+            Stammdatensatz; die Besatzungsrollen folgen der gewählten
+            Betriebsart.</p>
         </div>
         <?php /* Die Besatzungsfelder entstehen im Browser aus dem EINGEFRORENEN
                  Rollensatz des Diensttags (`day_crew`), den api/day.php
@@ -535,19 +549,25 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
              die Spur eines vergessenen Einsatzes liegt — wer waehrend des
              Einsatzes keinen Knopf gedrueckt hat, findet sie hier und
              nirgends sonst.
-             Die Zeilen baut `renderRuheliste()`; die Karte bleibt leer, wenn
-             der Tag keine Segmente hat (kein Leerzustand mit eigener
-             Gestaltung — die Karte verschwindet dann ganz). */ ?>
+             Die Zeilen baut `assets/schneiden.js` (`zeichnen()`).
+
+             KEINE STAENDIGE KACHEL MEHR (E-OF-05, OF-07). Die Karte steht
+             nur noch auf Abruf da: Der Eintrag „Einsatz aus GPS-Daten
+             ausschneiden" im Aktionsmenue blendet sie ein (`schneidenAuf()`
+             unten), ebenso die Adresse `index.php?d=…#ruheliste` und eine
+             Rueckmeldung des Schnitts oder des GPX-Imports, die in ihr
+             steht. `schneiden.js` setzt `hidden` nach jedem Laden aus der
+             Zahl der Segmente; `loadDay()` nimmt das danach zurueck, solange
+             niemand den Weg gewaehlt hat. */ ?>
     <section class="karte" id="ruheliste" hidden>
       <div class="karte-kopf">
         <h2 class="karte-titel">Ruhesegmente</h2>
         <span class="karte-zahl" id="rzahl"></span>
       </div>
       <div class="karte-inhalt">
-        <p class="feld-hinweis">Aufzeichnung zwischen den Einsätzen. Wurde
-           während eines Einsatzes kein Knopf gedrückt, schneide ihn hier aus
-           dem Segment heraus — der übrige Zeitraum bleibt als Ruhesegment
-           stehen.</p>
+        <p class="feld-hinweis">Wurde während eines Einsatzes kein Knopf
+           gedrückt, schneide ihn hier aus der Aufzeichnung zwischen den
+           Einsätzen heraus.</p>
         <div id="ruhezeilen"></div>
       </div>
     </section>
@@ -720,6 +740,44 @@ map.on('zoomend', () => {
 
 let dayMissions = [];
 let dayRest = [];
+
+/* ---- DER SCHNEIDE-BEREICH AUF ABRUF (E-OF-05, OF-07) ------------------
+ *
+ * Die Karte „Ruhesegmente" steht nicht mehr an jedem Tag da. Offen ist sie
+ * fuer den Tag in `schneidenTag`; wechselt der Tag, ist sie wieder zu.
+ * `schneiden.js` bleibt unveraendert und setzt `hidden` nach jedem Laden
+ * aus der Zahl der Segmente — `schneidenNachLaden()` laeuft danach und hat
+ * das letzte Wort. WARUM NICHT IN schneiden.js: Die Datei baut Liste und
+ * Bereich, und beides ist gleich geblieben; neu ist nur, WANN die Karte
+ * sichtbar ist, und das entscheidet die Seite, die das Menue traegt. */
+let schneidenTag = null;
+let schneidenBeimLaden = location.hash === '#ruheliste';
+
+function schneidenNachLaden(){
+  if (schneidenTag !== currentDayId) { schneidenTag = null; }
+  const hat = dayRest.length > 0;
+  const eintrag = document.getElementById('dayschneiden');
+  if (eintrag) { eintrag.hidden = !hat; }
+  document.getElementById('ruheliste').hidden = !(hat && schneidenTag !== null);
+  if (schneidenBeimLaden) { schneidenBeimLaden = false; schneidenAuf(); }
+}
+
+/* Einblenden, bei genau einem schneidbaren Segment dessen Bereich
+   aufklappen, hinrollen. Der Klick auf den vorhandenen Knopf „Schneiden"
+   ist Absicht: Er ist der eine Weg in den Bereich (Fokus, aria-expanded,
+   „immer nur einer offen"), und hier entsteht kein zweiter. */
+function schneidenAuf(aufklappen = true){
+  const karte = document.getElementById('ruheliste');
+  if (!currentDayId || !dayRest.length) { return; }
+  schneidenTag = currentDayId;
+  karte.hidden = false;
+  const knoepfe = karte.querySelectorAll('.zeile-knoepfe [data-schnitt-auf]');
+  if (aufklappen && knoepfe.length === 1
+      && knoepfe[0].getAttribute('aria-expanded') !== 'true') {
+    knoepfe[0].click();
+  }
+  karte.scrollIntoView({ block: 'start' });
+}
 /* ---- DIE TAGESTABELLE ENTSTEHT AUS DEM GEMEINSAMEN ERZEUGER ----------
  *
  * Schritt 15 AP9b (Backlog Nr. 57, E-ZE-01/-08). Hier standen bis dahin
@@ -1002,6 +1060,7 @@ async function loadDay(dayId){
     }
   });
   EdSchnitt.setzen(dayRest, { tag: d.day, tz: d.zeitzone });
+  schneidenNachLaden();
 
   /* Welche Faehigkeiten dieser Tag auswerten laesst -- VOR
      renderMissionTable(), weil das Modul sie beim Zeichnen liest. */
@@ -1284,6 +1343,10 @@ function renderCrewFields(meta){
   const presets = (meta && meta.presets) ? meta.presets : {};
 
   if (!crew.length) {
+    /* AM AD-HOC-TAG SCHWEIGT DIESER HINWEIS (OF-07, ein Satz je Karte): Der
+       Satz unter den Ad-hoc-Feldern sagt schon, dass die Rollen der
+       Betriebsart folgen; hier stand derselbe Gedanke ein zweites Mal. */
+    if (meta && meta.adhoc) { hint.hidden = true; return; }
     hint.hidden = false;
     /* DER SATZ HAT EINMAL ZU VIEL VERSPROCHEN (Web 18.1.1). Er verwies auf
        die abweichende Besatzung am einzelnen Einsatz — dort greift aber
@@ -1292,15 +1355,12 @@ function renderCrewFields(meta){
        leer; seit 21.0.0 trägt der Tag die Rollen seiner Art, leer ist er nur
        ohne gewählte Art. Wer dem
        Satz folgte, fand die Felder nicht. Jetzt sagt er, was gilt. */
-    hint.textContent = (meta && meta.adhoc)
-      ? 'Die Besatzungsrollen folgen der Betriebsart — bitte oben luft- oder '
-        + 'bodengebunden wählen.'
-      : (meta && meta.vehicle_id)
+    hint.textContent = (meta && meta.vehicle_id)
       ? 'Für dieses Rettungsmittel sind keine Besatzungsrollen angehakt — '
         + 'nachzutragen unter Einstellungen → Rettungsmittel.'
-      : 'Noch kein Rettungsmittel zugeordnet: Dieser Diensttag ist neutral und '
-        + 'zeigt keine Besatzungsrollen. Zeiten, Phasen, Track und Reanimation '
-        + 'werden trotzdem vollständig erfasst.';
+      : 'Ohne Rettungsmittel ist der Diensttag neutral und zeigt keine '
+        + 'Besatzungsrollen; Zeiten, Phasen, GPS-Daten und Reanimation werden '
+        + 'trotzdem vollständig erfasst.';
     return;
   }
   hint.hidden = true;
@@ -1654,6 +1714,31 @@ async function init(){
        `textContent` sieht beide — „DonnerstagDo, 16.07.2026". */
     EdSchnitt.gpxStarten(currentDayId, EdFormat.tag(currentDay));
   });
+  /* Ein Sprung auf `#ruheliste` innerhalb der Seite laedt nicht neu — er
+     oeffnet die Karte wie beim Laden (dieselbe Lehre wie die Wahlkarten,
+     E-OF-70 (5)). */
+  window.addEventListener('hashchange', () => {
+    if (location.hash === '#ruheliste') { schneidenAuf(); }
+  });
+  /* „Einsatz aus GPS-Daten ausschneiden": Blatt schliessen, Karte auf. */
+  document.getElementById('dayschneiden')?.addEventListener('click', ev => {
+    ev.preventDefault();
+    if (window.edBlatt) { edBlatt.zu(); }
+    schneidenAuf();
+  });
+  /* EINE RUECKMELDUNG OEFFNET DIE KARTE. `schneiden.js` schreibt Erfolg und
+     Grund eines Schnitts, einer Ruecknahme und des GPX-Imports als Meldung
+     IN die Karte (`melde()`, Anker `data-schnittmeldung`). Nach dem Import
+     ist sie noch zu — ohne das hier stuende „Einsätze schneidest du jetzt
+     heraus." in einer verborgenen Karte, und der Import saehe stumm aus.
+     Ohne Aufklappen: Die Meldung soll gelesen werden, nicht ein Zeitfeld
+     den Fokus nehmen. */
+  new MutationObserver(liste => {
+    const neu = liste.some(m => [...m.addedNodes].some(n =>
+      n.nodeType === 1 && n.hasAttribute('data-schnittmeldung')));
+    const karte = document.getElementById('ruheliste');
+    if (neu && karte.hidden) { schneidenAuf(false); }
+  }).observe(document.querySelector('#ruheliste .karte-inhalt'), { childList: true });
   document.querySelector('#dayblatt [data-tagdaten-bearbeiten]')
     ?.addEventListener('click', ev => {
       ev.preventDefault();

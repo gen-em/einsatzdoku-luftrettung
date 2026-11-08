@@ -914,7 +914,56 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               : '';
       };
 
-      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, $showIfAuf, $showIfZu, &$LOC_FELDER, &$SUGGEST_FELDER, $labelSichtbar, $feldKennzeichen): void {
+      /* ---- Eine Folge von Feldern ausgeben ---------------------------
+       *
+       * EINE STELLE FUER GRUPPE UND UNTERFELDER (OF-07, E-OF-33). Bis dahin
+       * fasste nur die Gruppe 'nebeneinander' zu einer Zeile zusammen, und die
+       * Unterfelder liefen in drei gleichlautenden Schleifen (Auswahl,
+       * Ortsfeld, Text) ohne diese Faehigkeit. Die Transportfelder brauchen
+       * sie aber gerade dort: NA-Begleitung und Schockraum stehen als Kinder
+       * der Transportart nebeneinander.
+       *
+       * 'nebeneinander' fasst unmittelbar aufeinanderfolgende Felder mit
+       * diesem Schluessel in EINE Zeile (`.fld-reihe`). Es sind bewusst nur
+       * unmittelbare Nachbarn: Sonst haenge die Anordnung davon ab, was
+       * dazwischen steht — und das ist beim Lesen des Katalogs nicht zu sehen.
+       *
+       * SCHALTER DUERFEN SEIT E-OF-33 IN DIE REIHE. Bis dahin standen sie
+       * immer untereinander („ein Griff neben einem Griff in halber Breite
+       * waere zum Tippen zu eng"); die Betreiberin hat die Zweierreihe mit
+       * Mockup freigegeben (OF-P32), und die Trefferflaeche bleibt die ganze
+       * Beschriftung der halben Zeile.
+       *
+       * Mit $elternCol bekommt jedes Feld seinen 'show_if'-Rahmen; ohne ihn
+       * (Gruppe, Kinder eines Hakens) nicht — dort haengt nichts an einem
+       * Wert. */
+      $felderRendern = function (array $felder, int $depth = 0, ?string $elternCol = null, $elternWert = null) use (&$renderField, $showIfAuf, $showIfZu): void {
+          $offen = false;                 // laeuft gerade eine `.fld-reihe`?
+          foreach ($felder as $col => $f) {
+              $reihe = !empty($f['nebeneinander']);
+              if ($reihe && !$offen) { echo '<div class="fld-reihe">'; $offen = true; }
+              if (!$reihe && $offen)  { echo '</div>'; $offen = false; }
+              if ($elternCol !== null) { $showIfAuf($elternCol, $f, $elternWert); }
+              $renderField((string)$col, $f, $depth);
+              if ($elternCol !== null) { $showIfZu($f); }
+          }
+          if ($offen) { echo '</div>'; }
+      };
+      /* Unterfelder eines Auswahl-, Orts- oder Textfeldes: eingerueckt unter
+       * einem Randstrich (`.childfields`), oder — mit 'einzug' => false im
+       * Katalog — ohne beides, als Teil der Karte. */
+      $kinderRendern = function (string $col, array $f, int $depth, $val) use (&$felderRendern): void {
+          if (empty($f['children'])) { return; }
+          if (($f['einzug'] ?? true) === false) {
+              $felderRendern($f['children'], $depth, $col, $val);
+              return;
+          }
+          echo '<div class="childfields">';
+          $felderRendern($f['children'], $depth + 1, $col, $val);
+          echo '</div>';
+      };
+
+      $renderField = function (string $col, array $f, int $depth = 0) use (&$felderRendern, $kinderRendern, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, &$LOC_FELDER, &$SUGGEST_FELDER, $labelSichtbar, $feldKennzeichen): void {
           $type = $f['type'] ?? 'text';
           $val = fieldValue($col);
           /* FILTER: verstecken, aber immer rendern (siehe mission_fields.php).
@@ -990,7 +1039,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
             </div>
             <?php if (!empty($f['children'])): ?>
               <div class="childfields" id="ch_<?= e($col) ?>" <?= $on ? '' : 'hidden' ?>>
-                <?php foreach ($f['children'] as $cc => $cf) { $renderField($cc, $cf, $depth + 1); } ?>
+                <?php $felderRendern($f['children'], $depth + 1); ?>
               </div>
             <?php endif; ?>
           <?php return; }
@@ -1002,6 +1051,27 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               // fuer options_src-Listen — feste 'options' bleiben streng.
               if (isset($f['options_src']) && $val !== '' && !array_key_exists($val, $opts)) {
                   $opts = [$val => $val] + $opts;
+              }
+              /* ---- SEGMENTWAHL ('darstellung' => 'segment', E-OF-33) ----
+               * Derselbe Feldname, dieselben Werte: Die Radios heissen
+               * `f_<spalte>` wie das Dropdown, und „keine Wahl" sendet wie
+               * dessen „–" den leeren Wert (verborgenes Radio `.segment-leer`
+               * aus ui_segment()). Die Speicherlogik oben merkt keinen
+               * Unterschied. Nur mit festen 'options' — eine Stammdatenliste
+               * ist fuer eine Zeile Tasten zu lang.
+               *
+               * DIE BESCHRIFTUNG IST KEIN <label>: Sie gehoert zu einer Gruppe
+               * von drei Radios, nicht zu einem Feld. `.feld-label` gibt ihr
+               * die Gestalt, `aria-label` an der Gruppe den Namen. */
+              if (($f['darstellung'] ?? '') === 'segment' && !isset($f['options_src'])) { ?>
+            <div class="feldblock<?= $depth ? ' fld-sub' : '' ?>"<?= $hideAttr ?>>
+              <span class="feld-label"><?= $labelSichtbar($f['label']) . $feldKennzeichen($f) ?></span>
+              <?php ui_segment(['name' => 'f_' . $col, 'wert' => $val,
+                                'label' => (string)$f['label'],
+                                'optionen' => $opts, 'abwaehlbar' => true]); ?>
+            </div>
+            <?php $kinderRendern($col, $f, $depth, $val);
+                  return;
               } ?>
             <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= e($f['label']) ?>
               <select name="f_<?= e($col) ?>">
@@ -1013,15 +1083,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                 <?php endforeach; ?>
               </select>
             </label>
-            <?php if (!empty($f['children'])): ?>
-              <div class="childfields">
-                <?php foreach ($f['children'] as $cc => $cf) {
-                        $showIfAuf($col, $cf, $val);
-                        $renderField($cc, $cf, $depth + 1);
-                        $showIfZu($cf);
-                      } ?>
-              </div>
-            <?php endif; ?>
+            <?php $kinderRendern($col, $f, $depth, $val); ?>
           <?php return; }
           /* ---- ORTSFELD ------------------------------------------------
            * Bezeichnung, versteckte Koordinaten, Chip und Zustandszeile kommen
@@ -1068,15 +1130,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                    * bekommt — nicht diese Datei. */
                   'ortswahl'    => !empty($f['ortswahl']),
               ]);
-              if (!empty($f['children'])) { ?>
-                <div class="childfields">
-                  <?php foreach ($f['children'] as $cc => $cf) {
-                          $showIfAuf($col, $cf, $val);
-                          $renderField($cc, $cf, $depth + 1);
-                          $showIfZu($cf);
-                        } ?>
-                </div>
-              <?php }
+              $kinderRendern($col, $f, $depth, $val);
               return;
           }
           if ($type === 'textarea') {
@@ -1115,27 +1169,15 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                 <ul id="vl_<?= e($col) ?>" class="vorschlaege" hidden></ul>
               <?php endif; ?>
             </label>
-            <?php if (!empty($f['children'])): ?>
-              <div class="childfields">
-                <?php foreach ($f['children'] as $cc => $cf) {
-                        $showIfAuf($col, $cf, $val);
-                        $renderField($cc, $cf, $depth + 1);
-                        $showIfZu($cf);
-                      } ?>
-              </div>
-            <?php endif; ?>
+            <?php $kinderRendern($col, $f, $depth, $val); ?>
       <?php };
 
       /* ---- Gruppen ------------------------------------------
        *
        * Der Katalog sagt, WOHIN ein Feld gehoert ('gruppe'); diese beiden
        * Helfer holen die Felder einer Gruppe und geben sie aus. Die
-       * Reihenfolge innerhalb der Gruppe ist die des Katalogs.
-       *
-       * 'nebeneinander' fasst unmittelbar aufeinanderfolgende Felder mit
-       * diesem Schluessel in EINE Zeile (`.fld-reihe`). Es sind bewusst nur
-       * unmittelbare Nachbarn: Sonst haenge die Anordnung davon ab, was
-       * dazwischen steht — und das ist beim Lesen des Katalogs nicht zu sehen.
+       * Reihenfolge innerhalb der Gruppe ist die des Katalogs; die Zeilen
+       * ('nebeneinander') bildet $felderRendern() oben.
        */
       $gruppeFelder = static function (string $name) use ($FIELDS): array {
           $raus = [];
@@ -1163,19 +1205,8 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
           }
           return false;
       };
-      $gruppeRendern = function (string $name) use ($gruppeFelder, &$renderField): void {
-          $felder = $gruppeFelder($name);
-          $offen = false;                 // laeuft gerade eine `.fld-reihe`?
-          foreach ($felder as $col => $f) {
-              /* Schalter stehen IMMER untereinander: Ein Griff
-               * neben einem Griff in halber Breite waere zum Tippen zu eng —
-               * 'nebeneinander' gilt nur fuer Text- und Auswahlfelder. */
-              $reihe = !empty($f['nebeneinander']) && ($f['type'] ?? 'text') !== 'checkbox';
-              if ($reihe && !$offen) { echo '<div class="fld-reihe">'; $offen = true; }
-              if (!$reihe && $offen)  { echo '</div>'; $offen = false; }
-              $renderField($col, $f);
-          }
-          if ($offen) { echo '</div>'; }
+      $gruppeRendern = function (string $name) use ($gruppeFelder, $felderRendern): void {
+          $felderRendern($gruppeFelder($name));
       };
 
       /* Gewaehlte Regel des Abfahrtorts. Sie steht hier und nicht im Markup,
@@ -1362,23 +1393,22 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
       </div>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- Karte "Einsatz": die Schalter (Sekundaer, Fehleinsatz) und
-             die Bergrettung (Winde, Bergwacht) in EINER Karte.
-             Die Bergrettungsfelder haengen an Faehigkeiten des Diensttags —
-             fehlen sie und ist nichts belegt, stehen hier nur die zwei
-             Schalter. */ ?>
-    <?php ui_karte_start(['titel' => 'Einsatz', 'klasse' => 'form-block-einsatz']); ?>
+    <?php /* ---- Karte „Einsatz und Transport" (OF-07, E-OF-33) ------------
+             EINE Karte statt zwei: „Einsatz" mit zwei Schaltern und darunter
+             „Transport" mit einer Auswahlliste und eingerückten Unterfeldern
+             waren zwei Überschriften für eine Sache. Was in welcher Folge
+             steht und was wovon abhängt, sagt der Katalog (Gruppe 'einsatz':
+             die zwei Schalter nebeneinander, die Transportart als
+             Segmentwahl, darunter ohne Einzug Ziel und die zwei Transport-
+             Schalter; „Ambulant" blendet sie aus, und der Server LEERT sie
+             dann auch).
+
+             DIE BERGRETTUNG STEHT DARUNTER, wie bisher in derselben Karte wie
+             die zwei Schalter. Sie hängt an Fähigkeiten des Diensttags —
+             fehlen sie und ist nichts belegt, fällt sie weg. */ ?>
+    <?php ui_karte_start(['titel' => 'Einsatz und Transport', 'klasse' => 'form-block-einsatz']); ?>
       <?php $gruppeRendern('einsatz'); ?>
       <?php if ($gruppeSichtbar('bergrettung')) { $gruppeRendern('bergrettung'); } ?>
-    <?php ui_karte_ende(); ?>
-
-    <?php /* ---- GRUPPE 3: Transport -----------------------------------------
-             Transportart, NA-Begleitung, Transportziel samt Schockraum. Die
-             Abhängigkeiten stehen im Katalog ('show_if'): „Ambulant" blendet
-             NA-Begleitung und Transportziel aus, und der Server LEERT sie dann
-             auch. */ ?>
-    <?php ui_karte_start(['titel' => 'Transport', 'klasse' => 'form-block-transport']); ?>
-      <?php $gruppeRendern('transport'); ?>
     <?php ui_karte_ende(); ?>
     </div><?php /* .form-spalte (links) */ ?>
     <div class="form-spalte">
@@ -2038,13 +2068,33 @@ if (startSel && startBox) {
  * versteckt: Der Server LEERT ein ausgeblendetes Unterfeld beim Speichern.
  * Deshalb ist die Aenderung sichtbar, bevor sie wirkt — das Feld verschwindet
  * vor dem Absenden und nicht danach (A5). */
+/* WERT EINES KATALOGFELDS, AUCH ALS SEGMENTWAHL (OF-07, E-OF-33). Seit die
+ * Transportart drei Radios statt eines Dropdowns ist, traegt der Name
+ * `f_<spalte>` mehrere Elemente, und das erste davon ist das verborgene
+ * Radio ohne Wert — `querySelector(…).value` laese immer „". Gefragt wird
+ * deshalb das GEWAEHLTE Radio; ein Dropdown oder Textfeld liefert seinen
+ * Wert wie bisher. */
+function katalogQuellen(spalte) {
+  return [...document.querySelectorAll('[name="f_' + spalte + '"]')];
+}
+function katalogWert(quellen) {
+  const radios = quellen.filter(el => el.type === 'radio');
+  if (radios.length) {
+    const an = radios.find(el => el.checked);
+    return an ? an.value : '';
+  }
+  return quellen.length ? quellen[0].value : '';
+}
+
 document.querySelectorAll('.showif').forEach(box => {
-  const eltern = document.querySelector('[name="f_' + box.dataset.ifField + '"]');
-  if (!eltern) { return; }
+  const quellen = katalogQuellen(box.dataset.ifField);
+  if (!quellen.length) { return; }
   const aus = (box.dataset.ifNot || '').split('|').filter(Boolean);
-  const pruefe = () => { box.hidden = aus.includes(eltern.value); };
-  eltern.addEventListener('change', pruefe);
-  eltern.addEventListener('input', pruefe);
+  const pruefe = () => { box.hidden = aus.includes(katalogWert(quellen)); };
+  quellen.forEach(el => {
+    el.addEventListener('change', pruefe);
+    el.addEventListener('input', pruefe);
+  });
   pruefe();
 });
 
@@ -2353,19 +2403,22 @@ document.querySelectorAll('.parentcheck').forEach(cb => {
  * Ein gespeicherter Wert wird nie beim Öffnen überschrieben — es passiert nur
  * etwas, wenn jemand die Transportart gerade umstellt. */
 document.querySelectorAll('input[data-vor-feld]').forEach(cb => {
-  const quelle = document.querySelector('[name="f_' + cb.dataset.vorFeld + '"]');
-  if (!quelle) { return; }
+  /* Die Quelle kann eine Segmentwahl sein (katalogWert() oben): Jedes ihrer
+   * Radios meldet `change`, gefragt wird das gewählte. */
+  const quellen = katalogQuellen(cb.dataset.vorFeld);
+  if (!quellen.length) { return; }
   let vonHand = false;
   cb.addEventListener('change', () => { vonHand = true; });
-  quelle.addEventListener('change', () => {
+  const nachziehen = () => {
     if (vonHand) { return; }
-    if (quelle.value === cb.dataset.vorWert && !cb.checked) {
+    if (katalogWert(quellen) === cb.dataset.vorWert && !cb.checked) {
       cb.checked = true;
       // Unterfelder eines vorbelegten Hakens müssen mit aufgehen.
       cb.dispatchEvent(new Event('change', { bubbles: true }));
       vonHand = false;   // das eigene Ereignis zählt nicht als Handgriff
     }
-  });
+  };
+  quellen.forEach(el => el.addEventListener('change', nachziehen));
 });
 
 

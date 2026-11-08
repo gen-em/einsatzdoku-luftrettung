@@ -466,7 +466,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
-145 Token in 21 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+146 Token in 21 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Leitwerte**
 
@@ -476,7 +476,7 @@ auseinanderlaufen kann.
 | `--rauch` | `var(--genem-rauch)` | 1 |  |
 | `--sand` | `var(--genem-sand)` | 1 |  |
 | `--asphalt` | `var(--genem-asphalt)` | 1 |  |
-| `--dunkelblau` | `var(--genem-dunkelblau)` | 11 |  |
+| `--dunkelblau` | `var(--genem-dunkelblau)` | 14 |  |
 | `--orange` | `var(--genem-philipp-orange)` | 0 |  |
 | `--blau` | `var(--genem-max-blau)` | 4 |  |
 | `--rot` | `var(--genem-newroz-rot)` | 4 |  |
@@ -599,23 +599,23 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--groesse-2` | `13px` | 70 |  |
-| `--groesse-3` | `15px` | 16 |  |
+| `--groesse-2` | `13px` | 71 |  |
+| `--groesse-3` | `15px` | 17 |  |
 | `--groesse-4` | `16px` | 15 |  |
 | `--groesse-5` | `19px` | 13 |  |
 | `--groesse-6` | `24px` | 5 |  |
 | `--groesse-titel` | `28px` | 2 |  |
 | `--zeile-eng` | `1.3` | 5 | Titel, Kacheln |
-| `--zeile` | `1.55` | 3 | Oberfläche |
+| `--zeile` | `1.55` | 4 | Oberfläche |
 | `--zeile-lesen` | `1.6` | 4 | Fließtext in der Lesespalte |
 
 **Abstände**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 88 |  |
-| `--abstand-2` | `8px` | 130 |  |
-| `--abstand-3` | `12px` | 170 |  |
+| `--abstand-1` | `4px` | 89 |  |
+| `--abstand-2` | `8px` | 137 |  |
+| `--abstand-3` | `12px` | 171 |  |
 | `--abstand-4` | `16px` | 77 |  |
 | `--abstand-5` | `24px` | 39 |  |
 
@@ -624,7 +624,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--radius-klein` | `6px` | 29 | Plakette, Kästchen, Eingabefeld |
-| `--radius` | `10px` | 22 | Knopf, Meldung |
+| `--radius` | `10px` | 23 | Knopf, Meldung |
 | `--radius-gross` | `12px` | 8 | Karte, Blatt, Dialog |
 
 **Maße**
@@ -632,7 +632,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--kopf` | `56px` | 19 |  |
-| `--knopf` | `44px` | 44 |  |
+| `--knopf` | `44px` | 51 |  |
 | `--bereiche` | `48px` | 5 |  |
 | `--leiste` | `260px` | 2 | Seitenleiste ab 1200 |
 | `--leiste-schmal` | `220px` | 2 | Seitenleiste 1024–1199 |
@@ -644,16 +644,17 @@ auseinanderlaufen kann.
 | `--blatt-zeile` | `50px` | 1 | Zeilenhöhe im Aktionsblatt |
 | `--unterpunkt` | `28px` | 2 | Sprungmarke unter dem Menüpunkt |
 | `--feld-breit` | `36rem` | 4 | Höchstbreite eines Felds: Listensuche, Felder der Einstellungen |
+| `--lese-beschriftung` | `14rem` | 1 | Beschriftungsspalte der Einsatzansicht ab 720 px (E-OF-28, Bild OF-P34) |
 | `--feld-datum` | `calc(11ch + 2 * var(--abstand-3) + 2 * var(--strich))` | 1 |  |
 | `--uebersicht-spalte` | `240px` | 1 | schmalste Spalte der Einstellungs-Übersicht |
 | `--suchfeld` | `48px` | 2 | das große Suchfeld |
-| `--symbol-klein` | `16px` | 11 | Zusatzzeichen an einer Beschriftung |
+| `--symbol-klein` | `16px` | 14 | Zusatzzeichen an einer Beschriftung |
 | `--symbol-winzig` | `calc(var(--symbol-klein) - var(--abstand-1))` | 4 | 12 px, im Chip |
 | `--ziel-chip` | `calc(var(--symbol-gross) + var(--abstand-1))` | 2 | 28 px, Treffziel |
 | `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
-| `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
+| `--symbol` | `20px` | 14 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 72 | Haarlinie |
+| `--strich` | `1px` | 74 | Haarlinie |
 | `--strich-stark` | `2px` | 37 | Aktivstrich, Randstrich, Fokus |
 | `--strich-reiter` | `calc(var(--strich-stark) + var(--strich))` | 1 | 3 px |
 | `--radius-rund` | `999px` | 20 | Zähler, Griff, Punkt — voll rund |
@@ -1027,12 +1028,12 @@ zählt nur Breiten.
 | `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
 | `@media (min-width:1024px) and (max-height:949px)` | 1 |
 | `@media (min-width:1024px)` | 4 |
-| `@media (min-width:720px)` | 17 |
+| `@media (min-width:720px)` | 18 |
 | `@media screen and (min-width:720px)` | 1 |
 | `@media (max-width:719px)` | 1 |
 | `@media (max-width:479px)` | 3 |
 
-Zusammen 35 Medienblöcke über 6 verschiedene Breiten: 479 px, 719 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 36 Medienblöcke über 6 verschiedene Breiten: 479 px, 719 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -1127,15 +1128,15 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 22 |
 | `haken.svg` | Tabler Icons „check" (MIT) | 41 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
-| `herunterladen.svg` | Tabler Icons „download" (MIT) | 3 |
+| `herunterladen.svg` | Tabler Icons „download" (MIT) | 7 |
 | `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 18 |
 | `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 38 |
-| `hochladen.svg` | Tabler Icons „upload" (MIT) | 0 |
+| `hochladen.svg` | Tabler Icons „upload" (MIT) | 1 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
 | `karte-breit.svg` | Tabler Icons „arrows-horizontal" (MIT) | 1 |
 | `karte-gross.svg` | Tabler Icons „arrows-vertical" (MIT) | 1 |
-| `karte.svg` | Tabler Icons „map-2" (MIT) | 15 |
+| `karte.svg` | Tabler Icons „map-2" (MIT) | 14 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 2 |
 | `korb.svg` | Tabler Icons „trash" (MIT) | 22 |
@@ -1173,14 +1174,14 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 30 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
-| `wiederherstellen.svg` | Tabler Icons „restore" (MIT) | 2 |
+| `wiederherstellen.svg` | Tabler Icons „restore" (MIT) | 4 |
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 18 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 3 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 0 |
-| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 36 |
+| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 34 |
 
 64 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
-**Nirgends genannt:** `hochladen`, `luftlinie`, `mond`, `reanimation`, `werkzeug`, `ziel-fern`.
+**Nirgends genannt:** `luftlinie`, `mond`, `reanimation`, `werkzeug`, `ziel-fern`.
 
 ## 9. Bausteine
 
@@ -1647,6 +1648,15 @@ sind **kein Bedienelement** — wer eine anklickbar braucht, nimmt einen Knopf
 > es zwei verschiedene Auskünfte sind: **Die Plakette sagt „hier stehen
 > verschlüsselte Angaben", das Schloss sagt „diese hier."** Bei einer
 > Schutzauskunft ist Redundanz kein Lärm.
+
+> **In der Einsatzansicht steht das Schloss vor dem Wort, in einer eigenen
+> Spalte** (seit Web 24.8.0, Konzept OF, E-OF-28, Bild OF-P34-links). Jede
+> Beschriftung rückt um die Spalte ein (`--symbol-klein` plus `--abstand-2`),
+> das Schloss (`.lese-schloss`) zieht sich mit negativem Rand hinein; ab 720 px
+> ist die Beschriftungsspalte `--lese-beschriftung` breit, und die Werte
+> beginnen in einer Flucht. Die Beschriftung steht senkrecht mittig neben
+> ihrem Wert. Im **Formular** bleibt das Schloss hinter dem Wort: Dort trägt
+> die Beschriftung den Fokus.
 
 ### 9.7 Feld, Schalter, Segment, Wahlliste
 
@@ -2127,6 +2137,13 @@ freigegeben am 31.08.2026.* Gebaut wird er in `assets/schneiden.js`, nicht in
 `ui.php`: Die Segmentliste entsteht im Browser aus `api/day.php`, es gibt
 keine PHP-Seite, die ihn ausgeben könnte. In der erzeugten Bausteintabelle
 (Kapitel 9, Anfang) steht er deshalb nicht — sie liest `ui.php`.
+
+**Die Karte um ihn herum steht seit Web 24.8.0 auf Abruf** (Konzept OF,
+E-OF-05): Bis dahin stand „Ruhesegmente“ an jedem Tag mit Aufzeichnung unter
+der Einsatzliste. Jetzt öffnet sie der Eintrag „Einsatz aus GPS-Daten
+ausschneiden“ im Aktionsmenü des Diensttags (bei genau einem Segment gleich
+mit aufgeklapptem Bereich), die Adresse `#ruheliste` und jede Rückmeldung,
+die `schneiden.js` in sie schreibt.
 
 ```
 .schnitt-bereich      der aufklappbare Block unter einer Segmentzeile
@@ -3764,7 +3781,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
-| **Web 24.8.0 (Schritt 27, Konzept OF, OF-07)** | **9.30:** Bedienelemente der Karte im Branding, Ebenenwahl mit Zeichen `karte` und Überschrift „Kartenart“, Namen ohne Anbieter (E-OF-13, -29). Kein neuer Baustein, kein Token. |
+| **Web 24.8.0 (Schritt 27, Konzept OF, OF-07)** | **9.30:** Bedienelemente der Karte im Branding, Ebenenwahl mit Zeichen `karte` und Überschrift „Kartenart“, Namen ohne Anbieter (E-OF-13, -29). **9.6:** Schloss der Einsatzansicht in eigener Spalte vor dem Wort (E-OF-28). **9.7:** Transportart als abwählbare Segmentwahl aus dem Feldkatalog (E-OF-33). **9.17:** Die Karte „Ruhesegmente“ steht auf Abruf (E-OF-05). **4:** neues Maß `--lese-beschriftung` (14 rem, aus E-OF-28). Kein neuer Baustein. |
 | **Web 24.7.0 (Schritt 27, Konzept OF, OF-06)** | **9.1:** Stand und Plakette der Klappkarte als eine Gruppe (`.karte-stand-gruppe`). **9.2:** `zeile-umbruch` für Zeilen mit mehreren Plaketten oder Plakette und Knopf. Statusseite „Probleme zuerst", Servereinstellungen, Hintergrundjobs und Komplett-Backup aus vorhandenen Bausteinen (Klappkarte, Zeile, Segmentwahl, `haupt`); kein neuer Baustein, kein Token. |
 | **Web 24.5.0 (Schritt 27, Konzept OF, OF-04)** | **9.42 neu — Wahlkarten**, freigegeben mit OF-P17-C; dort auch Koppel-Dialog und Zweitfaktor-Karte als Verwendungen vorhandener Bausteine. **9.9:** Speicherleiste außerhalb des Formulars (`data-fuer`). **6:** Feldraster `.listen-form-felder` in den Einstellungen auf `--feld-breit` begrenzt. |
 | **Web 24.4.0 (Schritt 27, Konzept OF, OF-03)** | **9.7:** Datumsfeld `TT.MM.JJJJ` (`ui_datum_eingabe()`, `.feld-datum`, `--feld-datum`) an allen acht Stellen. **9.13:** Zeichen statt Kleinzeile am Ortsfeld, der Satz als Tooltip. **9.18a:** Filterknopf mit gesetzten Filtern als Pillen. Neues abgeleitetes Maß `--feld-datum`; kein neuer Baustein — alle drei mit den Mockups freigegeben. |

@@ -138,20 +138,56 @@ declare(strict_types=1);
  *
  *   'gruppe' => Kennung             FORMULARGRUPPE. Nur an Feldern
  *                                   der obersten Ebene; Unterfelder folgen
- *                                   ihrem Elternfeld. Die Gruppen, ihre
+ *                                   ihrem Elternfeld. Die Karten, ihre
  *                                   Ueberschriften und ihre Reihenfolge stehen
- *                                   in einsatz_form.php ($GRUPPEN) — hier steht
- *                                   nur, WOHIN das Feld gehoert. Ohne Angabe
- *                                   landet es in der letzten Gruppe, statt
- *                                   unsichtbar zu werden.
+ *                                   in einsatz_form.php (je Karte ein
+ *                                   `$gruppeRendern()`) — hier steht nur, WOHIN
+ *                                   das Feld gehoert. Ohne Angabe landet es in
+ *                                   der letzten Gruppe, statt unsichtbar zu
+ *                                   werden. Die REIHENFOLGE innerhalb einer
+ *                                   Gruppe und unter einem Elternfeld ist die
+ *                                   dieser Datei.
  *
  *   'nebeneinander' => true         Das Feld teilt sich eine Zeile mit seinen
- *                                   unmittelbaren Nachbarn derselben Gruppe,
- *                                   die dasselbe verlangen. Gedacht
- *                                   fuer kurze Haken wie Sekundaertransport und
- *                                   Fehleinsatz — zwei Woerter, die
- *                                   untereinander zwei Zeilen kosten und
- *                                   nebeneinander eine.
+ *                                   unmittelbaren Nachbarn derselben Ebene
+ *                                   (Gruppe oder Geschwister unter demselben
+ *                                   Elternfeld), die dasselbe verlangen.
+ *                                   Gedacht fuer kurze Haken wie
+ *                                   Sekundaertransport und Fehleinsatz — zwei
+ *                                   Woerter, die untereinander zwei Zeilen
+ *                                   kosten und nebeneinander eine. SEIT OF-07
+ *                                   (E-OF-33) GILT ES AUCH FUER SCHALTER und
+ *                                   auch fuer Unterfelder; bis dahin standen
+ *                                   Schalter immer untereinander, und der
+ *                                   Schluessel an den beiden Haken oben war
+ *                                   ohne Wirkung. Ein Schalter MIT Kindern
+ *                                   gehoert nicht in eine Reihe — seine
+ *                                   Unterfelder klappten in einer halben
+ *                                   Spalte auf.
+ *
+ *   'darstellung' => 'segment'      nur bei 'select' mit festen 'options':
+ *                                   die Auswahl als SEGMENTWAHL statt als
+ *                                   Dropdown, abwaehlbar (Design.md 9.7,
+ *                                   E-OF-33). Ein zweiter Klick auf das
+ *                                   gewaehlte Feld nimmt die Wahl zurueck;
+ *                                   gesendet wird dann der leere Wert — genau
+ *                                   das, was das Dropdown mit „–" sendete.
+ *                                   Feldname, Werte und Spalte bleiben gleich,
+ *                                   die Speicherlogik merkt keinen Unterschied.
+ *                                   Fuer 'options_src' gibt es das nicht: Dort
+ *                                   sind die Stammdaten die Liste, und die ist
+ *                                   fuer eine Zeile Tasten zu lang.
+ *
+ *   'einzug' => false               an einem Feld MIT 'children': Die
+ *                                   Unterfelder stehen ohne Einzug und ohne
+ *                                   Randstrich darunter (kein `.childfields`).
+ *                                   Vorgabe ist der Einzug. Gedacht fuer
+ *                                   Unterfelder, die inhaltlich abhaengen,
+ *                                   optisch aber Teil der Karte sind — die
+ *                                   Transportfelder unter der Transportart
+ *                                   (E-OF-33: „ohne Einzug"). Die ABHAENGIGKEIT
+ *                                   bleibt davon unberuehrt: 'show_if' blendet
+ *                                   weiter aus und der Server leert weiter.
  *
  *   'vorbelegt_bei' => [            VORBELEGUNG EINER CHECKBOX, abhaengig vom
  *      '<spalte>' => '<wert>',      Wert eines ANDEREN Feldes. Der
@@ -300,10 +336,13 @@ foreach (CREW_ROLES as $mf_code => $mf_rolle) {
  * davon unberuehrt.
  */
 return [
-    /* ---- Gruppe „Einsatz" -------------------------------------------------
-     * Zwei Haken, die den Einsatz als Ganzes kennzeichnen. Sie stehen im
-     * Formular NEBENEINANDER ueber dem Einsatzort: Beides sind Aussagen ueber
-     * die Art des Auftrags, und beide sind mit einem Blick zu erfassen. */
+    /* ---- Gruppe „Einsatz" — Karte „Einsatz und Transport" -----------------
+     * Zwei Haken, die den Einsatz als Ganzes kennzeichnen, dann die
+     * Transportart mit ihren Unterfeldern. EINE KARTE FUER BEIDES (E-OF-33):
+     * „Einsatz" und „Transport" standen als zwei Karten untereinander, zwei
+     * Ueberschriften fuer eine Sache. Die zwei Haken stehen NEBENEINANDER
+     * oben: Beides sind Aussagen ueber die Art des Auftrags, und beide sind
+     * mit einem Blick zu erfassen. */
     'secondary' => [
         'label' => 'Sekundärtransport', 'type' => 'checkbox',
         'gruppe' => 'einsatz', 'nebeneinander' => true,
@@ -329,7 +368,7 @@ return [
         'gruppe' => 'einsatz', 'nebeneinander' => true,
     ],
 
-    /* ---- Gruppe „Transport" -----------------------------------------------
+    /* ---- Transportart (Gruppe „Einsatz") ------------------------------------
      *
      * TRANSPORTART. Sie ist das ordnende Feld der Einsatzdokumentation
      * geworden: Zielklinik, Schockraum und NA-Begleitung haengen daran und
@@ -337,17 +376,26 @@ return [
      * transportiert wurde.
      *
      * SIE HEISST „TRANSPORTART" und nicht „Transport".
-     * „Transport" ist zugleich der Name der Gruppe, in der sie steht, und der
-     * Name eines Feldes darin — und in alten Dateien ausserdem der Spaltentitel
-     * fuer die ZIELKLINIK (siehe assets/import_profiles.js). Drei Bedeutungen
-     * fuer ein Wort sind zwei zu viel.
+     * „Transport" ist zugleich ein Teil des Kartentitels, in dem sie steht, und
+     * in alten Dateien ausserdem der Spaltentitel fuer die ZIELKLINIK (siehe
+     * assets/import_profiles.js). Drei Bedeutungen fuer ein Wort sind zwei zu
+     * viel.
      *
      * KEIN 'kind_gate'. „Luft" ist auch an einem bodengebundenen Dienst ein
      * gueltiger Wert: Das NEF uebergibt an den Hubschrauber, und wie
      * transportiert wurde, ist eine Aussage ueber den EINSATZ, nicht ueber das
-     * eigene Rettungsmittel. */
+     * eigene Rettungsmittel.
+     *
+     * DIE REIHENFOLGE DER KINDER IST DIE DES FORMULARS (E-OF-33): erst das
+     * Ziel, dann die beiden Haken nebeneinander. Bis OF-07 stand die
+     * NA-Begleitung vor dem Ziel und der Schockraum als Kind UNTER dem Ziel;
+     * er haengt jetzt wie die Begleitung unmittelbar an der Transportart, mit
+     * derselben Bedingung. Gespeichert wird dadurch nichts anders: Vorher galt
+     * fuer ihn „Transportart nicht ambulant" ueber das Ziel, jetzt
+     * unmittelbar — das Ziel selbst traegt keine eigene Bedingung fuer seine
+     * Kinder. */
     'transport_mode' => [
-        'label' => 'Transportart', 'type' => 'select', 'gruppe' => 'transport',
+        'label' => 'Transportart', 'type' => 'select', 'gruppe' => 'einsatz',
         /* WERT LINKS, BESCHRIFTUNG RECHTS. Die Spalte ist ein
          * `ENUM('air','ground','ambulant')` — sie ist englisch benannt wie alle
          * uebrigen Spalten. Eine
@@ -355,23 +403,12 @@ return [
          * Spalte, und dort wuerde sie still abgeschnitten. Beide Schreibweisen
          * loest mf_optionen() auf (mission_fields_lib.php). */
         'options' => ['air' => 'Luft', 'ground' => 'Boden', 'ambulant' => 'Ambulant'],
+        /* SEGMENTWAHL, ABWAEHLBAR (E-OF-33). Drei Tasten statt eines
+         * Dropdowns; „offen" ist keine vierte Taste, sondern der Zustand ohne
+         * Wahl — gespeichert wie bisher als NULL. */
+        'darstellung' => 'segment',
+        'einzug' => false,
         'children' => [
-            'na_escort' => [
-                'label' => 'NA-Begleitung', 'type' => 'checkbox',
-                // 'not_in' nennt den GESPEICHERTEN Wert, nicht die Beschriftung.
-                'show_if' => ['field' => 'transport_mode', 'not_in' => ['ambulant']],
-                /* VORBELEGT BEI LUFT. Ein luftgebundener Transport
-                 * ohne Notarzt an Bord ist die Ausnahme, nicht die Regel — der
-                 * Haken war damit der am haeufigsten vergessene des Formulars.
-                 * Gesetzt wird er NUR, solange niemand ihn von Hand angefasst
-                 * hat (assets/forms.js kennt die Regel nicht; sie steht im
-                 * Skript des Formulars). Eine ausdrueckliche Entscheidung
-                 * schlaegt die Vorbelegung immer.
-                 * Sie greift nur, wenn die Transportart GERADE UMGESTELLT wird
-                 * — nicht beim Laden. Deshalb gilt sie auch beim Bearbeiten,
-                 * ohne dort je einen gespeicherten Wert zu ueberschreiben. */
-                'vorbelegt_bei' => ['transport_mode' => 'air'],
-            ],
             /* ZIELKLINIK ALS ORTSFELD. Freitext und
              * Vorschlagsliste, dazu die optionale Koordinate.
              *
@@ -382,8 +419,7 @@ return [
              * deshalb `ohne_spalte` und keine `lat_col`/`lon_col`. Die
              * Vorschlagsliste der Zielkliniken
              * (`transport_dests`) bleibt Stammdatum im Klartext: Sie sagt, wohin
-             * man fliegen KANN, nicht wohin jemand geflogen ist. Der Haken
-             * „Schockraum" darunter bleibt Klartext — er ist kein Ort.
+             * man fliegen KANN, nicht wohin jemand geflogen ist.
              *
              * EINGEFROREN AM EINSATZ, nicht ueber den Namen aufgeloest: Das
              * Feld ist Freitext, und eine Aufloesung ueber Namensgleichheit
@@ -408,10 +444,30 @@ return [
                  * Stammdatentreffer. Die Koordinate ist das ERGEBNIS und steht
                  * danach als Merkfeld darunter. */
                 'such_label' => 'Lokalisation Transportziel (optional)',
+                // 'not_in' nennt den GESPEICHERTEN Wert, nicht die Beschriftung.
                 'show_if' => ['field' => 'transport_mode', 'not_in' => ['ambulant']],
-                'children' => [
-                    'schockraum' => [ 'label' => 'Schockraum', 'type' => 'checkbox' ],
-                ],
+            ],
+            'na_escort' => [
+                'label' => 'NA-Begleitung', 'type' => 'checkbox',
+                'nebeneinander' => true,
+                'show_if' => ['field' => 'transport_mode', 'not_in' => ['ambulant']],
+                /* VORBELEGT BEI LUFT. Ein luftgebundener Transport
+                 * ohne Notarzt an Bord ist die Ausnahme, nicht die Regel — der
+                 * Haken war damit der am haeufigsten vergessene des Formulars.
+                 * Gesetzt wird er NUR, solange niemand ihn von Hand angefasst
+                 * hat (assets/forms.js kennt die Regel nicht; sie steht im
+                 * Skript des Formulars). Eine ausdrueckliche Entscheidung
+                 * schlaegt die Vorbelegung immer.
+                 * Sie greift nur, wenn die Transportart GERADE UMGESTELLT wird
+                 * — nicht beim Laden. Deshalb gilt sie auch beim Bearbeiten,
+                 * ohne dort je einen gespeicherten Wert zu ueberschreiben. */
+                'vorbelegt_bei' => ['transport_mode' => 'air'],
+            ],
+            /* Der Haken „Schockraum" bleibt Klartext — er ist kein Ort. */
+            'schockraum' => [
+                'label' => 'Schockraum', 'type' => 'checkbox',
+                'nebeneinander' => true,
+                'show_if' => ['field' => 'transport_mode', 'not_in' => ['ambulant']],
             ],
         ],
     ],

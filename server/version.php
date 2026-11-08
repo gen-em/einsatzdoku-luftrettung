@@ -8817,4 +8817,16 @@ declare(strict_types=1);
  *   zugeklappt mit ihrem Stand. Komplett-Backup: „Stand" offen, „Jetzt
  *   sichern" als Hauptaktion. Backup-Ziele: eine Karte an zwei Orten
  *   (`sicherungsziele_teile.php`), die Seite leitet um. Neben; kein Schema. */
-const WEB_VERSION = '24.7.0';
+/* 24.8.0 — EINSATZ, DIENSTTAG, KARTE, PAPIERKORB (Schritt 27, Konzept OF,
+ *   OF-07; E-OF-05, -11, -12, -13, -28 bis -30, -33, -48, -75 bis -78).
+ *   Formular: eine Karte „Einsatz und Transport", die Transportart als
+ *   abwaehlbare Segmentwahl; der Feldkatalog traegt dafuer `darstellung`
+ *   und `einzug`, `nebeneinander` gilt auch fuer Schalter. Leseansicht:
+ *   dieselbe Gruppe, das Schloss in einer eigenen Spalte vor dem Wort.
+ *   Tagesuebersicht: die Karte „Ruhesegmente" steht nur noch auf Abruf
+ *   („Einsatz aus GPS-Daten ausschneiden", `#ruheliste`). GPX traegt
+ *   `herunterladen`/`hochladen`, die Plakette „ausgeduennt" ist fort.
+ *   Karte: Bedienelemente im Branding, Kartenart ohne Anbieter. Papierkorb:
+ *   `wiederherstellen`, Artzeichen vorn. Je Karte ein Satz. Neben; kein
+ *   Schema. */
+const WEB_VERSION = '24.8.0';

@@ -237,7 +237,14 @@ export const wege = [
         const boden = await stand(k);
         await k.bild('ap6-adhoc-felder');
 
-        const satz = (auf.hinweis || '').includes('folgen der Betriebsart');
+        /* Seit Web 24.8.0 sagt das der Satz unter den Ad-hoc-Feldern, und der
+           Besatzungshinweis schweigt am Ad-hoc-Tag (Konzept OF, E-OF-78: ein
+           Satz je Karte). Gelesen wird deshalb dieser Satz. */
+        const satz = await k.seite.evaluate(() => {
+          const h = document.querySelector('#adhocfelder .feld-hinweis');
+          return !!h && h.offsetParent !== null
+            && /folgen der gewählten Betriebsart/.test(h.textContent.replace(/\s+/g, " "));
+        });
         const ok = auf.adhocAuf && auf.rollen.length === 0 && satz
                 && regel.luftGesperrt && regel.bodenGesetzt && regel.festSichtbar
                 && gleich(boden.rollen, ROLLEN_BODEN);

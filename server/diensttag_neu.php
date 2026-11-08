@@ -92,12 +92,11 @@ ui_seite_start(['titel' => 'Diensttag anlegen']);
   ]); ?>
   <?php ui_meldung(null, $fehler, 'info', '  '); ?>
 
-  <p class="seiten-erklaerung">Für Dienste, an denen die Uhr nicht mitgelaufen
-     ist. Der Diensttag erscheint danach in der Liste links; Besatzung und
-     Einsätze trägst du dort nach. <strong>Mehrere Dienste an einem Kalendertag
-     sind möglich</strong> — etwa ein Hubschrauberdienst am Tag und ein
-     NEF-Nachtdienst am Abend. Damit sie sich unterscheiden lassen, gehört zu
-     jedem eine Uhrzeit des Dienstbeginns; ohne Angabe gilt 00:00.</p>
+  <?php /* EIN SATZ (Design.md 6, OF-07; bis Web 24 vier). Wo der Tag danach
+           erscheint und was man dort nachtraegt, steht im Handbuch 4.5. */ ?>
+  <p class="seiten-erklaerung">Für Dienste, an denen die Uhr nicht mitlief;
+     <strong>mehrere an einem Kalendertag</strong> unterscheidet der
+     Dienstbeginn, ohne Angabe gilt 00:00.</p>
 
   <?php ui_karte_start(['titel' => 'Neuer Diensttag']); ?>
 

@@ -166,8 +166,6 @@ Das wäre eine Behauptung; die Messung ist eine Auskunft.
 | Klasse | Grund | Paket |
 |---|---|---|
 | `leaflet-bottom` | Gehört **Leaflet**, nicht diesem Stylesheet: Die Regel liegt in `server/assets/vendor/leaflet.css`. Eine Regel dafür in `style.css` wäre ein Eingriff in eine fremde Bibliothek. | PK-04/1b |
-| `leaflet-control-layers` | Gehört **Leaflet**, nicht diesem Stylesheet: Die Regel liegt in `server/assets/vendor/leaflet.css`. Eine Regel dafür in `style.css` wäre ein Eingriff in eine fremde Bibliothek. | PK-04/1b |
-| `leaflet-control-layers-expanded` | Gehört **Leaflet**, nicht diesem Stylesheet: Die Regel liegt in `server/assets/vendor/leaflet.css`. Eine Regel dafür in `style.css` wäre ein Eingriff in eine fremde Bibliothek. | PK-04/1b |
 | `leaflet-control-layers-selector` | Gehört **Leaflet**, nicht diesem Stylesheet: Die Regel liegt in `server/assets/vendor/leaflet.css`. Eine Regel dafür in `style.css` wäre ein Eingriff in eine fremde Bibliothek. | PK-04/1b |
 | `leaflet-control-layers-separator` | Gehört **Leaflet**, nicht diesem Stylesheet: Die Regel liegt in `server/assets/vendor/leaflet.css`. Eine Regel dafür in `style.css` wäre ein Eingriff in eine fremde Bibliothek. | PK-04/1b |
 | `leaflet-top` | Gehört **Leaflet**, nicht diesem Stylesheet: Die Regel liegt in `server/assets/vendor/leaflet.css`. Eine Regel dafür in `style.css` wäre ein Eingriff in eine fremde Bibliothek. | PK-04/1b |

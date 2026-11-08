@@ -19,51 +19,6 @@
     }
   },
   "seitenregeln": {
-    "_lies_mich": "Seiten mit bekanntem Verstoss gegen eine der drei Seitenregeln (Konzept OF, OF-01, Nr. 530): `knopf` (Knopf zwischen zwei Abschnitten), `kante` (rechte Kante), `saetze` (mehr als ein Satz je Karte oder Seitenerklaerung). Je Seite die Regel und das Paket, das den Verstoss behebt. Das Paket streicht seine Zeilen; eine Ausnahme ohne Befund ist selbst ein Befund. Bis OF-09 ist die Liste leer.",
-    "02h-rueckfrage-konto": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "10-tagesuebersicht": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "10a-tagesuebersicht-ohne-standort": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "10b-tagesuebersicht-luftlinie": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "11-tagesuebersicht-schublade": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "12-tagesuebersicht-adhoc": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "12a-schnitt-grund": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "12b-schnitt-vorschau": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "12c-nachtdienst": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "16-papierkorb": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "18-diensttag-anlegen": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "19-diensttag-datum": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "21-diensttag-zusammenfuehren": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "21a-tag-spuren": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "22-einsatz-verschieben": {
-      "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    }
+    "_lies_mich": "Seiten mit bekanntem Verstoss gegen eine der drei Seitenregeln (Konzept OF, OF-01, Nr. 530): `knopf` (Knopf zwischen zwei Abschnitten), `kante` (rechte Kante), `saetze` (mehr als ein Satz je Karte oder Seitenerklaerung). Je Seite die Regel und das Paket, das den Verstoss behebt. Das Paket streicht seine Zeilen; eine Ausnahme ohne Befund ist selbst ein Befund. Bis OF-09 ist die Liste leer."
   }
 }

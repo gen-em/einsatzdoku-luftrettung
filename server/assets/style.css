@@ -504,6 +504,7 @@
   --blatt-zeile:50px;                  /* Zeilenhöhe im Aktionsblatt */
   --unterpunkt:28px;                   /* Sprungmarke unter dem Menüpunkt */
   --feld-breit:36rem;                  /* Höchstbreite eines Felds: Listensuche, Felder der Einstellungen */
+  --lese-beschriftung:14rem;           /* Beschriftungsspalte der Einsatzansicht ab 720 px (E-OF-28, Bild OF-P34) */
   /* DAS DATUMSFELD (Konzept OF, OF-03, E-OF-44): zehn Zeichen „TT.MM.JJJJ"
    * plus ein Zeichen Luft, dazu Innenabstand und Rand des Felds — eine
    * Rechnung, keine neue Zahl. */
@@ -3506,6 +3507,25 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
 /* Die Leseansicht der Einsatz-Karten ist einspaltig — anders als die
  * Diensttag-Daten, deren Zweispalter volle Inhaltsbreite hat. */
 .einsatz-raster .tag-lese{display:block}
+
+/* DAS SCHLOSS IN EIGENER SPALTE (Konzept OF, OF-07, E-OF-28, Bild
+ * OF-P34-links): Jede Beschriftung rückt um die Schlossspalte ein, das
+ * Schloss zieht sich mit negativem Rand in sie hinein — Beschriftungen ohne
+ * Schloss stehen damit gleich weit eingerückt, und die Werte beginnen ab
+ * 720 px in einer Flucht. Darunter bleibt die Spalte so breit wie ihr
+ * längstes Wort: 14 rem passen neben einen Wert auf dem Handy nicht. */
+/* Die Beschriftung steht senkrecht mittig neben ihrem Wert (Bild OF-P34):
+ * Unter „Einsatzort" stand neben Adresse und Strecke eine leere Zeile. */
+.einsatz-raster .tagfeld{align-items:center}
+.einsatz-raster .tagfeld dt{padding-left:calc(var(--symbol-klein) + var(--abstand-2))}
+.einsatz-raster .tagfeld dt > .lese-schloss{
+  margin:0 var(--abstand-2) 0 calc((var(--symbol-klein) + var(--abstand-2)) * -1);
+}
+@media (min-width:720px){
+  .einsatz-raster .tagfeld{
+    grid-template-columns:calc(var(--symbol-klein) + var(--abstand-2) + var(--lese-beschriftung)) minmax(0,1fr);
+  }
+}
 
 /* Kleinzeile unter einem Lesewert: Höhe, Luftlinie und Strecke unter dem
  * Einsatzort, das Alter unter dem Geburtsdatum. */

@@ -47,16 +47,17 @@ es im Kopf von `server/version.php`.
 | OF-04 | Einstellungen: Profil mit Zweitfaktor „ein Satz plus Verwalten“ (E-OF-19); Geräte nach Typ, Koppeln im Dialog (E-OF-25); Import / Export „erst wählen, dann füllen“ (E-OF-26); Backup (E-OF-52, OF-P-15) | Opus · keine | **erledigt** 08.11.2026 (Web 24.5.0) |
 | OF-05 | Verwaltung: Kontenliste ohne Spalte „Öffnen“ (E-OF-53); Demo-Konto als Karte unter Installation, ein Schalter statt zwei (E-OF-08, E-OF-46) | Opus · keine | **erledigt** 08.11.2026 (Web 24.6.0; Kontrollzahlen und Umleitung von `admin_demo.php` mit OF-06, E-OF-71) |
 | OF-06 | Betrieb: Status „Probleme zuerst“ (E-OF-20; Q-OF-02 → OF-M1); Hintergrundjobs (E-OF-10, -21); Servereinstellungen als Klappkarten (E-OF-22); Komplett-Backup (E-OF-23); Backup-Ziele an beiden Orten, die Seite entfällt (E-OF-24, E-OF-45) | Opus · **gefächert** nach OF-M1: je ein Agent für Status, Hintergrundjobs, Servereinstellungen und Komplett-Backup samt Ziele; `ui.php`, `style.css`, `status_lib.php`, Texte und Prüfarbeit seriell | **erledigt** 08.11.2026 (Web 24.7.0; gefächert auf drei Agenten, E-OF-74) |
-| OF-07 | Einsatz, Diensttag, Karte, Papierkorb: Ruhesegmente-Kachel entfällt (E-OF-05); GPX-Zeichen (E-OF-11); Plakette „ausgedünnt“ entfällt (E-OF-12); Karte „Einsatz und Transport“ im Feldkatalog (E-OF-33); Schlösser in eigener Spalte (E-OF-28); Kartenart ohne Anbieter (E-OF-13); Leaflet-Bedienelemente im Branding (E-OF-29); Papierkorb mit `restore`, Artzeichen vor das Datum (E-OF-30, E-OF-48) | Opus · **gefächert**: ein Agent Formular und Leseansicht (`einsatz_form.php`, `mission_fields.php`, `einsatz.php`), einer Karte (`geo.js`, `map_layers.js`, Leaflet-Regeln), einer Tagesübersicht und Papierkorb (`index.php`, `tag_spuren.php`, `papierkorb.php`); `style.css`, Design.md und Prüfarbeit seriell | offen |
+| OF-07 | Einsatz, Diensttag, Karte, Papierkorb: Ruhesegmente-Kachel entfällt (E-OF-05); GPX-Zeichen (E-OF-11); Plakette „ausgedünnt“ entfällt (E-OF-12); Karte „Einsatz und Transport“ im Feldkatalog (E-OF-33); Schlösser in eigener Spalte (E-OF-28); Kartenart ohne Anbieter (E-OF-13); Leaflet-Bedienelemente im Branding (E-OF-29); Papierkorb mit `restore`, Artzeichen vor das Datum (E-OF-30, E-OF-48) | Opus · **gefächert**: ein Agent Formular und Leseansicht (`einsatz_form.php`, `mission_fields.php`, `einsatz.php`), einer Karte (`geo.js`, `map_layers.js`, Leaflet-Regeln), einer Tagesübersicht und Papierkorb (`index.php`, `tag_spuren.php`, `papierkorb.php`); `style.css`, Design.md und Prüfarbeit seriell | **erledigt** 08.11.2026 (Web 24.8.0; Karte seriell, die zwei Seitenteile gefächert auf zwei Agenten, E-OF-75 bis -78) |
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | offen |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
-**In Arbeit:** OF-07 Einsatz, Diensttag, Karte, Papierkorb. **Erledigt:**
-OF-00, NV-01 bis NV-04 (das Gerüst), OF-01 bis OF-06 (OF-M1 entschieden
-08.11.2026: E-OF-72, -73). **Je Paket mitzunehmen:** seine Zeilen unter
-`seitenregeln` in `tools/screenshots/ausnahmen.json` (E-OF-65) — OF-06 hat
-seine gestrichen; OF-07 Jobs, Sicherheit, Servereinstellungen; OF-07
-Tagesübersicht, Papierkorb, Diensttag- und Einsatzseiten.
+**In Arbeit:** OF-08 Darstellung. **Erledigt:**
+OF-00, NV-01 bis NV-04 (das Gerüst), OF-01 bis OF-07 (OF-M1 entschieden
+08.11.2026: E-OF-72, -73). **`seitenregeln` in
+`tools/screenshots/ausnahmen.json` ist leer** (E-OF-65): OF-06 und OF-07
+haben ihre Zeilen gestrichen. **Vorgelegt zur Kenntnis:** „Transportart“
+statt „Transport“ und das Artzeichen des Papierkorbs in eigener Spalte
+(E-OF-76, -78) — je eine Zeile, falls die Betreiberin das Bild genau will.
 **Prüfweise seit NV-02:** E-OF-60. **Hakt:**
 nichts; F-OF-19 (eine Rolle mit einem Bereich sieht einen einzelnen
 Reiter) ist der Betreiberin zur Kenntnis vorgelegt. **Offen bei der Betreiberin:** nichts — alle Fragen sind entschieden (Abschnitt 7); Q-OF-02 wird in OF-M1 vorgelegt.
@@ -229,6 +230,26 @@ enthält `origin/main` `ac4a7bd` (Merge von PR #157).
   in einer Karte: auf den Konto-Backups 6 px unter der Mitte des Knopfs, im
   Schneide-Bereich ebenso. Das ist OF-P-08; behoben mit `>` (nur das direkte
   Kind) und `align-items: center` an beiden Gruppen.
+- **F-OF-23 — F-OF-08 verwechselt zwei Stellen.** Die Wahl „die ganze
+  Aufzeichnung; Einsätze danach herausschneiden“ gehört nicht zur Kachel
+  „Ruhesegmente“, sondern ist der Zusatz der Option „Ruhesegment“ im Dialog
+  „GPX importieren“; er bleibt, wie er ist. Die Kachel dagegen ist die
+  einzige Stelle, an der der Schneide-Bereich lebt (`schneiden.js` baut ihre
+  Zeilen und den Bereich hinein, und nur dort steht „Schnitt zurücknehmen“).
+  Sie kann also nicht entfallen, nur ihr ständiges Dastehen (E-OF-75).
+- **F-OF-24 — Vier Messmittel griffen nach der alten Form.** Bilderlauf
+  (`__TAG_SCHNITT__`) und Ortsdatenprobe klickten „Schneiden“ in der jetzt
+  verborgenen Karte; die Bedienwege `ap1`/`ap2` und die Ortsdatenprobe
+  suchten `select[name=f_transport_mode]`, das es nicht mehr gibt — die
+  Bedienwege hätten still nichts getan, die Probe wäre abgestürzt. Alle
+  gehen jetzt über `#ruheliste` und das Radiofeld (und klicken es nur, wenn
+  es nicht schon gewählt ist: ein zweiter Klick wählt ab).
+- **F-OF-25 — Gegen `origin/main` tragen sieben Signaturen des
+  Stilvergleichs (Rahmenkarte, Leiste, Bereichszeile, Fuß, Speicherleiste)
+  zusätzlich `background-color`.** Gegen den Stand nach OF-06 (`6ab4abd`)
+  gemessen, zeigt keine davon eine Abweichung; OF-07 berührt sie nicht.
+  Woher die Eigenschaft gegen `main` kommt, ist nicht geklärt — in OF-09
+  beim vollen Lauf nachsehen.
 - **F-OF-20 — Die Höhenschwelle der Sprungmarken ist vielleicht
   überholt.** Unter 950 px Fensterhöhe fallen die Sprungmarken in der
   festen Leiste weg (Design.md 9.25), weil sie bei 18 Einträgen die
@@ -794,6 +815,10 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-73 | Option F-OF-17: **keine** Statuszeile „Verdichtung fällig“ — die Betreiberin kann daran nichts tun (nur der Browser der NutzerIn verdichtet), ein Konto ohne Anmeldung bliebe dauerhaft orange. Damit gilt E-OF-52 ohne die Bedingung: Die Karte bei der NutzerIn bleibt wie in OF-04 gebaut | Betreiberin, 08.11.2026 („nein“) |
 | E-OF-74 | OF-06, Umsetzung: (1) **Fächerung** wie im Statusblock: je ein Agent für Hintergrundjobs, Servereinstellungen, Komplett-Backup samt Ziele; Statusseite, `ui.php`, `style.css`, Texte, Einbindung und alle Prüfmittel seriell. (2) **Korrektur an der OF-M1-Tabelle:** Die Karte „Betriebsprotokoll" konnte doch rot werden („n nicht geschrieben") — diese eine Zeile steht jetzt im Bereich Server und erscheint nur dann; die Zahlen je Reiter entfallen wie beschlossen. (3) Status: „Testmail an mich" wird ein Knopf im Inhalt der Karte E-Mail (eine Klappkarte trägt keine Kopfaktion); die Karte der `config.php` heißt „Konfiguration" wie im Bild. (4) Backup-Ziele: Es gab keinen Dialog zum Anlegen, sondern eine Formkarte über `?neu=1`; die Karte bringt jetzt einen Dialog je Ziel und einen für ein neues mit; nach einem abgewiesenen Speichern geht er mit Eingabe und Grund wieder auf. „Jetzt versenden" steht an der Zeile „Wartet auf den nächsten Lauf". `admin_sicherungsziele.php` nimmt nur POST an und leitet auf die erlaubte Seite der Karte (`zurueck`, zwei Seiten) zurück, GET auf die Servereinstellungen. (5) Servereinstellungen: „Protokoll lesen" wird ein leiser Knopf neben „Speichern". (6) Jobs: Pausendauern blieben, der Server nahm schon genau die vier an; Formularwerte und Schlüssel (`jobs_pause_an`, `jobs_pause_bis`) bleiben, nur Texte wechseln; „Aufräumen" ist ein Satz mit Beispielen statt der erzeugten Liste der Schritte. (7) Zwei kleine Erweiterungen für alle Klappkarten und Zeilen, ohne neuen Baustein: Stand und Plakette sind eine Gruppe (`.karte-stand-gruppe`, am Handy brach die Plakette sonst allein nach links um) und `zeile-umbruch` (mehrere Plaketten oder Plakette und Knopf; unter 720 px steht der Satz darüber) | Umsetzung, 08.11.2026 |
 | E-OF-48 | Papierkorb: Das Artzeichen des Diensttags (`ohne-zuordnung`, Hubschrauber, Fahrzeug) steht vor dem Datum wie in Leiste und Vorschlägen — so zeigt es das freigegebene Bild; „entfernt“ in E-OF-30 meint die Stelle neben den Knöpfen. Will die Betreiberin es im Papierkorb ganz weglassen, ist das eine Zeile | Konzept, aus E-OF-30 (F-OF-16) |
+| E-OF-75 | OF-07, Ruhesegmente (E-OF-05, F-OF-23): Die Karte „Ruhesegmente“ bleibt im Markup und ist an jedem Tag zu. Der Eintrag „Einsatz aus GPS-Daten ausschneiden“ (Zeichen `karte`, direkt unter „Einsatz nachtragen“, nur an Tagen mit Segment) schließt das Blatt, öffnet sie und rollt zu ihr; bei genau einem Segment klappt er dessen Bereich über den vorhandenen Knopf „Schneiden“ auf. Ebenso öffnen sie die Adresse `index.php?d=…#ruheliste` und jede Rückmeldung, die `schneiden.js` in sie schreibt (sonst stünde die Meldung nach einem GPX-Import in einer verborgenen Karte). `schneiden.js` bleibt unverändert | Umsetzung, 08.11.2026 |
+| E-OF-76 | OF-07, Formular (E-OF-33): Der Feldkatalog bekommt `'darstellung' => 'segment'` (abwählbare Segmentwahl für `select` mit festen `options`) und `'einzug' => false` (Unterfelder ohne Einzug); `nebeneinander` gilt auch für Schalter und Unterfelder. `transport_mode` steht in der Gruppe `einsatz`, `schockraum` hängt unmittelbar an ihr (`show_if` nicht Ambulant, wie bisher mittelbar). Ein Renderer `$felderRendern()` ersetzt drei gleichlautende Schleifen. **Beschriftung bleibt „Transportart“**, nicht „Transport“ wie im Bild: „Transport“ hat im Katalog schon drei Bedeutungen — eine Zeile, falls die Betreiberin das Bildwort will. Gesendet wird wie zuvor; 80 POST-Fälle alter gegen neuer Katalog ohne Abweichung | Umsetzung, 08.11.2026 |
+| E-OF-77 | OF-07, Leseansicht (E-OF-28): Die Karte „Transport“ heißt „Einsatz und Transport“ und trägt jetzt auch die Plaketten Sekundär, Fehleinsatz, Winde, Bergwacht und „Namen / Infos“ der Bergwacht — dieselbe Gruppe wie im Formular; „Einsatz“ (Ort, Diagnose, Notizen) bleibt eine eigene Karte, wie im Formular. Das Schloss steht vor dem Wort (`.lese-schloss`), die Beschriftungsspalte ist ab 720 px `--lese-beschriftung` (14 rem, neues Maß aus dem Bild), darunter so breit wie ihr Wort. **Die „Leerzeile unter Einsatzort“** war der Freiraum unter der Beschriftung neben zweizeiligem Wert; im Bild steht sie senkrecht mittig — `align-items: center` am Feld | Umsetzung, 08.11.2026 |
+| E-OF-78 | OF-07, Papierkorb (E-OF-48): Das Artzeichen steht in `vorn` der Zeile (eigene Spalte links, senkrecht mittig), nicht in der Datumszeile wie im Bild: `ui_zeile()` maskiert `text`, und dieselbe Form trägt schon die Liste der Rettungsmittel. Will die Betreiberin genau das Bild, ist es eine Option in `ui_zeile()`. Weiter in OF-07: je Karte und Seitenerklärung ein Satz auf Tagesübersicht (Diensttag-Daten, Ruhesegmente), Spurenseite, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben; Besatzungshinweis am Ad-hoc-Tag entfällt (der Satz der Ad-hoc-Felder trägt ihn). Die Ausnahme `spur-gpx-fachbegriff` der Wortliste fällt mit ihrem Satz | Umsetzung, 08.11.2026 |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
@@ -1396,3 +1421,67 @@ und WebKit (E-OF-60); ein Ziel mit echter Gegenstelle (Prüfen, Nachsehen,
 Versand über die neue Karte — die Versandprobe misst die Bibliothek, nicht
 die Karte); eine laufende Pause im Bild; eine Statusseite mit roter
 Plattformzeile.
+
+### OF-07 Einsatz, Diensttag, Karte, Papierkorb (08.11.2026, Web 24.8.0)
+
+**Was getan ist.** Karte (seriell, Zwischenstand `da86880`): Namen
+Standard / Wanderkarte / Topografisch / Satellitenbild, Knopf mit Zeichen
+`karte`, Überschrift „Kartenart“, Bedienelemente im Branding (Regeln nach
+`.leaflet-div-icon`, Selektoren mit `.leaflet-control`, weil `leaflet.css`
+auf der Spurenseite nach `style.css` lädt), fünf Ausnahmen in
+`kontrast.py` (die Karte bleibt hell, E-MA-14). Gefächert (Statusblock):
+ein Agent Formular und Leseansicht (`mission_fields.php`,
+`einsatz_form.php`, `einsatz.php`), einer Tagesübersicht, Spurenseite,
+Papierkorb und vier Diensttag-/Einsatzseiten. Seriell danach: die Regeln der
+Schlossspalte samt `--lese-beschriftung` und `align-items: center`
+(E-OF-77), `hashchange` auf `#ruheliste` in `index.php` (gefunden von der
+Ortsdatenprobe), Prüfmittel (F-OF-24): Bilderlauf `__TAG_SCHNITT__`,
+Ortsdatenprobe, Bedienwege `ap1`, `ap2`, `ap3`, `ap6` und
+`schalterInstallation()` (die Klappkarte aus OF-06 — gefunden erst hier,
+weil `ap2` in OF-06 nicht lief), Wortliste (`spur-gpx-fachbegriff` fällt),
+Vollständigkeit (zwei Leaflet-Klassen haben jetzt Regeln, zwei werden
+abgefragt). Doku: Handbuch 4.1 (Aktionsblatt), 4.1a, 4.1b (Schneiden,
+Zeitraum löschen), 4.1c, 4.2 (Karten, Schloss, Plakette), Formularkarten
+und Transportart, Papierkorb; Technik 4.17 (drei Schlüssel, `$felderRendern()`),
+Spurenseite; Design.md 9.6, 9.17, Verlauf, Tabellen erzeugt; CHANGELOG;
+`version.php` 24.8.0.
+
+**Gemessen** (Prüfweise E-OF-60). Riegel **24 von 24** (darin
+`kennzeichnung` **26 von 26** Kennzeichen, 13 Felder, Sollliste
+unverändert). Kontrast **60 / 0**, 42 Paare aus den Regeln, 0 ohne Eintrag.
+Stilvergleich gegen `origin/main`: **203 / 203 / 211** Signaturen geplant
+(Chromium / Firefox / WebKit), je 67 457 Elementmessungen; gegen `6ab4abd`
+(nur OF-07, Chromium) **29 Signaturen**, alle aus Kartenknöpfen, Ebenenwahl,
+Schlossspalte und der Höhe der Katalogseite (F-OF-25 zu den übrigen).
+Bilderlauf Chromium, drei Breiten, 20 Seiten (Tagesübersicht in sieben
+Fassungen, Schnitt, Einsatzansicht, Formular, Papierkorb, sechs Diensttag-
+und Einsatzseiten, Rückfrage beim Konto): **60 Bilder, Überlauf 0, Konsole
+0, Knöpfe 0, Seitenregeln 54 Karten, 0 Befunde, 0 ausgenommen**.
+Bedienprobe (Chromium) von neun Wegdateien, die die Seiten berühren:
+**37 von 37** (über zwei Läufe; der erste fand 2 rot, F-OF-24 und
+`schalterInstallation()`). Proben: Ortsdaten **58 / 0** (Schneiden,
+Rücknahme, Löschen über die Karte auf Abruf, Transportart als
+Segmentwahl), GPX **48 / 0**. Speicherweg: 80 POST-Fälle alter gegen neuer
+Katalog, **0 Abweichungen**; Gegenprobe ohne `show_if` am Schockraum 8
+Abweichungen. Segmentmitte der Transportart (F-OF-21): Text gegen Taste
+**0,6 / 0 / 0 px** in Chromium / Firefox / WebKit, je 1440 und 390 px —
+der Versatz aus OF-P-05 ist auch hier nicht nachzustellen. OF-P-02: die
+aufgerufene Karte steht **24 px** (`--abstand-5`) unter der Einsatzliste,
+wie jede Karte. Schlossspalte bei 1440 px: 13 Beschriftungen beginnen bei
+derselben x, die Werte ebenso.
+
+**Probleme.** (1) Das Demo-Konto war zweimal gedrosselt (andere Agenten,
+dann die Prüfläufe) — rund eine Stunde Wartezeit bei den Agenten, die
+letzte Messung bei 390 px fiel deshalb aus. (2) F-OF-23 (Konzept
+verwechselt Kachel und Importzusatz), F-OF-24 (vier Messmittel an der alten
+Form). (3) Der Klick auf ein schon gewähltes Segment wählt ab — die Probe
+klickte zuerst blind und hätte „Luft“ zurückgenommen. (4) Eine eigene
+Handbuchzeile nannte „Hubschrauber“ (Wortliste), umformuliert.
+
+**Nicht geprüft:** Bilderlauf, Bedienprobe und Barrierefreiheit in Firefox
+und WebKit (E-OF-60, OF-09); Schneiden und GPX-Import im Bild (die Probe
+belegt den Weg, nicht das Aussehen nach einer Rückmeldung); ein echter
+Ad-hoc-Tag und ein Tag ohne Rettungsmittel im Bild (der Bestand hat keinen);
+eine ausgedünnte Spur in der Einsatzansicht (eine Zeile, belegt durch
+Lesen); die Tastaturbedienung der Transportart (`segment.js`, unverändert);
+die Lage der aufgerufenen Karte bei 390 px.

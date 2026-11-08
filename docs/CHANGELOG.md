@@ -14,6 +14,23 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.8.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — Einsatz und Transport in einer Karte, Ruhesegmente auf Abruf**
+  (Schritt 27). Im Formular standen „Einsatz“ mit zwei Schaltern und
+  „Transport“ mit einer Auswahlliste als zwei Karten für eine Sache; jetzt
+  ist es eine, die Transportart eine Segmentwahl, die sich abwählen lässt,
+  und der Feldkatalog beschreibt die Anordnung, statt dass sie von Hand
+  gebaut ist. Die Karte „Ruhesegmente“ stand an jedem Tag mit Aufzeichnung
+  unter der Einsatzliste, obwohl man sie nur zum Schneiden braucht — sie
+  öffnet jetzt der Eintrag „Einsatz aus GPS-Daten ausschneiden“ im Menü des
+  Diensttags. In der Einsatzansicht stehen die Schlösser in einer eigenen
+  Spalte vor dem Wort, die Kartenknöpfe sehen aus wie die der Anwendung, und
+  die Plakette „GPS-Daten ausgedünnt“ ist fort, weil sie wie eine Warnung
+  aussah und keine war.
+
 ## [Web 24.7.0] — unveröffentlicht
 
 ### Geändert

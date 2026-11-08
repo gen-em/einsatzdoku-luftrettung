@@ -173,11 +173,13 @@ ui_geruest_start(['hilfe' => 'hilfe.php#4-1a-gps-daten-des-diensttages', 'aktiv'
         . 'zwischen den Einsätzen. Die Dateien sind damit so zu behandeln wie '
         . 'die geschützten Angaben selbst, obwohl sie ohne Schlüssel lesbar '
         . 'sind.') ?>
-    <p class="feld-hinweis">Auf eine Zeile zeigen hebt die zugehörige Linie auf
-       der Karte hervor; ein Klick zoomt auf sie. <strong>GPX</strong> lädt sie
-       einzeln herunter.<?php if ($auswahlAn): ?> Mehrere Kästchen ankreuzen
-       lädt die ausgewählten GPS-Daten als <em>eine</em> Datei — jede
-       Aufzeichnung bleibt darin eine eigene Spur.<?php endif; ?></p>
+    <?php /* EIN SATZ (Design.md 6, OF-07; bis Web 24 drei). Dass „GPX"
+             einzeln herunterlaedt, sagt jetzt das Zeichen am Knopf; dass in
+             der Sammeldatei jede Aufzeichnung ein eigener Track bleibt, steht
+             im Handbuch 4.1a. */ ?>
+    <p class="feld-hinweis">Auf eine Zeile zeigen hebt ihre Linie auf der Karte
+       hervor, ein Klick zoomt auf sie<?php if ($auswahlAn): ?>; angekreuzte
+       Zeilen lädt „Auswahl als GPX" als <em>eine</em> Datei<?php endif; ?>.</p>
 
     <?php foreach ($spuren as $i => $s): ?>
       <?php
@@ -188,20 +190,22 @@ ui_geruest_start(['hilfe' => 'hilfe.php#4-1a-gps-daten-des-diensttages', 'aktiv'
         $zeit = fmt_local((string)$s['von'], 'H:i')
               . ($s['bis'] ? '–' . fmt_local((string)$s['bis'], 'H:i') : '–offen') . ' Uhr';
 
-        $plaketten = '';
-        if ($s['n'] === 0) {
-            $plaketten = ui_plakette('keine GPS-Daten', ['ton' => 'neutral']);
-        } elseif ($s['stufe'] === SPUR2_STUFE_DUENN) {
-            $plaketten = ui_plakette('ausgedünnt · ' . $s['n'] . ' von '
-                . $s['n_original'] . ' Punkten', ['ton' => 'orange']);
-        } else {
-            $plaketten = ui_plakette($s['n'] . ' Punkte', ['ton' => 'neutral']);
-        }
+        /* KEINE PLAKETTE „AUSGEDUENNT" MEHR (E-OF-12, OF-07). Eine
+         * ausgeduennte Aufzeichnung zeigt ihre heutige Punktzahl wie jede
+         * andere; dass sie ausgeduennt ist, steht in der GPX-Datei
+         * (`assets/gpx.js`, Stufe und urspruengliche Zahl) und im
+         * Handbuch 4.1a. Die Plakette war orange und sah aus wie ein
+         * Befund, um den sich jemand kuemmern muesste — es gibt keinen. */
+        $plaketten = $s['n'] === 0
+            ? ui_plakette('keine GPS-Daten', ['ton' => 'neutral'])
+            : ui_plakette($s['n'] . ' Punkte', ['ton' => 'neutral']);
         /* DER BROWSER BAUT DIE DATEI (`assets/gpx.js`). Ein Knopf statt
-         * eines Verweises, weil es kein Ziel gibt. */
+         * eines Verweises, weil es kein Ziel gibt. Zeichen `herunterladen`
+         * wie „GPS-Daten als GPX" im Menue der Tagesansicht (E-OF-11). */
         if ($s['n'] > 0) {
             $plaketten .= ' <button type="button" class="knopf knopf-leise" '
-                . 'data-gpx-spur="' . $i . '">GPX</button>';
+                . 'data-gpx-spur="' . $i . '">' . ui_symbol('herunterladen')
+                . '<span>GPX</span></button>';
         }
       ?>
       <?php
@@ -246,7 +250,7 @@ ui_geruest_start(['hilfe' => 'hilfe.php#4-1a-gps-daten-des-diensttages', 'aktiv'
     <form id="f-gpxwahl" hidden></form>
     <?php ui_speichern_leiste([
         'id' => 'gpxleiste', 'kein_haken' => true, 'form' => 'f-gpxwahl',
-        'text' => 'Auswahl als GPX', 'symbol' => 'karte',
+        'text' => 'Auswahl als GPX', 'symbol' => 'herunterladen',
         'zahl' => 'gpxzahl', 'hinweis' => '0 ausgewählt',
     ]); ?>
   <?php endif; ?>

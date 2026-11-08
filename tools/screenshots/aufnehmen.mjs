@@ -1053,7 +1053,10 @@ async function platzhalter() {
     const erstes = segs[0];
     if (erstes && erstes.bis_ts != null && erstes.bis_ts - erstes.von_ts >= 70 * 60
         && !(erstes.schnitte || []).length) {
-      p['__TAG_SCHNITT__'] = `index.php?d=${t.id}`;
+      /* MIT `#ruheliste` (seit Web 24.8.0, E-OF-05): Die Karte steht nicht
+         mehr von selbst da, die Adresse oeffnet sie wie der Menueeintrag
+         „Einsatz aus GPS-Daten ausschneiden". */
+      p['__TAG_SCHNITT__'] = `index.php?d=${t.id}#ruheliste`;
       break;
     }
   }

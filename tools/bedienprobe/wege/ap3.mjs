@@ -484,11 +484,11 @@ export const wege = [
                    gps: (t.match(/GPS-Daten/g) || []).length };
         });
         gps += r.gps;
-        /* DIE EINE ERLAUBTE: „jede Aufzeichnung bleibt darin eine eigene
-         * Spur" erklaert den Aufbau der GPX-DATEI — dort heisst es so
-         * (Ausnahme `spur-gpx-fachbegriff` der Wortliste). */
-        const uebrig = name === 'GPS-Daten des Tages' ? r.spur.slice(1) : r.spur;
-        if (uebrig.length) { funde.push(name + ': ' + uebrig.join(', ')); }
+        /* Bis Web 24.8.0 war auf der Seite „GPS-Daten des Tages" ein „Spur"
+         * erlaubt („jede Aufzeichnung bleibt darin eine eigene Spur", der
+         * Aufbau der GPX-Datei). Der Satz ist mit OF-07 gegangen, die
+         * Ausnahme mit ihm; jetzt gilt die Regel auf allen vier Seiten. */
+        if (r.spur.length) { funde.push(name + ': ' + r.spur.join(', ')); }
       }
       await k.bild('ap3-wording-gps-daten');
       return {

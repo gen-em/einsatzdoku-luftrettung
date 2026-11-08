@@ -700,14 +700,6 @@
       "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist. CLAUDE.md 4 nennt ihn namentlich: „Spuren nur über spur_lib.php“. „Spurteil“ ist der NAME DER DATEI im Sicherungsarchiv (docs/Backup-Format.md), nicht eine Beschreibung. Wer ein Archiv oeffnet, sieht ihn dort stehen; eine Meldung, die ihn anders nennt als das Verzeichnis, hilft niemandem beim Suchen. Das Backup-Format ist von E-S9-03 ausdruecklich ausgenommen."
     },
     {
-      "id": "spur-gpx-fachbegriff",
-      "datei": "server/tag_spuren.php",
-      "muster": "spur",
-      "klasse": "Homonym",
-      "zeile": "eine eigene Spur",
-      "begruendung": "Hier ist „Spur“ der Fachbegriff des GPX-FORMATS: Eine GPX-Datei enthaelt Tracks, und der Satz erklaert genau das — „jede Aufzeichnung bleibt darin eine eigene Spur“. Ein Kartenprogramm nennt sie so; die Anwendung waere die einzige, die es anders schriebe."
-    },
-    {
       "id": "spur-fachdokument-technik",
       "bereich": "c",
       "datei": "docs/Technik.md",
