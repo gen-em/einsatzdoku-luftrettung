@@ -32,6 +32,7 @@ katalog.html  div.karte-klappbar <div.rahmenkarte-abschnitte>  :  height
 katalog.html  div.karte-kopf <div.karte-bereich>  :  background, border, border-bottom, border-bottom-color, border-color, border-radius, border-width, height, padding, padding-bottom, padding-left, padding-right, padding-top
 katalog.html  div.karte-kopf <div.karte-klappbar>  :  border, border-bottom, border-bottom-color, border-color, border-width, height, padding, padding-bottom, padding-left, padding-right, padding-top
 katalog.html  div.karte-kopf <div.rahmenkarte-abschnitte>  :  border, border-bottom, border-bottom-color, border-color, border-width, height, padding, padding-bottom, padding-left, padding-right, padding-top
+katalog.html  div.karte-stand <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, font, font-size, height, line-height, margin, outline, text-align
 katalog.html  div.kartenfilter-lupe <div>  :  bottom, top
 katalog.html  div.kartenfilter-x <div>  :  bottom, top
 katalog.html  div.knopf-breit <div.speichern>  :  width
@@ -62,11 +63,19 @@ katalog.html  div.suchfeld-x <div>  :  bottom, top
 katalog.html  div.vorschlaege <div>  :  bottom, top
 katalog.html  div.vorschlag.aktiv <div>  :  background, border-color, border-left, border-left-color
 katalog.html  div.wahlliste <div.rahmenkarte-abschnitte>  :  max-width, width
+katalog.html  div.zeile-aktionen <div.protokoll-liste>  :  align-items
+katalog.html  div.zeile-aktionen <div>  :  align-items
+katalog.html  div.zeile-plaketten <div.archiv-liste>  :  align-items
+katalog.html  div.zeile-plaketten <div.karte-inhalt>  :  align-items
+katalog.html  div.zeile-plaketten <div.protokoll-liste>  :  align-items
+katalog.html  div.zeile-plaketten <div>  :  align-items
 katalog.html  form <div.inhalt>  :  height
 katalog.html  html <->  :  height, scroll-padding-top
 katalog.html  input.schalter-box <div>  :  bottom, top
 katalog.html  input.segment-box <div>  :  bottom, top
 katalog.html  input.wahl-box <div>  :  bottom, top
+seiten.html[einsatz.php]  div#plaketten.zeile-plaketten <div.karte-inhalt>  :  align-items
+seiten.html[suche.php]  div#filterplaketten.zeile-plaketten.filterplaketten <div>  :  align-items
 seiten.html[ui.php]  a.akkordeon-uebersicht <div.akkordeon-rahmen>  :  left
 seiten.html[ui.php]  a.eintrag.eintrag-anlegen <div.leiste-fuss>  :  width
 seiten.html[ui.php]  a.eintrag.eintrag-leise <div.leiste-fuss>  :  width
@@ -88,12 +97,17 @@ seiten.html[ui.php]  div.loc-widget.X <aside.leisteX>  :  width
 seiten.html[ui.php]  div.loc-widget.X <div.loc-widget.X>  :  width
 seiten.html[ui.php]  div.ortsfeld-zeile <div.loc-widget.X>  :  width
 seiten.html[ui.php]  div.schalter <aside.leisteX>  :  width
-seiten.html[ui.php]  div.segmentX <aside.leisteX>  :  width
+seiten.html[ui.php]  div.segmentXX <aside.leisteX>  :  width
 seiten.html[ui.php]  div.speichern <aside.leisteX>  :  background, border, border-color, border-radius, border-top, border-top-color, border-width, box-shadow, padding, padding-left, padding-right
 seiten.html[ui.php]  div.titelzeile <aside.leisteX>  :  width
 seiten.html[ui.php]  div.titelzeile-haupt <div.titelzeile>  :  width
 seiten.html[ui.php]  div.titelzeile-text <div.titelzeile-haupt>  :  width
 seiten.html[ui.php]  div.wahlliste <aside.leisteX>  :  width
+seiten.html[ui.php]  div.zeile-aktionen <a>  :  align-items
+seiten.html[ui.php]  div.zeile-aktionen <div.zeile-aktionen>  :  align-items
+seiten.html[ui.php]  div.zeile-aktionen <div.zeile-plaketten>  :  align-items
+seiten.html[ui.php]  div.zeile-plaketten <details.zeile-mehr>  :  align-items
+seiten.html[ui.php]  div.zeile-plaketten <span.zeile-haupt>  :  align-items
 seiten.html[ui.php]  footer.fuss-seiteX <aside.leisteX>  :  width
 seiten.html[ui.php]  h2.leiste-kopfzeile <aside.leisteX>  :  width
 seiten.html[ui.php]  h2.leiste-kopfzeile <div>  :  width
@@ -103,7 +117,7 @@ seiten.html[ui.php]  label <div.loc-widget.X>  :  width
 seiten.html[ui.php]  label.feld-label <div.feldX>  :  width
 seiten.html[ui.php]  label.feld-label <div.loc-widget.X>  :  width
 seiten.html[ui.php]  label.schalter-label <div.schalter>  :  width
-seiten.html[ui.php]  label.segment-taste <div.segmentX>  :  width
+seiten.html[ui.php]  label.segment-taste <div.segmentXX>  :  width
 seiten.html[ui.php]  label.wahl-zeile <div.wahlliste>  :  width
 seiten.html[ui.php]  main#inhalt.inhalt <h2.leiste-kopfzeile>  :  width
 seiten.html[ui.php]  p <div.demo-hinweis>  :  width
@@ -118,6 +132,7 @@ seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-anlegen>  :  width
 seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-leise>  :  width
 seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-offen>  :  width
 seiten.html[ui.php]  span.fuss-version <p.fuss-zeile>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, outline
+seiten.html[ui.php]  span.karte-stand <span.karte-zahl>  :  text-align
 seiten.html[ui.php]  span.nur-vorlesen <button.knopf.knopf-symbol>  :  left
 seiten.html[ui.php]  span.nur-vorlesen <span>  :  right
 seiten.html[ui.php]  span.wahl-text <label.wahl-zeile>  :  width

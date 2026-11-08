@@ -1120,12 +1120,15 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `drucken.svg` | Tabler Icons „printer" (MIT) | 3 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
+| `filter.svg` | Tabler Icons „filter" (MIT) | 11 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 22 |
 | `haken.svg` | Tabler Icons „check" (MIT) | 38 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
+| `herunterladen.svg` | Tabler Icons „download" (MIT) | 3 |
 | `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 18 |
 | `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 37 |
+| `hochladen.svg` | Tabler Icons „upload" (MIT) | 0 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
 | `karte-breit.svg` | Tabler Icons „arrows-horizontal" (MIT) | 1 |
@@ -1138,6 +1141,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `lupe.svg` | Tabler Icons „search" (MIT) | 13 |
 | `mail.svg` | Tabler Icons „mail" (MIT) | 15 |
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
+| `mond.svg` | Tabler Icons „moon" (MIT) | 0 |
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 6 |
@@ -1153,6 +1157,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
 | `server.svg` | Tabler Icons „server" (MIT) | 21 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 25 |
+| `sonne.svg` | Tabler Icons „sun" (MIT) | 1 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
@@ -1166,13 +1171,14 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 30 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
+| `wiederherstellen.svg` | Tabler Icons „restore" (MIT) | 2 |
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 19 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 2 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 34 |
 
-58 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
-**Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`.
+64 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
+**Nirgends genannt:** `hochladen`, `luftlinie`, `mond`, `reanimation`, `werkzeug`.
 
 ## 9. Bausteine
 
@@ -1270,36 +1276,36 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1811 |
 | `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1839 |
 | `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1866 |
-| `ui_karte_start()` | `.karte` | ja (+43 Unterklassen) | 1906 |
-| `ui_karte_ende()` | `.karte` | ja (+43 Unterklassen) | 1990 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 2025 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 2067 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2115 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2177 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2232 |
-| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2289 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2388 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2460 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2518 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2564 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2598 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2670 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2694 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2736 |
-| `ui_feld()` | `.feld` | ja (+28 Unterklassen) | 2808 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2873 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2917 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2970 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 3014 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3113 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3183 |
-| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3224 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3316 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3354 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3384 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3396 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3539 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3618 |
+| `ui_karte_start()` | `.karte` | ja (+43 Unterklassen) | 1913 |
+| `ui_karte_ende()` | `.karte` | ja (+43 Unterklassen) | 2000 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 2035 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 2077 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2125 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2187 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2242 |
+| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2299 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2398 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2470 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2528 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2574 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2608 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2680 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2704 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2746 |
+| `ui_feld()` | `.feld` | ja (+28 Unterklassen) | 2818 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2883 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2927 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2997 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 3041 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3140 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3210 |
+| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3251 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3343 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3381 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3411 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3423 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3566 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3645 |
 
 54 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -1322,19 +1328,24 @@ Zahl (gedämpft), genau **eine** Kopfaktion rechts.
 ```
 
 **Zustände:** offen (`<section>`) · klappbar (`<details class="karte
-karte-klappbar">` mit Winkel links und Vorschau rechts) · mit Plakette.
+karte-klappbar">` mit Winkel links, rechts **Stand** und **Plakette**) · mit
+Plakette.
 
-> **Die drei Zustände sind nicht frei kombinierbar, und der Unterschied fällt
-> still aus** (notiert 16.09.2026, P5a/AP8). Eine **klappbare** Karte zeigt
-> **weder `plakette` noch `aktion`**: `ui_karte_start()` kehrt im
-> `<details>`-Zweig zurück, bevor beides ausgegeben wird. Sie kennt dort nur
-> Winkel, Titel, `zahl` und `vorschau`. Wer `vorschau` setzt und eine Plakette
-> mitgibt, verliert die Plakette — ohne Fehlermeldung, und kein Bild zeigt es,
-> weil der zugeklappte Kartenkopf ohnehin anders aussieht.
->
-> **Wer beides braucht, nimmt eine offene Karte.** Was in die Plakette
-> gehörte, steht dann nicht zusätzlich in der Vorschau: Die Vorschau ist der
-> Ersatz für den Inhalt, nicht für den Zustand.
+**Die Klappkarte trägt Stand und Plakette** (seit Web 24.3.0, Konzept OF,
+OF-02, E-OF-42, Bilder OF-P24 bis -P27): `ui_karte_start(['zu' => true,
+'stand' => 'kein Streifen', 'plakette' => ui_plakette(…)])` gibt im
+`<summary>` Winkel, Titel, `zahl`, den Stand (`.karte-stand`, gedämpft,
+rechts) und die Plakette aus. **Eine Kopfaktion trägt sie weiterhin nicht** —
+im `<summary>` wäre sie ein Knopf im Knopf. Steht der Anker der Adresse auf
+der Karte oder in ihr, klappt `assets/klappkarte.js` (Gerüst) sie auf; nach
+dem Speichern einer Karte, die auf `#k-…` umleitet, steht sie damit offen
+mit ihrer Meldung.
+
+> **Bis Web 24.2 fiel die Plakette im `<details>`-Zweig still weg**
+> (notiert 16.09.2026, P5a/AP8): `ui_karte_start()` kehrte zurück, bevor sie
+> ausgegeben wurde, und der Stand hieß `vorschau` (`.karte-vorschau`). Wer
+> beides brauchte, nahm eine offene Karte. Das ist überholt; die Regel „die
+> Plakette sagt den Zustand, der Stand ersetzt den Inhalt" bleibt.
 
 **Eine zweite Kopfaktion gibt es nicht** (E-P3-25). Was mehr braucht, bekommt
 ein Aktionsmenü.
@@ -1399,6 +1410,12 @@ Plaketten, Aktionen rechts.
   <div class="zeile-aktionen">…</div>
 </div>
 ```
+
+**Plakette und Knopf stehen auf einer Linie** (seit Web 24.3.0, OF-P-08):
+`.zeile-plaketten` und `.zeile-aktionen` sind beide mittig ausgerichtet. Bis
+dahin rückte die Regel für die Plaketten am Fuß der Einsatzkarte
+(`.karte-inhalt .zeile-plaketten`, Abstand oben) jede Zeile in einer Karte
+um 12 px herunter; sie gilt jetzt nur dem direkten Kind.
 
 **`vorn` ist nicht `aktionen`.** Was vorn steht, *wählt die Zeile aus*; was
 rechts steht, *handelt an ihr*. Zwei Verwendungen: die NutzerInnen-Liste
@@ -1627,7 +1644,7 @@ Vier Eingabebausteine, und die Wahl zwischen ihnen ist keine Geschmacksfrage:
 |---|---|
 | **`.feld`** | Beschriftung plus Eingabe. Die Beschriftung steht in **Normalschrift** — im Bestand waren Feldnamen gesperrte Versalien, das prägende Stilmittel und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21). |
 | **`.schalter`** | **eines** an oder aus. 44-px-Zeile, Beschriftung links, an in Orange. Abhängige Felder klappen darunter auf, eingerückt mit orangem Randstrich (E-P3-28). |
-| **`.segment`** | **eine aus wenigen** kurzen Möglichkeiten nebeneinander („Gemischt / Luft / Boden"). |
+| **`.segment`** | **eine aus wenigen** kurzen Möglichkeiten nebeneinander („Gemischt / Luft / Boden"). **Abwählbar** (`'abwaehlbar' => true`, seit Web 24.3.0, E-OF-33): Ein zweiter Klick oder die Leertaste auf das gewählte Feld nimmt die Wahl zurück; den Zustand „keines" trägt ein verborgenes Radio ohne Wert (`.segment-leer`), `assets/segment.js` macht das Abwählen. Ohne Skript bleibt das Formular gültig. |
 | **`.wahlliste`** | **eine aus mehreren** mit Erklärung daneben. 44-px-Zeilen untereinander, die gewählte hell orange (E-P3-20). **Schlichte Liste, keine umrandeten Einzelzeilen** (seit Web 12.3.3): Vier Zeilen mit eigenem Rahmen auf eigener Fläche sahen aus wie vier Karten und sind eine Wahl. Erkennbar ist die Auswahl am gezeichneten Punkt und an der Fläche der gewählten Zeile — dafür braucht keine Zeile eine Umrandung. |
 
 Alle vier sind aus **echten** `<input>` gebaut: Tastaturbedienung,
@@ -1726,13 +1743,23 @@ Hängt an `data-dirty-track` (`assets/forms.js`).
 **Kein „Verwerfen".** Der Rückweg oben genügt, und ein Verwerfen-Knopf neben
 einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29).
 
-**Sie hat die Form der Karte** (E-R43-1, seit Web 12.2.3): derselbe Radius,
-dieselbe Breite. Bis dahin brach sie mit einem negativen Rand seitlich aus dem
-Inhalt aus und lief ohne Radius von Rand zu Rand — sie wirkte dadurch eckig
-und breiter als die Karte darüber, obwohl sie zu ihr gehört. **Was bleibt, ist
-alles, was die Funktion trägt:** der klebende Sitz, die Trennlinie nach oben
-und der Schatten. Die Leiste soll auffallen, weil sie folgt, nicht weil sie
-anders geschnitten ist.
+**Sie ist eine Fläche, keine Karte** (seit Web 24.2.0, Konzept OF, OF-01,
+E-OF-32, -41, Bild OF-P07): `--auswahl-flaeche` (schaltet im Dunkelmodus
+mit), ohne Linie, Bogen und Schatten. Steht sie direkt im Inhalt oder in
+dessen Formular, nimmt sie dessen Innenabstand seitlich und unten zurück und
+ist damit **der untere Rand der Rahmenkarte**, bündig von der Leiste bis zum
+Kartenrand. Links steht fett in der Auswahlschrift, **was** geändert ist
+(„Geändert: Logo und Darstellung" — die Titel der Abschnitte mit Änderung,
+`forms.js`); „Geändert" ist die Vorgabe jeder Formularleiste
+(`hinweis_vorlage`), nur die Sammelleiste zählt stattdessen ihre Auswahl.
+*Bis Web 24.1 hatte sie die Form der Karte* (E-R43-1, seit Web 12.2.3:
+Radius, Linie oben, Schatten), weil sie zwischen Karten stand; seit die
+Karten der Einstellungen Abschnitte sind, gehört sie zu keinem.
+
+**Die Regel dazu gilt für jede Seite** (Kapitel 6, gemessen im Bilderlauf):
+Speichert ein Knopf **einen** Abschnitt, steht er als letztes Element darin;
+speichert er **mehrere**, erscheint diese Leiste. Ein Knopf zwischen zwei
+Abschnitten gehört optisch zum falschen.
 
 **Der Knopf steht rechts, die Zählung links daneben.** Im Markup steht der
 Hinweis zuerst — das ist zugleich die Vorlesereihenfolge („12 ausgewählt",
@@ -3645,6 +3672,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 24.2.0–24.3.0 (Schritt 27, Konzept OF, OF-01 und OF-02)** | **6:** Erklärtext ohne Verweis, das „?" öffnet das Kapitel; drei Seitenregeln im Bilderlauf. **9.9** Speicherleiste als Auswahlfläche am Rand. **4:** `--feld-breit` statt `--listensuche-breit`. **9.1:** Klappkarte mit Stand und Plakette (`stand` statt `vorschau`). **9.2:** Plakette und Knopf auf einer Linie. **9.7:** Segmentwahl abwählbar. **8:** sechs Zeichen (`filter`, `wiederherstellen`, `herunterladen`, `hochladen`, `mond`, `sonne`), freigegeben mit den Mockups. Kein neuer Baustein. |
 | **Web 24.1.0 (Schritt 27, Konzept OF, NV-03)** | **9.25:** Am Schreibtisch nur der aktive Block (`.leiste-gruppe-aktiv`), Schublade unverändert; aktiver Eintrag, markierte Zeitraumzeile und Vorschlag **ohne Strich**, der Vorschlag auf Blau 100 statt Rauch (E-OF-16); Sprungmarken nur zu sichtbaren Karten. **3.4:** zwei Paare neu beschrieben (der Strich, den sie nannten, ist fort; die Paare tragen andere Stellen). **10.1:** „Abmelden" nur in der Leiste (E-OF-27). Kein neuer Baustein, kein Token. |
 | **Web 23.12.0–24.0.0 (Schritt 27, Konzept OF, NV-01 und NV-02)** | **9.37:** Bereichszeile als zweite Lage des Reiter-Bausteins, Reiter 700 / 48 px (`--bereiche`) / Unterstrich 3 px (`--strich-reiter`) für beide Ebenen (E-OF-17, -40). **10.1:** Rahmenkarte um Leiste und Inhalt, Abschnitte statt Karten im Bereich Einstellungen (E-NV-01, -03, E-OF-36 bis -38); Fußzeile dunkelblau (E-OF-34). Neue Token `--bereiche` und das abgeleitete `--strich-reiter`; kein neuer Baustein — Bereichszeile und Rahmenkarte sind mit den Mockups NV und OF freigegeben (Konzept OF). |
 | **Web 23.10.1–23.11.2 (Schritt 26, Konzept MA, zweite Runde)** | **Repo auf `e7bf4fc`** (Token hell und dunkel). **9.4:** Knopfart **`haupt`** (Philipp-Orange mit Asphalt, einmal je Seite, sechs Seiten, E-MA-27), `gefahr` als **Umriss** (E-MA-26), Tabelle der Arten nach dem Repo. **2.3:** in der Kopfleiste wieder der **Kurzname** (E-MA-28); Favicons aus dem Set des Repos (E-MA-35). **3.1:** Zeile Hauptaktion. **3a:** Gefahrknopf und Zähler getrennt. **6:** Links im Fließtext unterstrichen, Barrierefreiheit wird gemessen (E-MA-32, -33). Kein neuer Baustein; `haupt` ist die Form des Primärknopfs mit den Repo-Token (Board 9D). |

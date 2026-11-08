@@ -189,7 +189,7 @@ ui_seite_start(['titel' => 'Rechtstexte']);
                  zu den Sicherheitsereignissen steht immer: Den
                  Ratenschutz gibt es in jeder Installation. */ ?>
         <?php ui_karte_start(['titel' => 'Textbausteine', 'id' => 'k-bausteine',
-                              'vorschau' => $bausteine . ' zum Übernehmen']); ?>
+                              'stand' => $bausteine . ' zum Übernehmen']); ?>
           <?php if (geocoder_installation_an()): ?>
             <?= ui_codeblock_lang(
                   '### Adresssuche' . "\n\n"

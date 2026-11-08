@@ -178,7 +178,7 @@ ui_seite_start(['titel' => 'Diensttag aufnehmen']);
 
   <?php if ($nichtWaehlbar): ?>
     <?php ui_karte_start(['titel' => 'Nicht wählbar', 'zu' => true,
-                          'vorschau' => count($nichtWaehlbar) . ' in der Nachbarschaft']); ?>
+                          'stand' => count($nichtWaehlbar) . ' in der Nachbarschaft']); ?>
       <p class="feld-hinweis">Zusammenführen geht nur zwischen Diensttagen
          <strong>derselben Art</strong>: Art, Rollensatz und Fähigkeiten sind
          eingefroren (E8), und einen luftgebundenen mit einem bodengebundenen

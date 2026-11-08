@@ -42,7 +42,7 @@ es im Kopf von `server/version.php`.
 | NV-03 | Leiste der Einstellungen auf den aktiven Bereich kürzen; aktiver Eintrag ohne Strich in jeder Leiste (OF-P-04, E-OF-16); „Abmelden“ nur in der Leiste (E-OF-27); Sprungmarken nur zu sichtbaren Karten (OF-P-16) | Opus · keine | **erledigt** 08.11.2026 (Web 24.1.0) |
 | NV-04 | Schmale Breiten: Bereichszeile rollt, Rahmenkarte ohne Rand, Schublade mit drei Bereichen; die Übersicht bleibt (E-OF-50) | Opus · keine | **erledigt** 08.11.2026 (ohne Codeänderung, E-OF-63) |
 | OF-01 | Regeln für alle Seiten: eine rechte Kante, Felder 36 rem (E-OF-31); Speicherknopf im Abschnitt oder Speicherleiste (E-OF-32, E-OF-41); Handbuch-Verweise raus, das „?“ öffnet das Kapitel der Seite (E-OF-02, -56); ein Satz je Karte (OF-P-10, -15); drei Messungen im Bilderlauf (E-OF-49, Nr. 530) | Opus · keine | **erledigt** 08.11.2026 (Web 24.2.0) |
-| OF-02 | Bausteine I: Klappkarte mit Stand und Plakette (E-OF-42); Segmentwahl abwählbar und senkrecht mittig (OF-P-05, E-OF-33); Zeile mit Plakette und Knopf auf einer Linie (OF-P-08); sechs neue Zeichen | Opus · keine | offen |
+| OF-02 | Bausteine I: Klappkarte mit Stand und Plakette (E-OF-42); Segmentwahl abwählbar und senkrecht mittig (OF-P-05, E-OF-33); Zeile mit Plakette und Knopf auf einer Linie (OF-P-08); sechs neue Zeichen | Opus · keine | **erledigt** 08.11.2026 (Web 24.3.0) |
 | OF-03 | Bausteine II, Eingabe: Datumsfeld `TT.MM.JJJJ` an allen acht Stellen (E-OF-06, -44, -54); Ortsfeld-Hinweis als Zeichen (E-OF-07); Listenkopf mit Filterknopf (E-OF-18) | Opus · keine | offen |
 | OF-04 | Einstellungen: Profil mit Zweitfaktor „ein Satz plus Verwalten“ (E-OF-19); Geräte nach Typ, Koppeln im Dialog (E-OF-25); Import / Export „erst wählen, dann füllen“ (E-OF-26); Backup (E-OF-52, OF-P-15) | Opus · keine | offen |
 | OF-05 | Verwaltung: Kontenliste ohne Spalte „Öffnen“ (E-OF-53); Demo-Konto als Karte unter Installation, ein Schalter statt zwei (E-OF-08, E-OF-46) | Opus · keine | offen |
@@ -51,8 +51,8 @@ es im Kopf von `server/version.php`.
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | offen |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
-**In Arbeit:** OF-02 Bausteine I. **Erledigt:** OF-00, NV-01 bis NV-04
-(das Gerüst), OF-01. **Je Paket mitzunehmen:** seine Zeilen unter
+**In Arbeit:** OF-03 Bausteine II. **Erledigt:** OF-00, NV-01 bis NV-04
+(das Gerüst), OF-01, OF-02. **Je Paket mitzunehmen:** seine Zeilen unter
 `seitenregeln` in `tools/screenshots/ausnahmen.json` (E-OF-65) — OF-04
 Profil, Geräte, Backup, Import / Export, Standorte; OF-05 Kontoseite,
 Protokoll-Archiv; OF-06 Jobs, Sicherheit, Servereinstellungen; OF-07
@@ -215,6 +215,20 @@ enthält `origin/main` `ac4a7bd` (Merge von PR #157).
   ist. Soll sie bei einem Bereich entfallen, ist das eine Bedingung in
   `ui_geruest_start()`.
 
+- **F-OF-21 — Der Versatz der Segmentwahl (OF-P-05) ist im Bestand nicht
+  nachzustellen.** Gemessen am 08.11.2026 an allen sichtbaren Segmenttasten
+  von Suche (28), Installation (3), Hintergrundjobs (4),
+  Servereinstellungen (4) und Import / Export (2) in Chromium, Firefox und
+  WebKit: Mitte des Textes gegen Mitte der Taste, **0 Abweichungen ab
+  1 px**. `.segment-taste` trägt `align-items: center` seit jeher. Gemeint
+  war vermutlich die Transportart im Mockup `OF-P32`, die es als
+  Segmentwahl erst mit OF-07 gibt — dort wird nachgemessen.
+- **F-OF-22 — Die Plakette neben einem Knopf sass zu tief, und zwar
+  wegen einer fremden Regel.** `.karte-inhalt .zeile-plaketten { margin-top }`
+  war für die Plaketten am Fuß der Einsatzkarte gedacht und traf jede Zeile
+  in einer Karte: auf den Konto-Backups 6 px unter der Mitte des Knopfs, im
+  Schneide-Bereich ebenso. Das ist OF-P-08; behoben mit `>` (nur das direkte
+  Kind) und `align-items: center` an beiden Gruppen.
 - **F-OF-20 — Die Höhenschwelle der Sprungmarken ist vielleicht
   überholt.** Unter 950 px Fensterhöhe fallen die Sprungmarken in der
   festen Leiste weg (Design.md 9.25), weil sie bei 18 Einträgen die
@@ -770,6 +784,7 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-65 | OF-01: Die drei Seitenregeln sind ab sofort rot im Bilderlauf; die 31 bekannten Verstöße stehen mit dem Paket, das sie behebt, unter `seitenregeln` in `ausnahmen.json`. Jedes Paket streicht seine Zeilen, eine Ausnahme ohne Befund ist selbst rot — so läuft die Liste bis OF-09 auf null, und ein neuer Verstoß fällt sofort auf. Seiten ohne eigenes Paket sind zugeordnet: Standorte und Rückfrage beim Konto zu OF-04, Diensttag anlegen / Datum / zusammenführen und Einsatz verschieben zu OF-07 | Umsetzung, 08.11.2026 |
 | E-OF-66 | OF-01: Die Handbuchmarken stehen als Zuordnung Menüpunkt → Marke in `ui_hilfe_marke()`, nicht als sechstes Glied der Punkt-Tupel — die Tupel werden an fünf Stellen positionsweise gelesen. Seiten mit eigenem Kapitel (Kontoseite, Sicherheit, die Diensttage-Seiten, Suche) geben `hilfe` an `ui_geruest_start()` | Umsetzung, 08.11.2026 |
 | E-OF-67 | OF-01: Die Speicherleiste bekommt ihre Form jetzt (Fläche, bündig, „Geändert: …“ als Vorgabe jeder Formularleiste); welche Seite Knöpfe im Abschnitt und welche die Leiste trägt, entscheidet das Paket der Seite (Profil OF-04, Installation OF-05, Servereinstellungen OF-06), wie Abschnitt 5 es sagt. „Ungespeichert“ der Rechtstexte wird „Geändert“ | Umsetzung, 08.11.2026 |
+| E-OF-68 | OF-02: `vorschau` heißt `stand` bei allen **neun** Verwendern, nicht bei dreien (Abschnitt 5 zählte drei); `.karte-vorschau` heißt `.karte-stand`. Das Öffnen „nach dem Absenden“ macht ein Gerüstskript `klappkarte.js` am Anker der Adresse, nicht der Server — die Seiten leiten nach dem Speichern auf `#k-…` um, und den Anker sieht nur der Browser; dasselbe Skript öffnet die Karte beim Sprung über eine Sprungmarke. Die Leertaste der abwählbaren Segmentwahl behandelt `segment.js` selbst, weil Chromium und WebKit auf einem gewählten Radio keinen Klick auslösen | Umsetzung, 08.11.2026 |
 | E-OF-48 | Papierkorb: Das Artzeichen des Diensttags (`ohne-zuordnung`, Hubschrauber, Fahrzeug) steht vor dem Datum wie in Leiste und Vorschlägen — so zeigt es das freigegebene Bild; „entfernt“ in E-OF-30 meint die Stelle neben den Knöpfen. Will die Betreiberin es im Papierkorb ganz weglassen, ist das eine Zeile | Konzept, aus E-OF-30 (F-OF-16) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
@@ -1066,4 +1081,40 @@ Auswertung und fiel mit ihr aus; seit sie eine eigene Funktion mit eigenem
 **Nicht geprüft:** Bilderlauf, Barrierefreiheit, Bedienprobe in Firefox
 und WebKit; die Speicherleiste des Einsatzformulars im Bild (gemessen nur
 an den Rechtstexten); das „?“ je Seite von Hand (belegt über `anker`).
+
+### OF-02 Bausteine I (08.11.2026, Web 24.3.0)
+
+**Was getan ist.** Klappkarte: `stand` (statt `vorschau`, neun Verwender,
+E-OF-68) und `plakette` im `<summary>`, `.karte-stand`; Gerüstskript
+`assets/klappkarte.js`. Segmentwahl: Option `abwaehlbar` mit verborgenem
+`.segment-leer` und `assets/segment.js` (einmal je Seite);
+`segment-leer` in `vollstaendigkeit-ohne-regel.md` als Anker. Zeile:
+`align-items: center` an `.zeile-plaketten` und `.zeile-aktionen`,
+Einsatzkarten-Abstand nur am direkten Kind (F-OF-22). Kartenkopf mit
+Plakette: bricht schon um (`flex-wrap`, Plakette `nowrap`) — nichts zu
+tun. Sechs Zeichen aus `@tabler/icons` 3.31.0 (`arrow-left` darin
+byte-gleich mit `zurueck.svg`), LIESMICH des Vorrats (64), Lizenzen.md
+5 und Verlauf. Design.md 9.1, 9.2, 9.7, **9.9 (in OF-01 vergessen, hier
+nachgezogen)**, Verlauf; Tabellen erzeugt. CHANGELOG, `version.php`
+24.3.0.
+
+**Gemessen.** Segmenttasten: 41 Tasten auf sechs Seiten in drei Engines,
+Textmitte gegen Tastenmitte **0 Abweichungen ≥ 1 px** (F-OF-21).
+Abwählen an einer aus `ui_segment_markup()` erzeugten Gruppe, Wert über
+`FormData`: Start „“ → Boden „boden“ → Boden „“ → Luft „luft“ →
+Leertaste „“ → Leertaste „luft“, **in Chromium, Firefox und WebKit
+gleich** (erster Versuch: Chromium und WebKit blieben bei der Leertaste
+auf „luft“, E-OF-68). Plakette neben Knopf, Konto-Backups 1920: vorher
+**6 px** unter der Mitte (3 Zeilen), nachher **0** in drei Engines.
+Klappkarte: Status mit `#k-konfig` geladen → offen; zugeklappt und Anker
+neu gesetzt → offen, Oberkante 120 px; drei Engines gleich. Riegel **24
+von 24** (`vollstaendigkeit` zuerst rot: `segment-leer` ohne Regel,
+eingetragen). Stilvergleich 131 / 132 / 137, die neuen 17 durchgesehen
+(`align-items`, `.karte-stand`, Segment-Markup in der Quelltextprobe von
+`ui.php`; Einsatzkarte: nur `align-items`, der Abstand bleibt), 0
+ungeplant. Kontrast 60 / 0.
+
+**Nicht geprüft:** eine Klappkarte mit Plakette im Bild (erster Verwender
+OF-06); die abwählbare Segmentwahl in einer echten Seite (erster Verwender
+OF-07, P-OF-11); Bilderlauf, Barrierefreiheit und Bedienprobe (E-OF-60).
 

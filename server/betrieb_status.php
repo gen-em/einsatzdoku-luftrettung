@@ -290,7 +290,7 @@ ui_seite_start(['titel' => 'Status']);
            wer sie nicht braucht, soll nicht an zwanzig Zeilen vorbeiscrollen. */ ?>
   <?php $kp = $nach('k-plattform'); ?>
   <?php ui_karte_start(['titel' => $kp['titel'], 'id' => $kp['id'],
-                        'vorschau' => 'Muss · Empfohlen · gemessen']); ?>
+                        'stand' => 'Muss · Empfohlen · gemessen']); ?>
     <p class="feld-hinweis">Dieselbe Liste, die <code>install.php</code> vor
        der Einrichtung prüft — ein fehlendes <em>Muss</em> färbt die Ampel rot,
        ein knappes orange, ein <em>Empfohlen</em> gar nicht.</p>
@@ -303,7 +303,7 @@ ui_seite_start(['titel' => 'Status']);
            „leer" da, die Liste und ihre Begruendung stehen in
            `status_konfig_zeilen()`. Sie zaehlt nicht in der Meldung oben. */ ?>
   <?php ui_karte_start(['titel' => 'Einstellungen aus der config.php', 'id' => 'k-konfig',
-                        'vorschau' => 'nur lesend · Geheimnisse als gesetzt/leer']); ?>
+                        'stand' => 'nur lesend · Geheimnisse als gesetzt/leer']); ?>
     <p class="feld-hinweis">Die Datei liegt nur auf dem Server und lässt sich
        hier nicht ändern — geändert wird sie per FTP. Passwörter und Schlüssel
        stehen nie im Klartext da.</p>

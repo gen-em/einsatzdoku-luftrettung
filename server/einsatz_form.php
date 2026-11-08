@@ -1394,7 +1394,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
              Wahrheit. */ ?>
     <?php $besatzungAbw = fieldValue('crew_override') === '1';
           ui_karte_start(['titel' => 'Abweichende Besatzung',
-                          'vorschau' => $besatzungAbw ? 'abweichend' : 'vom Diensttag',
+                          'stand' => $besatzungAbw ? 'abweichend' : 'vom Diensttag',
                           'offen' => $besatzungAbw,
                           'klasse' => 'form-block-besatzung']); ?>
       <?php $gruppeRendern('besatzung'); ?>
@@ -1461,7 +1461,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                              oder „nicht lesbar“. Bis Web 23.7.0 stand „keine“
                              auch im gesperrten Formular eines Einsatzes mit
                              Reanimation. */
-                          'vorschau' => $ortHuelleB64 !== null ? '' : 'keine',
+                          'stand' => $ortHuelleB64 !== null ? '' : 'keine',
                           'offen' => false,
                           'geschuetzt' => true,
                           'klasse' => 'form-block-rea']); ?>
@@ -1754,7 +1754,7 @@ function reaSperren(zu) {
     .forEach(el => { el.disabled = zu; });
 }
 function reaVorschau(text) {
-  const el = document.querySelector('.form-block-rea .karte-vorschau');
+  const el = document.querySelector('.form-block-rea .karte-stand');
   const n = document.querySelectorAll('#rearows .rea-sitzung').length;
   if (el) { el.textContent = text || (n ? n + ' erfasst' : 'keine'); }
 }

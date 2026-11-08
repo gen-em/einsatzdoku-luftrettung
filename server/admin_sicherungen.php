@@ -503,7 +503,7 @@ ui_seite_start(['titel' => 'Konto-Backups']);
          * Ebene tiefer). Löschen und „Ganzen Ordner löschen" liegen im
          * ⋯-Menü, weil beides endgültig ist. */ ?>
     <?php ui_karte_start(['titel' => 'Backups ohne Konto', 'id' => 'k-ohne',
-                          'vorschau' => $verwaist
+                          'stand' => $verwaist
                               ? count($verwaist) . (count($verwaist) === 1 ? ' Ordner · ' : ' Ordner · ')
                                 . $paketeOhneKonto . ($paketeOhneKonto === 1 ? ' Paket · ' : ' Pakete · ')
                                 . groesse_text($bytesOhneKonto)

@@ -320,7 +320,7 @@ ui_seite_start(['titel' => 'Demo-Konto']);
            zugeklappte Karte, die es nur gibt, wenn es einen Bericht gibt. */ ?>
   <?php if ($bericht !== null): ?>
     <?php ui_karte_start(['titel' => 'Bericht des letzten Laufs', 'id' => 'k-bericht',
-                          'zu' => true, 'vorschau' => 'Zahlen des Resets']); ?>
+                          'zu' => true, 'stand' => 'Zahlen des Resets']); ?>
       <pre><?= e(json_encode($bericht,
           JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></pre>
     <?php ui_karte_ende(true); ?>

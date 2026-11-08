@@ -1554,7 +1554,10 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .karte-aktion-blau{color:var(--text-link)}
 .karte-aktion-orange{color:var(--text-link)}
 .karte-inhalt{padding:var(--abstand-4)}
-.karte-vorschau{
+/* DER STAND EINER KLAPPKARTE (bis Web 24.2 `.karte-vorschau`): leise
+ * rechts im Kopf, dahinter die Plakette (Konzept OF, E-OF-42). Bricht der
+ * Kopf um, rutscht er mit der Plakette in die zweite Zeile. */
+.karte-stand{
   margin-left:auto;color:var(--gedaempft);
   font-size:var(--groesse-2);text-align:right;
 }
@@ -1592,8 +1595,10 @@ a.zeile:hover .zeile-weiter{color:var(--text-link-hover)}
 .zeile-haupt{font-weight:700;color:var(--text)}
 .zeile-text a{color:inherit}
 .zeile-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
-.zeile-plaketten{display:flex;flex-wrap:wrap;gap:var(--abstand-1);flex:0 1 auto}
-.zeile-aktionen{display:flex;gap:var(--abstand-2);flex:0 0 auto}
+/* PLAKETTE UND KNOPF AUF EINER LINIE (OF-P-08): beide Gruppen mittig
+ * ausgerichtet, in sich und in der Zeile. */
+.zeile-plaketten{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-1);flex:0 1 auto}
+.zeile-aktionen{display:flex;align-items:center;gap:var(--abstand-2);flex:0 0 auto}
 
 /* ZEILE MIT AUFKLAPPBAREN ANGABEN (.zeile-mehr). Ein <details>, dessen
  * <summary> die Zeile ist; die Angaben
@@ -3376,8 +3381,12 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
  * Einsatzort, das Alter unter dem Geburtsdatum. */
 .lese-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
 
-/* Die Plaketten am Fuß der Einsatz-Karte — dieselben wie auf der Kachel. */
-.karte-inhalt .zeile-plaketten{margin-top:var(--abstand-3)}
+/* Die Plaketten am Fuß der Einsatz-Karte — dieselben wie auf der Kachel.
+ * NUR DAS DIREKTE KIND (Konzept OF, OF-02, OF-P-08): Bis Web 24.2 stand hier
+ * `.karte-inhalt .zeile-plaketten`, und das traf jede Zeile in einer Karte —
+ * die Plakette sass dort 6 px unter der Mitte des Knopfs daneben (gemessen
+ * auf den Konto-Backups, auch die Ruhesegment-Zeilen des Schneide-Bereichs). */
+.karte-inhalt > .zeile-plaketten{margin-top:var(--abstand-3)}
 
 /* ---- Einsatzphasen als Zeilenliste ---------------------------------------
  * Nummer gedämpft, Name, rechts die Uhrzeit mit dem Minutenabstand zur

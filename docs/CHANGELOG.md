@@ -14,6 +14,26 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.3.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — zugeklappte Abschnitte zeigen ihren Stand** (Schritt 27).
+  Klappbare Karten sagten zugeklappt nur, wie sie heißen; ob darin etwas
+  stimmt, sah man erst nach dem Aufklappen. Jetzt stehen rechts im Kopf der
+  eingestellte Stand und eine farbige Plakette, und springt man auf einen
+  solchen Abschnitt — etwa nach dem Speichern —, klappt er von selbst auf.
+  Eine Segmentwahl kann außerdem so gebaut sein, dass ein zweiter Klick die
+  Wahl wieder zurücknimmt; gebraucht wird das für die Transportart.
+
+### Behoben
+
+- **Web — Plaketten saßen neben einem Knopf zu tief** (Schritt 27). Eine
+  Regel, die nur für die Plaketten am Fuß der Einsatzkarte gedacht war,
+  rückte jede Plakette in einer Liste innerhalb einer Karte um einige Pixel
+  nach unten, etwa bei den Konto-Backups. Sie gilt jetzt nur noch dort, wo
+  sie hingehört.
+
 ## [Web 24.2.0] — unveröffentlicht
 
 ### Geändert

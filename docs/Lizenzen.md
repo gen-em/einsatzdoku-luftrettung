@@ -236,7 +236,7 @@ Namen nicht weiterführen. Hier wird nichts verändert.
 `server/assets/images/symbole/LICENSE-tabler-icons.txt`
 (© 2020–2026 Paweł Kuna).
 
-58 Dateien unter `server/assets/images/symbole/`, je Zeichen eine Datei,
+64 Dateien unter `server/assets/images/symbole/`, je Zeichen eine Datei,
 24 × 24, Strich 2 px, Farbe über `currentColor`. Jede Datei trägt im Kommentar
 ihren Tabler-Namen; die Zuordnungstabelle steht in der `LIESMICH.md` daneben.
 Eine erzeugte Übersicht liefert `python3 tools/erzeugen/design.py symbole`.
@@ -639,6 +639,7 @@ Backlog Nr. 230.
 
 | Fassung | Was |
 |---|---|
+| Web 24.3.0 (Schritt 27, Konzept OF, OF-02) | Abschnitt 5: **sechs neue Zeichen**, Tabler Icons **„filter", „restore", „download", „upload", „moon", „sun"** (MIT), Outline, unverändert übernommen und deutsch benannt (`filter`, `wiederherstellen`, `herunterladen`, `hochladen`, `mond`, `sonne`), freigegeben mit den Mockups der Oberflächenrunde. Quelle: npm-Paket `@tabler/icons` 3.31.0 — `arrow-left` daraus ist byte-gleich mit `zurueck.svg`, also derselbe Satz. **58 → 64 Dateien.** Kein neuer Fremdbestandteil. |
 | Web 23.11.1–23.11.2 (Schritt 26, MA-13, MA-15) | Abschnitt 7.0a: **axe-core** 4.14.0 (MPL-2.0) als Prüfwerkzeug unter `tools/barrierefreiheit/vendor/` (E-MA-33, Nr. 524), byteweise unverändert mit SHA-256. Die Favicons der Produktmarke kommen aus dem Set des Branding-Repos (Commit `e7bf4fc`). |
 | Web 20.42.0 (P5c/AP5) | Abschnitt 3: **qrcode-generator** 2.0.4 (MIT) für den QR-Code des Zweitfaktors (E-P5c-41, hebt SP-11 in diesem Punkt auf). Nur die Modulmatrix; das SVG baut die Anwendung. Abschnitt 7.0: **jsQR** 1.4.0 (Apache-2.0) als Prüfwerkzeug unter `tools/bedienprobe/vendor/` (E-P5c-87). Beide mit Herkunft und SHA-256 im Dateikopf. |
 | Web 20.39.0 (P5c/AP2) | Abschnitt 5: **ein neues Zeichen**, Tabler Icons **„list"** (MIT), Outline, Strich 2 im 24-px-Raster wie der übrige Vorrat — `protokoll.svg`. Es trägt den Menüpunkt Verwaltung → Protokoll; jeder Punkt der Einstellungsleiste trägt ein Zeichen, und der Vorrat hatte keines für eine Ereignisliste. **57 → 58 Dateien.** Die Zahl in Abschnitt 5 stand noch bei **56** und war damit schon vor diesem Paket um ein Zeichen hinter dem Ordner zurück; gezählt am 24.09.2026: 58 `.svg` im Ordner. Kein neuer Fremdbestandteil und kein neuer Laufzeitdienst: derselbe Satz, aus dem die übrigen kommen. |

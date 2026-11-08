@@ -807,7 +807,7 @@ function ui_leiste_ende(): void
  * Schließt Inhalt und Rahmen, setzt die Fußzeile darunter und lädt die
  * Skripte des Gerüsts.
  *
- * DIE VIER SKRIPTE DES GERÜSTS stehen hier und nicht auf den Seiten: Sie
+ * DIE SKRIPTE DES GERÜSTS stehen hier und nicht auf den Seiten: Sie
  * gehören zur Hülle, und eine Seite, die eines davon zu laden vergisst, fällt
  * nicht auf — sie verhält sich nur an einer Stelle anders als alle anderen.
  * So ging es einmal mit confirm.js, das auf drei Seiten zweimal und auf
@@ -829,7 +829,7 @@ function ui_geruest_ende(array $o = []): void
      * und auf genau diesen beiden ruft `unlock.js` seinen Sendeweg zur
      * LADEZEIT. */
     $skripte = ['assets/symbol.js', 'assets/schublade.js', 'assets/blatt.js',
-                'assets/confirm.js'];
+                'assets/confirm.js', 'assets/klappkarte.js'];
     if (ui_hat_tagesleiste()) { $skripte[] = 'assets/daylist.js'; }
     if (ui_hat_menueleiste()) { $skripte[] = 'assets/menue.js'; }
     foreach ($skripte as $s) {
@@ -1882,11 +1882,18 @@ function ui_ladeplatz(string $text, array $o = []): string
  * Eine zweite Kopfaktion gibt es nicht — was mehr braucht, bekommt ein
  * Aktionsmenü.
  *
- * Zugeklappte Karten tragen den Winkel links im Kopf und eine Vorschau rechts
- * („keine", „vom Diensttag", „3 · 1 ausgewählt").
+ * Zugeklappte Karten tragen den Winkel links im Kopf, rechts den STAND
+ * („keine", „vom Diensttag", „kein Streifen") und die Plakette (Konzept OF,
+ * OF-02, E-OF-42). Bis Web 24.2 hiess der Stand `vorschau`, und die Plakette
+ * fiel im zugeklappten Zweig still weg — Status, Hintergrundjobs,
+ * Servereinstellungen und Komplett-Backup brauchen beides im Kopf. Eine
+ * KOPFAKTION traegt die Klappkarte weiter nicht: Sie stuende im <summary>,
+ * ein Knopf im Knopf. Steht der Anker der Adresse auf der Karte oder in
+ * ihr, klappt `assets/klappkarte.js` sie auf — so ist sie nach dem
+ * Speichern offen und die Meldung zu sehen.
  *
  * $o: titel, zahl, aktion ['text','href','symbol','art','form','attr'],
- *     zu (bool), vorschau, klasse, id, plakette, geschuetzt (bool),
+ *     zu (bool), stand, offen (bool), klasse, id, plakette, geschuetzt (bool),
  *     symbol (Bereichszeichen vor dem Titel — nur mit 'klasse' => 'karte-bereich')
  *
  * DIE BEREICHSKARTE. `symbol` setzt ein
@@ -1905,7 +1912,7 @@ function ui_ladeplatz(string $text, array $o = []): string
  * ------------------------------------------------------------------------ */
 function ui_karte_start(array $o = []): void
 {
-    $zu = !empty($o['zu']) || isset($o['vorschau']);
+    $zu = !empty($o['zu']) || isset($o['stand']);
 
     /* 'geschuetzt' => true haengt das SCHLOSS an den Kartentitel.
      *
@@ -1940,8 +1947,11 @@ function ui_karte_start(array $o = []): void
         if (isset($o['zahl'])) {
             echo '    <span class="karte-zahl">' . ui_e((string)$o['zahl']) . "</span>\n";
         }
-        if (isset($o['vorschau'])) {
-            echo '    <span class="karte-vorschau">' . ui_e((string)$o['vorschau']) . "</span>\n";
+        if (isset($o['stand'])) {
+            echo '    <span class="karte-stand">' . ui_e((string)$o['stand']) . "</span>\n";
+        }
+        if (!empty($o['plakette'])) {
+            echo '    ' . (string)$o['plakette'] . "\n";
         }
         echo "  </summary>\n";
         echo '  <div class="karte-inhalt">' . "\n";
@@ -2916,12 +2926,26 @@ function ui_segment(array $o): void
  */
 function ui_segment_markup(array $o): string
 {
+    /* ABWAEHLBAR (Konzept OF, OF-02, E-OF-33): Ein zweiter Klick auf das
+     * gewaehlte Feld nimmt die Wahl zurueck — „keines" ist dann ein Zustand,
+     * kein viertes Feld. Getragen wird er von einem verborgenen Radio ohne
+     * Wert, das vorn in der Gruppe steht und gewaehlt ist, wenn `wert` leer
+     * ist. Ohne Skript bleibt das Formular gueltig: Es sendet die letzte
+     * Wahl oder den leeren Wert. `assets/segment.js` macht das Abwaehlen,
+     * einmal je Seite geladen. */
+    static $skriptGeladen = false;
+    $abwaehlbar = !empty($o['abwaehlbar']);
     ob_start();
     $name = (string)($o['name'] ?? '');
     ?>
-<div class="segment<?= !empty($o['klasse']) ? ' ' . ui_e((string)$o['klasse']) : '' ?>"
+<div class="segment<?= !empty($o['klasse']) ? ' ' . ui_e((string)$o['klasse']) : '' ?><?= $abwaehlbar ? ' segment-abwaehlbar' : '' ?>"
      <?= !empty($o['id']) ? 'id="' . ui_e((string)$o['id']) . '" ' : '' ?>role="group"<?=
         !empty($o['label']) ? ' aria-label="' . ui_e((string)$o['label']) . '"' : '' ?>>
+  <?php if ($abwaehlbar): ?>
+    <input type="radio" class="segment-box segment-leer" name="<?= ui_e($name) ?>" value=""
+           aria-hidden="true" tabindex="-1" hidden
+           <?= (string)($o['wert'] ?? '') === '' ? 'checked' : '' ?>>
+  <?php endif; ?>
   <?php $i = 0; foreach ((array)($o['optionen'] ?? []) as $wert => $text):
       $id = 'sg-' . preg_replace('/[^\w-]/', '-', $name . '-' . $wert . '-' . $i++); ?>
     <input type="radio" class="segment-box" id="<?= ui_e($id) ?>" name="<?= ui_e($name) ?>"
@@ -2930,7 +2954,10 @@ function ui_segment_markup(array $o): string
     <label class="segment-taste" for="<?= ui_e($id) ?>"><?= ui_e((string)$text) ?></label>
   <?php endforeach; ?>
 </div>
-<?php return (string)ob_get_clean();
+<?php if ($abwaehlbar && !$skriptGeladen): $skriptGeladen = true; ?>
+<script src="<?= ui_e(ui_asset('assets/segment.js')) ?>" defer></script>
+<?php endif;
+    return (string)ob_get_clean();
 }
 
 

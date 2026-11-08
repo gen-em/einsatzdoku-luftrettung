@@ -371,7 +371,7 @@ ui_seite_start(['titel' => 'Updates']);
   <?php /* ---- Ausgeführt: zugeklappt ---------------------------------- */ ?>
   <?php ui_karte_start(['titel' => 'Ausgeführt', 'id' => 'k-ausgefuehrt',
       'zahl' => (string)count($erledigt),
-      'vorschau' => $stand['letzte'] !== null
+      'stand' => $stand['letzte'] !== null
           ? 'zuletzt ' . (string)$stand['letzte']
             . ($stand['wann'] !== null
                ? ' am ' . datum_zeit_text((string)$stand['wann']) : '')

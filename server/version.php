@@ -8764,4 +8764,16 @@ declare(strict_types=1);
  *   Seiten ohne Kopfmenue; das „?" der Kopfleiste oeffnet das Kapitel der
  *   Seite (`ui_hilfe_marke()`, `ui_geruest_start(['hilfe' => …])`). Der
  *   Bilderlauf misst die drei Regeln. Neben; kein Schema. */
-const WEB_VERSION = '24.2.0';
+/* 24.3.0 — BAUSTEINE I (Schritt 27, Konzept OF, OF-02; E-OF-11, -18, -30,
+ *   -33, -42, OF-P-05, -08). Die Klappkarte traegt im Kopf den Stand
+ *   (`stand`, bisher `vorschau`, neun Verwender) und die Plakette; die
+ *   Sperre fuer die Plakette faellt, die fuer die Kopfaktion bleibt.
+ *   `assets/klappkarte.js` (Geruest) oeffnet die Karte, auf die der Anker
+ *   zeigt. Die Segmentwahl ist abwaehlbar (`abwaehlbar`, verborgenes Radio
+ *   ohne Wert, `assets/segment.js`; die Leertaste wird selbst behandelt,
+ *   weil Chromium und WebKit auf einem gewaehlten Radio keinen Klick
+ *   ausloesen). Plakette und Knopf einer Zeile stehen auf einer Linie —
+ *   der Abstand fuer die Plaketten am Fuss der Einsatzkarte traf bis dahin
+ *   jede Zeile in einer Karte. Sechs Zeichen aus Tabler (filter, restore,
+ *   download, upload, moon, sun). Neben; kein Schema. */
+const WEB_VERSION = '24.3.0';
