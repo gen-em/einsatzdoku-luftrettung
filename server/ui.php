@@ -652,6 +652,22 @@ function ui_kopf(array $o = []): void
            <?= $aktiv === 'hilfe' ? 'aria-current="page"' : '' ?>>
           <?= ui_symbol('hilfe', 'symbol-gross') ?>
         </a>
+        <?php /* MOND UND SONNE (Konzept OF, OF-08, E-OF-09): zwischen „?" und
+                 Zahnrad, nur angemeldet und nur bei Umschalter oder Folgt
+                 System (`darstellung_umschalter()`). Beide Zeichen stehen im
+                 Knopf, das Stylesheet zeigt das passende — so stimmt das Bild
+                 schon vor jedem Skript, auch wenn das Geraet entscheidet.
+                 Name und `aria-pressed` setzt `assets/darstellung.js`, weil
+                 nur der Browser weiss, was das Geraet will. */
+              if (function_exists('darstellung_umschalter') && darstellung_umschalter()):
+                  $dunkel = darstellung_attribut() === 'dark'; ?>
+        <button type="button" class="knopf knopf-symbol kopf-darstellung" data-darstellung
+                aria-pressed="<?= $dunkel ? 'true' : 'false' ?>"
+                aria-label="<?= $dunkel ? 'Dunkel aus' : 'Dunkel ein' ?>">
+          <?= ui_symbol('mond', 'symbol-gross symbol-mond') ?>
+          <?= ui_symbol('sonne', 'symbol-gross symbol-sonne') ?>
+        </button>
+        <?php endif; ?>
         <a class="knopf knopf-symbol kopf-zahnrad<?= $aktiv === 'einstellungen' ? ' aktiv' : '' ?>"
            href="einstellungen.php" aria-label="Einstellungen"
            <?= $aktiv === 'einstellungen' ? 'aria-current="page"' : '' ?>>
@@ -828,6 +844,10 @@ function ui_geruest_ende(array $o = []): void
      * LADEZEIT. */
     $skripte = ['assets/symbol.js', 'assets/schublade.js', 'assets/blatt.js',
                 'assets/confirm.js', 'assets/klappkarte.js'];
+    /* Mond und Sonne der Kopfleiste (OF-08) — nur, wenn es den Knopf gibt. */
+    if (function_exists('darstellung_umschalter') && darstellung_umschalter()) {
+        $skripte[] = 'assets/darstellung.js';
+    }
     if (ui_hat_tagesleiste()) { $skripte[] = 'assets/daylist.js'; }
     if (ui_hat_menueleiste()) { $skripte[] = 'assets/menue.js'; }
     foreach ($skripte as $s) {

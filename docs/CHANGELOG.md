@@ -14,6 +14,18 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.9.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — Mond und Sonne in der Kopfleiste** (Schritt 27). Hell oder dunkel
+  ließ sich bisher nur im Profil wählen, und wer nachts kurz umschalten
+  wollte, musste dorthin und zurück; jetzt steht zwischen „?“ und Zahnrad ein
+  Knopf, der sofort umschaltet und bis zur Abmeldung gilt. Er gehört zur
+  neuen Vorgabe „Umschalter“ und zu „Folgt System“; bei „Immer hell“ und
+  „Immer dunkel“ fehlt er. Der Klick bleibt bewusst in der Sitzung und nicht
+  im Konto — dauerhaft gilt, was im Profil steht.
+
 ## [Web 24.8.0] — unveröffentlicht
 
 ### Geändert

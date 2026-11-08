@@ -8829,4 +8829,12 @@ declare(strict_types=1);
  *   Karte: Bedienelemente im Branding, Kartenart ohne Anbieter. Papierkorb:
  *   `wiederherstellen`, Artzeichen vorn. Je Karte ein Satz. Neben; kein
  *   Schema. */
-const WEB_VERSION = '24.8.0';
+/* 24.9.0 — DIE DARSTELLUNG (Schritt 27, Konzept OF, OF-08; E-OF-09, -43,
+ *   -55, -79). Vier Einstellungen im Profil: Umschalter (Vorgabe), Immer
+ *   hell, Immer dunkel, Folgt System. Bei Umschalter und Folgt System steht
+ *   Mond/Sonne zwischen „?" und Zahnrad (`assets/darstellung.js`); der Klick
+ *   gilt bis zur Abmeldung und liegt in der Sitzung (`api/darstellung.php`),
+ *   nicht im Konto. `users.darstellung` bekommt den Wert 'system', '' heisst
+ *   jetzt Umschalter — Bestandskonten ohne Wahl haben damit den Knopf. Neben;
+ *   kein Schema, keine Migration (VARCHAR(10)). */
+const WEB_VERSION = '24.9.0';

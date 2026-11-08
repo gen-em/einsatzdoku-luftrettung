@@ -1139,6 +1139,17 @@ img,svg,video{max-width:100%;height:auto}
  * Der negative Rand des Zahnrads zieht nur den letzten Knopf an die Kante;
  * dieser hier braucht ihn nicht. */
 .kopf-hilfe.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
+/* MOND UND SONNE (Konzept OF, OF-08, E-OF-09): Der Knopf traegt beide
+ * Zeichen, gezeigt wird das, wohin ein Klick fuehrt — hell der Mond, dunkel
+ * die Sonne. Dieselben zwei Ausloeser wie die Farben (Abschnitt 3a), damit
+ * das Zeichen schon stimmt, wenn das Geraet entscheidet. */
+.kopf-darstellung .symbol-sonne{display:none}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .kopf-darstellung .symbol-mond{display:none}
+  :root:not([data-theme="light"]) .kopf-darstellung .symbol-sonne{display:inline}
+}
+:root[data-theme="dark"] .kopf-darstellung .symbol-mond{display:none}
+:root[data-theme="dark"] .kopf-darstellung .symbol-sonne{display:inline}
 /* KOPFLEISTE EINER ANLAGE MIT ETIKETT (.kopf-umgebung) — Variante der
  * Kopfleiste. Gesetzt von ui_kopf(),
  * wenn `app.umgebung` einen Namen traegt; die Farbe ist eine geschlossene

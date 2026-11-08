@@ -46,6 +46,7 @@ katalog.html  div.kartenfilter-x <div>  :  bottom, inset, top
 katalog.html  div.knopf-breit <div.speichern>  :  size, width
 katalog.html  div.konto-mail <div.tabelle-konten>  :  overflow-wrap
 katalog.html  div.konto-name <div.tabelle-konten>  :  overflow-wrap
+katalog.html  div.kopf-darstellung <div>  :  height, size
 katalog.html  div.koppel-schritte <div>  :  column-gap, display, flex-direction, gap, height, list-style, padding, padding-left, size
 katalog.html  div.leaflet-bar.leaflet-control <div.leaflet-container>  :  background, background-clip, background-color, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, border-top-color, border-width, height, overflow, overflow-x, overflow-y, size
 katalog.html  div.leaflet-bar.leaflet-control.map-ctrl-phase <div.leaflet-container>  :  background, background-clip, background-color, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, border-top-color, border-width, height, overflow, overflow-x, overflow-y, size
@@ -86,6 +87,7 @@ katalog.html  div.speichern-hinweis <div>  :  border, border-bottom, border-bott
 katalog.html  div.suchfeld-lupe <div>  :  bottom, inset, top
 katalog.html  div.suchfeld-x <div>  :  bottom, inset, top
 katalog.html  div.symbol <div.leaflet-control-layers-toggle>  :  margin, margin-left, margin-right, margin-top
+katalog.html  div.symbol-sonne <div.kopf-darstellung>  :  display, height, size, width
 katalog.html  div.tagfeld <div.einsatz-raster>  :  align-items, grid-template-columns
 katalog.html  div.vorschlaege <div>  :  bottom, inset, top
 katalog.html  div.vorschlag.aktiv <div>  :  background, background-color, border-color, border-left, border-left-color

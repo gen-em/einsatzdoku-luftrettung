@@ -204,7 +204,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            Auflösung dieselbe Quelle haben. */
         $logo = post_text('logo_wahl');
         if (!in_array($logo, LOGO_WAHLEN, true)) { $logo = ''; }
-        /* Dieselbe Haltung fuer die Darstellung: unbekannt heisst System. */
+        /* Dieselbe Haltung fuer die Darstellung: unbekannt heisst Umschalter
+           (die Vorgabe, ohne Klick wie das Geraet). */
         $darstellung = post_text('darstellung');
         if (!in_array($darstellung, DARSTELLUNGEN, true)) { $darstellung = ''; }
         /* ---- Adresswechsel nur mit Passwortnachweis
@@ -1519,14 +1520,22 @@ ui_seite_start(['titel' => 'Einstellungen',
                Kopfleiste → Profil; ein eigener Schalter in der Leiste waere
                ein neuer Baustein (CLAUDE.md 5). */ ?>
       <?php ui_karte_start(['titel' => 'Darstellung', 'id' => 'k-darstellung']); ?>
-        <p class="feld-hinweis">Hell oder dunkel für dieses Konto auf jedem Gerät —
-          Karten und Druckblätter bleiben hell.</p>
+        <?php /* VIER EINSTELLUNGEN SEIT WEB 24.9.0 (Konzept OF, OF-08,
+                 E-OF-09, -79). Mond und Sonne stehen in der Kopfleiste bei
+                 „Umschalter" und „Folgt System"; ein Klick gilt bei beiden
+                 bis zur Abmeldung. Bis dahin drei: Wie das Gerät, Hell,
+                 Dunkel — '' hiess „wie das Gerät" und heisst jetzt
+                 Umschalter, ohne Klick ebenfalls wie das Gerät. */ ?>
+        <p class="feld-hinweis">Hell oder dunkel für dieses Konto auf jedem Gerät;
+          Mond und Sonne in der Kopfleiste schalten bis zur Abmeldung um, Karten
+          und Druckblätter bleiben hell.</p>
         <?php ui_wahlliste([
             'name' => 'darstellung', 'wert' => $darstellungWahl, 'label' => 'Darstellung',
             'optionen' => [
-                ''       => ['text' => 'Wie das Gerät', 'zusatz' => 'Vorgabe'],
-                'hell'   => ['text' => 'Hell'],
-                'dunkel' => ['text' => 'Dunkel'],
+                ''       => ['text' => 'Umschalter', 'zusatz' => 'Vorgabe · wie das Gerät, mit Mond und Sonne'],
+                'hell'   => ['text' => 'Immer hell'],
+                'dunkel' => ['text' => 'Immer dunkel'],
+                'system' => ['text' => 'Folgt System', 'zusatz' => 'wie das Gerät, mit Mond und Sonne'],
             ],
         ]); ?>
       <?php ui_karte_ende(); ?>

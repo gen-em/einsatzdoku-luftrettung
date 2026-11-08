@@ -430,10 +430,19 @@ dunkle Markenfarbe; ein Schwarz aus der Neutral-Reihe kippte die Marke ins
 Beige (Board MA-04).
 
 **Zwei Auslöser, dieselben Werte.** Ohne Wahl folgt die Oberfläche dem
-Gerät (`prefers-color-scheme`); im Profil lässt sich „Hell" oder „Dunkel"
-fest wählen, und `ui_seite_start()` setzt dann `data-theme` am `<html>` —
-serverseitig, damit nichts aufblitzt (E-MA-13). Der Schalter ist eine
-**Wahlliste** (9.31) im Profil, kein neuer Baustein in der Kopfleiste.
+Gerät (`prefers-color-scheme`); im Profil lässt sich „Immer hell" oder
+„Immer dunkel" fest wählen, und `ui_seite_start()` setzt dann `data-theme`
+am `<html>` — serverseitig, damit nichts aufblitzt (E-MA-13). Die Wahl ist
+eine **Wahlliste** (9.31) im Profil.
+
+**Mond und Sonne** (seit Web 24.9.0, Konzept OF, E-OF-09): Bei „Umschalter"
+(Vorgabe) und „Folgt System" steht in der Kopfleiste zwischen „?" und
+Zahnrad ein Symbolknopf (`.kopf-darstellung`, `--knopf`, Zeichen
+`mond`/`sonne` in `--auf-dunkel`) — gezeigt wird, wohin ein Klick führt:
+hell der Mond, dunkel die Sonne, über dieselben zwei Auslöser, also schon
+vor jedem Skript richtig. Ein Klick gilt bis zur Abmeldung. Kein neuer
+Baustein (ein Symbolknopf wie Hilfe und Zahnrad), kein neues Kontrastpaar
+(dieselbe Schrift auf Dunkelblau).
 
 **Was nicht umschaltet:**
 
@@ -1144,7 +1153,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `lupe.svg` | Tabler Icons „search" (MIT) | 13 |
 | `mail.svg` | Tabler Icons „mail" (MIT) | 15 |
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
-| `mond.svg` | Tabler Icons „moon" (MIT) | 0 |
+| `mond.svg` | Tabler Icons „moon" (MIT) | 1 |
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 6 |
@@ -1160,7 +1169,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
 | `server.svg` | Tabler Icons „server" (MIT) | 21 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 25 |
-| `sonne.svg` | Tabler Icons „sun" (MIT) | 1 |
+| `sonne.svg` | Tabler Icons „sun" (MIT) | 2 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
@@ -1181,7 +1190,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 34 |
 
 64 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
-**Nirgends genannt:** `luftlinie`, `mond`, `reanimation`, `werkzeug`, `ziel-fern`.
+**Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`, `ziel-fern`.
 
 ## 9. Bausteine
 
@@ -1258,58 +1267,58 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_seite_start()` | — | Hüllenfunktion, kein eigenes Element | 53 |
 | `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 181 |
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 248 |
-| `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 309 |
+| `ui_symbol()` | `.symbol` | ja (+14 Unterklassen) | 309 |
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 504 |
-| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 600 |
-| `ui_geruest_start()` | `.inhalt` | ja | 695 |
-| `ui_leiste_ende()` | `.leiste` | ja (+28 Unterklassen) | 794 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 819 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 869 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1118 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1278 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1354 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1430 |
-| `ui_hinweise()` | `.hinweise` | ja | 1478 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1506 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1541 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1594 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1647 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1712 |
-| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1758 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1810 |
-| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1838 |
-| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1865 |
-| `ui_karte_start()` | `.karte` | ja (+44 Unterklassen) | 1912 |
-| `ui_karte_ende()` | `.karte` | ja (+44 Unterklassen) | 2007 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 2042 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 2084 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2132 |
-| `ui_zeile()` | `.zeile` | ja (+40 Unterklassen) | 2194 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2249 |
-| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2306 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2410 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2522 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2580 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2628 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2662 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2734 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2758 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2800 |
-| `ui_datum_eingabe()` | `.datum-eingabe` | **keine** | 2886 |
-| `ui_feld()` | `.feld` | ja (+31 Unterklassen) | 2909 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2980 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 3024 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 3094 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 3138 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3237 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3309 |
-| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3350 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3442 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3480 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3511 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3540 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3684 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3763 |
+| `ui_kopf()` | `.kopf` | ja (+30 Unterklassen) | 600 |
+| `ui_geruest_start()` | `.inhalt` | ja | 711 |
+| `ui_leiste_ende()` | `.leiste` | ja (+28 Unterklassen) | 810 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 835 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 889 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1138 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1298 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1374 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1450 |
+| `ui_hinweise()` | `.hinweise` | ja | 1498 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1526 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1561 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1614 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1667 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1732 |
+| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1778 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1830 |
+| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1858 |
+| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1885 |
+| `ui_karte_start()` | `.karte` | ja (+44 Unterklassen) | 1932 |
+| `ui_karte_ende()` | `.karte` | ja (+44 Unterklassen) | 2027 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 2062 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 2104 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2152 |
+| `ui_zeile()` | `.zeile` | ja (+40 Unterklassen) | 2214 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2269 |
+| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2326 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2430 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2542 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2600 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2648 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2682 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2754 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2778 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2820 |
+| `ui_datum_eingabe()` | `.datum-eingabe` | **keine** | 2906 |
+| `ui_feld()` | `.feld` | ja (+31 Unterklassen) | 2929 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 3000 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 3044 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 3114 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 3158 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3257 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3329 |
+| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3370 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3462 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3500 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3531 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3560 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3704 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3783 |
 
 55 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_datum_eingabe()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -3781,6 +3790,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 24.9.0 (Schritt 27, Konzept OF, OF-08)** | **3a:** Mond und Sonne in der Kopfleiste bei „Umschalter“ und „Folgt System“ (E-OF-09); vier Einstellungen im Profil. Kein neuer Baustein, kein Token, kein Kontrastpaar. |
 | **Web 24.8.0 (Schritt 27, Konzept OF, OF-07)** | **9.30:** Bedienelemente der Karte im Branding, Ebenenwahl mit Zeichen `karte` und Überschrift „Kartenart“, Namen ohne Anbieter (E-OF-13, -29). **9.6:** Schloss der Einsatzansicht in eigener Spalte vor dem Wort (E-OF-28). **9.7:** Transportart als abwählbare Segmentwahl aus dem Feldkatalog (E-OF-33). **9.17:** Die Karte „Ruhesegmente“ steht auf Abruf (E-OF-05). **4:** neues Maß `--lese-beschriftung` (14 rem, aus E-OF-28). Kein neuer Baustein. |
 | **Web 24.7.0 (Schritt 27, Konzept OF, OF-06)** | **9.1:** Stand und Plakette der Klappkarte als eine Gruppe (`.karte-stand-gruppe`). **9.2:** `zeile-umbruch` für Zeilen mit mehreren Plaketten oder Plakette und Knopf. Statusseite „Probleme zuerst", Servereinstellungen, Hintergrundjobs und Komplett-Backup aus vorhandenen Bausteinen (Klappkarte, Zeile, Segmentwahl, `haupt`); kein neuer Baustein, kein Token. |
 | **Web 24.5.0 (Schritt 27, Konzept OF, OF-04)** | **9.42 neu — Wahlkarten**, freigegeben mit OF-P17-C; dort auch Koppel-Dialog und Zweitfaktor-Karte als Verwendungen vorhandener Bausteine. **9.9:** Speicherleiste außerhalb des Formulars (`data-fuer`). **6:** Feldraster `.listen-form-felder` in den Einstellungen auf `--feld-breit` begrenzt. |

@@ -677,15 +677,26 @@ angemeldete Konten — aber nur bei denen, die hier „Standard der Installation
 stehen haben. Eine getroffene eigene Wahl bleibt unberührt.
 
 **Karte „Darstellung": hell oder dunkel.** Seit Web 23.10.0 wählst du im
-Profil, wie die Oberfläche aussieht: **Wie das Gerät** (die Vorgabe — sie
-folgt der Einstellung von Handy oder Rechner), **Hell** oder **Dunkel**. Die
-Wahl gilt für dein Konto auf jedem Gerät und wirkt sofort nach dem
-Speichern. Dunkel heißt: dunkelblaue Flächen, helle Schrift, dieselben
+Profil, wie die Oberfläche aussieht, seit Web 24.9.0 aus vier Einstellungen:
+
+- **Umschalter** (die Vorgabe): Die Seite folgt der Einstellung von Handy
+  oder Rechner, und in der Kopfleiste steht zwischen „?" und Zahnrad ein
+  Knopf mit **Mond** (zu dunkel) oder **Sonne** (zu hell). Ein Klick schaltet
+  sofort um und gilt **bis zur Abmeldung**; danach folgt die Seite wieder dem
+  Gerät.
+- **Immer hell** und **Immer dunkel**: fest, ohne Knopf.
+- **Folgt System**: wie Umschalter — die Seite folgt dem Gerät, der Knopf
+  steht da, ein Klick gilt bis zur Abmeldung.
+
+*(Bis Web 24.8.0 gab es drei Einstellungen ohne Knopf: Wie das Gerät, Hell,
+Dunkel. Ein Konto, das „Wie das Gerät" stehen hatte, hat jetzt den
+Umschalter.)* Die Wahl gilt für dein Konto auf jedem Gerät und wirkt sofort
+nach dem Speichern. Dunkel heißt: dunkelblaue Flächen, helle Schrift, dieselben
 Farben für Hinweise und Warnungen in dunklen Tönen. **Die Karte bleibt hell**
 — eine dunkle Karte bräuchte einen weiteren Kartendienst, der deinen
 Ausschnitt sähe —, ebenso alles, was du druckst. Die Anmeldeseite kennt
 dein Konto noch nicht und folgt immer dem Gerät. Im Demo-Konto lässt sich
-das Profil nicht speichern; dort gilt die Einstellung des Geräts.
+das Profil nicht speichern; dort gilt der Umschalter.
 
 **Karte „Datenschutz": die Adresssuche.** Seit Web 15.8.0 steht im Profil
 darunter der Schalter **„Adressvorschläge aus dem Internet"**. Er entscheidet

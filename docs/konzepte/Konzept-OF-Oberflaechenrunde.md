@@ -48,11 +48,11 @@ es im Kopf von `server/version.php`.
 | OF-05 | Verwaltung: Kontenliste ohne Spalte „Öffnen“ (E-OF-53); Demo-Konto als Karte unter Installation, ein Schalter statt zwei (E-OF-08, E-OF-46) | Opus · keine | **erledigt** 08.11.2026 (Web 24.6.0; Kontrollzahlen und Umleitung von `admin_demo.php` mit OF-06, E-OF-71) |
 | OF-06 | Betrieb: Status „Probleme zuerst“ (E-OF-20; Q-OF-02 → OF-M1); Hintergrundjobs (E-OF-10, -21); Servereinstellungen als Klappkarten (E-OF-22); Komplett-Backup (E-OF-23); Backup-Ziele an beiden Orten, die Seite entfällt (E-OF-24, E-OF-45) | Opus · **gefächert** nach OF-M1: je ein Agent für Status, Hintergrundjobs, Servereinstellungen und Komplett-Backup samt Ziele; `ui.php`, `style.css`, `status_lib.php`, Texte und Prüfarbeit seriell | **erledigt** 08.11.2026 (Web 24.7.0; gefächert auf drei Agenten, E-OF-74) |
 | OF-07 | Einsatz, Diensttag, Karte, Papierkorb: Ruhesegmente-Kachel entfällt (E-OF-05); GPX-Zeichen (E-OF-11); Plakette „ausgedünnt“ entfällt (E-OF-12); Karte „Einsatz und Transport“ im Feldkatalog (E-OF-33); Schlösser in eigener Spalte (E-OF-28); Kartenart ohne Anbieter (E-OF-13); Leaflet-Bedienelemente im Branding (E-OF-29); Papierkorb mit `restore`, Artzeichen vor das Datum (E-OF-30, E-OF-48) | Opus · **gefächert**: ein Agent Formular und Leseansicht (`einsatz_form.php`, `mission_fields.php`, `einsatz.php`), einer Karte (`geo.js`, `map_layers.js`, Leaflet-Regeln), einer Tagesübersicht und Papierkorb (`index.php`, `tag_spuren.php`, `papierkorb.php`); `style.css`, Design.md und Prüfarbeit seriell | **erledigt** 08.11.2026 (Web 24.8.0; Karte seriell, die zwei Seitenteile gefächert auf zwei Agenten, E-OF-75 bis -78) |
-| OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | offen |
+| OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | **erledigt** 08.11.2026 (Web 24.9.0; Klick nur in der Sitzung, E-OF-79) |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
-**In Arbeit:** OF-08 Darstellung. **Erledigt:**
-OF-00, NV-01 bis NV-04 (das Gerüst), OF-01 bis OF-07 (OF-M1 entschieden
+**In Arbeit:** OF-09 Abschluss. **Erledigt:**
+OF-00, NV-01 bis NV-04 (das Gerüst), OF-01 bis OF-08 (OF-M1 entschieden
 08.11.2026: E-OF-72, -73). **`seitenregeln` in
 `tools/screenshots/ausnahmen.json` ist leer** (E-OF-65): OF-06 und OF-07
 haben ihre Zeilen gestrichen. **Vorgelegt zur Kenntnis:** „Transportart“
@@ -819,6 +819,7 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-76 | OF-07, Formular (E-OF-33): Der Feldkatalog bekommt `'darstellung' => 'segment'` (abwählbare Segmentwahl für `select` mit festen `options`) und `'einzug' => false` (Unterfelder ohne Einzug); `nebeneinander` gilt auch für Schalter und Unterfelder. `transport_mode` steht in der Gruppe `einsatz`, `schockraum` hängt unmittelbar an ihr (`show_if` nicht Ambulant, wie bisher mittelbar). Ein Renderer `$felderRendern()` ersetzt drei gleichlautende Schleifen. **Beschriftung bleibt „Transportart“**, nicht „Transport“ wie im Bild: „Transport“ hat im Katalog schon drei Bedeutungen — eine Zeile, falls die Betreiberin das Bildwort will. Gesendet wird wie zuvor; 80 POST-Fälle alter gegen neuer Katalog ohne Abweichung | Umsetzung, 08.11.2026 |
 | E-OF-77 | OF-07, Leseansicht (E-OF-28): Die Karte „Transport“ heißt „Einsatz und Transport“ und trägt jetzt auch die Plaketten Sekundär, Fehleinsatz, Winde, Bergwacht und „Namen / Infos“ der Bergwacht — dieselbe Gruppe wie im Formular; „Einsatz“ (Ort, Diagnose, Notizen) bleibt eine eigene Karte, wie im Formular. Das Schloss steht vor dem Wort (`.lese-schloss`), die Beschriftungsspalte ist ab 720 px `--lese-beschriftung` (14 rem, neues Maß aus dem Bild), darunter so breit wie ihr Wort. **Die „Leerzeile unter Einsatzort“** war der Freiraum unter der Beschriftung neben zweizeiligem Wert; im Bild steht sie senkrecht mittig — `align-items: center` am Feld | Umsetzung, 08.11.2026 |
 | E-OF-78 | OF-07, Papierkorb (E-OF-48): Das Artzeichen steht in `vorn` der Zeile (eigene Spalte links, senkrecht mittig), nicht in der Datumszeile wie im Bild: `ui_zeile()` maskiert `text`, und dieselbe Form trägt schon die Liste der Rettungsmittel. Will die Betreiberin genau das Bild, ist es eine Option in `ui_zeile()`. Weiter in OF-07: je Karte und Seitenerklärung ein Satz auf Tagesübersicht (Diensttag-Daten, Ruhesegmente), Spurenseite, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben; Besatzungshinweis am Ad-hoc-Tag entfällt (der Satz der Ad-hoc-Felder trägt ihn). Die Ausnahme `spur-gpx-fachbegriff` der Wortliste fällt mit ihrem Satz | Umsetzung, 08.11.2026 |
+| E-OF-79 | Q zu OF-08 (E-OF-09 gegen E-OF-43): Der Klick auf Mond/Sonne liegt **nur in der Sitzung**, auch bei „Umschalter“ — E-OF-09 („Wahl gespeichert“) und E-OF-43 (Sitzung) widersprachen sich, und mit E-OF-43 verhalten sich „Umschalter“ und „Folgt System“ gleich. Vorgelegt mit drei Wegen (Konto, Sitzung, nur drei Einstellungen); gewählt: Sitzung, vier Einstellungen bleiben. Umsetzung: `darstellung_umschalter()`, `darstellung_klick_setzen()`, `$_SESSION['darstellung_klick']`; ändert das Profil die Einstellung, verfällt der Klick, speichert es dieselbe (Name, Logo), bleibt er. Der Knopf trägt beide Zeichen, das Stylesheet zeigt das passende (kein Aufblitzen, auch wenn das Gerät entscheidet); Name „Dunkel ein“/„Dunkel aus“ und `aria-pressed` setzt `assets/darstellung.js`. Ohne Knopf lehnt `api/darstellung.php` mit 409 ab | Betreiberin, 08.11.2026 („Nur in der Sitzung“) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
@@ -1485,3 +1486,46 @@ Ad-hoc-Tag und ein Tag ohne Rettungsmittel im Bild (der Bestand hat keinen);
 eine ausgedünnte Spur in der Einsatzansicht (eine Zeile, belegt durch
 Lesen); die Tastaturbedienung der Transportart (`segment.js`, unverändert);
 die Lage der aufgerufenen Karte bei 390 px.
+
+### OF-08 Darstellung (08.11.2026, Web 24.9.0)
+
+**Vorab entschieden:** E-OF-09 und E-OF-43 widersprachen sich darin, ob der
+Klick des Umschalters im Konto bleibt; vorgelegt, entschieden: nur in der
+Sitzung (E-OF-79).
+
+**Was getan ist.** `session_lib.php`: vier Werte in `DARSTELLUNGEN`,
+`darstellung_umschalter()`, `darstellung_klick_setzen()`,
+`darstellung_attribut()` mit Klick der Sitzung, `darstellung_sitzung_setzen()`
+lässt den Klick bei geänderter Einstellung verfallen. Neu
+`api/darstellung.php` (Sitzung, 409 ohne Knopf) und
+`assets/darstellung.js`; `ui_kopf()` gibt den Knopf zwischen „?“ und
+Zahnrad aus, `ui_seite_ende()` lädt das Skript nur dann. Stylesheet: welches
+Zeichen sichtbar ist, über dieselben zwei Auslöser wie die Farben. Profil:
+vier Einstellungen, ein Satz. `schema.sql` (Kommentar), keine Migration.
+Doku: Handbuch 3.1a, Technik 4.41, Baum, `users`; Design.md 3a, Verlauf,
+Tabellen erzeugt; Prüfliste P-MA-04 und -11 nennen „Umschalter“; CHANGELOG;
+`version.php` 24.9.0.
+
+**Gemessen.** Eigener Weg (`darst.mjs`, Prüfkonto der Verwaltung, Gerät hell
+und dunkel emuliert) in **Chromium, Firefox und WebKit je 12 von 12**: bei
+`''` und `'system'` Knopf da, kein Attribut, Zeichen und Name nach dem Gerät;
+Klick schaltet sofort (`data-theme`, Fläche der Seite gewechselt); die
+nächste Seite trägt `data-theme` schon im Markup; neue Sitzung folgt wieder
+dem Gerät; bei `'hell'`/`'dunkel'` kein Knopf, festes Attribut, Endpunkt
+409. Riegel **24 von 24**, Kontrast **60 / 0**. Stilvergleich gegen
+`origin/main`: **205 / 205 / 213** Signaturen, neu je Engine genau zwei (der
+Knopf und sein Sonnenzeichen in der Katalogseite). Bilderlauf Chromium, drei
+Breiten, fünf Seiten (Tagesübersicht, Einstellungs-Übersicht, Profil,
+Status, Rückfrage): **15 Bilder, Überlauf 0, Konsole 0, Knöpfe 0,
+Seitenregeln 0 Befunde**; bei 360 px kürzt die Kopfleiste den Namen der
+Anlage früher (vorhandene Auslassung, kein Überlauf). Bedienprobe Profil und
+Menü (Chromium) **6 von 6**.
+
+**Probleme.** (1) Der Container startete mitten im Paket neu; Startfolge
+nach Sandbox-Setup 6.1a. (2) Die Drosselung des Demo-Kontos überstand den
+Neustart (sie liegt in der Datenbank); Bilderlauf und Bedienprobe warteten
+rund 20 Minuten.
+
+**Nicht geprüft:** Barrierefreiheit des Knopfs mit `tools/barrierefreiheit/`
+(P-OF-34, OF-09); ein Wechsel der Geräteeinstellung bei offener Seite (der
+Name folgt über `change`, nur gelesen); P-OF-33 (Staging nach dem Deploy).
