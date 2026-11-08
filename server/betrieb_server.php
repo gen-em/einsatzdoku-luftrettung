@@ -366,7 +366,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'demo_
               'Demo-Anmeldung abgeschaltet (mit dem Wechsel auf „nur auf Einladung")',
               ['geaendert' => [KONTEN_K_DEMO_ANMELDUNG]]);
     $notice = 'Die Demo-Anmeldung ist abgeschaltet. Der Bestand des Demo-Kontos '
-            . 'bleibt; ein Umlegen des Schalters macht es sofort wieder zugänglich.';
+            . 'bleibt; der Schalter unter Installation → Demo-Konto macht es sofort wieder zugänglich.';
 }
 
 /* ---- Konten: Registrierung, Fristen, Grenzen --------
@@ -460,10 +460,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
         }
     }
 
-    /* ---- Demo-Anmeldung ------------------------------------------------ */
-    if ($error === null) {
-        $neu[KONTEN_K_DEMO_ANMELDUNG] = empty($_POST['demo_anmeldung']) ? '0' : '1';
-    }
+    /* DIE DEMO-ANMELDUNG STEHT NICHT MEHR HIER (seit Web 24.6, E-OF-46):
+     * Ihr Schalter ist in der Karte „Demo-Konto" unter Installation. Stuende
+     * sie noch in `$neu`, schaltete jedes Speichern dieser Karte sie ab — das
+     * Formular schickt das Feld nicht mehr. Die Rueckfrage darunter bleibt. */
 
     /* Die Protokollfrist steht nicht hier: Sie hat eine eigene Karte,
      * zusammen mit dem Archiv — und wird protokolliert. */
@@ -511,7 +511,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
          * blockiert nichts, und sie verschwindet beim naechsten Speichern. */
         if ($art === 'einladung'
             && ($vorher[KONTEN_K_REG_ART] ?? '') !== 'einladung'
-            && $neu[KONTEN_K_DEMO_ANMELDUNG] === '1') {
+            && konten_demo_anmeldung_an()) {
             $demoFrage = true;
         }
     }
@@ -1594,11 +1594,6 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           'wert' => (string)konten_grenze_mb(),
           'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, gemessen wie die '
                    . 'Statistik zählt.']); ?>
-      <h3 class="listen-form-titel">Demo</h3>
-      <?php ui_schalter(['name' => 'demo_anmeldung', 'label' => 'Demo-Anmeldung zulassen',
-          'an' => konten_demo_anmeldung_an(),
-          'klein' => 'Aus heißt: Die Demo-Adresse gilt bei der Anmeldung als '
-                   . 'unbekannt, ihr Bestand bleibt.']); ?>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </div>

@@ -361,7 +361,7 @@ Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
 | Block | wer sieht ihn | was darin steht |
 |---|---|---|
 | **Einstellungen** | alle | Profil, Geräte, **Standorte**, Backup, Import / Export — Kapitel 3 bis 10 |
-| **Verwaltung** | Admins; der **Support** nur NutzerInnen und Protokoll | NutzerInnen, **Konto-Backups**, **Installation**, **Rechtstexte**, Demo-Konto, Protokoll — **Kapitel 11** |
+| **Verwaltung** | Admins; der **Support** nur NutzerInnen und Protokoll | NutzerInnen, **Konto-Backups**, **Installation** (mit dem Demo-Konto), **Rechtstexte**, Protokoll — **Kapitel 11** |
 | **Betrieb** | BetreiberInnen | **Status**, **Statistik**, **Updates**, **Hintergrundjobs**, **Servereinstellungen**, **Komplett-Backup**, **Backup-Ziele** — **Kapitel 12** |
 
 Jeder Block hat einen Kopf mit rundem Zeichen, Namen und der Zahl der
@@ -1173,7 +1173,7 @@ damit die nächste Person hereinkommt. Alles andere ist offen.
 Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
 **gesperrt**, die Karte „Konto-Backups" fehlt dort ganz, und der Anzeigename
 lautet **„Demo NutzerIn"**. Verwaltet wird das Konto ausschließlich über den
-Reiter **Demo-Konto**: anlegen, zurücksetzen, entfernen. Der Grund ist der
+Karte **Demo-Konto** unter Installation: anlegen, zurücksetzen, entfernen. Der Grund ist der
 Reset — was auf der Kontoseite eingetragen würde, wäre beim nächsten Reset
 wieder weg, und zwar ohne Hinweis. **Die Geräte bleiben offen:** Eine
 Uhr zu koppeln ist gerade der Sinn dieses Kontos, und der Reset räumt das
@@ -4171,9 +4171,8 @@ ihnen:
 |---|---|---|
 | **NutzerInnen** | 11.2, 11.3 | Konten sehen, anlegen, ändern, löschen; je Konto die Kontoseite (11.1) |
 | **Konto-Backups** | 11.4 | die Regeln, die für **alle** Konten gelten |
-| **Installation** | 11.5 | Name, Adressen, Logo |
+| **Installation** | 11.5, 11.6 | Name, Adressen, Logo, Demo-Konto |
 | **Rechtstexte** | 11.5a | Impressum, Datenschutzerklärung, Nutzungsbedingungen, AVV — mit Vorschau beim Tippen |
-| **Demo-Konto** | 11.6 | anlegen, zurücksetzen, entfernen |
 | **Protokoll** | 11.7 | nachlesen, wer wann was im Betrieb getan hat; für die BetreiberIn dazu das Archiv |
 
 Angelegt wird in der Liste, gelöscht auf der Kontoseite — dort gehört die
@@ -4846,7 +4845,7 @@ versiegelten Abzug eines Komplett-Backups.
 ### 11.5 Installation
 
 Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: der
-**Name**, die **Adressen** und das **Logo**, untereinander in einer Spalte. Die
+**Name**, die **Adressen**, das **Logo** und das **Demo-Konto** (11.6), untereinander in einer Spalte. Die
 vier Rechtstexte stehen seit Web 21.1.0 auf einer eigenen Seite
 (11.5a); bis dahin standen sie hier in der rechten Spalte.
 
@@ -5119,8 +5118,11 @@ fertiger Text.
 
 ### 11.6 Demo-Konto
 
-Unter **Verwaltung → Demo-Konto** wird das Demo-Konto **angelegt**,
-**zurückgesetzt** oder **entfernt**. Was es ist, wann es sich selbst
+In der Karte **Demo-Konto** unter **Verwaltung → Installation** wird das
+Demo-Konto **angelegt**, **auf Standard zurückgesetzt** (Kopfaktion) oder
+**entfernt** (Zeile „Konto“), und dort steht der Schalter **„Demo-Anmeldung
+zulassen“**. Bis Web 24.5 war das eine eigene Seite und der Schalter stand
+in den Servereinstellungen. Was es ist, wann es sich selbst
 zurücksetzt und was darin nicht geht, steht in Abschnitt 3.2 —
 dort aus Sicht dessen, der es benutzt. **Entfernen** löscht es wie jedes
 andere Konto (seit Web 21.1.8): samt Konto-Backups und mit einem Eintrag im
@@ -5130,10 +5132,12 @@ Zwei Dinge, die nur die Verwaltung betreffen: Auf der **Kontoseite** des
 Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
 abgeschaltet, und in **jeder Zahl der Statistik** (12.2) bleibt es außen vor.
 
-Auf der Seite stehen der Zustand (Konto, letzter Reset, ob seither etwas
-geändert wurde, nächster Reset), die
-drei **Papierkorbzahlen** und — sobald es einen gibt — der **Bericht des
-letzten Laufs**, zugeklappt. Die Papierkorbzahlen sind die Kontrolle des
+Die Karte zeigt Konto, letzten und nächsten Reset; nach einem Anlegen oder
+Zurücksetzen steht darunter der **Bericht des letzten Laufs**, zugeklappt.
+Die Warnung zum Schlüsselmaterial steht nur, solange die Anmeldung
+zugelassen ist. Die **Kontrollzahlen** — Bestand und die drei
+**Papierkorbzahlen** — stehen auf einer eigenen, nur lesenden Seite
+(`admin_demo.php`). Die Papierkorbzahlen sind die Kontrolle des
 Resets: Der Papierkorb kommt **aus der Fixture** zurück, nicht aus einem
 Nachlauf. Stehen sie auf null, ist beim Einspielen etwas übersprungen worden.
 Ausgelöst wird der Reset von der nächsten Anfrage des Demo-Kontos, sobald er
@@ -5144,6 +5148,16 @@ Absenden im Demo-Konto und jeder angenommene Upload eines seiner Geräte;
 mehr — das Verdichten der Spuren im Hintergrund lässt das Demo-Konto aus. **Nach einem Deploy mit neuer
 Fixture** zeigt das Demo-Konto deshalb bis zu einem Tag lang den alten
 Bestand — „Zurücksetzen" holt den neuen sofort.
+
+**Demo-Anmeldung zulassen.** Ist sie aus, wird die Demo-Adresse bei der
+Anmeldung **wie eine unbekannte Adresse** behandelt — dieselbe Meldung,
+dieselbe Antwortdauer, auch beim richtigen Passwort. Die Seite verrät damit
+nicht, ob diese Installation ein Demo-Konto hat. **Der Bestand bleibt
+liegen:** Abgeschaltet ist die Anmeldung, nicht das Konto. Der Reset ruht,
+weil ihn nur Anfragen des Demo-Kontos auslösen — es sei denn, ein
+gekoppeltes Demo-Gerät lädt weiter hoch. Wenn die Registrierung auf „nur
+auf Einladung“ wechselt, bieten die Servereinstellungen an, die
+Demo-Anmeldung mit abzuschalten (12.5, Karte „Konten“).
 
 #### Was der Reset umfasst
 
@@ -6420,18 +6434,9 @@ Kontoverwaltung überschreibbar: Zahl der Einsätze und Speicher in Megabyte
 unter Verwaltung → Konto-Backups (11.4); die Überschreibung je Konto steht
 auf der Kontoseite.
 
-**Demo-Anmeldung zulassen.** Ist sie aus, wird die Demo-Adresse bei der
-Anmeldung **wie eine unbekannte Adresse** behandelt — dieselbe Meldung,
-dieselbe Antwortdauer, auch beim richtigen Passwort. Die Seite verrät damit
-nicht, ob diese Installation ein Demo-Konto hat.
-
-**Der Bestand bleibt liegen.** Abgeschaltet ist die Anmeldung, nicht das
-Konto: Seine Einsätze, sein Selbst-Reset und sein Platz in der
-Kontoverwaltung sind unberührt, und ein Umlegen des Schalters macht es sofort
-wieder zugänglich.
-
 **Schaltest du die Registrierung auf „nur auf Einladung", fragt die Seite
-einmal nach**, ob die Demo-Anmeldung mit abgeschaltet werden soll — wer die
+einmal nach** (der Schalter selbst steht seit Web 24.6 unter Installation →
+Demo-Konto, 11.6), ob die Demo-Anmeldung mit abgeschaltet werden soll — wer die
 Tür schließt, hat meist auch das Demo-Konto im Sinn. Ein Angebot, keine
 Bedingung: Eine geschlossene Installation kann gute Gründe für ein
 Demo-Konto zum Vorzeigen haben.

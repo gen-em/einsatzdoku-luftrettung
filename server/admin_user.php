@@ -879,7 +879,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   $istDemoKopf = demo_ist_demo($uid);
   $aktionen = $istDemoKopf
       ? ($nurSupport ? '' : ui_knopf(['text' => 'Zum Demo-Konto', 'symbol' => 'kolben',
-                  'art' => 'neutral', 'href' => 'admin_demo.php']))
+                  'art' => 'neutral', 'href' => 'admin_installation.php#k-demo']))
       : ($nurSupport ? '' : ui_knopf(['text' => 'Jetzt sichern', 'symbol' => 'sicherung',
                   'art' => 'neutral', 'attr' => ' form="f-sichern"']));
   $eintraege = [];
@@ -953,13 +953,13 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
   <?php $istDemo = demo_ist_demo($uid); ?>
   <?php if ($istDemo): ?>
     <?= ui_meldung_markup('info',
-        'Dieses Konto wird über den Reiter „Demo-Konto“ verwaltet: dort wird es '
+        'Dieses Konto wird unter Installation → Demo-Konto verwaltet: dort wird es '
       . 'angelegt, zurückgesetzt und entfernt. Ändern und Sichern sind hier '
       . 'gesperrt — der Reset überschreibt Konto und Bestand, und der '
       . 'Bestand ist erfunden.',
         'Demo-Konto.',
         ui_knopf(['text' => 'Zum Demo-Konto', 'art' => 'neutral',
-                  'href' => 'admin_demo.php'])) ?>
+                  'href' => 'admin_installation.php#k-demo'])) ?>
   <?php endif; ?>
 
   <?php /* EINSPALTIG FUER DEN SUPPORT: Die rechte
@@ -1351,7 +1351,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
             . 'unter Betrieb → Updates die Migration ausführen — ohne Kennung lässt '
             . 'sich das Konto nicht sichern.') ?>
       <?php elseif (!$pakete): ?>
-        <p class="feld-hinweis">Für dieses Konto gibt es noch kein Konto-Backup.</p>
+        <p class="feld-hinweis">Noch kein Konto-Backup für dieses Konto.</p>
       <?php endif; ?>
 
       <?php /* ---- Zustandszeile der Freigabe --------------------
@@ -1454,8 +1454,8 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
     <?php ui_karte_start(['titel' => 'Konto löschen', 'klasse' => 'karte-gefahr',
                           'id' => 'karte-loeschen']); ?>
       <?php if ($istDemo): ?>
-        <p class="feld-hinweis">Das Demo-Konto entfernt der Reiter
-           <a href="admin_demo.php">Demo-Konto</a>, damit dessen Buchführung stimmt.</p>
+        <p class="feld-hinweis">Das Demo-Konto entfernt
+           <a href="admin_installation.php#k-demo">Installation → Demo-Konto</a>, damit dessen Buchführung stimmt.</p>
       <?php elseif ($istIch): ?>
         <p class="feld-hinweis">Das eigene Konto lässt sich hier nicht löschen.</p>
       <?php elseif ($istLetzteBetreiberin): ?>

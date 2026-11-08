@@ -8799,4 +8799,12 @@ declare(strict_types=1);
  *   `assets/wahlkarten.js`). Backup: ein Satz; „GPS-Daten verdichten" nur,
  *   wenn etwas faellig ist, sonst eine Zeile im Profil. Standorte: je
  *   Abschnitt ein Satz. Neben; kein Schema. */
-const WEB_VERSION = '24.5.0';
+/* 24.6.0 — DIE VERWALTUNG (Schritt 27, Konzept OF, OF-05; E-OF-08, -46,
+ *   -53, -71). Kontenliste: Der Name ist der Verweis auf die Kontoseite, die
+ *   Spalte „Oeffnen" ist fort, Titel und Adresse brechen um — bei 1024 px
+ *   rollt die Tabelle nicht mehr (Nr. 342, Kontenlisten-Teil). Demo-Konto:
+ *   eine Karte unter Installation mit dem einen Schalter „Demo-Anmeldung
+ *   zulassen" (aus den Servereinstellungen hierher) und Anlegen,
+ *   Zuruecksetzen, Entfernen; der Menuepunkt entfaellt, `admin_demo.php`
+ *   zeigt bis OF-06 nur noch die Kontrollzahlen. Neben; kein Schema. */
+const WEB_VERSION = '24.6.0';

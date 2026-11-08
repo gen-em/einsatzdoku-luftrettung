@@ -41,6 +41,8 @@ katalog.html  div.karte-stand <div>  :  border, border-bottom, border-bottom-col
 katalog.html  div.kartenfilter-lupe <div>  :  bottom, inset, top
 katalog.html  div.kartenfilter-x <div>  :  bottom, inset, top
 katalog.html  div.knopf-breit <div.speichern>  :  width
+katalog.html  div.konto-mail <div.tabelle-konten>  :  overflow-wrap
+katalog.html  div.konto-name <div.tabelle-konten>  :  overflow-wrap
 katalog.html  div.koppel-schritte <div>  :  column-gap, display, flex-direction, gap, height, list-style, padding, padding-left
 katalog.html  div.leiste <div.leiste-spalte>  :  background, border, border-color, border-right, border-width, height, inset, top
 katalog.html  div.leiste <div.rahmen-bereiche>  :  height, inset, top
@@ -93,6 +95,12 @@ katalog.html  input.wahl-box <div>  :  bottom, inset, top
 katalog.html  input.wahlkarte-box <div>  :  bottom, display, height, inset, left, opacity, position, right, top, width
 katalog.html  li <div.koppel-schritte>  :  height, list-style, min-height, min-width, width
 katalog.html  strong <li>  :  display, height, list-style, width
+seiten.html[admin_users.php]  a <th.sortable>  :  text-wrap, white-space
+seiten.html[admin_users.php]  a.konto-name <td>  :  overflow-wrap
+seiten.html[admin_users.php]  span.arrow <a>  :  text-wrap, white-space
+seiten.html[admin_users.php]  span.konto-mail <td>  :  overflow-wrap
+seiten.html[admin_users.php]  span.nur-vorlesen <a.konto-name>  :  overflow-wrap
+seiten.html[admin_users.php]  th.sortable <tr>  :  text-wrap, white-space
 seiten.html[einsatz.php]  div#plaketten.zeile-plaketten <div.karte-inhalt>  :  align-items
 seiten.html[einstellungen.php]  details.apk-fach <li>  :  list-style
 seiten.html[einstellungen.php]  div.listen-form-felder <form>  :  grid-template-columns

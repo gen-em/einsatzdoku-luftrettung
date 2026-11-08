@@ -14,6 +14,18 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.6.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — das Demo-Konto steht unter Installation, die Kontenliste ohne
+  „Öffnen“** (Schritt 27). Das Demo-Konto hatte eine eigene Seite, sein
+  Schalter stand aber in den Servereinstellungen — zwei Orte für eine Sache;
+  jetzt sind Schalter, Zurücksetzen, Anlegen und Entfernen eine Karte unter
+  Installation, und „Aus“ nimmt auch die Warnung zum Schlüsselmaterial weg.
+  In der Kontenliste ist der Name der Verweis auf die Kontoseite; die Spalte
+  „Öffnen“ war bei 1024 px angeschnitten und ließ die Tabelle rollen.
+
 ## [Web 24.5.0] — unveröffentlicht
 
 ### Geändert

@@ -45,16 +45,16 @@ es im Kopf von `server/version.php`.
 | OF-02 | Bausteine I: Klappkarte mit Stand und Plakette (E-OF-42); Segmentwahl abwählbar und senkrecht mittig (OF-P-05, E-OF-33); Zeile mit Plakette und Knopf auf einer Linie (OF-P-08); sechs neue Zeichen | Opus · keine | **erledigt** 08.11.2026 (Web 24.3.0) |
 | OF-03 | Bausteine II, Eingabe: Datumsfeld `TT.MM.JJJJ` an allen acht Stellen (E-OF-06, -44, -54); Ortsfeld-Hinweis als Zeichen (E-OF-07); Listenkopf mit Filterknopf (E-OF-18) | Opus · keine | **erledigt** 08.11.2026 (Web 24.4.0) |
 | OF-04 | Einstellungen: Profil mit Zweitfaktor „ein Satz plus Verwalten“ (E-OF-19); Geräte nach Typ, Koppeln im Dialog (E-OF-25); Import / Export „erst wählen, dann füllen“ (E-OF-26); Backup (E-OF-52, OF-P-15) | Opus · keine | **erledigt** 08.11.2026 (Web 24.5.0) |
-| OF-05 | Verwaltung: Kontenliste ohne Spalte „Öffnen“ (E-OF-53); Demo-Konto als Karte unter Installation, ein Schalter statt zwei (E-OF-08, E-OF-46) | Opus · keine | offen |
+| OF-05 | Verwaltung: Kontenliste ohne Spalte „Öffnen“ (E-OF-53); Demo-Konto als Karte unter Installation, ein Schalter statt zwei (E-OF-08, E-OF-46) | Opus · keine | **erledigt** 08.11.2026 (Web 24.6.0; Kontrollzahlen und Umleitung von `admin_demo.php` mit OF-06, E-OF-71) |
 | OF-06 | Betrieb: Status „Probleme zuerst“ (E-OF-20; Q-OF-02 → OF-M1); Hintergrundjobs (E-OF-10, -21); Servereinstellungen als Klappkarten (E-OF-22); Komplett-Backup (E-OF-23); Backup-Ziele an beiden Orten, die Seite entfällt (E-OF-24, E-OF-45) | Opus · **gefächert** nach OF-M1: je ein Agent für Status, Hintergrundjobs, Servereinstellungen und Komplett-Backup samt Ziele; `ui.php`, `style.css`, `status_lib.php`, Texte und Prüfarbeit seriell | offen |
 | OF-07 | Einsatz, Diensttag, Karte, Papierkorb: Ruhesegmente-Kachel entfällt (E-OF-05); GPX-Zeichen (E-OF-11); Plakette „ausgedünnt“ entfällt (E-OF-12); Karte „Einsatz und Transport“ im Feldkatalog (E-OF-33); Schlösser in eigener Spalte (E-OF-28); Kartenart ohne Anbieter (E-OF-13); Leaflet-Bedienelemente im Branding (E-OF-29); Papierkorb mit `restore`, Artzeichen vor das Datum (E-OF-30, E-OF-48) | Opus · **gefächert**: ein Agent Formular und Leseansicht (`einsatz_form.php`, `mission_fields.php`, `einsatz.php`), einer Karte (`geo.js`, `map_layers.js`, Leaflet-Regeln), einer Tagesübersicht und Papierkorb (`index.php`, `tag_spuren.php`, `papierkorb.php`); `style.css`, Design.md und Prüfarbeit seriell | offen |
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | offen |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
-**In Arbeit:** OF-05 Verwaltung. **Erledigt:** OF-00, NV-01 bis NV-04
-(das Gerüst), OF-01 bis OF-04. **Je Paket mitzunehmen:** seine Zeilen unter
-`seitenregeln` in `tools/screenshots/ausnahmen.json` (E-OF-65) — OF-05
-Kontoseite (das Protokoll-Archiv ist mit OF-04 frei, E-OF-70 (6)); OF-06 Jobs, Sicherheit, Servereinstellungen; OF-07
+**In Arbeit:** OF-06 Betrieb — **wartet auf OF-M1** (Q-OF-02 mit der
+Option F-OF-17 vorgelegt). **Erledigt:** OF-00, NV-01 bis NV-04 (das
+Gerüst), OF-01 bis OF-05. **Je Paket mitzunehmen:** seine Zeilen unter
+`seitenregeln` in `tools/screenshots/ausnahmen.json` (E-OF-65) — OF-06 Jobs, Sicherheit, Servereinstellungen; OF-07
 Tagesübersicht, Papierkorb, Diensttag- und Einsatzseiten.
 **Prüfweise seit NV-02:** E-OF-60. **Hakt:**
 nichts; F-OF-19 (eine Rolle mit einem Bereich sieht einen einzelnen
@@ -562,7 +562,9 @@ diesem Konzept unter 9 (Prüfprotokoll OF-06). Danach gefächert (Statusblock).
   Bereich als Klappkarte (OF-02) mit Zahl der Prüfungen und Plakette
   (`in Ordnung` grün, `2 Hinweise` orange, rot bei Fehler). Fünf Wörter für
   denselben grünen Zustand werden eines (Nebenbefund). Die Kennzahlen des
-  Demo-Kontos (OF-05) werden Zeilen im Bereich Konten. „Sicherheit“ und
+  Demo-Kontos (OF-05) werden Zeilen im Bereich Konten; `admin_demo.php`
+  leitet danach auf die Statusseite um, `demo_pruefen.mjs` und der
+  Bilderlauf (`44-demo-konto`) ziehen nach (E-OF-71). „Sicherheit“ und
   „Aktualisieren“ bleiben Kopfaktionen; „Aktualisieren“ steht nicht neben
   einem `restore`-Zeichen (E-OF-30).
 - **Hintergrundjobs** (E-OF-10, -21, Bild `OF-P24-vorschlag.png`): oben
@@ -786,6 +788,7 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-68 | OF-02: `vorschau` heißt `stand` bei allen **neun** Verwendern, nicht bei dreien (Abschnitt 5 zählte drei); `.karte-vorschau` heißt `.karte-stand`. Das Öffnen „nach dem Absenden“ macht ein Gerüstskript `klappkarte.js` am Anker der Adresse, nicht der Server — die Seiten leiten nach dem Speichern auf `#k-…` um, und den Anker sieht nur der Browser; dasselbe Skript öffnet die Karte beim Sprung über eine Sprungmarke. Die Leertaste der abwählbaren Segmentwahl behandelt `segment.js` selbst, weil Chromium und WebKit auf einem gewählten Radio keinen Klick auslösen | Umsetzung, 08.11.2026 |
 | E-OF-69 | OF-03: (1) Datumsformatieren bleibt bei den vorhandenen `EdFormat.tag()` (Browser) und kommt als `datum_de()` nach `format_lib.php` (Register: Text aus Zeitpunkt → `format_lib`); nur das Lesen steht in `eingabe_lib.php` (`datum_de_lesen()`, `post_datum()`, `get_datum()`) und als `EdFormat.datumLesen()`. Beide Formen gelten beim Lesen; ein Wert, der kein Tag ist, geht unverändert an die Prüfung der Seite. Die Suche trägt in der Adresse weiter ISO (Art `datum`), damit verschickte Links gelten. (2) Das Zeichen zur Adresssuche bleibt **einmal je Seite** am ersten Ortsfeld, wie der Satz vorher; der Tooltip ist so breit wie die Feldzeile, kein `title` am Knopf (er stünde zweimal im Vorlesetext). (3) Der Filterknopf ist ein Knopf mit `aria-expanded`, kein `<details>`: Knopf neben dem Suchfeld und Reihe darunter liegen nicht in einem Kasten. „Gesetzt“ heißt aktiv und nicht `vorgabe`; die Pille nimmt über `weg` zurück | Umsetzung, 08.11.2026 |
 | E-OF-70 | OF-04: (1) „Verwalten“ ist ein `<details>` im Inhalt der Zweitfaktor-Karte (`zf-verwalten`), sein `<summary>` die Zeile mit dem Satz und dem Knopfbild; offen ist es von selbst, solange der Code frisch ist (`zweitfaktor_frisch()`) — dann steht die Handlung, für die man gerade bestätigt hat, schon da. Die Zahlen (Geräte, Passkeys, Rückweg) stehen in der Kleinzeile, nicht als Plakette (OF-P-08). Das Ausschalten hat ein eigenes Formular, weil es am Codes-Formular zwei `action`-Felder gesendet hätte. (2) Das Anlegen eines Passkeys bleibt der Block unter der Zeile „Passkeys“ (Bezeichnung, Knopf), keine Aktion in der Zeile — `passkey.js` blendet ihn erst ein, wenn der Browser Passkeys kann. (3) Geräte: Art `handy` gehört zur Karte „Android-Handy und Wear-OS-Uhr“, jede andere zur Garmin-Karte; der Dialog trägt den Typ als verborgenes Feld und öffnet nach einem Fehler wieder. (4) Die Speicherleiste kann zu einem Formular außerhalb gehören: `ui_speichern_leiste(['form'])` setzt `data-fuer`, `forms.js` findet sie darüber. (5) Wahlkarten (`wahlkarten.js`): der Anker der Adresse wählt, beim Laden **und** bei `hashchange` — eine Sprungmarke auf `#exportform` lädt nicht neu. (6) Ein Leerzustand („Noch kein …“, „Kein …“) zählt in der Seitenregel `saetze` nicht als Satz der Karte; damit fällt die Ausnahme des Protokoll-Archivs (`44c`, OF-05) ohne Umbau weg. (7) Korrektur an E-OF-65: „Rückfrage beim Konto“ (`02h`) steht in `ausnahmen.json` bei OF-07, nicht bei OF-04; der Text von E-OF-65 ist angeglichen | Umsetzung, 08.11.2026 |
+| E-OF-71 | OF-05: Die Kontrollzahlen des Demo-Kontos (Bestand, drei Papierkorbzahlen) und die Umleitung von `admin_demo.php` wandern mit **OF-06**, nicht mit OF-05 — sie werden Zeilen der Statusseite, und deren Bau wartet auf OF-M1. Bis dahin zeigt `admin_demo.php` sie nur lesend, ohne Menüpunkt; `demo_pruefen.mjs` liest dort weiter und klickt die Knöpfe unter Installation. Im Zweig ist die Seite nur über ihre Adresse erreichbar; ausgeliefert wird erst nach OF-09. Weiter: (1) die Kopfaktion der Karte ist „Auf Standard zurücksetzen“ bzw. „Demo-Konto anlegen“, „Entfernen“ steht an der Zeile „Konto“ (eine Kopfaktion je Karte, Design.md 9.1); (2) die Konten-Karte der Servereinstellungen schreibt den Demo-Wert nicht mehr — sonst schaltete jedes Speichern dort ihn ab; ihre Rückfrage prüft den gespeicherten Wert; (3) „Der Reset ruht“ gilt, weil ihn nur Anfragen des Demo-Kontos auslösen — ein gekoppeltes Demo-Gerät, das hochlädt, löst ihn weiter aus, und so steht es in Karte und Handbuch; (4) „Namen“ und „Adressen speichern“ bekommen Haken und Fußzeile wie der Rest der Seite (E-OF-67); (5) die Kontenliste rollte nach dem Wegfall von „Öffnen“ bei 1024 px noch 43 px — Spaltentitel und Adresse brechen jetzt um | Umsetzung, 08.11.2026 |
 | E-OF-48 | Papierkorb: Das Artzeichen des Diensttags (`ohne-zuordnung`, Hubschrauber, Fahrzeug) steht vor dem Datum wie in Leiste und Vorschlägen — so zeigt es das freigegebene Bild; „entfernt“ in E-OF-30 meint die Stelle neben den Knöpfen. Will die Betreiberin es im Papierkorb ganz weglassen, ist das eine Zeile | Konzept, aus E-OF-30 (F-OF-16) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
@@ -1245,4 +1248,51 @@ Ausnahmen sind durch zwei neue ersetzt, die die Geräte nach Typ nennen.
 und WebKit (E-OF-60, kommt mit dem vollen Prüfstand); der Koppel-Dialog mit
 echter Garmin-Uhr und echtem Handy (Handprüfung); die Karte „GPS-Daten
 verdichten“ mit einem gescheiterten Lauf im Bild.
+
+### OF-05 Verwaltung (08.11.2026, Web 24.6.0)
+
+**Was getan ist.** Kontenliste (`admin_users.php`): Name als Verweis mit
+Vorlesetext „Konto … öffnen“, ohne Namen trägt die Adresse ihn; Spalte
+„Öffnen“ und `.oeffnen` fort; Spaltentitel und Adresse brechen um. Demo-Konto:
+Karte `#k-demo` auf `admin_installation.php` mit Kopfaktion, Zeilen Konto
+(„Entfernen“), letzter und nächster Reset, Schalter mit eigenem Formular,
+Warnung nur bei zugelassener Anmeldung, Bericht als Klappkarte; die
+Handlungen samt Fehlerbehandlung aus `admin_demo.php` übernommen.
+`admin_demo.php` nur lesend (E-OF-71); Menüpunkt und Hilfe-Zuordnung fort;
+Verweise der Kontoseite zeigen auf `#k-demo`. Servereinstellungen: Schalter
+fort, Rückfrage bleibt (E-OF-71 (2)). Kontoseite: Leerzustand „Noch kein
+Konto-Backup …“ (Seitenregel). Prüfmittel: `demo_pruefen.mjs`
+(Knöpfe unter Installation), `ausnahmen.json` (`41-kontoseite`), Stilplan.
+Doku: Handbuch 3.2, 11 (Tabelle), 11.5, 11.6, 12.5; Technik (Baum,
+Rollenmatrix: fünf Zeilen, eine neu, Seitenliste); Backlog Nr. 342 auf
+Suche und Zeitraum gekürzt; CHANGELOG; `version.php` 24.6.0.
+
+**Gemessen.** Riegel **24 von 24**. Kontrast **60 / 0**. Stilvergleich:
+**8 neue Signaturen** je Engine (Umbruch in der Kontenliste: `th.sortable`,
+`a`, `span.arrow` — `white-space`, `text-wrap`; `konto-name`,
+`konto-mail`, `nur-vorlesen` — `overflow-wrap`), durchgesehen, geplant;
+danach 181 / 181 / 188. Kontenliste rollt bei 1024 und 1440 px um **0 px**
+(BetreiberIn und Support; vorher 81 / 24, nach dem ersten Umbau 43).
+Bilderlauf Chromium, drei Breiten, sieben Seiten (NutzerInnen ×3,
+Kontoseite, Installation, Demo-Konto, Server): 21 Bilder, Überlauf 0,
+Konsole 0, Knöpfe 0, Seitenregeln 25 Karten / 14 Kanten, **0 Befunde**;
+rollend nur die Bereichszeile bei 360 px. `demo_pruefen.mjs`
+(anlegen, reset): **16 Einzelprüfungen, keine Befunde**, Anlegen nicht
+gemessen (Konto vorhanden, vom Werkzeug so ausgewiesen). Eigener Weg
+(Chromium): Schalter aus → Wert aus, Warnung fort, „ruht …“; Servereinstellungen
+ohne Schalter, Speichern der Konten-Karte lässt den Wert **an**; Entfernen →
+`demo_id` null, Kopfaktion „Demo-Konto anlegen“; Anlegen → Konto da,
+Bericht da. Rollenprobe **616 Erwartungen, 0 nicht erfüllt**. Bedienprobe
+(Chromium) der Installations-, NutzerInnen- und Serverwege **7 von 7**.
+
+**Probleme.** (1) Der Konzepttext legte Umleitung und Kontrollzahlen in
+OF-05, die Statuszeilen aber in OF-06 — gelöst mit E-OF-71. (2) Die
+Konten-Karte hätte den Demo-Wert bei jedem Speichern abgeschaltet, weil das
+Feld fehlt; der Wert ist aus `$neu` genommen. (3) Nach dem Wegfall der
+Spalte rollte die Tabelle bei 1024 px weiter (43 px); Umbruch erlaubt.
+
+**Nicht geprüft:** Bilderlauf und Bedienprobe in Firefox und WebKit
+(E-OF-60); das Entfernen mit einem Wurf mittendrin (der Zweig ist aus
+`admin_demo.php` übernommen, nicht neu gemessen); eine Kontenliste mit
+vielen und langen Adressen (örtlich vier Konten).
 

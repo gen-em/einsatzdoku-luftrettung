@@ -586,7 +586,6 @@ function ui_hilfe_marke(string $menue): ?string
         'admin_sicherungen'       => 'hilfe.php#11-4-konto-backups',
         'admin_installation'      => 'hilfe.php#11-5-installation',
         'admin_rechtstexte'       => 'hilfe.php#11-5a-rechtstexte',
-        'admin_demo'              => 'hilfe.php#11-6-demo-konto',
         'admin_protokoll'         => 'hilfe.php#11-7-protokoll',
         'betrieb_status'          => 'hilfe.php#12-1-status',
         'betrieb_statistik'       => 'hilfe.php#12-2-statistik',
@@ -1175,11 +1174,11 @@ function ui_einstellungen_punkte(): array
                 ['admin_sicherungen',  'admin_sicherungen.php',  'Konto-Backups', 'sicherung',
                                                                   $z('admin_sicherungen')],
                 /* `haus` fuer „Installation" (freigegeben), und eine eigene
-                 * Seite „Rechtstexte" mit ihrem Zeichen aus dem Vorrat:
-                 * zwischen Installation und Demo-Konto. */
+                 * Seite „Rechtstexte" mit ihrem Zeichen aus dem Vorrat.
+                 * „Demo-Konto" ist seit Web 24.6 eine Karte unter
+                 * Installation (Konzept OF, E-OF-46, F-OF-07). */
                 ['admin_installation', 'admin_installation.php', 'Installation',  'haus'],
                 ['admin_rechtstexte',  'admin_rechtstexte.php',  'Rechtstexte',   'rechtstexte'],
-                ['admin_demo',         'admin_demo.php',         'Demo-Konto',    'kolben'],
                 /* PROTOKOLL UNTER VERWALTUNG, nicht unter Betrieb: Der Admin
                  * sieht vier seiner Reiter, und ein
                  * Admin sieht Betrieb nicht. Menueeintrag und Zeichen kommen

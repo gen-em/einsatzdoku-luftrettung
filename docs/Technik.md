@@ -499,7 +499,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      SPEICHERT NICHTS und kann nichts speichern —
 │   │                      deshalb spaeter nicht erneut druckbar
 │   ├── admin_installation.php  Wie diese Installation nach aussen auftritt
-│   │                       (S8/AP3): Name, Adressen, Logo — eine Spalte;
+│   │                       (S8/AP3): Name, Adressen, Logo, Demo-Konto
+│   │                       (seit Web 24.6.0) — eine Spalte;
 │   │                       die Rechtstexte standen hier bis Web 21.0.0
 │   ├── admin_rechtstexte.php  Die vier Rechtstexte, ein Reiter je Text, Feld
 │   │                       links, Vorschau rechts (P5c/AP9, E-P5c-28); von
@@ -610,7 +611,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      wird; erzeugt von tools/referenzdatensatz/fixture/
 │   ├── demo_lib.php       Demo-Konto: anlegen, zurücksetzen, entfernen,
 │   │                      Reset-Fälligkeit (Abschnitt 4.21)
-│   ├── admin_demo.php     die zugehörige Adminseite
+│   ├── admin_demo.php     Kontrollzahlen des Resets, nur lesend (seit Web
+│   │                      24.6.0; die Handlungen unter Installation)
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
 │   ├── migrations/        Migrationen als nachlesbare SQL-Dateien (ausgeführt
 │   │                      wird über Betrieb → Updates, siehe migration_lib.php)
@@ -9166,10 +9168,11 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Rechtstexte: die Seite | `GET admin_rechtstexte.php` | 403 | 403 | 200 | 200 | — |
 | Rechtstexte: speichern | `POST admin_rechtstexte.php` | 403 | 403 | durch | durch | — |
 | Rechtstexte: Vorschau beim Tippen | `POST api/rechtstext_vorschau.php` | 403 | 403 | durch | durch | — |
-| Demo-Konto: die Seite | `GET admin_demo.php` | 403 | 403 | 200 | 200 | — |
-| Demo-Konto: anlegen | `POST admin_demo.php action=demo_anlegen` | 403 | 403 | durch | durch | — |
-| Demo-Konto: zurücksetzen | `POST admin_demo.php action=demo_reset` | 403 | 403 | durch | durch | — |
-| Demo-Konto: entfernen | `POST admin_demo.php action=demo_entfernen` | 403 | 403 | durch | durch | — |
+| Demo-Konto: Kontrollzahlen | `GET admin_demo.php` | 403 | 403 | 200 | 200 | — |
+| Demo-Konto: anlegen | `POST admin_installation.php action=demo_anlegen` | 403 | 403 | durch | durch | — |
+| Demo-Konto: zurücksetzen | `POST admin_installation.php action=demo_reset` | 403 | 403 | durch | durch | — |
+| Demo-Konto: entfernen | `POST admin_installation.php action=demo_entfernen` | 403 | 403 | durch | durch | — |
+| Demo-Konto: Anmeldung zulassen | `POST admin_installation.php action=demo_anmeldung` | 403 | 403 | durch | durch | — |
 | Rückweg: Paar ablegen (Konzept RW) | `POST api/rueckweg_anlegen.php` | durch | durch | durch | durch | — |
 | Notzugang (SR-04): die Seite | `GET zweitfaktor_notweg.php` | 200 | 200 | 200 | 200 | — |
 | Betrieb · Server: die Seite | `GET betrieb_server.php` | 403 | 403 | 403 | 200 | — |
@@ -15059,7 +15062,7 @@ Plakette stand auf „nicht aktuell" (F-P5c-154); der Bedienweg
 | `admin_rechtstexte.php` | Editor, ein Reiter je Text, Vorschau daneben (seit Web 21.1.0; von 15.2.0 bis 21.0.0 eine Weiterleitung auf `admin_installation.php`) |
 | `api/rechtstext_vorschau.php` | Vorschau beim Tippen: `rt_html()` auf dem Server, speichert nichts, Topf `rt_vorschau` |
 | `assets/rechtstext_vorschau.js` | Entprellung, jüngste Antwort, Plakette, anteiliges Mitrollen |
-| `admin_installation.php` | Name, Adressen, Logo der Installation (S8/AP3, E-S8-05); bis Web 21.0.0 auch der Editor der Rechtstexte |
+| `admin_installation.php` | Name, Adressen, Logo der Installation (S8/AP3, E-S8-05), seit Web 24.6.0 die Karte „Demo-Konto“ mit Schalter und Handlungen (Konzept OF, E-OF-46); bis Web 21.0.0 auch der Editor der Rechtstexte |
 | `tools/proben/rechtstexte/` | Angriffsprobe für `rt_html()` |
 
 #### `rt_html()` — erst maskieren, dann Struktur erkennen

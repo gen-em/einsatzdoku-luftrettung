@@ -319,7 +319,11 @@ async function zustand() {
 // ---- 1. Anlegen ---------------------------------------------------------
 if (schritte.includes('anlegen')) {
   pruefe(await anmelden(admin, adminPw), 'Anmeldung als Administration gescheitert');
-  await seite.goto(`${basis}/admin_demo.php`, { waitUntil: 'domcontentloaded' });
+  /* SEIT WEB 24.6 stehen die Knöpfe in der Karte „Demo-Konto" unter
+     Installation (Konzept OF, E-OF-46); `zustand()` liest weiter
+     `admin_demo.php` (E-OF-71). Erst den Zustand, dann die Seite der Knöpfe. */
+  const schonDa = ((await zustand())['konto'] || '') !== '';
+  await seite.goto(`${basis}/admin_installation.php`, { waitUntil: 'domcontentloaded' });
   await seite.waitForTimeout(700);
   /* DEN KNOPF GIBT ES NUR, WENN ES NOCH KEIN DEMO-KONTO GIBT.
    *
@@ -331,7 +335,6 @@ if (schritte.includes('anlegen')) {
    * ein Demo-Konto auf der Seite, ist das die Antwort, und der Schritt zählt
    * als nicht gemessen statt als verfehlt. */
   const knopf = seite.locator('button[form="f-demo-anlegen"]');
-  const schonDa = ((await zustand())['konto'] || '') !== '';
   if (await knopf.count() === 0 && schonDa) {
     nichtGemessen += 1;
     melde('Abschnitt 1 (anlegen): NICHT GEMESSEN — es gibt bereits ein '
@@ -341,8 +344,6 @@ if (schritte.includes('anlegen')) {
     pruefe(await knopf.count() > 0,
            'Knopf zum Anlegen fehlt (gesucht: button[form="f-demo-anlegen"])');
   }
-  await seite.goto(`${basis}/admin_demo.php`, { waitUntil: 'domcontentloaded' });
-  await seite.waitForTimeout(500);
   if (await knopf.count() > 0) {
     await knopf.first().click();
     await seite.waitForTimeout(1000);
@@ -599,6 +600,8 @@ if (schritte.includes('reset')) {
   const vorher = await zustand();
   melde(`vor dem Reset: ${JSON.stringify(vorher)}`);
   ergebnis.vor_reset = vorher;
+  await seite.goto(`${basis}/admin_installation.php`, { waitUntil: 'domcontentloaded' });
+  await seite.waitForTimeout(700);
   /* DER KNOPF HEISST „Zurücksetzen", NICHT „Auf Standard zurücksetzen".
    *
    * Hier stand der lange Text, und `hasText` fand nichts. Die Erwartung

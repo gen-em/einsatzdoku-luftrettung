@@ -4710,19 +4710,19 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
  * Spalten dafür kosteten Breite und träfen doch nie beide zugleich zu — ein
  * Konto ohne Namen hat nur die Adresse. */
 .konto-name{display:block;font-weight:700;color:var(--text-titel)}
+a.konto-name:hover{color:var(--text-link)}
 .konto-mail{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
 .tabelle-konten .wahl-spalte{width:var(--knopf);text-align:center}
-.tabelle-konten .oeffnen-spalte{width:1%;text-align:right;white-space:nowrap}
+/* BEI 1024 px ROLLTE DIE TABELLE (Nr. 342): Der Titel „Zuletzt angemeldet"
+   und eine Adresse ohne Namen blieben auf einer Zeile. Beide duerfen
+   umbrechen, die Adresse an jeder Stelle (Konzept OF, OF-05). */
+.tabelle-konten th.sortable{white-space:normal}
+.tabelle-konten .konto-name,.tabelle-konten .konto-mail{overflow-wrap:anywhere}
 .tabelle-konten th.sortable a{
   display:inline-flex;align-items:center;gap:var(--abstand-1);
   color:inherit;text-decoration:none;
 }
 .tabelle-konten th.sortable a:hover{color:var(--text-link);text-decoration:none}
-.oeffnen{
-  display:inline-flex;align-items:center;gap:var(--abstand-1);
-  min-height:var(--knopf);color:var(--text-link);
-  font-family:var(--schrift-kopf);font-weight:500;
-}
 
 /* Das Kästchen vor dem Text einer Zeile (mobile Fassung derselben Liste). */
 .zeile-vorn{flex:0 0 auto;display:flex;align-items:center}

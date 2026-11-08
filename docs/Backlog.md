@@ -513,16 +513,15 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      der rollende Behälter seither nennt (Nr. 297). Die Tabelle in
      `.tabelle-scroll` rollt auf `suche.php` bei 1440 px noch um 176 px und
      bei 1600 px um 16, auf `zeitraum.php` bei 1440 px um 136 (Tagesliste)
-     bzw. bei 1200 px um 52 (Monatsliste); die Kontenliste der Verwaltung
-     bei 1024 px um 81 (BetreiberIn), 24 (Support) — dort ist die Spalte
-     „Öffnen" angeschnitten. Unter 720 px zeigen alle drei Seiten Karten
-     statt der Tabelle; betroffen ist also genau die Schreibtischbreite, für
-     die die Tabelle da ist.
+     bzw. bei 1200 px um 52 (Monatsliste). Die Kontenliste (bei 1024 px
+     81 px) ist mit Web 24.6 erledigt: Spalte „Öffnen" fort, Titel und
+     Adresse brechen um (Konzept OF, OF-05). Unter 720 px zeigen beide
+     Seiten Karten; betroffen ist genau die Schreibtischbreite.
      *Weg:* je Seite messen, welche Spalten die Breite treiben, und
      entscheiden: Spalten erst ab einer Breite zeigen, die Kartenansicht bis
      zu einer höheren Schwelle, oder umbrechen lassen. Eine Gestaltungsfrage
      mit Mockup (`CLAUDE.md` 5), keine Korrektur.
-     *Abnahme:* Bilderlauf, Spalte „Rollt bei" für die drei Seiten ab
+     *Abnahme:* Bilderlauf, Spalte „Rollt bei" für beide Seiten ab
      1280 px leer.
 
 <!-- -->

@@ -5,135 +5,17 @@ require_admin();
 require_once __DIR__ . '/demo_lib.php';
 
 /**
- * Demo-Konto verwalten.
+ * Demo-Konto — die Kontrollzahlen des Resets.
  *
- * DREI HANDLUNGEN, EINE DAVON HARMLOS:
- *   Anlegen        legt das Konto an und spielt die Fixture ein
- *   Zuruecksetzen  verwirft alles und spielt die Fixture erneut ein
- *   Entfernen      loescht das Konto samt Kennzeichnung
- *
- * „Zuruecksetzen" sieht gefaehrlich aus und ist es nicht: Der Verlust ist der
- * Zweck. Was verlorengeht, sind Besuchereingaben in einem Konto mit rein
- * erfundenen Daten — und dasselbe passiert ohnehin 30 Minuten nach der
- * ersten Aenderung von selbst. „Entfernen" dagegen ist endgueltig und hat deshalb eine Rueckfrage.
- *
- * WARUM EINE EIGENE SEITE. Die Nutzerverwaltung listet Konten; hier geht es
- * um EIN Konto mit besonderen Regeln, dessen Zustand (wann war der letzte
- * Reset? wie viele Einsaetze stehen gerade darin?) man sehen will, bevor man
- * etwas tut. Als Abschnitt zwischen dreissig Kontozeilen waere das ein
- * Fremdkoerper.
+ * SEIT WEB 24.6 NUR NOCH LESEND (Konzept OF, OF-05, E-OF-71). Anlegen,
+ * Zuruecksetzen, Entfernen und der Schalter stehen in der Karte „Demo-Konto"
+ * unter Installation (`admin_installation.php#k-demo`, E-OF-08, -46), der
+ * Menuepunkt ist fort. Was hier bleibt, sind die Zahlen, die
+ * `tools/referenzdatensatz/browser/demo_pruefen.mjs` liest; sie werden in
+ * OF-06 Zeilen der Statusseite, und diese Seite leitet dann um.
  */
 
-$notice = null; $error = null; $bericht = null;
-
-/* UMLEITEN NACH DEM POST. Jede gelungene
- * Handlung endet mit `flash_setzen()` und einer Umleitung auf diese Seite,
- * der Bericht des Laufs reist ueber die Sitzung mit — sonst legt
- * Neuladen an, setzt zurueck oder entfernt ein zweites Mal. Ein Scheitern
- * bleibt auf der Seite: Anlegen und Zuruecksetzen rollen ihre Transaktion
- * zurueck, und `demo_entfernen()` loescht bei `ok=false` nichts
- * (`konto_loeschen()`). Nur ein Wurf mitten im Entfernen leitet um — dann
- * kann schon etwas fort sein (Absatz im `catch`). */
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    csrf_check();
-    $aktion = post_text('action');
-    try {
-        if ($aktion === 'demo_anlegen') {
-            $bericht = demo_anlegen();
-            $notice = 'Demo-Konto angelegt und Standardzustand eingespielt.';
-        } elseif ($aktion === 'demo_reset') {
-            $bericht = demo_zuruecksetzen();
-            $notice = 'Demo-Konto auf den Standardzustand zurückgesetzt.';
-            /* NUR DER RESET VON HAND. Der selbsttätige
-             * schriebe bis zu 48 Einträge am Tag in den Reiter mit der langen
-             * Frist — und verdeckte jeden anderen. */
-            require_once __DIR__ . '/protokoll_lib.php';
-            protokoll('verwaltung', 'demo_zurueckgesetzt',
-                      'Demo-Konto von Hand auf den Standardzustand zurückgesetzt');
-        } elseif ($aktion === 'demo_entfernen' && ($_POST['confirm'] ?? '') === 'ja') {
-            $r = demo_entfernen();
-            if ($r['ok']) {
-                $notice = 'Demo-Konto entfernt.';
-            } else {
-                $error = $r['grund'];
-            }
-        }
-    } catch (Throwable $ex) {
-        /* DREI FAELLE, UND NUR EINER DAVON DARF WOERTLICH DURCH.
-         *
-         * demo_lib.php wirft an mehreren Stellen RuntimeException mit einem
-         * Satz, der FUER die Administration geschrieben ist („Es gibt bereits
-         * ein Demo-Konto …"). Der ist die Auskunft und bleibt.
-         *
-         * Alles andere kaeme genauso heraus — auch
-         * `SQLSTATE[23000] … Duplicate entry 'manual-2' for key 'device_id'`.
-         * Das ist keine Meldung, sondern ein Fund fuer jemanden, der den Code
-         * kennt. Die technische Ursache gehoert ins Fehlerprotokoll, in die
-         * Seite gehoert, WAS los ist und dass nichts geaendert wurde —
-         * Anlegen und Zuruecksetzen laufen in einer Transaktion und rollen
-         * zurueck. Das Entfernen NICHT (Absatz am Ende).
-         *
-         * Die Kennung verbindet beides: Sie steht in der Meldung und im
-         * Protokoll (fehler_kennung(), db.php).
-         *
-         * DIE REIHENFOLGE DER ZWEIGE IST NICHT BELIEBIG: PDOException ERBT
-         * von RuntimeException. Steht die Abfrage auf RuntimeException zuerst,
-         * faengt sie jeden Datenbankfehler mit ab und gibt ihn im Wortlaut
-         * aus — also genau das, was hier abgestellt werden soll. Die erste
-         * Fassung dieser Aenderung hatte den Fehler; aufgefallen ist er im
-         * Browserlauf, nicht beim Lesen. */
-        if ($ex instanceof PDOException) {
-            $kennung = fehler_kennung($ex, 'admin_demo');
-            $error = ist_dublettenfehler($ex)
-                ? 'Der Vorgang ist fehlgeschlagen, weil ein Wert aus der Fixture '
-                  . 'auf diesem Server bereits vergeben ist — am ehesten eine '
-                  . 'Gerätekennung, wenn hier auch der Bestand liegt, aus dem die '
-                  . 'Fixture stammt. Es wurde nichts geändert. Einzelheiten stehen '
-                  . 'im Protokoll unter der Kennung ' . $kennung . '.'
-                : 'Der Vorgang ist an der Datenbank gescheitert; es wurde nichts '
-                  . 'geändert. Einzelheiten stehen im Protokoll unter der '
-                  . 'Kennung ' . $kennung . '.';
-        } elseif ($ex instanceof RuntimeException) {
-            $error = $ex->getMessage();
-        } else {
-            $kennung = fehler_kennung($ex, 'admin_demo');
-            $error = 'Der Vorgang ist fehlgeschlagen; es wurde nichts geändert. '
-                   . 'Einzelheiten stehen im Protokoll unter der Kennung '
-                   . $kennung . '.';
-        }
-        /* DAS ENTFERNEN IST KEINE TRANSAKTION. Es geht ueber
-         * `konto_loeschen()`, und das raeumt Backups und Spuren, bevor die
-         * Kontozeile faellt. Wirft es dazwischen, ist „es wurde nichts
-         * geaendert" falsch. Ein zweites „Entfernen" fuehrt es zu Ende: Was
-         * schon fort ist, findet es nicht mehr, und den Rest raeumt es. Weil
-         * schon etwas geschehen sein kann, leitet auch dieses Scheitern um. */
-        if ($aktion === 'demo_entfernen') {
-            $kennung ??= fehler_kennung($ex, 'admin_demo');
-            flash_setzen('error', 'Das Entfernen ist mittendrin gescheitert — ein Teil '
-                . 'des Demo-Kontos kann schon gelöscht sein. Ein zweites „Entfernen" '
-                . 'führt es zu Ende. Einzelheiten stehen im Protokoll unter der Kennung '
-                . $kennung . '.');
-            header('Location: admin_demo.php');
-            exit;
-        }
-    }
-    if ($notice !== null && $error === null) {
-        flash_setzen('notice', $notice, '', $bericht !== null ? ['bericht' => $bericht] : []);
-        header('Location: admin_demo.php');
-        exit;
-    }
-}
-
-// Meldung und Bericht aus der Umleitung uebernehmen
-$flash = flash_holen();
-if ($flash !== null) {
-    if ($flash['ton'] === 'error') { $error = $flash['text']; }
-    else                           { $notice = $flash['text']; }
-    if (is_array($flash['daten']['bericht'] ?? null)) { $bericht = $flash['daten']['bericht']; }
-}
-
 $demoId = demo_id();
-$fixtureDa = demo_fixture_vorhanden();
 
 /* Kennzahlen des Kontos — sie beantworten die Frage, die man VOR dem Klicken
  * hat: Steht da ueberhaupt etwas, und seit wann? */
@@ -190,74 +72,17 @@ $restSek   = demo_reset_in();
 ui_seite_start(['titel' => 'Demo-Konto']);
 ?>
 
-<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin_demo']); ?>
+<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin_installation']); ?>
 
-  <?php /* Die Formulare der Titelzeile. Versteckt, weil ihr Knopf woanders
-           steht; `data-confirm` haengt am Formular, nicht am Knopf — es gibt
-           je Formular nur eine Handlung. */ ?>
-  <form method="post" id="f-demo-anlegen" hidden>
-    <?= csrf_field() ?><input type="hidden" name="action" value="demo_anlegen">
-  </form>
-  <form method="post" id="f-demo-reset" hidden>
-    <?= csrf_field() ?><input type="hidden" name="action" value="demo_reset">
-  </form>
-  <form method="post" id="f-demo-weg" hidden
-        data-confirm="Demo-Konto samt allen Daten endgültig entfernen?"
-        data-confirm-ok="Entfernen">
-    <?= csrf_field() ?><input type="hidden" name="action" value="demo_entfernen">
-    <input type="hidden" name="confirm" value="ja">
-  </form>
+  <?php ui_titelzeile(['titel' => 'Demo-Konto', 'unter' => 'Kontrollzahlen des Resets']); ?>
 
-  <?php
-  /* KEINE RUECKFRAGE VOR DEM ZURUECKSETZEN: Der Verlust ist der Zweck, und
-     dasselbe passiert 30 Minuten nach jeder ersten Aenderung von selbst.
-     Eine Rueckfrage, die man oft am Tag wegklickt, entwertet die Rueckfragen, die etwas
-     bedeuten. „Entfernen" dagegen ist endgueltig und steht deshalb im
-     Aktionsmenue, hinter einer Rueckfrage. */
-  $gesperrt = $fixtureDa ? '' : ' disabled';
-  if ($demoId === null) {
-      $aktionen = ui_knopf(['text' => 'Demo-Konto anlegen', 'art' => 'primaer',
-                            'symbol' => 'plus', 'attr' => ' form="f-demo-anlegen"' . $gesperrt]);
-  } else {
-      $aktionen = ui_knopf(['text' => 'Zurücksetzen', 'art' => 'primaer', 'symbol' => 'tausch',
-                            'attr' => ' form="f-demo-reset"' . $gesperrt])
-        . ui_aktionen(['titel' => 'Demo-Konto', 'eintraege' => [
-              ['text' => 'Demo-Konto entfernen', 'symbol' => 'korb',
-               'gefahr' => true, 'form' => 'f-demo-weg'],
-          ]]);
-  }
-  ?>
-  <?php ui_titelzeile(['titel' => 'Demo-Konto', 'aktionen' => $aktionen]); ?>
-
-  <?php ui_meldung($notice, $error, 'info', '  '); ?>
-
-  <?php /* DIE WARNUNG STEHT VOR ALLEM ANDEREN und bleibt stehen — sie ist der
-           einzige Ort im Projekt, an dem die Ende-zu-Ende-Verschluesselung
-           bewusst ausgesetzt ist. */ ?>
-  <?= ui_meldung_markup('warn',
-      'In diesem Konto liegt das Schlüsselmaterial auf dem Server. Das ist die '
-    . 'einzige Stelle im Projekt, an der die Ende-zu-Ende-Verschlüsselung bewusst '
-    . 'ausgesetzt ist, und sie ist nur vertretbar, weil dort ausschließlich '
-    . 'erfundene Daten stehen. Niemals echte Daten in diesem Konto erfassen.',
-      'Schlüsselmaterial auf dem Server') ?>
-
-  <?php if (!$fixtureDa): ?>
-    <?= ui_meldung_markup('fehler',
-        'Es liegt keine Fixture unter server/demo/fixture.json.gz. Ohne sie lässt '
-      . 'sich weder anlegen noch zurücksetzen. Sie entsteht mit '
-      . '„php tools/referenzdatensatz/fixture/erzeugen.php" aus dem Referenzkonto.',
-        'Keine Fixture') ?>
-  <?php endif; ?>
-
-  <p class="seiten-erklaerung">Ein Konto zum Ausprobieren, das sich
-     <strong>30 Minuten nach der ersten Änderung</strong> selbst auf den
-     Standardzustand zurücksetzt — ohne Änderung einmal am Tag.</p>
+  <p class="seiten-erklaerung">Anlegen, zurücksetzen und abschalten:
+     <a href="admin_installation.php#k-demo">Installation → Demo-Konto</a>.</p>
 
 <?php if ($demoId === null): ?>
 
   <?php ui_karte_start(['titel' => 'Zustand', 'id' => 'k-zustand']); ?>
-    <p class="feld-hinweis">Es gibt derzeit <strong>kein</strong> Demo-Konto;
-       „Demo-Konto anlegen" legt es an und spielt die Fixture ein.</p>
+    <p class="feld-hinweis">Es gibt derzeit <strong>kein</strong> Demo-Konto.</p>
   <?php ui_karte_ende(); ?>
 
 <?php else: ?>
@@ -313,18 +138,6 @@ ui_seite_start(['titel' => 'Demo-Konto']);
       <p class="feld-hinweis">Die drei Zahlen sind die Kontrolle des Resets —
          stehen sie auf null, hat das Einspielen etwas übersprungen.</p>
     <?php ui_karte_ende(); ?>
-
-  <?php /* DER BERICHT BLEIBT, DIE ERKLAERUNG GEHT. Der Umfang des Resets
-           ist Erklaertext und steht im Handbuch 11.6; der Bericht ist
-           ein Messwert dieses Laufs und gehoert auf die Seite — als eigene,
-           zugeklappte Karte, die es nur gibt, wenn es einen Bericht gibt. */ ?>
-  <?php if ($bericht !== null): ?>
-    <?php ui_karte_start(['titel' => 'Bericht des letzten Laufs', 'id' => 'k-bericht',
-                          'zu' => true, 'stand' => 'Zahlen des Resets']); ?>
-      <pre><?= e(json_encode($bericht,
-          JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></pre>
-    <?php ui_karte_ende(true); ?>
-  <?php endif; ?>
 
 <?php endif; ?>
 

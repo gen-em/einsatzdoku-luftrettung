@@ -613,7 +613,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 89 |  |
+| `--abstand-1` | `4px` | 88 |  |
 | `--abstand-2` | `8px` | 129 |  |
 | `--abstand-3` | `12px` | 170 |  |
 | `--abstand-4` | `16px` | 77 |  |
@@ -632,7 +632,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--kopf` | `56px` | 19 |  |
-| `--knopf` | `44px` | 45 |  |
+| `--knopf` | `44px` | 44 |  |
 | `--bereiche` | `48px` | 5 |  |
 | `--leiste` | `260px` | 2 | Seitenleiste ab 1200 |
 | `--leiste-schmal` | `220px` | 2 | Seitenleiste 1024–1199 |
@@ -1124,7 +1124,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `filter.svg` | Tabler Icons „filter" (MIT) | 12 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 22 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 38 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 41 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
 | `herunterladen.svg` | Tabler Icons „download" (MIT) | 3 |
 | `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 18 |
@@ -1136,8 +1136,8 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `karte-gross.svg` | Tabler Icons „arrows-vertical" (MIT) | 1 |
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 15 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
-| `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
-| `korb.svg` | Tabler Icons „trash" (MIT) | 23 |
+| `kolben.svg` | Tabler Icons „flask" (MIT) | 2 |
+| `korb.svg` | Tabler Icons „trash" (MIT) | 22 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 13 |
 | `mail.svg` | Tabler Icons „mail" (MIT) | 15 |
@@ -1173,7 +1173,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 30 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
 | `wiederherstellen.svg` | Tabler Icons „restore" (MIT) | 2 |
-| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 19 |
+| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 18 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 3 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 34 |
@@ -1258,56 +1258,56 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 248 |
 | `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 309 |
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 504 |
-| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 602 |
-| `ui_geruest_start()` | `.inhalt` | ja | 697 |
-| `ui_leiste_ende()` | `.leiste` | ja (+28 Unterklassen) | 796 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 821 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 871 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1120 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1279 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1355 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1431 |
-| `ui_hinweise()` | `.hinweise` | ja | 1479 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1507 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1542 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1595 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1648 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1713 |
-| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1759 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1811 |
-| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1839 |
-| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1866 |
-| `ui_karte_start()` | `.karte` | ja (+43 Unterklassen) | 1913 |
-| `ui_karte_ende()` | `.karte` | ja (+43 Unterklassen) | 2000 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 2035 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 2077 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2125 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2187 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2242 |
-| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2299 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2403 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2515 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2573 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2621 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2655 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2727 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2751 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2793 |
-| `ui_datum_eingabe()` | `.datum-eingabe` | **keine** | 2879 |
-| `ui_feld()` | `.feld` | ja (+31 Unterklassen) | 2902 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2973 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 3017 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 3087 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 3131 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3230 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3302 |
-| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3343 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3435 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3473 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3504 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3533 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3677 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3756 |
+| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 601 |
+| `ui_geruest_start()` | `.inhalt` | ja | 696 |
+| `ui_leiste_ende()` | `.leiste` | ja (+28 Unterklassen) | 795 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 820 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 870 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1119 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1278 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1354 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1430 |
+| `ui_hinweise()` | `.hinweise` | ja | 1478 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1506 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1541 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1594 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1647 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1712 |
+| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1758 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1810 |
+| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1838 |
+| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1865 |
+| `ui_karte_start()` | `.karte` | ja (+43 Unterklassen) | 1912 |
+| `ui_karte_ende()` | `.karte` | ja (+43 Unterklassen) | 1999 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 2034 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 2076 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2124 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2186 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2241 |
+| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2298 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2402 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2514 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2572 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2620 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2654 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2726 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2750 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2792 |
+| `ui_datum_eingabe()` | `.datum-eingabe` | **keine** | 2878 |
+| `ui_feld()` | `.feld` | ja (+31 Unterklassen) | 2901 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2972 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 3016 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 3086 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 3130 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3229 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3301 |
+| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3342 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3434 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3472 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3503 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3532 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3676 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3755 |
 
 55 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_datum_eingabe()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
