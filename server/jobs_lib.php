@@ -151,7 +151,7 @@ const JOB_PAUSE_SCHLUESSEL = 'jobs_pause_bis';
 const JOB_PAUSE_MAX_S = 7200;
 
 /**
- * Die Jobs anhalten — bis zu JOB_PAUSE_MAX_S Sekunden.
+ * Die Jobs pausieren — bis zu JOB_PAUSE_MAX_S Sekunden.
  *
  * @param int $sekunden 0 = Pause sofort aufheben
  */
@@ -167,7 +167,7 @@ function jobs_pause(int $sekunden): void
     app_state_setzen(JOB_PAUSE_SCHLUESSEL, $bis);
 }
 
-/** Bis wann sind die Jobs angehalten? null = sie laufen. */
+/** Bis wann sind die Jobs pausiert? null = sie laufen. */
 function jobs_pause_bis(): ?string
 {
     $wert = (string)(app_state_lesen(JOB_PAUSE_SCHLUESSEL) ?? '');
@@ -183,7 +183,11 @@ function jobs_pause_bis(): ?string
  *
  * Je Job:
  *   titel        fuer die Wartungsseite
- *   beschreibung was er tut, in einem Satz
+ *   beschreibung was er tut, in EINEM kurzen Satz ohne Punkt — er steht als
+ *                Kleinzeile unter dem Titel (Betrieb -> Hintergrundjobs und
+ *                Statusseite, Konzept OF, E-OF-21). Was ein Job im Einzelnen
+ *                tut und warum, steht im Handbuch 12.4 und in Technik 4.7,
+ *                nicht hier: Die Zeile war bis Web 24 drei Zeilen lang.
  *   taeglich     true  = hoechstens einmal je Kalendertag (Aufraeumarbeiten)
  *                false = laeuft, solange es Rueckstand gibt
  *   rueckstand   fn(PDO, array $zustand): ?int — wie viel steht aus?
@@ -196,19 +200,6 @@ function jobs_pause_bis(): ?string
  *                tun. `$zeitLinks()` liefert die verbleibenden Sekunden — wer
  *                laenger arbeitet, als er hat, bringt die Anfrage um.
  */
-/**
- * Eine Liste als deutscher Satzteil: „a, b und c".
- *
- * Steht hier und nicht in `ui.php`, weil `jobs_lib.php` im CLI-Lauf ohne
- * Oberflaeche geladen wird. Vier Zeilen sind der kleinere Preis als eine
- * Abhaengigkeit auf die Seitenhuelle.
- */
-function jobs_aufzaehlung(array $teile): string
-{
-    if (count($teile) < 2) { return implode('', $teile); }
-    $letztes = array_pop($teile);
-    return implode(', ', $teile) . ' und ' . $letztes;
-}
 
 function jobs_katalog(): array
 {
@@ -231,22 +222,23 @@ function jobs_katalog(): array
          * naechsten Kalendertag. */
         'mail' => [
             'titel'        => 'Post zustellen',
-            'beschreibung' => 'Nachrichten, deren erster Versuch scheiterte — '
-                            . 'fünf Versuche über 24 Stunden, danach steht die '
-                            . 'Nachricht als unzustellbar auf der Statusseite',
+            'beschreibung' => 'Gescheiterte Mails erneut senden, fünf Versuche '
+                            . 'über 24 Stunden',
             'taeglich'     => false,
             'rueckstand'   => 'mail_rueckstand',
             'lauf'         => 'mail_job',
         ],
         'aufraeumen' => [
             'titel'        => 'Aufräumen',
-            /* DIESE ZEILE IST SICHTBARER TEXT (Betrieb -> Hintergrundjobs)
-             * und wird erzeugt, nicht VON HAND gefuehrt — von Hand hinkte sie
-             * den Schritten hinterher: `job_aufraeumen_schritte()` kennt seine
-             * Schritte, sie heissen dort bereits „Kopplungssitzungen",
-             * „Sperrereignisse", „Gerätevermerke". */
-            'beschreibung' => jobs_aufzaehlung(
-                array_keys(job_aufraeumen_schritte())),
+            /* KEINE AUFZAEHLUNG DER SCHRITTE MEHR. Seit Web 20.26.0 wurde
+             * die Zeile aus `array_keys(job_aufraeumen_schritte())` erzeugt,
+             * weil eine von Hand gefuehrte Liste den Schritten hinterherhinkte
+             * — erzeugt war sie richtig, aber achtzehn Namen lang, und ein
+             * Satz je Zeile (E-OF-21) traegt keine achtzehn. Dieser Satz
+             * nennt Beispiele und keine Vollstaendigkeit; er kann deshalb
+             * nicht hinterherhinken. Die Schritte zaehlt das Jobregister
+             * gegen Technik 4.7. */
+            'beschreibung' => 'Abgelaufene Sitzungen, Sperren und Zähler entfernen',
             'taeglich'     => true,
             'rueckstand'   => fn(PDO $pdo, array $z): ?int => null,
             'lauf'         => 'job_aufraeumen',
@@ -261,10 +253,7 @@ function jobs_katalog(): array
          * verbraucht, ist eine nicht eingehaltene Zusage. */
         'konto_loeschung' => [
             'titel'        => 'Beantragte Löschungen ausführen',
-            'beschreibung' => 'Konten, deren 30-tägige Karenz abgelaufen ist, '
-                            . 'endgültig löschen — mitsamt GPS-Daten, Stammdaten und '
-                            . 'Konto-Backups; eine Anmeldung in der Karenz nimmt '
-                            . 'den Antrag zurück',
+            'beschreibung' => 'Konten nach 30 Tagen Karenz endgültig löschen',
             'taeglich'     => false,
             'rueckstand'   => 'job_konto_loeschung_rueckstand',
             'lauf'         => 'job_konto_loeschung',
@@ -277,10 +266,12 @@ function jobs_katalog(): array
          * Aufmerksamkeit kosteten, als sie wert sind. */
         'konto_verfall' => [
             'titel'        => 'Verfallene Registrierungen löschen',
-            'beschreibung' => 'Unbestätigte Registrierungen nach 48 Stunden und '
-                            . 'wartende nach Ablauf der Freischaltfrist (Vorgabe '
-                            . '30 Tage) löschen — die Wartenden bekommen vorher '
-                            . 'eine letzte Mail',
+            /* „nach Ablauf der Frist" und nicht „nach 30 Tagen": Die Frist
+             * ist einstellbar (`konten_reg_frist_tage()`), 30 ist nur die
+             * Vorgabe. Der Katalog liest keine Einstellung — er wird bei
+             * jedem Lauf gebaut. */
+            'beschreibung' => 'Unbestätigte nach 48 Stunden, wartende nach Ablauf '
+                            . 'der Frist',
             'taeglich'     => false,
             'rueckstand'   => 'job_konto_verfall_rueckstand',
             'lauf'         => 'job_konto_verfall',
@@ -296,8 +287,7 @@ function jobs_katalog(): array
          * etwas zu tun hat, ist es das, worauf jemand gerade wartet. */
         'adminbackup' => [
             'titel'        => 'Backups aller Konten',
-            'beschreibung' => 'Den Auftrag „Alle sichern" in Schüben abarbeiten '
-                            . '— je Konto ein Paket, mit Wiederaufnahme',
+            'beschreibung' => 'Den Auftrag „Alle sichern" in Schüben abarbeiten',
             'taeglich'     => false,
             'rueckstand'   => 'job_adminbackup_rueckstand',
             'lauf'         => 'job_adminbackup',
@@ -308,9 +298,7 @@ function jobs_katalog(): array
          * Abfrage auf die Marke und sonst nichts. */
         'protokoll_archiv' => [
             'titel'        => 'Protokoll archivieren',
-            'beschreibung' => 'Die Einträge eines abgelaufenen Zeitraums versiegelt als '
-                            . 'ZIP ablegen und Archive nach Ablauf der Aufbewahrung '
-                            . 'löschen — ohne IP-Adressen, in Häppchen',
+            'beschreibung' => 'Abgelaufene Einträge versiegelt als ZIP ablegen',
             'taeglich'     => false,
             'rueckstand'   => 'protokoll_archiv_rueckstand',
             'lauf'         => 'protokoll_archiv_job',
@@ -322,10 +310,7 @@ function jobs_katalog(): array
          * eine Abfrage (`serverschluessel_zustand()`) und ist fertig. */
         'schluesselwechsel' => [
             'titel'        => 'Serverschlüssel umhüllen',
-            'beschreibung' => 'Nur während eines Wechsels: Zugänge der Backup-Ziele, '
-                            . 'Zweitfaktor-Geheimnisse, Konto-Backups und Archive des '
-                            . 'Protokolls vom bisherigen auf den neuen Serverschlüssel '
-                            . 'umhüllen und jedes Stück mit dem neuen nachweisen',
+            'beschreibung' => 'Nur während eines Schlüsselwechsels',
             'taeglich'     => false,
             'rueckstand'   => 'job_schluesselwechsel_rueckstand',
             'lauf'         => 'job_schluesselwechsel',
@@ -338,9 +323,7 @@ function jobs_katalog(): array
          * Ohne aktives Ziel kostet er eine Abfrage und ist fertig. */
         'versand' => [
             'titel'        => 'Backups versenden',
-            'beschreibung' => 'Neue Pakete auf die aktiven Backup-Ziele '
-                            . 'schieben — nur was dort fehlt, und nichts wird '
-                            . 'dort gelöscht',
+            'beschreibung' => 'Neue Pakete auf die aktiven Backup-Ziele schieben',
             'taeglich'     => false,
             'rueckstand'   => 'job_versand_rueckstand',
             'lauf'         => 'job_versand',
@@ -361,8 +344,7 @@ function jobs_katalog(): array
          * hinter ihm noch zum Zug kommt. */
         'komplett' => [
             'titel'        => 'Komplett-Backup der Installation',
-            'beschreibung' => 'Die ganze Datenbank als versiegelter SQL-Dump '
-                            . '— tabellenweise in Häppchen, mit Wiederaufnahme',
+            'beschreibung' => 'Die ganze Datenbank als versiegelter SQL-Dump',
             'taeglich'     => false,
             'rueckstand'   => 'job_komplett_rueckstand',
             'lauf'         => 'job_komplett',
@@ -374,18 +356,14 @@ function jobs_katalog(): array
          * bevor das Sicherheitsnetz `waisen` das Restbudget nimmt. */
         'nachaufloesen' => [
             'titel'        => 'Gerätemodelle nachlösen',
-            'beschreibung' => 'Nach einer neuen Modelltabelle die Teilenummern '
-                            . 'bestehender Geräte erneut auflösen — in Blöcken '
-                            . 'von 200, nur was die Tabelle kennt, die Rohangabe '
-                            . 'bleibt unberührt',
+            'beschreibung' => 'Teilenummern nach neuer Modelltabelle neu auflösen',
             'taeglich'     => false,
             'rueckstand'   => 'job_nachaufloesen_rueckstand',
             'lauf'         => 'job_nachaufloesen',
         ],
         'waisen' => [
             'titel'        => 'Verwaiste GPS-Daten',
-            'beschreibung' => 'GPS-Punkte und Blobs ohne Eigentümer entfernen '
-                            . '— bereichsweise über den Primärschlüssel',
+            'beschreibung' => 'GPS-Daten ohne Eigentümer entfernen',
             'taeglich'     => false,
             'rueckstand'   => 'job_waisen_rueckstand',
             'lauf'         => 'job_waisen',
@@ -424,7 +402,7 @@ function jobs_lauf(string $ausloeser, ?array $nur = null): array
         $aus = [];
         foreach (jobs_katalog() as $name => $job) {
             if ($nur !== null && !in_array($name, $nur, true)) { continue; }
-            $aus[$name] = ['uebersprungen' => 'angehalten bis ' . $pause . ' UTC'];
+            $aus[$name] = ['uebersprungen' => 'pausiert bis ' . $pause . ' UTC'];
         }
         return $aus;
     }
@@ -674,7 +652,7 @@ function jobs_token(bool $neu = false): string
  *
  * Wer es hat, kann die Aktionen der Kette ausloesen: ein Komplett-Backup
  * anstossen, den Wartungsmodus ein- und ausschalten, den Zustand abfragen,
- * die Jobs anhalten. Daten lesen oder schreiben kann er damit nicht. Es kommt
+ * die Jobs pausieren. Daten lesen oder schreiben kann er damit nicht. Es kommt
  * NUR im Rumpf einer POST-Anfrage an (`jobs.php` lehnt `aktion` per GET ab)
  * und steht deshalb in keinem Zugriffsprotokoll. In GitHub liegt es als
  * Geheimnis `JOBS_TOKEN` der Umgebungen `staging` und `produktion` — der Name

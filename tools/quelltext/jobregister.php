@@ -13,9 +13,10 @@ declare(strict_types=1);
  * Abstand wieder. Verlangt ist deshalb ausdruecklich ein PRUEFMITTEL —
  * „sonst wandert das Problem nur eine Ebene weiter".
  *
- * DIE SICHTBARE BESCHREIBUNG WIRD SEIT WEB 20.26.0 ERZEUGT
- * (`jobs_katalog()` aus `array_keys(job_aufraeumen_schritte())`) und kann
- * nicht mehr altern. Die Registerzeile in der Dokumentation bleibt Prosa,
+ * DIE SICHTBARE BESCHREIBUNG WURDE VON WEB 20.26.0 BIS 24.6 ERZEUGT
+ * (`jobs_katalog()` aus `array_keys(job_aufraeumen_schritte())`); seit Web
+ * 24.7 ist sie ein kurzer Satz mit Beispielen (Konzept OF, E-OF-21), und die
+ * Schritte zaehlt nur noch dieses Register. Die Registerzeile in der Dokumentation bleibt Prosa,
  * weil sie mehr sagt als eine Liste — sie wird ab jetzt nachgezaehlt.
  *
  * MIT DEM TOKENIZER, NICHT MIT `grep` — und nicht durch Ausfuehren.

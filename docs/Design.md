@@ -614,7 +614,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--abstand-1` | `4px` | 88 |  |
-| `--abstand-2` | `8px` | 129 |  |
+| `--abstand-2` | `8px` | 130 |  |
 | `--abstand-3` | `12px` | 170 |  |
 | `--abstand-4` | `16px` | 77 |  |
 | `--abstand-5` | `24px` | 39 |  |
@@ -1029,9 +1029,10 @@ zählt nur Breiten.
 | `@media (min-width:1024px)` | 4 |
 | `@media (min-width:720px)` | 17 |
 | `@media screen and (min-width:720px)` | 1 |
+| `@media (max-width:719px)` | 1 |
 | `@media (max-width:479px)` | 3 |
 
-Zusammen 34 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 35 Medienblöcke über 6 verschiedene Breiten: 479 px, 719 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -1117,7 +1118,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `aktualisieren.svg` | Tabler Icons „refresh" (MIT) | 1 |
 | `balken.svg` | Tabler Icons „chart-bar" (MIT) | 4 |
 | `bergwacht.svg` | Tabler Icons „mountain" (MIT) | 32 |
-| `datenbank.svg` | Tabler Icons „database" (MIT) | 11 |
+| `datenbank.svg` | Tabler Icons „database" (MIT) | 10 |
 | `drucken.svg` | Tabler Icons „printer" (MIT) | 3 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
@@ -1146,10 +1147,10 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 6 |
-| `plus.svg` | Tabler Icons „plus" (MIT) | 25 |
+| `plus.svg` | Tabler Icons „plus" (MIT) | 26 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 18 |
-| `protokoll.svg` | Tabler Icons „list" (MIT) | 21 |
+| `protokoll.svg` | Tabler Icons „list" (MIT) | 23 |
 | `punkte.svg` | Tabler Icons „dots" (MIT) | 70 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
@@ -1167,7 +1168,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 16 |
 | `uhr.svg` | Tabler Icons „device-watch" (MIT) | 282 |
-| `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
+| `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 4 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 11 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 30 |
@@ -1175,11 +1176,11 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `wiederherstellen.svg` | Tabler Icons „restore" (MIT) | 2 |
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 18 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 3 |
-| `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
-| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 34 |
+| `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 0 |
+| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 36 |
 
 64 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
-**Nirgends genannt:** `hochladen`, `luftlinie`, `mond`, `reanimation`, `werkzeug`.
+**Nirgends genannt:** `hochladen`, `luftlinie`, `mond`, `reanimation`, `werkzeug`, `ziel-fern`.
 
 ## 9. Bausteine
 
@@ -1258,12 +1259,12 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 248 |
 | `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 309 |
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 504 |
-| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 601 |
-| `ui_geruest_start()` | `.inhalt` | ja | 696 |
-| `ui_leiste_ende()` | `.leiste` | ja (+28 Unterklassen) | 795 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 820 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 870 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1119 |
+| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 600 |
+| `ui_geruest_start()` | `.inhalt` | ja | 695 |
+| `ui_leiste_ende()` | `.leiste` | ja (+28 Unterklassen) | 794 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 819 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 869 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1118 |
 | `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1278 |
 | `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1354 |
 | `ui_fuss_seite()` | `.fuss-seite` | ja | 1430 |
@@ -1277,37 +1278,37 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1810 |
 | `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1838 |
 | `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1865 |
-| `ui_karte_start()` | `.karte` | ja (+43 Unterklassen) | 1912 |
-| `ui_karte_ende()` | `.karte` | ja (+43 Unterklassen) | 1999 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 2034 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 2076 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2124 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2186 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2241 |
-| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2298 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2402 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2514 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2572 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2620 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2654 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2726 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2750 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2792 |
-| `ui_datum_eingabe()` | `.datum-eingabe` | **keine** | 2878 |
-| `ui_feld()` | `.feld` | ja (+31 Unterklassen) | 2901 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2972 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 3016 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 3086 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 3130 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3229 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3301 |
-| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3342 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3434 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3472 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3503 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3532 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3676 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3755 |
+| `ui_karte_start()` | `.karte` | ja (+44 Unterklassen) | 1912 |
+| `ui_karte_ende()` | `.karte` | ja (+44 Unterklassen) | 2007 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 2042 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 2084 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2132 |
+| `ui_zeile()` | `.zeile` | ja (+40 Unterklassen) | 2194 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2249 |
+| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2306 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2410 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2522 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2580 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2628 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2662 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2734 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2758 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2800 |
+| `ui_datum_eingabe()` | `.datum-eingabe` | **keine** | 2886 |
+| `ui_feld()` | `.feld` | ja (+31 Unterklassen) | 2909 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2980 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 3024 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 3094 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 3138 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3237 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3309 |
+| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3350 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3442 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3480 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3511 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3540 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3684 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3763 |
 
 55 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_datum_eingabe()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -1421,6 +1422,12 @@ Plaketten, Aktionen rechts.
 dahin rückte die Regel für die Plaketten am Fuß der Einsatzkarte
 (`.karte-inhalt .zeile-plaketten`, Abstand oben) jede Zeile in einer Karte
 um 12 px herunter; sie gilt jetzt nur dem direkten Kind.
+
+**Mehrere Plaketten oder Plakette und Knopf: `'klasse' => 'zeile-umbruch'`**
+(seit Web 24.7.0, OF-06). Die Plaketten stehen nebeneinander statt
+gestapelt, und unter 720 px steht der Satz über ihnen und dem Knopf — sonst
+quetschten sie ihn am Handy auf zwei, drei Wörter je Zeile. Verwender: die
+Jobs (Zeitpunkt, Auslöser, Rückstand) und die Backup-Ziele.
 
 **`vorn` ist nicht `aktionen`.** Was vorn steht, *wählt die Zeile aus*; was
 rechts steht, *handelt an ihr*. Zwei Verwendungen: die NutzerInnen-Liste
@@ -3745,7 +3752,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
-| **Web 24.7.0 (Schritt 27, Konzept OF, OF-06)** | **9.1:** Stand und Plakette der Klappkarte als eine Gruppe (`.karte-stand-gruppe`). Statusseite „Probleme zuerst", Servereinstellungen, Hintergrundjobs und Komplett-Backup aus vorhandenen Bausteinen (Klappkarte, Zeile, Segmentwahl, `haupt`); kein neuer Baustein, kein Token. |
+| **Web 24.7.0 (Schritt 27, Konzept OF, OF-06)** | **9.1:** Stand und Plakette der Klappkarte als eine Gruppe (`.karte-stand-gruppe`). **9.2:** `zeile-umbruch` für Zeilen mit mehreren Plaketten oder Plakette und Knopf. Statusseite „Probleme zuerst", Servereinstellungen, Hintergrundjobs und Komplett-Backup aus vorhandenen Bausteinen (Klappkarte, Zeile, Segmentwahl, `haupt`); kein neuer Baustein, kein Token. |
 | **Web 24.5.0 (Schritt 27, Konzept OF, OF-04)** | **9.42 neu — Wahlkarten**, freigegeben mit OF-P17-C; dort auch Koppel-Dialog und Zweitfaktor-Karte als Verwendungen vorhandener Bausteine. **9.9:** Speicherleiste außerhalb des Formulars (`data-fuer`). **6:** Feldraster `.listen-form-felder` in den Einstellungen auf `--feld-breit` begrenzt. |
 | **Web 24.4.0 (Schritt 27, Konzept OF, OF-03)** | **9.7:** Datumsfeld `TT.MM.JJJJ` (`ui_datum_eingabe()`, `.feld-datum`, `--feld-datum`) an allen acht Stellen. **9.13:** Zeichen statt Kleinzeile am Ortsfeld, der Satz als Tooltip. **9.18a:** Filterknopf mit gesetzten Filtern als Pillen. Neues abgeleitetes Maß `--feld-datum`; kein neuer Baustein — alle drei mit den Mockups freigegeben. |
 | **Web 24.2.0–24.3.0 (Schritt 27, Konzept OF, OF-01 und OF-02)** | **6:** Erklärtext ohne Verweis, das „?" öffnet das Kapitel; drei Seitenregeln im Bilderlauf. **9.9** Speicherleiste als Auswahlfläche am Rand. **4:** `--feld-breit` statt `--listensuche-breit`. **9.1:** Klappkarte mit Stand und Plakette (`stand` statt `vorschau`). **9.2:** Plakette und Knopf auf einer Linie. **9.7:** Segmentwahl abwählbar. **8:** sechs Zeichen (`filter`, `wiederherstellen`, `herunterladen`, `hochladen`, `mond`, `sonne`), freigegeben mit den Mockups. Kein neuer Baustein. |

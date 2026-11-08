@@ -37,7 +37,8 @@ katalog.html  div.karte-klappbar <div.rahmenkarte-abschnitte>  :  height
 katalog.html  div.karte-kopf <div.karte-bereich>  :  background, border, border-bottom, border-bottom-color, border-color, border-radius, border-width, height, padding, padding-bottom, padding-left, padding-right, padding-top
 katalog.html  div.karte-kopf <div.karte-klappbar>  :  border, border-bottom, border-bottom-color, border-color, border-width, height, padding, padding-bottom, padding-left, padding-right, padding-top
 katalog.html  div.karte-kopf <div.rahmenkarte-abschnitte>  :  border, border-bottom, border-bottom-color, border-color, border-width, height, padding, padding-bottom, padding-left, padding-right, padding-top
-katalog.html  div.karte-stand <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, font, font-size, height, line-height, margin, outline, text-align
+katalog.html  div.karte-stand <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, font, font-size, height, line-height, outline, text-align
+katalog.html  div.karte-stand-gruppe <div>  :  align-items, column-gap, display, flex-wrap, gap, justify-content, margin, width
 katalog.html  div.kartenfilter-lupe <div>  :  bottom, top
 katalog.html  div.kartenfilter-x <div>  :  bottom, top
 katalog.html  div.knopf-breit <div.speichern>  :  width
@@ -86,7 +87,10 @@ katalog.html  div.zeile-aktionen <div>  :  align-items
 katalog.html  div.zeile-plaketten <div.archiv-liste>  :  align-items
 katalog.html  div.zeile-plaketten <div.karte-inhalt>  :  align-items
 katalog.html  div.zeile-plaketten <div.protokoll-liste>  :  align-items
+katalog.html  div.zeile-plaketten <div.zeile-umbruch>  :  align-items, flex, flex-wrap
 katalog.html  div.zeile-plaketten <div>  :  align-items
+katalog.html  div.zeile-text <div.zeile-umbruch>  :  flex, flex-basis
+katalog.html  div.zeile-umbruch <div>  :  flex-wrap
 katalog.html  form <div.inhalt>  :  height
 katalog.html  html <->  :  height, scroll-padding-top
 katalog.html  input.schalter-box <div>  :  bottom, top
@@ -181,7 +185,8 @@ seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-anlegen>  :  width
 seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-leise>  :  width
 seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-offen>  :  width
 seiten.html[ui.php]  span.fuss-version <p.fuss-zeile>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, outline
-seiten.html[ui.php]  span.karte-stand <span.karte-zahl>  :  text-align
+seiten.html[ui.php]  span.karte-stand <span.karte-stand-gruppe>  :  display, min-height, min-width, text-align
+seiten.html[ui.php]  span.karte-stand-gruppe <span.karte-zahl>  :  align-items, column-gap, display, flex-wrap, gap, justify-content
 seiten.html[ui.php]  span.nur-vorlesen <button.knopf.knopf-symbol>  :  bottom, left, top
 seiten.html[ui.php]  span.nur-vorlesen <span>  :  right
 seiten.html[ui.php]  span.wahl-text <label.wahl-zeile>  :  width

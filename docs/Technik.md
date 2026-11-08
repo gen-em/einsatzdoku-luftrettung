@@ -265,8 +265,14 @@ Daten erst nach Server-Bestätigung.
 │   │                       Schema (P5c/AP8). Dazu Pflege in der
 │   │                       Tabelle backup_targets, „Verbindung prüfen" und
 │   │                       der Versandschub
-│   ├── admin_sicherungsziele.php  BetreiberIn-Seite dazu (Nr. 286): Ziele anlegen und prüfen,
-│   │                       Versand ein/aus; fehlt der Serverschlüssel, der
+│   ├── sicherungsziele_teile.php  Die Karte „Backup-Ziele" samt Dialogen, eingebunden
+│   │                       in Servereinstellungen und Komplett-Backup (seit
+│   │                       Web 24.7.0, Konzept OF, E-OF-45; Muster
+│   │                       zweitfaktor_teile.php)
+│   ├── admin_sicherungsziele.php  Ziel der Formulare dieser Karte: nimmt nur POST an
+│   │                       und leitet auf die Seite der Karte zurück, GET auf
+│   │                       die Servereinstellungen (seit Web 24.7.0; bis
+│   │                       dahin die eigene Seite, Nr. 286); fehlt der Serverschlüssel, der
 │   │                       Weg zur Karte unter Servereinstellungen (bis
 │   │                       Web 21.12.0 stand hier „Serverschlüssel
 │   │                       nachtragen" — so war es bis S10, F-SR-03)
@@ -4039,7 +4045,7 @@ Ratenschutz:
 | `komplett` | **nur** das Komplett-Backup — und legt einen Auftrag an, wenn keiner steht | `{ok, fertig, bericht, komplett}` |
 | `wartung_an` / `wartung_aus` | Wartungsmodus, Urheber `kette` | `{ok, wartung}` |
 | `zustand` | Auskunft **ohne Nebenwirkung**: Version, Wartung, jüngster Komplett-Stand, Migration ausstehend | `{ok, version, wartung, komplett, migration_ausstehend}` |
-| `pause` | Jobs anhalten (`sekunden=N`) oder freigeben (`sekunden=0`); seit Web 20.16.0 | `{ok, sekunden, grenze, bis, meldung}` |
+| `pause` | Jobs pausieren (`sekunden=N`) oder freigeben (`sekunden=0`); seit Web 20.16.0 | `{ok, sekunden, grenze, bis, meldung}` |
 
 **`pause` ist kein zweiter Mechanismus**, sondern ein vierter Aufrufer von
 `jobs_pause()` — neben der Kommandozeile und den beiden Knöpfen unter Betrieb
@@ -4246,11 +4252,12 @@ Laufzeiten am Messstand —, steht in der Git-Historie dieser Datei (bis
 `0db03e9`). Die Ausdünnung selbst (Stufe 3, oben) gilt unverändert; sie läuft
 nur an anderer Stelle.
 
-#### Die Jobs anhalten (ab Web 10.2.0, Knopf ab Web 19.3.0)
+#### Die Jobs pausieren (ab Web 10.2.0, Knopf ab Web 19.3.0)
 
 **Zwei Wege, ein Schalter.** `php jobs.php --pause <Sekunden>` (0 hebt auf) und
-seit Web 19.3.0 der Knopf **„Jobs anhalten"** in der Karte „Zustand" auf
-Betrieb → Hintergrundjobs, mit einer Dauerwahl aus 15 Min., 30 Min., 1 Std.
+seit Web 19.3.0 der Knopf auf Betrieb → Hintergrundjobs — seit Web 24.7.0
+**„Pausieren"** in der eigenen Karte „Jobs vorübergehend pausieren" (bis dahin
+„Jobs anhalten" in der Karte „Zustand"; Konzept OF, E-OF-10), mit einer Dauerwahl aus 15 Min., 30 Min., 1 Std.
 und 2 Std. Beide rufen `jobs_pause()` und schreiben denselben Schlüssel
 `jobs_pause_bis` nach `app_state` — es gibt keinen zweiten Speicherort und
 keine zweite Deckelung. Der Knopf ist dort nötig, wo es keine Kommandozeile
@@ -4560,7 +4567,7 @@ benannten Zweig (`sftp`), und alles Übrige fiel in `ZielFtp`, wo
 **Seit Web 21.0.0 kennt auch das Schema den Wert nicht mehr** (Migration
 `2026_09_25_ftp_entfernen`, P5c/AP8, E-P5c-124). Sie sperrt mit
 Vorbedingung, solange ein FTP-Ziel dasteht, und nennt den Weg: unter
-Betrieb → Backup-Ziele umstellen oder löschen (seit Web 21.1.0 auch im
+Betrieb → Backup-Ziele (seit Web 24.7.0 die Karte unter Servereinstellungen) umstellen oder löschen (seit Web 21.1.0 auch im
 Wartungsmodus offen, E-P5c-134; bis dahin nannte der Satz „Verwaltung →
 Sicherungsziele", F-P5c-159). **Mit dem Wert ist der
 Weg gefallen, der ein solches Ziel von 20.2.0 bis 20.47.0 umschiffte:** die
@@ -6589,7 +6596,7 @@ Die Bausteine im Einzelnen:
 | Transaktionsrahmen | `transaktion_lib.php` (bis Web 20.37.2 `db.php`, Nr. 288) | `db_transaktion($pdo, $fn)` — beginnen, den Rumpf laufen lassen, bestätigen; bei jedem `Throwable` zurückrollen und **weiterwerfen**. **Verschachtelungsfest und asymmetrisch:** Wer schon in einer fremden Transaktion steht, öffnet keine eigene und bestätigt und verwirft dann auch nichts. Vor dem `rollBack()` wird nachgefragt, ob sie noch steht — ein DDL bestätigt in MySQL still, und der Rumpf darf selbst zurückgerollt haben; sonst verdeckte eine zweite Ausnahme die erste. Ab Web 20.30.0; **neun Rahmen bleiben namentlich außen vor**, die Registerzeile Z16 führt sie mit Grund. |
 | Kindtabellen eines Einsatzes | `einsatz_lib.php` | `einsatz_phasen_ersetzen()`, `einsatz_rettungsmittel_ersetzen()`, `einsatz_besatzung_ersetzen()` (bis Web 22.7.0 dazu `einsatz_reas_ersetzen()`) — fünf Schreibwege (Formular, CSV-Import, Uhr-Eingang, Backup, Schneiden), dreißig Anweisungen, jetzt null außerhalb. Schalter `loeschen` (Vorgabe `true`; das Backup schreibt in einen gerade angelegten Einsatz) und `ignorieren` (dessen `INSERT IGNORE`). **Sie prüfen nichts** — was gültig ist, entscheidet der Aufrufer. Ab Web 20.30.0. |
 | Vorbereitete Anweisung | `einsatz_lib.php` (`einsatz_anweisung()`) | Eine `PDOStatement` je Verbindung und SQL-Text. Nötig, weil `db.php` `ATTR_EMULATE_PREPARES => false` setzt: Jedes `prepare()` ist ein Roundtrip, und der CSV-Import führt seine Anweisungen bis zu 3 000-mal aus. Die Verbindung wird **mitgehalten**, nicht nur ihre Objektkennung — eine freigegebene PDO gäbe ihre `spl_object_id` an die nächste weiter. |
-| Zahl, Größe, Anteil, Datum, Zeit | `format_lib.php` | `zahl_text()` · `groesse_text()` (drei Stufen: GB zwei, MB eine, KB null Nachkommastellen) · `groesse_kurz_text()` (mit Stufe „B", abgeschnittenen Nullen und `unbegrenzt` — eine **andere** Schreibweise, keine zweite Fassung) · `groesse_paar_text($ist, $grenze)` (gemeinsame Einheit: „3 von 250 MB") · `prozent_wert($teil, $ganz, 'ab'\|'kauf')` und `prozent_text()` · `datum_text()` · `datum_zeit_text($utc, $trenner)` · `datum_stunde_text()` · `zeit_relativ()` · `heute_lokal()` · `iso_utc()` / `iso_utc_lesen()` · seit Web 23.3.1 `csv_zelle()` (entschärft eine CSV-Zelle, die mit `=`, `+`, `-`, `@`, Tabulator oder Wagenrücklauf beginnt, mit einem Apostroph; der Modellname in der Geräte-CSV der Statistik kommt vom Gerät, R17-22, F-R17-45). Ab Web 20.32.0. **Sie lädt nur `konfig_lib.php`** — `install.php` erreicht sie über `plattform_lib.php`, bevor es eine `config.php` gibt. **Zwölf Stellen bleiben namentlich außen vor**, die Registerzeilen Z22–Z26 führen sie mit Grund. |
+| Zahl, Größe, Anteil, Datum, Zeit | `format_lib.php` | `zahl_text()` · `groesse_text()` (drei Stufen: GB zwei, MB eine, KB null Nachkommastellen) · `groesse_kurz_text()` (mit Stufe „B", abgeschnittenen Nullen und `unbegrenzt` — eine **andere** Schreibweise, keine zweite Fassung) · `groesse_paar_text($ist, $grenze)` (gemeinsame Einheit: „3 von 250 MB") · `prozent_wert($teil, $ganz, 'ab'\|'kauf')` und `prozent_text()` · `datum_text()` · `datum_zeit_text($utc, $trenner)` · `datum_stunde_text()` · `zeit_relativ()` · seit Web 24.7.0 `zeit_relativ_kurz()` („heute 23:24", „gestern 07:10", sonst „TT.MM." — für Plaketten, die nicht umbrechen) · `heute_lokal()` · `iso_utc()` / `iso_utc_lesen()` · seit Web 23.3.1 `csv_zelle()` (entschärft eine CSV-Zelle, die mit `=`, `+`, `-`, `@`, Tabulator oder Wagenrücklauf beginnt, mit einem Apostroph; der Modellname in der Geräte-CSV der Statistik kommt vom Gerät, R17-22, F-R17-45). Ab Web 20.32.0. **Sie lädt nur `konfig_lib.php`** — `install.php` erreicht sie über `plattform_lib.php`, bevor es eine `config.php` gibt. **Zwölf Stellen bleiben namentlich außen vor**, die Registerzeilen Z22–Z26 führen sie mit Grund. |
 | Ortszeit | `format_lib.php` (`fmt_local()`) | **Stand bis Web 20.31.0 in `db.php`**, Name und Verhalten unverändert — alle 113 Aufrufer in 37 Dateien merken nichts, weil `db.php` die neue Datei lädt. Umgezogen, weil `datum_text()` und `datum_zeit_text()` darauf aufbauen. `local_to_utc()` **bleibt in `db.php`**: Sie liest einen Formularwert, um damit zu rechnen — die andere Richtung. |
 | Zwei Trenner für Datum und Zeit | `format_lib.php` | `datum_zeit_text($utc, $trenner)` hängt den Trenner **nach** dem Formatieren an, statt ihn ins Format-Literal zu schreiben. Sonst würde der erste Trenner mit einem Buchstaben still zu Formatzeichen (` um ` ergäbe `u` = Mikrosekunden, `m` = Monat) — und so einer steht schon im Bestand. Drei Trenner sind im Umlauf (Leerzeichen 25×, Mittelpunkt 11×, Komma 1×); die Vereinheitlichung entscheidet 10c AP9 und findet dafür **eine** Stelle statt 41. |
 | Formatierer im Browser | `assets/format.js` (`EdFormat`) | **Zahl und Größe** (`zahl()`, `groesse()`) — dieselben Regeln wie `format_lib.php`, über 2 014 Byte-Werte Zeichen für Zeichen geprüft. **Tag, Dauer und Strecke** seit Web 20.34.0 (`tag()`, `tagKurz()`, `spanne()`, `dauer()`, `dauerUhr()`, `minuten()`, `km()`, `kmSumme()`) — dafür gibt es **keine** PHP-Entsprechung: Dort geht es um UTC-Zeitstempel mit Zonenumrechnung, hier um einen nackten Tagesstring und um Dauern, die serverseitig nicht entstehen. **Der Leerwert ist überall ein Parameter**, kein fester Wert — die Lehre aus AP7, wo ein fester Frühausstieg aus „– um –“ ein „–“ machte. Sechs verschiedene Leer-Antworten waren im Bestand gemessen worden. **Die Datei steht im `<head>`** (`ui_seite_start()`), damit die Ladereihenfolge keine Frage mehr ist. **Fünf dünne Weiterleitungen bleiben** (Z34), jede bindet einen anderen Leerwert. |
@@ -9108,7 +9115,7 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Komplett-Backup: abbrechen | `POST admin_komplettsicherung.php action=abbrechen` | 403 | 403 | 403 | durch | — |
 | Komplett-Backup: Regeln | `POST admin_komplettsicherung.php action=regeln` | 403 | 403 | 403 | durch | — |
 | Komplett-Backup: Stand löschen | `POST admin_komplettsicherung.php action=stand_loeschen` | 403 | 403 | 403 | durch | — |
-| Backup-Ziele: die Seite | `GET admin_sicherungsziele.php` | 403 | 403 | 403 | 200 | — |
+| Backup-Ziele: die Seite (leitet seit Web 24.7.0 auf die Servereinstellungen um) | `GET admin_sicherungsziele.php` | 403 | 403 | 403 | 302 | — |
 | Backup-Ziele: Ziel speichern | `POST admin_sicherungsziele.php action=ziel_speichern` | 403 | 403 | 403 | durch | — |
 | Backup-Ziele: Ziel löschen | `POST admin_sicherungsziele.php action=ziel_loeschen` | 403 | 403 | 403 | durch | — |
 | Backup-Ziele: Abdruck vergessen | `POST admin_sicherungsziele.php action=abdruck_vergessen` | 403 | 403 | 403 | durch | — |
@@ -9203,7 +9210,7 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Betrieb · Jobs: Kettentoken neu (Web 23.1.0) | `POST betrieb_jobs.php action=kette_token_neu` | 403 | 403 | 403 | durch | ja |
 | Betrieb · Jobs: Health-Token neu (Web 23.5.0) | `POST betrieb_jobs.php action=health_token_neu` | 403 | 403 | 403 | durch | ja |
 | Betrieb · Jobs: Health-Abfrage abschalten (Web 23.5.0) | `POST betrieb_jobs.php action=health_token_aus` | 403 | 403 | 403 | durch | ja |
-| Betrieb · Jobs: anhalten | `POST betrieb_jobs.php action=jobs_pause_an` | 403 | 403 | 403 | durch | — |
+| Betrieb · Jobs: pausieren | `POST betrieb_jobs.php action=jobs_pause_an` | 403 | 403 | 403 | durch | — |
 | Betrieb · Jobs: Pause aufheben | `POST betrieb_jobs.php action=jobs_pause_aus` | 403 | 403 | 403 | durch | — |
 | Betrieb · Updates: die Seite | `GET betrieb_updates.php` | 403 | 403 | 403 | 200 | — |
 | Betrieb · Updates: Wartung an | `POST betrieb_updates.php action=wartung_an` | 403 | 403 | 403 | durch | — |
@@ -13730,7 +13737,7 @@ deren Hülle nicht aufgeht, steht im **Reiter System** (Meldung des Browsers)
 und bleibt, wie sie ist. (Klartextspuren aus der Zeit vor S11 gibt es seit
 Web 23 nicht mehr; bis dahin hob sie das Einmalwerkzeug, S11-10.)
 
-**Die Jobs vorübergehend anhalten** (vor einer großen Wiederherstellung, vor
+**Die Jobs vorübergehend pausieren** (vor einer großen Wiederherstellung, vor
 einer Messung): `php jobs.php --pause 1800`, aufheben mit `--pause 0`. Die
 Pause gilt für alle drei Auslöser, läuft nach höchstens zwei Stunden von selbst
 ab, und Betrieb → Hintergrundjobs zeigt sie an. **Sie ist kein Ersatz für ein

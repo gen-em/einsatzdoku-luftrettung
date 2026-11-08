@@ -40,7 +40,7 @@
  */
 
 import { execFileSync, spawnSync } from 'node:child_process';
-import { neuladenPruefen } from '../neuladen.mjs';
+import { neuladenPruefen, aufklappen } from '../neuladen.mjs';
 import { probekontoAnlegen, probekontoRaeumen, eigenerKontext, passwortSchicken, php as phpK, WURZEL }
   from '../probekonto.mjs';
 import { naechsterCode, SANDBOX } from '../../zweitfaktor/totp.mjs';
@@ -90,6 +90,7 @@ export const wege = [
       const schritte = [];
       try {
         await k.gehZu(SEITE(k));
+        await aufklappen(k, '#f-ank_text');
         await k.seite.fill('#f-ank_text', TEXT);
         await k.seite.selectOption('#f-ank_ton', 'warn');
         await k.seite.fill('#f-ank_bis', morgen());
@@ -119,6 +120,7 @@ export const wege = [
         await k.bild('betrieb-server-ankuendigung-nach-neuanmeldung');
 
         await k.gehZu(SEITE(k));
+        await aufklappen(k, '#k-ankuendigung button[name="action"][value="ankuendigung_weg"]');
         await absenden(k, '#k-ankuendigung button[name="action"][value="ankuendigung_weg"]');
         const nachEntfernen = await streifenDa(k);
         const db = gespeichert();
@@ -146,6 +148,7 @@ export const wege = [
       const vorher = protokollRundmail();
       try {
         await k.gehZu(SEITE(k));
+        await aufklappen(k, '#k-ankuendigung button[value="rundmail"]');
         const knopf = k.seite.locator('#k-ankuendigung button[value="rundmail"]');
         if (await knopf.isDisabled()) {
           return { ist: 'Knopf gesperrt', ok: false,

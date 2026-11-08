@@ -4,7 +4,7 @@ require_once __DIR__ . '/auth_guard.php';
 require_betreiberin();
 require_once __DIR__ . '/jobs_lib.php';
 require_once __DIR__ . '/wartung_lib.php';
-require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Zeitangaben unten
+require_once __DIR__ . '/format_lib.php';   // datum_zeit_text(), zeit_relativ_kurz()
 
 /**
  * BETRIEB → HINTERGRUNDJOBS.
@@ -13,6 +13,12 @@ require_once __DIR__ . '/format_lib.php';   // datum_zeit_text() fuer die Zeitan
  * nein, woran hängt es? „Zustand" beantwortet den ersten Teil, „Auslöser" den
  * zweiten. Beide standen bisher auf der Wartungsseite zwischen sieben anderen
  * Blöcken.
+ *
+ * SEIT KONZEPT OF (OF-06, E-OF-10, -21, Bild `OF-P24-vorschlag.png`): oben
+ * die offene Karte „Jobs vorübergehend pausieren", darunter der Zustand als
+ * offene Karte, Auslöser, Auslieferungskette und Monitoring als Klappkarten
+ * mit Stand und Plakette im Kopf. Wer nachsieht, ob die Arbeit läuft, liest
+ * die ersten zwei Karten; die Tokens braucht nur, wer einrichtet.
  *
  * WARUM DAS ÜBERHAUPT SICHTBAR SEIN MUSS: Die Wartung ist gegenüber der
  * Anfrage still. Ein dauerhaft scheiternder Job ist von einem laufenden sonst
@@ -116,11 +122,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
     }
 }
 
-/* DIE JOBS ANHALTEN UND WIEDER FREIGEBEN.
+/* DIE JOBS PAUSIEREN UND WIEDER FREIGEBEN.
  *
  * Mit `php jobs.php --pause <Sekunden>` allein ginge das nicht: Auf
  * geteiltem Hosting ist eine Kommandozeile die Ausnahme, nicht die Regel —
- * wer keine hat, koennte die Hintergrundarbeit nicht anhalten, wenn etwas
+ * wer keine hat, koennte die Hintergrundarbeit nicht pausieren, wenn etwas
  * schieflaeuft oder ein grosses Backup einzuspielen ist.
  *
  * SERVERSEITIG DERSELBE WEG: `jobs_pause()` aus `jobs_lib.php`, derselbe
@@ -136,18 +142,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
  * muesste die Einheit erklaeren (der Code rechnet in SEKUNDEN, die
  * Oberflaeche sagte bis heute faelschlich „Minuten"), und ein Vertipper
  * saehe aus wie ein Fehler der Anwendung. Vier Werte decken den Zweck ab;
- * laenger als zwei Stunden laesst die Bibliothek ohnehin nicht zu. */
-/* EINE Liste, zwei Verwender: die Pruefung unten und die Tastenreihe im
+ * laenger als zwei Stunden laesst die Bibliothek ohnehin nicht zu.
+ * Kommandozeile und Kette nehmen weiter jede Zahl bis JOB_PAUSE_MAX_S: Ihre
+ * Aufrufer sind Pruefmittel, die die Dauer ihres Laufs kennen. */
+/* EINE Liste, zwei Verwender: die Pruefung unten und die Segmentwahl im
  * Formular. Zwei Listen liefen beim ersten Zusatzwert auseinander — und der
  * Fehler waere still, weil die Pruefung die Wahl dann einfach abweist. */
 $JOB_PAUSE_DAUERN = [900 => '15 Min.', 1800 => '30 Min.',
                      3600 => '1 Std.', 7200 => '2 Std.'];
 
-/* UMLEITEN NACH DEM POST: Anhalten und
- * Aufheben enden mit `flash_setzen()` und einer Umleitung in die Karte
- * „Zustand" — sonst setzt Neuladen die Pause ein zweites Mal, mit neuer
- * Frist. Eine Dauer, die nicht auf der Liste steht, aendert nichts und
- * bleibt auf der Seite; ebenso ein Schreibfehler von `jobs_pause()`. */
+/* UMLEITEN NACH DEM POST: Pausieren und Aufheben enden mit `flash_setzen()`
+ * und einer Umleitung — sonst setzt Neuladen die Pause ein zweites Mal, mit
+ * neuer Frist. Eine Dauer, die nicht auf der Liste steht, aendert nichts und
+ * bleibt auf der Seite; ebenso ein Schreibfehler von `jobs_pause()`.
+ *
+ * OHNE ANKER: Die Karte „Jobs vorübergehend pausieren" steht als erste unter
+ * dem Titel, und dort steht auch die Meldung. Sie traegt keine `id` — mit
+ * einer stuende sie als fuenfter Unterpunkt in der Leiste (`menue.js` liest
+ * `.karte[id]`), und das freigegebene Bild (OF-P24) zeigt vier. Der Ort der
+ * Meldung heisst trotzdem `k-pause`, damit `flash_holen()` sie zuordnet. */
 $pauseMeldung = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST'
     && in_array($_POST['action'] ?? '', ['jobs_pause_an', 'jobs_pause_aus'], true)) {
@@ -163,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
                 $pauseMeldung = ['fehler', 'Bitte eine der angebotenen Dauern wählen.'];
             } else {
                 jobs_pause($sek);
-                $pauseMeldung = ['ok', 'Die Hintergrundarbeit ist angehalten bis '
+                $pauseMeldung = ['ok', 'Die Hintergrundarbeit ist pausiert bis '
                     . datum_zeit_text((string)jobs_pause_bis()) . '.'];
             }
         }
@@ -172,8 +185,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
                                 . $ex->getMessage()];
     }
     if ($pauseMeldung[0] === 'ok') {
-        flash_setzen($pauseMeldung[0], $pauseMeldung[1], 'k-zustand');
-        header('Location: betrieb_jobs.php#k-zustand');
+        flash_setzen($pauseMeldung[0], $pauseMeldung[1], 'k-pause');
+        header('Location: betrieb_jobs.php');
         exit;
     }
 }
@@ -181,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
 // Meldung aus der Umleitung in die Karte, die gehandelt hat
 $flash = flash_holen();
 if ($flash !== null) {
-    if ($flash['ort'] === 'k-zustand')       { $pauseMeldung ??= [$flash['ton'], $flash['text']]; }
+    if ($flash['ort'] === 'k-pause')         { $pauseMeldung ??= [$flash['ton'], $flash['text']]; }
     elseif ($flash['ort'] === 'k-ausloeser') { $jobsMeldung  ??= [$flash['ton'], $flash['text']]; }
     elseif ($flash['ort'] === 'k-kette')     { $ketteMeldung ??= [$flash['ton'], $flash['text']]; }
     elseif ($flash['ort'] === 'k-health')    { $healthMeldung ??= [$flash['ton'], $flash['text']]; }
@@ -190,10 +203,40 @@ if ($flash !== null) {
 $jobs      = jobs_zustand();
 $jobFehler = count(array_filter($jobs, fn($j) => !empty($j['letzter_fehler'])));
 $jobNie    = count(array_filter($jobs, fn($j) => $j['letzter_lauf'] === null));
-/* Eine ANGEHALTENE Wartung darf nicht aussehen wie eine arbeitende.
+/* Eine PAUSIERTE Wartung darf nicht aussehen wie eine arbeitende.
  * Die Pause laeuft zwar von selbst ab, aber bis dahin geschieht nichts — und
  * wer das nicht sieht, sucht den Fehler woanders. */
 $jobPause = jobs_pause_bis();
+
+/* DER AUSLOESER IN WORTEN, nicht als Rohwert. In der Tabelle `jobs` steht
+ * `anfrage`, `cli` oder `token` — Bezeichner, die niemand ausser dem Code
+ * liest. Ein unbekannter Wert erscheint roh, statt zu verschwinden. */
+$AUSLOESER_TEXT = ['anfrage' => 'Anfrage', 'cli' => 'Kommandozeile', 'token' => 'Adresse'];
+
+/* DER ZULETZT BENUTZTE AUSLOESER fuer Stand und Plakette der Klappkarte —
+ * dieselbe Rechnung und dieselben Schwellen wie die Zeile „Auslöser" der
+ * Statusseite (`status_lib.php`): ueber 24 Stunden still ist rot, nur der
+ * Huckepack-Weg ist orange. */
+$letzterLauf = null; $letzterWeg = null;
+foreach ($jobs as $j) {
+    if ($j['letzter_lauf'] !== null
+        && ($letzterLauf === null || $j['letzter_lauf'] > $letzterLauf)) {
+        $letzterLauf = (string)$j['letzter_lauf'];
+        $letzterWeg  = (string)($j['letzter_ausloeser'] ?? '');
+    }
+}
+if ($letzterLauf === null) {
+    $ausloeserStand    = 'noch kein Lauf';
+    $ausloeserPlakette = ui_plakette('nie gelaufen', ['ton' => 'rot']);
+} else {
+    $ausloeserStand = 'zuletzt ' . ($AUSLOESER_TEXT[$letzterWeg] ?? $letzterWeg)
+                    . ', ' . zeit_relativ_kurz($letzterLauf);
+    $alterS = time() - (int)iso_utc_lesen($letzterLauf);
+    $ausloeserPlakette = $alterS > 86400
+        ? ui_plakette('über 24 h her', ['ton' => 'rot'])
+        : ($letzterWeg === 'anfrage' ? ui_plakette('huckepack', ['ton' => 'orange'])
+                                     : ui_plakette('läuft', ['ton' => 'gruen']));
+}
 
 $tokenAdresse = null;
 if ($jobs !== []) {
@@ -220,101 +263,106 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
   <?php ui_titelzeile(['titel' => 'Hintergrundjobs']); ?>
   <?= wartung_balken() ?>
 
+  <?php /* ---- Jobs vorübergehend pausieren -------------------------------
+     *
+     * EINE EIGENE KARTE OBEN (Konzept OF, E-OF-10, -21). Bis Web 24 stand
+     * „Anhalten" als letzter Abschnitt der Zustandskarte, unter elf Zeilen —
+     * wer die Jobs in Eile stillstellen wollte, suchte den Knopf.
+     *
+     * DIE RUECKFRAGE NENNT DEN PREIS VOLLSTAENDIG — alle Jobs, auch das
+     * geplante Komplett-Backup und den Mailversand. Neben einem Knopf ist
+     * sie die Entscheidungsgrundlage.
+     *
+     * Ohne Tabelle `jobs` (vor der Migration) gibt es nichts zu pausieren;
+     * die Karte entfaellt dann, wie bisher das Formular. */ ?>
+  <?php if ($jobs !== []): ?>
+    <?php ui_karte_start(['titel' => 'Jobs vorübergehend pausieren',
+        'plakette' => $jobPause !== null
+            ? ui_plakette('pausiert bis ' . zeit_relativ_kurz($jobPause), ['ton' => 'orange'])
+            : ui_plakette('laufen', ['ton' => 'gruen'])]); ?>
+      <?php if ($pauseMeldung): ?>
+        <?= ui_meldung_markup($pauseMeldung[0], $pauseMeldung[1]) ?>
+      <?php endif; ?>
+      <?php if ($jobPause !== null): ?>
+        <p class="feld-hinweis">Bis <?= ui_e(datum_zeit_text($jobPause)) ?> wird nichts
+           aufgeräumt, gesichert oder versendet — auch das Komplett-Backup nicht; die
+           Pause endet von selbst.</p>
+        <form method="post" action="betrieb_jobs.php">
+          <?= csrf_field() ?><input type="hidden" name="action" value="jobs_pause_aus">
+          <div class="listen-form-fuss">
+            <?= ui_knopf(['text' => 'Pause aufheben', 'art' => 'neutral', 'typ' => 'submit']) ?>
+          </div>
+        </form>
+      <?php else: ?>
+        <p class="feld-hinweis">Pausiert alle Jobs, etwa wenn etwas schiefläuft oder ein
+           großes Backup einzuspielen ist; die Pause endet von selbst.</p>
+        <form method="post" action="betrieb_jobs.php">
+          <?= csrf_field() ?><input type="hidden" name="action" value="jobs_pause_an">
+          <div class="feld">
+            <span class="feld-label">Wie lange</span>
+            <?php ui_segment(['name' => 'dauer', 'wert' => '1800',
+                              'label' => 'Wie lange',
+                              'optionen' => array_combine(
+                                  array_map('strval', array_keys($JOB_PAUSE_DAUERN)),
+                                  array_values($JOB_PAUSE_DAUERN))]); ?>
+          </div>
+          <div class="listen-form-fuss">
+            <?= ui_knopf(['text' => 'Pausieren', 'art' => 'neutral', 'symbol' => 'uhrzeit',
+                          'typ' => 'submit',
+                          'attr' => ' data-confirm="Während der Pause wird nichts '
+                                  . 'aufgeräumt, gesichert '
+                                  . 'und versendet — auch das geplante '
+                                  . 'Komplett-Backup nicht."'
+                                  . ' data-confirm-ok="Pausieren"'
+                                  /* Kein „danger": Pausieren loescht nichts und
+                                     laeuft von selbst ab. Der rote Ton ist fuer
+                                     das Unumkehrbare da. */
+                                  . ' data-confirm-tone="normal"']) ?>
+          </div>
+        </form>
+      <?php endif; ?>
+    <?php ui_karte_ende(); ?>
+  <?php endif; ?>
+
   <?php ui_karte_start(['titel' => 'Zustand', 'id' => 'k-zustand',
       'plakette' => $jobs === []
           ? ui_plakette('Migration ausstehend', ['ton' => 'neutral'])
-          : ($jobPause !== null ? ui_plakette('angehalten', ['ton' => 'orange'])
+          : ($jobPause !== null ? ui_plakette('pausiert', ['ton' => 'orange'])
              : ($jobFehler > 0
                 ? ui_plakette($jobFehler === 1 ? '1 Fehler' : $jobFehler . ' Fehler',
                               ['ton' => 'rot'])
                 : ($jobNie === count($jobs)
                    ? ui_plakette('noch nie gelaufen', ['ton' => 'neutral'])
                    : ui_plakette('läuft', ['ton' => 'gruen']))))]); ?>
-    <?php if ($pauseMeldung): ?>
-      <?= ui_meldung_markup($pauseMeldung[0], $pauseMeldung[1]) ?>
-    <?php endif; ?>
-    <?php if ($jobPause !== null): ?>
-      <?php /* DAS FORMULAR STEHT VERSTECKT DANEBEN, DER KNOPF ZEIGT DARAUF.
-               `ui_meldung_markup()` nimmt den Knopf als Zeichenkette und setzt
-               ihn in `.meldung-aktion` — ein <form> mitten in einer Meldung
-               ginge nicht, und zwei Formulare ineinander erst recht nicht.
-               Dasselbe Muster wie bei „Alle sichern" in admin_sicherungen.php.
-
-               UND DER TEXT TRAEGT KEIN MARKUP: `ui_meldung_markup()`
-               escapt seinen Text — ein `<code>` waere auf der Seite mit
-               spitzen Klammern zu lesen. Einen Befehl braucht es nicht, der
-               Knopf daneben tut es. */ ?>
-      <form method="post" action="betrieb_jobs.php" id="f-jobpause-aus" hidden>
-        <?= csrf_field() ?><input type="hidden" name="action" value="jobs_pause_aus">
-      </form>
-      <?= ui_meldung_markup('warn', 'Die Hintergrundarbeit ist angehalten bis '
-          . datum_zeit_text($jobPause) . '. Bis dahin wird nichts '
-          . 'aufgeräumt, gesichert oder versendet — '
-          . 'auch das Komplett-Backup nicht. Die Pause läuft von selbst ab.',
-          '', ui_knopf(['text' => 'Pause aufheben', 'art' => 'neutral',
-                        'typ' => 'submit', 'attr' => ' form="f-jobpause-aus"'])) ?>
-    <?php endif; ?>
     <?php if ($jobs === []): ?>
       <p class="feld-hinweis">Die Tabelle <code>jobs</code> gibt es noch nicht —
          sie kommt mit einer Migration unter <a href="betrieb_updates.php">Updates</a>.</p>
     <?php else: foreach ($jobs as $j): ?>
       <?php
-        $lauf = $j['letzter_lauf'] ? datum_zeit_text((string)$j['letzter_lauf']) : 'nie';
-        $plaketten = ui_plakette($lauf, ['ton' => $j['letzter_lauf'] ? 'blau' : 'neutral']);
-        if ($j['letzter_ausloeser']) {
-            $plaketten .= ui_plakette((string)$j['letzter_ausloeser'], ['ton' => 'neutral']);
+        /* ZWEI PLAKETTEN, DIE NICHT UMBRECHEN (E-OF-21): der Zeitpunkt kurz
+           („heute 23:24" statt „08.11.2026, 23:24") und der Auslöser in
+           Worten. Rückstand und Fehler kommen nur dazu, wenn es sie gibt. */
+        $plaketten = ui_plakette(zeit_relativ_kurz($j['letzter_lauf']),
+                                 ['ton' => $j['letzter_lauf'] ? 'blau' : 'neutral']);
+        $weg = (string)($j['letzter_ausloeser'] ?? '');
+        if ($weg !== '') {
+            $plaketten .= ui_plakette($AUSLOESER_TEXT[$weg] ?? $weg, ['ton' => 'neutral']);
         }
         if ($j['rueckstand'] !== null && (int)$j['rueckstand'] > 0) {
             $plaketten .= ui_plakette('Rückstand ' . (int)$j['rueckstand'], ['ton' => 'orange']);
         }
-        /* DER FEHLERTEXT STEHT IN DER KLEINZEILE und nicht
-           als eigene Meldung darunter. Der Grund ist der Platz: Bei sieben
-           Jobs stand die Zeile „Fehler" siebenmal möglich, und jede Meldung
-           kostete eine eigene Fläche. Was der Fehler war, gehört an den Job —
-           dorthin, wo man ihn liest. */
+        /* DER FEHLERTEXT STEHT IN DER KLEINZEILE, und zwar STATT des Satzes,
+           was der Job tut — ein Satz je Zeile. Was der Job tut, sagt sein
+           Titel; was schiefging, sagt nur dieser Text. */
         $klein = (string)$j['beschreibung'];
         if (!empty($j['letzter_fehler'])) {
             $plaketten .= ui_plakette('Fehler', ['ton' => 'rot']);
-            $klein .= ' · zuletzt: „' . (string)$j['letzter_fehler'] . '"';
+            $klein = 'Zuletzt: „' . (string)$j['letzter_fehler'] . '"';
         }
         ui_zeile(['text' => (string)$j['titel'], 'klein' => $klein,
-                  'plaketten' => $plaketten]);
+                  'plaketten' => $plaketten, 'klasse' => 'zeile-umbruch']);
       ?>
     <?php endforeach; endif; ?>
-    <?php /* ANHALTEN OHNE KOMMANDOZEILE: Auf geteiltem Hosting gibt es diese
-             Kommandozeile in der Regel nicht.
-
-             DIE RUECKFRAGE NENNT DEN PREIS VOLLSTAENDIG — alle sieben Jobs,
-             auch das geplante Komplett-Backup und den Mailversand. Neben
-             einem Knopf ist sie die Entscheidungsgrundlage. */ ?>
-    <?php if ($jobs !== [] && $jobPause === null): ?>
-      <form method="post" action="betrieb_jobs.php">
-        <?= csrf_field() ?><input type="hidden" name="action" value="jobs_pause_an">
-        <h3 class="listen-form-titel">Anhalten</h3>
-        <p class="feld-hinweis">Für den Fall, dass etwas schiefläuft oder ein
-           großes Backup einzuspielen ist — die Pause läuft nach höchstens
-           <?= (int)(JOB_PAUSE_MAX_S / 3600) ?> Stunden von selbst ab.</p>
-        <?php ui_segment(['name' => 'dauer', 'wert' => '1800',
-                          'label' => 'Dauer der Pause',
-                          'optionen' => array_map('strval',
-                              array_combine(array_map('strval',
-                                  array_keys($JOB_PAUSE_DAUERN)),
-                                  array_values($JOB_PAUSE_DAUERN)))]); ?>
-        <div class="listen-form-fuss">
-          <?= ui_knopf(['text' => 'Jobs anhalten', 'art' => 'neutral',
-                        'typ' => 'submit',
-                        'attr' => ' data-confirm="Während der Pause wird nichts '
-                                . 'aufgeräumt, gesichert '
-                                . 'und versendet — auch das geplante '
-                                . 'Komplett-Backup nicht."'
-                                . ' data-confirm-ok="Anhalten"'
-                                /* Kein „danger": Anhalten loescht nichts und
-                                   laeuft von selbst ab. Der rote Ton ist fuer
-                                   das Unumkehrbare da. */
-                                . ' data-confirm-tone="normal"']) ?>
-        </div>
-      </form>
-    <?php endif; ?>
   <?php ui_karte_ende(); ?>
 
   <?php /* ---- Auslöser ---------------------------------------------
@@ -322,11 +370,17 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
      * Drei Wege zur selben Arbeit, damit die Hosterwahl offen bleibt. Die
      * Reihenfolge hier ist die Empfehlung: Kommandozeile zuerst.
      *
-     * Das Token steht offen auf der Seite — sie ist ohnehin nur der
-     * BetreiberIn zugänglich, und ein Geheimnis, das man erst aufklappen muss,
-     * wird beim Einrichten abgetippt statt kopiert. Dafür gibt es den Knopf
-     * „Kopieren". */ ?>
-  <?php ui_karte_start(['titel' => 'Auslöser', 'id' => 'k-ausloeser']); ?>
+     * ZUGEKLAPPT (E-OF-21, E-OF-42): Stand und Plakette sagen im Kopf, ob
+     * ein Weg eingerichtet ist; aufklappen muss nur, wer ihn einrichtet. Das
+     * Token steht aufgeklappt offen da — die Seite ist ohnehin nur der
+     * BetreiberIn zugänglich, und ein Geheimnis, das man erst aufdecken muss,
+     * wird beim Einrichten abgetippt statt kopiert. Nach dem Erzeugen leitet
+     * die Seite auf `#k-ausloeser` um; `klappkarte.js` öffnet die Karte. Ist
+     * eine Meldung da, ohne dass umgeleitet wurde (ein Fehler), steht die
+     * Karte von sich aus offen. */ ?>
+  <?php ui_karte_start(['titel' => 'Auslöser', 'id' => 'k-ausloeser', 'zu' => true,
+                        'offen' => $jobsMeldung !== null,
+                        'stand' => $ausloeserStand, 'plakette' => $ausloeserPlakette]); ?>
     <?php if ($jobsMeldung): ?>
       <?= ui_meldung_markup($jobsMeldung[0], $jobsMeldung[1]) ?>
     <?php endif; ?>
@@ -358,20 +412,30 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
     <?php endif; ?>
 
     <h3 class="listen-form-titel">3. Huckepack auf einer Anfrage <span class="feld-klein-inline">immer an</span></h3>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Auslieferungskette -------------
      *
      * Das zweite Token. Es steht neben den Auslösern und nicht darin, weil es
      * keiner ist: Mit ihm schaltet die Auslieferung Wartung und Backup. Die
      * Bausteine sind die der Karte darüber — Codeblock mit „Kopieren",
-     * Warnmeldung, leiser Knopf mit Rückfrage —, kein neuer (`CLAUDE.md` 5). */ ?>
-  <?php ui_karte_start(['titel' => 'Auslieferungskette', 'id' => 'k-kette']); ?>
+     * Warnmeldung, leiser Knopf mit Rückfrage —, kein neuer (`CLAUDE.md` 5).
+     *
+     * DIE PLAKETTE SAGT NUR, WAS DIE SEITE WEISS: ob ein Token bereitsteht.
+     * Ob es in GitHub eingetragen ist, sieht sie nicht — „eingerichtet"
+     * waere eine Behauptung. */ ?>
+  <?php ui_karte_start(['titel' => 'Auslieferungskette', 'id' => 'k-kette', 'zu' => true,
+                        'offen' => $ketteMeldung !== null,
+                        'stand' => $ketteToken !== null ? 'Geheimnis JOBS_TOKEN'
+                                                        : 'Token nicht lesbar',
+                        'plakette' => $ketteToken !== null
+                            ? ui_plakette('bereit', ['ton' => 'gruen'])
+                            : ui_plakette('nicht lesbar', ['ton' => 'rot'])]); ?>
     <?php if ($ketteMeldung): ?>
       <?= ui_meldung_markup($ketteMeldung[0], $ketteMeldung[1]) ?>
     <?php endif; ?>
     <p class="feld-hinweis">Mit diesem Token schaltet die Auslieferung Wartung und
-       Komplett-Backup dieser Anlage. Es gehört als Geheimnis <code>JOBS_TOKEN</code>
+       Komplett-Backup dieser Anlage; es gehört als Geheimnis <code>JOBS_TOKEN</code>
        in die GitHub-Umgebung, die hierher ausliefert.</p>
     <?= ui_meldung_markup('warn', 'Ein Geheimnis wie ein Passwort — nicht in eine '
         . 'Adresse, nicht in eine Mail, nicht in ein Ticket.') ?>
@@ -389,25 +453,35 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
         </div>
       </form>
     <?php endif; ?>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Monitoring ----------------------
      *
      * Das dritte Token, fuer `api/health.php`. Dieselben Bausteine wie in den
      * zwei Karten darueber — Codeblock mit „Kopieren", Warnmeldung, leise
-     * Knoepfe mit Rueckfrage —, kein neuer (`CLAUDE.md` 5). */ ?>
-  <?php ui_karte_start(['titel' => 'Monitoring', 'id' => 'k-health']); ?>
+     * Knoepfe mit Rueckfrage —, kein neuer (`CLAUDE.md` 5).
+     *
+     * „Keine Abfrage eingerichtet" stand bis Web 24 als zweiter Absatz in der
+     * Karte; es ist jetzt ihr Stand im Kopf — ein Satz je Karte. */ ?>
+  <?php ui_karte_start(['titel' => 'Monitoring', 'id' => 'k-health', 'zu' => true,
+                        'offen' => $healthMeldung !== null,
+                        'stand' => $healthToken === null ? 'Token nicht lesbar'
+                                 : ($healthToken === '' ? 'keine Abfrage eingerichtet'
+                                                        : 'Kopfzeile X-Health-Token'),
+                        'plakette' => $healthToken === null
+                            ? ui_plakette('nicht lesbar', ['ton' => 'rot'])
+                            : ($healthToken === '' ? ui_plakette('aus', ['ton' => 'neutral'])
+                                                   : ui_plakette('an', ['ton' => 'gruen']))]); ?>
     <?php if ($healthMeldung): ?>
       <?= ui_meldung_markup($healthMeldung[0], $healthMeldung[1]) ?>
     <?php endif; ?>
-    <p class="feld-hinweis">Mit diesem Token fragt ein eigenes Monitoring den Zustand
-       der Anlage ab — <code>api/health.php</code> mit der Kopfzeile
-       <code>X-Health-Token</code>. Die Antwort nennt Fassung, Datenbank, Migration,
-       Alter der Jobs und Speicher, keine Daten.</p>
+    <p class="feld-hinweis">Mit diesem Token fragt ein eigenes Monitoring
+       <code>api/health.php</code> mit der Kopfzeile <code>X-Health-Token</code> ab;
+       die Antwort nennt Fassung, Datenbank, Migration, Alter der Jobs und Speicher,
+       keine Daten.</p>
     <?php if ($healthToken === null): ?>
       <?= ui_meldung_markup('fehler', 'Das Health-Token ist gerade nicht lesbar.') ?>
     <?php elseif ($healthToken === ''): ?>
-      <p class="feld-hinweis">Keine Abfrage eingerichtet — jede Anfrage bekommt 403.</p>
       <form method="post" action="betrieb_jobs.php">
         <?= csrf_field() ?><input type="hidden" name="action" value="health_token_neu">
         <div class="listen-form-fuss">
@@ -437,9 +511,9 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
         </div>
       </form>
     <?php endif; ?>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
   <?php /* KEINE KARTE „WAS HIER GILT":
-           Budget, Reihenfolge, Anhalten auf der Kommandozeile und „Ein
+           Budget, Reihenfolge, Pausieren auf der Kommandozeile und „Ein
            Rückstand ist kein Fehler" stehen im Handbuch 12.4. */ ?>
 
 <?php ui_geruest_ende(); ?>

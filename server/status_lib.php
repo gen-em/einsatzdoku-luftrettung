@@ -772,11 +772,11 @@ function status_erhebung(): array
     } else {
         if ($jobPause !== null) {
             $jobZeilen[] = status_z('Pause',
-                'Die Hintergrundarbeit ist angehalten bis '
+                'Die Hintergrundarbeit ist pausiert bis '
                 . datum_zeit_text($jobPause)
                 . ' Uhr. Aufheben über Betrieb → Hintergrundjobs '
                 . '(oder php jobs.php --pause 0)',
-                'orange', 'angehalten', 'betrieb_jobs.php');
+                'orange', 'pausiert', 'betrieb_jobs.php');
         }
 
         /* DER AUSLÖSER IST DIE WICHTIGSTE ZEILE DIESER KARTE. Ein Job ohne
@@ -895,7 +895,7 @@ function status_erhebung(): array
         $backups[] = status_z('Backup-Ziele',
             'Kein Ziel eingetragen. Die Konto-Backups liegen damit auf demselben '
             . 'Server, dessen Ausfall der Grund für ein Backup wäre',
-            'neutral', 'keines', 'admin_sicherungsziele.php');
+            'neutral', 'keines', 'betrieb_server.php#k-backup-ziele');
     } else {
         $nieVersandt = array_values(array_filter($aktiv,
             static fn($z) => empty($z['letzter_lauf'])));
@@ -914,7 +914,7 @@ function status_erhebung(): array
             $klein = count($ziele) . ' eingetragen · Versand '
                    . (sz_auto_an() ? 'automatisch' : 'nur von Hand');
         }
-        $backups[] = status_z('Backup-Ziele', $klein, $ton, $pl, 'admin_sicherungsziele.php');
+        $backups[] = status_z('Backup-Ziele', $klein, $ton, $pl, 'betrieb_server.php#k-backup-ziele');
     }
 
     /* ---- WÄCHST EIN ZIEL, OHNE DASS DORT JE ETWAS ENTFERNT WURDE?
@@ -952,7 +952,7 @@ function status_erhebung(): array
                   . $erstes['name'] . '" mit ' . groesse_text($erstes['bytes']),
             'orange',
             count($waechst) === 1 ? 'wächst' : count($waechst) . ' wachsen',
-            'admin_sicherungsziele.php');
+            'betrieb_server.php#k-backup-ziele');
     }
 
     /* Speicher: derselbe Ton wie der Balken auf den Servereinstellungen —

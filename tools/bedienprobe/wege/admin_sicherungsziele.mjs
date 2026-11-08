@@ -16,9 +16,12 @@ export const wege = [
     soll: 'Speichern des Versandschalters leitet um; die Meldung steht einmal da, '
         + 'Neuladen ist ein GET ohne sie',
     fahren: k => neuladenPruefen(k, {
-      name: 'admin-sicherungsziele', seite: `${k.basis}/admin_sicherungsziele.php`,
+      /* SEIT WEB 24.7 eine Karte in den Servereinstellungen (Konzept OF,
+         E-OF-24, -45); admin_sicherungsziele.php nimmt nur noch POSTs an
+         und leitet zurueck. */
+      name: 'admin-sicherungsziele', seite: `${k.basis}/betrieb_server.php`,
       feld: 'input[name="action"][value="versand_schalter"]',
-      meldung: 'Der Versand ist', ziel: 'admin_sicherungsziele.php',
+      meldung: 'Der Versand ist', ziel: 'betrieb_server.php#k-backup-ziele',
     }),
   },
 ];

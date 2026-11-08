@@ -64,15 +64,6 @@
     },
     "22-einsatz-verschieben": {
       "saetze": "OF-07 — Diensttag- und Einsatzseiten (Tagesübersicht samt Ruhesegmente-Kachel, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben, GPS-Daten)"
-    },
-    "45b-betrieb-sicherheit": {
-      "saetze": "OF-06 — Betrieb — Hintergrundjobs und Sicherheit"
-    },
-    "47-betrieb-jobs": {
-      "saetze": "OF-06 — Betrieb — Hintergrundjobs und Sicherheit"
-    },
-    "48-betrieb-server": {
-      "saetze": "OF-06 — Betrieb — Servereinstellungen als Klappkarten"
     }
   }
 }

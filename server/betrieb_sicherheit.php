@@ -266,8 +266,8 @@ ui_seite_start(['titel' => 'Sicherheit']);
              (`sicherheit_verlangsamung_vermerken()`); ein Ende hat kein
              eigenes Ereignis. Daher „seit", nicht „von bis". */ ?>
     <?php if ($phasen === []): ?>
-      <p class="feld-hinweis">In den letzten 30 Tagen ist die Bremse nicht
-         angesprungen.</p>
+      <p class="feld-hinweis">Kein Anstieg der Bremse in den letzten
+         30 Tagen.</p>
     <?php else: ?>
       <?php foreach ($phasen as $p): ?>
         <?php ui_zeile([
@@ -380,8 +380,8 @@ ui_seite_start(['titel' => 'Sicherheit']);
        Aufbewahrungsregel eingeschaltet ist, und nur, was diese Installation
        selbst dorthin geschickt hat.</p>
     <?php if ($loeschungen['zeilen'] === []): ?>
-      <p class="feld-hinweis">In den letzten 30 Tagen ist auf keinem Ziel etwas
-         entfernt worden.</p>
+      <p class="feld-hinweis">Keine Löschung auf einem Ziel in den letzten
+         30 Tagen.</p>
     <?php else: ?>
       <?php foreach ($loeschungen['zeilen'] as $z): ?>
         <?php ui_zeile([

@@ -8807,4 +8807,14 @@ declare(strict_types=1);
  *   zulassen" (aus den Servereinstellungen hierher) und Anlegen,
  *   Zuruecksetzen, Entfernen; der Menuepunkt entfaellt, `admin_demo.php`
  *   zeigt bis OF-06 nur noch die Kontrollzahlen. Neben; kein Schema. */
-const WEB_VERSION = '24.6.0';
+/* 24.7.0 — DER BETRIEB (Schritt 27, Konzept OF, OF-06; E-OF-10, -20 bis
+ *   -24, -45, -72, -73). Status: „Braucht Aufmerksamkeit" oben, jeder Bereich
+ *   als Klappkarte mit Zahl und Plakette; sieben Zeilen, die nie etwas
+ *   verlangten, entfallen, die neue Karte „Konten" haelt Verwaltungskonten,
+ *   Konto-Backups und die Kontrollzahlen des Demo-Kontos (OF-M1). Jobs:
+ *   „pausieren" statt „anhalten" in eigener Karte, je Job ein Satz und zwei
+ *   Plaketten (`zeit_relativ_kurz()`). Servereinstellungen: jede Karte
+ *   zugeklappt mit ihrem Stand. Komplett-Backup: „Stand" offen, „Jetzt
+ *   sichern" als Hauptaktion. Backup-Ziele: eine Karte an zwei Orten
+ *   (`sicherungsziele_teile.php`), die Seite leitet um. Neben; kein Schema. */
+const WEB_VERSION = '24.7.0';

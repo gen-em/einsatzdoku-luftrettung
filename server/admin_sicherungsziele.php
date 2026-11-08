@@ -4,23 +4,34 @@ require_once __DIR__ . '/auth_guard.php';
 /* NUR DIE BETREIBERIN, wie der Kopf der Rollen in `db.php` sagt; die
  * Rollenprobe prüft es je Handlung. */
 require_betreiberin();
-require_once __DIR__ . '/sicherungsziel_lib.php';
-require_once __DIR__ . '/format_lib.php';        // groesse_text(), datum_text(), datum_zeit_text()
-require_once __DIR__ . '/adminbackup_lib.php';    // edbak_aufbewahrung()
+require_once __DIR__ . '/sicherungsziele_teile.php';   // SZ_KARTE_ID, sz_zurueck_seite(), SZ_FORMFELDER
+require_once __DIR__ . '/format_lib.php';              // groesse_text()
 
 /**
- * BACKUP-ZIELE — wohin die Backups geschoben werden.
+ * BACKUP-ZIELE — der Schreibweg, keine Seite mehr.
  *
- * WARUM EINE EIGENE SEITE UND KEINE VIERTE KARTE AUF „BACKUPS".
- * Jene Seite ist ausdrücklich „die Regeln, und sonst nichts mehr"
- * — Zahlen und Schalter, keine Liste. Hier steht eine Liste mit einem
- * Formular je Eintrag, dazu ein Handgriff („Verbindung prüfen"), der etwas
- * TUT und eine Weile dauert. Das ist der Zuschnitt einer Seite.
+ * WARUM HIER NICHTS MEHR ANGEZEIGT WIRD. Seit Web 24.7 (Konzept OF, E-OF-24,
+ * E-OF-45) stehen die Ziele als Klappkarte an zwei Orten: in den
+ * Servereinstellungen und im Komplett-Backup. Die Karte entsteht einmal in
+ * `sicherungsziele_teile.php`; ihre Formulare posten hierher. Diese Datei
+ * nimmt den POST an, tut die Handlung und leitet IMMER um — auf die Seite,
+ * von der das Formular kam (`zurueck`, nur aus `SZ_ZURUECK_SEITEN`), mit
+ * dem Anker der Karte. Die Meldung reist per `flash_setzen()` mit dem
+ * `ort` der Karte; die einbindende Seite reicht sie der Karte durch.
+ *
+ * AUCH JEDER FEHLER LEITET UM. Bis Web 24.6 blieb eine Abweisung auf dieser
+ * Seite stehen, die Eingabe im Formular. Die Seite gibt es nicht mehr; ein
+ * Fehler, der hier stehen bliebe, stünde auf einer weissen Fläche. Ein
+ * gescheitertes Speichern schickt deshalb seine Eingabe (ohne Passwort und
+ * Schlüssel) in der Meldung mit, und der Dialog geht drüben wieder auf.
+ *
+ * EIN GET führt auf die Servereinstellungen — alte Lesezeichen, die
+ * Statuszeilen und `?neu=1`/`?bearbeiten=…` aus der Zeit der Seite landen
+ * damit bei der Karte, statt ins Leere.
  *
  * DREI DINGE, DIE HIER ZUSAMMENKOMMEN
- *   1. Der SERVERSCHLÜSSEL. Ohne ihn lässt sich kein Zugangsdatum speichern,
- *      und die Seite sagt das VORHER — nicht, nachdem jemand ein Passwort
- *      eingetippt hat.
+ *   1. Der SERVERSCHLÜSSEL. Ohne ihn lässt sich kein Zugangsdatum speichern;
+ *      die Karte bietet „Ziel anlegen" dann gar nicht erst an.
  *   2. Die ZIELE selbst, mit Zustand: Wann lief zuletzt etwas, und wenn es
  *      schiefging, warum.
  *   3. Die PRÜFUNG, die tatsächlich schreibt, liest und wieder löscht — eine
@@ -37,694 +48,206 @@ require_once __DIR__ . '/adminbackup_lib.php';    // edbak_aufbewahrung()
  */
 const SICHERN_BUDGET_VERSAND = 20.0;
 
-$notice = null; $error = null; $ergebnis = null;
-$bearbeiten = null;
-
-$tabelleDa = sz_tabelle_da();
-/* Ergebnis des Knopfes „Nachsehen“ — null, solange niemand
- * geklickt hat. Es wird NICHT gespeichert: Es ist eine Momentaufnahme der
- * Gegenstelle, und eine gespeicherte Momentaufnahme ist beim nächsten
- * Aufruf eine Behauptung. */
-$bestand = null;
-
-/* UMLEITEN NACH DEM POST. Was ein Ziel anlegt,
- * ändert, entfernt, prüft oder versendet, endet mit `flash_setzen()` und einer
- * Umleitung auf dieselbe Ansicht (`neu`/`bearbeiten`, unten); das Ergebnis der
- * Verbindungsprüfung reist über die Sitzung mit. Sonst wiederholt Neuladen die
- * Handlung — beim Speichern samt Passwort. Eine Abweisung, die nichts geändert
- * hat, bleibt auf der Seite, die Eingabe im Formular. „Nachsehen" ändert
- * nichts und bleibt, wie es ist. */
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    csrf_check();
-    $aktion = post_text('action');
-    $id = (int)($_POST['id'] ?? 0);
-    $zurueck = 'admin_sicherungsziele.php'
-             . (isset($_GET['neu']) ? '?neu=1'
-                : (isset($_GET['bearbeiten']) ? '?bearbeiten=' . (int)$_GET['bearbeiten'] : ''));
-
-    if ($aktion === 'ziel_speichern') {
-        /* Ein LEERES Passwortfeld heisst „nicht anfassen", nicht „löschen".
-         * Deshalb `null` statt `''` — die Bibliothek unterscheidet beides. */
-        $geheim = ($_POST['geheim'] ?? '') === '' ? null : post_text('geheim');
-        $schluessel = trim(post_text('schluessel'));
-        $schluesselNeu = $schluessel === '' ? null : $schluessel;
-        if (($_POST['schluessel_weg'] ?? '') === '1') { $schluesselNeu = ''; }
-        /* DER ALTE STAND VOR DEM SPEICHERN.
-         * Stuende `sz_lesen()` erst nach `sz_speichern()`, laese es
-         * die neue Zeile: Der Vergleich unten schluege nie an, und ein
-         * SFTP-Ziel auf neuem Host behielte den Abdruck des alten — die
-         * naechste Verbindung scheiterte als „ANDERER Hostschluessel". */
-        $vorher = $id > 0 ? sz_lesen($id) : null;
-        [$ok, $was] = sz_speichern($id > 0 ? $id : null, $_POST,
-                                   $geheim, $schluesselNeu);
-        if ($ok) {
-            $notice = $id > 0 ? 'Das Ziel wurde geändert.' : 'Das Ziel wurde angelegt.';
-            /* Der Fingerabdruck gehört zum Rechner. Zieht ein Ziel auf einen
-             * anderen Host um, ist der alte Abdruck falsch — und ein falscher
-             * Abdruck ist schlimmer als keiner, weil er jede Verbindung
-             * blockiert und wie ein Angriff aussieht. Verglichen wird mit
-             * der gespeicherten Zeile, nicht mit `$_POST` — `sz_speichern()`
-             * normalisiert, und ein Leerzeichen am Host ist kein Umzug. */
-            $nachher = $vorher !== null ? sz_lesen($id) : null;
-            if ($vorher !== null && $nachher !== null
-                && ((string)$vorher['host'] !== (string)$nachher['host']
-                    || (int)$vorher['port'] !== (int)$nachher['port'])) {
-                sz_fingerabdruck_merken($id, null);
-                $notice .= ' Der Hostschlüssel wurde vergessen, weil sich der '
-                         . 'Rechner geändert hat — er wird bei der nächsten '
-                         . 'Prüfung neu übernommen.';
-            }
-            flash_setzen('notice', $notice);
-            header('Location: ' . $zurueck);
-            exit;
-        } else {
-            $error = implode(' ', (array)$was);
-            $bearbeiten = $id > 0 ? $id : 0;
-        }
-    } elseif ($aktion === 'ziel_loeschen' && $id > 0) {
-        $z = sz_lesen($id);
-        if (sz_loeschen($id)) {
-            flash_setzen('notice', 'Das Ziel „' . (string)($z['name'] ?? '') . '" wurde entfernt. '
-                . 'Was dort liegt, bleibt liegen — gelöscht wird auf dem Ziel nichts.');
-            header('Location: ' . $zurueck);
-            exit;
-        }
-        $notice = 'Dieses Ziel gibt es nicht (mehr).';
-    } elseif ($aktion === 'abdruck_vergessen' && $id > 0) {
-        sz_fingerabdruck_merken($id, null);
-        $notice = 'Der gespeicherte Hostschlüssel wurde vergessen. Die nächste '
-                . 'Prüfung übernimmt den, den der Server dann zeigt — vorher '
-                . 'vergewissern, dass er der richtige ist.';
-        flash_setzen('notice', $notice);
-        header('Location: ' . $zurueck);
-        exit;
-    } elseif ($aktion === 'versand_schalter') {
-        $an = ($_POST['versand_auto'] ?? '') === '1';
-        if (sz_auto_setzen($an)) {
-            $notice = $an
-                ? 'Der Versand läuft ab jetzt mit dem Aufräumjob mit. Wie oft '
-                . 'das ist, hängt vom eingerichteten Auslöser ab — nachzusehen '
-                . 'unter Betrieb → Hintergrundjobs.'
-                : 'Der Versand ist abgeschaltet. Die Ziele bleiben eingetragen; '
-                . 'es geht nur nichts mehr von selbst hinaus.';
-            flash_setzen('notice', $notice);
-            header('Location: ' . $zurueck);
-            exit;
-        } else {
-            $error = 'Der Schalter liess sich nicht speichern.';
-        }
-    } elseif ($aktion === 'jetzt_versenden') {
-        /* DIESER WEG FRAGT DEN SCHALTER NICHT. Hier hat gerade jemand
-         * geklickt, und das ist die Zustimmung — der Schalter beantwortet
-         * die andere Frage, nämlich ob es auch OHNE Klick passieren soll. */
-        $anfang = microtime(true);
-        $e = sz_versand_schub(static fn(): float => SICHERN_BUDGET_VERSAND
-                                                  - (microtime(true) - $anfang), 5.0);
-        $satz = $e['gesendet'] . ($e['gesendet'] === 1 ? ' Datei' : ' Dateien')
-              . ' an ' . $e['ziele'] . ($e['ziele'] === 1 ? ' Ziel' : ' Ziele')
-              . ' gesendet (' . groesse_text($e['bytes']) . ').'
-              /* WAS DORT ENTFERNT WURDE, STEHT IM ERFOLGSSATZ.
-               * Eine Löschung auf einer fremden Maschine ist die Sorte
-               * Handlung, die man nicht erst auf einer anderen Seite
-               * nachlesen sollte. Die vollständige Liste steht in
-               * Betrieb / Status / Sicherheit. */
-              . ((int)($e['geloescht'] ?? 0) > 0
-                  ? ' Auf den Zielen entfernt: ' . (int)$e['geloescht']
-                    . ((int)$e['geloescht'] === 1 ? ' alte Sicherung (' : ' alte Sicherungen (')
-                    . groesse_text((int)($e['geloescht_bytes'] ?? 0))
-                    . ') — nach der Aufbewahrungsregel des jeweiligen Ziels.'
-                  : '')
-              . ((int)($e['nicht_wieder'] ?? 0) > 0
-                  ? ' ' . (int)$e['nicht_wieder'] . ' Sicherung'
-                    . ((int)$e['nicht_wieder'] === 1 ? ' ging' : 'en gingen')
-                    . ' nicht erneut hinaus — sie '
-                    . ((int)$e['nicht_wieder'] === 1 ? 'wurde' : 'wurden')
-                    . ' dort schon nach der Aufbewahrungsregel entfernt.'
-                  : '')
-              . ($e['fertig'] ? '' : ' Der Durchgang war nicht fertig — ein '
-                              . 'zweiter Klick macht dort weiter, wo dieser aufhörte.');
-        if ($e['fehler'] !== []) {
-            $error = $satz . ' ' . implode(' ', $e['fehler']);
-        } else {
-            $notice = $e['ziele'] === 0
-                ? 'Es ist kein aktives Ziel eingetragen — es wurde nichts gesendet.'
-                : $satz;
-        }
-        flash_setzen($error !== null ? 'error' : 'notice', (string)($error ?? $notice));
-        header('Location: ' . $zurueck);
-        exit;
-    } elseif ($aktion === 'ziel_pruefen' && $id > 0) {
-        $z = sz_lesen($id);
-        if ($z === null) {
-            $error = 'Dieses Ziel gibt es nicht (mehr).';
-        } else {
-            $ergebnis = sz_verbindung_pruefen($z);
-            $ergebnis['ziel'] = (string)$z['name'];
-            /* Beim ERSTEN Mal wird der Hostschlüssel übernommen — und nur
-             * dann. Steht schon einer, hat die Bibliothek bereits verglichen
-             * und wäre gar nicht bis hierher gekommen, wenn er nicht passt. */
-            if ($ergebnis['ok'] && ($z['fingerabdruck'] ?? null) === null
-                && $ergebnis['fingerabdruck'] !== null) {
-                sz_fingerabdruck_merken($id, (string)$ergebnis['fingerabdruck']);
-                $ergebnis['uebernommen'] = true;
-            }
-            sz_lauf_merken($id, (bool)$ergebnis['ok'],
-                           $ergebnis['ok'] ? null : (string)$ergebnis['meldung']);
-            /* Meldung, Schritte und „übernommen" reisen als Ergebnis mit; ein
-             * Hostschlüssel ist öffentlich, ein Zugangsdatum steht nicht darin. */
-            flash_setzen($ergebnis['ok'] ? 'ok' : 'fehler', (string)$ergebnis['meldung'], '',
-                         ['ergebnis' => $ergebnis]);
-            header('Location: ' . $zurueck);
-            exit;
-        }
-    } elseif ($aktion === 'ziel_bestand' && $id > 0) {
-        /* ---- NACHSEHEN, WAS DORT LIEGT --------------
-         *
-         * AUF KNOPFDRUCK UND NICHT BEI JEDEM SEITENAUFRUF. Diese Auskunft
-         * kostet eine Verbindung und je Ordner eine Listenabfrage; bei drei
-         * Zielen und dreissig Konten sind das neunzig Anfragen über eine
-         * Leitung, die auch mal langsam ist. Dieselbe Überlegung wie bei
-         * `sz_versand_rueckstand()`, und dieselbe wie beim Knopf „Verbindung
-         * prüfen" daneben: Wer es wissen will, fragt.
-         *
-         * SIE LÖSCHT NICHTS. Das ist die Grundlage — die
-         * Anzeige beantwortet die Frage vielleicht schon, und dann braucht
-         * es die Löschregel gar nicht. */
-        $z = sz_lesen($id);
-        if ($z === null) {
-            $error = 'Dieses Ziel gibt es nicht (mehr).';
-        } else {
-            $weg = null;
-            try {
-                $weg = sz_weg($z);
-                $weg->verbinden();
-                $bestand = sz_bestand($weg, $id);
-                $bestand['ziel'] = (string)$z['name'];
-            } catch (ZielFehler $e) {
-                $error = 'Bei „' . (string)$z['name'] . '" ging es nicht weiter: '
-                       . $e->getMessage();
-            } finally {
-                if ($weg !== null) { try { $weg->trennen(); } catch (Throwable $x) {} }
-            }
-        }
-    }
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: ' . SZ_ZURUECK_SEITEN[0] . '#' . SZ_KARTE_ID);
+    exit;
 }
 
-// Meldung oder Pruefergebnis aus der Umleitung uebernehmen
-$flash = flash_holen();
-if ($flash !== null) {
-    if (is_array($flash['daten']['ergebnis'] ?? null)) { $ergebnis = $flash['daten']['ergebnis']; }
-    elseif ($flash['ton'] === 'error')                 { $error = $flash['text']; }
-    else                                               { $notice = $flash['text']; }
-}
+/* DAS TOKEN VOR ALLEM ANDEREN, auch vor dem Ziel der Umleitung. */
+csrf_check();
+$ziel = sz_zurueck_seite(post_text('zurueck')) . '#' . SZ_KARTE_ID;
 
-if ($bearbeiten === null) {
-    if (isset($_GET['neu'])) { $bearbeiten = 0; }
-    elseif (isset($_GET['bearbeiten'])) { $bearbeiten = (int)$_GET['bearbeiten']; }
-}
-$ziele = $tabelleDa ? sz_alle() : [];
-$form = null;
-if ($bearbeiten !== null) {
-    $form = $bearbeiten > 0 ? sz_lesen($bearbeiten) : null;
-    if ($bearbeiten > 0 && $form === null) { $bearbeiten = null; }
-}
-/* Nach einem misslungenen Speichern stehen die Eingaben im POST — sonst
- * tippt man alles noch einmal, nur um zu erfahren, dass der Port fehlt.
+/**
+ * Meldung hinterlegen und zurück zur Karte. Endet immer.
  *
- * NUR NACH „SPEICHERN". Hinge das hier und am Schalter „Auf dem Ziel
- * aufraeumen" unten an jedem POST mit Fehler, mischte „Nachsehen, was dort
- * liegt" mit offenem Formular `csrf`, `id` und `action` in `$form`, und der
- * Schalter stuende danach auf aus — wer dann speicherte, schaltete die
- * Aufbewahrung am Ziel still ab. */
-$speichernGescheitert = $_SERVER['REQUEST_METHOD'] === 'POST'
-    && ($_POST['action'] ?? '') === 'ziel_speichern' && $error !== null;
-if ($speichernGescheitert && $bearbeiten !== null) {
-    $form = array_merge((array)$form, $_POST);
+ * @param array $daten was die Karte ausser dem Satz braucht (siehe Kopf der Teile)
+ */
+$zurueck = static function (string $ton, string $text, array $daten = []) use ($ziel): never {
+    flash_setzen($ton, $text, SZ_KARTE_ID, $daten);
+    header('Location: ' . $ziel);
+    exit;
+};
+
+if (!sz_tabelle_da()) {
+    $zurueck('error', 'Die Tabelle für die Backup-Ziele fehlt noch — bitte unter '
+        . 'Betrieb → Updates die ausstehenden Updates ausführen.');
 }
 
-$schluesselDa = serverschluessel_da();
-/* Diese Seite wuerfelt keinen
- * Serverschluessel — das tut die Karte „Schluessel des Servers" unter
- * Betrieb → Servereinstellungen. Ein zweiter Ort, an dem bei jedem
- * Neuladen ein anderer Schluessel entsteht, waere die Stelle, an der jemand
- * zwei davon eintraegt. */
-$aktiveZiele = count(array_filter($ziele, static fn($z) => (int)$z['aktiv'] === 1));
-$autoAn = $tabelleDa && sz_auto_an();
+$aktion = post_text('action');
+$id = (int)($_POST['id'] ?? 0);
 
-ui_seite_start(['titel' => 'Backup-Ziele']);
-?>
+if ($aktion === 'ziel_speichern') {
+    /* Ein LEERES Passwortfeld heisst „nicht anfassen", nicht „löschen".
+     * Deshalb `null` statt `''` — die Bibliothek unterscheidet beides. */
+    $geheim = ($_POST['geheim'] ?? '') === '' ? null : post_text('geheim');
+    $schluessel = trim(post_text('schluessel'));
+    $schluesselNeu = $schluessel === '' ? null : $schluessel;
+    if (($_POST['schluessel_weg'] ?? '') === '1') { $schluesselNeu = ''; }
+    /* DER ALTE STAND VOR DEM SPEICHERN.
+     * Stuende `sz_lesen()` erst nach `sz_speichern()`, laese es
+     * die neue Zeile: Der Vergleich unten schluege nie an, und ein
+     * SFTP-Ziel auf neuem Host behielte den Abdruck des alten — die
+     * naechste Verbindung scheiterte als „ANDERER Hostschluessel". */
+    $vorher = $id > 0 ? sz_lesen($id) : null;
+    if ($id > 0 && $vorher === null) {
+        $zurueck('error', 'Dieses Ziel gibt es nicht (mehr).');
+    }
+    [$ok, $was] = sz_speichern($id > 0 ? $id : null, $_POST, $geheim, $schluesselNeu);
+    if (!$ok) {
+        /* DIE EINGABE REIST MIT, damit niemand alles noch einmal tippt, nur
+         * um zu erfahren, dass der Port fehlt. NUR DIE FELDER DES FORMULARS:
+         * `csrf`, `action` und `zurueck` gehören nicht hinein, Passwort und
+         * Schlüssel bleiben aus der Sitzung. */
+        $werte = [];
+        foreach (SZ_FORMFELDER as $f) {
+            if (isset($_POST[$f])) { $werte[$f] = post_text($f); }
+        }
+        $zurueck('error', implode(' ', (array)$was),
+                 ['zielform' => ['id' => $id > 0 ? $id : 0, 'werte' => $werte]]);
+    }
+    $notice = $id > 0 ? 'Das Ziel wurde geändert.' : 'Das Ziel wurde angelegt.';
+    /* Der Fingerabdruck gehört zum Rechner. Zieht ein Ziel auf einen
+     * anderen Host um, ist der alte Abdruck falsch — und ein falscher
+     * Abdruck ist schlimmer als keiner, weil er jede Verbindung
+     * blockiert und wie ein Angriff aussieht. Verglichen wird mit
+     * der gespeicherten Zeile, nicht mit `$_POST` — `sz_speichern()`
+     * normalisiert, und ein Leerzeichen am Host ist kein Umzug. */
+    $nachher = $vorher !== null ? sz_lesen($id) : null;
+    if ($vorher !== null && $nachher !== null
+        && ((string)$vorher['host'] !== (string)$nachher['host']
+            || (int)$vorher['port'] !== (int)$nachher['port'])) {
+        sz_fingerabdruck_merken($id, null);
+        $notice .= ' Der Hostschlüssel wurde vergessen, weil sich der Rechner geändert '
+                 . 'hat — er wird bei der nächsten Prüfung neu übernommen.';
+    }
+    $zurueck('notice', $notice);
+}
 
-<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen',
-                        'menue' => 'admin_sicherungsziele']); ?>
+if ($aktion === 'ziel_loeschen' && $id > 0) {
+    $z = sz_lesen($id);
+    if ($z !== null && sz_loeschen($id)) {
+        $zurueck('notice', 'Das Ziel „' . (string)$z['name'] . '“ wurde entfernt. '
+            . 'Was dort liegt, bleibt liegen — gelöscht wird auf dem Ziel nichts.');
+    }
+    $zurueck('error', 'Dieses Ziel gibt es nicht (mehr).');
+}
 
-  <form method="post" id="f-versand" hidden
-        data-confirm="Jetzt alle neuen Pakete auf die aktiven Ziele schieben? Das dauert — je Ziel wird eine Verbindung aufgebaut und jede fehlende Datei übertragen. Was in einem Durchgang nicht fertig wird, bleibt offen."
-        data-confirm-ok="Versenden" data-confirm-tone="normal">
-    <?= csrf_field() ?><input type="hidden" name="action" value="jetzt_versenden">
-  </form>
+if ($aktion === 'abdruck_vergessen' && $id > 0) {
+    sz_fingerabdruck_merken($id, null);
+    $zurueck('notice', 'Der gespeicherte Hostschlüssel wurde vergessen. Die nächste '
+        . 'Prüfung übernimmt den, den der Server dann zeigt — vorher '
+        . 'vergewissern, dass er der richtige ist.');
+}
 
-  <?php ui_titelzeile([
-      'titel' => 'Backup-Ziele',
-      'unter' => 'SFTP- und FTPS-Gegenstellen für die Backups, nicht zu verwechseln '
-               . 'mit den Zielkliniken unter '
-               . '<a href="einstellungen.php?t=standorte">Standorte</a>.',
-      'aktionen' => $schluesselDa && $tabelleDa
-          ? (($aktiveZiele > 0
-              ? ui_knopf(['text' => 'Jetzt versenden', 'symbol' => 'tausch',
-                          'art' => 'neutral', 'attr' => ' form="f-versand"'])
+if ($aktion === 'versand_schalter') {
+    $an = ($_POST['versand_auto'] ?? '') === '1';
+    if (!sz_auto_setzen($an)) {
+        $zurueck('error', 'Der Schalter liess sich nicht speichern.');
+    }
+    $zurueck('notice', $an
+        ? 'Der Versand läuft ab jetzt mit dem Aufräumjob mit — wie oft, hängt vom '
+          . 'Auslöser unter Betrieb → Hintergrundjobs ab.'
+        : 'Der Versand ist abgeschaltet; die Ziele bleiben eingetragen.');
+}
+
+if ($aktion === 'jetzt_versenden') {
+    /* DIESER WEG FRAGT DEN SCHALTER NICHT. Hier hat gerade jemand
+     * geklickt, und das ist die Zustimmung — der Schalter beantwortet
+     * die andere Frage, nämlich ob es auch OHNE Klick passieren soll. */
+    $anfang = microtime(true);
+    $e = sz_versand_schub(static fn(): float => SICHERN_BUDGET_VERSAND
+                                              - (microtime(true) - $anfang), 5.0);
+    $satz = $e['gesendet'] . ($e['gesendet'] === 1 ? ' Datei' : ' Dateien')
+          . ' an ' . $e['ziele'] . ($e['ziele'] === 1 ? ' Ziel' : ' Ziele')
+          . ' gesendet (' . groesse_text($e['bytes']) . ').'
+          /* WAS DORT ENTFERNT WURDE, STEHT IM ERFOLGSSATZ.
+           * Eine Löschung auf einer fremden Maschine ist die Sorte
+           * Handlung, die man nicht erst auf einer anderen Seite
+           * nachlesen sollte. Die vollständige Liste steht in
+           * Betrieb / Status / Sicherheit. */
+          . ((int)($e['geloescht'] ?? 0) > 0
+              ? ' Auf den Zielen entfernt: ' . (int)$e['geloescht']
+                . ((int)$e['geloescht'] === 1 ? ' alte Sicherung (' : ' alte Sicherungen (')
+                . groesse_text((int)($e['geloescht_bytes'] ?? 0))
+                . ') — nach der Aufbewahrungsregel des jeweiligen Ziels.'
               : '')
-             . ui_knopf(['text' => 'Ziel anlegen', 'symbol' => 'plus', 'art' => 'primaer',
-                         'href' => '?neu=1']))
-          : '',
-  ]); ?>
-  <?php /* DER BALKEN, WIE AUF JEDER AUSNAHMESEITE DES WARTUNGSMODUS — diese
-           Seite steht in WARTUNG_AUSNAHMEN. */ ?>
-  <?= wartung_balken() ?>
+          . ((int)($e['nicht_wieder'] ?? 0) > 0
+              ? ' ' . (int)$e['nicht_wieder'] . ' Sicherung'
+                . ((int)$e['nicht_wieder'] === 1 ? ' ging' : 'en gingen')
+                . ' nicht erneut hinaus — sie '
+                . ((int)$e['nicht_wieder'] === 1 ? 'wurde' : 'wurden')
+                . ' dort schon nach der Aufbewahrungsregel entfernt.'
+              : '')
+          . ($e['fertig'] ? '' : ' Der Durchgang war nicht fertig — ein '
+                          . 'zweiter Klick macht dort weiter, wo dieser aufhörte.');
+    if ($e['fehler'] !== []) {
+        $zurueck('error', $satz . ' ' . implode(' ', $e['fehler']));
+    }
+    $zurueck('notice', $e['ziele'] === 0
+        ? 'Es ist kein aktives Ziel eingetragen — es wurde nichts gesendet.'
+        : $satz);
+}
 
-  <?php ui_meldung($notice, $error, 'info', '  '); ?>
+if ($aktion === 'ziel_pruefen' && $id > 0) {
+    $z = sz_lesen($id);
+    if ($z === null) {
+        $zurueck('error', 'Dieses Ziel gibt es nicht (mehr).');
+    }
+    $ergebnis = sz_verbindung_pruefen($z);
+    $ergebnis['ziel'] = (string)$z['name'];
+    /* Beim ERSTEN Mal wird der Hostschlüssel übernommen — und nur
+     * dann. Steht schon einer, hat die Bibliothek bereits verglichen
+     * und wäre gar nicht bis hierher gekommen, wenn er nicht passt. */
+    if ($ergebnis['ok'] && ($z['fingerabdruck'] ?? null) === null
+        && $ergebnis['fingerabdruck'] !== null) {
+        sz_fingerabdruck_merken($id, (string)$ergebnis['fingerabdruck']);
+        $ergebnis['uebernommen'] = true;
+    }
+    sz_lauf_merken($id, (bool)$ergebnis['ok'],
+                   $ergebnis['ok'] ? null : (string)$ergebnis['meldung']);
+    /* Meldung, Schritte und „übernommen" reisen als Ergebnis mit; ein
+     * Hostschlüssel ist öffentlich, ein Zugangsdatum steht nicht darin. */
+    $zurueck($ergebnis['ok'] ? 'ok' : 'fehler', (string)$ergebnis['meldung'],
+             ['ergebnis' => $ergebnis]);
+}
 
-  <?php if (!$tabelleDa): ?>
-    <?= ui_meldung_markup('fehler', 'Die Tabelle für die Backup-Ziele fehlt '
-        . 'noch. Sie entsteht mit der Migration „Backup-Ziele" — bitte '
-        . 'einmal unter Betrieb → Updates die ausstehenden Updates ausführen.',
-        'Migration steht aus.') ?>
-    <p class="feld-hinweis"><a href="betrieb_updates.php">Zu den Updates</a></p>
-  <?php endif; ?>
+if ($aktion === 'ziel_bestand' && $id > 0) {
+    /* ---- NACHSEHEN, WAS DORT LIEGT --------------
+     *
+     * AUF KNOPFDRUCK UND NICHT BEI JEDEM SEITENAUFRUF. Diese Auskunft
+     * kostet eine Verbindung und je Ordner eine Listenabfrage; bei drei
+     * Zielen und dreissig Konten sind das neunzig Anfragen über eine
+     * Leitung, die auch mal langsam ist. Wer es wissen will, fragt.
+     *
+     * SIE LÖSCHT NICHTS, UND SIE WIRD NICHT GESPEICHERT. Bis Web 24.6 stand
+     * sie in der Antwort auf den POST; jetzt reist sie einmal mit der
+     * Umleitung über die Sitzung und ist danach weg — eine gespeicherte
+     * Momentaufnahme wäre beim nächsten Aufruf eine Behauptung. */
+    $z = sz_lesen($id);
+    if ($z === null) {
+        $zurueck('error', 'Dieses Ziel gibt es nicht (mehr).');
+    }
+    $weg = null;
+    $bestand = null;
+    $fehler = null;
+    try {
+        $weg = sz_weg($z);
+        $weg->verbinden();
+        $bestand = sz_bestand($weg, $id);
+        $bestand['ziel'] = (string)$z['name'];
+    } catch (ZielFehler $e) {
+        $fehler = 'Bei „' . (string)$z['name'] . '“ ging es nicht weiter: ' . $e->getMessage();
+    } finally {
+        if ($weg !== null) { try { $weg->trennen(); } catch (Throwable $x) {} }
+    }
+    if ($fehler !== null) {
+        $zurueck('error', $fehler);
+    }
+    $zurueck('info', 'Eine Momentaufnahme, die nicht gespeichert wird; was nicht dem '
+        . 'Namensmuster einer Sicherung entspricht, zählt als fremd.',
+        ['bestand' => $bestand]);
+}
 
-  <?php /* ---- Das Ergebnis der Verbindungsprüfung ------------------------
-       Es steht ganz oben und mit JEDEM Schritt, nicht nur mit „hat geklappt":
-       Wer eine Verbindung einrichtet, will wissen, WIE WEIT es kam — bis zur
-       Anmeldung, bis zum Schreiben, oder gar nicht erst los. */ ?>
-  <?php if ($ergebnis !== null): ?>
-    <?= ui_meldung_markup($ergebnis['ok'] ? 'ok' : 'fehler',
-        e((string)$ergebnis['meldung']),
-        'Ziel „' . e((string)$ergebnis['ziel']) . '"') ?>
-    <?php if ($ergebnis['schritte']): ?>
-      <?php ui_karte_start(['titel' => 'Was die Prüfung getan hat', 'id' => 'k-pruefung']); ?>
-        <?php foreach ($ergebnis['schritte'] as $i => $s): ?>
-          <?php ui_zeile(['text' => (string)($i + 1) . '. ' . $s]); ?>
-        <?php endforeach; ?>
-        <?php if (!$ergebnis['ok']): ?>
-          <?php ui_zeile(['text' => 'Hier ging es nicht weiter.',
-                          'klein' => (string)$ergebnis['meldung'],
-                          'plaketten' => ui_plakette('abgebrochen', ['ton' => 'rot'])]); ?>
-        <?php endif; ?>
-        <?php if (!empty($ergebnis['uebernommen'])): ?>
-          <p class="feld-hinweis"><strong>Der Hostschlüssel wurde übernommen</strong>
-             und wird ab jetzt bei jeder Verbindung verglichen.</p>
-        <?php endif; ?>
-      <?php ui_karte_ende(); ?>
-    <?php endif; ?>
-  <?php endif; ?>
-
-  <?php /* ---- Was auf dem Ziel liegt ----------------
-       DIE ANZEIGE IST DIE GRUNDLAGE, nicht die Löschregel: eine
-       blosse Anzeige des Belegten am Ziel, damit die Betreiberin es sieht
-       und dort selbst entscheidet. Sie löscht nichts und beantwortet die
-       Frage vielleicht schon.
-
-       FREMDE DATEIEN STEHEN MIT EIGENER ZAHL DA. Sie sind der Grund, warum
-       die Löschregel eine Herkunftsprobe braucht — und wer sie sieht, weiß
-       auf einen Blick, dass dieses Ziel nicht nur uns gehört. */ ?>
-  <?php if ($bestand !== null): ?>
-    <?php ui_karte_start(['titel' => 'Was auf „' . e((string)$bestand['ziel']) . '" liegt',
-                          'id' => 'k-bestand']); ?>
-      <?php
-      ui_zeile(['text' => 'Sicherungen dieser Installation',
-                'klein' => $bestand['dateien'] === 0
-                    ? 'Dort liegt nichts von hier — entweder ist noch nichts gesendet '
-                    . 'worden, oder es liegt unter einem anderen Pfad.'
-                    : groesse_text((int)$bestand['bytes']) . ' in '
-                    . (int)$bestand['ordner'] . ' Ordner'
-                    . ((int)$bestand['ordner'] === 1 ? '' : 'n'),
-                'plaketten' => ui_plakette((string)(int)$bestand['dateien'] . ' '
-                    . ((int)$bestand['dateien'] === 1 ? 'Datei' : 'Dateien'),
-                    ['ton' => (int)$bestand['dateien'] > 0 ? 'blau' : 'neutral'])]);
-      if ($bestand['aeltester'] !== null) {
-          ui_zeile(['text' => 'Ältester Stand',
-                    'klein' => 'Der jüngste ist von '
-                             . datum_zeit_text((string)$bestand['juengster']) . ' Uhr',
-                    'plaketten' => ui_plakette(
-                        datum_text((string)$bestand['aeltester']), ['ton' => 'neutral'])]);
-      }
-      ui_zeile(['text' => 'Fremde Dateien',
-                'klein' => (int)$bestand['fremd'] === 0
-                    ? 'Auf diesem Ziel liegt nichts, was nicht von hier stammt.'
-                    : groesse_text((int)$bestand['fremd_bytes'])
-                    . ' — diese Anwendung fasst sie nie an, auch nicht mit '
-                    . 'eingeschalteter Aufbewahrungsregel.',
-                'plaketten' => ui_plakette((string)(int)$bestand['fremd'],
-                    ['ton' => (int)$bestand['fremd'] > 0 ? 'orange' : 'gruen'])]);
-      ?>
-      <p class="feld-hinweis">Eine Momentaufnahme, die nicht gespeichert wird;
-         was nicht dem Namensmuster einer Sicherung entspricht, zählt als fremd.</p>
-    <?php ui_karte_ende(); ?>
-  <?php endif; ?>
-
-  <?php /* ---- Der Serverschlüssel steht woanders --
-       DIE KARTE STEHT UNTER BETRIEB → SERVEREINSTELLUNGEN, mit dem
-       Server-Anteil zusammen („Schlüssel des Servers"). Der Grund: Der
-       Serverschlüssel betrifft nicht die Backup-Ziele, sondern die
-       INSTALLATION — er versiegelt auch das Komplett-Backup und die
-       Konto-Backups. Er hier zu
-       verwalten hiesse, ihn auf der Seite anzulegen, die ihn am wenigsten
-       braucht.
-
-       WAS BLEIBT, IST DER VERWEIS. Ohne Schlüssel lässt sich hier kein Ziel
-       anlegen, und wer davorsteht, muss wissen wohin. Eine Seite, die eine
-       Voraussetzung nennt, ohne den Weg dorthin zu zeigen, schickt die
-       BetreiberIn auf die Suche. */ ?>
-  <?php if (!$schluesselDa): ?>
-    <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt', 'id' => 'k-schluessel-fehlt']); ?>
-      <p class="feld-hinweis">Die Zugangsdaten der Ziele werden mit dem
-         Serverschlüssel verschlüsselt, und ohne ihn lässt sich kein Ziel anlegen.</p>
-      <div class="listen-form-fuss">
-        <?= ui_knopf(['text' => 'Zu den Servereinstellungen', 'symbol' => 'schloss',
-                      'art' => 'primaer',
-                      'href' => 'betrieb_server.php#k-schluessel']) ?>
-      </div>
-    <?php ui_karte_ende(); ?>
-  <?php endif; ?>
-
-  <?php /* ---- Versand ----------------------------------------------------
-       Der Schalter sagt OB, nicht WANN. Wann etwas läuft, entscheidet der
-       eingerichtete Auslöser (Betrieb → Hintergrundjobs) — eine zweite Uhr hier wäre
-       eine zweite Wahrheit. */ ?>
-  <?php if ($tabelleDa && $schluesselDa): ?>
-    <?php ui_karte_start(['titel' => 'Versand', 'id' => 'k-versand']); ?>
-      <form method="post">
-        <?= csrf_field() ?><input type="hidden" name="action" value="versand_schalter">
-        <?php ui_schalter(['name' => 'versand_auto', 'label' => 'Backups automatisch versenden',
-                           'an' => $autoAn,
-                           /* „DER VERSAND LÖSCHT NICHTS" WÄRE FALSCH: Wo die
-                            * Aufbewahrungsregel eines Ziels eingeschaltet
-                            * ist, löscht der Versand dort sehr wohl. Eine
-                            * Zusage, die neben einer Option steht, die sie
-                            * aufhebt, ist schlimmer als keine. */
-                           'klein' => 'Der Aufräumjob schiebt neue Pakete auf die '
-                                    . 'aktiven Ziele und löscht dort nur, wo die '
-                                    . 'Aufbewahrungsregel des Ziels eingeschaltet ist.']); ?>
-        <div class="listen-form-fuss">
-          <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
-        </div>
-      </form>
-      <?php
-      ui_zeile(['text' => 'Aktive Ziele',
-                'klein' => $aktiveZiele === 0
-                    ? 'keines — es geht nichts hinaus'
-                    : $aktiveZiele . ($aktiveZiele === 1 ? ' Ziel' : ' Ziele'),
-                'plaketten' => $aktiveZiele === 0
-                    ? ui_plakette('keines', ['ton' => 'orange'])
-                    : ui_plakette((string)$aktiveZiele, ['ton' => 'blau'])]);
-      $rueck = $autoAn ? sz_versand_rueckstand() : null;
-      /* DREI GRÜNDE FÜR „KEINE ZAHL", UND JEDER SAGT SEINEN — nicht in
-         allen dreien „solange ein Ziel nie erfolgreich lief", auch bei
-         abgeschaltetem Versand und ohne aktives Ziel. Gezählt werden
-         Konto-Backups, Komplett-Stände und Archive des
-         Protokolls; das Wort dafür ist „Sicherungen", nicht „Pakete". */
-      $rueckKlein = !$autoAn ? 'keine Aussage — der Versand ist aus'
-          : ($aktiveZiele === 0 ? 'keine Aussage — es gibt kein aktives Ziel'
-          : ($rueck === null
-              ? 'noch keine Aussage — ein Ziel lief noch nie erfolgreich'
-              : ($rueck === 1 ? '1 Sicherung ist' : $rueck . ' Sicherungen sind')
-                . ' neuer als der letzte erfolgreiche Versand (Schätzung; '
-                . 'gezählt wird hier, nicht am Ziel)'));
-      ui_zeile(['text' => 'Wartet auf den nächsten Lauf',
-                'klein' => $rueckKlein,
-                'plaketten' => $rueck === null
-                    ? ui_plakette('unbekannt', ['ton' => 'neutral'])
-                    : ui_plakette((string)$rueck, ['ton' => $rueck > 0 ? 'orange' : 'gruen'])]);
-      ?>
-      <p class="feld-hinweis">Der Versand schickt, was am Ziel nach Name und Größe
-         fehlt, und wiederholt deshalb eine abgebrochene Übertragung.</p>
-    <?php ui_karte_ende(); ?>
-  <?php endif; ?>
-
-  <?php /* ---- Die Liste ------------------------------------------------- */ ?>
-  <?php if ($tabelleDa): ?>
-    <?php ui_karte_start(['titel' => 'Ziele', 'id' => 'k-ziele', 'zahl' => count($ziele)]); ?>
-      <?php if (!$ziele): ?>
-        <p class="feld-hinweis">Es ist noch kein Ziel eingetragen — bis dahin
-           bleiben die Backups auf diesem Server.</p>
-      <?php endif; ?>
-      <?php foreach ($ziele as $z): ?>
-        <?php
-        $prot = strtoupper((string)$z['protokoll']);
-        $plaketten = (int)$z['aktiv'] === 1
-            ? ui_plakette('aktiv', ['ton' => 'gruen'])
-            : ui_plakette('abgeschaltet', ['ton' => 'neutral']);
-        if (($z['letzter_fehler'] ?? null) !== null) {
-            $plaketten .= ui_plakette('zuletzt gescheitert', ['ton' => 'rot']);
-        } elseif (($z['letzter_erfolg'] ?? null) !== null) {
-            $plaketten .= ui_plakette('zuletzt in Ordnung', ['ton' => 'gruen']);
-        } else {
-            $plaketten .= ui_plakette('nie geprüft', ['ton' => 'orange']);
-        }
-        if ((string)$z['protokoll'] === 'sftp' && ($z['fingerabdruck'] ?? null) !== null) {
-            $plaketten .= ui_plakette('Hostschlüssel bekannt', ['ton' => 'gruen']);
-        }
-        $klein = $prot . ' · ' . (string)$z['nutzer'] . '@' . (string)$z['host']
-               . ':' . (int)$z['port'] . ' · ' . (string)$z['pfad'];
-        if (($z['schluessel'] ?? null) !== null) { $klein .= ' · mit privatem Schlüssel'; }
-        /* DIE AUFBEWAHRUNG STEHT AN DER ZEILE, nicht nur im Formular.
-         * Eine Regel, die drüben löscht, gehört dorthin, wo man
-         * die Ziele überfliegt — und zwar in BEIDEN Zuständen: „aus" ist hier
-         * die Auskunft, dass dort nichts entfernt wird, und nicht ein
-         * fehlender Satz. */
-        $bk = $z['behalten_konto'] === null ? null : (int)$z['behalten_konto'];
-        $bm = $z['behalten_komplett'] === null ? null : (int)$z['behalten_komplett'];
-        if ($bk !== null || $bm !== null) {
-            $plaketten .= ui_plakette('räumt dort auf', ['ton' => 'orange']);
-            $klein .= ' · behält dort ' . ($bk ?? '—') . ' je Konto und '
-                    . ($bm ?? '—') . ' Komplett-Stände';
-        } else {
-            $klein .= ' · räumt dort nicht auf';
-        }
-        if (($z['letzter_erfolg'] ?? null) !== null) {
-            /* NICHT noch einmal „zuletzt in Ordnung" — das steht schon als
-               Plakette daneben. Bei 390 px umfliesst die Kleinzeile die
-               Plaketten, und jedes doppelte Wort kostet dort eine Zeile. */
-            $klein .= ' · ' . datum_zeit_text((string)$z['letzter_erfolg']) . ' Uhr';
-        }
-        ?>
-        <form method="post" id="zp-<?= (int)$z['id'] ?>" hidden>
-          <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
-          <input type="hidden" name="action" value="ziel_pruefen">
-        </form>
-        <form method="post" id="zl-<?= (int)$z['id'] ?>" hidden>
-          <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
-          <input type="hidden" name="action" value="ziel_loeschen">
-        </form>
-        <?php /* `zh-` und nicht `za-`: `ui_zeilenaktionen()` nummeriert seine
-                 Menüs selbst als `za-1`, `za-2` … — zwei gleiche Kennungen,
-                 und „…" öffnete statt des Menüs dieses Formular. */ ?>
-        <form method="post" id="zh-<?= (int)$z['id'] ?>" hidden>
-          <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
-          <input type="hidden" name="action" value="abdruck_vergessen">
-        </form>
-        <form method="post" id="zb-<?= (int)$z['id'] ?>" hidden>
-          <?= csrf_field() ?><input type="hidden" name="id" value="<?= (int)$z['id'] ?>">
-          <input type="hidden" name="action" value="ziel_bestand">
-        </form>
-        <?php
-        $eintraege = [
-            ['text' => 'Verbindung prüfen', 'symbol' => 'haken',
-             'form' => 'zp-' . (int)$z['id']],
-            /* NACHSEHEN STEHT NEBEN PRÜFEN, weil es dasselbe kostet: eine
-             * Verbindung auf Knopfdruck. Es löscht nichts — das ist die
-             * Grundlage, und die Löschregel darunter ist die
-             * Option, die man danach vielleicht gar nicht braucht. */
-            ['text' => 'Nachsehen, was dort liegt', 'symbol' => 'lupe',
-             'form' => 'zb-' . (int)$z['id']],
-            ['text' => 'Bearbeiten', 'symbol' => 'stift',
-             'href' => '?bearbeiten=' . (int)$z['id']],
-        ];
-        if ((string)$z['protokoll'] === 'sftp' && ($z['fingerabdruck'] ?? null) !== null) {
-            $eintraege[] = ['text' => 'Hostschlüssel vergessen', 'symbol' => 'schloss-offen',
-                            'art' => 'leise', 'form' => 'zh-' . (int)$z['id'],
-                            'attr' => ' data-confirm="Den gespeicherten Hostschlüssel '
-                                    . 'vergessen? Die nächste Prüfung übernimmt den, den '
-                                    . 'der Server dann zeigt — das ist der Weg nach einem '
-                                    . 'Schlüsselwechsel der Gegenstelle und sonst nichts."'
-                                    . ' data-confirm-ok="Vergessen" data-confirm-tone="normal"'];
-        }
-        $eintraege[] = ['text' => 'Löschen', 'symbol' => 'korb', 'art' => 'gefahr',
-                        'form' => 'zl-' . (int)$z['id'],
-                        'attr' => ' data-confirm="Das Ziel &quot;' . e((string)$z['name'])
-                                . '&quot; entfernen? Was dort liegt, bleibt liegen — '
-                                . 'gelöscht wird auf dem Ziel nichts."'
-                                . ' data-confirm-ok="Entfernen" data-confirm-tone="gefahr"'];
-        ui_zeile([
-            'text' => (string)$z['name'],
-            'klein' => $klein,
-            'plaketten' => $plaketten,
-            /* ---- ALLES INS MENUE (`blatt_immer`) ---------------
-             *
-             * DIE ZEILE TRUEG SONST FUENF KNOEPFE. Mit „Nachsehen, was dort
-             * liegt" ist die Knopfreihe zu breit geworden, und zwar gemessen:
-             * Der Bilderlauf fand **+156 px waagerechten Überlauf bei 768 px**
-             * und +120 bei 1024 (Verursacher `div.zeile-aktionen`). Den Text
-             * zu kürzen half nicht genug (+49 / +13) — fünf Knöpfe passen
-             * dort nicht, egal wie sie heissen.
-             *
-             * `blatt_immer` IST DAFUER DA, und die Begründung im Baustein
-             * passt hier wörtlich: „Die Geräteliste trägt
-             * drei Handlungen, von denen eine unumkehrbar ist. Als Knopfreihe
-             * stünde ‚Entkoppeln' in Rot unmittelbar neben ‚Deaktivieren'."
-             * Genau das war hier der Zustand — „Löschen" in Rot neben
-             * „Bearbeiten", in jeder Zeile. Im Menü liegt es eine Ebene
-             * tiefer, abgesetzt und rot.
-             *
-             * KEIN NEUER BAUSTEIN: `blatt_immer` ist eine vorhandene Option
-             * derselben Funktion und steht so in `docs/Design.md` 9. */
-            'aktionen' => ui_zeilenaktionen(['eintraege' => $eintraege,
-                                             'blatt_immer' => true,
-                                             'titel' => (string)$z['name']]),
-        ]);
-        if (($z['letzter_fehler'] ?? null) !== null) {
-            /* DER FEHLER STEHT DA, BIS ER WEG IST. Ein Versand, der seit drei
-               Wochen scheitert, steht auch im Protokoll unter System; hier
-               steht er trotzdem, weil man dort suchen muss. */
-            ui_zeile(['text' => 'Zuletzt gescheitert',
-                      'klein' => (string)$z['letzter_fehler'],
-                      'plaketten' => ui_plakette(
-                          datum_zeit_text((string)$z['letzter_lauf']),
-                          ['ton' => 'rot'])]);
-        }
-        ?>
-      <?php endforeach; ?>
-    <?php ui_karte_ende(); ?>
-  <?php endif; ?>
-
-  <?php /* ---- Anlegen und Ändern ------------------------------------- */ ?>
-  <?php if ($bearbeiten !== null && $schluesselDa && $tabelleDa): ?>
-    <?php $neu = $bearbeiten === 0; ?>
-    <?php /* Das Protokoll FTP kennt die Datenbank nicht; ein Zweig fuer
-             ein solches Ziel ist hier nicht noetig. */ ?>
-    <?php ui_karte_start(['titel' => $neu ? 'Neues Ziel' : 'Ziel bearbeiten',
-                          'id' => 'zielform']); ?>
-      <form method="post">
-        <?= csrf_field() ?>
-        <input type="hidden" name="action" value="ziel_speichern">
-        <input type="hidden" name="id" value="<?= $neu ? 0 : (int)$bearbeiten ?>">
-        <div class="fld-reihe">
-          <?php ui_feld(['name' => 'name', 'label' => 'Name', 'pflicht' => true,
-                         'wert' => (string)($form['name'] ?? ''),
-                         'klein' => 'Frei wählbar — er steht in Meldungen und im '
-                                  . 'Versandprotokoll.']); ?>
-          <?php ui_feld(['name' => 'protokoll', 'label' => 'Protokoll', 'art' => 'select',
-                         'optionen' => SZ_PROTOKOLLE,
-                         'wert' => (string)($form['protokoll'] ?? 'sftp'),
-                         'klein' => 'SFTP erkennt den Server am Hostschlüssel wieder, '
-                                  . 'FTPS verschlüsselt nur die Leitung.']); ?>
-        </div>
-        <div class="fld-reihe">
-          <?php ui_feld(['name' => 'host', 'label' => 'Rechnername', 'pflicht' => true,
-                         'wert' => (string)($form['host'] ?? ''),
-                         'platzhalter' => 'backup.example.de']); ?>
-          <?php ui_feld(['name' => 'port', 'label' => 'Port', 'art' => 'number',
-                         'pflicht' => true, 'attr' => 'min="1" max="65535"',
-                         'wert' => (string)($form['port'] ?? SZ_PORTS['sftp']),
-                         'klein' => 'Üblich: 22 für SFTP, 21 für FTPS.']); ?>
-        </div>
-        <div class="fld-reihe">
-          <?php ui_feld(['name' => 'nutzer', 'label' => 'Nutzername', 'pflicht' => true,
-                         'wert' => (string)($form['nutzer'] ?? '')]); ?>
-          <?php ui_feld(['name' => 'pfad', 'label' => 'Pfad auf dem Ziel',
-                         'wert' => (string)($form['pfad'] ?? '/'),
-                         'klein' => 'Der Ordner für die Backups, mit einem '
-                                  . 'Unterordner je Konto.']); ?>
-        </div>
-        <?php ui_feld(['name' => 'geheim', 'label' => 'Passwort', 'art' => 'password',
-                       'wert' => '',
-                       'klein' => $neu
-                           ? 'Bei Anmeldung mit privatem Schlüssel: dessen Passphrase '
-                           . '(leer lassen, wenn er keine hat).'
-                           : 'Leer lassen heißt unverändert; Gespeichertes wird nie '
-                           . 'in dieses Feld zurückgeschrieben.']); ?>
-        <?php ui_feld(['name' => 'schluessel', 'label' => 'Privater Schlüssel (nur SFTP)',
-                       'art' => 'textarea', 'zeilen' => 4, 'wert' => '',
-                       'platzhalter' => "-----BEGIN OPENSSH PRIVATE KEY-----\n"
-                                      . "(der ganze Schlüssel)\n"
-                                      . "-----END OPENSSH PRIVATE KEY-----",
-                       'klein' => 'Vollständig mit BEGIN- und END-Zeile; das Feld '
-                                . '„Passwort" ist dann seine Passphrase'
-                                . (($form['schluessel'] ?? null) !== null
-                                   ? ', und leer lassen heißt, der hinterlegte bleibt.'
-                                   : '.')]); ?>
-        <?php if (($form['schluessel'] ?? null) !== null): ?>
-          <?php ui_schalter(['name' => 'schluessel_weg',
-                             'label' => 'Hinterlegten Schlüssel entfernen',
-                             'an' => false,
-                             'klein' => 'Danach wird wieder mit Passwort angemeldet.']); ?>
-        <?php endif; ?>
-        <?php ui_schalter(['name' => 'passiv', 'label' => 'Passiver Modus (nur FTPS)',
-                           'an' => (int)($form['passiv'] ?? 1) === 1,
-                           'klein' => 'Fast immer richtig, aus nur für eine Gegenstelle, '
-                                    . 'die aktives FTP verlangt.']); ?>
-        <?php ui_schalter(['name' => 'aktiv', 'label' => 'Ziel benutzen',
-                           'an' => (int)($form['aktiv'] ?? 1) === 1,
-                           'klein' => 'Aus heisst: Es bleibt eingetragen, der Versand '
-                                    . 'überspringt es aber.']); ?>
-
-        <?php /* ---- Die Aufbewahrung auf DEM ZIEL ----
-                 SIE IST EINE OPTION UND NIE DIE VORGABE. Der Zweck eines
-                 auswärtigen Ziels ist, den Ausfall dieses Servers zu
-                 überleben — samt eines Fehlers, der HIER zu viel löscht.
-                 Ein Versand, der drüben aufräumt, trägt genau diesen Fehler
-                 mit hinüber. Wer den Haken setzt, entscheidet sich
-                 ausdrücklich dafür, dass er beides will.
-
-                 DER SATZ DARUNTER NENNT DIE DREI SICHERUNGEN, weil sie die
-                 Antwort auf die Frage sind, die beim Setzen des Hakens
-                 entsteht: „Und was, wenn dort noch etwas anderes liegt?" */ ?>
-        <?php /* NACH EINEM FEHLSCHLAG GILT, WAS DAGESTANDEN HAT. `$form` ist
-                 dann die Verschmelzung aus Datenbankzeile und `$_POST`, und
-                 ein NICHT gesetzter Haken kommt in `$_POST` gar nicht vor —
-                 die beiden Zahlen aber schon. Ohne diese Unterscheidung
-                 stünde der Haken nach einem Tippfehler im Port wieder an,
-                 obwohl ihn niemand gesetzt hat. */ ?>
-        <?php $aufAn = $speichernGescheitert
-                       ? !empty($_POST['aufraeumen'])
-                       : (($form['behalten_konto'] ?? null) !== null
-                          || ($form['behalten_komplett'] ?? null) !== null); ?>
-        <?php ui_schalter(['name' => 'aufraeumen',
-                           'label' => 'Auf dem Ziel aufräumen',
-                           'an' => $aufAn,
-                           'klein' => 'An entfernt dort alte Sicherungen dieser '
-                                    . 'Installation über der Zahl darunter, nie fremde '
-                                    . 'Dateien.']); ?>
-        <div class="fld-reihe">
-          <?php ui_feld(['name' => 'behalten_konto', 'label' => 'Je Konto behalten',
-                         'art' => 'number', 'attr' => 'min="1" max="999"',
-                         'wert' => (string)($form['behalten_konto'] ?? 6),
-                         /* DIE EINSTELLUNG unter Verwaltung → Konto-Backups,
-                            keine feste Zahl. Und es ist die VORGABE:
-                            Ein Konto kann eine eigene Zahl haben
-                            (`edbak_aufbewahrung_konto()`) — „sind es N" stimmte
-                            für solche Konten nicht. */
-                         'klein' => 'Hier auf dem Server gilt als Vorgabe '
-                                  . edbak_aufbewahrung() . ' je Konto, am Ziel darf es '
-                                  . 'mehr sein.']); ?>
-          <?php ui_feld(['name' => 'behalten_komplett', 'label' => 'Komplett-Stände behalten',
-                         'art' => 'number', 'attr' => 'min="1" max="999"',
-                         'wert' => (string)($form['behalten_komplett'] ?? 12),
-                         'klein' => 'Aus einem Komplett-Stand lässt sich jedes Konto '
-                                  . 'wiederherstellen, umgekehrt nicht — deshalb hier '
-                                  . 'die längere Reihe.']); ?>
-        </div>
-        <div class="listen-form-fuss">
-          <?= ui_knopf(['text' => $neu ? 'Anlegen' : 'Speichern', 'symbol' => 'haken',
-                        'art' => 'primaer']) ?>
-          <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'neutral',
-                        'href' => 'admin_sicherungsziele.php']) ?>
-        </div>
-      </form>
-    <?php ui_karte_ende(); ?>
-  <?php endif; ?>
-
-<?php ui_geruest_ende(); ?>
-<?php /* Kein `assets/kopieren.js`: Diese Seite hat keinen
-         `ui_codeblock_lang()`. Ein Skript ohne Baustein laedt bei jedem
-         Aufruf ein paar Kilobyte fuer nichts. */ ?>
-<?php ui_seite_ende(); ?>
+/* EINE UNBEKANNTE HANDLUNG — ein veraltetes Formular oder ein Ziel ohne
+ * Kennung. Auch das geht zurück, mit einem Satz statt einer leeren Seite. */
+$zurueck('error', 'Diese Handlung kennt die Karte „Backup-Ziele“ nicht.');

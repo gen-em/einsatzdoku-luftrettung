@@ -593,7 +593,6 @@ function ui_hilfe_marke(string $menue): ?string
         'betrieb_jobs'            => 'hilfe.php#12-4-hintergrundjobs',
         'betrieb_server'          => 'hilfe.php#12-5-servereinstellungen',
         'admin_komplettsicherung' => 'hilfe.php#12-6-komplett-backup',
-        'admin_sicherungsziele'   => 'hilfe.php#12-7-backup-ziele',
     ];
     return $marken[$menue] ?? null;
 }
@@ -1225,8 +1224,9 @@ function ui_einstellungen_punkte(): array
                 ['betrieb_server',    'betrieb_server.php',    'Servereinstellungen', 'server'],
                 ['admin_komplettsicherung', 'admin_komplettsicherung.php',
                                                                'Komplett-Backup',     'datenbank'],
-                ['admin_sicherungsziele',   'admin_sicherungsziele.php',
-                                                               'Backup-Ziele',        'ziel-fern'],
+                /* „Backup-Ziele" ist seit Web 24.7 eine Karte in den
+                 * Servereinstellungen und im Komplett-Backup (Konzept OF,
+                 * E-OF-24, -45, F-OF-07); die Seite leitet um. */
             ],
         ];
     }

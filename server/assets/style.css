@@ -1637,6 +1637,16 @@ a.zeile:hover .zeile-weiter{color:var(--text-link-hover)}
 /* PLAKETTE UND KNOPF AUF EINER LINIE (OF-P-08): beide Gruppen mittig
  * ausgerichtet, in sich und in der Zeile. */
 .zeile-plaketten{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-1);flex:0 1 auto}
+/* ZEILE MIT MEHREREN PLAKETTEN ODER PLAKETTE UND KNOPF (Konzept OF, OF-06,
+   E-OF-21): Die Plaketten stehen nebeneinander, nicht gestapelt, und unter
+   720 px steht der Satz ueber ihnen — sonst quetschten drei Plaketten oder
+   ein Knopf ihn auf zwei, drei Woerter je Zeile. Zuerst bei den Jobs und
+   den Backup-Zielen. */
+.zeile-umbruch .zeile-plaketten{flex-wrap:nowrap;flex:0 0 auto}
+@media (max-width:719px){
+  .zeile-umbruch{flex-wrap:wrap}
+  .zeile-umbruch .zeile-text{flex-basis:100%}
+}
 .zeile-aktionen{display:flex;align-items:center;gap:var(--abstand-2);flex:0 0 auto}
 
 /* ZEILE MIT AUFKLAPPBAREN ANGABEN (.zeile-mehr). Ein <details>, dessen

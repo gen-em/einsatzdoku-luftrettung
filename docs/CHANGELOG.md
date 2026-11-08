@@ -14,6 +14,19 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.7.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — der Betrieb zeigt zuerst, was etwas braucht** (Schritt 27). Die
+  Statusseite hatte rund siebzig Zeilen in offenen Karten; die wenigen, die
+  eine Handlung verlangten, musste man suchen — jetzt stehen sie oben, jeder
+  Bereich ist zugeklappt, und Zeilen, die nie etwas verlangten, sind fort.
+  Servereinstellungen, Hintergrundjobs und Komplett-Backup zeigen jede Karte
+  zugeklappt mit ihrem Stand, „Anhalten" heißt „Pausieren", und die
+  Backup-Ziele sind keine eigene Seite mehr, sondern eine Karte an den beiden
+  Orten, an denen man sie braucht.
+
 ## [Web 24.6.0] — unveröffentlicht
 
 ### Geändert

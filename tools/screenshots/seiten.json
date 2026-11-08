@@ -398,7 +398,7 @@
       "name": "43b-sicherungsziele",
       "gruppe": "Administration",
       "rolle": "betreiberin",
-      "pfad": "admin_sicherungsziele.php"
+      "pfad": "betrieb_server.php#k-backup-ziele"
     },
     {
       "name": "43c-komplettsicherung",

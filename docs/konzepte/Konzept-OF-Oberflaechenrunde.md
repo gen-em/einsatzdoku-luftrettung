@@ -46,15 +46,16 @@ es im Kopf von `server/version.php`.
 | OF-03 | Bausteine II, Eingabe: Datumsfeld `TT.MM.JJJJ` an allen acht Stellen (E-OF-06, -44, -54); Ortsfeld-Hinweis als Zeichen (E-OF-07); Listenkopf mit Filterknopf (E-OF-18) | Opus · keine | **erledigt** 08.11.2026 (Web 24.4.0) |
 | OF-04 | Einstellungen: Profil mit Zweitfaktor „ein Satz plus Verwalten“ (E-OF-19); Geräte nach Typ, Koppeln im Dialog (E-OF-25); Import / Export „erst wählen, dann füllen“ (E-OF-26); Backup (E-OF-52, OF-P-15) | Opus · keine | **erledigt** 08.11.2026 (Web 24.5.0) |
 | OF-05 | Verwaltung: Kontenliste ohne Spalte „Öffnen“ (E-OF-53); Demo-Konto als Karte unter Installation, ein Schalter statt zwei (E-OF-08, E-OF-46) | Opus · keine | **erledigt** 08.11.2026 (Web 24.6.0; Kontrollzahlen und Umleitung von `admin_demo.php` mit OF-06, E-OF-71) |
-| OF-06 | Betrieb: Status „Probleme zuerst“ (E-OF-20; Q-OF-02 → OF-M1); Hintergrundjobs (E-OF-10, -21); Servereinstellungen als Klappkarten (E-OF-22); Komplett-Backup (E-OF-23); Backup-Ziele an beiden Orten, die Seite entfällt (E-OF-24, E-OF-45) | Opus · **gefächert** nach OF-M1: je ein Agent für Status, Hintergrundjobs, Servereinstellungen und Komplett-Backup samt Ziele; `ui.php`, `style.css`, `status_lib.php`, Texte und Prüfarbeit seriell | offen |
+| OF-06 | Betrieb: Status „Probleme zuerst“ (E-OF-20; Q-OF-02 → OF-M1); Hintergrundjobs (E-OF-10, -21); Servereinstellungen als Klappkarten (E-OF-22); Komplett-Backup (E-OF-23); Backup-Ziele an beiden Orten, die Seite entfällt (E-OF-24, E-OF-45) | Opus · **gefächert** nach OF-M1: je ein Agent für Status, Hintergrundjobs, Servereinstellungen und Komplett-Backup samt Ziele; `ui.php`, `style.css`, `status_lib.php`, Texte und Prüfarbeit seriell | **erledigt** 08.11.2026 (Web 24.7.0; gefächert auf drei Agenten, E-OF-74) |
 | OF-07 | Einsatz, Diensttag, Karte, Papierkorb: Ruhesegmente-Kachel entfällt (E-OF-05); GPX-Zeichen (E-OF-11); Plakette „ausgedünnt“ entfällt (E-OF-12); Karte „Einsatz und Transport“ im Feldkatalog (E-OF-33); Schlösser in eigener Spalte (E-OF-28); Kartenart ohne Anbieter (E-OF-13); Leaflet-Bedienelemente im Branding (E-OF-29); Papierkorb mit `restore`, Artzeichen vor das Datum (E-OF-30, E-OF-48) | Opus · **gefächert**: ein Agent Formular und Leseansicht (`einsatz_form.php`, `mission_fields.php`, `einsatz.php`), einer Karte (`geo.js`, `map_layers.js`, Leaflet-Regeln), einer Tagesübersicht und Papierkorb (`index.php`, `tag_spuren.php`, `papierkorb.php`); `style.css`, Design.md und Prüfarbeit seriell | offen |
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | offen |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
-**In Arbeit:** OF-06 Betrieb (OF-M1 entschieden 08.11.2026: E-OF-72,
--73). **Erledigt:** OF-00, NV-01 bis NV-04 (das
-Gerüst), OF-01 bis OF-05. **Je Paket mitzunehmen:** seine Zeilen unter
-`seitenregeln` in `tools/screenshots/ausnahmen.json` (E-OF-65) — OF-06 Jobs, Sicherheit, Servereinstellungen; OF-07
+**In Arbeit:** OF-07 Einsatz, Diensttag, Karte, Papierkorb. **Erledigt:**
+OF-00, NV-01 bis NV-04 (das Gerüst), OF-01 bis OF-06 (OF-M1 entschieden
+08.11.2026: E-OF-72, -73). **Je Paket mitzunehmen:** seine Zeilen unter
+`seitenregeln` in `tools/screenshots/ausnahmen.json` (E-OF-65) — OF-06 hat
+seine gestrichen; OF-07 Jobs, Sicherheit, Servereinstellungen; OF-07
 Tagesübersicht, Papierkorb, Diensttag- und Einsatzseiten.
 **Prüfweise seit NV-02:** E-OF-60. **Hakt:**
 nichts; F-OF-19 (eine Rolle mit einem Bereich sieht einen einzelnen
@@ -791,6 +792,7 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-71 | OF-05: Die Kontrollzahlen des Demo-Kontos (Bestand, drei Papierkorbzahlen) und die Umleitung von `admin_demo.php` wandern mit **OF-06**, nicht mit OF-05 — sie werden Zeilen der Statusseite, und deren Bau wartet auf OF-M1. Bis dahin zeigt `admin_demo.php` sie nur lesend, ohne Menüpunkt; `demo_pruefen.mjs` liest dort weiter und klickt die Knöpfe unter Installation. Im Zweig ist die Seite nur über ihre Adresse erreichbar; ausgeliefert wird erst nach OF-09. Weiter: (1) die Kopfaktion der Karte ist „Auf Standard zurücksetzen“ bzw. „Demo-Konto anlegen“, „Entfernen“ steht an der Zeile „Konto“ (eine Kopfaktion je Karte, Design.md 9.1); (2) die Konten-Karte der Servereinstellungen schreibt den Demo-Wert nicht mehr — sonst schaltete jedes Speichern dort ihn ab; ihre Rückfrage prüft den gespeicherten Wert; (3) „Der Reset ruht“ gilt, weil ihn nur Anfragen des Demo-Kontos auslösen — ein gekoppeltes Demo-Gerät, das hochlädt, löst ihn weiter aus, und so steht es in Karte und Handbuch; (4) „Namen“ und „Adressen speichern“ bekommen Haken und Fußzeile wie der Rest der Seite (E-OF-67); (5) die Kontenliste rollte nach dem Wegfall von „Öffnen“ bei 1024 px noch 43 px — Spaltentitel und Adresse brechen jetzt um | Umsetzung, 08.11.2026 |
 | E-OF-72 | Q-OF-02 (OF-M1): Die Tabelle der Umsetzung gilt wie vorgelegt. **Entfallen:** Server · Datenbank (Größe), Gerätemodelle, PHP und Zeitzone, Gesperrt; E-Mail · SMTP; Backups · Ablage; Plattform · „Empfohlen insgesamt“ (wird Plakette der Karte); die Karte Betriebsprotokoll. **Nur bei Abweichung:** Umgebung. **Wandert:** „Antwort und Versand“ zu den Empfehlungen der Plattform (färbt die Ampel nicht mehr); Verwaltungskonten und Konto-Backups in eine neue Karte **„Konten“** mit zwei Zeilen zum Demo-Konto — „Bestand“ (Information) und „Papierkorb“ (orange, wenn eine der drei Zahlen 0 ist). **Hintergrundjobs:** nur die nicht grünen Jobs einzeln, dazu eine Sammelzeile. **Bleiben** alle übrigen; die Karte der `config.php` zugeklappt, ohne Zählung. Tabelle mit Begründung je Zeile: Prüfprotokoll OF-06 | Betreiberin, 08.11.2026 („passt“) |
 | E-OF-73 | Option F-OF-17: **keine** Statuszeile „Verdichtung fällig“ — die Betreiberin kann daran nichts tun (nur der Browser der NutzerIn verdichtet), ein Konto ohne Anmeldung bliebe dauerhaft orange. Damit gilt E-OF-52 ohne die Bedingung: Die Karte bei der NutzerIn bleibt wie in OF-04 gebaut | Betreiberin, 08.11.2026 („nein“) |
+| E-OF-74 | OF-06, Umsetzung: (1) **Fächerung** wie im Statusblock: je ein Agent für Hintergrundjobs, Servereinstellungen, Komplett-Backup samt Ziele; Statusseite, `ui.php`, `style.css`, Texte, Einbindung und alle Prüfmittel seriell. (2) **Korrektur an der OF-M1-Tabelle:** Die Karte „Betriebsprotokoll" konnte doch rot werden („n nicht geschrieben") — diese eine Zeile steht jetzt im Bereich Server und erscheint nur dann; die Zahlen je Reiter entfallen wie beschlossen. (3) Status: „Testmail an mich" wird ein Knopf im Inhalt der Karte E-Mail (eine Klappkarte trägt keine Kopfaktion); die Karte der `config.php` heißt „Konfiguration" wie im Bild. (4) Backup-Ziele: Es gab keinen Dialog zum Anlegen, sondern eine Formkarte über `?neu=1`; die Karte bringt jetzt einen Dialog je Ziel und einen für ein neues mit; nach einem abgewiesenen Speichern geht er mit Eingabe und Grund wieder auf. „Jetzt versenden" steht an der Zeile „Wartet auf den nächsten Lauf". `admin_sicherungsziele.php` nimmt nur POST an und leitet auf die erlaubte Seite der Karte (`zurueck`, zwei Seiten) zurück, GET auf die Servereinstellungen. (5) Servereinstellungen: „Protokoll lesen" wird ein leiser Knopf neben „Speichern". (6) Jobs: Pausendauern blieben, der Server nahm schon genau die vier an; Formularwerte und Schlüssel (`jobs_pause_an`, `jobs_pause_bis`) bleiben, nur Texte wechseln; „Aufräumen" ist ein Satz mit Beispielen statt der erzeugten Liste der Schritte. (7) Zwei kleine Erweiterungen für alle Klappkarten und Zeilen, ohne neuen Baustein: Stand und Plakette sind eine Gruppe (`.karte-stand-gruppe`, am Handy brach die Plakette sonst allein nach links um) und `zeile-umbruch` (mehrere Plaketten oder Plakette und Knopf; unter 720 px steht der Satz darüber) | Umsetzung, 08.11.2026 |
 | E-OF-48 | Papierkorb: Das Artzeichen des Diensttags (`ohne-zuordnung`, Hubschrauber, Fahrzeug) steht vor dem Datum wie in Leiste und Vorschlägen — so zeigt es das freigegebene Bild; „entfernt“ in E-OF-30 meint die Stelle neben den Knöpfen. Will die Betreiberin es im Papierkorb ganz weglassen, ist das eine Zeile | Konzept, aus E-OF-30 (F-OF-16) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
@@ -1298,3 +1300,99 @@ Spalte rollte die Tabelle bei 1024 px weiter (43 px); Umbruch erlaubt.
 `admin_demo.php` übernommen, nicht neu gemessen); eine Kontenliste mit
 vielen und langen Adressen (örtlich vier Konten).
 
+
+
+### OF-06 Betrieb (08.11.2026, Web 24.7.0)
+
+**OF-M1 — die Tabelle Q-OF-02** (vorgelegt und von der Betreiberin mit
+„passt" bestätigt, E-OF-72; „kann anschlagen" = orange oder rot):
+
+| Bereich · Zeile | anschlagen | Handlung | steht woanders | Entscheid |
+|---|---|---|---|---|
+| Server · Serverbetrieb | orange (Wartung) | ja | Updates | bleibt |
+| Server · Umgebung | orange bei Widerspruch | ja, config | Kopfleiste | nur bei Abweichung |
+| Server · Adresse der Anlage | orange | ja, config | — | bleibt |
+| Server · Verwaltungskonten | orange | ja | — | wandert nach Konten |
+| Server · Rückweg-Prüfung | orange | Hoster | — | bleibt |
+| Server · Updates | orange | ja | Updates, Menüzähler | bleibt |
+| Server · Serverschlüssel, Server-Anteil, Schlüsselableitung | rot | ja | Servereinstellungen (zwei) | bleiben |
+| Server · Datenbank (Größe) | nie | — | Plattform, Speicher | entfällt |
+| Server · Verbindungen | orange | Hoster | — | bleibt |
+| Server · Gerätemodelle | orange, heilt selbst | nein | Jobs | entfällt |
+| Server · PHP und Zeitzone | nie | — | Plattform, config | entfällt |
+| Server · Verlangsamung | orange | nein | Sicherheit | bleibt (Angriff) |
+| Server · Gesperrt | orange | nein | Sicherheit | entfällt |
+| Server · Abgewiesene Geräte | orange | ja | Sicherheit | bleibt |
+| E-Mail · SMTP | nie | — | Plattform | entfällt |
+| E-Mail · Letzter Versand, Warteschlange | rot / orange | ja | Protokoll, Jobs | bleiben |
+| E-Mail · Antwort und Versand | orange, oft dauerhaft | Hoster | — | wandert zu den Empfehlungen |
+| Jobs · Tabelle, Pause, Auslöser | rot / orange | ja | Jobs | bleiben |
+| Jobs · zehn Einzeljobs | rot / orange | ja | Jobs | nur nicht grüne, dazu „Übrige Jobs" |
+| Backups · Komplett, Ziele, Aufbewahrung am Ziel, Speicher | rot / orange | ja | ihre Seiten | bleiben |
+| Backups · Konto-Backups | orange | ja | Konto-Backups, Menüzähler | wandert nach Konten |
+| Backups · Ablage | rot | ja | Plattform | entfällt |
+| Plattform · 15 Pflichtzeilen | rot / orange | Hoster | nur install.php | bleiben |
+| Plattform · Empfohlen insgesamt | nie | — | — | wird Stand der Karte |
+| config.php · 17 Werte | nie | — | — | bleibt zugeklappt, zählt nicht |
+| Betriebsprotokoll · 7 Reiter | nie | — | Protokoll | entfällt (*Fehlerzeile siehe E-OF-74 (2)*) |
+| neu: Konten · Demo-Konto Bestand / Papierkorb | Papierkorb orange bei einer 0 | ja | — | neu (E-OF-71) |
+
+Option F-OF-17 („Verdichtung fällig"): abgelehnt (E-OF-73).
+
+**Was getan ist.** Status (seriell): `status_lib.php` nach der Tabelle,
+neue Karte „Konten", Fehlerzeile des Protokolls im Server, `empfohlen` in der
+Rückgabe; `betrieb_status.php` mit „Braucht Aufmerksamkeit" und Klappkarten
+(Stand „N Prüfungen", Plakette „in Ordnung" / „N Hinweise" / „N Fehler"),
+„Alles läuft." ohne Befund. Gefächert (E-OF-74 (1)): Jobs
+(`betrieb_jobs.php`, `jobs_lib.php`, `jobs.php`, `zeit_relativ_kurz()` in
+`format_lib.php`), Servereinstellungen (neun Klappkarten, `bs_stand_…()` je
+Karte), Komplett-Backup und `sicherungsziele_teile.php` samt
+`admin_sicherungsziele.php`. Seriell danach: Einbindung der Ziele-Karte in
+die Servereinstellungen, Menüpunkt und Hilfe-Zuordnung „Backup-Ziele" fort,
+Statuszeilen zeigen auf `betrieb_server.php#k-backup-ziele`,
+`.karte-stand-gruppe`, `zeile-umbruch`, Statuszeile „Pause" auf
+„pausiert", Sicherheitsseite (zwei Leerzustände). Prüfmittel:
+`neuladen.mjs` (`aufklappen()`), Bedienwege Server, Ziele, Jobs;
+Rollen-, Wartungs-, Zweitfaktorprobe und Klickweg Komplett-Backup an Klappkarten
+und Umleitungen; Technik-Matrix; `seiten.json` (`43b` auf die Karte);
+`pruefablauf.json` (Teile-Datei zur Versandprobe), Pruefablauf-Tabelle;
+`jobregister.php` (Kopf); drei Seiten aus `ausnahmen.json` gestrichen.
+Doku: Handbuch 12.1, 12.4, 12.5, 12.6, 12.7 und zwei Verweise; Technik
+(Baum, Formatierer, Pausieren, Matrix); Design.md 9.1, 9.2, Verlauf, Tabellen
+erzeugt; CHANGELOG; `version.php` 24.7.0. Zwischenstand `e25a4c1`.
+
+**Gemessen** (Prüfweise E-OF-60). Riegel **24 von 24**. Kontrast **60 / 0**.
+Stilvergleich: je Engine 6–7 neue Signaturen, alle aus `.karte-stand-gruppe`
+und `zeile-umbruch` (dazu in WebKit die Titelbreite der Klappkarte, in
+Firefox das Katalogmuster `.karte-stand`), durchgesehen, geplant: **186 /
+186 / 194**. Bilderlauf Chromium, drei Breiten, acht Seiten (Status,
+Sicherheit, Updates, Jobs, Server, Komplett-Backup, Ziele, Demo-Konto): **24
+Bilder, Überlauf 0, Konsole 0, Knöpfe 0, Seitenregeln 49 Karten / 16 Kanten,
+0 Befunde, 0 ausgenommen**; rollend nur die Bereichszeile bei 360 px.
+Bedienprobe (Chromium) der neun Wege von Status, Jobs, Server,
+Komplett-Backup und Zielen **9 von 9** (über zwei Läufe; der erste fand 6
+rot an zugeklappten Karten). Proben: Jobs **40 / 0**, Komplett **74 / 0**,
+Versand **142 / 0**, Rollen **616 / 0**, Zweitfaktor **139 / 0**, Wartung
+**84 / 0**, Klickweg Komplett-Backup **0 Befunde**. Eigener Weg (Chromium):
+alte Ziele-Seite → `betrieb_server.php#k-backup-ziele`; Schalter von beiden
+Seiten speichern → zurück auf dieselbe Seite, Karte offen, Meldung darin;
+abgewiesenes Anlegen → Dialog offen, Grund und Name stehen da. Bilder mit
+einem eingetragenen Ziel bei 1440 und 390 px.
+
+**Probleme.** (1) Der Container startete mitten im Paket neu; die Anlage war
+weg, als zwei Agenten ihre Bilder machen wollten — Startfolge nach
+Sandbox-Setup 6.1a, die fehlenden Bilder seriell nachgeholt. (2) Zwei Fehler
+aus der Fächerung, gefunden im eigenen Rundweg: Nach einem abgewiesenen
+Anlegen ging der Dialog nie wieder auf — `isset()` auf den Eintrag 0 mit Wert
+`null`, und das Skript öffnete `dlg-sz-0` statt `dlg-sz-neu`; beides
+berichtigt. (3) Z48 rot: eigene `is_string()`-Hülle in
+`admin_sicherungsziele.php`, auf `post_text()` zurückgeführt. (4) Am Handy
+brach die Plakette einer Klappkarte allein nach links um, und Plaketten mit
+Knopf quetschten den Satz; daraus E-OF-74 (7). (5) Die Tabelle aus OF-M1
+übersah die Fehlerzeile des Protokolls (E-OF-74 (2)).
+
+**Nicht geprüft:** Bilderlauf, Barrierefreiheit und Bedienprobe in Firefox
+und WebKit (E-OF-60); ein Ziel mit echter Gegenstelle (Prüfen, Nachsehen,
+Versand über die neue Karte — die Versandprobe misst die Bibliothek, nicht
+die Karte); eine laufende Pause im Bild; eine Statusseite mit roter
+Plattformzeile.

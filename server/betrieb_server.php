@@ -750,6 +750,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 /* Die Meldung aus der Umleitung steht in der Karte, in der geklickt wurde —
  * die Umleitung springt dorthin, und oben saehe sie niemand. */
 $bsFlash = flash_holen();
+/* DIE MELDUNG DER BACKUP-ZIELE gehoert ihrer Karte aus
+ * `sicherungsziele_teile.php` (OF-06, E-OF-45) — sie traegt Daten
+ * (Pruefschritte, verworfene Eingabe), die nur die Karte liest. */
+require_once __DIR__ . '/sicherungsziele_teile.php';
+$zielMeldung = null;
+if ($bsFlash !== null && $bsFlash['ort'] === SZ_KARTE_ID) { $zielMeldung = $bsFlash; $bsFlash = null; }
 if ($bsFlash !== null && !in_array($bsFlash['ton'], ['ok', 'fehler', 'warn', 'info'], true)) {
     $bsFlash = null;
 }
@@ -1950,7 +1956,13 @@ document.querySelectorAll('.speicher-balken [data-breite]').forEach(function (el
 });
 </script>
 
-<?php /* BACKUP-ZIELE: Karte aus sicherungsziele_teile.php (OF-06, E-OF-45) — wird eingebunden */ ?>
+<?php /* BACKUP-ZIELE als letzte Karte (OF-06, E-OF-24, -45): dieselbe Karte
+         wie im Komplett-Backup, aus `sicherungsziele_teile.php`; ihre
+         Formulare posten an admin_sicherungsziele.php und kommen hierher
+         zurueck. Ausserhalb jedes <form>. */ ?>
+<?php sicherungsziele_karte('betrieb_server.php', $zielMeldung); ?>
+<?php sicherungsziele_dialoge('betrieb_server.php', $zielMeldung); ?>
 
 <?php ui_geruest_ende(); ?>
-<?php ui_seite_ende(['skripte' => ['assets/zeitfeld.js', 'assets/ankuendigung.js']]); ?>
+<?php ui_seite_ende(['skripte' => array_values(array_unique(array_merge(
+    ['assets/zeitfeld.js', 'assets/ankuendigung.js'], sicherungsziele_skripte())))]); ?>

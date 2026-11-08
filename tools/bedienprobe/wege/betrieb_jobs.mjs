@@ -1,9 +1,9 @@
 /* Wege der Seite Betrieb → Hintergrundjobs (`betrieb_jobs.php`).
  * ===========================================================================
  *
- * Anhalten und Aufheben leiten in die
+ * Pausieren und Aufheben leiten in die
  * Karte „Zustand" um; Neuladen setzt die Pause nicht ein zweites Mal. Der
- * Pausenhinweis der Karte sagt dasselbe wie die Meldung („… angehalten bis"),
+ * Pausenhinweis der Karte sagt dasselbe wie die Meldung („… pausiert bis", bis Web 24.6 „angehalten"),
  * solange die Pause gilt — `neuladenPruefen()` zählt deshalb Treffer.
  *
  * DER STAND DAVOR KOMMT ZURÜCK, wörtlich: Hält ein anderer Lauf die Jobs an
@@ -23,7 +23,7 @@ export const wege = [
   {
     name: 'betrieb-jobs-neuladen',
     paket: 'R4-11', punkt: 'Nr. 250', rolle: 'admin',
-    soll: 'Anhalten und Aufheben leiten je um; die Meldung steht je einmal da, '
+    soll: 'Pausieren und Aufheben leiten je um; die Meldung steht je einmal da, '
         + 'Neuladen ist ein GET ohne sie',
     async fahren(k) {
       const vorher = lesen();
@@ -31,14 +31,14 @@ export const wege = [
         php('app_state_loeschen("jobs_pause_bis");');
         const an = await neuladenPruefen(k, {
           name: 'betrieb-jobs-an', seite: SEITE(k),
-          /* „Jobs anhalten" fragt zurück (`data-confirm`) — erst „Anhalten"
-           * im Dialog schickt ab. */
+          /* „Pausieren" fragt zurück (`data-confirm`) — erst „Pausieren"
+           * im Dialog schickt ab (bis Web 24.6 „Jobs anhalten", E-OF-10). */
           async absenden(k) {
-            await k.seite.getByRole('button', { name: 'Jobs anhalten', exact: true }).click();
+            await k.seite.getByRole('button', { name: 'Pausieren', exact: true }).click();
             await k.seite.waitForSelector('dialog[open]', { timeout: 4000 });
             await k.seite.locator('dialog[open] [data-act="yes"]').click();
           },
-          meldung: 'Die Hintergrundarbeit ist angehalten bis', ziel: 'betrieb_jobs.php',
+          meldung: 'Die Hintergrundarbeit ist pausiert bis', ziel: 'betrieb_jobs.php',
         });
         const aus = await neuladenPruefen(k, {
           name: 'betrieb-jobs-aus', seite: SEITE(k),

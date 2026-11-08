@@ -664,7 +664,8 @@
       "ab": "klein",
       "pfade": [
         "server/sicherungsziel_lib.php",
-        "server/admin_sicherungsziele.php"
+        "server/admin_sicherungsziele.php",
+        "server/sicherungsziele_teile.php"
       ],
       "proben": [
         "versandprobe"

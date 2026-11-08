@@ -4685,8 +4685,8 @@ Betrieb → Komplett-Backup (12.6).
 Warteschlange überlebt einen Abbruch. Wie oft er läuft, hängt vom
 eingerichteten Auslöser ab (12.4).
 
-**Wohin die Pakete von hier aus gehen**, steht unter Betrieb → Backup-Ziele
-(12.7) — FTPS- oder SFTP-Gegenstellen. Ohne ein solches Ziel liegen die
+**Wohin die Pakete von hier aus gehen**, steht in der Karte „Backup-Ziele"
+unter Betrieb → Servereinstellungen (12.7) — FTPS- oder SFTP-Gegenstellen. Ohne ein solches Ziel liegen die
 Backups auf demselben Server, dessen Ausfall der Grund für ein Backup wäre.
 Die Ablage selbst ist über den Browser nicht erreichbar: Eine `.htaccess`
 sperrt sie, und der Ordnername je Konto ist nicht zu erraten.
@@ -6012,9 +6012,10 @@ zu verlieren. Und die Uhr kann zu einem ausgedünnten Einsatz keine Punkte mehr
 nachliefern; sie bekommt eine Bestätigung, damit sie ihren Speicher leert, die
 Punkte werden aber nicht mehr aufgenommen.
 
-**Die Arbeit anhalten.** Am Ende der Karte „Zustand" steht **„Jobs
-anhalten"** mit einer Dauerwahl: *15 Min.*, *30 Min.*, *1 Std.* oder
-*2 Std.*. Das ist für den Fall gedacht, dass etwas schiefläuft oder ein großes
+**Die Jobs pausieren.** Ganz oben steht die Karte **„Jobs vorübergehend
+pausieren"** (seit Web 24.7.0; bis dahin hieß der Knopf „Jobs anhalten" und
+stand am Ende der Karte „Zustand") mit einer Dauerwahl: *15 Min.*,
+*30 Min.*, *1 Std.* oder *2 Std.*, und dem Knopf **„Pausieren"**. Das ist für den Fall gedacht, dass etwas schiefläuft oder ein großes
 Backup einzuspielen ist. **Während der Pause geschieht gar nichts** — nichts
 wird aufgeräumt, gesichert oder versendet, auch das geplante Komplett-Backup
 nicht. Das Verdichten der GPS-Daten im Browser hält sie nicht an; es gehört
@@ -6022,10 +6023,15 @@ nicht zu diesen Jobs. Die Rückfrage sagt genau das.
 
 Die Pause **läuft von selbst ab**; länger als zwei Stunden am Stück geht
 nicht, damit eine vergessene Pause die Installation nicht dauerhaft anhält.
-Solange sie läuft, steht an der Karte die Plakette **„angehalten"** und
-darunter eine orange Meldung mit dem Zeitpunkt und dem Knopf **„Pause
-aufheben"**; der Knopf zum Anhalten ist dann nicht da, weil es nichts
-anzuhalten gibt. Auch **Betrieb → Status** zeigt die Pause als eigene Zeile.
+Solange sie läuft, trägt die Karte die Plakette **„pausiert bis …"**, und
+statt „Pausieren" steht dort **„Pause aufheben"**. Auch **Betrieb → Status**
+zeigt die Pause als eigene Zeile.
+
+**Der Zustand je Job** ist eine Zeile mit einem Satz und zwei Plaketten:
+wann er zuletzt lief („heute 23:24", „gestern 07:10", sonst das Datum) und
+wodurch („Anfrage", „Kommandozeile", „Adresse"); Rückstand und Fehler kommen
+dazu, wenn es sie gibt. Auslöser, Auslieferungskette und Monitoring sind
+zugeklappte Karten mit ihrem Stand im Kopf.
 
 *Seit Web 19.3.0.* Vorher ging das nur auf der Kommandozeile
 (`php jobs.php --pause <Sekunden>`, `0` hebt auf) — und die gibt es auf
@@ -6498,7 +6504,11 @@ Kennung des bisherigen; gefragt wird nach den **heutigen** Werten.
 ### 12.6 Komplett-Backup
 
 Seit Web 12.2.0 gibt es unter **Betrieb → Komplett-Backup** einen
-zweiten, grösseren Knopf. Der Unterschied zu allem darüber ist der Zweck:
+zweiten, grösseren Knopf. Seit Web 24.7.0 steht oben die offene Karte
+**„Stand"** (jüngster Stand, belegter Speicher, nächster Lauf),
+**„Jetzt sichern"** ist die eine orange Hauptaktion der Seite, und
+**„Regeln"**, **„Stände"** und **„Backup-Ziele"** (12.7) sind zugeklappte
+Karten mit ihrem Stand im Kopf. Der Unterschied zu allem darüber ist der Zweck:
 
 | | Backup eines Kontos | Komplett-Backup |
 |---|---|---|
@@ -6624,9 +6634,18 @@ Mischung, die niemand mehr auseinanderbekommt.
 
 ### 12.7 Backup-Ziele
 
-Seit Web 12.1.0 kann die BetreiberIn unter **Betrieb →
-Backup-Ziele** eine Gegenstelle eintragen, auf die die Konto-Backups
-geschoben werden — per **SFTP oder FTPS**; dazu die Komplett-Stände und seit
+Seit Web 12.1.0 kann die BetreiberIn eine Gegenstelle eintragen — seit Web
+24.7.0 in der Karte **„Backup-Ziele"**, die an zwei Orten steht: als letzte
+Karte unter **Betrieb → Servereinstellungen** und unter den Ständen im
+**Komplett-Backup** (bis dahin eine eigene Seite „Backup-Ziele"). Es ist
+dieselbe Karte; was du an einem Ort änderst, steht am anderen auch. Zugeklappt
+zeigt sie, ob automatisch versendet wird, und wie viele Ziele aktiv sind;
+aufgeklappt den Schalter **„Backups automatisch versenden"**, je Ziel eine
+Zeile mit Menü („Bearbeiten" öffnet einen Dialog), „Wartet auf den nächsten
+Lauf" mit **„Jetzt versenden"** und den Knopf **„Ziel anlegen"** (ebenfalls
+ein Dialog; wird eine Eingabe abgewiesen, geht er mit ihr und dem Grund
+wieder auf). Auf ein Ziel werden die Konto-Backups
+geschoben — per **SFTP oder FTPS**; dazu die Komplett-Stände und seit
 Web 20.39.0 die Archive des Protokolls. Der Grund ist schlicht: Ein
 Paket, das auf demselben Server liegt wie das Gesicherte, hilft nicht,
 wenn dieser Server ausfällt.

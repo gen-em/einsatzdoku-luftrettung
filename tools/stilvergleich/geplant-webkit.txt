@@ -38,6 +38,7 @@ katalog.html  div.karte-kopf <div.karte-bereich>  :  background, border, border-
 katalog.html  div.karte-kopf <div.karte-klappbar>  :  border, border-bottom, border-bottom-color, border-color, border-width, height, padding, padding-bottom, padding-left, padding-right, padding-top, size
 katalog.html  div.karte-kopf <div.rahmenkarte-abschnitte>  :  border, border-bottom, border-bottom-color, border-color, border-width, height, padding, padding-bottom, padding-left, padding-right, padding-top, size
 katalog.html  div.karte-stand <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, font, font-size, height, line-height, outline, size, text-align
+katalog.html  div.karte-stand-gruppe <div>  :  align-items, column-gap, display, flex-wrap, gap, justify-content, size, width
 katalog.html  div.kartenfilter-lupe <div>  :  bottom, inset, top
 katalog.html  div.kartenfilter-x <div>  :  bottom, inset, top
 katalog.html  div.knopf-breit <div.speichern>  :  size, width
@@ -86,7 +87,10 @@ katalog.html  div.zeile-aktionen <div>  :  align-items
 katalog.html  div.zeile-plaketten <div.archiv-liste>  :  align-items
 katalog.html  div.zeile-plaketten <div.karte-inhalt>  :  align-items
 katalog.html  div.zeile-plaketten <div.protokoll-liste>  :  align-items
+katalog.html  div.zeile-plaketten <div.zeile-umbruch>  :  align-items, flex, flex-wrap
 katalog.html  div.zeile-plaketten <div>  :  align-items
+katalog.html  div.zeile-text <div.zeile-umbruch>  :  flex, flex-basis
+katalog.html  div.zeile-umbruch <div>  :  flex-wrap
 katalog.html  form <div.inhalt>  :  height, size
 katalog.html  html <->  :  height, scroll-padding-top, size
 katalog.html  input.schalter-box <div>  :  bottom, inset, top
@@ -163,6 +167,7 @@ seiten.html[ui.php]  div.zeile-aktionen <div.zeile-plaketten>  :  align-items
 seiten.html[ui.php]  div.zeile-plaketten <details.zeile-mehr>  :  align-items
 seiten.html[ui.php]  div.zeile-plaketten <span.zeile-haupt>  :  align-items
 seiten.html[ui.php]  footer.fuss-seiteX <aside.leisteX>  :  size, width
+seiten.html[ui.php]  h2.karte-titel <details.<summary.class=>  :  size
 seiten.html[ui.php]  h2.leiste-kopfzeile <aside.leisteX>  :  size, width
 seiten.html[ui.php]  h2.leiste-kopfzeile <div>  :  size, width
 seiten.html[ui.php]  input#X.feld-eingabe <div.feldX>  :  size, width
@@ -188,7 +193,8 @@ seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-anlegen>  :  size, wid
 seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-leise>  :  size, width
 seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-offen>  :  size, width
 seiten.html[ui.php]  span.fuss-version <p.fuss-zeile>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, outline
-seiten.html[ui.php]  span.karte-stand <span.karte-zahl>  :  text-align
+seiten.html[ui.php]  span.karte-stand <span.karte-stand-gruppe>  :  display, min-height, min-width, size, text-align
+seiten.html[ui.php]  span.karte-stand-gruppe <span.karte-zahl>  :  align-items, column-gap, display, flex-wrap, gap, justify-content, size
 seiten.html[ui.php]  span.nur-vorlesen <button.knopf.knopf-symbol>  :  bottom, inset, left, top
 seiten.html[ui.php]  span.nur-vorlesen <span>  :  inset, right
 seiten.html[ui.php]  span.wahl-text <label.wahl-zeile>  :  size, width

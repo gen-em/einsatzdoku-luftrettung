@@ -215,6 +215,45 @@ function zeit_relativ(?string $utc): string
 }
 
 /**
+ * Ein Zeitpunkt kurz, für eine Plakette: „heute 23:24", „gestern 07:10",
+ * sonst „08.11." — aus einem anderen Jahr „08.11.2025".
+ *
+ * WARUM NEBEN `zeit_relativ()` UND `datum_zeit_text()`: Die eine sagt den
+ * Abstand („vor 3 Stunden") und verliert die Uhrzeit, die andere sagt alles
+ * und ist mit „08.11.2026, 23:24" zu breit — zwei Plaketten nebeneinander
+ * brachen in der Zeile um (Konzept OF, E-OF-21). Die Uhrzeit braucht es nur
+ * für die letzten zwei Tage; was älter ist, liest man am Tag.
+ *
+ * „HEUTE" IST DER ORTSTAG (`app.timezone`), nicht der UTC-Tag — zwischen 0
+ * und 2 Uhr Ortszeit stünde sonst ein Lauf von gerade eben unter „gestern".
+ * Derselbe Rückfall wie in `heute_lokal()`.
+ *
+ * Leer heißt „nie", unlesbar „unbekannt" — wie bei `zeit_relativ()`. Ein
+ * Zeitpunkt in der Zukunft (eine Pause, die noch läuft) bekommt den Tag
+ * genauso: Heute ist heute. Im Browser `EdFormat.zeitKurz()`, sobald eine
+ * Seite ihn dort braucht.
+ */
+function zeit_relativ_kurz(?string $isoUtc): string
+{
+    if ($isoUtc === null || $isoUtc === '') { return 'nie'; }
+    $t = iso_utc_lesen($isoUtc);
+    if ($t === null) { return 'unbekannt'; }
+    $zone  = new DateTimeZone((string)konfig('app.timezone', 'Europe/Berlin'));
+    $dann  = (new DateTimeImmutable('@' . $t))->setTimezone($zone);
+    $heute = new DateTimeImmutable('today', $zone);
+    $tag   = $dann->format('Y-m-d');
+    if ($tag === $heute->format('Y-m-d')) {
+        return 'heute ' . $dann->format('H:i');
+    }
+    if ($tag === $heute->modify('-1 day')->format('Y-m-d')) {
+        return 'gestern ' . $dann->format('H:i');
+    }
+    return $dann->format('Y') === $heute->format('Y')
+        ? $dann->format('d.m.')
+        : $dann->format('d.m.Y');
+}
+
+/**
  * Ein Kalendertag 'JJJJ-MM-TT' als 'TT.MM.JJJJ' — der Wert eines Datumsfelds
  * (Konzept OF, OF-03, E-OF-44). Leer, wenn es kein Tag ist. Gegenstück zu
  * `datum_de_lesen()` in `eingabe_lib.php`; im Browser `EdFormat.tag()`.
