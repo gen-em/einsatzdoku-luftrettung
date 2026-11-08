@@ -373,6 +373,14 @@ dessen eigener Seite. Der Grund war, dass beide Reiter denselben Bestand
 luden und man zwischen ihnen hin und her ging, um einen einzigen Standort
 einzurichten.
 
+**Am breiten Bildschirm liegen Leiste und Inhalt in einer gemeinsamen
+Karte** (seit Web 24.0.0). Die Leiste bleibt beim Rollen stehen und rollt,
+wenn sie länger ist als das Fenster, in sich; ihr Fuß — „Abmelden",
+„Diensttag anlegen", „Papierkorb" — bleibt dabei sichtbar. In den
+Einstellungen sind die Abschnitte einer Seite durch Linien getrennt statt
+als einzelne Karten gezeichnet. Unter allem steht ein dunkelblauer Streifen
+mit Lizenz, Fassung, Impressum und Datenschutz.
+
 **Unter der Kopfleiste stehen dieselben Blöcke als Reiter** (seit Web
 23.12.0): Einstellungen · Verwaltung · Betrieb, je mit der Zahl seiner
 Einträge und — wenn darin etwas zu tun ist — der Summe der Zahlen an seinen

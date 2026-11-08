@@ -8727,4 +8727,18 @@ declare(strict_types=1);
  *   Leiste unter beiden; das Skript der Reihe laedt einmal je Seite. Neben,
  *   weil die Leiste noch alle Bloecke traegt und der Weg derselbe ist —
  *   die Hauptnummer kommt mit der Rahmenkarte (NV-02). Kein Schema. */
-const WEB_VERSION = '23.12.0';
+/* 24.0.0 IST DIE HAUPTNUMMER DER OBERFLAECHENRUNDE (Schritt 27, Konzept OF,
+ *   NV-02; E-NV-01, -03, E-OF-34, -36 bis -38, -59). Nicht Datenmodell,
+ *   nicht Verschluesselung, nicht Migration — sondern der dritte Grund,
+ *   den die Zaehlweise fuer eine Hauptnummer kennt: ein spuerbar anderer
+ *   Weg durch die Anwendung. Leiste und Inhalt liegen jetzt in EINER
+ *   Rahmenkarte (`.rahmenkarte`, `.leiste-spalte`), fuer Diensttage,
+ *   Einstellungen und Suche; die Leiste klebt darin und ist hoechstens so
+ *   hoch wie Fenster und Karte. Im Bereich Einstellungen werden die Karten
+ *   per CSS zu Abschnitten mit Trennlinie (`.rahmenkarte-abschnitte`) —
+ *   `ui_karte_start()` bleibt, wie es war. Die Fusszeile ist ein
+ *   dunkelblauer Streifen ueber die ganze Breite; `.fuss-dunkel` der
+ *   Anmeldung ist damit keine eigene Form mehr. Was in derselben Runde noch
+ *   kommt (gekuerzte Leiste, Regeln, Bausteine, Seiten), zaehlt in der
+ *   Nebennummer weiter. Kein Schema. */
+const WEB_VERSION = '24.0.0';

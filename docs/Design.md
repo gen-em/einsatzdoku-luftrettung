@@ -486,7 +486,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--flaeche-seite` | `var(--genem-flaeche-standard)` | 1 |  |
-| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 20 |  |
+| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 22 |  |
 | `--flaeche-abgesetzt` | `var(--genem-flaeche-abgesetzt)` | 36 |  |
 | `--flaeche-feld` | `var(--genem-flaeche-standard)` | 5 |  |
 | `--flaeche-marke` | `var(--genem-dunkelblau)` | 1 |  |
@@ -497,8 +497,8 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--text` | `var(--genem-text-standard)` | 21 |  |
 | `--text-titel` | `var(--genem-text-alternativ)` | 36 |  |
-| `--gedaempft` | `var(--genem-text-sekundaer)` | 71 |  |
-| `--text-link` | `var(--genem-text-blau)` | 19 |  |
+| `--gedaempft` | `var(--genem-text-sekundaer)` | 69 |  |
+| `--text-link` | `var(--genem-text-blau)` | 18 |  |
 | `--text-link-hover` | `var(--genem-text-blau)` | 4 |  |
 | `--auf-dunkel` | `var(--genem-schnee)` | 7 | Schrift auf Dunkelblau, 13,33:1 |
 
@@ -506,7 +506,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `var(--genem-linie)` | 47 |  |
+| `--linie` | `var(--genem-linie)` | 49 |  |
 | `--linie-stark` | `var(--genem-linie-stark)` | 20 |  |
 | `--mechanik` | `var(--genem-sand)` | 11 |  |
 
@@ -614,10 +614,10 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--abstand-1` | `4px` | 87 |  |
-| `--abstand-2` | `8px` | 124 |  |
-| `--abstand-3` | `12px` | 164 |  |
-| `--abstand-4` | `16px` | 70 |  |
-| `--abstand-5` | `24px` | 35 |  |
+| `--abstand-2` | `8px` | 125 |  |
+| `--abstand-3` | `12px` | 165 |  |
+| `--abstand-4` | `16px` | 72 |  |
+| `--abstand-5` | `24px` | 36 |  |
 
 **Radien**
 
@@ -625,15 +625,15 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--radius-klein` | `6px` | 29 | Plakette, Kästchen, Eingabefeld |
 | `--radius` | `10px` | 21 | Knopf, Meldung |
-| `--radius-gross` | `12px` | 8 | Karte, Blatt, Dialog |
+| `--radius-gross` | `12px` | 9 | Karte, Blatt, Dialog |
 
 **Maße**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--kopf` | `56px` | 17 |  |
+| `--kopf` | `56px` | 19 |  |
 | `--knopf` | `44px` | 45 |  |
-| `--bereiche` | `48px` | 4 |  |
+| `--bereiche` | `48px` | 5 |  |
 | `--leiste` | `260px` | 2 | Seitenleiste ab 1200 |
 | `--leiste-schmal` | `220px` | 2 | Seitenleiste 1024–1199 |
 | `--leiste-filter` | `280px` | 1 | Filterleiste der Suche ab 1200 |
@@ -652,7 +652,7 @@ auseinanderlaufen kann.
 | `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 67 | Haarlinie |
+| `--strich` | `1px` | 72 | Haarlinie |
 | `--strich-stark` | `2px` | 36 | Aktivstrich, Randstrich, Fokus |
 | `--strich-reiter` | `calc(var(--strich-stark) + var(--strich))` | 1 | 3 px |
 | `--radius-rund` | `999px` | 20 | Zähler, Griff, Punkt — voll rund |
@@ -1235,56 +1235,56 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 181 |
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 248 |
 | `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 309 |
-| `ui_logo_masse()` | `.logo-masse` | **keine** | 492 |
-| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 553 |
-| `ui_geruest_start()` | `.inhalt` | ja | 645 |
-| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 721 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 745 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 795 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1044 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1203 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1274 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1353 |
-| `ui_hinweise()` | `.hinweise` | ja | 1401 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1429 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1464 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1517 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1570 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1635 |
-| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1681 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1733 |
-| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1761 |
-| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1788 |
-| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1828 |
-| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1912 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1947 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1989 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2037 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2099 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2154 |
-| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2211 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2310 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2382 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2440 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2486 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2520 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2592 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2616 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2658 |
-| `ui_feld()` | `.feld` | ja (+27 Unterklassen) | 2730 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2795 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2839 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2892 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2936 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3035 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3099 |
-| `ui_abbruch()` | `.rahmen` | ja (+2 Unterklassen) | 3140 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3232 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3270 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3300 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3312 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3455 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3534 |
+| `ui_logo_masse()` | `.logo-masse` | **keine** | 504 |
+| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 565 |
+| `ui_geruest_start()` | `.inhalt` | ja | 657 |
+| `ui_leiste_ende()` | `.leiste` | ja (+23 Unterklassen) | 750 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 775 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 825 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1074 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1233 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1304 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1383 |
+| `ui_hinweise()` | `.hinweise` | ja | 1431 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1459 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1494 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1547 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1600 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1665 |
+| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1711 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1763 |
+| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1791 |
+| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1818 |
+| `ui_karte_start()` | `.karte` | ja (+43 Unterklassen) | 1858 |
+| `ui_karte_ende()` | `.karte` | ja (+43 Unterklassen) | 1942 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 1977 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 2019 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2067 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2129 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2184 |
+| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2241 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2340 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2412 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2470 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2516 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2550 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2622 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2646 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2688 |
+| `ui_feld()` | `.feld` | ja (+27 Unterklassen) | 2760 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2825 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2869 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2922 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2966 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3065 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3129 |
+| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3170 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3262 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3300 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3330 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3342 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3485 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3564 |
 
 54 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -3417,8 +3417,28 @@ der Karte — bei 390 px war die Karte dadurch rund 200 px breit.
 `<aside class="leiste">` als Schublade über dem Inhalt, darüber steht sie fest
 daneben; der Unterschied ist ausschließlich CSS.
 
+**Leiste und Inhalt liegen in einer Rahmenkarte** (seit Web 24.0.0,
+Konzept OF, NV-02, E-NV-01): Inhalts-, Einstellungs- und Suchseite öffnen
+in `ui_geruest_start()` eine `.rahmenkarte` (Rand, großer Bogen, Fläche
+Karte, `overflow: clip` — `hidden` bräche das Kleben der Leiste) und darin
+eine `.leiste-spalte`, die Fläche und Linie bis zum Kartenboden trägt. Die
+Leiste klebt darin, ist höchstens so hoch wie das Fenster unter den Leisten
+und höchstens so hoch wie die Karte: Auf einer kurzen Seite steht ihr Fuß
+am Kartenboden, auf einer langen am Fensterboden (E-OF-37). **Im Bereich
+Einstellungen sind die Karten darin Abschnitte** (`.rahmenkarte-abschnitte`,
+E-NV-03): ohne Rand, Bogen und Fläche, mit einer Linie darüber und ohne
+Einzug — reines CSS, `ui_karte_start()` bleibt. Auf Startseite und Suche
+bleiben Karten Karten (E-OF-36, -38). Unter 1024 px haben Karte und Spalte
+keine eigene Box (`display: contents`). Seiten ohne Leiste tragen keine
+Rahmenkarte.
+
 **Jede Seite hat eine Fußzeile** — auch vor der Anmeldung, mit Lizenz,
-Versionsnummer und den Verweisen auf Impressum und Datenschutz. Die einzige
+Versionsnummer und den Verweisen auf Impressum und Datenschutz. **Seit Web
+24.0.0 ist sie ein dunkelblauer Streifen** über die ganze Fensterbreite,
+Schrift und Verweise `--auf-dunkel`, die Version `--auf-dunkel-leise`, im
+Dunkelmodus mit derselben Kante wie die Kopfleiste (E-OF-34); bis dahin
+war sie hell mit einer Linie darüber, und nur die Anmeldung trug die
+dunkle Fassung (`.fuss-dunkel`, die Klasse wirkt nicht mehr). Die einzige
 Ausnahme ist der Einrichter: Er läuft, bevor es eine Datenbank gibt, und die
 beiden Rechtstextseiten brauchen eine.
 
@@ -3595,6 +3615,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 23.12.0–24.0.0 (Schritt 27, Konzept OF, NV-01 und NV-02)** | **9.37:** Bereichszeile als zweite Lage des Reiter-Bausteins, Reiter 700 / 48 px (`--bereiche`) / Unterstrich 3 px (`--strich-reiter`) für beide Ebenen (E-OF-17, -40). **10.1:** Rahmenkarte um Leiste und Inhalt, Abschnitte statt Karten im Bereich Einstellungen (E-NV-01, -03, E-OF-36 bis -38); Fußzeile dunkelblau (E-OF-34). Neue Token `--bereiche` und das abgeleitete `--strich-reiter`; kein neuer Baustein — Bereichszeile und Rahmenkarte sind mit den Mockups NV und OF freigegeben (Konzept OF). |
 | **Web 23.10.1–23.11.2 (Schritt 26, Konzept MA, zweite Runde)** | **Repo auf `e7bf4fc`** (Token hell und dunkel). **9.4:** Knopfart **`haupt`** (Philipp-Orange mit Asphalt, einmal je Seite, sechs Seiten, E-MA-27), `gefahr` als **Umriss** (E-MA-26), Tabelle der Arten nach dem Repo. **2.3:** in der Kopfleiste wieder der **Kurzname** (E-MA-28); Favicons aus dem Set des Repos (E-MA-35). **3.1:** Zeile Hauptaktion. **3a:** Gefahrknopf und Zähler getrennt. **6:** Links im Fließtext unterstrichen, Barrierefreiheit wird gemessen (E-MA-32, -33). Kein neuer Baustein; `haupt` ist die Form des Primärknopfs mit den Repo-Token (Board 9D). |
 | **Web 23.9.0–23.10.0 (Schritt 26, Konzept MA)** | **Die Marke kommt aus dem Branding-Repo** `gen-em/gen-em-branding`. **2** neu geschrieben: Grundtöne mit Repo-Token, Schriften 500/400/700 (die 600er entfallen, E-MA-15), **Produktmarke NAdoku** statt `gen-em_logo_*` (2.3), der Platzhalter-Abschnitt fällt, Backlog Nr. 62 erledigt (2.4). **3** neu: Aktion Dunkelblau statt Orange (E-MA-01), Auswahl blau 100, **Grün** für „in Ordnung" (E-MA-02), Status je Fläche 100 / Schrift 700 / Linie 600, Kontrasttabelle nach **Rollen** und in **zwei Modi** (58 Paare je Modus, 0 verfehlt). **3a neu — Dark Mode** (E-MA-03, -13, -14), freigegeben mit den Boards MA-03, -04, -07, -08. **5:** `--groesse-1` (12 px) entfällt (E-MA-07). **9.5** `ok` grün, **9.6** fünf Töne mit `gruen` (E-MA-08), **9.23** grün statt blau, 9.10, 9.36, 9.37, 9.40 und die Vorschlagsliste mit den neuen Rollen. **Neue Token** (Rollen statt Farbwerten, Kapitel 4 neu erzeugt); **kein neuer Baustein** — der Schalter „Darstellung" ist eine Wahlliste (9.7). |
 | **Web 23.6.0 (R17-29)** | **8, Einbindung:** Die Zeichen stehen einmal je Seite als Vorrat (`ui_symbolvorrat()`, ein `<svg display="none">` ohne Regel im Stylesheet), die Verweise zeigen dorthin; ohne Vorrat wie zuvor auf die Datei. Kein neues Zeichen, kein sichtbarer Unterschied (fünf Seiten in drei Engines pixelweise verglichen). **9.41:** Ladeplatz auch in Suche und Zeitraum; gesteuert über `EdHtml.ladeplatz()` statt `EdOrtsdaten.ladeplatz()`. Kein neuer Baustein: `ui_symbolvorrat()` gibt ein unsichtbares Element ohne Gestaltung aus und steht im Erzeuger als Handwerkszeug. |

@@ -800,6 +800,12 @@
   :root:not([data-theme="light"]) .kopf { border-bottom:var(--strich) solid var(--genem-blau-700); }
 }
 :root[data-theme="dark"] .kopf { border-bottom:var(--strich) solid var(--genem-blau-700); }
+/* Dieselbe Kante über der Fußzeile, die seit Web 24 dieselbe Fläche trägt
+ * (Konzept OF, E-OF-34). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .fuss-seite { border-top:var(--strich) solid var(--genem-blau-700); }
+}
+:root[data-theme="dark"] .fuss-seite { border-top:var(--strich) solid var(--genem-blau-700); }
 
 @media (min-width:720px){
   :root{ --groesse-titel:30px; }
@@ -1151,6 +1157,30 @@ img,svg,video{max-width:100%;height:auto}
 }
 .rahmen-lesespalte .inhalt{max-width:var(--lesespalte);margin:0 auto}
 
+/* ---- Rahmenkarte: Leiste und Inhalt in EINER Fläche (Konzept OF, NV-02) --
+ *
+ * Unter 1024 px haben Karte und Leistenspalte keine eigene Box
+ * (`display: contents`): Die Leiste ist dort die Schublade, der Inhalt
+ * steht allein. Ab 1024 px (Block „ab 1024" unten) werden beide sichtbar.
+ *
+ * DIE KARTEN DER EINSTELLUNGEN WERDEN ABSCHNITTE (`.rahmenkarte-abschnitte`,
+ * E-NV-03): ohne Rand, Bogen und eigene Fläche, mit einer Linie darüber und
+ * ohne Einzug — der Titel steht auf der Kante des Seitentitels. Reines CSS;
+ * `ui_karte_start()` weiß davon nichts. Auf Startseite und Suche fehlt die
+ * Klasse, und Karten bleiben Karten (E-OF-36, -38). Meldungen sind keine
+ * `.karte` und bleiben farbige Kästen. Gilt in jeder Breite. */
+.rahmenkarte,.leiste-spalte{display:contents}
+.rahmenkarte-abschnitte .karte{
+  border:0;border-top:var(--strich) solid var(--linie);border-radius:0;
+  background:transparent;margin:0;
+}
+.rahmenkarte-abschnitte .karte-kopf{padding:var(--abstand-4) 0 var(--abstand-2);border-bottom:0}
+.rahmenkarte-abschnitte .karte-klappbar[open] > .karte-kopf{border-bottom:0}
+.rahmenkarte-abschnitte .karte-inhalt{padding:0 0 var(--abstand-5)}
+/* Die Bereichskarten der Übersicht verlieren mit dem Rand auch die Rauchfläche
+ * im Kopf (Bild OF-P29-C); Zeichen und Mitte tragen die Absetzung allein. */
+.rahmenkarte-abschnitte .karte-bereich > .karte-kopf{background:transparent;border-radius:0}
+
 /* ---- Leiste und Schublade — EIN Markup ----------------------------------
  *
  * Unter 1024 px liegt die Leiste als Schublade von links über dem Inhalt,
@@ -1311,29 +1341,26 @@ img,svg,video{max-width:100%;height:auto}
  * 72 px). */
 
 /* ---- Fußzeile ------------------------------------------------------------
- * Zweizeilig, zentriert, unter dem Inhalt — und außerhalb von <main>. */
+ * Zweizeilig, zentriert, außerhalb von <main> — und seit Web 24 ein
+ * DUNKELBLAUER STREIFEN über die ganze Fensterbreite (Konzept OF, E-OF-34,
+ * Bild OF-P29-C): Die Seite ist oben von der Kopfleiste und unten von ihm
+ * gerahmt. Bis Web 23 stand sie hell mit einer Linie darüber am Ende des
+ * Inhalts, und nur die Anmeldung trug die dunkle Fassung (`.fuss-dunkel`).
+ * Die gibt es nicht mehr als eigene Form; die Klasse bleibt am Einrichter
+ * und an der Anmeldung stehen und tut nichts mehr.
+ *
+ * DIE VERSION IN --auf-dunkel-leise, wie sie auf der Anmeldung immer stand:
+ * Sie ist eine Auskunft zum Abtippen, aber nicht die Botschaft der Zeile. */
 .fuss-seite{
-  border-top:var(--strich) solid var(--linie);
+  background:var(--dunkelblau);color:var(--auf-dunkel);
   padding:var(--abstand-4) var(--abstand-3);
   text-align:center;
-  color:var(--gedaempft);font-size:var(--groesse-2);
+  font-size:var(--groesse-2);
 }
 .fuss-zeile{margin:0;display:flex;flex-wrap:wrap;gap:var(--abstand-2);justify-content:center}
 .fuss-rechts{margin-top:var(--abstand-1)}
-.fuss-seite a{color:var(--text-link);font-weight:700}
-/* --gedaempft, nicht --sand. Auf --rauch ergaebe Sand 1,53:1 — die
- * Versionsnummer ist die Auskunft, mit der ein Fehlerbericht anfaengt, und
- * damit ein zu LESENDER Text. `kontrast.py` fuehrt „Sand auf Schnee" als
- * Ausnahme, begruendet aber nur den Akkordeon-Winkel („Mechanik, keine
- * Botschaft"); das trifft auf eine Zahl nicht zu, die man abtippen soll.
- * So 5,30:1. Die dunkle Fassung darunter bleibt, wie sie ist. */
-.fuss-version{color:var(--gedaempft)}
-.fuss-dunkel{
-  background:var(--dunkelblau);color:var(--auf-dunkel);
-  border-top:0;
-}
-.fuss-dunkel a{color:var(--auf-dunkel)}
-.fuss-dunkel .fuss-version{color:var(--auf-dunkel-leise)}
+.fuss-seite a{color:var(--auf-dunkel);font-weight:700}
+.fuss-version{color:var(--auf-dunkel-leise)}
 
 /* ---- Was nur in der Schublade steht -------------------------------------- */
 .nur-schublade{display:block}
@@ -2769,6 +2796,34 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
     transform:none;
     flex:0 0 auto;
   }
+  /* DIE RAHMENKARTE (NV-02). `overflow: clip`, nicht `hidden`: `hidden`
+     macht die Karte zum Rollbehälter, und die klebende Leiste klebte dann
+     an ihr statt am Fenster (F-NV-02). */
+  .rahmen:has(> .rahmenkarte){padding:var(--abstand-4) var(--abstand-3)}
+  .rahmenkarte{
+    display:flex;align-items:stretch;flex:1 1 auto;min-width:0;
+    background:var(--flaeche-karte);
+    border:var(--strich) solid var(--linie);border-radius:var(--radius-gross);
+    overflow:clip;
+  }
+  /* Die Spalte trägt Fläche und Linie bis zum Kartenboden (E-OF-37); die
+     Leiste darin klebt, ist höchstens so hoch wie das Fenster unter den
+     Leisten und höchstens so hoch wie die Karte — auf einer kurzen Seite
+     steht „Abmelden" deshalb am Kartenboden (Bild NV-03), auf einer langen
+     am Fensterboden. */
+  .leiste-spalte{
+    display:block;flex:0 0 auto;
+    background:var(--flaeche-karte);
+    border-right:var(--strich) solid var(--linie);
+  }
+  .leiste-spalte > .leiste{
+    border-right:0;background:transparent;
+    height:min(calc(100vh - var(--kopf)), 100%);
+  }
+  .rahmen-bereiche .leiste-spalte > .leiste{
+    height:min(calc(100vh - var(--kopf) - var(--bereiche) - var(--strich)), 100%);
+  }
+  .leiste-spalte .leiste-liste{min-height:0}
   .schleier{display:none}
   .schublade-auf{overflow:visible}
   .kopf-menue{display:none}
@@ -4886,6 +4941,9 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
  * Kästen, die nichts tun. */
 @media print {
   .nur-bildschirm { display: none !important; }
+  /* Die Fußzeile ist seit Web 24 ein dunkelblauer Streifen (E-OF-34) — auf
+   * Papier ein Tintenbalken ohne Auskunft. Sie bleibt im Druck weg. */
+  .fuss-seite { display: none; }
 
   /* KEINE FLÄCHE AUF PAPIER. Die Flächenfarbe der Anwendung (`--schnee`,
    * `--rauch`) druckt als grauer Kasten und kostet Tinte; auf Papier ist der

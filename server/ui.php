@@ -439,6 +439,18 @@ function ui_hat_tagesleiste(?bool $setzen = null): bool
  * Dasselbe für die Einstellungsleiste — sie braucht `assets/menue.js`
  * (Akkordeonzustand der drei Blöcke).
  */
+/**
+ * Merkt sich, ob das Gerüst eine Rahmenkarte geöffnet hat (Konzept OF,
+ * NV-02) — `ui_leiste_ende()` schließt dann die Leistenspalte mit,
+ * `ui_geruest_ende()` die Karte. Eine Seite ohne Leiste hat keine.
+ */
+function ui_hat_rahmenkarte(?bool $setzen = null): bool
+{
+    static $hat = false;
+    if ($setzen !== null) { $hat = $setzen; }
+    return $hat;
+}
+
 function ui_hat_menueleiste(?bool $setzen = null): bool
 {
     static $ja = false;
@@ -660,9 +672,26 @@ function ui_geruest_start(array $o = []): void
      * Wiederherstellung) und über das Gerüst nicht erreichbar. */
     $rahmen = 'rahmen' . (!empty($o['lesespalte']) ? ' rahmen-lesespalte' : '')
             . ($bereiche ? ' rahmen-bereiche' : '');
+    /* DIE RAHMENKARTE (Konzept OF, NV-02, E-NV-01, E-OF-36, -38): Leiste und
+     * Inhalt in EINER Fläche, für alle drei Leistentypen. Im Bereich
+     * Einstellungen sind die Karten darin Abschnitte mit Trennlinie
+     * (`.rahmenkarte-abschnitte`, E-NV-03 — reines CSS, ui_karte_start()
+     * bleibt); auf Startseite und Suche bleiben Karten Karten. Ohne Leiste
+     * (404 von apk.php) keine: Ein Rahmen um eine einzelne Karte wäre eine
+     * Karte in der Karte. */
+    $karte = in_array($leiste, ['diensttage', 'einstellungen', 'filter'], true);
+    ui_hat_rahmenkarte($karte);
     ?>
 <div class="schleier" data-schublade="zu" hidden></div>
 <div class="<?= ui_e($rahmen) ?>">
+<?php if ($karte): ?>
+<div class="rahmenkarte<?= $bereiche ? ' rahmenkarte-abschnitte' : '' ?>">
+  <?php /* Die Spalte trägt Fläche und Linie bis zum Kartenboden; die
+           Leiste darin klebt und rollt in sich (E-OF-37). Unter 1024 px
+           ist sie ohne eigene Box (`display: contents`), die Leiste dort
+           die Schublade wie bisher. */ ?>
+  <div class="leiste-spalte">
+<?php endif; ?>
   <?php /* tabindex="-1": Beim Öffnen der Schublade fokussiert schublade.js
            die Leiste SELBST, nicht ihr erstes Bedienelement — sonst trüge
            das X beim Öffnen einen Fokusring, den niemand bestellt hat.
@@ -721,6 +750,7 @@ function ui_geruest_start(array $o = []): void
 function ui_leiste_ende(): void
 {
     echo "  </aside>\n";
+    if (ui_hat_rahmenkarte()) { echo "  </div>\n"; }
     echo '  <main class="inhalt" id="inhalt">' . "\n";
     ui_hinweise();
 }
@@ -744,7 +774,7 @@ function ui_leiste_ende(): void
  */
 function ui_geruest_ende(array $o = []): void
 {
-    echo "  </main>\n</div>\n";
+    echo "  </main>\n" . (ui_hat_rahmenkarte() ? "</div>\n" : '') . "</div>\n";
     ui_fuss_seite($o);
 
     /* `api.js` STAND HIER EINEN NACHMITTAG LANG und gehoert nicht hierher —

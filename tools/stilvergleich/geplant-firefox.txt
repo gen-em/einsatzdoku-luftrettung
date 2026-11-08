@@ -8,12 +8,33 @@
 # Vergleichsstand und zaehlt sie nicht, solange sie nicht gemessen werden
 # (Nr. 330). Die naechste Gestaltungsaenderung schreibt sie neu.
 
+katalog.html  a <div.fuss-seite>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, outline
 katalog.html  body <html>  :  height
 katalog.html  div <body>  :  height
 katalog.html  div <div>  :  height
 katalog.html  div.bereich-zahl <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, outline
+katalog.html  div.fuss-seite <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, border-width, color, height, outline
+katalog.html  div.fuss-version <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, outline
+katalog.html  div.karte <div.rahmenkarte-abschnitte>  :  background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-width, height, margin, margin-bottom
+katalog.html  div.karte-bereich <div.rahmenkarte-abschnitte>  :  height
+katalog.html  div.karte-inhalt <div.rahmenkarte-abschnitte>  :  height, padding, padding-bottom, padding-left, padding-right, padding-top
+katalog.html  div.karte-klappbar <div.rahmenkarte-abschnitte>  :  height
+katalog.html  div.karte-kopf <div.karte-bereich>  :  background, border, border-bottom, border-bottom-color, border-color, border-radius, border-width, height, padding, padding-bottom, padding-left, padding-right, padding-top
+katalog.html  div.karte-kopf <div.karte-klappbar>  :  border, border-bottom, border-bottom-color, border-color, border-width, height, padding, padding-bottom, padding-left, padding-right, padding-top
+katalog.html  div.karte-kopf <div.rahmenkarte-abschnitte>  :  border, border-bottom, border-bottom-color, border-color, border-width, height, padding, padding-bottom, padding-left, padding-right, padding-top
+katalog.html  div.kartenfilter-lupe <div>  :  bottom, top
+katalog.html  div.kartenfilter-x <div>  :  bottom, top
+katalog.html  div.leiste <div.leiste-spalte>  :  background, border, border-color, border-right, border-width, height, inset, top
 katalog.html  div.leiste <div.rahmen-bereiche>  :  height, inset, top
+katalog.html  div.leiste-liste <div.leiste-spalte>  :  width
+katalog.html  div.leiste-spalte <div.rahmen-bereiche>  :  background, border, border-color, border-right, border-width, display, flex, height, width
+katalog.html  div.leiste-spalte <div>  :  background, border, border-color, border-right, border-width, display, flex, height, width
+katalog.html  div.nur-vorlesen <div>  :  bottom, top
+katalog.html  div.rahmen <div>  :  height, padding, padding-bottom, padding-left, padding-right, padding-top
 katalog.html  div.rahmen-bereiche <div>  :  height
+katalog.html  div.rahmenkarte <div.rahmen>  :  align-items, background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, border-top-color, border-width, display, flex, height, min-height, min-width, overflow, overflow-x, overflow-y, width
+katalog.html  div.rahmenkarte <div>  :  align-items, background, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-top, border-top-color, border-width, display, flex, height, overflow, overflow-x, overflow-y, width
+katalog.html  div.rahmenkarte-abschnitte <div>  :  height
 katalog.html  div.reiter <div.reiter-bereiche>  :  border, border-bottom, border-bottom-color, border-color, border-width, column-gap, gap, height, margin, margin-bottom, margin-left, margin-right, max-width, padding, padding-left, padding-right, width
 katalog.html  div.reiter-bereiche <div>  :  background, border, border-bottom, border-bottom-color, border-color, border-width, height, inset, position, top, z-index
 katalog.html  div.reiter-punkt <div.reiter-bereiche>  :  border-bottom, border-width, column-gap, font, font-weight, gap, height, min-height, padding, padding-left, padding-right, width
@@ -26,3 +47,60 @@ katalog.html  html <->  :  height, scroll-padding-top
 katalog.html  input.schalter-box <div>  :  bottom, top
 katalog.html  input.segment-box <div>  :  bottom, top
 katalog.html  input.wahl-box <div>  :  bottom, top
+seiten.html[ui.php]  a.akkordeon-uebersicht <div.akkordeon-rahmen>  :  left
+seiten.html[ui.php]  a.eintrag.eintrag-anlegen <div.leiste-fuss>  :  width
+seiten.html[ui.php]  a.eintrag.eintrag-leise <div.leiste-fuss>  :  width
+seiten.html[ui.php]  a.eintrag.eintrag-offen <div.leiste-fuss>  :  width
+seiten.html[ui.php]  aside#leiste.leisteX <div.leiste-spalte>  :  width
+seiten.html[ui.php]  details.akkordeon.leiste-gruppe <div.leiste-liste>  :  width
+seiten.html[ui.php]  details.akkordeonX <div.akkordeon-rahmen>  :  width
+seiten.html[ui.php]  div <scriptx>  :  width
+seiten.html[ui.php]  div#Xchips.rmchips <div.loc-widget.X>  :  width
+seiten.html[ui.php]  div.akkordeon-rahmen <div.leiste-liste>  :  width
+seiten.html[ui.php]  div.balken-zeile <div.feld>  :  grid-template-columns
+seiten.html[ui.php]  div.demo-hinweis <aside.leisteX>  :  width
+seiten.html[ui.php]  div.demo-hinweis.hinweis-umgebung <aside.leisteX>  :  width
+seiten.html[ui.php]  div.feldX <aside.leisteX>  :  width
+seiten.html[ui.php]  div.leiste-fuss <aside.leisteX>  :  width
+seiten.html[ui.php]  div.leiste-liste <aside.leisteX>  :  width
+seiten.html[ui.php]  div.leiste-spalte <div.rahmenkarteX>  :  background, border, border-color, border-right, border-width, display, flex, height, width
+seiten.html[ui.php]  div.loc-widget.X <aside.leisteX>  :  width
+seiten.html[ui.php]  div.loc-widget.X <div.loc-widget.X>  :  width
+seiten.html[ui.php]  div.ortsfeld-zeile <div.loc-widget.X>  :  width
+seiten.html[ui.php]  div.schalter <aside.leisteX>  :  width
+seiten.html[ui.php]  div.segmentX <aside.leisteX>  :  width
+seiten.html[ui.php]  div.titelzeile <aside.leisteX>  :  width
+seiten.html[ui.php]  div.titelzeile-haupt <div.titelzeile>  :  width
+seiten.html[ui.php]  div.titelzeile-text <div.titelzeile-haupt>  :  width
+seiten.html[ui.php]  div.wahlliste <aside.leisteX>  :  width
+seiten.html[ui.php]  footer.fuss-seiteX <aside.leisteX>  :  width
+seiten.html[ui.php]  h2.leiste-kopfzeile <aside.leisteX>  :  width
+seiten.html[ui.php]  h2.leiste-kopfzeile <div>  :  width
+seiten.html[ui.php]  input#X.feld-eingabe <div.feldX>  :  width
+seiten.html[ui.php]  input#Xaddr <div.ortsfeld-zeile>  :  width
+seiten.html[ui.php]  label <div.loc-widget.X>  :  width
+seiten.html[ui.php]  label.feld-label <div.feldX>  :  width
+seiten.html[ui.php]  label.feld-label <div.loc-widget.X>  :  width
+seiten.html[ui.php]  label.schalter-label <div.schalter>  :  width
+seiten.html[ui.php]  label.segment-taste <div.segmentX>  :  width
+seiten.html[ui.php]  label.wahl-zeile <div.wahlliste>  :  width
+seiten.html[ui.php]  main#inhalt.inhalt <h2.leiste-kopfzeile>  :  width
+seiten.html[ui.php]  p <div.demo-hinweis>  :  width
+seiten.html[ui.php]  p.feld-klein <div.feldX>  :  width
+seiten.html[ui.php]  p.fuss-zeile <footer.fuss-seiteX>  :  width
+seiten.html[ui.php]  p.fuss-zeile.fuss-rechts <footer.fuss-seiteX>  :  width
+seiten.html[ui.php]  p.leiste-leer <div.leiste-liste>  :  width
+seiten.html[ui.php]  p.titelzeile-unter <div.titelzeile>  :  width
+seiten.html[ui.php]  select#X.feld-eingabe <div.feldX>  :  width
+seiten.html[ui.php]  span.akkordeon-text <summary.akkordeon-zeile>  :  width
+seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-anlegen>  :  width
+seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-leise>  :  width
+seiten.html[ui.php]  span.eintrag-text <a.eintrag.eintrag-offen>  :  width
+seiten.html[ui.php]  span.fuss-version <p.fuss-zeile>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, outline
+seiten.html[ui.php]  span.nur-vorlesen <button.knopf.knopf-symbol>  :  left
+seiten.html[ui.php]  span.nur-vorlesen <span>  :  right
+seiten.html[ui.php]  span.wahl-text <label.wahl-zeile>  :  width
+seiten.html[ui.php]  summary.akkordeon-zeile <details.akkordeon.akkordeon-monatX>  :  width
+seiten.html[ui.php]  summary.akkordeon-zeile <details.akkordeon.leiste-gruppe>  :  width
+seiten.html[ui.php]  summary.akkordeon-zeile <details.akkordeonX>  :  width
+seiten.html[ui.php]  textarea#X.feld-eingabe.feld-mehrzeilig <div.feldX>  :  width

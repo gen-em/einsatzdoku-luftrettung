@@ -38,7 +38,7 @@ es im Kopf von `server/version.php`.
 |---|---|---|---|
 | OF-00 | Konzept, Fahrplanzeile, Backlog-Spanne, Übernahme von NV und der Vorbereitung | Fable · keine | **erledigt** 07.11.2026 |
 | NV-01 | Bereichszeile unter der Kopfleiste — als Reiter-Baustein für beide Ebenen (E-OF-17, E-OF-40); Seitenreiter in derselben Form (OF-P-20); Ziel „Betrieb“ ist der erste Punkt (E-OF-51) | Opus · keine | **erledigt** 08.11.2026 (Web 23.12.0) |
-| NV-02 | Rahmenkarte für alle drei Leistentypen: Abschnitte in den Einstellungen, Karten auf Startseite und Suche (E-OF-36 bis -38); Leiste klebt und rollt innen (E-OF-37); Fußzeile als dunkelblauer Abschluss (E-OF-34) | Opus · keine | offen |
+| NV-02 | Rahmenkarte für alle drei Leistentypen: Abschnitte in den Einstellungen, Karten auf Startseite und Suche (E-OF-36 bis -38); Leiste klebt und rollt innen (E-OF-37); Fußzeile als dunkelblauer Abschluss (E-OF-34) | Opus · keine | **erledigt** 08.11.2026 (Web 24.0.0) |
 | NV-03 | Leiste der Einstellungen auf den aktiven Bereich kürzen; aktiver Eintrag ohne Strich in jeder Leiste (OF-P-04, E-OF-16); „Abmelden“ nur in der Leiste (E-OF-27); Sprungmarken nur zu sichtbaren Karten (OF-P-16) | Opus · keine | offen |
 | NV-04 | Schmale Breiten: Bereichszeile rollt, Rahmenkarte ohne Rand, Schublade mit drei Bereichen; die Übersicht bleibt (E-OF-50) | Opus · keine | offen |
 | OF-01 | Regeln für alle Seiten: eine rechte Kante, Felder 36 rem (E-OF-31); Speicherknopf im Abschnitt oder Speicherleiste (E-OF-32, E-OF-41); Handbuch-Verweise raus, das „?“ öffnet das Kapitel der Seite (E-OF-02, -56); ein Satz je Karte (OF-P-10, -15); drei Messungen im Bilderlauf (E-OF-49, Nr. 530) | Opus · keine | offen |
@@ -51,7 +51,8 @@ es im Kopf von `server/version.php`.
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | offen |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
-**In Arbeit:** NV-02 Rahmenkarte. **Erledigt:** OF-00, NV-01. **Hakt:**
+**In Arbeit:** NV-03 Leiste kürzen. **Erledigt:** OF-00, NV-01, NV-02.
+**Prüfweise seit NV-02:** E-OF-60. **Hakt:**
 nichts; F-OF-19 (eine Rolle mit einem Bereich sieht einen einzelnen
 Reiter) ist der Betreiberin zur Kenntnis vorgelegt. **Offen bei der Betreiberin:** nichts — alle Fragen sind entschieden (Abschnitt 7); Q-OF-02 wird in OF-M1 vorgelegt.
 **Meilenstein:** OF-M1 (Statuszeilen, zu Beginn von OF-06).
@@ -749,6 +750,8 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-57 | NV-01: Die Bereichszeile klebt ab 1024 px unter der Kopfleiste, die Leiste unter beiden (`.rahmen-bereiche`); darunter rollt sie mit der Seite weg — auf dem Handy wären 104 px feste Kopfzone ein Sechstel des Bildes. Unter 720 px enger (`--abstand-2` statt `-4`), damit drei Bereiche bei 390 px ohne Rollen stehen (P-NV-06) | Umsetzung, 08.11.2026 |
 | E-OF-58 | NV-01: Der Unterstrich von 3 px (E-NV-05) ist ein abgeleitetes Maß `--strich-reiter: calc(var(--strich-stark) + var(--strich))`, keine neue Zahl in der Skala; „keine Token außer `--bereiche`“ (Abschnitt 1) gilt damit für die Skala, nicht für die Rechnung | Umsetzung, 08.11.2026 |
 | E-OF-59 | NV-01: Fassung — NV-01 hebt die Nebennummer (23.12.0); die Hauptnummer kommt mit NV-02 (24.0.0), weil erst die Rahmenkarte und die gekürzte Leiste den Weg sichtbar ändern (K3) | Betreiberin, 08.11.2026 |
+| E-OF-60 | Prüfweise der Umsetzung: Nach jedem Paket die billigen Mittel — 24 Riegel aus `pruefablauf.json` (`braucht: nichts`), Stilvergleich in drei Engines mit Durchsicht der neuen Signaturen, `kontrast.py`, gezielte Bilder der berührten Seiten; Bilderlauf, Barrierefreiheit und Bedienprobe in Chromium nach NV-04; der volle Prüfstand mit Bericht vor dem Pull Request (OF-09). Grund: Zwei Neustarts des Containers brachen den vollen Prüfstand (rund 2 h) nach 20 und nach 180 Minuten ab (NV-01) | Betreiberin, 08.11.2026 (Vorschlag Claude) |
+| E-OF-61 | NV-02: (1) Auch die Bereichskarten der Übersicht werden Abschnitte, ohne Rauchfläche im Kopf — so zeigt es das freigegebene Bild `OF-P29-C`; E-OF-50 („unverändert“) bezieht sich auf Inhalt und Zweck der Seite. (2) Jeder Abschnitt trägt die Linie oben, auch der erste; sie steht damit unter dem Seitentitel wie in `NV-01` — eine Ausnahme für die erste Karte (Abschnitt 5, NV-02) braucht es dafür nicht. (3) Die Fußzeile bleibt im Druck weg (Abschnitt 5, NV-02); bis Web 23 wurde sie gedruckt — „wie heute“ dort stimmte nicht. (4) Unter 1024 px haben Rahmenkarte und Leistenspalte keine Box (`display: contents`); was die schmale Breite sonst braucht, bringt NV-04 | Umsetzung, 08.11.2026 |
 | E-OF-48 | Papierkorb: Das Artzeichen des Diensttags (`ohne-zuordnung`, Hubschrauber, Fahrzeug) steht vor dem Datum wie in Leiste und Vorschlägen — so zeigt es das freigegebene Bild; „entfernt“ in E-OF-30 meint die Stelle neben den Knöpfen. Will die Betreiberin es im Papierkorb ganz weglassen, ist das eine Zeile | Konzept, aus E-OF-30 (F-OF-16) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
@@ -897,4 +900,44 @@ Prüfstand über den endgültigen Baum: Bericht im Commit.
 **Nicht geprüft:** P-NV-07 (Kontraste) läuft mit `kontrast.py` im
 Prüfstand; P-NV-01 (Raster der Kanten) wird erst mit der Rahmenkarte
 (NV-02) messbar.
+
+### NV-02 Rahmenkarte (08.11.2026, Web 24.0.0)
+
+**Was getan ist.** `ui_geruest_start()` öffnet für `diensttage`,
+`einstellungen` und `filter` eine `.rahmenkarte` (bei Einstellungen mit
+`.rahmenkarte-abschnitte`) und darin `.leiste-spalte` um die Leiste;
+`ui_leiste_ende()` und `ui_geruest_ende()` schließen sie, gesteuert über
+`ui_hat_rahmenkarte()`. Ohne Leiste (404 von `apk.php`) keine Karte.
+Stylesheet: Rahmenkarte ab 1024 px (Rand, `--radius-gross`, `overflow:
+clip`), `.rahmen` mit Karte `padding: --abstand-4 --abstand-3`; Spalte mit
+Fläche und Linie; Leiste klebt, `height: min(Fenster unter den Leisten,
+100 %)`. Abschnitte: Karte ohne Rand und Fläche, Linie oben, Kopf und Inhalt
+ohne Einzug (E-OF-61). Fußzeile dunkelblau für alle Seiten, Kante im
+Dunkelmodus wie die Kopfleiste, im Druck ausgeblendet. Design.md 10.1 und
+Änderungsverlauf, Tabellen erzeugt; Handbuch 2; CHANGELOG;
+`version.php` 24.0.0 mit Begründung der Hauptnummer (E-OF-59).
+
+**Gemessen.** Bilder (Chromium): Profil 1920 ganze Seite gegen `NV-01`,
+Status 1920 gegen `NV-03`, Startseite 1366 × 700 600 px gerollt gegen
+`OF-E2` (Leiste klebt, „Diensttag anlegen“ und „Papierkorb“ sichtbar),
+Suche gegen `OF-E3`. Lagen in **Chromium, Firefox und WebKit gleich**:
+kurze Seite (Updates, 1920 × 1080) Karte 121–902, Leiste 122–901, Fuß
+848–901 = Kartenboden, Fußzeile ab 918; Übersicht ebenso (WebKit 50 px
+höher, Inhalt); lange Seite (NutzerInnen, 1366 × 700, 400 px gerollt)
+Leiste 12–607 an der Unterkante der Karte (608). 390 px: `scrollWidth`
+390, Rahmenkarte `display: contents`. **Riegel:** 24 von 24 grün.
+**Stilvergleich:** 95 / 96 / 101 Signaturen (Chromium / Firefox / WebKit,
+kumuliert seit `main`), durchgesehen — Fußzeile, Rahmenkarte, Abschnitte,
+Leistenspalte; dazu Breiten in `seiten.html[ui.php]` (die Quelltextprobe
+liest `ui.php` als Markup, LIESMICH des Werkzeugs) —, als geplant
+abgelegt; danach 0 ungeplant in allen dreien. **Kontrast:** 60 Paare je
+Modus, 0 verfehlt, 40 abgeleitet, 0 ohne Eintrag. **Bilderlauf**
+(Chromium, drei Breiten, alle Seiten): 258 Bilder, Überlauf 0,
+Konsolenfehler 0, Knöpfe falscher Höhe 0, 211 Karten / 0 außerhalb.
+**Barrierefreiheit** (Chromium): 74 Seitenaufrufe, 0 Befunde.
+**Bedienprobe** (Chromium): 77 von 77 Wegen. **Rollenprobe:** 4 von 4.
+
+**Nicht geprüft:** Bilderlauf, Barrierefreiheit und Bedienprobe in
+Firefox und WebKit (E-OF-60: nach NV-04 bzw. im vollen Prüfstand);
+Druckvorschau von Hand.
 

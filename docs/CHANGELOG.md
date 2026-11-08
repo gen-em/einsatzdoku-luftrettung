@@ -14,6 +14,19 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.0.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — Leiste und Inhalt liegen in einer gemeinsamen Karte** (Schritt
+  27). Am breiten Bildschirm schwamm die Seitenleiste neben Karten mit
+  eigenem Rand, und man sah ihr nicht an, dass sie zum Inhalt gehört. Jetzt
+  rahmt eine Karte beide; in den Einstellungen sind die Abschnitte einer
+  Seite nur noch durch Linien getrennt, auf Startseite und Suche bleiben
+  Karten Karten. Die Leiste bleibt beim Rollen stehen, ohne dass ihr Fuß aus
+  dem Bild läuft, und die Fußzeile ist ein dunkelblauer Streifen, der die
+  Seite unten so abschließt wie die Kopfleiste oben.
+
 ## [Web 23.12.0] — unveröffentlicht
 
 ### Hinzugefügt
