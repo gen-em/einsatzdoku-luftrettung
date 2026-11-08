@@ -5369,18 +5369,31 @@ Speicherstand unter den Backups, ein Job-Fehler als Plakette in einer Liste.
 Wer wissen wollte, ob die Installation in Ordnung ist, musste sechs Seiten
 aufrufen.
 
-Oben steht eine Meldung mit einer Zahl — *„2 Punkte brauchen Aufmerksamkeit"*
-oder *„Alles läuft"*. Darunter vier Karten: **Server**, **E-Mail**,
-**Hintergrundjobs** und **Backups**, je Sache eine Zeile mit einer Plakette.
-Ganz unten, eingeklappt, eine fünfte: **Plattform** (seit Web 20.5.0), und
-darunter, ebenso eingeklappt, seit Web 23.5.0 **„Einstellungen aus der
-config.php"**.
+**Probleme zuerst** (seit Web 24.7.0). Oben steht der Abschnitt **„Braucht
+Aufmerksamkeit"** mit genau den Zeilen, die nicht grün sind — rote vor
+orangen, je mit ihrem Bereich davor („E-Mail · …"). Steht nichts an, steht
+dort *„Alles läuft."*. Darunter jeder Bereich als **zugeklappter Abschnitt**
+mit der Zahl seiner Prüfungen und einer Plakette (*in Ordnung*, *N Hinweise*,
+*N Fehler*): **Server**, **Konten**, **E-Mail**, **Hintergrundjobs**,
+**Backups**, **Plattform** und **Konfiguration** (die Werte der
+`config.php`, nur lesend). Bis Web 24.6 standen dort vier offene Karten mit
+rund siebzig Zeilen; die wenigen, die etwas brauchten, musste man suchen.
+
+**Was nicht mehr dasteht, weil es nie etwas verlangte** (seit Web 24.7.0):
+die Zeilen „Datenbank" (Größe — steht in der Plattform und unter
+Servereinstellungen → Speicher), „Gerätemodelle" (heilt beim nächsten Joblauf;
+der Job steht unter Hintergrundjobs), „PHP und Zeitzone", „Gesperrt" (läuft
+von selbst ab; die Liste steht unter Sicherheit), „SMTP" (misst die
+Plattform), „Ablage" (misst die Plattform) und die Karte
+„Betriebsprotokoll" (die Zahlen stehen an den Reitern des Protokolls, 11.7).
+Die Hintergrundjobs stehen nur einzeln da, wenn sie nicht grün sind; den Rest
+zählt die Zeile „Übrige Jobs".
 
 **Neben dem Titel steht seit Web 20.12.0 ein zweiter Knopf: „Sicherheit".**
 Er führt auf die Unterseite, auf der steht, wer gerade ausgesperrt ist — und
 auf der sich eine Sperre aufheben lässt. Beschrieben in Abschnitt **11.4b**.
-Dorthin führen auch die drei Zeilen „Verlangsamung", „Gesperrt" und
-„Abgewiesene Geräte" der Karte **Server**.
+Dorthin führen auch die Zeilen „Verlangsamung" und „Abgewiesene Geräte" des
+Bereichs **Server**.
 
 **Die Plakettenfarbe bedeutet auf dieser Seite überall dasselbe:**
 
@@ -5405,13 +5418,9 @@ Web 23 (**Betrieb → Updates**) hält an, solange noch ein Konto Klartext hat,
 nennt die Konten mit ihren Einsätzen und läuft nur nach ausdrücklicher
 Freigabe — wer freigibt, verliert diese Ortsdaten.
 
-**Die Zeile „Umgebung"** (seit Web 20.38.0) steht oben in der Karte
-**Server**, und zwar immer. Ihre Plakette nennt die Anlage: den Namen aus dem
-Eintrag `app.umgebung` in der `config.php` — auf der Testanlage „Staging" —
-oder **„Produktiv"**, wenn dort keiner steht. Das ist keine Vermutung über die
-Adresse, sondern die Lesart eines leeren Eintrags: Ohne Etikett verhält sich
-die Anlage wie die für den Echtbetrieb, und genau das sagt die Zeile. Sie
-wird **orange** in zwei Fällen: Die Mails tragen den Betreff-Präfix
+**Die Zeile „Umgebung"** (seit Web 20.38.0) steht seit Web 24.7.0 **nur
+noch, wenn sich die `config.php` widerspricht** — welche Anlage es ist, zeigt
+die Kopfleiste ohnehin. Sie ist dann **orange**, in zwei Fällen: Die Mails tragen den Betreff-Präfix
 „[Staging]", die Oberfläche aber kein Etikett — dann fehlt `app.umgebung` in
 der `config.php`. Oder das Etikett nennt eine Farbe, die die Anwendung nicht
 kennt; die Kopfleiste steht dann trotzdem rot. Einstellen lässt sich beides
@@ -5430,7 +5439,7 @@ Zeile in der `config.php` berichtigen (per FTP — hier lässt sie sich nicht
 ändern). Wer `base_url` umstellt, muss Passkeys neu anlegen; sie gehören zur
 alten Adresse.
 
-**Die Karte „Einstellungen aus der config.php"** (seit Web 23.5.0) zeigt, was
+**Der Bereich „Konfiguration"** (seit Web 23.5.0, bis Web 24.6 „Einstellungen aus der config.php") zeigt, was
 in der Datei steht — eine Zeile je Einstellung. Passwörter und Schlüssel
 (Datenbank, Mailserver, Serverschlüssel, Server-Anteil) stehen nur als
 **„gesetzt"** oder **„leer"** da, nie der Wert. Ändern lässt sich hier nichts:
@@ -5438,7 +5447,15 @@ Die Datei ist während des Betriebs bewusst nicht beschreibbar, damit auch eine
 übernommene Sitzung sie nicht ändern kann. Die Karte zählt nicht in der
 Meldung oben mit.
 
-**Die Zeile „Verwaltungskonten"** (seit Web 20.42.0) steht darunter und sagt,
+**Der Bereich „Konten"** (seit Web 24.7.0) hält die Zeilen „Verwaltungskonten"
+und „Konto-Backups" (bis dahin unter Server und Backups) und, wenn es ein
+Demo-Konto gibt, dessen **Kontrollzahlen** (bis dahin auf einer eigenen
+Seite): „Demo-Konto · Bestand" (Diensttage, Einsätze, Ruhesegmente, Geräte)
+und „Demo-Konto · Papierkorb". Die Papierkorbzahlen sind die Kontrolle des
+Resets — der Papierkorb kommt aus der Fixture zurück; steht eine auf null, ist
+die Zeile **orange**, denn dann hat das Einspielen etwas übersprungen.
+
+**Die Zeile „Verwaltungskonten"** (seit Web 20.42.0) sagt,
 ob die Anlage **vertreten** ist. Gezählt werden **handlungsfähige** Konten
 mit Rolle Admin oder BetreiberIn: aktiv und mit eingerichtetem Zweitfaktor
 (3.1f) — ein Konto ohne ihn kann nach der Anmeldung nichts, bevor er steht.
@@ -5466,10 +5483,11 @@ zurücksetzt, wenn Handy und Codes fehlen. Grün „prüft" mit Weg und Dauer:
 Anmeldung nicht angeboten; Codes und das Zurücksetzen durch die Verwaltung
 gehen weiter. Was dann zu tun ist, steht im Runbook (`docs/Technik.md` 13).
 
-**Eine Testmail an dich selbst.** Im Kopf der Karte **E-Mail** steht seit
-Web 19.3.0 der Knopf **„Testmail an mich"**. Er schickt eine kurze Nachricht
-über den regulären Versandweg an die Adresse, mit der du angemeldet bist —
-und beantwortet damit die Frage, die die Zeile „SMTP" nicht beantworten kann:
+**Eine Testmail an dich selbst.** Im Bereich **E-Mail** steht seit Web
+19.3.0 der Knopf **„Testmail an mich"** (seit Web 24.7.0 unter den Zeilen,
+bis dahin im Kartenkopf). Er schickt eine kurze Nachricht über den regulären
+Versandweg an die Adresse, mit der du angemeldet bist — und beantwortet
+damit die Frage, die die Einrichtung allein nicht beantworten kann:
 *Eingerichtet* heißt nicht *funktioniert*. Ein falsches Passwort im
 SMTP-Zugang fiel bis dahin erst auf, wenn jemand einen Einladungslink
 vermisste.
@@ -5519,14 +5537,16 @@ Sie hat zwei Stufen, und der Unterschied ist wichtig:
 | **Muss** | Fehlt es, läuft die Anwendung nicht. Die Zeile steht **rot** und zählt oben mit. |
 | **Empfohlen** | Die Anwendung läuft vollständig — nur langsamer oder mit einem Handgriff mehr. Die Zeile steht als **Hinweis** und **färbt die Ampel nicht**. |
 
-Erfüllte Empfehlungen stehen nicht einzeln da; die letzte Zeile nennt ihre
-Zahl („6 von 6 erfüllt"). Und wo die Anwendung etwas **nicht messen kann**,
+Erfüllte Empfehlungen stehen nicht einzeln da; ihre Zahl steht im Kopf des
+Bereichs („7/8 empfohlen"). Seit Web 24.7.0 gehört **„Antwort und Versand"**
+dazu (bis dahin eine orange Zeile unter E-Mail): Kennt die PHP-Anbindung
+weder `fastcgi_finish_request` noch `litespeed_finish_request`, kann im
+ungünstigen Fall die Dauer von „Passwort vergessen" verraten, ob es zu einer
+Adresse ein Konto gibt. Ändern kann das nur der Hoster; deshalb färbt es die
+Ampel nicht. Und wo die Anwendung etwas **nicht messen kann**,
 sagt sie das, statt zu raten: Der freie Plattenplatz ist auf geteiltem
 Webspace die Zahl des ganzen Hosts und nicht dein Kontingent — die Zeile
 schreibt es dazu.
-
-Die Karte ist **eingeklappt**. Wer sie braucht, braucht sie einmal nach einem
-Update oder wenn oben etwas rot steht.
 
 **Die Seite ändert nichts am Bestand.** Jede Zeile führt auf die Seite, auf
 der sich etwas ändern lässt — ein fehlender **Serverschlüssel** etwa auf die
@@ -5539,8 +5559,8 @@ die Servereinstellungen.*
 
 **Die Zahlen sind nicht alle gleich alt.** Wartungsmodus, Migrationen, Jobs,
 Konto-Backups und die Ablage werden bei jedem Aufruf gelesen. Die Größe von
-Datenbank und Dateien kommt aus der täglichen Messung im Aufräumjob; die
-Zeile „Datenbank" sagt, wann sie entstanden ist.
+Datenbank und Dateien kommt aus der täglichen Messung im Aufräumjob; wann
+sie entstanden ist, sagt die Karte „Speicher" der Servereinstellungen.
 
 #### Wenn die einzige BetreiberIn den Zweitfaktor verliert (seit Web 21.13.0)
 
@@ -5591,7 +5611,7 @@ ihrer Reihenfolge, als letzten das SQL von Hand.
 
 #### Die Zeile „Verbindungen" (seit Web 20.13.0)
 
-In der Karte **Server**, unter „Datenbank". Sie beantwortet eine Frage, die
+Im Bereich **Server**. Sie beantwortet eine Frage, die
 sonst niemand stellt: **Wie oft hat die Datenbank in der letzten Zeit keine
 Verbindung mehr angenommen?**
 
@@ -5621,59 +5641,17 @@ im Browser **zurück**, findet die Eingaben noch im Formular und schickt es
 gleich noch einmal ab. Uhr und Handy behalten ihre Daten und liefern von
 selbst nach.
 
-#### Die Zeile „Gerätemodelle" (seit Web 20.15.0)
+#### Wenn das Betriebsprotokoll nicht schreibt
 
-Ebenfalls in der Karte **Server**. Eine Garmin-Uhr kennt ihren Modellnamen
-nicht — sie sendet beim Koppeln eine **Teilenummer**, und eine Tabelle in der
-Anwendung macht daraus „Venu 3S". Kennt diese Tabelle die Nummer noch nicht
-(das Gerät ist neuer als die Tabelle), steht in der Geräteliste die
-Teilenummer, und die Geräteart ist nur das, was die Uhr-App über sich selbst
-behauptet.
-
-Die Zeile sagt, ob das nachgetragen ist:
-
-| Plakette | heißt |
-|---|---|
-| **aktuell** | Die Tabelle ist verarbeitet. Daneben steht, wann und wie viele Zeilen nachgezogen wurden. |
-| **steht aus** (orange) | Ein Update hat eine neue Tabelle mitgebracht. Der Hintergrundjob zieht beim nächsten Lauf nach — meist innerhalb weniger Minuten. Ist es nach einem Tag noch orange, laufen die Hintergrundjobs nicht (Karte *Hintergrundjobs*). |
-| **ungeprüft** | Es ist noch nie gelaufen. Auch das holt der nächste Jobdurchlauf. |
-
-**„M unbekannt" ist kein Fehler.** So viele Geräte tragen eine Angabe, die die
-Tabelle nicht kennt — Handys (die ihren Namen selbst mitbringen) und Modelle,
-die noch nicht in der Tabelle stehen. Sie werden **nicht** angefasst: Was ein
-Gerät über sich gesagt hat, bleibt stehen.
-
-#### Karte „Betriebsprotokoll" (seit Web 20.16.5)
-
-**Die Anwendung führt Buch über den Betrieb** — Konten angelegt,
-freigeschaltet, gesperrt, gelöscht; Rollen und Adressen geändert; Sicherungen
-eingespielt; Wartung gefahren; Post versandt.
-
-**Sie führt kein Buch darüber, wer welchen Einsatz angesehen hat.** Das steht
-nicht darin und soll nicht darin stehen. Wenn dich jemand fragt, ob du
-nachsehen kannst, wer einen bestimmten Einsatz geöffnet hat: Du kannst es
-nicht, und zwar mit Absicht.
-
-**Sieben Reiter, zwei Fristen.** *Verwaltung* ist das Audit — wer wann was
-getan hat — und bleibt **365 Tage**; die Zahl stellst du unter
-Servereinstellungen → Protokoll ein (zwischen 90 und 1095). Alle übrigen
-verfallen nach **30 Tagen**, und das ist keine Einstellung.
-
-**Die Karte zählt, gelesen wird unter Verwaltung → Protokoll** (11.7). Je
-Reiter stehen die Einträge der letzten 24 Stunden und insgesamt; jede Zeile
-führt auf ihren Reiter. Seit Web 20.39.0 zählt die Karte auch E-Mail, Jobs,
-Sicherheit und Ziele mit — dort stand bis dahin eine Null, obwohl es Einträge
-gab.
-
-*Aktive Sperren* hebst du weiter unter Status → Sicherheit auf; der Reiter
-Sicherheit im Protokoll zeigt, was geschehen ist, auch die aufgehobenen.
-
-**Steht dort eine rote Plakette „n nicht geschrieben", sieh hin.** Die
-Handlungen selbst sind gelungen — das Protokoll lässt nie eine Handlung
-scheitern, nur weil es selbst nicht schreiben kann. Aber es hat sie nicht
-festgehalten, und der Grund steht im Serverprotokoll deines Hosters unter der
-Kennung `protokoll:`. Der häufigste Grund: Ein Update ist eingespielt, aber
-`update.php` ist noch nicht gelaufen.
+**Steht im Bereich Server eine rote Zeile „Betriebsprotokoll — n nicht
+geschrieben", sieh hin.** Die Handlungen selbst sind gelungen — das Protokoll
+lässt nie eine Handlung scheitern, nur weil es selbst nicht schreiben kann.
+Aber es hat sie nicht festgehalten, und der Grund steht im Serverprotokoll
+deines Hosters unter der Kennung `protokoll:`. Der häufigste Grund: Ein
+Update ist eingespielt, aber `update.php` ist noch nicht gelaufen. Was das
+Protokoll festhält und wie lange, steht in 11.7. *(Bis Web 24.6 stand das in
+einer eigenen Karte „Betriebsprotokoll" mit den Zahlen je Reiter, und die
+Zeile „Gerätemodelle" hatte hier einen Abschnitt.)*
 
 #### Die Ampel der Statusseite
 
@@ -5682,7 +5660,7 @@ der Seite (P5c/AP9).* Die Ampel hat **vier Töne**, und sie bedeuten auf der
 ganzen Seite dasselbe: **Grün** — es ist in Ordnung (bis Web 23.9.0 Blau). **Orange** — es braucht
 Aufmerksamkeit, arbeitet aber. **Rot** — es arbeitet nicht, oder es geht dabei
 etwas verloren. **Neutral** — nicht eingerichtet, oder eine reine Zahl ohne
-Wertung. Die Meldung oben zählt die roten und orangen Zeilen.
+Wertung. Der Abschnitt „Braucht Aufmerksamkeit" hält die roten und orangen Zeilen.
 
 Einen **Zwischenspeicher** über die ganze Seite gibt es bewusst nicht: Eine
 Statusseite, die einen Zustand zeigt, den es nicht mehr gibt, ist schlechter
@@ -6116,8 +6094,14 @@ die Schrittfolge steht im Runbook (`Technik.md` 13).
 
 ### 12.5 Servereinstellungen
 
+**Jede Karte ist zugeklappt** (seit Web 24.7.0): Im Kopf stehen der
+eingestellte Stand in einer Zeile („5000 Einsätze · 250 MB je Konto") und
+eine Plakette; ein Klick klappt das Formular auf. So ist die Seite eine
+Übersicht, und wer eine Sache ändern will, öffnet nur ihre Karte. Ganz unten
+steht seit derselben Fassung die Karte **„Backup-Ziele"** (12.7).
+
 **Nach dem Speichern steht die Meldung in der Karte, in der du geklickt
-hast**, und die Seite springt dorthin (seit Web 21.8.0). „Neu laden" schickt
+hast**, die Karte ist offen, und die Seite springt dorthin (seit Web 21.8.0). „Neu laden" schickt
 danach nichts noch einmal ab — bis dahin wiederholte es die Handlung, etwa
 eine Rundmail. Hat die Seite eine Eingabe abgewiesen, bleibt sie mit dem
 Getippten stehen, und die Meldung steht oben.
@@ -6475,7 +6459,7 @@ Wie lange Betriebsereignisse liegen — in der Datenbank und im Archiv. Bis Web
 
 **Jede Änderung steht selbst im Protokoll** (Reiter Verwaltung, Art
 „Fristen") — ein kürzeres Audit ist eine Handlung, die ins Audit gehört.
-Die Plakette am Kartenkopf zählt die Archive, „Protokoll lesen" führt auf
+Die Plakette am Kartenkopf zählt die Archive, der Knopf „Protokoll lesen" neben „Speichern" führt auf
 die Seite. Was ins Archiv geht und was nicht: 11.7.
 
 #### Das Schlüsselblatt
@@ -6716,7 +6700,7 @@ Was dabei zu wissen ist:
   gespeichert.
 - Was am Ziel liegt, zählt **nicht** in die Speichergrenze — der Server kennt
   die Größe nicht. Wächst ein Ziel seit über einem Monat, ohne dass dort je
-  etwas entfernt wurde, sagt es die Statusseite (Karte *Backups*, Zeile
+  etwas entfernt wurde, sagt es die Statusseite (Bereich *Backups*, Zeile
   *Aufbewahrung am Ziel*).
 
 Für dein Konto ändert sich dadurch nichts: Der Inhalt des Backups bleibt

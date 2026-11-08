@@ -1337,7 +1337,10 @@ Plakette.
 OF-02, E-OF-42, Bilder OF-P24 bis -P27): `ui_karte_start(['zu' => true,
 'stand' => 'kein Streifen', 'plakette' => ui_plakette(…)])` gibt im
 `<summary>` Winkel, Titel, `zahl`, den Stand (`.karte-stand`, gedämpft,
-rechts) und die Plakette aus. **Eine Kopfaktion trägt sie weiterhin nicht** —
+rechts) und die Plakette aus. Stand und Plakette stehen in einer Gruppe
+(`.karte-stand-gruppe`, seit Web 24.7.0): Bricht der Kopf am Handy um, gehen
+beide zusammen rechtsbündig in die zweite Zeile — vorher stand die Plakette
+dann allein links. **Eine Kopfaktion trägt sie weiterhin nicht** —
 im `<summary>` wäre sie ein Knopf im Knopf. Steht der Anker der Adresse auf
 der Karte oder in ihr, klappt `assets/klappkarte.js` (Gerüst) sie auf; nach
 dem Speichern einer Karte, die auf `#k-…` umleitet, steht sie damit offen
@@ -3742,6 +3745,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 24.7.0 (Schritt 27, Konzept OF, OF-06)** | **9.1:** Stand und Plakette der Klappkarte als eine Gruppe (`.karte-stand-gruppe`). Statusseite „Probleme zuerst", Servereinstellungen, Hintergrundjobs und Komplett-Backup aus vorhandenen Bausteinen (Klappkarte, Zeile, Segmentwahl, `haupt`); kein neuer Baustein, kein Token. |
 | **Web 24.5.0 (Schritt 27, Konzept OF, OF-04)** | **9.42 neu — Wahlkarten**, freigegeben mit OF-P17-C; dort auch Koppel-Dialog und Zweitfaktor-Karte als Verwendungen vorhandener Bausteine. **9.9:** Speicherleiste außerhalb des Formulars (`data-fuer`). **6:** Feldraster `.listen-form-felder` in den Einstellungen auf `--feld-breit` begrenzt. |
 | **Web 24.4.0 (Schritt 27, Konzept OF, OF-03)** | **9.7:** Datumsfeld `TT.MM.JJJJ` (`ui_datum_eingabe()`, `.feld-datum`, `--feld-datum`) an allen acht Stellen. **9.13:** Zeichen statt Kleinzeile am Ortsfeld, der Satz als Tooltip. **9.18a:** Filterknopf mit gesetzten Filtern als Pillen. Neues abgeleitetes Maß `--feld-datum`; kein neuer Baustein — alle drei mit den Mockups freigegeben. |
 | **Web 24.2.0–24.3.0 (Schritt 27, Konzept OF, OF-01 und OF-02)** | **6:** Erklärtext ohne Verweis, das „?" öffnet das Kapitel; drei Seitenregeln im Bilderlauf. **9.9** Speicherleiste als Auswahlfläche am Rand. **4:** `--feld-breit` statt `--listensuche-breit`. **9.1:** Klappkarte mit Stand und Plakette (`stand` statt `vorschau`). **9.2:** Plakette und Knopf auf einer Linie. **9.7:** Segmentwahl abwählbar. **8:** sechs Zeichen (`filter`, `wiederherstellen`, `herunterladen`, `hochladen`, `mond`, `sonne`), freigegeben mit den Mockups. Kein neuer Baustein. |

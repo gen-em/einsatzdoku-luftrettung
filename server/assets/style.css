@@ -1592,8 +1592,12 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 /* DER STAND EINER KLAPPKARTE (bis Web 24.2 `.karte-vorschau`): leise
  * rechts im Kopf, dahinter die Plakette (Konzept OF, E-OF-42). Bricht der
  * Kopf um, rutscht er mit der Plakette in die zweite Zeile. */
+.karte-stand-gruppe{
+  margin-left:auto;display:inline-flex;flex-wrap:wrap;justify-content:flex-end;
+  align-items:center;gap:var(--abstand-2);
+}
 .karte-stand{
-  margin-left:auto;color:var(--gedaempft);
+  color:var(--gedaempft);
   font-size:var(--groesse-2);text-align:right;
 }
 .karte-klappbar > .karte-kopf{cursor:pointer;border-bottom:0}

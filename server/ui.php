@@ -1946,11 +1946,19 @@ function ui_karte_start(array $o = []): void
         if (isset($o['zahl'])) {
             echo '    <span class="karte-zahl">' . ui_e((string)$o['zahl']) . "</span>\n";
         }
-        if (isset($o['stand'])) {
-            echo '    <span class="karte-stand">' . ui_e((string)$o['stand']) . "</span>\n";
-        }
-        if (!empty($o['plakette'])) {
-            echo '    ' . (string)$o['plakette'] . "\n";
+        /* STAND UND PLAKETTE SIND EINE GRUPPE: Bricht der Kopf am Handy um,
+           gehen beide zusammen rechtsbuendig in die zweite Zeile. Bis Web
+           24.6 waren es zwei Geschwister, und die Plakette stand dann allein
+           links unter dem Titel (OF-06, Servereinstellungen bei 390 px). */
+        if (isset($o['stand']) || !empty($o['plakette'])) {
+            echo '    <span class="karte-stand-gruppe">';
+            if (isset($o['stand'])) {
+                echo '<span class="karte-stand">' . ui_e((string)$o['stand']) . '</span>';
+            }
+            if (!empty($o['plakette'])) {
+                echo (string)$o['plakette'];
+            }
+            echo "</span>\n";
         }
         echo "  </summary>\n";
         echo '  <div class="karte-inhalt">' . "\n";

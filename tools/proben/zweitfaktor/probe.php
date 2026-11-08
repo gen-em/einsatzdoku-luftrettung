@@ -1058,8 +1058,12 @@ pruefe($ohneAdmin['verwaltung'] === $ohne['verwaltung'] - 1,
        'ein Admin ohne Zweitfaktor fällt aus der Zahl der handlungsfähigen',
        json_encode($ohne) . ' → ' . json_encode($ohneAdmin));
 $zeile = null;
-foreach (status_erhebung()['karten'][0]['zeilen'] as $z) {
-    if ($z['text'] === 'Verwaltungskonten') { $zeile = $z; }
+/* In jeder Karte gesucht: Seit Web 24.7 steht die Zeile in „Konten",
+   nicht mehr in „Server" (Konzept OF, E-OF-72). */
+foreach (status_erhebung()['karten'] as $k) {
+    foreach ($k['zeilen'] as $z) {
+        if ($z['text'] === 'Verwaltungskonten') { $zeile = $z; }
+    }
 }
 pruefe($zeile !== null && ($ohneAdmin['betreiberinnen'] >= 2) === ($zeile['ton'] === 'gruen'),
        'Ampel: gruen genau bei zwei handlungsfähigen BetreiberInnen, sonst orange (bis Web 23.9.0 blau)',
