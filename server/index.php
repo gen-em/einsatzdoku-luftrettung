@@ -136,7 +136,7 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
                     : '']);
 ?>
 
-<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $selDay]); ?>
+<?php ui_geruest_start(['hilfe' => 'hilfe.php#4-1-tagesuebersicht', 'aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $selDay]); ?>
     <?php /* DER ERSTSTART STEHT GANZ OBEN — vor dem Geraetehinweis und vor
              der Tagesuebersicht. Wer gerade erst ein Konto hat, hat noch
              keine neuen Geraete und keine Diensttage; die Karte steht dann

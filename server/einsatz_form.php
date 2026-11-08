@@ -666,7 +666,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                 'karte' => true]);
 ?>
 
-<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]); ?>
+<?php ui_geruest_start(['hilfe' => 'hilfe.php#4-3-einsaetze-nachtragen-und-bearbeiten', 'aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]); ?>
   <?php
     /* Titelzeile: Rueckweg dorthin, wo man herkam —
        beim Bearbeiten zum Einsatz, beim Nachtragen zum Diensttag. Der Titel
@@ -712,8 +712,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
     ]);
   ?>
   <p class="seiten-erklaerung">Felder mit Schloss ver- und entschlüsselt dein
-     Browser, alle anderen liegen lesbar auf dem Server.
-     <a href="hilfe.php#schloss-und-klartext">Handbuch: Schloss und Klartext</a></p>
+     Browser, alle anderen liegen lesbar auf dem Server.</p>
   <?php if ($editing && !(int)$mission['uhr_gesperrt']):
           ui_meldung('Dieser Einsatz stammt von der Uhr. Nach dem Speichern gilt er als '
               . 'manuell bearbeitet — spätere Uhr-Uploads überschreiben ihn dann nicht '

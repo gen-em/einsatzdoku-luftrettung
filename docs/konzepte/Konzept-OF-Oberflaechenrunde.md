@@ -41,7 +41,7 @@ es im Kopf von `server/version.php`.
 | NV-02 | Rahmenkarte für alle drei Leistentypen: Abschnitte in den Einstellungen, Karten auf Startseite und Suche (E-OF-36 bis -38); Leiste klebt und rollt innen (E-OF-37); Fußzeile als dunkelblauer Abschluss (E-OF-34) | Opus · keine | **erledigt** 08.11.2026 (Web 24.0.0) |
 | NV-03 | Leiste der Einstellungen auf den aktiven Bereich kürzen; aktiver Eintrag ohne Strich in jeder Leiste (OF-P-04, E-OF-16); „Abmelden“ nur in der Leiste (E-OF-27); Sprungmarken nur zu sichtbaren Karten (OF-P-16) | Opus · keine | **erledigt** 08.11.2026 (Web 24.1.0) |
 | NV-04 | Schmale Breiten: Bereichszeile rollt, Rahmenkarte ohne Rand, Schublade mit drei Bereichen; die Übersicht bleibt (E-OF-50) | Opus · keine | **erledigt** 08.11.2026 (ohne Codeänderung, E-OF-63) |
-| OF-01 | Regeln für alle Seiten: eine rechte Kante, Felder 36 rem (E-OF-31); Speicherknopf im Abschnitt oder Speicherleiste (E-OF-32, E-OF-41); Handbuch-Verweise raus, das „?“ öffnet das Kapitel der Seite (E-OF-02, -56); ein Satz je Karte (OF-P-10, -15); drei Messungen im Bilderlauf (E-OF-49, Nr. 530) | Opus · keine | offen |
+| OF-01 | Regeln für alle Seiten: eine rechte Kante, Felder 36 rem (E-OF-31); Speicherknopf im Abschnitt oder Speicherleiste (E-OF-32, E-OF-41); Handbuch-Verweise raus, das „?“ öffnet das Kapitel der Seite (E-OF-02, -56); ein Satz je Karte (OF-P-10, -15); drei Messungen im Bilderlauf (E-OF-49, Nr. 530) | Opus · keine | **erledigt** 08.11.2026 (Web 24.2.0) |
 | OF-02 | Bausteine I: Klappkarte mit Stand und Plakette (E-OF-42); Segmentwahl abwählbar und senkrecht mittig (OF-P-05, E-OF-33); Zeile mit Plakette und Knopf auf einer Linie (OF-P-08); sechs neue Zeichen | Opus · keine | offen |
 | OF-03 | Bausteine II, Eingabe: Datumsfeld `TT.MM.JJJJ` an allen acht Stellen (E-OF-06, -44, -54); Ortsfeld-Hinweis als Zeichen (E-OF-07); Listenkopf mit Filterknopf (E-OF-18) | Opus · keine | offen |
 | OF-04 | Einstellungen: Profil mit Zweitfaktor „ein Satz plus Verwalten“ (E-OF-19); Geräte nach Typ, Koppeln im Dialog (E-OF-25); Import / Export „erst wählen, dann füllen“ (E-OF-26); Backup (E-OF-52, OF-P-15) | Opus · keine | offen |
@@ -51,8 +51,12 @@ es im Kopf von `server/version.php`.
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | offen |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
-**In Arbeit:** OF-01 Regeln. **Erledigt:** OF-00, NV-01 bis NV-04 (das
-Gerüst steht).
+**In Arbeit:** OF-02 Bausteine I. **Erledigt:** OF-00, NV-01 bis NV-04
+(das Gerüst), OF-01. **Je Paket mitzunehmen:** seine Zeilen unter
+`seitenregeln` in `tools/screenshots/ausnahmen.json` (E-OF-65) — OF-04
+Profil, Geräte, Backup, Import / Export, Standorte; OF-05 Kontoseite,
+Protokoll-Archiv; OF-06 Jobs, Sicherheit, Servereinstellungen; OF-07
+Tagesübersicht, Papierkorb, Diensttag- und Einsatzseiten.
 **Prüfweise seit NV-02:** E-OF-60. **Hakt:**
 nichts; F-OF-19 (eine Rolle mit einem Bereich sieht einen einzelnen
 Reiter) ist der Betreiberin zur Kenntnis vorgelegt. **Offen bei der Betreiberin:** nichts — alle Fragen sind entschieden (Abschnitt 7); Q-OF-02 wird in OF-M1 vorgelegt.
@@ -762,6 +766,10 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-61 | NV-02: (1) Auch die Bereichskarten der Übersicht werden Abschnitte, ohne Rauchfläche im Kopf — so zeigt es das freigegebene Bild `OF-P29-C`; E-OF-50 („unverändert“) bezieht sich auf Inhalt und Zweck der Seite. (2) Jeder Abschnitt trägt die Linie oben, auch der erste; sie steht damit unter dem Seitentitel wie in `NV-01` — eine Ausnahme für die erste Karte (Abschnitt 5, NV-02) braucht es dafür nicht. (3) Die Fußzeile bleibt im Druck weg (Abschnitt 5, NV-02); bis Web 23 wurde sie gedruckt — „wie heute“ dort stimmte nicht. (4) Unter 1024 px haben Rahmenkarte und Leistenspalte keine Box (`display: contents`); was die schmale Breite sonst braucht, bringt NV-04 | Umsetzung, 08.11.2026 |
 | E-OF-62 | NV-03: Die Sprungmarken ziehen über einen `MutationObserver` auf `hidden` im Inhalt nach, nicht über einen Aufruf der Backup-Seite (Abschnitt 5, NV-03). So kann keine Seite mit bedingter Karte — Backup, Zweitfaktor, Geräte, Import / Export nach OF-04 — das Nachziehen vergessen; die Durchsicht je Seite entfällt damit. Der Vorschlag verliert mit dem Strich seine einzige Markierung auf Rauch und bekommt deshalb die Auswahlfläche (Blau 100) statt Rauch; zwei Kontrastpaare, deren Beschreibung den Strich nannte, tragen weiter andere Stellen und sind neu beschrieben | Umsetzung, 08.11.2026 |
 | E-OF-63 | NV-04 ohne Codeänderung: Was Abschnitt 5 für unter 1024 px verlangt, leistet `display: contents` an Rahmenkarte und Leistenspalte aus NV-02 (E-OF-61) — keine Box, kein Rand, keine Fläche; die Bereichszeile rollt (NV-01), Schublade und Rückweg sind unverändert. Die Regel `.rahmen { padding: --abstand-3 }` entfällt: `.inhalt` trägt den Abstand schon, und der Inhalt liegt wie im Bild `NV-05` 12 px vom Rand; mit ihr wären es 24. Keine neue Fassung — es ändert sich nichts, was ausgeliefert wird | Umsetzung, 08.11.2026 |
+| E-OF-64 | OF-01: Den Verweis ins Handbuch behalten die Druckblätter (Notfall-, Code-, Schlüsselblatt — auf Papier gibt es kein „?“) und die öffentlichen Seiten ohne Kopfmenü (Wiederherstellung, Notzugang zum Zweitfaktor), auf denen er der einzige Weg ins Handbuch ist. „Überall“ in E-OF-02 meint die Seiten mit Kopfleiste | Umsetzung, 08.11.2026 |
+| E-OF-65 | OF-01: Die drei Seitenregeln sind ab sofort rot im Bilderlauf; die 31 bekannten Verstöße stehen mit dem Paket, das sie behebt, unter `seitenregeln` in `ausnahmen.json`. Jedes Paket streicht seine Zeilen, eine Ausnahme ohne Befund ist selbst rot — so läuft die Liste bis OF-09 auf null, und ein neuer Verstoß fällt sofort auf. Seiten ohne eigenes Paket sind zugeordnet: Standorte und Rückfrage beim Konto zu OF-04, Diensttag anlegen / Datum / zusammenführen und Einsatz verschieben zu OF-07 | Umsetzung, 08.11.2026 |
+| E-OF-66 | OF-01: Die Handbuchmarken stehen als Zuordnung Menüpunkt → Marke in `ui_hilfe_marke()`, nicht als sechstes Glied der Punkt-Tupel — die Tupel werden an fünf Stellen positionsweise gelesen. Seiten mit eigenem Kapitel (Kontoseite, Sicherheit, die Diensttage-Seiten, Suche) geben `hilfe` an `ui_geruest_start()` | Umsetzung, 08.11.2026 |
+| E-OF-67 | OF-01: Die Speicherleiste bekommt ihre Form jetzt (Fläche, bündig, „Geändert: …“ als Vorgabe jeder Formularleiste); welche Seite Knöpfe im Abschnitt und welche die Leiste trägt, entscheidet das Paket der Seite (Profil OF-04, Installation OF-05, Servereinstellungen OF-06), wie Abschnitt 5 es sagt. „Ungespeichert“ der Rechtstexte wird „Geändert“ | Umsetzung, 08.11.2026 |
 | E-OF-48 | Papierkorb: Das Artzeichen des Diensttags (`ohne-zuordnung`, Hubschrauber, Fahrzeug) steht vor dem Datum wie in Leiste und Vorschlägen — so zeigt es das freigegebene Bild; „entfernt“ in E-OF-30 meint die Stelle neben den Knöpfen. Will die Betreiberin es im Papierkorb ganz weglassen, ist das eine Zeile | Konzept, aus E-OF-30 (F-OF-16) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
@@ -1006,4 +1014,56 @@ Seitenaufrufe, **0 Befunde**; **Bedienprobe 77 von 77**.
 **Nicht geprüft:** dieselben Läufe in Firefox und WebKit (voller
 Prüfstand vor dem Pull Request); 768 px und 1024 px nur im Bilderlauf,
 nicht im Bild durchgesehen.
+
+### OF-01 Regeln für alle Seiten (08.11.2026, Web 24.2.0)
+
+**Was getan ist.** (1) **Eine rechte Kante:** `--listensuche-breit` heißt
+`--feld-breit`; in `.rahmenkarte-abschnitte` sind `.feld-eingabe` und
+`.wahlliste` auf 36 rem begrenzt, `.form-raster-einspaltig` ohne Deckel;
+die Servereinstellungen ohne `lesespalte`. (2) **Speicherleiste:**
+`.speichern` als Auswahlfläche ohne Linie, Bogen, Schatten; direkt im
+Inhalt oder seinem Formular bündig (negativer Rand); `.speichern-hinweis`
+fett in Auswahlschrift links; „Geändert“ als Vorgabe (E-OF-67).
+(3) **Erklärtext ohne Verweis:** 62 Verweise in 25 Dateien maschinell und
+von Hand geräumt (vier Titelzeilen und Sätze mit Verweis im Satz von
+Hand), dazu „Anleitung im Handbuch.“ der Erststart-Karte; ausgenommen
+E-OF-64. Das „?“ öffnet das Kapitel: `ui_hilfe_marke()` (19 Menüpunkte),
+`ui_kopf(['hilfe'])`, `ui_geruest_start(['hilfe'])` auf zehn Seiten
+(E-OF-66). Design.md 6 neu gefasst (E-P5c-06 aufgehoben), 9.0, 10.2.
+(4) **Drei Messungen** im Bilderlauf (`seitenregelnMessen()`), Selbstprobe
+um die Fälle 25–32 im Browser, bekannte Verstöße in `ausnahmen.json`
+(E-OF-65); LIESMICH (Anlass Nr. 530, Sollzahl); Nr. 530 nach
+`Backlog-Erledigt.md`. Handbuch 2 (das „?“, die Leiste), CHANGELOG,
+`version.php` 24.2.0.
+
+**Gemessen.** Rechte Kante (Chromium 1920): Installation,
+Servereinstellungen, NutzerInnen — alle Karten enden bei 1771 px =
+Innenkante von `.inhalt`; Felder höchstens 576 px; Rechtstexte zweispaltig,
+rechte Spalte an derselben Kante. Speicherleiste (Rechtstexte 1366 × 700,
+eine Eingabe): sichtbar, „Geändert: Impressum“, 0 px Abstand links und
+rechts zu `.inhalt`, Unterkante 700 = Fensterboden, Fläche
+`rgb(217, 236, 253)` (Blau 100) — gegen `OF-P07`. `anker`: **34 Verweise
+auf 109 Marken, 0 ohne Ziel** (die 19 + 10 neuen Kapitelmarken
+eingeschlossen). `grep "Handbuch:"` in `server/`: nur Schlüsselblatt
+(ausgenommen) und ein Kommentar. **Bilderlauf** (Chromium, drei Breiten):
+258 Bilder, Überlauf 0, Konsolenfehler 0, Knöpfe 0; **Seitenregeln: 187
+Karten auf Sätze, 78 Aufnahmen auf die Kante, 0 Befunde, 31 ausgenommen**,
+rc 0. Erster Lauf ohne Ausnahmen: 31 Befunde (30 + Servereinstellungen
+„Anmeldung“ im zweiten Lauf), davon 0 an der rechten Kante.
+**Selbstprobe** `aufnehmen.mjs` **32 von 32** (Knopf zwischen /
+im Abschnitt, Lesespalte / volle Breite, zwei Sätze / einer mit
+Abkürzung und Fassungsnummer / Meldung / Rest ab vier Wörtern), `vergleichen.py`
+14 von 14. Riegel 24 von 24 (`wortliste` zuerst rot: „Patient“ im
+Handbuch-Beispiel, ersetzt). Stilvergleich 116 / 117 / 122, die neuen 11
+durchgesehen (Felder, Einspalter, Speicherleiste), 0 ungeplant. Kontrast
+60 / 0.
+
+**Probleme.** Der erste Bilderlauf fand den Satz-Befund der
+Servereinstellungen nicht — die Messung lief noch in der großen
+Auswertung und fiel mit ihr aus; seit sie eine eigene Funktion mit eigenem
+`evaluate` ist, kommt sie an.
+
+**Nicht geprüft:** Bilderlauf, Barrierefreiheit, Bedienprobe in Firefox
+und WebKit; die Speicherleiste des Einsatzformulars im Bild (gemessen nur
+an den Rechtstexten); das „?“ je Seite von Hand (belegt über `anker`).
 

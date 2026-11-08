@@ -171,7 +171,7 @@ $restText = static function (int $s): string {
 ui_seite_start(['titel' => 'Sicherheit']);
 ?>
 
-<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen',
+<?php ui_geruest_start(['hilfe' => 'hilfe.php#11-4b-sicherheit-wer-ausgesperrt-ist-und-wie-man-ihn-wieder-hereinlaesst', 'aktiv' => 'einstellungen', 'leiste' => 'einstellungen',
                         'menue' => 'betrieb_status']); ?>
 
   <?php ui_titelzeile([
@@ -202,8 +202,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
       <p class="feld-hinweis">Zurzeit ist nichts gesperrt — der Normalfall.</p>
     <?php else: ?>
       <p class="feld-hinweis">Eine Sperre läuft von selbst ab; aufheben nur, wenn
-         jemand jetzt hereinmuss.
-         <a href="hilfe.php#11-4b-sicherheit-wer-ausgesperrt-ist-und-wie-man-ihn-wieder-hereinlaesst">Handbuch: Sicherheit</a></p>
+         jemand jetzt hereinmuss.</p>
       <?php foreach ($sperren as $i => $sp): ?>
         <form method="post" action="betrieb_sicherheit.php" id="f-auf-<?= $i ?>" hidden>
           <?= csrf_field() ?><input type="hidden" name="action" value="aufheben">
@@ -280,7 +279,6 @@ ui_seite_start(['titel' => 'Sicherheit']);
         ]); ?>
       <?php endforeach; ?>
     <?php endif; ?>
-    <p class="feld-klein"><a href="hilfe.php#sicherheit-schwellen-aufraeumen-mailregel">Handbuch: wann die Bremse greift und was vermerkt wird</a></p>
   <?php ui_karte_ende(); ?>
 
   <?php /* ---- 3. Mengenbremse -------------------------------------------- */ ?>
@@ -288,8 +286,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
       'zahl' => count($geraete) > 0 ? (string)count($geraete) : null]); ?>
     <p class="feld-hinweis">Ab 30 fehlgeschlagenen Geräteanmeldungen je
        Viertelstunde greift dieselbe Leiter wie bei der Anmeldung — trifft es ein echtes
-       Gerät, hilft neu koppeln.
-       <a href="hilfe.php#sicherheit-schwellen-aufraeumen-mailregel">Handbuch: Mengenbremse</a></p>
+       Gerät, hilft neu koppeln.</p>
     <?php if ($geraete === []): ?>
       <p class="feld-hinweis">Kein Gerät hat abgewiesene Anmeldungen.</p>
     <?php else: ?>
@@ -335,8 +332,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
              eine kurze Liste als „es war fast nichts", obwohl die meisten
              Toepfe gar nicht berichten. */ ?>
     <p class="feld-hinweis">Vermerkt werden nur die acht Töpfe mit Sperrleiter,
-       nicht jede Sperre.
-       <a href="hilfe.php#11-4b-sicherheit-wer-ausgesperrt-ist-und-wie-man-ihn-wieder-hereinlaesst">Handbuch: welche Töpfe</a></p>
+       nicht jede Sperre.</p>
     <?php if ($ereign['zeilen'] === []): ?>
       <p class="feld-hinweis">Keine Ereignisse in den letzten 30 Tagen.</p>
     <?php else: ?>
@@ -382,8 +378,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
       'zahl' => $loeschungen['gesamt'] > 0 ? (string)$loeschungen['gesamt'] : null]); ?>
     <p class="feld-hinweis">Auf einem Ziel gelöscht wird nur, wo die
        Aufbewahrungsregel eingeschaltet ist, und nur, was diese Installation
-       selbst dorthin geschickt hat.
-       <a href="hilfe.php#12-7-backup-ziele">Handbuch: Backup-Ziele</a></p>
+       selbst dorthin geschickt hat.</p>
     <?php if ($loeschungen['zeilen'] === []): ?>
       <p class="feld-hinweis">In den letzten 30 Tagen ist auf keinem Ziel etwas
          entfernt worden.</p>
@@ -413,8 +408,7 @@ ui_seite_start(['titel' => 'Sicherheit']);
           : ui_plakette('aus', ['ton' => 'neutral'])]); ?>
     <p class="feld-hinweis">Erreicht eine Sperre die letzte Sprosse (Stufe
        <?= (int)$mailregel['stufe'] ?>) oder die Verlangsamung ihre vierte Stufe,
-       geht höchstens eine Sammelmeldung je Stunde hinaus.
-       <a href="hilfe.php#sicherheit-schwellen-aufraeumen-mailregel">Handbuch: Meldung per Mail</a></p>
+       geht höchstens eine Sammelmeldung je Stunde hinaus.</p>
     <?php ui_zeile([
         'text'  => $mailregel['an'] ? 'Meldung ist eingeschaltet' : 'Meldung ist abgeschaltet',
         'klein' => 'Umstellen unter Betrieb → Servereinstellungen, Karte „Ratenschutz"',

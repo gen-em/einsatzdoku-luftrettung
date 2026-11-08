@@ -336,8 +336,13 @@ Die Kopfleiste zeigt links das Zeichen der Produktmarke und den Kurznamen
 der Anlage (Vorgabe **Gen-EM NAdoku**, einstellbar unter Verwaltung →
 Installation, 11.5); am breiten
 Bildschirm steht der eigene Name daneben (im Profil setzbar, sonst die
-E-Mail-Adresse). Rechts stehen **Startseite**, **Suche** (Abschnitt 4.6) und
-das Zahnrad für die **Einstellungen**. Sie bleibt beim Scrollen oben stehen.
+E-Mail-Adresse). Rechts stehen **Startseite**, **Suche** (Abschnitt 4.6), das
+**Fragezeichen** für dieses Handbuch und das Zahnrad für die
+**Einstellungen**. Sie bleibt beim Scrollen oben stehen. **Das Fragezeichen
+öffnet das Kapitel der Seite, auf der du gerade bist** (seit Web 24.2.0) —
+von den Servereinstellungen aus also 12.5, von der Tagesübersicht 4.1. Die
+Seiten selbst tragen deshalb keine Verweise „Handbuch: …" mehr, sondern
+höchstens einen Satz je Abschnitt.
 Nach 30 Minuten ohne Aktivität meldet das System automatisch ab.
 
 ![Die Web-Oberfläche am Schreibtisch](bilder/tagesuebersicht-desktop.png)
@@ -1830,7 +1835,9 @@ deines Geräts.
 
 Gespeichert wird über die **Speichern-Leiste**, die am unteren Rand erscheint,
 sobald du etwas geändert hast (seit Web 9.4.0) — vorher gibt es nichts zu
-speichern und keinen Knopf. Einen „Verwerfen"-Knopf gibt es bewusst nicht:
+speichern und keinen Knopf. Sie ist blau hinterlegt und nennt links, in
+welchen Abschnitten etwas geändert ist („Geändert: Einsatzort und Zeiten",
+seit Web 24.2.0). Einen „Verwerfen"-Knopf gibt es bewusst nicht:
 Der Rückweg oben genügt, und beim Verlassen mit ungespeicherten Änderungen
 fragt der Browser nach. **Strg-Enter** (bzw. Cmd-Enter auf macOS) speichert
 ohne Maus — in Notizen bleibt einfaches Enter ein Zeilenumbruch.

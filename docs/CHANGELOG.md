@@ -14,6 +14,25 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.2.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — das Fragezeichen führt ins passende Kapitel, die Seiten verweisen
+  nicht mehr selbst ins Handbuch** (Schritt 27). Unter vielen Karten stand
+  ein Satz mit „Handbuch: …“ dahinter, und wer die Seite kannte, musste
+  trotzdem jedes Mal daran vorbei. Jetzt öffnet das Fragezeichen der
+  Kopfleiste das Kapitel der Seite, auf der man steht, und die Seiten tragen
+  höchstens einen Satz je Abschnitt. Druckblätter und die öffentlichen
+  Seiten ohne Kopfleiste behalten ihren Verweis, weil sie keinen anderen Weg
+  ins Handbuch haben.
+- **Web — eine rechte Kante und eine sichtbarere Speicherleiste** (Schritt
+  27). Manche Einstellungsseiten waren schmaler als andere, und beim
+  Wechseln sprangen die Linien der Abschnitte; jetzt reichen alle bis an den
+  Rand, begrenzt sind nur die Eingabefelder. Die Leiste, die nach einer
+  Änderung zum Speichern auffordert, ist blau hinterlegt und nennt, in
+  welchen Abschnitten etwas geändert ist.
+
 ## [Web 24.1.0] — unveröffentlicht
 
 ### Geändert

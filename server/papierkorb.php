@@ -116,7 +116,7 @@ $fehler  = ($flashPk !== null && $flashPk['ton'] === 'error') ? $flashPk['text']
 require_once __DIR__ . '/ui.php';   // auth_guard.php laedt sie bereits
 ui_seite_start(['titel' => $zeigeListe ? 'Papierkorb' : 'Endgültig löschen']);
 ?>
-<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage']); ?>
+<?php ui_geruest_start(['hilfe' => 'hilfe.php#8-loeschen-und-papierkorb', 'aktiv' => 'start', 'leiste' => 'diensttage']); ?>
   <?php if ($zeigeListe): ?>
 
     <?php ui_titelzeile(['titel' => 'Papierkorb']); ?>

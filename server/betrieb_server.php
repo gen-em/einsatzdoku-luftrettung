@@ -836,11 +836,12 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
 ui_seite_start(['titel' => 'Servereinstellungen']);
 ?>
 
-<?php /* Lesespalte — damals zwei Karten mit viel
-         Erklärtext; heute acht mit je einem Satz, einspaltig aus dem Grund
-         im Kopf dieser Datei. */ ?>
+<?php /* KEINE LESESPALTE MEHR (Konzept OF, E-OF-31): Die Abschnitte reichen
+         wie auf jeder Einstellungsseite bis an den Rand; begrenzt sind die
+         Felder (style.css, „Eine rechte Kante"). Einspaltig bleibt sie aus
+         dem Grund im Kopf dieser Datei. */ ?>
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen',
-                        'menue' => 'betrieb_server', 'lesespalte' => true]); ?>
+                        'menue' => 'betrieb_server']); ?>
 
   <?php ui_titelzeile(['titel' => 'Servereinstellungen']); ?>
   <?= wartung_balken() ?>
@@ -883,8 +884,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                             ['ton' => $ankGesp['ton'] === 'warn' ? 'orange' : 'blau']))]); ?>
   <?= $kartenMeldung('k-ankuendigung') ?>
     <p class="feld-hinweis">Ein Streifen über jeder Seite, bis er abläuft —
-       als Rundmail höchstens einmal je Tag.
-       <a href="hilfe.php#12-8-ankuendigung-und-rundmail">Wie er wirkt</a></p>
+       als Rundmail höchstens einmal je Tag.</p>
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?>
       <?php /* VON HAND, NICHT DURCH ui_feld: Der Zähler darunter braucht eine
@@ -989,8 +989,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
   <?= $kartenMeldung('k-schluessel') ?>
 
     <p class="feld-hinweis">Zwei Geheimnisse in <code>config.php</code>, nicht
-       in der Datenbank — gedruckt gehören beide auf das Schlüsselblatt.
-       <a href="hilfe.php#karte-schluessel-des-servers-seit-web-20-1-0">Handbuch: was sie schützen und was tun, wenn einer fehlt</a></p>
+       in der Datenbank — gedruckt gehören beide auf das Schlüsselblatt.</p>
 
     <?php
       ui_zeile([
@@ -1383,8 +1382,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         ], $sp['gesamt']['bezug'], $sp['schwellen']) ?>
 
     <p class="feld-hinweis">Der freie Webspace wird nicht gemessen, nur was
-       diese Installation belegt.
-       <a href="hilfe.php#speicher">Handbuch: was gezählt wird</a></p>
+       diese Installation belegt.</p>
 
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="speicher">
@@ -1469,8 +1467,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           : ui_plakette('CSP meldet nur', ['ton' => 'orange'])]); ?>
   <?= $kartenMeldung('k-kopfzeilen') ?>
     <p class="feld-hinweis">Die Content-Security-Policy sagt dem Browser, woher
-       er etwas laden darf — erst beobachten, dann scharf schalten.
-       <a href="hilfe.php#karte-sicherheitskopfzeilen-seit-web-20-7-0">Handbuch: Sicherheitskopfzeilen</a></p>
+       er etwas laden darf — erst beobachten, dann scharf schalten.</p>
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="kopfzeilen">
       <?php ui_schalter(['name' => 'csp_scharf', 'label' => 'Richtlinie scharf schalten',
@@ -1558,8 +1555,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       </div>
     <?php endif; ?>
     <p class="feld-hinweis">Die Vorgabe ist „nur auf Einladung", damit niemand
-       durch Untätigkeit eine offene Registrierung bekommt.
-       <a href="hilfe.php#karte-konten-seit-web-20-16-5">Handbuch: Konten</a></p>
+       durch Untätigkeit eine offene Registrierung bekommt.</p>
 
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="konten">
@@ -1627,8 +1623,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
   <?= $kartenMeldung('k-anmeldung') ?>
     <p class="feld-hinweis">Nach einem Code aus der App kann ein Browser gemerkt
        werden; dort fragt die Anmeldung dann so lange keinen Code. Kürzer
-       stellen wirkt sofort — auch für schon gemerkte Geräte, „aus" meldet alle ab.
-       <a href="hilfe.php#karte-anmeldung-seit-web-21-8-0">Handbuch: Anmeldung</a></p>
+       stellen wirkt sofort — auch für schon gemerkte Geräte, „aus" meldet alle ab.</p>
     <?php if (!zweitfaktor_geraete_da()): ?>
       <?= ui_meldung_markup('warn', 'Die Tabelle für gemerkte Geräte fehlt noch — eine '
           . 'AdministratorIn muss update.php aufrufen. Bis dahin fragt die Anmeldung '
@@ -1662,8 +1657,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       'aktion' => ['text' => 'Protokoll lesen', 'href' => 'admin_protokoll.php']]); ?>
   <?= $kartenMeldung('k-protokoll') ?>
     <p class="feld-hinweis">Was hier steht, begrenzt, wie lange Betriebsereignisse
-       liegen — in der Datenbank und im versiegelten Archiv.
-       <a href="hilfe.php#das-archiv-nur-betreiberin">Wie das Archiv arbeitet</a></p>
+       liegen — in der Datenbank und im versiegelten Archiv.</p>
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="protokoll">
       <?php ui_feld(['name' => 'protokoll_frist',
@@ -1708,8 +1702,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           : ui_plakette('ruhig', ['ton' => 'gruen'])]); ?>
   <?= $kartenMeldung('k-ratenschutz') ?>
     <p class="feld-hinweis">Eine Sperre dauert beim zweiten Mal länger und
-       zählt am eingetippten Namen, nicht am Konto.
-       <a href="hilfe.php#11-4a-ratenschutz-was-jemanden-aufhaelt-der-es-von-aussen-versucht">Handbuch: Ratenschutz</a></p>
+       zählt am eingetippten Namen, nicht am Konto.</p>
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="ratenschutz">
 
@@ -1780,8 +1773,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           : ui_plakette('aus', ['ton' => 'neutral'])]); ?>
   <?= $kartenMeldung('k-adresssuche') ?>
     <p class="feld-hinweis">Beim Tippen in einem Ortsfeld und nach jeder Wahl auf
-       der Karte gehen der getippte Text und die Koordinate an einen Adressdienst.
-       <a href="hilfe.php#karte-adresssuche-seit-web-15-8-0">Handbuch: Adresssuche</a></p>
+       der Karte gehen der getippte Text und die Koordinate an einen Adressdienst.</p>
 
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="geocoder">

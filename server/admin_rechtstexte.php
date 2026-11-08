@@ -104,8 +104,7 @@ ui_seite_start(['titel' => 'Rechtstexte']);
 
   <?php ui_titelzeile(['titel' => 'Rechtstexte']); ?>
   <p class="seiten-erklaerung">Die vier Texte, die diese Installation nach außen
-     zeigt — der Inhalt ist Sache der BetreiberIn.
-     <a href="hilfe.php#11-5a-rechtstexte">Handbuch: Rechtstexte</a></p>
+     zeigt — der Inhalt ist Sache der BetreiberIn.</p>
 
   <?php ui_meldung($notice, $error, 'ok', '  '); ?>
 
@@ -252,8 +251,7 @@ ui_seite_start(['titel' => 'Rechtstexte']);
     </div><?php /* .form-raster */ ?>
 
     <?php ui_speichern_leiste(['text' => 'Änderungen speichern',
-                               'hinweis' => 'Es gibt ungespeicherte Änderungen',
-                               'hinweis_vorlage' => 'Ungespeichert']); ?>
+                               'hinweis' => 'Es gibt ungespeicherte Änderungen']); ?>
   </form>
 
 <?php ui_geruest_ende(); ?>

@@ -1698,7 +1698,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         </div>
       </form>
 <?php else: ?>
-      <p>Zusätzlich zum Passwort ein sechsstelliger Code aus einer App auf deinem Handy. <a href="hilfe.php#3-1f-zweitfaktor">Wie das geht</a></p>
+      <p>Zusätzlich zum Passwort ein sechsstelliger Code aus einer App auf deinem Handy.</p>
 <?php if ($zf['an']):
         $zfBenutzt = max(0, $zf['codes_alle'] - $zf['codes_offen']);
         ui_zeile(['text' => 'Eingeschaltet', 'klein' => 'seit ' . datum_zeit_text($zf['seit'])]);

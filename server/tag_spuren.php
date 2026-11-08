@@ -134,7 +134,7 @@ ui_seite_start(['titel' => 'GPS-Daten des Diensttages', 'karte' => true]);
  * Der Bilderlauf hat es nicht gefunden, und das ist kein Versagen: Er misst
  * waagerechten UEBERLAUF (scrollWidth > innerWidth), und eine Seite ohne
  * Innenabstand laeuft nicht ueber — sie ist nur randlos. */
-ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]);
+ui_geruest_start(['hilfe' => 'hilfe.php#4-1a-gps-daten-des-diensttages', 'aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]);
 ?>
 
   <div class="titelzeile">

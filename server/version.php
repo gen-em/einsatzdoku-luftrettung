@@ -8752,4 +8752,16 @@ declare(strict_types=1);
  *   Sprungmarken nennen nur sichtbare Karten und ziehen nach, wenn eine
  *   Seite eine Karte ein- oder ausblendet (ein MutationObserver auf
  *   `hidden` statt eines Aufrufs je Seite). Neben; kein Schema. */
-const WEB_VERSION = '24.1.0';
+/* 24.2.0 — REGELN FUER ALLE SEITEN (Schritt 27, Konzept OF, OF-01; E-OF-02,
+ *   -31, -32, -41, -49, -56, Nr. 530). Eine rechte Kante: In den
+ *   Einstellungen reichen die Abschnitte bis an den Rand, begrenzt sind die
+ *   Felder (`--feld-breit`, 36 rem, bisher `--listensuche-breit`); die
+ *   Servereinstellungen verlieren ihre Lesespalte. Die Speicherleiste ist
+ *   eine Flaeche in Auswahlblau ohne Linie, Bogen und Schatten, buendig am
+ *   Rand des Inhalts, und nennt links „Geaendert: …" (Vorgabe jeder
+ *   Formularleiste). Kein „Handbuch: …" mehr in den Seiten — 62 Verweise in
+ *   25 Dateien sind fort, ausser auf Druckblaettern und auf oeffentlichen
+ *   Seiten ohne Kopfmenue; das „?" der Kopfleiste oeffnet das Kapitel der
+ *   Seite (`ui_hilfe_marke()`, `ui_geruest_start(['hilfe' => …])`). Der
+ *   Bilderlauf misst die drei Regeln. Neben; kein Schema. */
+const WEB_VERSION = '24.2.0';

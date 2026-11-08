@@ -64,8 +64,7 @@ ui_seite_start(['titel' => 'Import / Export']);
         'titel' => 'Import / Export',
         'unter' => 'Die Einsatzliste als Ganzes — herein und hinaus. Das '
                  . 'vollständige <a href="' . ui_e($backupZ) . '">Backup</a> und '
-                 . 'einzelne GPS-Aufzeichnungen laufen über andere Wege; welche das '
-                 . 'sind, steht im <a href="hilfe.php#die-uebrigen-wege">Handbuch</a>.',
+                 . 'einzelne GPS-Aufzeichnungen laufen über andere Wege.',
     ]); ?>
     <p class="seiten-erklaerung">Übernimmt eine vorhandene Einsatzliste (Excel oder
        CSV) in dieses Konto. Die Datei wird <strong>nicht hochgeladen</strong> — sie

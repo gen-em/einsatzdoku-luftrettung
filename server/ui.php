@@ -562,9 +562,47 @@ function ui_artzeichen(?string $kind, string $klassen = '', ?string $typ = null)
  *     menue   false = kein Menüknopf und kein Zahnrad (öffentliche Hülle)
  *     zurueck ['text' => …, 'href' => …] statt der Hauptpunkte (öffentlich)
  * ------------------------------------------------------------------------ */
+/**
+ * Die Handbuchmarke eines Menüpunkts der Einstellungen (Konzept OF, E-OF-56).
+ *
+ * DAS „?" DER KOPFLEISTE ÖFFNET DAS KAPITEL DER SEITE, nicht das ganze
+ * Handbuch — und deshalb steht in den Seiten kein „Handbuch: …" mehr
+ * (E-OF-02). Die Marken stehen hier als ganzer Verweis `hilfe.php#…`, damit
+ * der Riegel `anker` sie findet und jedes Ziel hält. Die Schlüssel sind die
+ * des Menüs (`ui_einstellungen_punkte()`); eine Seite mit eigenem Kapitel
+ * (Kontoseite, Sicherheit) gibt ihre Marke selbst an `ui_geruest_start()`.
+ * Ohne Marke führt das „?" auf das ganze Handbuch.
+ */
+function ui_hilfe_marke(string $menue): ?string
+{
+    $marken = [
+        ''                        => 'hilfe.php#3-die-web-oberflaeche-ueberblick',
+        'profil'                  => 'hilfe.php#3-1a-profil-name-adresse-logo-und-darstellung',
+        'geraete'                 => 'hilfe.php#10-geraete',
+        'standorte'               => 'hilfe.php#9-stammdaten-standorte-und-rettungsmittel',
+        'backup'                  => 'hilfe.php#6-backup',
+        'import'                  => 'hilfe.php#7-import-und-export',
+        'admin'                   => 'hilfe.php#11-2-die-liste-der-nutzerinnen',
+        'admin_sicherungen'       => 'hilfe.php#11-4-konto-backups',
+        'admin_installation'      => 'hilfe.php#11-5-installation',
+        'admin_rechtstexte'       => 'hilfe.php#11-5a-rechtstexte',
+        'admin_demo'              => 'hilfe.php#11-6-demo-konto',
+        'admin_protokoll'         => 'hilfe.php#11-7-protokoll',
+        'betrieb_status'          => 'hilfe.php#12-1-status',
+        'betrieb_statistik'       => 'hilfe.php#12-2-statistik',
+        'betrieb_updates'         => 'hilfe.php#12-3-updates',
+        'betrieb_jobs'            => 'hilfe.php#12-4-hintergrundjobs',
+        'betrieb_server'          => 'hilfe.php#12-5-servereinstellungen',
+        'admin_komplettsicherung' => 'hilfe.php#12-6-komplett-backup',
+        'admin_sicherungsziele'   => 'hilfe.php#12-7-backup-ziele',
+    ];
+    return $marken[$menue] ?? null;
+}
+
 function ui_kopf(array $o = []): void
 {
     $aktiv  = (string)($o['aktiv'] ?? '');
+    $hilfe  = (string)($o['hilfe'] ?? '') !== '' ? (string)$o['hilfe'] : 'hilfe.php';
     $menue  = ($o['menue'] ?? true) !== false;
     $zurueck = $o['zurueck'] ?? null;
     /* DIE FARBE DER UMGEBUNG. Eine Stelle fuer
@@ -612,7 +650,7 @@ function ui_kopf(array $o = []): void
                  weiterweiss. Genau dann will man nicht erst ein Menue
                  aufziehen. */ ?>
         <a class="knopf knopf-symbol kopf-hilfe<?= $aktiv === 'hilfe' ? ' aktiv' : '' ?>"
-           href="hilfe.php" aria-label="Hilfe und Handbuch"
+           href="<?= ui_e($hilfe) ?>" aria-label="Hilfe und Handbuch"
            <?= $aktiv === 'hilfe' ? 'aria-current="page"' : '' ?>>
           <?= ui_symbol('hilfe', 'symbol-gross') ?>
         </a>
@@ -649,6 +687,8 @@ function ui_kopf(array $o = []): void
  *     menue    aktiver Eintrag des Einstellungsmenüs (nur bei 'einstellungen')
  *     lesespalte  true = Inhaltsspalte auf Lesebreite (760 px) begrenzen
  *     titel    Überschrift der Leiste bei 'filter'
+ *     hilfe    Ziel des „?" (`hilfe.php#…`), Vorgabe die Marke des
+ *              Menüpunkts (ui_hilfe_marke()) bzw. das ganze Handbuch
  *
  * Bei 'filter' gibt diese Funktion die Leiste NICHT aus: Die Suchseite füllt
  * sie selbst und ruft danach ui_leiste_ende(). Bei allen anderen Werten ist
@@ -659,7 +699,13 @@ function ui_geruest_start(array $o = []): void
     $leiste = (string)($o['leiste'] ?? '');
     ui_hat_tagesleiste($leiste === 'diensttage');
     ui_hat_menueleiste($leiste === 'einstellungen');
-    ui_kopf(['aktiv' => (string)($o['aktiv'] ?? '')]);
+    /* DAS „?" FÜHRT INS KAPITEL DER SEITE (E-OF-56): eine Marke, die die
+     * Seite selbst angibt (`hilfe`), sonst die des Menüpunkts. */
+    $hilfe = (string)($o['hilfe'] ?? '');
+    if ($hilfe === '' && $leiste === 'einstellungen') {
+        $hilfe = (string)ui_hilfe_marke((string)($o['menue'] ?? ''));
+    }
+    ui_kopf(['aktiv' => (string)($o['aktiv'] ?? ''), 'hilfe' => $hilfe]);
     /* DIE BEREICHSZEILE steht nur im Einstellungsbereich, zwischen Kopfleiste
      * und Rahmen (Konzept OF, NV-01). Der Rahmen erfaehrt davon, damit die
      * Leiste ab 1024 px unter BEIDEN klebt. */
@@ -3082,6 +3128,12 @@ function ui_speichern_leiste(array $o = []): void
      *     Seite, Orange statt Dunkelblau — nur dort, wo das Formular der
      *     Zweck der Seite ist, E-MA-27) */
     $id = !empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '';
+    /* „GEÄNDERT: …" IST DIE VORGABE (Konzept OF, E-OF-32, -41): Eine
+     * Formularleiste nennt die Abschnitte, in denen etwas geändert ist; nur
+     * die Sammelleiste (`kein_haken`) zählt stattdessen ihre Auswahl. */
+    if (empty($o['kein_haken']) && !isset($o['hinweis_vorlage'])) {
+        $o['hinweis_vorlage'] = 'Geändert';
+    }
     ?>
 <div class="speichern"<?= $id ?><?= empty($o['kein_haken']) ? ' data-speichern' : '' ?> hidden>
   <?php /* HINWEIS ZUERST, KNOPF DANACH. Stuende der Knopf im Markup vorn und

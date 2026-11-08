@@ -503,7 +503,7 @@
   --schublade:320px;                   /* Höchstbreite der mobilen Schublade */
   --blatt-zeile:50px;                  /* Zeilenhöhe im Aktionsblatt */
   --unterpunkt:28px;                   /* Sprungmarke unter dem Menüpunkt */
-  --listensuche-breit:36rem;           /* Höchstbreite des Suchfelds einer Liste */
+  --feld-breit:36rem;                  /* Höchstbreite eines Felds: Listensuche, Felder der Einstellungen */
   --uebersicht-spalte:240px;           /* schmalste Spalte der Einstellungs-Übersicht */
   --suchfeld:48px;                     /* das große Suchfeld */
   --symbol-klein:16px;                 /* Zusatzzeichen an einer Beschriftung */
@@ -1177,6 +1177,15 @@ img,svg,video{max-width:100%;height:auto}
 .rahmenkarte-abschnitte .karte-kopf{padding:var(--abstand-4) 0 var(--abstand-2);border-bottom:0}
 .rahmenkarte-abschnitte .karte-klappbar[open] > .karte-kopf{border-bottom:0}
 .rahmenkarte-abschnitte .karte-inhalt{padding:0 0 var(--abstand-5)}
+/* EINE RECHTE KANTE (Konzept OF, OF-01, E-OF-31, Bild OF-P19): Jeder
+ * Abschnitt und seine Linie reichen bis an den Rand des Inhalts; begrenzt
+ * werden die FELDER, auf das Maß der Listensuche. Bis Web 24.1 deckelten
+ * einzelne Seiten ihre Abschnitte (Lesespalte der Servereinstellungen,
+ * `.form-raster-einspaltig` der Installation), und die Linien sprangen beim
+ * Wechsel zwischen zwei Seiten. Listenseiten bleiben, wie sie sind. */
+.rahmenkarte-abschnitte .feld-eingabe,
+.rahmenkarte-abschnitte .wahlliste{max-width:var(--feld-breit)}
+.rahmenkarte-abschnitte .form-raster-einspaltig{max-width:none}
 /* Die Bereichskarten der Übersicht verlieren mit dem Rand auch die Rauchfläche
  * im Kopf (Bild OF-P29-C); Zeichen und Mitte tragen die Absetzung allein. */
 .rahmenkarte-abschnitte .karte-bereich > .karte-kopf{background:transparent;border-radius:0}
@@ -2131,20 +2140,16 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * einem Speichern-Knopf ist die Stelle, an der man sich vergreift. */
 .speichern{
   position:sticky;bottom:0;z-index:30;
-  /* KARTENFORM. Bräche die Leiste mit negativem Rand seitlich aus dem
-   * Inhalt aus und liefe ohne Radius von Rand zu Rand, wirkte sie „eckig
-   * und breiter" als die Karte darüber, obwohl sie zu ihr gehört. Deshalb
-   * Radius und Breite wie die Karte.
-   *
-   * WAS BLEIBT, ist alles, was die FUNKTION traegt: der klebende Sitz, die
-   * Trennlinie nach oben und der Schatten. Die Leiste soll auffallen, weil
-   * sie folgt — nicht, weil sie anders geschnitten ist. */
+  /* AUSWAHLFLÄCHE, OHNE LINIE, BOGEN UND SCHATTEN (Konzept OF, E-OF-32,
+   * -41, Bild OF-P07). Bis Web 24.1 trug die Leiste die Form einer Karte —
+   * Radius, Linie oben, Schatten —, weil sie zwischen Karten stand. Seit die
+   * Karten der Einstellungen Abschnitte sind, gehört sie zu keinem: Sie ist
+   * der untere Rand der Rahmenkarte und hebt sich über die Fläche ab, die
+   * im Dunkelmodus mitschaltet. Direkt im Inhalt (oder in seinem Formular)
+   * läuft sie bündig von Rand zu Rand (Regeln darunter). */
   margin:var(--abstand-4) 0 0;
-  padding:var(--abstand-3);
-  background:var(--flaeche-karte);
-  border-top:var(--strich) solid var(--linie);
-  border-radius:var(--radius-gross);
-  box-shadow:var(--schatten);
+  padding:var(--abstand-3) var(--abstand-4);
+  background:var(--auswahl-flaeche);
 }
 /* KNOPF RECHTS, ZAEHLUNG LINKS DANEBEN. Im Markup steht der Hinweis zuerst
  * (ui_speichern_leiste), damit die Vorlesereihenfolge stimmt: erst „12
@@ -2154,7 +2159,16 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   display:flex;align-items:center;justify-content:flex-end;gap:var(--abstand-3);
   max-width:var(--rahmen);margin:0 auto;
 }
-.speichern-hinweis{display:none;color:var(--gedaempft);font-size:var(--groesse-2)}
+/* „Geändert: Logo und Darstellung" steht links, fett, in der Auswahlschrift;
+ * der Knopf rechts. */
+.speichern-hinweis{display:none;color:var(--auswahl-text);font-weight:700;font-size:var(--groesse-2);margin-right:auto}
+/* BÜNDIG AM RAND DES INHALTS: Steht die Leiste direkt im Inhalt oder in
+ * dessen Formular, nimmt sie dessen Innenabstand seitlich und unten
+ * zurück — so ist sie der Boden der Rahmenkarte, nicht ein Kasten darin. */
+.inhalt > .speichern,.inhalt > form > .speichern{
+  margin-left:calc(var(--abstand-3) * -1);margin-right:calc(var(--abstand-3) * -1);
+  margin-bottom:calc(var(--abstand-5) * -1);
+}
 
 
 /* == 12. KENNZAHL ==========================================================
@@ -2775,6 +2789,10 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
   .kennzahl-raster{grid-template-columns:repeat(4,minmax(0,1fr))}
   .speichern-hinweis{display:block}
   .speichern .knopf-breit{width:auto}
+  .inhalt > .speichern,.inhalt > form > .speichern{
+    margin-left:calc(var(--abstand-4) * -1);margin-right:calc(var(--abstand-4) * -1);
+    margin-bottom:calc(var(--abstand-5) * -1);
+  }
   .segment{display:inline-flex}
 }
 
@@ -4486,7 +4504,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
  *
  * Es gilt für JEDE Liste mit Suche und Filtern, nicht für diese eine Seite. */
 .listensuche{display:flex;gap:var(--abstand-2);align-items:center;
-  max-width:var(--listensuche-breit)}
+  max-width:var(--feld-breit)}
 
 /* FILTERREIHE (.filterreihe) — Verweise, keine Knöpfe im Formular: Ein Filter
  * ändert die angezeigte Liste, und das ist eine Navigation. So trägt jeder

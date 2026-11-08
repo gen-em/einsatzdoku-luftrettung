@@ -482,8 +482,7 @@ ui_seite_start(['titel' => 'Konto-Backups']);
       </form>
       <p class="feld-hinweis">Speichergrenze und Ablage gelten für beide
          Backup-Arten und stehen deshalb unter
-         <a href="betrieb_server.php">Betrieb → Servereinstellungen</a>.
-         <a href="hilfe.php#11-4-konto-backups">Handbuch: Konto-Backups</a></p>
+         <a href="betrieb_server.php">Betrieb → Servereinstellungen</a>.</p>
     <?php ui_karte_ende(); ?>
 
   </div><?php /* .form-spalte (links) */ ?>
@@ -510,8 +509,7 @@ ui_seite_start(['titel' => 'Konto-Backups']);
                                 . groesse_text($bytesOhneKonto)
                               : 'keine']); ?>
       <p class="feld-hinweis">Pakete, deren Konto gelöscht wurde, bleiben mit
-         Absicht liegen, bis jemand sie einspielt oder löscht.
-         <a href="hilfe.php#backups-ohne-konto-und-die-freigabe">Handbuch: Backups ohne Konto</a></p>
+         Absicht liegen, bis jemand sie einspielt oder löscht.</p>
 
       <?php if (!$verwaist): ?>
         <p class="feld-hinweis">Zurzeit keine.</p>

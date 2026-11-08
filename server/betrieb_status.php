@@ -293,8 +293,7 @@ ui_seite_start(['titel' => 'Status']);
                         'vorschau' => 'Muss · Empfohlen · gemessen']); ?>
     <p class="feld-hinweis">Dieselbe Liste, die <code>install.php</code> vor
        der Einrichtung prüft — ein fehlendes <em>Muss</em> färbt die Ampel rot,
-       ein knappes orange, ein <em>Empfohlen</em> gar nicht.
-       <a href="hilfe.php#12-1-status">Handbuch: Muss und Empfohlen</a></p>
+       ein knappes orange, ein <em>Empfohlen</em> gar nicht.</p>
     <?php foreach ($kp['zeilen'] as $zeile) { status_zeile($zeile); } ?>
   <?php ui_karte_ende(true); ?>
 
@@ -307,8 +306,7 @@ ui_seite_start(['titel' => 'Status']);
                         'vorschau' => 'nur lesend · Geheimnisse als gesetzt/leer']); ?>
     <p class="feld-hinweis">Die Datei liegt nur auf dem Server und lässt sich
        hier nicht ändern — geändert wird sie per FTP. Passwörter und Schlüssel
-       stehen nie im Klartext da.
-       <a href="hilfe.php#12-1-status">Handbuch: Status</a></p>
+       stehen nie im Klartext da.</p>
     <?php foreach (status_konfig_zeilen() as $zeile) { status_zeile($zeile); } ?>
   <?php ui_karte_ende(true); ?>
 
@@ -332,8 +330,7 @@ ui_seite_start(['titel' => 'Status']);
           ? ui_plakette($pf . ' nicht geschrieben', ['ton' => 'rot'])
           : ui_plakette((string)$pz['alle'] . ' Einträge', ['ton' => 'blau'])]); ?>
     <p class="feld-hinweis">Gezählt werden Betriebsereignisse — kein
-       Zugriffsprotokoll.
-       <a href="hilfe.php#karte-betriebsprotokoll-seit-web-20-16-5">Handbuch: Betriebsprotokoll</a></p>
+       Zugriffsprotokoll.</p>
     <?php if ($pf > 0): ?>
       <?php status_zeile(['text' => 'Einträge, die nicht geschrieben werden konnten',
           'klein' => 'Die Handlungen sind gelungen, aber nicht festgehalten — der '

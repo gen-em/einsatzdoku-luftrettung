@@ -808,7 +808,7 @@ $unterTeile[] = 'zuletzt angemeldet '
 ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
 ?>
 
-<?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin']); ?>
+<?php ui_geruest_start(['hilfe' => 'hilfe.php#11-1-die-kontoseite', 'aktiv' => 'einstellungen', 'leiste' => 'einstellungen', 'menue' => 'admin']); ?>
 
   <?php /* Die versteckten Formulare zuerst: Die Knöpfe in der Titelzeile, in
            den Zeilenaktionen und im Aktionsblatt verweisen über `form` auf
@@ -1067,16 +1067,14 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                verweist deshalb nicht darauf. */ ?>
       <?php if ($istDemoKopf): ?>
       <p class="feld-hinweis">Das Passwort des Demo-Kontos ist öffentlich und wird
-         nicht über einen Link gesetzt.
-         <a href="hilfe.php#3-2-demo-konto-ausprobieren-ohne-etwas-kaputtzumachen">Handbuch: Demo-Konto</a></p>
+         nicht über einen Link gesetzt.</p>
       <?php elseif ($nurAnsehen): ?>
       <p class="feld-klein">Ein Konto mit der Rolle „BetreiberIn" ändert nur eine BetreiberIn.</p>
       <?php elseif ($nurSupport): ?>
       <p class="feld-klein">Ändern kann die Verwaltung, den Setz-Link schickt „Aktionen".</p>
       <?php else: ?>
       <p class="feld-hinweis">Ein Passwort lässt sich hier nicht setzen — „Setz-Link
-         senden" im Aktionsmenü verschickt den Link aus „Passwort vergessen".
-         <a href="hilfe.php#11-1-die-kontoseite">Handbuch: Kontoseite</a></p>
+         senden" im Aktionsmenü verschickt den Link aus „Passwort vergessen".</p>
       <?php endif; ?>
     <?php ui_karte_ende(); ?>
 
@@ -1149,8 +1147,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
           </form>
         <?php elseif ($kStatus === 'gesperrt'): ?>
           <p class="feld-hinweis">Entsperren nimmt auch einen <strong>beantragten
-             Löschtermin</strong> zurück.
-             <a href="hilfe.php#status-sperren-entsperren-freischalten-seit-web-20-17-0">Handbuch: Status</a></p>
+             Löschtermin</strong> zurück.</p>
           <form method="post">
             <?= csrf_field() ?><input type="hidden" name="action" value="konto_status">
             <input type="hidden" name="id" value="<?= $uid ?>">
@@ -1161,8 +1158,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
           </form>
         <?php else: ?>
           <p class="feld-hinweis">Eine Sperre beendet laufende Sitzungen und löscht
-             nichts — Geräte behalten ihre Warteschlange und senden danach nach.
-             <a href="hilfe.php#status-sperren-entsperren-freischalten-seit-web-20-17-0">Handbuch: Status</a></p>
+             nichts — Geräte behalten ihre Warteschlange und senden danach nach.</p>
           <form method="post">
             <?= csrf_field() ?><input type="hidden" name="action" value="konto_status">
             <input type="hidden" name="id" value="<?= $uid ?>">
@@ -1260,8 +1256,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
         <p class="feld-hinweis"><strong>Leer heißt: die Vorgabe der Installation
            gilt</strong> (<?= (int)konten_grenze_einsaetze() ?> Einsätze,
            <?= (int)konten_grenze_mb() ?> MB); eine Zahl gilt <em>statt</em> ihrer,
-           auch wenn sie später steigt.
-           <a href="hilfe.php#mengen-und-grenzen-je-konto-seit-web-20-21-0">Handbuch: Mengen und Grenzen</a></p>
+           auch wenn sie später steigt.</p>
         <div class="fld-reihe">
           <?php ui_feld(['name' => 'grenze_einsaetze', 'label' => 'Einsätze',
               'art' => 'number',
@@ -1439,8 +1434,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
                Zahl nicht. */ ?>
       <p class="feld-hinweis">Aufbewahrt werden die letzten
          <?= edbak_aufbewahrung_konto($kennung) ?> Pakete, das jüngste und ein
-         freigegebenes immer.
-         <a href="hilfe.php#11-1-die-kontoseite">Handbuch: Kontoseite</a></p>
+         freigegebenes immer.</p>
       <?php if ($pakete && $zielkonten): ?>
         <div class="listen-form-fuss">
           <?= ui_knopf(['text' => 'Für Zielkonto freigeben', 'symbol' => 'tausch',
@@ -1473,8 +1467,7 @@ ui_seite_start(['titel' => ($u['name'] ?: $u['email']) . ' — Konto']);
            zweite an.</p>
       <?php else: ?>
         <p class="feld-hinweis">Entfernt Konto, Diensttage, Einsätze, Tracks,
-           Reanimationen und Geräte <strong>endgültig</strong>, ohne Papierkorb.
-           <a href="hilfe.php#11-1-die-kontoseite">Handbuch: Kontoseite</a></p>
+           Reanimationen und Geräte <strong>endgültig</strong>, ohne Papierkorb.</p>
         <form method="post" data-confirm="Konto endgültig löschen?"
               data-confirm-ok="Endgültig löschen">
           <?= csrf_field() ?><input type="hidden" name="action" value="user_delete">

@@ -293,8 +293,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
         <h3 class="listen-form-titel">Anhalten</h3>
         <p class="feld-hinweis">Für den Fall, dass etwas schiefläuft oder ein
            großes Backup einzuspielen ist — die Pause läuft nach höchstens
-           <?= (int)(JOB_PAUSE_MAX_S / 3600) ?> Stunden von selbst ab.
-           <a href="hilfe.php#12-4-hintergrundjobs">Handbuch: Hintergrundjobs</a></p>
+           <?= (int)(JOB_PAUSE_MAX_S / 3600) ?> Stunden von selbst ab.</p>
         <?php ui_segment(['name' => 'dauer', 'wert' => '1800',
                           'label' => 'Dauer der Pause',
                           'optionen' => array_map('strval',
@@ -335,8 +334,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
              drei Auslöser, Budget und Reihenfolge". Die Warnung zur Adresse
              bleibt als Meldung. */ ?>
     <p class="feld-hinweis">Einer der drei Wege genügt; ohne Einrichtung läuft
-       die Arbeit huckepack auf den Anfragen mit.
-       <a href="hilfe.php#die-drei-ausloeser-budget-und-reihenfolge">Wie die drei Wege arbeiten</a></p>
+       die Arbeit huckepack auf den Anfragen mit.</p>
 
     <h3 class="listen-form-titel">1. Kommandozeile <span class="feld-klein-inline">empfohlen</span></h3>
     <?= ui_codeblock_lang('* * * * * php ' . __DIR__ . '/jobs.php') ?>
@@ -374,8 +372,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
     <?php endif; ?>
     <p class="feld-hinweis">Mit diesem Token schaltet die Auslieferung Wartung und
        Komplett-Backup dieser Anlage. Es gehört als Geheimnis <code>JOBS_TOKEN</code>
-       in die GitHub-Umgebung, die hierher ausliefert.
-       <a href="hilfe.php#die-drei-ausloeser-budget-und-reihenfolge">Wozu zwei Tokens</a></p>
+       in die GitHub-Umgebung, die hierher ausliefert.</p>
     <?= ui_meldung_markup('warn', 'Ein Geheimnis wie ein Passwort — nicht in eine '
         . 'Adresse, nicht in eine Mail, nicht in ein Ticket.') ?>
     <?php if ($ketteToken !== null): ?>
@@ -406,8 +403,7 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
     <p class="feld-hinweis">Mit diesem Token fragt ein eigenes Monitoring den Zustand
        der Anlage ab — <code>api/health.php</code> mit der Kopfzeile
        <code>X-Health-Token</code>. Die Antwort nennt Fassung, Datenbank, Migration,
-       Alter der Jobs und Speicher, keine Daten.
-       <a href="hilfe.php#12-9-health-endpunkt-fuer-das-eigene-monitoring">Wie das Monitoring fragt</a></p>
+       Alter der Jobs und Speicher, keine Daten.</p>
     <?php if ($healthToken === null): ?>
       <?= ui_meldung_markup('fehler', 'Das Health-Token ist gerade nicht lesbar.') ?>
     <?php elseif ($healthToken === ''): ?>

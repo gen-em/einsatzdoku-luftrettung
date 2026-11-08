@@ -107,8 +107,7 @@ ui_seite_start(['titel' => 'Installation']);
                         'menue' => 'admin_installation']); ?>
 
   <?php ui_titelzeile(['titel' => 'Installation',
-                       'unter' => 'Wie diese Installation nach außen auftritt — '
-                                . '<a href="hilfe.php#11-5-installation">Handbuch: Installation</a>']); ?>
+                       'unter' => 'Wie diese Installation nach außen auftritt']); ?>
 
   <?php ui_meldung($notice, $error, 'ok', '  '); ?>
 
@@ -162,8 +161,7 @@ ui_seite_start(['titel' => 'Installation']);
 
         <p class="feld-hinweis">Beide dürfen leer bleiben — dann fällt die
           Kontaktzeile aus den Mails, und Betriebspost geht an alle mit
-          Verwaltungsrecht.
-          <a href="hilfe.php#11-5-installation">Handbuch: Installation</a></p>
+          Verwaltungsrecht.</p>
 
         <form method="post" class="listen-form">
           <?= csrf_field() ?>

@@ -224,8 +224,7 @@ ui_seite_start(['titel' => 'Updates']);
              und nicht noch einmal hier — zwei Fassungen einer Sache laufen
              auseinander. */ ?>
     <p class="feld-hinweis">Schließt die Anwendung für alle; offen bleiben nur die
-       Seiten unter Betrieb, und Uhr und Handy liefern danach nach.
-       <a href="hilfe.php#der-wartungsmodus">Handbuch: Wartungsmodus und Ablauf eines Updates</a></p>
+       Seiten unter Betrieb, und Uhr und Handy liefern danach nach.</p>
     <form method="post" action="betrieb_updates.php">
       <?= csrf_field() ?>
       <input type="hidden" name="action"
@@ -337,7 +336,6 @@ ui_seite_start(['titel' => 'Updates']);
     <?php endif; ?>
     <?php /* DER VERWEIS STEHT IMMER: Die Seite hat keinen Seitenkopf,
              der ihn für alle Karten trüge. */ ?>
-    <p class="feld-hinweis"><a href="hilfe.php#12-3-updates">Handbuch: Updates</a></p>
 
     <?php /* „WARTUNG BEENDEN" STEHT HIER UND NICHT NUR OBEN.
              Die Wartung geht NIE von selbst aus. Wer
@@ -437,7 +435,6 @@ ui_seite_start(['titel' => 'Updates']);
                     'plaketten' => ui_plakette($apk['version'] ?? '—', ['ton' => 'neutral'])]);
       }
     ?>
-    <p class="feld-hinweis"><a href="hilfe.php#12-3-updates">Handbuch: Updates</a></p>
   <?php ui_karte_ende(); ?>
 
   </div><?php /* .karten-raster */ ?>

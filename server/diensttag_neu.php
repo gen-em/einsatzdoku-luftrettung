@@ -84,7 +84,7 @@ foreach ($SD_BASES as $b) {
 
 ui_seite_start(['titel' => 'Diensttag anlegen']);
 ?>
-<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage']); ?>
+<?php ui_geruest_start(['hilfe' => 'hilfe.php#4-5-diensttag-von-hand-anlegen', 'aktiv' => 'start', 'leiste' => 'diensttage']); ?>
 
   <?php ui_titelzeile([
       'titel'   => 'Diensttag anlegen',

@@ -21,7 +21,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
                         . ' data-vorladen="api/mission.php?id=' . $mid . '"></script>']);
 ?>
 
-<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $missionDayId]); ?>
+<?php ui_geruest_start(['hilfe' => 'hilfe.php#4-2-einsatzansicht', 'aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $missionDayId]); ?>
   <?php /* Titelzeile: Rueckweg zum Diensttag, Titel „Einsatz N"
            (ab 720 px mit Uhrzeit), Unterzeile mit Zeitspanne,
            Herkunfts-Plakette und Rettungsmittel. „Bearbeiten" ist die eine

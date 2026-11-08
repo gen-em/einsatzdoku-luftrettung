@@ -554,8 +554,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
            Welche Karten eine Kontoseite trägt, sagt
            das Handbuch. */ ?>
   <p class="seiten-erklaerung">Jedes Konto hat eine eigene Seite — ein Klick auf
-     eine Zeile öffnet sie.
-     <a href="hilfe.php#11-2-die-liste-der-nutzerinnen">Handbuch: NutzerInnen</a></p>
+     eine Zeile öffnet sie.</p>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 

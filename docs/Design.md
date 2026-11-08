@@ -486,7 +486,7 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--flaeche-seite` | `var(--genem-flaeche-standard)` | 1 |  |
-| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 22 |  |
+| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 21 |  |
 | `--flaeche-abgesetzt` | `var(--genem-flaeche-abgesetzt)` | 35 |  |
 | `--flaeche-feld` | `var(--genem-flaeche-standard)` | 5 |  |
 | `--flaeche-marke` | `var(--genem-dunkelblau)` | 1 |  |
@@ -497,7 +497,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--text` | `var(--genem-text-standard)` | 21 |  |
 | `--text-titel` | `var(--genem-text-alternativ)` | 36 |  |
-| `--gedaempft` | `var(--genem-text-sekundaer)` | 69 |  |
+| `--gedaempft` | `var(--genem-text-sekundaer)` | 68 |  |
 | `--text-link` | `var(--genem-text-blau)` | 18 |  |
 | `--text-link-hover` | `var(--genem-text-blau)` | 4 |  |
 | `--auf-dunkel` | `var(--genem-schnee)` | 7 | Schrift auf Dunkelblau, 13,33:1 |
@@ -506,7 +506,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `var(--genem-linie)` | 49 |  |
+| `--linie` | `var(--genem-linie)` | 48 |  |
 | `--linie-stark` | `var(--genem-linie-stark)` | 20 |  |
 | `--mechanik` | `var(--genem-sand)` | 11 |  |
 
@@ -530,8 +530,8 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--auswahl-flaeche` | `var(--genem-blau-100)` | 17 |  |
-| `--auswahl-text` | `var(--genem-dunkelblau)` | 8 |  |
+| `--auswahl-flaeche` | `var(--genem-blau-100)` | 18 |  |
+| `--auswahl-text` | `var(--genem-dunkelblau)` | 9 |  |
 | `--auswahl-linie` | `var(--genem-aktion)` | 8 |  |
 | `--kopf-aktiv` | `var(--genem-blau-300)` | 1 |  |
 
@@ -615,9 +615,9 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--abstand-1` | `4px` | 87 |  |
 | `--abstand-2` | `8px` | 125 |  |
-| `--abstand-3` | `12px` | 165 |  |
-| `--abstand-4` | `16px` | 72 |  |
-| `--abstand-5` | `24px` | 36 |  |
+| `--abstand-3` | `12px` | 167 |  |
+| `--abstand-4` | `16px` | 75 |  |
+| `--abstand-5` | `24px` | 38 |  |
 
 **Radien**
 
@@ -625,7 +625,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--radius-klein` | `6px` | 29 | Plakette, Kästchen, Eingabefeld |
 | `--radius` | `10px` | 21 | Knopf, Meldung |
-| `--radius-gross` | `12px` | 9 | Karte, Blatt, Dialog |
+| `--radius-gross` | `12px` | 8 | Karte, Blatt, Dialog |
 
 **Maße**
 
@@ -643,7 +643,7 @@ auseinanderlaufen kann.
 | `--schublade` | `320px` | 1 | Höchstbreite der mobilen Schublade |
 | `--blatt-zeile` | `50px` | 1 | Zeilenhöhe im Aktionsblatt |
 | `--unterpunkt` | `28px` | 2 | Sprungmarke unter dem Menüpunkt |
-| `--listensuche-breit` | `36rem` | 1 | Höchstbreite des Suchfelds einer Liste |
+| `--feld-breit` | `36rem` | 2 | Höchstbreite eines Felds: Listensuche, Felder der Einstellungen |
 | `--uebersicht-spalte` | `240px` | 1 | schmalste Spalte der Einstellungs-Übersicht |
 | `--suchfeld` | `48px` | 2 | das große Suchfeld |
 | `--symbol-klein` | `16px` | 11 | Zusatzzeichen an einer Beschriftung |
@@ -652,7 +652,7 @@ auseinanderlaufen kann.
 | `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
 | `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 72 | Haarlinie |
+| `--strich` | `1px` | 71 | Haarlinie |
 | `--strich-stark` | `2px` | 35 | Aktivstrich, Randstrich, Fokus |
 | `--strich-reiter` | `calc(var(--strich-stark) + var(--strich))` | 1 | 3 px |
 | `--radius-rund` | `999px` | 20 | Zähler, Griff, Punkt — voll rund |
@@ -711,7 +711,7 @@ auseinanderlaufen kann.
 |---|---|--:|---|
 | `--dauer` | `.24s` | 9 |  |
 | `--schleier` | `rgba(26,46,77,.55)` | 2 | Dunkelblau, halbdurchsichtig |
-| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 8 |  |
+| `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 7 |  |
 | `--schatten-hoch` | `0 8px 28px rgba(26,5,0,.22)` | 3 |  |
 | `--auf-dunkel-leise` | `rgba(255,255,255,.55)` | 2 |  |
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 3 |  |
@@ -843,34 +843,49 @@ Redesign zurückzunehmen.
 > braucht `input[type=checkbox].meine-klasse` — `.meine-klasse` allein
 > verliert, und das Kästchen bleibt 20 × 20 px groß und fängt Klicks ab.
 
-### Erklärtext: ein Satz je Karte, der Rest steht im Handbuch
+### Erklärtext: ein Satz je Karte, ohne Verweis — das „?" führt ins Handbuch
 
-*Seit Web 21.1.0 (P5c/AP9, E-P5c-06, -49, -128).* Wer eine Seite zum
-zehnten Mal öffnet, liest den Text darauf nicht mehr und muss trotzdem daran
-vorbei. Deshalb gilt unter **Verwaltung** und **Betrieb**:
+*Seit Web 21.1.0 (P5c/AP9, E-P5c-06, -49, -128); seit Web 24.2.0 ohne
+Verweis und für alle Bereiche (Konzept OF, OF-01, E-OF-02, -56).* Wer eine
+Seite zum zehnten Mal öffnet, liest den Text darauf nicht mehr und muss
+trotzdem daran vorbei. Deshalb gilt **auf jeder Seite**, auch im Bereich
+Einstellungen (E-P5c-06 ist damit aufgehoben):
 
 - **Je Karte höchstens ein Satz**, der sagt, was hier passiert — als
-  `<p class="feld-hinweis">`, dahinter der Verweis ins Handbuch
-  (`<a href="hilfe.php#…">`) auf die Stelle, an der das Erklärende steht.
-  Die Sprungmarke ist die, die `doku_marke()` aus der Überschrift bildet; die
-  Ankerprüfung im Tor hält jeden Verweis dagegen.
+  `<p class="feld-hinweis">`, **ohne** Verweis „Handbuch: …". Bis Web 24.1
+  stand dahinter ein Verweis auf die Stelle im Handbuch; 62 solcher Verweise
+  in 25 Dateien sind entfallen.
+- **Der Weg ins Handbuch ist das „?" der Kopfleiste**, und es öffnet das
+  **Kapitel der Seite**: Einstellungsseiten über `ui_hilfe_marke()` (eine
+  Marke je Menüpunkt), andere Seiten über `ui_geruest_start(['hilfe' =>
+  'hilfe.php#…'])`; ohne Marke das ganze Handbuch. Die Marken stehen als
+  ganzer Verweis im Quelltext, und der Riegel `anker` hält jedes Ziel.
 - **Der Seitenkopf** (`ui_titelzeile(['unter' => …])` oder
   `<p class="seiten-erklaerung">`) trägt höchstens einen Satz.
 - **Eine Kleinzeile bleibt eine Zeile** — unter einem Feld wie unter einer
   Zeile (`'klein'`): höchstens ein Satz.
-- **Warnungen bleiben Meldungen** (`ui_meldung()`), keine Absätze.
+- **Warnungen bleiben Meldungen** (`ui_meldung()`), keine Absätze. Wo der
+  eine Satz nicht reicht („Konto löschen": was mit den Daten geschieht, die
+  Frist), steht das Wesentliche als Meldung.
 - **Keine Karte „Was hier gilt"** mehr (bis Web 21.0.0 nach R74 (5) die
   zugeklappte Karte am Seitenende). Ihr Inhalt steht im Handbuch am Ende des
-  Kapitels, und jede Karte der Seite verweist auf ihre Stelle.
+  Kapitels.
 
 Ausgenommen sind, weil sie Zustand und keine Erklärung sind: der Satz eines
 **Leerzustands** („Zurzeit keine."), die **Befundzeilen** der Statusseite
 (`status_erhebung()`, `plattform_pruefen()`), Meldungen, Dialoge und
-Kopierwerte. Der Bereich **Einstellungen** folgt der Regel noch nicht
-(E-P5c-06). Die drei Seiten außerhalb von Verwaltung und Betrieb, die die
-Karte „Was hier gilt" noch trugen — Import / Export, das Einsatzformular und
-die Wiederherstellung —, haben sie seit Web 21.4.1 nicht mehr (R4-20,
-Nr. 287); ihr Text steht im Handbuch 4.3, 7 und 12.6.
+Kopierwerte. **Den Verweis behalten** die Druckblätter (Notfall-, Code-,
+Schlüsselblatt — auf Papier gibt es kein „?") und die öffentlichen Seiten
+ohne Kopfmenü (Wiederherstellung, Notzugang zum Zweitfaktor), auf denen er
+der einzige Weg ins Handbuch ist (E-OF-64). Die drei Seiten außerhalb von
+Verwaltung und Betrieb, die die Karte „Was hier gilt" noch trugen — Import /
+Export, das Einsatzformular und die Wiederherstellung —, haben sie seit Web
+21.4.1 nicht mehr (R4-20, Nr. 287); ihr Text steht im Handbuch 4.3, 7 und
+12.6.
+
+**Gemessen wird es seit Web 24.2.0 im Bilderlauf** (E-OF-49, Nr. 530): je
+`.karte` höchstens ein Satz in `.feld-hinweis` und `.seiten-erklaerung`
+außerhalb von Meldungen, Leerzuständen und Befundzeilen.
 
 **Gezählt wird so** (E-P5c-128): S = fester Kartentext in Sätzen, Sb_max =
 die meisten bedingten Sätze, die gleichzeitig sichtbar sind; Soll
@@ -1109,7 +1124,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 22 |
 | `haken.svg` | Tabler Icons „check" (MIT) | 38 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
-| `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 3 |
+| `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 18 |
 | `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 37 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
@@ -1128,7 +1143,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 6 |
 | `plus.svg` | Tabler Icons „plus" (MIT) | 24 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
-| `profil.svg` | Tabler Icons „user" (MIT) | 17 |
+| `profil.svg` | Tabler Icons „user" (MIT) | 18 |
 | `protokoll.svg` | Tabler Icons „list" (MIT) | 21 |
 | `punkte.svg` | Tabler Icons „dots" (MIT) | 70 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
@@ -1206,7 +1221,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | einen Hinweis vor einem Feld | `<p class="feld-hinweis">` | dasselbe wie oben |
 | einen Zusatz **in** einer Beschriftung | `<span class="feld-klein-inline">` | Klammern im Beschriftungstext |
 | einen Satz oben auf der Seite | `ui_titelzeile(['unter' => …])` oder `<p class="seiten-erklaerung">` — **höchstens einen Satz** (Kapitel 6, Erklärtext) | zwei Absätze Vorrede |
-| erklären, **wie** etwas funktioniert | ein Absatz im Handbuch am Kapitelende, in der Karte ein Satz mit Verweis `hilfe.php#…` (Kapitel 6, Erklärtext) | eine Karte „Was hier gilt", mehrere Absätze in der Karte |
+| erklären, **wie** etwas funktioniert | ein Absatz im Handbuch am Kapitelende; in der Karte ein Satz **ohne** Verweis, das „?" der Kopfleiste öffnet das Kapitel (Kapitel 6, Erklärtext) | eine Karte „Was hier gilt", mehrere Absätze in der Karte, „Handbuch: …" |
 | einen Knopf am Ende eines Formulars | `ui_knopf()` in `<div class="listen-form-fuss">` | einen blanken `<button>` |
 | einen **Wert zum Abschreiben oder Kopieren** (Kennung, Schlüssel, Prüfsumme, Adresse) | `ui_codeblock_lang()` — beide Stufen und wann welche: 9.18 | ein `<code>` im Fließtext |
 | eine **Liste von Einmalcodes** zeigen oder einen **Code eintippen** lassen | `.codeblock-liste` im Codeblock, `ui_feld([… 'klasse' => 'feld-code'])`: 9.38 | eine Tabelle, ein Feld in Normalschrift |
@@ -1236,55 +1251,55 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 248 |
 | `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 309 |
 | `ui_logo_masse()` | `.logo-masse` | **keine** | 504 |
-| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 565 |
-| `ui_geruest_start()` | `.inhalt` | ja | 657 |
-| `ui_leiste_ende()` | `.leiste` | ja (+28 Unterklassen) | 750 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 775 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 825 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1074 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1233 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1309 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1385 |
-| `ui_hinweise()` | `.hinweise` | ja | 1433 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1461 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1496 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1549 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1602 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1667 |
-| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1713 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1765 |
-| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1793 |
-| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1820 |
-| `ui_karte_start()` | `.karte` | ja (+43 Unterklassen) | 1860 |
-| `ui_karte_ende()` | `.karte` | ja (+43 Unterklassen) | 1944 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1979 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 2021 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2069 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2131 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2186 |
-| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2243 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2342 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2414 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2472 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2518 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2552 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2624 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2648 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2690 |
-| `ui_feld()` | `.feld` | ja (+27 Unterklassen) | 2762 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2827 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2871 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2924 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2968 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3067 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3131 |
-| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3172 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3264 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3302 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3332 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3344 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3487 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3566 |
+| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 602 |
+| `ui_geruest_start()` | `.inhalt` | ja | 697 |
+| `ui_leiste_ende()` | `.leiste` | ja (+28 Unterklassen) | 796 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 821 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 871 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1120 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1279 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1355 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1431 |
+| `ui_hinweise()` | `.hinweise` | ja | 1479 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1507 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1542 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1595 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1648 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1713 |
+| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1759 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1811 |
+| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1839 |
+| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1866 |
+| `ui_karte_start()` | `.karte` | ja (+43 Unterklassen) | 1906 |
+| `ui_karte_ende()` | `.karte` | ja (+43 Unterklassen) | 1990 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 2025 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 2067 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2115 |
+| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2177 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2232 |
+| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2289 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2388 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2460 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2518 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2564 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2598 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2670 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2694 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2736 |
+| `ui_feld()` | `.feld` | ja (+28 Unterklassen) | 2808 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2873 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2917 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 2970 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 3014 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3113 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3183 |
+| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3224 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3316 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3354 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3384 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3396 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3539 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3618 |
 
 54 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
@@ -2177,7 +2192,7 @@ der aufklappt, den Rest der Seite verschiebt.
 gerenderte Liste im Browser ausdünnt, ist der Kartenfilter — 9.32.
 
 `.listenkopf` ist eine **Spalte, in jeder Breite**: oben `.listensuche` (mit
-der Höchstbreite `--listensuche-breit`, 36 rem), darunter `.filterreihe` mit
+der Höchstbreite `--feld-breit`, 36 rem), darunter `.filterreihe` mit
 `flex-wrap`.
 
 **Bis Web 15.4.0 rückten beide ab 1024 px nebeneinander**, das Suchfeld auf
@@ -3533,8 +3548,9 @@ beiden Rechtstextseiten brauchen eine.
    `<h1>`; der Rückweg gehört dazu.
 4. `ui_meldung($hinweis, $fehler)` direkt darunter.
 5. `<p class="seiten-erklaerung">` (oder `'unter'` der Titelzeile) —
-   höchstens **ein Satz**; alles Erklärende steht im Handbuch, und die Karte
-   verweist darauf (Kapitel 6, Erklärtext). Wer die Seite zum zehnten Mal
+   höchstens **ein Satz**; alles Erklärende steht im Handbuch, und das „?"
+   der Kopfleiste führt dorthin (Kapitel 6, Erklärtext; die Marke gibt
+   `ui_geruest_start(['hilfe' => …])` oder der Menüpunkt). Wer die Seite zum zehnten Mal
    öffnet, liest sie nicht mehr und muss trotzdem daran vorbei.
 6. Inhalt in `ui_karte_start()` … `ui_karte_ende()`; Listen als `ui_zeile()`
    mit `ui_zeilenaktionen()`; Formulare aus `ui_feld()` und Geschwistern.

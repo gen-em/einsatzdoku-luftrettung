@@ -731,22 +731,3 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      umbenennen, Aufrufer und `vollstaendigkeit-streichliste.md` nachziehen.
      *Abnahme:* `vollstaendigkeit.py` keine Befunde, `grep -rn "orange"`
      findet in Klassennamen nur noch Töne der Plakette und Kennzahl.
-
-<!-- -->
-
-530. **Kein Prüfmittel misst die drei Seitenregeln der Oberflächenrunde.** · gehört zu: 27 · Stand: offen · seit 07.11.2026
-     *Aufgenommen 07.11.2026 mit OF-00 (E-OF-49, F-OF-14).* Drei Regeln
-     gelten ab Schritt 27 für jede Seite: Ein Speicherknopf steht im
-     Abschnitt, den er speichert, oder in der Speicherleiste, nie zwischen
-     zwei Abschnitten (E-OF-32); jeder Abschnitt endet an derselben rechten
-     Kante, begrenzt sind die Felder (E-OF-31); je Karte höchstens ein Satz
-     Erklärtext, ohne Handbuch-Verweis (E-OF-02). Die Erklärtext-Zählung aus
-     `Design.md` 6 (E-P5c-128) ist eine Handregel, und die beiden anderen
-     Regeln misst niemand — ein Knopf zwischen zwei Karten war genau der
-     Befund OF-P-07 der Betreiberin, und er stand auf mehreren Seiten.
-     *Weg:* drei Messungen in `tools/screenshots/aufnehmen.mjs` an der
-     gerenderten Seite, je mit Selbstprobe (Konzept OF, Paket OF-01).
-     *Abnahme:* ein absichtlich zwischen zwei Abschnitte gesetzter Knopf,
-     eine Lesespalte auf einer Einstellungsseite und ein zweiter Satz in
-     einer Karte sind je ein Befund des Bilderlaufs; die Sollzahl steht in
-     `tools/screenshots/LIESMICH.md`.

@@ -257,8 +257,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
   <?php ui_titelzeile([
       'titel' => 'Komplett-Backup',
       'unter' => 'Die ganze Installation als versiegelter SQL-Dump, ohne '
-               . '<code>config.php</code> — sie gehört ins Wiederanlaufpaket. '
-               . '<a href="hilfe.php#12-6-komplett-backup">Handbuch: Komplett-Backup</a>',
+               . '<code>config.php</code> — sie gehört ins Wiederanlaufpaket.',
       'aktionen' => $schluesselDa
           ? ($laeuft
               ? ui_knopf(['text' => 'Fortsetzen', 'symbol' => 'sicherung',
@@ -281,8 +280,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                (Karte „Schlüssel des Servers"), nicht unter „Backup-Ziele";
                Backup-Ziele verweist selbst nur dorthin. */ ?>
       <p class="feld-hinweis">Ein Komplett-Backup wird immer versiegelt, und dafür
-      fehlt der Serverschlüssel aus <code>config.php</code>.
-      <a href="hilfe.php#karte-schluessel-des-servers-seit-web-20-1-0">Handbuch: Schlüssel des Servers</a></p>
+      fehlt der Serverschlüssel aus <code>config.php</code>.</p>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Zu den Servereinstellungen', 'symbol' => 'schloss',
                       'art' => 'primaer',

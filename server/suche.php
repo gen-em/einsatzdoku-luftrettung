@@ -32,7 +32,7 @@ ui_seite_start(['titel' => 'Suche']);
          Menue. `ui_geruest_start()` mit leiste => 'filter' oeffnet die Leiste
          und ueberlaesst der Seite den Inhalt; ui_leiste_ende() schliesst sie
          und oeffnet den Inhalt. */ ?>
-<?php ui_geruest_start(['aktiv' => 'suche', 'leiste' => 'filter', 'titel' => 'Filter']); ?>
+<?php ui_geruest_start(['hilfe' => 'hilfe.php#4-6-suche', 'aktiv' => 'suche', 'leiste' => 'filter', 'titel' => 'Filter']); ?>
 
     <?php
       /* ---- Bausteine dieser Seite -------------------------------------

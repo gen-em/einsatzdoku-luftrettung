@@ -251,8 +251,7 @@ ui_seite_start(['titel' => 'Demo-Konto']);
 
   <p class="seiten-erklaerung">Ein Konto zum Ausprobieren, das sich
      <strong>30 Minuten nach der ersten Änderung</strong> selbst auf den
-     Standardzustand zurücksetzt — ohne Änderung einmal am Tag.
-     <a href="hilfe.php#11-6-demo-konto">Handbuch: Demo-Konto</a></p>
+     Standardzustand zurücksetzt — ohne Änderung einmal am Tag.</p>
 
 <?php if ($demoId === null): ?>
 

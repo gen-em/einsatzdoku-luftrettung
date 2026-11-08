@@ -287,8 +287,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
       'titel' => 'Backup-Ziele',
       'unter' => 'SFTP- und FTPS-Gegenstellen für die Backups, nicht zu verwechseln '
                . 'mit den Zielkliniken unter '
-               . '<a href="einstellungen.php?t=standorte">Standorte</a>. '
-               . '<a href="hilfe.php#12-7-backup-ziele">Handbuch: Backup-Ziele</a>',
+               . '<a href="einstellungen.php?t=standorte">Standorte</a>.',
       'aktionen' => $schluesselDa && $tabelleDa
           ? (($aktiveZiele > 0
               ? ui_knopf(['text' => 'Jetzt versenden', 'symbol' => 'tausch',
@@ -398,8 +397,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
   <?php if (!$schluesselDa): ?>
     <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt', 'id' => 'k-schluessel-fehlt']); ?>
       <p class="feld-hinweis">Die Zugangsdaten der Ziele werden mit dem
-         Serverschlüssel verschlüsselt, und ohne ihn lässt sich kein Ziel anlegen.
-         <a href="hilfe.php#karte-schluessel-des-servers-seit-web-20-1-0">Handbuch: Schlüssel des Servers</a></p>
+         Serverschlüssel verschlüsselt, und ohne ihn lässt sich kein Ziel anlegen.</p>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Zu den Servereinstellungen', 'symbol' => 'schloss',
                       'art' => 'primaer',
@@ -458,8 +456,7 @@ ui_seite_start(['titel' => 'Backup-Ziele']);
                     : ui_plakette((string)$rueck, ['ton' => $rueck > 0 ? 'orange' : 'gruen'])]);
       ?>
       <p class="feld-hinweis">Der Versand schickt, was am Ziel nach Name und Größe
-         fehlt, und wiederholt deshalb eine abgebrochene Übertragung.
-         <a href="hilfe.php#12-7-backup-ziele">Handbuch: Backup-Ziele</a></p>
+         fehlt, und wiederholt deshalb eine abgebrochene Übertragung.</p>
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
