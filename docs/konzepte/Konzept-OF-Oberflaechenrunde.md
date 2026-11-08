@@ -40,7 +40,7 @@ es im Kopf von `server/version.php`.
 | NV-01 | Bereichszeile unter der Kopfleiste — als Reiter-Baustein für beide Ebenen (E-OF-17, E-OF-40); Seitenreiter in derselben Form (OF-P-20); Ziel „Betrieb“ ist der erste Punkt (E-OF-51) | Opus · keine | **erledigt** 08.11.2026 (Web 23.12.0) |
 | NV-02 | Rahmenkarte für alle drei Leistentypen: Abschnitte in den Einstellungen, Karten auf Startseite und Suche (E-OF-36 bis -38); Leiste klebt und rollt innen (E-OF-37); Fußzeile als dunkelblauer Abschluss (E-OF-34) | Opus · keine | **erledigt** 08.11.2026 (Web 24.0.0) |
 | NV-03 | Leiste der Einstellungen auf den aktiven Bereich kürzen; aktiver Eintrag ohne Strich in jeder Leiste (OF-P-04, E-OF-16); „Abmelden“ nur in der Leiste (E-OF-27); Sprungmarken nur zu sichtbaren Karten (OF-P-16) | Opus · keine | **erledigt** 08.11.2026 (Web 24.1.0) |
-| NV-04 | Schmale Breiten: Bereichszeile rollt, Rahmenkarte ohne Rand, Schublade mit drei Bereichen; die Übersicht bleibt (E-OF-50) | Opus · keine | offen |
+| NV-04 | Schmale Breiten: Bereichszeile rollt, Rahmenkarte ohne Rand, Schublade mit drei Bereichen; die Übersicht bleibt (E-OF-50) | Opus · keine | **erledigt** 08.11.2026 (ohne Codeänderung, E-OF-63) |
 | OF-01 | Regeln für alle Seiten: eine rechte Kante, Felder 36 rem (E-OF-31); Speicherknopf im Abschnitt oder Speicherleiste (E-OF-32, E-OF-41); Handbuch-Verweise raus, das „?“ öffnet das Kapitel der Seite (E-OF-02, -56); ein Satz je Karte (OF-P-10, -15); drei Messungen im Bilderlauf (E-OF-49, Nr. 530) | Opus · keine | offen |
 | OF-02 | Bausteine I: Klappkarte mit Stand und Plakette (E-OF-42); Segmentwahl abwählbar und senkrecht mittig (OF-P-05, E-OF-33); Zeile mit Plakette und Knopf auf einer Linie (OF-P-08); sechs neue Zeichen | Opus · keine | offen |
 | OF-03 | Bausteine II, Eingabe: Datumsfeld `TT.MM.JJJJ` an allen acht Stellen (E-OF-06, -44, -54); Ortsfeld-Hinweis als Zeichen (E-OF-07); Listenkopf mit Filterknopf (E-OF-18) | Opus · keine | offen |
@@ -51,7 +51,8 @@ es im Kopf von `server/version.php`.
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | offen |
 | OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
 
-**In Arbeit:** NV-04 schmale Breiten. **Erledigt:** OF-00, NV-01 bis NV-03.
+**In Arbeit:** OF-01 Regeln. **Erledigt:** OF-00, NV-01 bis NV-04 (das
+Gerüst steht).
 **Prüfweise seit NV-02:** E-OF-60. **Hakt:**
 nichts; F-OF-19 (eine Rolle mit einem Bereich sieht einen einzelnen
 Reiter) ist der Betreiberin zur Kenntnis vorgelegt. **Offen bei der Betreiberin:** nichts — alle Fragen sind entschieden (Abschnitt 7); Q-OF-02 wird in OF-M1 vorgelegt.
@@ -760,6 +761,7 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-60 | Prüfweise der Umsetzung: Nach jedem Paket die billigen Mittel — 24 Riegel aus `pruefablauf.json` (`braucht: nichts`), Stilvergleich in drei Engines mit Durchsicht der neuen Signaturen, `kontrast.py`, gezielte Bilder der berührten Seiten; Bilderlauf, Barrierefreiheit und Bedienprobe in Chromium nach NV-04; der volle Prüfstand mit Bericht vor dem Pull Request (OF-09). Grund: Zwei Neustarts des Containers brachen den vollen Prüfstand (rund 2 h) nach 20 und nach 180 Minuten ab (NV-01) | Betreiberin, 08.11.2026 (Vorschlag Claude) |
 | E-OF-61 | NV-02: (1) Auch die Bereichskarten der Übersicht werden Abschnitte, ohne Rauchfläche im Kopf — so zeigt es das freigegebene Bild `OF-P29-C`; E-OF-50 („unverändert“) bezieht sich auf Inhalt und Zweck der Seite. (2) Jeder Abschnitt trägt die Linie oben, auch der erste; sie steht damit unter dem Seitentitel wie in `NV-01` — eine Ausnahme für die erste Karte (Abschnitt 5, NV-02) braucht es dafür nicht. (3) Die Fußzeile bleibt im Druck weg (Abschnitt 5, NV-02); bis Web 23 wurde sie gedruckt — „wie heute“ dort stimmte nicht. (4) Unter 1024 px haben Rahmenkarte und Leistenspalte keine Box (`display: contents`); was die schmale Breite sonst braucht, bringt NV-04 | Umsetzung, 08.11.2026 |
 | E-OF-62 | NV-03: Die Sprungmarken ziehen über einen `MutationObserver` auf `hidden` im Inhalt nach, nicht über einen Aufruf der Backup-Seite (Abschnitt 5, NV-03). So kann keine Seite mit bedingter Karte — Backup, Zweitfaktor, Geräte, Import / Export nach OF-04 — das Nachziehen vergessen; die Durchsicht je Seite entfällt damit. Der Vorschlag verliert mit dem Strich seine einzige Markierung auf Rauch und bekommt deshalb die Auswahlfläche (Blau 100) statt Rauch; zwei Kontrastpaare, deren Beschreibung den Strich nannte, tragen weiter andere Stellen und sind neu beschrieben | Umsetzung, 08.11.2026 |
+| E-OF-63 | NV-04 ohne Codeänderung: Was Abschnitt 5 für unter 1024 px verlangt, leistet `display: contents` an Rahmenkarte und Leistenspalte aus NV-02 (E-OF-61) — keine Box, kein Rand, keine Fläche; die Bereichszeile rollt (NV-01), Schublade und Rückweg sind unverändert. Die Regel `.rahmen { padding: --abstand-3 }` entfällt: `.inhalt` trägt den Abstand schon, und der Inhalt liegt wie im Bild `NV-05` 12 px vom Rand; mit ihr wären es 24. Keine neue Fassung — es ändert sich nichts, was ausgeliefert wird | Umsetzung, 08.11.2026 |
 | E-OF-48 | Papierkorb: Das Artzeichen des Diensttags (`ohne-zuordnung`, Hubschrauber, Fahrzeug) steht vor dem Datum wie in Leiste und Vorschlägen — so zeigt es das freigegebene Bild; „entfernt“ in E-OF-30 meint die Stelle neben den Knöpfen. Will die Betreiberin es im Papierkorb ganz weglassen, ist das eine Zeile | Konzept, aus E-OF-30 (F-OF-16) |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
@@ -981,4 +983,27 @@ Strich am Vorschlag), 0 ohne Eintrag.
 **Nicht geprüft:** Bilderlauf, Barrierefreiheit, Bedienprobe (nach NV-04,
 E-OF-60); die Durchsicht der übrigen Seiten mit bedingten Karten von Hand
 (E-OF-62 macht sie überflüssig, belegt ist nur die Backup-Seite).
+
+### NV-04 Schmale Breiten (08.11.2026, ohne neue Fassung)
+
+**Was getan ist.** Nichts am Code (E-OF-63) — nachgemessen, dass das
+Gerüst aus NV-01 bis NV-03 die schmalen Breiten schon trägt.
+
+**Gemessen** (Chromium, örtliche Anlage). 390 × 844, Profil: Seitentitel
+und erstes Feld bei **x = 12**, Feld bis 378, `scrollWidth` 390 — wie
+`NV-05`. Übersicht 390: drei Bereichskarten untereinander, kein
+„Abmelden“ im Inhalt (P-OF-06). Startseite 390 gegen `OF-E1-2-karten-390`:
+Demo-Hinweis, Titel, Karten mit Rand ohne Rahmenkarte, gleiche Lage.
+Bereichszeile bei 390: `scrollWidth` = `clientWidth` (NV-01). Schublade
+bei 390: drei Bereiche (NV-03). **Nach dem Gerüst der schwere Lauf in
+Chromium (E-OF-60):** Bilderlauf **fünf Breiten** (390, 768, 1024, 1200,
+1600), 86 Seiten, **430 Bilder, Überlauf 0, Konsolenfehler 0, Knöpfe
+falscher Höhe 0**, 201 Karten / 0 außerhalb `main.inhalt` (in NV-02 mit
+drei Breiten 211 — die Zahl hängt am Breitensatz; warum, ist nicht
+untersucht), 0 gleiche Bilder über Breiten; **Barrierefreiheit** 74
+Seitenaufrufe, **0 Befunde**; **Bedienprobe 77 von 77**.
+
+**Nicht geprüft:** dieselben Läufe in Firefox und WebKit (voller
+Prüfstand vor dem Pull Request); 768 px und 1024 px nur im Bilderlauf,
+nicht im Bild durchgesehen.
 
