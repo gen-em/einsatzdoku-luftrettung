@@ -1869,6 +1869,14 @@ Unterpunkte der Leiste (9.25), und beide holen sie aus denselben `id`.
 
 **Eine Karte im Schleier — in jeder Breite.**
 
+**Schließen: Knopf, Esc oder ein Klick daneben** (der Klick daneben seit
+Web 24.9.3, `confirm.js`, für jedes modale `<dialog>`). Er wirkt wie Esc
+(`cancel`, danach `close`), zählt nur, wenn er auch außerhalb begann, und
+gilt nicht für Dialoge mit `data-dialog-fest`: die fünf Schlüssel-Dialoge
+(neuer Wiederherstellungsschlüssel, Rückweg, Schlüsselpaar, Schlüsselblatt-
+und Konto-Rückfrage). Ein neuer Dialog, der etwas Einmaliges zeigt, trägt
+das Attribut ebenfalls.
+
 > *Hier stand bis Web 17.0.0: „Am Schreibtisch eine Karte im Schleier, mobil
 > ein Blatt von unten (E-P3-27). Dasselbe Markup, das Stylesheet
 > entscheidet." Das stimmt nicht und hat nie gestimmt: Zu `.dialog` gibt es
@@ -3290,7 +3298,7 @@ ui_reiter(['label' => 'Bereiche des Protokolls', 'punkte' => [
 | Teil | Darstellung |
 |---|---|
 | `.reiter` | Reihe mit Grundlinie `--strich` in `--linie`, `--abstand-4` darunter |
-| `.reiter-punkt` | Kopfschrift **700**, `--gedaempft`, `min-height: var(--bereiche)` (**48 px in jeder Breite**, E-NV-04), Fläche `--flaeche-abgesetzt` beim Darüberfahren, nie umbrechend — bis Web 23.11 500 und `--knopf` |
+| `.reiter-punkt` | **Open Sans 700** (Textschrift; bis Web 24.9.2 Kopfschrift 700, die als Schnitt fehlt und vom Browser nachgerechnet wurde), `--gedaempft`, `min-height: var(--bereiche)` (**48 px in jeder Breite**, E-NV-04), Fläche `--flaeche-abgesetzt` beim Darüberfahren, nie umbrechend — bis Web 23.11 500 und `--knopf` |
 | `.reiter-punkt.aktiv` | `--text-titel`, Unterstrich `--strich-reiter` (3 px, bis Web 23.11 `--strich-stark`) in `--auswahl-linie` (Dunkelblau), `aria-current="page"` |
 | `.reiter-bereiche` | Lage der Bereichszeile: volle Breite, Fläche Karte, Linie unten am Rahmen statt an der Reihe; ab 1024 px `sticky` unter `--kopf` |
 | `.bereich-zahl` | Zahl der Punkte hinter dem Namen, `--gedaempft`, 400 |
@@ -3795,6 +3803,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 24.9.3** | **9.11:** Ein Klick neben einen Dialog schließt ihn, außer `data-dialog-fest` (Schlüssel-Dialoge). **9.37:** Reiter in Open Sans 700 statt Bricolage 700 — den Schnitt gibt es nicht, der Browser rechnete ihn nach, die Reiter sahen verschmiert aus (Rückmeldung vom 09.11.2026). Kein Token, kein Baustein. |
 | **Web 24.9.1 (Schritt 27, Konzept OF, OF-09)** | **9.26:** `.karten-raster` setzt seine Karten als `inline-block` — WebKit verteilte eine Klappkarte im Mehrspaltensatz falsch. Kein neuer Baustein, kein Token. |
 | **Web 24.9.0 (Schritt 27, Konzept OF, OF-08)** | **3a:** Mond und Sonne in der Kopfleiste bei „Umschalter“ und „Folgt System“ (E-OF-09); vier Einstellungen im Profil. Kein neuer Baustein, kein Token, kein Kontrastpaar. |
 | **Web 24.8.0 (Schritt 27, Konzept OF, OF-07)** | **9.30:** Bedienelemente der Karte im Branding, Ebenenwahl mit Zeichen `karte` und Überschrift „Kartenart“, Namen ohne Anbieter (E-OF-13, -29). **9.6:** Schloss der Einsatzansicht in eigener Spalte vor dem Wort (E-OF-28). **9.7:** Transportart als abwählbare Segmentwahl aus dem Feldkatalog (E-OF-33). **9.17:** Die Karte „Ruhesegmente“ steht auf Abruf (E-OF-05). **4:** neues Maß `--lese-beschriftung` (14 rem, aus E-OF-28). Kein neuer Baustein. |

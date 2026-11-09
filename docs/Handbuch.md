@@ -357,6 +357,12 @@ darunter der Teil, der zur Seite gehört (Diensttage, Einstellungen oder die
 Filter der Suche). Schließen lässt sie sich auf drei Wegen: über das × oben
 links, über die abgedunkelte Fläche daneben oder mit der Esc-Taste.
 
+**Popups** (Dialoge) schließt du mit ihrem Knopf, mit der Esc-Taste oder
+seit Web 24.9.3 mit einem Klick daneben — das wirkt wie „Abbrechen“. Nur die
+Dialoge rund um deine Schlüssel (neuer Wiederherstellungsschlüssel, Rückweg,
+Schlüsselblatt und die Rückfrage zum Konto) bleiben dabei offen, weil sie
+etwas Einmaliges zeigen oder eine Antwort brauchen.
+
 **Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie ist in **drei
 Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
 

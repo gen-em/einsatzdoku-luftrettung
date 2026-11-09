@@ -8851,4 +8851,12 @@ declare(strict_types=1);
  *   von `EdApi` hinaus (`postForm(…, { ueberdauert: true })`), und ein
  *   Verweis der eigenen Anlage wartet hoechstens 1,5 s, bis sie da ist.
  *   Korrektur; kein Schema. */
-const WEB_VERSION = '24.9.2';
+/* 24.9.3 — DIE REITER IN IHRER SCHRIFT. `.reiter-punkt` verlangte seit
+ *   23.12.0 (NV-01) Bricolage Grotesque 700; die Anwendung liefert nur den
+ *   Schnitt 500, der Browser rechnete den Fettdruck nach, und Bereichszeile
+ *   und Seitenreiter sahen verschmiert aus (Rueckmeldung der Betreiberin).
+ *   Jetzt Open Sans 700, wie das Konzept es vorsah. Dazu: Ein Klick neben
+ *   ein Popup schliesst es wie Esc (`confirm.js`, fuer jedes modale
+ *   <dialog>), ausser bei `data-dialog-fest` — den fuenf Schluessel-Dialogen.
+ *   Korrektur; kein Schema. */
+const WEB_VERSION = '24.9.3';

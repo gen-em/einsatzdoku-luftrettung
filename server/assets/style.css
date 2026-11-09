@@ -5210,11 +5210,15 @@ a.konto-name:hover{color:var(--text-link)}
  * Bereichszeile tragen dieselbe Schrift (Open Sans 700), dieselbe Höhe
  * (`--bereiche`, 48 px) und denselben Unterstrich (3 px Dunkelblau). Bis
  * Web 23 waren die Seitenreiter leiser (500, 44 px, 2 px). Welche Reihe die
- * obere Ebene ist, sagt die Lage. */
+ * obere Ebene ist, sagt die Lage.
+ * OPEN SANS, NICHT BRICOLAGE (seit Web 24.9.3): Von 23.12.0 bis 24.9.2 stand
+ * hier `--schrift-kopf` mit 700 — einen Bricolage-Schnitt 700 liefert die
+ * Anwendung nicht, der Browser rechnete den Fettdruck selbst, und die Reiter
+ * sahen verschmiert aus. */
 .reiter-punkt{
   flex:0 0 auto;display:inline-flex;align-items:center;gap:var(--abstand-2);
   min-height:var(--bereiche);padding:0 var(--abstand-4);
-  font-family:var(--schrift-kopf);font-weight:700;color:var(--gedaempft);
+  font-family:var(--schrift-text);font-weight:700;color:var(--gedaempft);
   text-decoration:none;white-space:nowrap;
   border-bottom:var(--strich-reiter) solid transparent;
 }

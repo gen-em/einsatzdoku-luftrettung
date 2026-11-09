@@ -36,7 +36,7 @@ declare(strict_types=1);
  * verloren hat, druckt es neu; der Schluessel bleibt derselbe.
  */
 ?>
-<dialog class="dialog" id="dlg-blatt" data-blatt-dialog>
+<dialog class="dialog" id="dlg-blatt" data-dialog-fest data-blatt-dialog>
   <div class="dialog-kopf">
     <h2>Schlüsselblatt bestätigen</h2>
     <p class="feld-hinweis" data-blatt-unter>Betrieb</p>

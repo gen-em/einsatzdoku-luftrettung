@@ -1904,7 +1904,7 @@ ui_seite_start(['titel' => 'Einstellungen',
     <?php endif; ?>
 <?php endif; ?>
 
-    <dialog class="dialog" id="dlg-schluessel" data-schluessel>
+    <dialog class="dialog" id="dlg-schluessel" data-dialog-fest data-schluessel>
       <?php require __DIR__ . '/schluessel_teile.php'; ?>
     </dialog>
 
@@ -1915,7 +1915,7 @@ ui_seite_start(['titel' => 'Einstellungen',
              aufzuschreiben, das Notfallblatt bleibt gueltig. Nach dem Erfolg
              laedt die Seite neu; die Meldung dazu legt der Endpunkt ab. */ ?>
     <?php if ($rwZ['stand'] === 'da'): ?>
-    <dialog class="dialog" id="dlg-rueckweg">
+    <dialog class="dialog" id="dlg-rueckweg" data-dialog-fest>
       <div class="dialog-kopf">
         <h2>Rückweg erneuern</h2>
         <p class="feld-hinweis">Konto-Sicherheit</p>
@@ -5163,7 +5163,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                         'attr' => ' data-kp-auf']) ?>
         </div>
       <?php ui_karte_ende(); ?>
-      <dialog class="dialog" id="dlg-kontopaar">
+      <dialog class="dialog" id="dlg-kontopaar" data-dialog-fest>
         <div class="dialog-kopf">
           <h2>Schlüsselpaar einrichten</h2>
           <p class="feld-hinweis">Konto-Sicherheit</p>

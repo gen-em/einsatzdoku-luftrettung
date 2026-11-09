@@ -202,8 +202,9 @@
     });
   }
 
-  /* Esc und der Klick daneben — beide gehen durch `cancel`, und beide werden
-   * in Abschnitt 3 abgewiesen. */
+  /* Esc geht durch `cancel` und wird in Abschnitt 3 abgewiesen. Ein Klick
+   * daneben schliesst diesen Dialog gar nicht (`data-dialog-fest`, seit Web
+   * 24.9.3; bis dahin stand hier, er gehe durch `cancel` — es gab ihn nicht). */
   dlg.addEventListener('cancel', function (ev) {
     if (festgehalten) { ev.preventDefault(); }
   });
