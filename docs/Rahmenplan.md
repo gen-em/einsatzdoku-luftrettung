@@ -1,10 +1,10 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 231 (09.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 232 (09.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `3d4db98`, PR #160, gemessen 09.11.2026): Web 24.9.2 ·
+**Stand `origin/main`** (Commit `e8b0fc5`, PR #162, gemessen 09.11.2026): Web 24.10.1 ·
 Uhr 4.3.3 · Android 0.22.0; auf Staging, Produktiv noch auf Web 23.8.2 · Uhr 4.3.2 · Android 0.21.0 (Tags auf `bfaca8b`).
 **Läuft:** nichts; 27 (OF) abgeschlossen 09.11.2026 (PR #159).
 **Als Nächstes:** 13 (P7).
