@@ -52,8 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 530 bis 539 | `claude/oberflaechenrunde-of` (27, OF) | 07.11.2026 |
-| ab 540 | frei — höchste reservierte Nummer 539; frei blieben 525 bis 529 aus der Spanne von 26 (PR #156), 511 bis 519 aus der Spanne von 24 und BR7 (PR #152 bis #154), 501 bis 509 aus der von 23 (PR #150, #151), 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
+| ab 540 | frei — höchste reservierte Nummer 539; frei blieben 531 bis 539 aus der Spanne von 27 (PR #159), 525 bis 529 aus der Spanne von 26 (PR #156), 511 bis 519 aus der Spanne von 24 und BR7 (PR #152 bis #154), 501 bis 509 aus der von 23 (PR #150, #151), 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
 
 ---
 
