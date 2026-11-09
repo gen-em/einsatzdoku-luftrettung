@@ -54,7 +54,7 @@ $rfWann  = [0 => 'Vor <strong>30 Tagen</strong>',
 $rfGeschoben = (int)($rueckfrageStand['rueckfrage_verschoben'] ?? 0);
 $rfSpaeterAuf = $rfGeschoben < RUECKFRAGE_SPAETER_MAX;
 ?>
-<dialog class="dialog" id="dlg-rueckfrage" data-rueckfrage>
+<dialog class="dialog" id="dlg-rueckfrage" data-dialog-fest data-rueckfrage>
 
   <?php /* ---- ZUSTAND 1: die Frage ------------------------------------- */ ?>
   <div class="dialog-teil" data-rf="frage">

@@ -461,8 +461,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         if ($zfZurueck !== null) {
-            if ($zfZurueck[0] !== '') { flash_setzen($zfZurueck[0], $zfZurueck[1]); }
-            header('Location: einstellungen.php?t=profil#k-zweitfaktor');
+            /* Aus dem Verwalten-Dialog (gemerkte Geräte) zurück in ihn. */
+            $imDialog = $action === 'zf_geraete_vergessen';
+            if ($zfZurueck[0] !== '') { flash_setzen($zfZurueck[0], $zfZurueck[1], $imDialog ? 'zf' : ''); }
+            header('Location: einstellungen.php?t=profil#' . ($imDialog ? 'zf-verwalten' : 'k-zweitfaktor'));
             exit;
         }
     }
@@ -485,11 +487,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             require_once __DIR__ . '/mail_lib.php';
             mail_einreihen('passkey_entfernt', (string)($row['email'] ?? ''),
                            ['link' => app_url('/einstellungen.php?t=profil'), 'bezeichnung' => $pkName]);
-            flash_setzen('notice', 'Passkey „' . $pkName . '" entfernt.');
+            flash_setzen('notice', 'Passkey „' . $pkName . '" entfernt.', 'zf');
         } else {
-            flash_setzen('error', 'Diesen Passkey gibt es nicht (mehr).');
+            flash_setzen('error', 'Diesen Passkey gibt es nicht (mehr).', 'zf');
         }
-        header('Location: einstellungen.php?t=profil#k-zweitfaktor');
+        header('Location: einstellungen.php?t=profil#zf-verwalten');
+        exit;
+    }
+
+    /* ---- Einen Passkey umbenennen (seit Web 24.10.0) --------
+     *
+     * NUR AM EIGENEN KONTO und OHNE frischen Code: Der Name ist eine
+     * Beschriftung, kein Faktor — am Schlüssel ändert sich nichts. Eine
+     * Protokollzeile, keine Mail. Zurück in den Dialog „Zweitfaktor
+     * verwalten", wo die Meldung steht. */
+    if ($action === 'passkey_umbenennen') {
+        require_once __DIR__ . '/passkey_lib.php';
+        $pkId = (int)($_POST['id'] ?? 0);
+        $pkVor = array_values(array_filter(pk_liste($userId), static fn(array $p): bool => $p['id'] === $pkId));
+        $grund = $pkVor === [] ? 'fehlt' : pk_umbenennen($userId, $pkId, post_text('pk_name_neu'));
+        if ($grund === '') {
+            $pkNach = array_values(array_filter(pk_liste($userId), static fn(array $p): bool => $p['id'] === $pkId));
+            $alt = pk_anzeigename($pkVor[0]);
+            $neu = $pkNach ? pk_anzeigename($pkNach[0]) : $alt;
+            if ($neu !== $alt) {
+                require_once __DIR__ . '/protokoll_lib.php';
+                protokoll('verwaltung', 'passkey_umbenannt', 'Passkey umbenannt: ' . $alt . ' → ' . $neu,
+                          ['weg' => 'selbst', 'passkey' => $pkId], $userId);
+            }
+            flash_setzen('notice', 'Passkey heißt jetzt „' . $neu . '".', 'zf');
+        } else {
+            flash_setzen('error', $grund === 'bezeichnung'
+                ? 'Die Bezeichnung ist zu lang — höchstens ' . PK_BEZEICHNUNG_MAX . ' Zeichen.'
+                : 'Diesen Passkey gibt es nicht (mehr).', 'zf');
+        }
+        header('Location: einstellungen.php?t=profil#zf-verwalten');
         exit;
     }
 
@@ -1341,6 +1373,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Meldung/Fehler aus der Umleitung uebernehmen
 $flash = flash_holen();
+/* MELDUNGEN AUS „ZWEITFAKTOR VERWALTEN" (Ort `zf`, seit Web 24.10.0) stehen
+   im Dialog, der nach der Umleitung wieder aufgeht — oben auf der Seite
+   laegen sie hinter seinem Schleier. */
+$zfFlash = null;
+if ($flash !== null && ($flash['ort'] ?? '') === 'zf') { $zfFlash = $flash; $flash = null; }
 if ($flash !== null) {
     if ($flash['ton'] === 'error') { $error = $flash['text']; }
     else                           { $notice = $flash['text']; }
@@ -1746,15 +1783,30 @@ ui_seite_start(['titel' => 'Einstellungen',
                 'info', '      ',
                 ['auftakt_fehler' => 'Das Geheimnis lässt sich auf dieser Anlage nicht öffnen.']);
         } ?>
-      <?php /* OFFEN, SOLANGE DER CODE FRISCH IST (15 Minuten): Dann kommt man
-               von „Zuerst Code bestätigen" und will einen Passkey hinzufügen —
-               das Formular dazu steht in der aufgeklappten Zeile. */ ?>
-      <details class="zeile-mehr zf-verwalten"<?= zweitfaktor_frisch() ? ' open' : '' ?>>
-        <summary class="zeile">
-          <span class="zeile-text"><span class="zeile-haupt">Eingeschaltet</span>
-            <span class="zf-satz"><?= e(implode(' · ', $zfSatz)) ?></span></span>
-          <span class="knopf knopf-neutral" aria-hidden="true"><?= ui_symbol('zahnrad') ?><span>Verwalten</span></span>
-        </summary>
+      <?php /* „VERWALTEN" ÖFFNET EIN POPUP (seit Web 24.10.0, Rückmeldung der
+               Betreiberin, Mockup freigegeben 09.11.2026). Bis dahin klappte
+               die Zeile die Verwaltung unter sich auf (OF-04, E-OF-19); in
+               der Karte steht jetzt nur der eine Satz, alles Weitere im
+               Dialog `#zf-verwalten`. Er steht IN der Karte, damit
+               `#k-zweitfaktor .zeile` weiter jede Zeile findet.
+               VON SELBST OFFEN nach einer Code-Bestätigung: Die vier
+               Handlungen dieser Karte kehren nach `#zf-verwalten` zurück
+               (`ZF_FRISCH_HANDLUNGEN`), und das Skript unten öffnet ihn dann. */ ?>
+      <div class="zeile">
+        <span class="zeile-text"><span class="zeile-haupt">Eingeschaltet</span>
+          <span class="zf-satz"><?= e(implode(' · ', $zfSatz)) ?></span></span>
+        <div class="zeile-aktionen">
+          <?= ui_knopf(['text' => 'Verwalten', 'art' => 'neutral', 'symbol' => 'zahnrad', 'typ' => 'button',
+                        'attr' => ' data-dialog="zf-verwalten"']) ?>
+        </div>
+      </div>
+      <dialog class="dialog" id="zf-verwalten" aria-labelledby="zf-verwalten-titel" data-ohne-feldfokus>
+        <div class="dialog-kopf"><h2 id="zf-verwalten-titel">Zweitfaktor verwalten</h2></div>
+        <div class="dialog-inhalt">
+          <?php if ($zfFlash !== null) {
+              ui_meldung($zfFlash['ton'] === 'error' ? null : $zfFlash['text'],
+                         $zfFlash['ton'] === 'error' ? $zfFlash['text'] : null, 'ok', '          ');
+          } ?>
 <?php
         ui_zeile(['text' => 'Codes zur Wiederherstellung',
                   'klein' => $zf['codes_offen'] . ' von ' . $zf['codes_alle']
@@ -1789,6 +1841,12 @@ ui_seite_start(['titel' => 'Einstellungen',
                       'klein' => $pkListe
                           ? count($pkListe) . ' von ' . PK_HOECHSTENS . ' — ersetzen bei der Anmeldung den Code'
                           : 'noch keiner — ein Passkey ersetzt bei der Anmeldung den Code']);
+            /* UMBENENNEN UND ENTFERNEN (Umbenennen seit Web 24.10.0, Mockup
+               freigegeben 09.11.2026): am Schreibtisch zwei Knöpfe, unter
+               720 px das „⋯" (`ui_zeilenaktionen()`). Umbenennen öffnet den
+               kleinen Dialog `dlg-pk-name`, der Kennung und heutigen Namen
+               vom Knopf übernimmt (`data-w-*`, assets/dialog.js); er steht
+               über diesem Dialog. */
             foreach ($pkListe as $pk) {
                 $pkName = pk_anzeigename($pk);
                 ui_zeile(['text' => $pkName,
@@ -1796,10 +1854,17 @@ ui_seite_start(['titel' => 'Einstellungen',
                                    . ($pk['zuletzt_am'] !== null
                                         ? ' · zuletzt benutzt ' . datum_zeit_text($pk['zuletzt_am'])
                                         : ' · noch nicht benutzt'),
-                          'aktionen' => ui_knopf(['text' => 'Entfernen', 'art' => 'leise',
-                              'attr' => ' form="f-pk-' . $pk['id'] . '" data-confirm="Passkey „'
-                                      . e($pkName) . '" entfernen? Die Anmeldung fragt dort danach wieder nach dem Code." '
-                                      . 'data-confirm-ok="Entfernen" data-confirm-tone="normal"'])]);
+                          'aktionen' => ui_zeilenaktionen(['titel' => $pkName, 'eintraege' => [
+                              ['text' => 'Umbenennen', 'symbol' => 'stift', 'art' => 'leise',
+                               'href' => '#dlg-pk-name',
+                               'attr' => ' data-dialog="dlg-pk-name" data-w-id="' . (int)$pk['id']
+                                       . '" data-w-name="' . e((string)$pk['bezeichnung']) . '"'],
+                              ['text' => 'Entfernen', 'symbol' => 'korb', 'art' => 'leise',
+                               'form' => 'f-pk-' . $pk['id'],
+                               'attr' => ' data-confirm="Passkey „'
+                                       . e($pkName) . '" entfernen? Die Anmeldung fragt dort danach wieder nach dem Code." '
+                                       . 'data-confirm-ok="Entfernen" data-confirm-tone="normal"'],
+                          ]])]);
             }
             foreach ($pkFremd as $pk) {
                 $pkName = pk_anzeigename($pk);
@@ -1834,7 +1899,7 @@ ui_seite_start(['titel' => 'Einstellungen',
 <?php
             } elseif (count($pkListe) < PK_HOECHSTENS) { ?>
         <p class="feld-klein"><a href="zweitfaktor.php?bestaetigen=1&amp;zurueck=<?=
-          e(rawurlencode('einstellungen.php?t=profil#k-zweitfaktor')) ?>">Zuerst Code bestätigen</a> —
+          e(rawurlencode('einstellungen.php?t=profil#zf-verwalten')) ?>">Zuerst Code bestätigen</a> —
           dann lässt sich ein Passkey hinzufügen (15 Minuten lang).</p>
 <?php
             }
@@ -1857,13 +1922,46 @@ ui_seite_start(['titel' => 'Einstellungen',
         <p class="feld-klein">Für die Rolle <?= e(rolle_text($userRole)) ?> Pflicht — ausschalten geht nicht; zurücksetzen kann <?=
           rolle_ist_betreiberin($userRole) ? 'eine andere BetreiberIn' : 'eine BetreiberIn' ?><?=
           $rwZ['stand'] === 'da' ? ' oder du selbst mit dem Wiederherstellungsschlüssel' : '' ?>.</p>
-<?php   else: ?>
-        <div class="listen-form-fuss">
+<?php   endif; ?>
+        </div>
+        <div class="dialog-fuss">
+<?php   if (!$zfPflicht): ?>
           <?= ui_knopf(['text' => 'Ausschalten', 'art' => 'leise', 'attr' => ' form="f-zf-aus"'
                         . ' data-confirm="Zweitfaktor ausschalten? Die Anmeldung fragt danach wieder nur nach dem Passwort; die Codes und deine Passkeys werden ungültig." data-confirm-ok="Ausschalten"']) ?>
-        </div>
 <?php   endif; ?>
-      </details>
+          <?= ui_knopf(['text' => 'Schließen', 'art' => 'neutral', 'typ' => 'button', 'attr' => ' data-dialog-zu']) ?>
+        </div>
+      </dialog>
+<?php   if ($pkDa && $pkListe): ?>
+      <dialog class="dialog" id="dlg-pk-name" aria-labelledby="dlg-pk-name-titel">
+        <form method="post" action="einstellungen.php?t=profil#zf-verwalten">
+          <?= csrf_field() ?><input type="hidden" name="action" value="passkey_umbenennen">
+          <input type="hidden" name="id" data-fuell="id">
+          <div class="dialog-kopf"><h2 id="dlg-pk-name-titel">Passkey umbenennen</h2></div>
+          <div class="dialog-inhalt">
+            <?php ui_feld(['name' => 'pk_name_neu', 'label' => 'Bezeichnung',
+                           'platzhalter' => 'z. B. Handy oder Laptop',
+                           'attr' => ' maxlength="' . PK_BEZEICHNUNG_MAX . '" autocomplete="off" data-fuell="name"']); ?>
+            <p class="feld-klein">Leer heißt „Passkey vom" und das Datum, an dem er hinzukam.</p>
+          </div>
+          <div class="dialog-fuss">
+            <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise', 'typ' => 'button', 'attr' => ' data-dialog-zu']) ?>
+            <?= ui_knopf(['text' => 'Speichern', 'art' => 'primaer', 'typ' => 'submit']) ?>
+          </div>
+        </form>
+      </dialog>
+<?php   endif; ?>
+    <script src="<?= asset('assets/dialog.js') ?>"></script>
+    <script<?= kopf_nonce_attr() ?>>
+    /* NACH EINER HANDLUNG IM DIALOG ODER DER CODE-BESTÄTIGUNG steht die Seite
+       auf `#zf-verwalten` — dann geht der Dialog von selbst auf. */
+    function zfAuf() {
+      const d = document.getElementById('zf-verwalten');
+      if (location.hash === '#zf-verwalten' && d && !d.open && window.edDialog) { window.edDialog.auf('zf-verwalten'); }
+    }
+    zfAuf();
+    window.addEventListener('hashchange', zfAuf);   // ein Sprung auf derselben Seite lädt nicht neu
+    </script>
       <form method="post" action="einstellungen.php?t=profil#k-zweitfaktor" id="f-zf-codes" hidden>
         <?= csrf_field() ?><input type="hidden" name="action" value="zf_codes_neu">
       </form>
@@ -1904,7 +2002,7 @@ ui_seite_start(['titel' => 'Einstellungen',
     <?php endif; ?>
 <?php endif; ?>
 
-    <dialog class="dialog" id="dlg-schluessel" data-schluessel>
+    <dialog class="dialog" id="dlg-schluessel" data-dialog-fest data-schluessel>
       <?php require __DIR__ . '/schluessel_teile.php'; ?>
     </dialog>
 
@@ -1915,7 +2013,7 @@ ui_seite_start(['titel' => 'Einstellungen',
              aufzuschreiben, das Notfallblatt bleibt gueltig. Nach dem Erfolg
              laedt die Seite neu; die Meldung dazu legt der Endpunkt ab. */ ?>
     <?php if ($rwZ['stand'] === 'da'): ?>
-    <dialog class="dialog" id="dlg-rueckweg">
+    <dialog class="dialog" id="dlg-rueckweg" data-dialog-fest>
       <div class="dialog-kopf">
         <h2>Rückweg erneuern</h2>
         <p class="feld-hinweis">Konto-Sicherheit</p>
@@ -5163,7 +5261,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                         'attr' => ' data-kp-auf']) ?>
         </div>
       <?php ui_karte_ende(); ?>
-      <dialog class="dialog" id="dlg-kontopaar">
+      <dialog class="dialog" id="dlg-kontopaar" data-dialog-fest>
         <div class="dialog-kopf">
           <h2>Schlüsselpaar einrichten</h2>
           <p class="feld-hinweis">Konto-Sicherheit</p>

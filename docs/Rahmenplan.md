@@ -1,10 +1,10 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 230 (09.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 231 (09.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `ced4a27`, PR #159, gemessen 09.11.2026): Web 24.9.1 ·
+**Stand `origin/main`** (Commit `3d4db98`, PR #160, gemessen 09.11.2026): Web 24.9.2 ·
 Uhr 4.3.3 · Android 0.22.0; auf Staging, Produktiv noch auf Web 23.8.2 · Uhr 4.3.2 · Android 0.21.0 (Tags auf `bfaca8b`).
 **Läuft:** nichts; 27 (OF) abgeschlossen 09.11.2026 (PR #159).
 **Als Nächstes:** 13 (P7).
@@ -203,7 +203,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste BR5:** P-BR5-11 (echter Safari), P-R17-34 (Bitwarden, Nr. 430, seit Web 23.7.2 erneut), P-BR5-14 (APK-Zeilen nach dem nächsten Android-Tag); P-BR5-08 prüft Claude, sobald ein Job scheitert | 22 | 04.11.2026 | `Pruefliste.md` 3, 8, 10 |
 | **Prüfliste GR:** P-GR-01 bis -03 (Garmin), -04 bis -07 (Handy) auf echten Geräten gegen Staging — Abmelden, Aktivieren, Rückstand, fremdes Konto; die Tags `uhr-v4.3.2` und `android-v0.21.0` sind ohne sie gesetzt (05.11.2026) | 21 | 04.11.2026 | `Pruefliste.md` 10 |
 | **Prüfliste BR6:** P-BR6-04 (Venu 3s), -05, -06 (Telefon, Frist), nach den Tags (05.11.2026); -07 freiwillig (Safari) | 23 | 05.11.2026 | `Pruefliste.md` 9, 10 |
-| **Prüfliste OF:** Betreiberin: P-OF-35 (Mockups), -28 (zwei Abweichungen), P-NV-10 (Safari), P-OF-34 (VoiceOver), P-NV-05 (Handy), P-OF-16 (Geräte), -25 (Versand); Claude: P-OF-32 nach 24.9.2 | 27 | 09.11.2026 | `Pruefliste.md` 5 bis 10 |
+| **Prüfliste OF:** Betreiberin: P-OF-35 (Mockups), -28 (zwei Abweichungen), P-NV-10 (Safari), P-OF-34 (VoiceOver), P-NV-05 (Handy), P-OF-16 (Geräte), -25 (Versand) | 27 | 09.11.2026 | `Pruefliste.md` 5 bis 10 |
 | **Prüfliste MA:** P-MA-01 (Produktiv nach dem Tag: `update.php`), P-MA-08, -11, -16 (Safari, VoiceOver/TalkBack), P-MA-12, -17 (Android 0.22.0 hell und dunkel, Garmin 4.3.3 auf dem Gerät); die Claude-Punkte prüft die Arbeitsumgebung auf Staging (R91) | 26 | 07.11.2026 | `Pruefliste.md` 7 bis 10 |
 | **Prüfliste RD:** P-RD-09 (Safari: Segment mit Schnitt über Mitternacht), P-RD-10 (Produktiv nach dem Tag `web-v23.8.2`: Demo zurücksetzen, Karte öffnet, keine Gerätemeldung) | 24 | 05.11.2026 | `Pruefliste.md` 9 |
 

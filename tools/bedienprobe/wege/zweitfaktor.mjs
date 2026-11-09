@@ -167,10 +167,10 @@ export const wege = [
           const z = [...document.querySelectorAll('#k-zweitfaktor .zeile')]
             .find(e => e.textContent.includes('Gemerkte Geräte'));
           /* Seit Web 24.5 (E-OF-19) steht die Zahl in der Kleinzeile
-             („1 Gerät · …"), und „Verwalten" ist zugeklappt, solange der
-             Code nicht frisch ist — fürs Bild aufgeklappt. */
-          const d = document.querySelector('#k-zweitfaktor details.zf-verwalten');
-          if (d) { d.open = true; }
+             („1 Gerät · …"); seit Web 24.10.0 steht die Zeile im Dialog
+             „Zweitfaktor verwalten" — fürs Bild geöffnet. */
+          const d = document.getElementById('zf-verwalten');
+          if (d && !d.open && window.edDialog) { window.edDialog.auf('zf-verwalten'); }
           const m = z ? /^(\d+|kein)\b/.exec(z.querySelector('.zeile-klein')?.textContent.trim() || '') : null;
           return m ? (m[1] === 'kein' ? '0' : m[1]) : null;
         });

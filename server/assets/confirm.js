@@ -213,4 +213,40 @@
   }, true);
 
   window.edConfirm = ask;      // für eigene Aufrufe
+
+  /* EIN KLICK NEBEN EIN POPUP SCHLIESST ES (seit Web 24.9.3, Rückmeldung der
+   * Betreiberin) — fuer jedes modale <dialog> der Anwendung, auch die aus
+   * `dialog.js`, `ortswahl.js`, `import_ui.js`. Er wirkt wie Esc: zuerst
+   * `cancel`, und nur wenn niemand widerspricht (`preventDefault()` — etwa
+   * die Konto-Rückfrage im letzten Schritt oder das Entsperren, solange es
+   * rechnet), schliesst er.
+   *
+   * NICHT bei `data-dialog-fest`: die Schlüssel-Dialoge (neuer
+   * Wiederherstellungsschlüssel, Rückweg, Schlüsselpaar, Schlüsselblatt- und
+   * Konto-Rückfrage). Dort zeigt der Dialog etwas Einmaliges oder verlangt
+   * eine Antwort, und ein Klick daneben aus Versehen kostete mehr als ein
+   * Klick auf „Schliessen".
+   *
+   * NUR WENN DER KLICK AUCH DANEBEN BEGANN. Wer im Dialog Text markiert und
+   * die Maus dabei hinauszieht, loest einen `click` auf dem Dialog aus — der
+   * soll nichts schliessen. */
+  let begannDaneben = null;
+  const daneben = (d, ev) => {
+    const r = d.getBoundingClientRect();
+    return ev.clientX < r.left || ev.clientX > r.right
+        || ev.clientY < r.top || ev.clientY > r.bottom;
+  };
+  document.addEventListener('pointerdown', ev => {
+    const d = ev.target;
+    begannDaneben = (d instanceof HTMLDialogElement && d.open && daneben(d, ev)) ? d : null;
+  }, true);
+  document.addEventListener('click', ev => {
+    const d = ev.target;
+    const war = begannDaneben;
+    begannDaneben = null;
+    if (!(d instanceof HTMLDialogElement) || !d.open || d !== war) { return; }
+    if (d.hasAttribute('data-dialog-fest') || !daneben(d, ev)) { return; }
+    const abbruch = new Event('cancel', { cancelable: true });
+    if (d.dispatchEvent(abbruch)) { d.close(); }
+  });
 })();

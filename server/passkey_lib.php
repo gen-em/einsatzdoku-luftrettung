@@ -941,6 +941,27 @@ function pk_anlegen(int $userId, array $reg, string $bezeichnung): array
     }
 }
 
+/**
+ * Einen Passkey DIESES Kontos umbenennen (seit Web 24.10.0). Dieselbe
+ * Säuberung und Höchstlänge wie beim Anlegen; leer ist erlaubt und heißt
+ * „Passkey vom <Datum>". Am Schlüssel ändert das nichts.
+ *
+ * @return string ''  geändert (oder unverändert), sonst der Grund:
+ *                'bezeichnung' (zu lang oder kein UTF-8), 'fehlt'
+ */
+function pk_umbenennen(int $userId, int $id, string $roh): string
+{
+    $bez = pk_bezeichnung_saeubern($roh);
+    if ($bez === null || mb_strlen($bez) > PK_BEZEICHNUNG_MAX) { return 'bezeichnung'; }
+    if (!pk_tabelle_da()) { return 'fehlt'; }
+    $st = db()->prepare('SELECT COUNT(*) FROM passkeys WHERE id = ? AND user_id = ?');
+    $st->execute([$id, $userId]);
+    if ((int)$st->fetchColumn() !== 1) { return 'fehlt'; }
+    db()->prepare('UPDATE passkeys SET bezeichnung = ? WHERE id = ? AND user_id = ?')
+        ->execute([$bez, $id, $userId]);
+    return '';
+}
+
 /** Einen Passkey DIESES Kontos entfernen; wahr, wenn es ihn gab. */
 function pk_entfernen(int $userId, int $id): bool
 {

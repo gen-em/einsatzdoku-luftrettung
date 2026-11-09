@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 231 | 09.11.2026 | 27 | Nachprüfung auf Staging nach PR #160 (R91): P-OF-32 mit Web 24.9.2 bestanden (Nr. 550), gestrichen; in der Prüfliste OF bleiben nur Punkte der Betreiberin. Kopf: Stand `3d4db98`. |
 | 230 | 09.11.2026 | 27 | 27 (OF) abgeschlossen (PR #159): Erledigt-Zeile, Konzept gelöscht (`3bd5282`), 6.1 „Prüfliste OF“, Kopf `ced4a27` (Web 24.9.1). Spanne 530–539 frei. Staging (R91): sechs Punkte bestanden, Fund Nr. 550 behoben (24.9.2). |
 | 229 | 07.11.2026 | 27 | Q-OF-11 bestätigt: 27 vor 13 steht; Q-OF-03, Q-OF-08/Q-NV-03 und Q-NV-02 entschieden (E-OF-49 bis -51). Neu Nr. 530 (Bilderlauf misst die drei Seitenregeln). |
 | 228 | 07.11.2026 | 27 | Schritt 27 (OF, Oberflächenrunde) begonnen als Einschub vor 13 (E-OF-39, Q-OF-11): Konzept `Konzept-OF-Oberflaechenrunde.md`; NV und die Vorbereitung OF gehen darin auf (E-OF-35, -47). Kopf: Stand `ac4a7bd` (PR #157). Spanne 530–539. |

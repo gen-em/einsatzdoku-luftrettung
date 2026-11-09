@@ -8851,4 +8851,21 @@ declare(strict_types=1);
  *   von `EdApi` hinaus (`postForm(…, { ueberdauert: true })`), und ein
  *   Verweis der eigenen Anlage wartet hoechstens 1,5 s, bis sie da ist.
  *   Korrektur; kein Schema. */
-const WEB_VERSION = '24.9.2';
+/* 24.9.3 — DIE REITER IN IHRER SCHRIFT. `.reiter-punkt` verlangte seit
+ *   23.12.0 (NV-01) Bricolage Grotesque 700; die Anwendung liefert nur den
+ *   Schnitt 500, der Browser rechnete den Fettdruck nach, und Bereichszeile
+ *   und Seitenreiter sahen verschmiert aus (Rueckmeldung der Betreiberin).
+ *   Jetzt Open Sans 700, wie das Konzept es vorsah. Dazu: Ein Klick neben
+ *   ein Popup schliesst es wie Esc (`confirm.js`, fuer jedes modale
+ *   <dialog>), ausser bei `data-dialog-fest` — den fuenf Schluessel-Dialogen.
+ *   Korrektur; kein Schema. */
+/* 24.10.0 — ZWEITFAKTOR VERWALTEN IM DIALOG, PASSKEYS UMBENENNEN
+ *   (Rueckmeldung der Betreiberin, Mockup freigegeben am 09.11.2026). Die
+ *   Karte im Profil traegt eine Zeile; „Verwalten" oeffnet den Dialog
+ *   `#zf-verwalten` mit Codes, Geraeten, Passkeys und Rueckweg, im Fuss
+ *   „Ausschalten". Neu: `passkey_umbenennen` (`pk_umbenennen()`, Protokoll
+ *   `passkey_umbenannt`, ohne frischen Code — eine Beschriftung). Nach einer
+ *   Handlung oder einer Code-Bestaetigung geht der Dialog mit der Meldung
+ *   wieder auf (Blitzmeldung mit Ort 'zf', Ruecksprung `#zf-verwalten`).
+ *   `dialog.js` kennt `data-ohne-feldfokus`. Neben; kein Schema. */
+const WEB_VERSION = '24.10.0';

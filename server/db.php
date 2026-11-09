@@ -1245,15 +1245,15 @@ const ZF_FRISCH_HANDLUNGEN = [
     'totp_zuruecksetzen' => ['seite' => 'admin_user.php',              'ort' => ''],
     'user_delete'        => ['seite' => 'admin_user.php',              'ort' => ''],
     // den eigenen Zweitfaktor ausschalten
-    'totp_ausschalten'   => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
+    'totp_ausschalten'   => ['seite' => 'einstellungen.php',           'ort' => 'zf-verwalten'],
     // Passkeys: Wer eine fremde Sitzung erbeutet hat, soll
     // sich damit keinen dauerhaften zweiten Faktor anlegen. Anlegen ist ein
     // Endpunkt (403 JSON), Entfernen ein Formular der Karte.
-    'passkey_anlegen'    => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
-    'passkey_entfernen'  => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
+    'passkey_anlegen'    => ['seite' => 'einstellungen.php',           'ort' => 'zf-verwalten'],
+    'passkey_entfernen'  => ['seite' => 'einstellungen.php',           'ort' => 'zf-verwalten'],
     // neue Wiederherstellungscodes — derselbe Grund wie
     // beim Passkey: ein dauerhafter zweiter Faktor.
-    'totp_codes_neu'     => ['seite' => 'einstellungen.php',           'ort' => 'k-zweitfaktor'],
+    'totp_codes_neu'     => ['seite' => 'einstellungen.php',           'ort' => 'zf-verwalten'],
     // beide Downloads einer Komplettsicherung:
     // der entsiegelte Abzug aller Konten.
     'komplett_herunterladen' => ['seite' => 'admin_komplettsicherung.php', 'ort' => ''],

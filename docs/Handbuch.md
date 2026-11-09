@@ -357,6 +357,12 @@ darunter der Teil, der zur Seite gehört (Diensttage, Einstellungen oder die
 Filter der Suche). Schließen lässt sie sich auf drei Wegen: über das × oben
 links, über die abgedunkelte Fläche daneben oder mit der Esc-Taste.
 
+**Popups** (Dialoge) schließt du mit ihrem Knopf, mit der Esc-Taste oder
+seit Web 24.9.3 mit einem Klick daneben — das wirkt wie „Abbrechen“. Nur die
+Dialoge rund um deine Schlüssel (neuer Wiederherstellungsschlüssel, Rückweg,
+Schlüsselblatt und die Rückfrage zum Konto) bleiben dabei offen, weil sie
+etwas Einmaliges zeigen oder eine Antwort brauchen.
+
 **Das Zahnrad führt auf die Einstellungs-Übersicht.** Sie ist in **drei
 Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
 
@@ -933,13 +939,17 @@ Wiederholung länger; die Meldung nennt, ab wann es wieder geht.
 
 **Die Karte zeigt eingeschaltet einen Satz** (seit Web 24.5.0): seit wann,
 wie viele Codes übrig sind, ob der Rückweg steht, wie viele Geräte gemerkt und
-wie viele Passkeys angelegt sind. **„Verwalten"** klappt darunter die Zeilen
-auf — Codes zur Wiederherstellung (**„Neu erzeugen"**), Gemerkte Geräte
-(**„Vergessen"**), Passkeys und Rückweg (**„Erneuern"**), jede mit ihrer
-Handlung.
+wie viele Passkeys angelegt sind. **„Verwalten"** öffnet seit Web 24.10.0
+ein Fenster **„Zweitfaktor verwalten"** (bis dahin klappte es die Zeilen
+unter dem Satz auf) — Codes zur Wiederherstellung (**„Neu erzeugen"**),
+Gemerkte Geräte (**„Vergessen"**), Passkeys (**„Umbenennen"**,
+**„Entfernen"**, „Passkey hinzufügen") und Rückweg (**„Erneuern"**), jede
+mit ihrer Handlung; unten **„Ausschalten"** und **„Schließen"**. Nach einer
+Handlung oder einer Code-Bestätigung geht es wieder auf, mit der Meldung
+darin. Schließen geht auch mit Esc oder einem Klick daneben.
 
 **Ausschalten** geht nur, wo er kein Muss ist: Karte → „Verwalten" →
-**„Ausschalten"**.
+unten **„Ausschalten"**.
 Für Support, Admin und BetreiberIn gibt es den Knopf nicht; dort **setzt die
 Verwaltung zurück** (11.1) — die BetreiberIn für alle Rollen, ein Admin nur
 für NutzerInnen, und niemand am eigenen Konto. Du bekommst dann eine Mail, und
@@ -1016,7 +1026,7 @@ Support, Admin und BetreiberIn 7 (Betrieb → Servereinstellungen, Karte
 - **Nicht an einem Rechner, den andere mitbenutzen.** Ein gemerkter Browser
   ist so gut wie dein Handy: Wer dort dein Passwort kennt, ist drin.
 - **Vergessen:** Einstellungen → Profil, Karte „Zweitfaktor", Zeile
-  „Gemerkte Geräte" (unter „Verwalten") → **„Vergessen"**. Von selbst vergessen werden alle
+  „Gemerkte Geräte" (im Fenster „Verwalten") → **„Vergessen"**. Von selbst vergessen werden alle
   gemerkten Geräte, wenn du dein **Passwort wechselst oder zurücksetzt**, wenn
   der Zweitfaktor **ausgeschaltet oder zurückgesetzt** wird, und wenn die
   BetreiberIn die Dauer **kürzer** stellt, als dein Gerät schon gemerkt ist.
@@ -1071,6 +1081,11 @@ Schau deshalb weiter auf die Adresse, auch mit Passkey.
   **„Mit Passkey bestätigen"**. Er zählt wie ein Code aus der App: Der Haken
   „Dieses Gerät merken" gilt auch für ihn, und die 15 Minuten des frischen
   Codes beginnen. Der Code aus der App geht daneben weiter.
+- **Umbenennen** (seit Web 24.10.0). In der Liste je Passkey
+  **„Umbenennen"** (am Handy hinter „⋯"): ein kleines Fenster mit der
+  Bezeichnung, bis 40 Zeichen; leer heißt er wieder „Passkey vom <Datum>".
+  Ohne frischen Code — der Name ist eine Beschriftung, am Schlüssel ändert
+  sich nichts. Das Protokoll hält es fest, eine Mail gibt es dafür nicht.
 - **Entfernen.** In der Liste je Passkey **„Entfernen"** (mit Rückfrage, auch
   hier mit frischem Code); eine Mail sagt es. Mit dem Zweitfaktor gehen alle
   Passkeys: beim **Ausschalten**, beim **Zurücksetzen** durch die Verwaltung

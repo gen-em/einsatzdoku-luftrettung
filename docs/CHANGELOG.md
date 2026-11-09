@@ -14,6 +14,42 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.10.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — „Verwalten“ beim Zweitfaktor öffnet ein Fenster** (Rückmeldung der
+  Betreiberin). Aufgeklappt schob die Liste aus Codes, Geräten, Passkeys und
+  Rückweg die Karten darunter weit nach unten, und „Ausschalten“ stand
+  zwischen den Zeilen. Jetzt trägt die Karte nur den einen Satz, das Fenster
+  alle Handlungen und unten „Ausschalten“; nach einer Handlung geht es mit
+  der Meldung wieder auf.
+
+### Hinzugefügt
+
+- **Web — ein Passkey lässt sich umbenennen.** Bisher blieb ein vertippter
+  oder nichtssagender Name stehen, bis man den Passkey entfernte und neu
+  anlegte. Umbenennen verlangt keinen frischen Code, weil am Schlüssel
+  nichts geschieht; das Protokoll hält es trotzdem fest.
+
+## [Web 24.9.3] — unveröffentlicht
+
+### Geändert
+
+- **Web — ein Klick neben ein Popup schließt es** (Rückmeldung der
+  Betreiberin). Bis dahin ging das nur über den Knopf oder Esc, und wer
+  daneben tippte, blieb vor dem Schleier stehen. Der Klick wirkt wie
+  „Abbrechen“; die fünf Dialoge rund um die Schlüssel bleiben offen, weil sie
+  etwas Einmaliges zeigen oder eine Antwort verlangen.
+
+### Behoben
+
+- **Web — die Reiter sahen verschmiert aus** (Rückmeldung der Betreiberin).
+  Bereichszeile und Seitenreiter verlangten seit Web 23.12.0 die Kopfschrift
+  in Fett, und diesen Schnitt liefert die Anwendung nicht mit; der Browser
+  rechnete ihn aus dem mittleren Schnitt nach, und das wirkte vor allem unter
+  Windows pixelig. Sie stehen jetzt in Open Sans Fett, wie es vorgesehen war.
+
 ## [Web 24.9.2] — unveröffentlicht
 
 ### Behoben
