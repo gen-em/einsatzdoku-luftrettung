@@ -145,7 +145,11 @@
   async function senden(url, optionen, vorgang) {
     let antwort = null;
     try {
-      antwort = await fetch(url, Object.assign({ signal: signal() }, optionen));
+      /* EINE ANFRAGE, DIE DEN SEITENWECHSEL UEBERDAUERN SOLL (`keepalive`,
+       * Option `ueberdauert` von `postForm()`), traegt das Abbruchsignal
+       * NICHT — sonst braeche `beforeunload` genau sie ab (Nr. 550). */
+      antwort = await fetch(url, optionen && optionen.keepalive
+        ? optionen : Object.assign({ signal: signal() }, optionen));
     } catch (e) {
       /* Beim Verlassen der Seite abgebrochen: keine Meldung — es gibt
        * niemanden mehr, der sie liest. */
@@ -235,12 +239,17 @@
         leib.set(k, f[k]);
       }
     }
-    return senden(url, {
+    /* `o.ueberdauert`: Die Anfrage soll ankommen, auch wenn die Seite
+     * gleich danach gewechselt wird — `keepalive` und ohne Abbruchsignal.
+     * Fuer kleine Meldungen ohne Antwort, die jemand liest (Mond und Sonne
+     * der Kopfleiste, Nr. 550); der Rumpf darf 64 KB nicht uebersteigen. */
+    const ueber = !!(o && o.ueberdauert);
+    return senden(url, Object.assign({
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: leib.toString(),
-    }, (o && o.vorgang) || '');
+    }, ueber ? { keepalive: true } : {}), (o && o.vorgang) || '');
   }
 
   /* `signal` fuer Abrufe, die (noch) nicht ueber EdApi laufen, etwa einen

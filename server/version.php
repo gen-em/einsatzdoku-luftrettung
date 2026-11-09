@@ -8845,4 +8845,10 @@ declare(strict_types=1);
  *   seinen Namen am Verweis (WebKit las den Titel des Zeichens nicht), und
  *   `.karten-raster` setzt seine Karten als `inline-block` (WebKit stellte
  *   auf Updates alles in die linke Spalte). Korrektur; kein Schema. */
-const WEB_VERSION = '24.9.1';
+/* 24.9.2 — MOND UND SONNE VERLIEREN KEINEN KLICK MEHR (Backlog Nr. 550,
+ *   gefunden bei der Nachpruefung von P-OF-32 auf Staging). Die Meldung an
+ *   `api/darstellung.php` geht mit `keepalive` und ohne das Abbruchsignal
+ *   von `EdApi` hinaus (`postForm(…, { ueberdauert: true })`), und ein
+ *   Verweis der eigenen Anlage wartet hoechstens 1,5 s, bis sie da ist.
+ *   Korrektur; kein Schema. */
+const WEB_VERSION = '24.9.2';

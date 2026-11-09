@@ -11176,3 +11176,21 @@ zutreffen.
      in `seitenregelnMessen()`, Selbstprobe 32 von 32 (Fälle 25–32 im
      Browser). Bekannte Verstöße stehen mit ihrem Paket unter `seitenregeln`
      in `ausnahmen.json` und laufen bis OF-09 auf null.
+
+550. **Ein Klick auf Mond/Sonne geht verloren, wenn gleich danach die Seite wechselt.** · gehört zu: nächste Backlog-Runde · Stand: erledigt · seit 09.11.2026
+     *Aufgenommen 09.11.2026 mit der Nachprüfung von P-OF-32 auf Staging
+     (R91), in Chromium, Firefox und WebKit gleich.* `assets/darstellung.js`
+     schaltet `data-theme` sofort und meldet die Wahl danach mit
+     `EdApi.postForm()` an `api/darstellung.php`. Wechselt die Seite, bevor
+     die Antwort da ist (Klick auf Mond, gleich danach auf einen Verweis),
+     bricht der Browser die Anfrage ab: Die Sitzung behält die alte Wahl,
+     und jede folgende Seite kommt in der alten Farbe. Mit Warten auf die
+     Antwort stimmt alles. *Weg:* die Meldung mit `keepalive: true` senden
+     (eine Option für `EdApi.postForm()`, die `senden()` an `fetch`
+     durchreicht) oder über `navigator.sendBeacon()` mit dem CSRF-Feld im
+     Rumpf. *Abnahme:* Klick und sofortiger Seitenwechsel in drei Engines —
+     die nächste Seite trägt die neue Wahl schon im Markup.
+     Erledigt mit Web 24.9.2 am 09.11.2026: Die Meldung überdauert den
+     Seitenwechsel (keepalive, ohne Abbruchsignal), ein Verweis wartet
+     höchstens 1,5 s; mit zurückgehaltener Anfrage in drei Engines 0 von 6
+     vorher, 6 von 6 nachher.
