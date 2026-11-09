@@ -14,6 +14,16 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.10.1] — unveröffentlicht
+
+### Behoben
+
+- **Web — nach einer Handlung im Fenster „Zweitfaktor verwalten“ ging am
+  Handy die Tastatur auf.** Das Fenster öffnete sich richtig wieder, aber ein
+  älteres Skript der Einstellungen, das nach dem Speichern ins erste Feld des
+  Ziels springt, setzte den Cursor danach in die Passkey-Bezeichnung. Es lässt
+  Fenster jetzt aus; deren Fokus regelt das Fenster selbst.
+
 ## [Web 24.10.0] — unveröffentlicht
 
 ### Geändert

@@ -5705,7 +5705,11 @@ ui_seite_start(['titel' => 'Einstellungen',
     }
     function oeffne(hashId){
       const d = document.getElementById(hashId);
-      if (!d) { return; }
+      /* EIN DIALOG IST NICHT UNSERE SACHE (seit Web 24.10.1). `#zf-verwalten`
+         oeffnet `dialog.js` mit `data-ohne-feldfokus`; sprang dieses Skript
+         danach ins erste Feld darin, stand am Handy nach jeder Handlung die
+         Tastatur offen (gefunden bei der Nachpruefung auf Staging). */
+      if (!d || d.tagName === 'DIALOG') { return; }
       oeffneVorfahren(d);
       if (d.tagName === 'DETAILS') { d.open = true; }
       d.scrollIntoView({ block: 'start' });
