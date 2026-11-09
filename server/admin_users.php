@@ -554,8 +554,7 @@ ui_seite_start(['titel' => 'NutzerInnen']);
            Welche Karten eine Kontoseite trägt, sagt
            das Handbuch. */ ?>
   <p class="seiten-erklaerung">Jedes Konto hat eine eigene Seite — ein Klick auf
-     eine Zeile öffnet sie.
-     <a href="hilfe.php#11-2-die-liste-der-nutzerinnen">Handbuch: NutzerInnen</a></p>
+     eine Zeile öffnet sie.</p>
 
   <?php ui_meldung($notice, $error, 'info', '  '); ?>
 
@@ -630,7 +629,11 @@ ui_seite_start(['titel' => 'NutzerInnen']);
          * nach Konto-Backups bleiben: Sehen darf er den Stand. */
         if ($nurSupport && $key === 'admins') { continue; }
         $pillen[] = ['text' => $text, 'aktiv' => $filter === $key, 'zahl' => (int)$zahlen[$key],
-                     'href' => konten_weg(['f' => $key === 'alle' ? '' : $key, 's' => ''])];
+                     'href' => konten_weg(['f' => $key === 'alle' ? '' : $key, 's' => '']),
+                     /* „Alle" ist kein gesetzter Filter; die anderen nimmt
+                      * das Kreuz ihrer Pille zurück (Filterknopf, E-OF-18). */
+                     'vorgabe' => $key === 'alle',
+                     'weg' => konten_weg(['f' => '', 's' => ''])];
     }
     ui_listenkopf([
         'form_id' => 'f-kontensuche',
@@ -640,6 +643,8 @@ ui_seite_start(['titel' => 'NutzerInnen']);
                         'sort' => $sort !== 'konto' ? $sort : '',
                         'dir' => $ab ? 'ab' : ''],
         'filter' => $pillen,
+        'treffer' => ($q !== '' || $filter !== 'alle')
+            ? zahl_text($treffer) . ' von ' . zahl_text($gesamt['konten']) : '',
     ]); ?>
 
     <?php if (!$zeilen): ?>
@@ -665,7 +670,6 @@ ui_seite_start(['titel' => 'NutzerInnen']);
                 endif; ?></a>
             </th>
           <?php endforeach; ?>
-          <th class="oeffnen-spalte"><span class="nur-vorlesen">Öffnen</span></th>
         </tr></thead>
         <tbody>
         <?php foreach ($zeilen as $k):
@@ -675,9 +679,15 @@ ui_seite_start(['titel' => 'NutzerInnen']);
             <td class="wahl-spalte"><?php if (!$nurSupport): ?><input type="checkbox" data-kontowahl
                 value="<?= (int)$k['id'] ?>"
                 aria-label="<?= e((string)($k['name'] ?: $k['email'])) ?> auswählen"><?php endif; ?></td>
+            <?php /* DER NAME IST DER VERWEIS (E-OF-53). Bis Web 24.5 stand
+                     rechts eine Spalte „Öffnen" — bei 1024 px angeschnitten
+                     (Nr. 342). Ein Verweis je Zeile, für die Tastatur; der
+                     Vorlesetext sagt „Konto … öffnen". Ohne Namen trägt die
+                     Adresse den Verweis und steht nicht zweimal da. */ ?>
             <td>
-              <span class="konto-name"><?= e((string)($k['name'] ?: '—')) ?></span>
-              <span class="konto-mail"><?= e((string)$k['email']) ?>
+              <a class="konto-name" href="<?= e($ziel) ?>"><span class="nur-vorlesen">Konto </span><?=
+                e((string)($k['name'] ?: $k['email'])) ?><span class="nur-vorlesen"> öffnen</span></a>
+              <span class="konto-mail"><?= $k['name'] ? e((string)$k['email']) : '' ?>
                 <?= konto_status_plakette($k['status'] ?? null) ?></span>
             </td>
             <?php /* FUENF SPALTEN MITTIG. Rolle, Seit,
@@ -692,8 +702,6 @@ ui_seite_start(['titel' => 'NutzerInnen']);
             <td class="mitte-spalte"><?= e($k['last_login'] ? datum_text($k['last_login']) : '—') ?></td>
             <td class="mitte-spalte"><?= (int)$k['geraete'] ?></td>
             <td class="mitte-spalte"><?= ui_plakette($standText, ['ton' => $standTon]) ?></td>
-            <td class="oeffnen-spalte"><a class="oeffnen" href="<?= e($ziel) ?>"><?=
-              ui_symbol('winkel', 'symbol-rechts') ?><span>Öffnen</span></a></td>
           </tr>
         <?php endforeach; ?>
         </tbody>

@@ -8714,4 +8714,135 @@ declare(strict_types=1);
  *   der absolut gesetzte Vorlesetext aus 23.11.2 am Dokument, und die
  *   Kontenliste lief bei 768 und 1024 px waagerecht ueber (Bilderlauf, drei
  *   Engines). Korrektur; kein Schema. */
-const WEB_VERSION = '23.11.3';
+/* 23.12.0 — DIE BEREICHSZEILE (Schritt 27, Konzept OF, NV-01; E-OF-14,
+ *   -17, -40, -51, E-NV-04, -05). Unter der Kopfleiste stehen die Bloecke
+ *   der Einstellungen (Einstellungen · Verwaltung · Betrieb) als Reiter, je
+ *   mit der Zahl seiner Punkte und dem summierten Aufmerksamkeitszaehler;
+ *   ein Reiter fuehrt auf den ersten Punkt seines Blocks. Sie ist KEIN
+ *   neuer Baustein, sondern `ui_reiter()` in einer zweiten Lage
+ *   (`.reiter-bereiche`), und die Seitenreiter von Protokoll, Statistik
+ *   und Rechtstexte bekommen dieselbe Form: 700, 48 px (`--bereiche`),
+ *   Unterstrich 3 px (`--strich-reiter`, gerechnet aus den beiden
+ *   Strichen). Ab 1024 px klebt die Zeile unter der Kopfleiste und die
+ *   Leiste unter beiden; das Skript der Reihe laedt einmal je Seite. Neben,
+ *   weil die Leiste noch alle Bloecke traegt und der Weg derselbe ist —
+ *   die Hauptnummer kommt mit der Rahmenkarte (NV-02). Kein Schema. */
+/* 24.0.0 IST DIE HAUPTNUMMER DER OBERFLAECHENRUNDE (Schritt 27, Konzept OF,
+ *   NV-02; E-NV-01, -03, E-OF-34, -36 bis -38, -59). Nicht Datenmodell,
+ *   nicht Verschluesselung, nicht Migration — sondern der dritte Grund,
+ *   den die Zaehlweise fuer eine Hauptnummer kennt: ein spuerbar anderer
+ *   Weg durch die Anwendung. Leiste und Inhalt liegen jetzt in EINER
+ *   Rahmenkarte (`.rahmenkarte`, `.leiste-spalte`), fuer Diensttage,
+ *   Einstellungen und Suche; die Leiste klebt darin und ist hoechstens so
+ *   hoch wie Fenster und Karte. Im Bereich Einstellungen werden die Karten
+ *   per CSS zu Abschnitten mit Trennlinie (`.rahmenkarte-abschnitte`) —
+ *   `ui_karte_start()` bleibt, wie es war. Die Fusszeile ist ein
+ *   dunkelblauer Streifen ueber die ganze Breite; `.fuss-dunkel` der
+ *   Anmeldung ist damit keine eigene Form mehr. Was in derselben Runde noch
+ *   kommt (gekuerzte Leiste, Regeln, Bausteine, Seiten), zaehlt in der
+ *   Nebennummer weiter. Kein Schema. */
+/* 24.1.0 — DIE LEISTE ZEIGT DEN AKTIVEN BEREICH (Schritt 27, Konzept OF,
+ *   NV-03; E-NV-02, E-OF-16, -27, OF-P-16). Ab 1024 px blendet das
+ *   Stylesheet alle Bloecke bis auf `.leiste-gruppe-aktiv` aus, und diesem
+ *   die Kopfzeile; der Server rendert weiter alle, weil die Schublade sie
+ *   als Akkordeon braucht. `menue.js` haelt den aktiven Block offen, auch
+ *   auf der Uebersicht, wo kein Eintrag aktiv ist. Der aktive Eintrag, die
+ *   markierte Zeitraumzeile und der Vorschlag tragen keinen Strich mehr,
+ *   nur die Auswahlflaeche. „Abmelden" steht nur noch in der Leiste. Die
+ *   Sprungmarken nennen nur sichtbare Karten und ziehen nach, wenn eine
+ *   Seite eine Karte ein- oder ausblendet (ein MutationObserver auf
+ *   `hidden` statt eines Aufrufs je Seite). Neben; kein Schema. */
+/* 24.2.0 — REGELN FUER ALLE SEITEN (Schritt 27, Konzept OF, OF-01; E-OF-02,
+ *   -31, -32, -41, -49, -56, Nr. 530). Eine rechte Kante: In den
+ *   Einstellungen reichen die Abschnitte bis an den Rand, begrenzt sind die
+ *   Felder (`--feld-breit`, 36 rem, bisher `--listensuche-breit`); die
+ *   Servereinstellungen verlieren ihre Lesespalte. Die Speicherleiste ist
+ *   eine Flaeche in Auswahlblau ohne Linie, Bogen und Schatten, buendig am
+ *   Rand des Inhalts, und nennt links „Geaendert: …" (Vorgabe jeder
+ *   Formularleiste). Kein „Handbuch: …" mehr in den Seiten — 62 Verweise in
+ *   25 Dateien sind fort, ausser auf Druckblaettern und auf oeffentlichen
+ *   Seiten ohne Kopfmenue; das „?" der Kopfleiste oeffnet das Kapitel der
+ *   Seite (`ui_hilfe_marke()`, `ui_geruest_start(['hilfe' => …])`). Der
+ *   Bilderlauf misst die drei Regeln. Neben; kein Schema. */
+/* 24.3.0 — BAUSTEINE I (Schritt 27, Konzept OF, OF-02; E-OF-11, -18, -30,
+ *   -33, -42, OF-P-05, -08). Die Klappkarte traegt im Kopf den Stand
+ *   (`stand`, bisher `vorschau`, neun Verwender) und die Plakette; die
+ *   Sperre fuer die Plakette faellt, die fuer die Kopfaktion bleibt.
+ *   `assets/klappkarte.js` (Geruest) oeffnet die Karte, auf die der Anker
+ *   zeigt. Die Segmentwahl ist abwaehlbar (`abwaehlbar`, verborgenes Radio
+ *   ohne Wert, `assets/segment.js`; die Leertaste wird selbst behandelt,
+ *   weil Chromium und WebKit auf einem gewaehlten Radio keinen Klick
+ *   ausloesen). Plakette und Knopf einer Zeile stehen auf einer Linie —
+ *   der Abstand fuer die Plaketten am Fuss der Einsatzkarte traf bis dahin
+ *   jede Zeile in einer Karte. Sechs Zeichen aus Tabler (filter, restore,
+ *   download, upload, moon, sun). Neben; kein Schema. */
+/* 24.4.0 — BAUSTEINE II, EINGABE (Schritt 27, Konzept OF, OF-03; E-OF-06,
+ *   -07, -18, -44, -54). Das Datumsfeld ist an allen acht Stellen ein
+ *   Textfeld TT.MM.JJJJ (`ui_datum_eingabe()`, `assets/datumsfeld.js`)
+ *   statt `<input type="date">`. Umgerechnet wird einmal: `datum_de()`,
+ *   `datum_de_lesen()`, `post_datum()`, `get_datum()` auf dem Server
+ *   (Registerzeile Z50), `EdFormat.datumLesen()` im Browser; beide Formen
+ *   gelten beim Lesen, und die Adressen der Suche tragen weiter ISO. Am
+ *   Ortsfeld steht der Satz zur Adresssuche als Zeichen mit Tooltip statt
+ *   als Kleinzeile. Der Listenkopf (Protokoll, NutzerInnen) hat einen
+ *   Filterknopf; gesetzte Filter stehen als Pillen mit Kreuz darunter. Neben;
+ *   kein Schema. */
+/* 24.5.0 — DIE EINSTELLUNGEN (Schritt 27, Konzept OF, OF-04; E-OF-19, -25,
+ *   -26, -52). Profil: Der Zweitfaktor zeigt eingeschaltet einen Satz und
+ *   klappt mit „Verwalten" die Zeilen mit je einer Handlung auf; das
+ *   Profilformular speichert ueber die Speicherleiste am Kartenboden (sie
+ *   steht ausserhalb des Formulars, `data-fuer`, forms.js), „Passwort
+ *   aendern" im Abschnitt; je Abschnitt ein Satz, „Konto loeschen" mit dem
+ *   Wesentlichen als Meldung. Geraete: zwei Karten nach Typ, Koppeln im
+ *   Dialog mit drei Schritten (App, Kopplung, Code), Platzzahl als
+ *   Kleinzeile. Import / Export: Wahlkarten (`.wahlkarten`,
+ *   `assets/wahlkarten.js`). Backup: ein Satz; „GPS-Daten verdichten" nur,
+ *   wenn etwas faellig ist, sonst eine Zeile im Profil. Standorte: je
+ *   Abschnitt ein Satz. Neben; kein Schema. */
+/* 24.6.0 — DIE VERWALTUNG (Schritt 27, Konzept OF, OF-05; E-OF-08, -46,
+ *   -53, -71). Kontenliste: Der Name ist der Verweis auf die Kontoseite, die
+ *   Spalte „Oeffnen" ist fort, Titel und Adresse brechen um — bei 1024 px
+ *   rollt die Tabelle nicht mehr (Nr. 342, Kontenlisten-Teil). Demo-Konto:
+ *   eine Karte unter Installation mit dem einen Schalter „Demo-Anmeldung
+ *   zulassen" (aus den Servereinstellungen hierher) und Anlegen,
+ *   Zuruecksetzen, Entfernen; der Menuepunkt entfaellt, `admin_demo.php`
+ *   zeigt bis OF-06 nur noch die Kontrollzahlen. Neben; kein Schema. */
+/* 24.7.0 — DER BETRIEB (Schritt 27, Konzept OF, OF-06; E-OF-10, -20 bis
+ *   -24, -45, -72, -73). Status: „Braucht Aufmerksamkeit" oben, jeder Bereich
+ *   als Klappkarte mit Zahl und Plakette; sieben Zeilen, die nie etwas
+ *   verlangten, entfallen, die neue Karte „Konten" haelt Verwaltungskonten,
+ *   Konto-Backups und die Kontrollzahlen des Demo-Kontos (OF-M1). Jobs:
+ *   „pausieren" statt „anhalten" in eigener Karte, je Job ein Satz und zwei
+ *   Plaketten (`zeit_relativ_kurz()`). Servereinstellungen: jede Karte
+ *   zugeklappt mit ihrem Stand. Komplett-Backup: „Stand" offen, „Jetzt
+ *   sichern" als Hauptaktion. Backup-Ziele: eine Karte an zwei Orten
+ *   (`sicherungsziele_teile.php`), die Seite leitet um. Neben; kein Schema. */
+/* 24.8.0 — EINSATZ, DIENSTTAG, KARTE, PAPIERKORB (Schritt 27, Konzept OF,
+ *   OF-07; E-OF-05, -11, -12, -13, -28 bis -30, -33, -48, -75 bis -78).
+ *   Formular: eine Karte „Einsatz und Transport", die Transportart als
+ *   abwaehlbare Segmentwahl; der Feldkatalog traegt dafuer `darstellung`
+ *   und `einzug`, `nebeneinander` gilt auch fuer Schalter. Leseansicht:
+ *   dieselbe Gruppe, das Schloss in einer eigenen Spalte vor dem Wort.
+ *   Tagesuebersicht: die Karte „Ruhesegmente" steht nur noch auf Abruf
+ *   („Einsatz aus GPS-Daten ausschneiden", `#ruheliste`). GPX traegt
+ *   `herunterladen`/`hochladen`, die Plakette „ausgeduennt" ist fort.
+ *   Karte: Bedienelemente im Branding, Kartenart ohne Anbieter. Papierkorb:
+ *   `wiederherstellen`, Artzeichen vorn. Je Karte ein Satz. Neben; kein
+ *   Schema. */
+/* 24.9.0 — DIE DARSTELLUNG (Schritt 27, Konzept OF, OF-08; E-OF-09, -43,
+ *   -55, -79). Vier Einstellungen im Profil: Umschalter (Vorgabe), Immer
+ *   hell, Immer dunkel, Folgt System. Bei Umschalter und Folgt System steht
+ *   Mond/Sonne zwischen „?" und Zahnrad (`assets/darstellung.js`); der Klick
+ *   gilt bis zur Abmeldung und liegt in der Sitzung (`api/darstellung.php`),
+ *   nicht im Konto. `users.darstellung` bekommt den Wert 'system', '' heisst
+ *   jetzt Umschalter — Bestandskonten ohne Wahl haben damit den Knopf. Neben;
+ *   kein Schema, keine Migration (VARCHAR(10)). */
+/* 24.9.1 — ABSCHLUSS DER OBERFLAECHENRUNDE (Schritt 27, Konzept OF, OF-09;
+ *   E-OF-71). `admin_demo.php` leitet nur noch um — die BetreiberIn auf die
+ *   Karte „Konten" der Statusseite, die Administration auf die Demo-Karte
+ *   unter Installation; die Kontrollzahlen standen seit 24.7.0 doppelt.
+ *   Dazu drei Funde des vollen Pruefstands: Der Knopf der Kartenart traegt
+ *   seinen Namen am Verweis (WebKit las den Titel des Zeichens nicht), und
+ *   `.karten-raster` setzt seine Karten als `inline-block` (WebKit stellte
+ *   auf Updates alles in die linke Spalte). Korrektur; kein Schema. */
+const WEB_VERSION = '24.9.1';

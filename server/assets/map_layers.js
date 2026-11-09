@@ -135,12 +135,40 @@
 
     standard.addTo(map);
 
-    L.control.layers({
+    /* NAMEN OHNE ANBIETER (Konzept OF, OF-07, E-OF-13, -29): Die Wahl sagt,
+     * was man sieht; wer die Kacheln liefert, steht je Ebene in der
+     * Zuschreibung unten rechts — dort verlangt es die Lizenz, und dort
+     * bleibt es (oben, `attribution`). Bis Web 24.7 stand der Anbieter in
+     * Klammern hinter jedem Namen. */
+    const ebenen = L.control.layers({
       'Standard': standard,
-      'Wanderkarte (OpenHikingMap)': hiking,
-      'Topographisch (OpenTopoMap)': topo,
-      'Satellitenbild (Esri)': satellit
+      'Wanderkarte': hiking,
+      'Topografisch': topo,
+      'Satellitenbild': satellit
     }, null, { position: 'topright' }).addTo(map);
+
+    /* DAS ZEICHEN DER APP STATT DES LEAFLET-BILDES, und offen eine
+     * Ueberschrift „Kartenart". Die Bibliothek bleibt unberuehrt; Zeichen und
+     * Ueberschrift kommen hier dazu, das Aussehen aus style.css. */
+    const kasten = ebenen.getContainer();
+    const umschalter = kasten.querySelector('.leaflet-control-layers-toggle');
+    if (umschalter && typeof window.edSymbol === 'function') {
+      /* DER NAME STEHT AM VERWEIS, NICHT IM ZEICHEN. Bis OF-09 trug das
+       * Zeichen den Titel „Kartenart" und der Verweis keinen: Chromium und
+       * Firefox lasen den Titel des SVG als Namen, WebKit nicht (axe
+       * `link-name`, gefunden im Prüfstand). Jetzt ist das Zeichen Schmuck,
+       * und `aria-label` gilt in jeder Engine. */
+      umschalter.innerHTML = window.edSymbol('karte', '');
+      umschalter.removeAttribute('title');
+      umschalter.setAttribute('aria-label', 'Kartenart');
+    }
+    const liste = kasten.querySelector('.leaflet-control-layers-list');
+    if (liste) {
+      const titel = document.createElement('div');
+      titel.className = 'leaflet-control-layers-titel';
+      titel.textContent = 'Kartenart';
+      liste.insertBefore(titel, liste.firstChild);
+    }
 
     groesseBeobachten(map);
   };

@@ -68,6 +68,7 @@ import { mkdirSync, writeFileSync, readdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as attrappe from './attrappe.mjs';
+import { aufklappen } from './neuladen.mjs';
 
 /* Hinter einem HTTPS_PROXY braucht Nodes fetch die Variable
  * NODE_USE_ENV_PROXY, und sie wird nur beim Prozessstart gelesen — dieselbe
@@ -582,6 +583,9 @@ async function kasten(rolle, weg, breite) {
       await s.goto(`${BASIS}/betrieb_server.php`, { waitUntil: 'domcontentloaded' });
       const box = s.locator('#k-adresssuche .schalter-box').first();
       if (!(await box.count())) { throw new Error('Karte „Adresssuche" fehlt im Betrieb'); }
+      /* Seit Web 24.7.0 ist jede Karte der Servereinstellungen zugeklappt
+         (Konzept OF, E-OF-22) — erst aufklappen, dann bedienen. */
+      await aufklappen({ seite: s }, '#k-adresssuche .schalter-box');
       if ((await box.isChecked()) !== an) {
         await s.locator('#k-adresssuche .schalter-label').first().click();
       }

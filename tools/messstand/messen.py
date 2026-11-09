@@ -269,12 +269,17 @@ def schritt_statistik(a) -> None:
                 antwort = s.get(f"betrieb_statistik.php?r={r}{zusatz}")
                 zeiten.append(time.monotonic() - t0)
                 # Der Reiter traegt den Zeitraum in seiner Adresse.
-                aktiv = (f'class="reiter-punkt aktiv" href="?r={r}{zusatz.replace("&", "&amp;")}"'
-                         f' aria-current="page">{text}<')
+                # Seit Web 23.12.0 (Konzept OF, NV-01) steht der Text in einem
+                # <span>; beide Formen gelten, damit ein aelterer Stand messbar
+                # bleibt.
+                kopf = (f'class="reiter-punkt aktiv" href="?r={r}{zusatz.replace("&", "&amp;")}"'
+                        f' aria-current="page">')
+                ist_aktiv = (kopf + text + '<') in antwort.text \
+                    or (kopf + '<span>' + text + '</span>') in antwort.text
                 gemeint = not zusatz or 'Einsätze im Zeitraum' in antwort.text
-                if antwort.status_code != 200 or aktiv not in antwort.text or not gemeint:
+                if antwort.status_code != 200 or not ist_aktiv or not gemeint:
                     fehler.append(f"Reiter {name}: HTTP {antwort.status_code}, "
-                                  f"{'Reiter aktiv' if aktiv in antwort.text else 'nicht der Reiter'}"
+                                  f"{'Reiter aktiv' if ist_aktiv else 'nicht der Reiter'}"
                                   f"{'' if gemeint else ', kein eigener Zeitraum'}")
                     break
             median = sorted(zeiten)[len(zeiten) // 2]

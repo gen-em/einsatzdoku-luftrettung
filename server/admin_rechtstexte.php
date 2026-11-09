@@ -49,7 +49,7 @@ $eingabe = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_check();
     $text  = post_text('text');
-    $stand = trim(post_text('stand'));
+    $stand = post_datum('stand');
     $mangel = rt_pruefen($text, $stand);
     if ($mangel !== null) {
         $error = $name . ': ' . $mangel;
@@ -104,8 +104,7 @@ ui_seite_start(['titel' => 'Rechtstexte']);
 
   <?php ui_titelzeile(['titel' => 'Rechtstexte']); ?>
   <p class="seiten-erklaerung">Die vier Texte, die diese Installation nach außen
-     zeigt — der Inhalt ist Sache der BetreiberIn.
-     <a href="hilfe.php#11-5a-rechtstexte">Handbuch: Rechtstexte</a></p>
+     zeigt — der Inhalt ist Sache der BetreiberIn.</p>
 
   <?php ui_meldung($notice, $error, 'ok', '  '); ?>
 
@@ -190,7 +189,7 @@ ui_seite_start(['titel' => 'Rechtstexte']);
                  zu den Sicherheitsereignissen steht immer: Den
                  Ratenschutz gibt es in jeder Installation. */ ?>
         <?php ui_karte_start(['titel' => 'Textbausteine', 'id' => 'k-bausteine',
-                              'vorschau' => $bausteine . ' zum Übernehmen']); ?>
+                              'stand' => $bausteine . ' zum Übernehmen']); ?>
           <?php if (geocoder_installation_an()): ?>
             <?= ui_codeblock_lang(
                   '### Adresssuche' . "\n\n"
@@ -252,8 +251,7 @@ ui_seite_start(['titel' => 'Rechtstexte']);
     </div><?php /* .form-raster */ ?>
 
     <?php ui_speichern_leiste(['text' => 'Änderungen speichern',
-                               'hinweis' => 'Es gibt ungespeicherte Änderungen',
-                               'hinweis_vorlage' => 'Ungespeichert']); ?>
+                               'hinweis' => 'Es gibt ungespeicherte Änderungen']); ?>
   </form>
 
 <?php ui_geruest_ende(); ?>

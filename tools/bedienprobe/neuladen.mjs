@@ -39,6 +39,24 @@ async function knopfZu(k, feld) {
   return `#${id} button:not([type="button"]), button[form="${id}"]:not([type="button"])`;
 }
 
+/**
+ * Klappt die zugeklappte Karte auf, in der `sel` steht — ueber ihr
+ * `<summary>`, wie eine Nutzerin es tut. Seit Web 24.7 sind die Karten von
+ * Servereinstellungen, Komplett-Backup, Status und Hintergrundjobs
+ * zugeklappt (Konzept OF, OF-06); vorher stand jedes Feld offen da.
+ * Steht `sel` in keiner zugeklappten Karte, geschieht nichts.
+ */
+export async function aufklappen(k, sel) {
+  const id = await k.seite.evaluate((s) => {
+    const e = document.querySelector(s);
+    const d = e && e.closest('details.karte-klappbar:not([open])');
+    if (!d) { return null; }
+    if (!d.id) { d.id = 'neuladen-karte'; }
+    return d.id;
+  }, sel);
+  if (id) { await k.seite.locator(`#${id} > summary`).click(); }
+}
+
 /** Wie oft steht `muster` (Text oder RegExp) im sichtbaren Text? */
 async function treffer(k, muster) {
   const text = await k.seite.evaluate(() => document.body.textContent.replace(/\s+/g, ' '));
@@ -70,11 +88,15 @@ async function treffer(k, muster) {
 export async function neuladenPruefen(k, o) {
   const schritte = [];
   await k.gehZu(o.seite);
+  if (o.feld) { await aufklappen(k, o.feld); }
   if (o.vorher) { await o.vorher(k); }
 
   const klick = o.absenden
     ? o.absenden(k)
-    : knopfZu(k, o.feld).then(sel => k.seite.locator(sel).first().click());
+    : knopfZu(k, o.feld).then(async (sel) => {
+        await aufklappen(k, sel);
+        await k.seite.locator(sel).first().click();
+      });
   const [antwort] = await Promise.all([
     k.seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
     klick,

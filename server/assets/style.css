@@ -489,6 +489,11 @@
    * Knopf, sondern ein Link mit Symbol. */
   --kopf:56px;
   --knopf:44px;
+  /* DIE BEREICHSZEILE (Konzept OF, NV-01) ist 48 px hoch, in jeder Breite und
+   * an jedem Zeiger (E-NV-04): Sie ist Navigation wie die Kopfleiste, kein
+   * Knopf, und die 36-px-Regel am Zeigergerät gilt deshalb nicht. Dasselbe Maß
+   * tragen die Seitenreiter — ein Baustein für beide Ebenen (E-OF-17, -40). */
+  --bereiche:48px;
   --leiste:260px;                      /* Seitenleiste ab 1200 */
   --leiste-schmal:220px;               /* Seitenleiste 1024–1199 */
   --leiste-filter:280px;               /* Filterleiste der Suche ab 1200 */
@@ -498,7 +503,12 @@
   --schublade:320px;                   /* Höchstbreite der mobilen Schublade */
   --blatt-zeile:50px;                  /* Zeilenhöhe im Aktionsblatt */
   --unterpunkt:28px;                   /* Sprungmarke unter dem Menüpunkt */
-  --listensuche-breit:36rem;           /* Höchstbreite des Suchfelds einer Liste */
+  --feld-breit:36rem;                  /* Höchstbreite eines Felds: Listensuche, Felder der Einstellungen */
+  --lese-beschriftung:14rem;           /* Beschriftungsspalte der Einsatzansicht ab 720 px (E-OF-28, Bild OF-P34) */
+  /* DAS DATUMSFELD (Konzept OF, OF-03, E-OF-44): zehn Zeichen „TT.MM.JJJJ"
+   * plus ein Zeichen Luft, dazu Innenabstand und Rand des Felds — eine
+   * Rechnung, keine neue Zahl. */
+  --feld-datum:calc(11ch + 2 * var(--abstand-3) + 2 * var(--strich));
   --uebersicht-spalte:240px;           /* schmalste Spalte der Einstellungs-Übersicht */
   --suchfeld:48px;                     /* das große Suchfeld */
   --symbol-klein:16px;                 /* Zusatzzeichen an einer Beschriftung */
@@ -520,6 +530,9 @@
   --symbol-gross:24px;                 /* Symbolgröße im Knopf und Kartenkopf */
   --strich:1px;                        /* Haarlinie */
   --strich-stark:2px;                  /* Aktivstrich, Randstrich, Fokus */
+  /* Der Unterstrich des aktiven Reiters ist 3 px (E-NV-05, Bild OF-P20-A):
+   * eine RECHNUNG aus den beiden Strichen, keine neue Zahl in der Skala. */
+  --strich-reiter:calc(var(--strich-stark) + var(--strich)); /* 3 px */
   --radius-rund:999px;                 /* Zähler, Griff, Punkt — voll rund */
   --schalter-breit:46px;               /* der Schalter, 46 breit … */
   --schalter-hoch:26px;                /* … 26 hoch, damit er in eine */
@@ -792,6 +805,12 @@
   :root:not([data-theme="light"]) .kopf { border-bottom:var(--strich) solid var(--genem-blau-700); }
 }
 :root[data-theme="dark"] .kopf { border-bottom:var(--strich) solid var(--genem-blau-700); }
+/* Dieselbe Kante über der Fußzeile, die seit Web 24 dieselbe Fläche trägt
+ * (Konzept OF, E-OF-34). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .fuss-seite { border-top:var(--strich) solid var(--genem-blau-700); }
+}
+:root[data-theme="dark"] .fuss-seite { border-top:var(--strich) solid var(--genem-blau-700); }
 
 @media (min-width:720px){
   :root{ --groesse-titel:30px; }
@@ -1120,6 +1139,17 @@ img,svg,video{max-width:100%;height:auto}
  * Der negative Rand des Zahnrads zieht nur den letzten Knopf an die Kante;
  * dieser hier braucht ihn nicht. */
 .kopf-hilfe.aktiv{background:var(--auf-dunkel-flaeche);border-radius:var(--radius)}
+/* MOND UND SONNE (Konzept OF, OF-08, E-OF-09): Der Knopf traegt beide
+ * Zeichen, gezeigt wird das, wohin ein Klick fuehrt — hell der Mond, dunkel
+ * die Sonne. Dieselben zwei Ausloeser wie die Farben (Abschnitt 3a), damit
+ * das Zeichen schon stimmt, wenn das Geraet entscheidet. */
+.kopf-darstellung .symbol-sonne{display:none}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .kopf-darstellung .symbol-mond{display:none}
+  :root:not([data-theme="light"]) .kopf-darstellung .symbol-sonne{display:inline}
+}
+:root[data-theme="dark"] .kopf-darstellung .symbol-mond{display:none}
+:root[data-theme="dark"] .kopf-darstellung .symbol-sonne{display:inline}
 /* KOPFLEISTE EINER ANLAGE MIT ETIKETT (.kopf-umgebung) — Variante der
  * Kopfleiste. Gesetzt von ui_kopf(),
  * wenn `app.umgebung` einen Namen traegt; die Farbe ist eine geschlossene
@@ -1142,6 +1172,42 @@ img,svg,video{max-width:100%;height:auto}
   padding:var(--abstand-4) var(--abstand-3) var(--abstand-5);
 }
 .rahmen-lesespalte .inhalt{max-width:var(--lesespalte);margin:0 auto}
+
+/* ---- Rahmenkarte: Leiste und Inhalt in EINER Fläche (Konzept OF, NV-02) --
+ *
+ * Unter 1024 px haben Karte und Leistenspalte keine eigene Box
+ * (`display: contents`): Die Leiste ist dort die Schublade, der Inhalt
+ * steht allein. Ab 1024 px (Block „ab 1024" unten) werden beide sichtbar.
+ *
+ * DIE KARTEN DER EINSTELLUNGEN WERDEN ABSCHNITTE (`.rahmenkarte-abschnitte`,
+ * E-NV-03): ohne Rand, Bogen und eigene Fläche, mit einer Linie darüber und
+ * ohne Einzug — der Titel steht auf der Kante des Seitentitels. Reines CSS;
+ * `ui_karte_start()` weiß davon nichts. Auf Startseite und Suche fehlt die
+ * Klasse, und Karten bleiben Karten (E-OF-36, -38). Meldungen sind keine
+ * `.karte` und bleiben farbige Kästen. Gilt in jeder Breite. */
+.rahmenkarte,.leiste-spalte{display:contents}
+.rahmenkarte-abschnitte .karte{
+  border:0;border-top:var(--strich) solid var(--linie);border-radius:0;
+  background:transparent;margin:0;
+}
+.rahmenkarte-abschnitte .karte-kopf{padding:var(--abstand-4) 0 var(--abstand-2);border-bottom:0}
+.rahmenkarte-abschnitte .karte-klappbar[open] > .karte-kopf{border-bottom:0}
+.rahmenkarte-abschnitte .karte-inhalt{padding:0 0 var(--abstand-5)}
+/* EINE RECHTE KANTE (Konzept OF, OF-01, E-OF-31, Bild OF-P19): Jeder
+ * Abschnitt und seine Linie reichen bis an den Rand des Inhalts; begrenzt
+ * werden die FELDER, auf das Maß der Listensuche. Bis Web 24.1 deckelten
+ * einzelne Seiten ihre Abschnitte (Lesespalte der Servereinstellungen,
+ * `.form-raster-einspaltig` der Installation), und die Linien sprangen beim
+ * Wechsel zwischen zwei Seiten. Listenseiten bleiben, wie sie sind. */
+.rahmenkarte-abschnitte .feld-eingabe,
+.rahmenkarte-abschnitte .wahlliste{max-width:var(--feld-breit)}
+.rahmenkarte-abschnitte .form-raster-einspaltig{max-width:none}
+/* Ein Feldraster zweier Felder nebeneinander (Von / Bis, Rettungsmittel /
+ * Standort) ist ebenfalls ein Feld im Sinne der Regel. */
+.rahmenkarte-abschnitte .listen-form-felder{max-width:var(--feld-breit)}
+/* Die Bereichskarten der Übersicht verlieren mit dem Rand auch die Rauchfläche
+ * im Kopf (Bild OF-P29-C); Zeichen und Mitte tragen die Absetzung allein. */
+.rahmenkarte-abschnitte .karte-bereich > .karte-kopf{background:transparent;border-radius:0}
 
 /* ---- Leiste und Schublade — EIN Markup ----------------------------------
  *
@@ -1245,6 +1311,34 @@ img,svg,video{max-width:100%;height:auto}
  * gibt, ohne ihn anzubieten. Derselbe Akkordeon-Baustein wie in den Leisten,
  * nur mit dem Abstand einer Kartenzeile darüber. */
 .apk-fach{margin-top:var(--abstand-3)}
+/* DIE SCHRITTE DES KOPPEL-DIALOGS (Konzept OF, OF-04, E-OF-25, Bild
+ * OF-P11-B2): eine nummerierte Liste, je Schritt der Name fett und darunter
+ * eine Kleinzeile. Listen tragen sonst kein Zeichen (Abschnitt 2). */
+.koppel-schritte{list-style:decimal;padding-left:var(--abstand-5);margin:0;
+  display:flex;flex-direction:column;gap:var(--abstand-3)}
+.koppel-schritte > li > strong{display:block}
+.koppel-schritte > li > .feld-klein{display:block}
+.koppel-schritte .feld{margin-top:var(--abstand-2)}
+
+/* WAHLKARTEN (Konzept OF, OF-04, E-OF-26, Bild OF-P17-C): zwei Radios in
+ * Kartenform, nebeneinander ab 720 px, zusammen so breit wie ein Feld (36 rem).
+ * Gewählt trägt sie die Auswahlfläche mit dunkelblauem Rand — dieselbe
+ * Auszeichnung wie die gewählte Wahlliste. Das Radio ist verborgen wie in der
+ * Segmentwahl; der Fokus steht auf der Karte. */
+.wahlkarten{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--abstand-3);
+  max-width:var(--feld-breit);margin-bottom:var(--abstand-4)}
+.wahlkarte{position:relative;display:flex;flex-direction:column;gap:var(--abstand-1);
+  margin:0;padding:var(--abstand-3) var(--abstand-4);cursor:pointer;
+  background:var(--flaeche-feld);border:var(--strich) solid var(--linie-stark);border-radius:var(--radius)}
+input[type=radio].wahlkarte-box{position:absolute;opacity:0;width:0;height:0;min-height:0}
+.wahlkarte-titel{display:flex;align-items:center;justify-content:flex-start;gap:var(--abstand-2);text-align:left;
+  font-family:var(--schrift-kopf);font-weight:500;color:var(--text-titel)}
+.wahlkarte-text{color:var(--gedaempft);font-size:var(--groesse-2);text-align:left}
+.wahlkarte:has(.wahlkarte-box:checked){background:var(--auswahl-flaeche);border-color:var(--auswahl-linie)}
+.wahlkarte:has(.wahlkarte-box:focus-visible){outline:var(--strich-stark) solid var(--fokus);outline-offset:var(--strich-stark)}
+@media (min-width:720px){
+  .wahlkarten{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
 .apk-fach > .akkordeon-zeile{font-size:var(--groesse-3);color:var(--text-link)}
 .gruppen-zahl{color:var(--gedaempft);font-weight:400;font-size:var(--groesse-2)}
 .leiste-gruppe[open] > .akkordeon-zeile .gruppen-zahl{display:none}
@@ -1303,29 +1397,26 @@ img,svg,video{max-width:100%;height:auto}
  * 72 px). */
 
 /* ---- Fußzeile ------------------------------------------------------------
- * Zweizeilig, zentriert, unter dem Inhalt — und außerhalb von <main>. */
+ * Zweizeilig, zentriert, außerhalb von <main> — und seit Web 24 ein
+ * DUNKELBLAUER STREIFEN über die ganze Fensterbreite (Konzept OF, E-OF-34,
+ * Bild OF-P29-C): Die Seite ist oben von der Kopfleiste und unten von ihm
+ * gerahmt. Bis Web 23 stand sie hell mit einer Linie darüber am Ende des
+ * Inhalts, und nur die Anmeldung trug die dunkle Fassung (`.fuss-dunkel`).
+ * Die gibt es nicht mehr als eigene Form; die Klasse bleibt am Einrichter
+ * und an der Anmeldung stehen und tut nichts mehr.
+ *
+ * DIE VERSION IN --auf-dunkel-leise, wie sie auf der Anmeldung immer stand:
+ * Sie ist eine Auskunft zum Abtippen, aber nicht die Botschaft der Zeile. */
 .fuss-seite{
-  border-top:var(--strich) solid var(--linie);
+  background:var(--dunkelblau);color:var(--auf-dunkel);
   padding:var(--abstand-4) var(--abstand-3);
   text-align:center;
-  color:var(--gedaempft);font-size:var(--groesse-2);
+  font-size:var(--groesse-2);
 }
 .fuss-zeile{margin:0;display:flex;flex-wrap:wrap;gap:var(--abstand-2);justify-content:center}
 .fuss-rechts{margin-top:var(--abstand-1)}
-.fuss-seite a{color:var(--text-link);font-weight:700}
-/* --gedaempft, nicht --sand. Auf --rauch ergaebe Sand 1,53:1 — die
- * Versionsnummer ist die Auskunft, mit der ein Fehlerbericht anfaengt, und
- * damit ein zu LESENDER Text. `kontrast.py` fuehrt „Sand auf Schnee" als
- * Ausnahme, begruendet aber nur den Akkordeon-Winkel („Mechanik, keine
- * Botschaft"); das trifft auf eine Zahl nicht zu, die man abtippen soll.
- * So 5,30:1. Die dunkle Fassung darunter bleibt, wie sie ist. */
-.fuss-version{color:var(--gedaempft)}
-.fuss-dunkel{
-  background:var(--dunkelblau);color:var(--auf-dunkel);
-  border-top:0;
-}
-.fuss-dunkel a{color:var(--auf-dunkel)}
-.fuss-dunkel .fuss-version{color:var(--auf-dunkel-leise)}
+.fuss-seite a{color:var(--auf-dunkel);font-weight:700}
+.fuss-version{color:var(--auf-dunkel-leise)}
 
 /* ---- Was nur in der Schublade steht -------------------------------------- */
 .nur-schublade{display:block}
@@ -1432,7 +1523,11 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
   color:var(--gedaempft);font-size:var(--groesse-2);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.eintrag.aktiv{background:var(--auswahl-flaeche);border-left-color:var(--auswahl-linie)}
+/* OHNE STRICH (Konzept OF, E-OF-16, Bild OF-P04-A): Der aktive Eintrag
+ * traegt nur die Auswahlflaeche und die Auswahlschrift — in jeder Leiste,
+ * in jeder Breite. Bis Web 24.0 stand links ein dunkelblauer Strich daneben;
+ * Flaeche und Strich sagten zweimal dasselbe. */
+.eintrag.aktiv{background:var(--auswahl-flaeche)}
 .eintrag.aktiv .eintrag-text{color:var(--auswahl-text);font-weight:500}
 
 /* Der Fuß der Leiste: „Zuordnung offen" (Fehlerfläche mit rotem Zähler, nur
@@ -1506,8 +1601,15 @@ details[open] > .akkordeon-zeile > .akkordeon-winkel{transform:none}
 .karte-aktion-blau{color:var(--text-link)}
 .karte-aktion-orange{color:var(--text-link)}
 .karte-inhalt{padding:var(--abstand-4)}
-.karte-vorschau{
-  margin-left:auto;color:var(--gedaempft);
+/* DER STAND EINER KLAPPKARTE (bis Web 24.2 `.karte-vorschau`): leise
+ * rechts im Kopf, dahinter die Plakette (Konzept OF, E-OF-42). Bricht der
+ * Kopf um, rutscht er mit der Plakette in die zweite Zeile. */
+.karte-stand-gruppe{
+  margin-left:auto;display:inline-flex;flex-wrap:wrap;justify-content:flex-end;
+  align-items:center;gap:var(--abstand-2);
+}
+.karte-stand{
+  color:var(--gedaempft);
   font-size:var(--groesse-2);text-align:right;
 }
 .karte-klappbar > .karte-kopf{cursor:pointer;border-bottom:0}
@@ -1544,8 +1646,20 @@ a.zeile:hover .zeile-weiter{color:var(--text-link-hover)}
 .zeile-haupt{font-weight:700;color:var(--text)}
 .zeile-text a{color:inherit}
 .zeile-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
-.zeile-plaketten{display:flex;flex-wrap:wrap;gap:var(--abstand-1);flex:0 1 auto}
-.zeile-aktionen{display:flex;gap:var(--abstand-2);flex:0 0 auto}
+/* PLAKETTE UND KNOPF AUF EINER LINIE (OF-P-08): beide Gruppen mittig
+ * ausgerichtet, in sich und in der Zeile. */
+.zeile-plaketten{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-1);flex:0 1 auto}
+/* ZEILE MIT MEHREREN PLAKETTEN ODER PLAKETTE UND KNOPF (Konzept OF, OF-06,
+   E-OF-21): Die Plaketten stehen nebeneinander, nicht gestapelt, und unter
+   720 px steht der Satz ueber ihnen — sonst quetschten drei Plaketten oder
+   ein Knopf ihn auf zwei, drei Woerter je Zeile. Zuerst bei den Jobs und
+   den Backup-Zielen. */
+.zeile-umbruch .zeile-plaketten{flex-wrap:nowrap;flex:0 0 auto}
+@media (max-width:719px){
+  .zeile-umbruch{flex-wrap:wrap}
+  .zeile-umbruch .zeile-text{flex-basis:100%}
+}
+.zeile-aktionen{display:flex;align-items:center;gap:var(--abstand-2);flex:0 0 auto}
 
 /* ZEILE MIT AUFKLAPPBAREN ANGABEN (.zeile-mehr). Ein <details>, dessen
  * <summary> die Zeile ist; die Angaben
@@ -1889,6 +2003,22 @@ a.zeile:hover .zeile-weiter{color:var(--text-link-hover)}
   border:var(--strich) solid var(--linie-stark);
   border-radius:var(--radius-klein);
 }
+/* Das Datumsfeld ist so breit wie sein Inhalt, nicht wie die Spalte
+ * (Konzept OF, E-OF-44); Ziffern gleich breit, damit 11.11. und 08.08. nicht
+ * verschieden breit stehen. */
+.feld-eingabe.feld-datum{width:var(--feld-datum);max-width:100%;font-variant-numeric:tabular-nums}
+
+/* DAS ZEICHEN ZUR ADRESSSUCHE neben der Lupe (Konzept OF, E-OF-07): Der Satz
+ * steht als Meldung `info` unter der Feldzeile, so breit wie sie, über dem,
+ * was darunter liegt. An der Zeile, nicht am Zeichen ausgerichtet: am Zeichen
+ * und 36 rem breit ragte er links über die Leiste. */
+.ortsfeld-zeile{position:relative}
+.ortsfeld-hinweis{flex:0 0 auto}
+.ortsfeld-hinweis-text{
+  position:absolute;top:100%;left:0;right:0;z-index:20;
+  margin-top:var(--abstand-1);
+}
+.ortsfeld-hinweis-text .meldung{margin:0;box-shadow:var(--schatten)}
 /* GESPERRT MUSS GESPERRT AUSSEHEN.
  * `.feld-eingabe` setzt Flaeche und Schrift selbst und ueberschreibt damit
  * die Graufaerbung, die der Browser einem `disabled` gibt — ein einzeln
@@ -2092,20 +2222,16 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
  * einem Speichern-Knopf ist die Stelle, an der man sich vergreift. */
 .speichern{
   position:sticky;bottom:0;z-index:30;
-  /* KARTENFORM. Bräche die Leiste mit negativem Rand seitlich aus dem
-   * Inhalt aus und liefe ohne Radius von Rand zu Rand, wirkte sie „eckig
-   * und breiter" als die Karte darüber, obwohl sie zu ihr gehört. Deshalb
-   * Radius und Breite wie die Karte.
-   *
-   * WAS BLEIBT, ist alles, was die FUNKTION traegt: der klebende Sitz, die
-   * Trennlinie nach oben und der Schatten. Die Leiste soll auffallen, weil
-   * sie folgt — nicht, weil sie anders geschnitten ist. */
+  /* AUSWAHLFLÄCHE, OHNE LINIE, BOGEN UND SCHATTEN (Konzept OF, E-OF-32,
+   * -41, Bild OF-P07). Bis Web 24.1 trug die Leiste die Form einer Karte —
+   * Radius, Linie oben, Schatten —, weil sie zwischen Karten stand. Seit die
+   * Karten der Einstellungen Abschnitte sind, gehört sie zu keinem: Sie ist
+   * der untere Rand der Rahmenkarte und hebt sich über die Fläche ab, die
+   * im Dunkelmodus mitschaltet. Direkt im Inhalt (oder in seinem Formular)
+   * läuft sie bündig von Rand zu Rand (Regeln darunter). */
   margin:var(--abstand-4) 0 0;
-  padding:var(--abstand-3);
-  background:var(--flaeche-karte);
-  border-top:var(--strich) solid var(--linie);
-  border-radius:var(--radius-gross);
-  box-shadow:var(--schatten);
+  padding:var(--abstand-3) var(--abstand-4);
+  background:var(--auswahl-flaeche);
 }
 /* KNOPF RECHTS, ZAEHLUNG LINKS DANEBEN. Im Markup steht der Hinweis zuerst
  * (ui_speichern_leiste), damit die Vorlesereihenfolge stimmt: erst „12
@@ -2115,7 +2241,16 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   display:flex;align-items:center;justify-content:flex-end;gap:var(--abstand-3);
   max-width:var(--rahmen);margin:0 auto;
 }
-.speichern-hinweis{display:none;color:var(--gedaempft);font-size:var(--groesse-2)}
+/* „Geändert: Logo und Darstellung" steht links, fett, in der Auswahlschrift;
+ * der Knopf rechts. */
+.speichern-hinweis{display:none;color:var(--auswahl-text);font-weight:700;font-size:var(--groesse-2);margin-right:auto}
+/* BÜNDIG AM RAND DES INHALTS: Steht die Leiste direkt im Inhalt oder in
+ * dessen Formular, nimmt sie dessen Innenabstand seitlich und unten
+ * zurück — so ist sie der Boden der Rahmenkarte, nicht ein Kasten darin. */
+.inhalt > .speichern,.inhalt > form > .speichern{
+  margin-left:calc(var(--abstand-3) * -1);margin-right:calc(var(--abstand-3) * -1);
+  margin-bottom:calc(var(--abstand-5) * -1);
+}
 
 
 /* == 12. KENNZAHL ==========================================================
@@ -2736,6 +2871,10 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
   .kennzahl-raster{grid-template-columns:repeat(4,minmax(0,1fr))}
   .speichern-hinweis{display:block}
   .speichern .knopf-breit{width:auto}
+  .inhalt > .speichern,.inhalt > form > .speichern{
+    margin-left:calc(var(--abstand-4) * -1);margin-right:calc(var(--abstand-4) * -1);
+    margin-bottom:calc(var(--abstand-5) * -1);
+  }
   .segment{display:inline-flex}
 }
 
@@ -2761,6 +2900,41 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
     transform:none;
     flex:0 0 auto;
   }
+  /* DIE RAHMENKARTE (NV-02). `overflow: clip`, nicht `hidden`: `hidden`
+     macht die Karte zum Rollbehälter, und die klebende Leiste klebte dann
+     an ihr statt am Fenster (F-NV-02). */
+  .rahmen:has(> .rahmenkarte){padding:var(--abstand-4) var(--abstand-3)}
+  .rahmenkarte{
+    display:flex;align-items:stretch;flex:1 1 auto;min-width:0;
+    background:var(--flaeche-karte);
+    border:var(--strich) solid var(--linie);border-radius:var(--radius-gross);
+    overflow:clip;
+  }
+  /* Die Spalte trägt Fläche und Linie bis zum Kartenboden (E-OF-37); die
+     Leiste darin klebt, ist höchstens so hoch wie das Fenster unter den
+     Leisten und höchstens so hoch wie die Karte — auf einer kurzen Seite
+     steht „Abmelden" deshalb am Kartenboden (Bild NV-03), auf einer langen
+     am Fensterboden. */
+  .leiste-spalte{
+    display:block;flex:0 0 auto;
+    background:var(--flaeche-karte);
+    border-right:var(--strich) solid var(--linie);
+  }
+  .leiste-spalte > .leiste{
+    border-right:0;background:transparent;
+    height:min(calc(100vh - var(--kopf)), 100%);
+  }
+  .rahmen-bereiche .leiste-spalte > .leiste{
+    height:min(calc(100vh - var(--kopf) - var(--bereiche) - var(--strich)), 100%);
+  }
+  .leiste-spalte .leiste-liste{min-height:0}
+  /* NUR DER AKTIVE BEREICH (NV-03, E-NV-02): Die Bereiche stehen in der
+     Bereichszeile; die Leiste zeigt den einen, ohne Kopfzeile und ohne die
+     Linie davor. Der Server rendert alle — unter 1024 px sind sie das
+     Akkordeon der Schublade. */
+  .leiste-gruppe:not(.leiste-gruppe-aktiv){display:none}
+  .leiste-gruppe-aktiv > .akkordeon-zeile{display:none}
+  .leiste-gruppe.leiste-gruppe-aktiv{margin-top:0;padding-top:0;border-top:0}
   .schleier{display:none}
   .schublade-auf{overflow:visible}
   .kopf-menue{display:none}
@@ -2874,6 +3048,12 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
    * sie keine thematische Ordnung haben. */
   .karten-raster{columns:2;column-gap:var(--abstand-4)}
   .karten-raster > .karte{break-inside:avoid}
+  /* WEBKIT VERTEILT EINE KLAPPKARTE (`<details>`) IM MEHRSPALTENSATZ NICHT
+   * VERLAESSLICH: Auf Updates stand bei 1200 px am Zeigergeraet alles in der
+   * linken Spalte, rechts 449 px leer (Konzept OF, OF-09, gefunden vom
+   * Bilderlauf). `inline-block` macht jedes Kind zu einem unteilbaren Block,
+   * den jede Engine gleich setzt; `width:100%` haelt die Spaltenbreite. */
+  .karten-raster > .karte{display:inline-block;width:100%;vertical-align:top}
 }
 
 
@@ -3245,6 +3425,71 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
  * unsere Marker zeichnen sich selbst. */
 .leaflet-div-icon{background:none;border:0}
 
+/* ---- BEDIENELEMENTE DER KARTE IM BRANDING (Konzept OF, OF-07, E-OF-29) ----
+ *
+ * Leaflet bringt kleine weisse Quadrate mit Schatten mit — eine eigene
+ * Formensprache neben der App. Jetzt: Bedienhoehe `--knopf` (44 px, am
+ * Zeigergeraet 36 px), Kartenflaeche, starke Linie, Radius wie ein Knopf,
+ * kein Schatten. Die Ebenenwahl traegt das Zeichen `karte` (map_layers.js),
+ * offen eine Ueberschrift und Zeilen in Bedienhoehe, gewaehlt in Dunkelblau.
+ *
+ * EINE KLASSE MEHR ALS LEAFLET (`.leaflet-control`), nicht die Reihenfolge:
+ * Auf der Spurenseite laedt leaflet.css NACH style.css, und Leaflets Regeln
+ * (`.leaflet-touch .leaflet-bar a`) haben sonst dasselbe Gewicht. Die
+ * Bibliothek selbst bleibt unberuehrt.
+ *
+ * GRUNDFARBEN STATT ROLLEN, wie die uebrigen Kartenzeichen: Die Karte bleibt
+ * im Dunkeln hell (E-MA-14), ihre Knoepfe auch. `--flaeche-karte`,
+ * `--linie-stark` usw. schalten um; ihre hellen Werte (neutral 75, neutral
+ * 600, neutral 200, Rauch, Asphalt) tun es nicht. */
+.leaflet-container .leaflet-bar.leaflet-control,
+.leaflet-container .leaflet-control-layers.leaflet-control{
+  border:var(--strich) solid var(--genem-neutral-600);border-radius:var(--radius);
+  background:var(--genem-neutral-75);background-clip:padding-box;
+  box-shadow:none;overflow:hidden;
+}
+.leaflet-container .leaflet-bar.leaflet-control a{
+  display:flex;align-items:center;justify-content:center;
+  width:var(--knopf);height:var(--knopf);line-height:var(--knopf);
+  background:var(--genem-neutral-75);color:var(--dunkelblau);
+  border-bottom:var(--strich) solid var(--genem-neutral-200);
+}
+.leaflet-container .leaflet-bar.leaflet-control a:last-child{border-bottom:0}
+/* DER PHASENUMSCHALTER DER EINSATZKARTE IST TEXT, KEIN ZEICHEN: Er behaelt
+ * seine Breite (Regel `.geo .map-ctrl-phase a` weiter unten), nur die Hoehe
+ * folgt dem Knopf. */
+.leaflet-container .leaflet-bar.leaflet-control.map-ctrl-phase a{
+  width:auto;padding:0 var(--abstand-2);
+}
+.leaflet-container .leaflet-bar.leaflet-control a:hover,
+.leaflet-container .leaflet-control-layers.leaflet-control .leaflet-control-layers-toggle:hover{
+  background-color:var(--genem-rauch);
+}
+.leaflet-container .leaflet-control-layers.leaflet-control .leaflet-control-layers-toggle{
+  width:var(--knopf);height:var(--knopf);
+  background-image:none;color:var(--dunkelblau);
+}
+/* Das Zeichen mittig im Umschalter — ohne `display` am Umschalter selbst:
+ * Leaflet blendet ihn im offenen Zustand ueber `display:none` aus. */
+.leaflet-control-layers-toggle .symbol{
+  display:block;margin:calc((var(--knopf) - var(--symbol)) / 2) auto 0;
+}
+.leaflet-container .leaflet-control-layers-expanded.leaflet-control{
+  padding:var(--abstand-2) var(--abstand-3);color:var(--genem-asphalt);
+  font:var(--groesse-3)/var(--zeile) var(--schrift-text);
+}
+.leaflet-control-layers-titel{
+  color:var(--genem-neutral-600);font-size:var(--groesse-2);
+  padding-bottom:var(--abstand-1);
+}
+.leaflet-control-layers-base label{
+  display:flex;align-items:center;min-height:var(--knopf);
+}
+.leaflet-control-layers-base label > span{
+  display:flex;align-items:center;gap:var(--abstand-2);
+}
+.leaflet-control-layers-base input{accent-color:var(--dunkelblau);margin:0}
+
 
 /* == 22. EINSATZANSICHT ====================================================
  *
@@ -3280,12 +3525,35 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
  * Diensttag-Daten, deren Zweispalter volle Inhaltsbreite hat. */
 .einsatz-raster .tag-lese{display:block}
 
+/* DAS SCHLOSS IN EIGENER SPALTE (Konzept OF, OF-07, E-OF-28, Bild
+ * OF-P34-links): Jede Beschriftung rückt um die Schlossspalte ein, das
+ * Schloss zieht sich mit negativem Rand in sie hinein — Beschriftungen ohne
+ * Schloss stehen damit gleich weit eingerückt, und die Werte beginnen ab
+ * 720 px in einer Flucht. Darunter bleibt die Spalte so breit wie ihr
+ * längstes Wort: 14 rem passen neben einen Wert auf dem Handy nicht. */
+/* Die Beschriftung steht senkrecht mittig neben ihrem Wert (Bild OF-P34):
+ * Unter „Einsatzort" stand neben Adresse und Strecke eine leere Zeile. */
+.einsatz-raster .tagfeld{align-items:center}
+.einsatz-raster .tagfeld dt{padding-left:calc(var(--symbol-klein) + var(--abstand-2))}
+.einsatz-raster .tagfeld dt > .lese-schloss{
+  margin:0 var(--abstand-2) 0 calc((var(--symbol-klein) + var(--abstand-2)) * -1);
+}
+@media (min-width:720px){
+  .einsatz-raster .tagfeld{
+    grid-template-columns:calc(var(--symbol-klein) + var(--abstand-2) + var(--lese-beschriftung)) minmax(0,1fr);
+  }
+}
+
 /* Kleinzeile unter einem Lesewert: Höhe, Luftlinie und Strecke unter dem
  * Einsatzort, das Alter unter dem Geburtsdatum. */
 .lese-klein{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
 
-/* Die Plaketten am Fuß der Einsatz-Karte — dieselben wie auf der Kachel. */
-.karte-inhalt .zeile-plaketten{margin-top:var(--abstand-3)}
+/* Die Plaketten am Fuß der Einsatz-Karte — dieselben wie auf der Kachel.
+ * NUR DAS DIREKTE KIND (Konzept OF, OF-02, OF-P-08): Bis Web 24.2 stand hier
+ * `.karte-inhalt .zeile-plaketten`, und das traf jede Zeile in einer Karte —
+ * die Plakette sass dort 6 px unter der Mitte des Knopfs daneben (gemessen
+ * auf den Konto-Backups, auch die Ruhesegment-Zeilen des Schneide-Bereichs). */
+.karte-inhalt > .zeile-plaketten{margin-top:var(--abstand-3)}
 
 /* ---- Einsatzphasen als Zeilenliste ---------------------------------------
  * Nummer gedämpft, Name, rechts die Uhrzeit mit dem Minutenabstand zur
@@ -3621,7 +3889,10 @@ label + .feld-klein{margin-bottom:var(--abstand-3)}
  * DER STRICH IST DIE AUSWAHLLINIE (Dunkelblau): Er steht hier allein — Rauch
  * hebt sich von der Karte kaum ab —, und Dunkelblau erreicht darauf
  * 12,4:1. kontrast.py leitet die Paare aus den Regeln ab und misst es. */
-.vorschlag:hover,.vorschlag.aktiv{background:var(--flaeche-abgesetzt);border-left-color:var(--auswahl-linie)}
+/* SEIT WEB 24.1 OHNE STRICH, MIT AUSWAHLFLAECHE (E-OF-16): Rauch allein
+ * hebt sich von der Karte kaum ab — der Strich war deshalb die eigentliche
+ * Markierung. Blau 100 traegt sie allein, wie beim aktiven Eintrag. */
+.vorschlag:hover,.vorschlag.aktiv{background:var(--auswahl-flaeche)}
 /* Die freie Eingabe ist eine HANDLUNG, kein Datensatz. */
 .vorschlag-neu .vorschlag-haupt{
   color:var(--text-link);font-family:var(--schrift-kopf);font-weight:500;
@@ -3995,7 +4266,6 @@ mark.treffer{background:var(--warnung-flaeche);color:inherit;border-radius:var(-
  * gleich aussieht. */
 .akkordeon.aktiv > .akkordeon-zeile{
   background:var(--auswahl-flaeche);
-  box-shadow:inset var(--strich-stark) 0 0 var(--auswahl-linie);
 }
 .akkordeon.aktiv > .akkordeon-zeile .akkordeon-text{color:var(--auswahl-text)}
 
@@ -4124,7 +4394,12 @@ h1 + .seiten-erklaerung{margin-top:0}
   font-size:var(--groesse-3);color:var(--text-titel);
   margin:0 0 var(--abstand-2);
 }
-.listen-form-felder{display:grid;gap:var(--abstand-3)}
+/* `minmax(0,1fr)` STATT DER AUTOMATISCHEN SPALTE: Die richtete sich nach dem
+ * breitesten Kind — seit das Ortsfeld neben der Lupe das Zeichen zur
+ * Adresssuche traegt (Web 24.4, E-OF-07), drueckte dessen Zeile die Spalte
+ * bei 360 px auf 356 statt 336 px, und die Seite lief 8 px ueber. Jetzt gibt
+ * das Eingabefeld der Zeile nach (`min-width:0`). */
+.listen-form-felder{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--abstand-3)}
 .listen-form-fuss{display:flex;flex-wrap:wrap;gap:var(--abstand-2);margin-top:var(--abstand-4)}
 /* Zwei Formulare in einem Abschnitt (Nr. 480): „Nachtragen vom Blatt" traegt
  * bei „beide abweichend" zwei, und der Knopf des ersten klebte an der
@@ -4136,7 +4411,7 @@ h1 + .seiten-erklaerung{margin-top:0}
 /* Ab 720 px stehen Name und Lage nebeneinander — sie gehören
  * zusammen und passen in eine Zeile. */
 @media (min-width:720px){
-  .listen-form-felder{grid-template-columns:1fr 1fr;align-items:start}
+  .listen-form-felder{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
 }
 
 /* Der Vorbelegungsstern in der Zeile: Dunkelblau, weil er eine Auszeichnung
@@ -4410,7 +4685,7 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
  *
  * Es gilt für JEDE Liste mit Suche und Filtern, nicht für diese eine Seite. */
 .listensuche{display:flex;gap:var(--abstand-2);align-items:center;
-  max-width:var(--listensuche-breit)}
+  max-width:var(--feld-breit)}
 
 /* FILTERREIHE (.filterreihe) — Verweise, keine Knöpfe im Formular: Ein Filter
  * ändert die angezeigte Liste, und das ist eine Navigation. So trägt jeder
@@ -4418,6 +4693,18 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
  * erreichbar), und er funktioniert ohne Skript. Der aktive trägt die
  * Auswahlfläche — dieselbe Auszeichnung wie die aktive Kennzahl. */
 .filterreihe{display:flex;flex-wrap:wrap;gap:var(--abstand-2)}
+/* DER FILTERKNOPF IM LISTENKOPF (Konzept OF, OF-03, E-OF-18, Bild OF-P22-B):
+ * rechts neben dem Suchfeld, so hoch wie es (die benannte Ausnahme der
+ * Suchseite, `.filterknopf`), kraeftiger Rand, fett, mit dem Filterzeichen
+ * und der Zahl der gesetzten Filter. Mit ihm fuellt das Suchfeld die Zeile
+ * wie im freigegebenen Bild; ohne Skript ist er verborgen, und die Zeile
+ * behaelt ihre Hoechstbreite nicht — die Reihe steht dann offen darunter. */
+.listensuche:has([data-filterknopf]){max-width:none}
+.listensuche .suchfeld{flex:1 1 auto}
+.listensuche .filterknopf{border-color:var(--linie-stark);font-weight:700;gap:var(--abstand-2)}
+/* Die gesetzten Filter als Pillen mit Kreuz unter der Suche, daneben die
+ * Trefferzahl. */
+.filtergesetzt{display:flex;flex-wrap:wrap;align-items:center;gap:var(--abstand-2)}
 /* Ein Auswahlfeld in der Filterreihe („Art") ist so hoch wie ein
  * Filter und nur so breit, wie es muss. */
 .filterreihe .feld-eingabe{width:auto;min-width:12rem;flex:0 1 auto}
@@ -4539,19 +4826,19 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
  * Spalten dafür kosteten Breite und träfen doch nie beide zugleich zu — ein
  * Konto ohne Namen hat nur die Adresse. */
 .konto-name{display:block;font-weight:700;color:var(--text-titel)}
+a.konto-name:hover{color:var(--text-link)}
 .konto-mail{display:block;color:var(--gedaempft);font-size:var(--groesse-2)}
 .tabelle-konten .wahl-spalte{width:var(--knopf);text-align:center}
-.tabelle-konten .oeffnen-spalte{width:1%;text-align:right;white-space:nowrap}
+/* BEI 1024 px ROLLTE DIE TABELLE (Nr. 342): Der Titel „Zuletzt angemeldet"
+   und eine Adresse ohne Namen blieben auf einer Zeile. Beide duerfen
+   umbrechen, die Adresse an jeder Stelle (Konzept OF, OF-05). */
+.tabelle-konten th.sortable{white-space:normal}
+.tabelle-konten .konto-name,.tabelle-konten .konto-mail{overflow-wrap:anywhere}
 .tabelle-konten th.sortable a{
   display:inline-flex;align-items:center;gap:var(--abstand-1);
   color:inherit;text-decoration:none;
 }
 .tabelle-konten th.sortable a:hover{color:var(--text-link);text-decoration:none}
-.oeffnen{
-  display:inline-flex;align-items:center;gap:var(--abstand-1);
-  min-height:var(--knopf);color:var(--text-link);
-  font-family:var(--schrift-kopf);font-weight:500;
-}
 
 /* Das Kästchen vor dem Text einer Zeile (mobile Fassung derselben Liste). */
 .zeile-vorn{flex:0 0 auto;display:flex;align-items:center}
@@ -4878,6 +5165,9 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
  * Kästen, die nichts tun. */
 @media print {
   .nur-bildschirm { display: none !important; }
+  /* Die Fußzeile ist seit Web 24 ein dunkelblauer Streifen (E-OF-34) — auf
+   * Papier ein Tintenbalken ohne Auskunft. Sie bleibt im Druck weg. */
+  .fuss-seite { display: none; }
 
   /* KEINE FLÄCHE AUF PAPIER. Die Flächenfarbe der Anwendung (`--schnee`,
    * `--rauch`) druckt als grauer Kasten und kostet Tinte; auf Papier ist der
@@ -4916,14 +5206,21 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
   overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;
 }
 .reiter::-webkit-scrollbar{display:none}
+/* EINE FORM FÜR BEIDE EBENEN (Konzept OF, E-OF-17, -40): Seitenreiter und
+ * Bereichszeile tragen dieselbe Schrift (Open Sans 700), dieselbe Höhe
+ * (`--bereiche`, 48 px) und denselben Unterstrich (3 px Dunkelblau). Bis
+ * Web 23 waren die Seitenreiter leiser (500, 44 px, 2 px). Welche Reihe die
+ * obere Ebene ist, sagt die Lage. */
 .reiter-punkt{
-  flex:0 0 auto;display:inline-flex;align-items:center;
-  min-height:var(--knopf);padding:0 var(--abstand-3);
-  font-family:var(--schrift-kopf);font-weight:500;color:var(--gedaempft);
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:var(--abstand-2);
+  min-height:var(--bereiche);padding:0 var(--abstand-4);
+  font-family:var(--schrift-kopf);font-weight:700;color:var(--gedaempft);
   text-decoration:none;white-space:nowrap;
-  border-bottom:var(--strich-stark) solid transparent;
+  border-bottom:var(--strich-reiter) solid transparent;
 }
-.reiter-punkt:hover{color:var(--text-titel);text-decoration:none}
+.reiter-punkt:hover{color:var(--text-titel);text-decoration:none;background:var(--flaeche-abgesetzt)}
+/* Die Zahl der Punkte hinter dem Namen (Bereichszeile): leise, nicht fett. */
+.bereich-zahl{color:var(--gedaempft);font-weight:400}
 /* DER STRICH TRAEGT DEN ZUSTAND: Die Schrift wechselt zwar mit, aber
  * Gedaempft gegen Dunkelblau sind nur 2,35 : 1. Die Auswahllinie
  * (Dunkelblau) erreicht auf der Karte 12,88 : 1; bis Schritt 26 war es
@@ -4939,6 +5236,41 @@ a.kennzahl:hover{border-color:var(--aktion);text-decoration:none}
 }
 .reiter-rahmen.rollt::after{right:0;background:linear-gradient(to right,transparent,var(--flaeche-karte))}
 .reiter-rahmen.rollt-links::before{left:0;background:linear-gradient(to left,transparent,var(--flaeche-karte))}
+
+/* DIE BEREICHSZEILE (.reiter-bereiche) ist der Reiter-Baustein in einer
+ * zweiten LAGE, nicht in einer zweiten Form (E-OF-40): volle Fensterbreite
+ * unter der Kopfleiste, Fläche Schnee, Linie unten, die Reiter auf dem
+ * Raster der Kopfleiste (`--rahmen`, derselbe Seitenabstand). Die Linie
+ * trägt hier der Rahmen über die ganze Breite, nicht die Reihe. */
+.reiter-bereiche{
+  background:var(--flaeche-karte);
+  border-bottom:var(--strich) solid var(--linie);
+}
+/* AUF DEM HANDY ENGER: Drei Bereiche mit Zahl und Zähler sollen bei 390 px
+ * ohne Rollen nebeneinander stehen (P-NV-06); ein vierter rollt. Ab 720 px
+ * gilt das Maß der Seitenreiter und das Raster der Kopfleiste. */
+.reiter-bereiche .reiter{
+  max-width:var(--rahmen);margin:0 auto;padding:0;
+  border-bottom:0;gap:0;
+}
+.reiter-bereiche .reiter-punkt{padding:0 var(--abstand-2);gap:var(--abstand-1)}
+@media (min-width:720px){
+  .reiter-bereiche .reiter{padding:0 var(--abstand-3)}
+  .reiter-bereiche .reiter-punkt{padding:0 var(--abstand-4);gap:var(--abstand-2)}
+}
+/* Ab 1024 px klebt sie unter der Kopfleiste; die Leiste klebt dann unter
+ * beiden (`.rahmen-bereiche` im Gerüst). Darunter rollt sie mit der Seite
+ * weg — auf dem Handy wären 104 px feste Kopfzone ein Sechstel des Bildes. */
+@media (min-width:1024px){
+  .reiter-bereiche{position:sticky;top:var(--kopf);z-index:30}
+  .rahmen-bereiche .leiste{
+    top:calc(var(--kopf) + var(--bereiche) + var(--strich));
+    height:calc(100vh - var(--kopf) - var(--bereiche) - var(--strich));
+  }
+  html:has(.reiter-bereiche){
+    scroll-padding-top:calc(var(--kopf) + var(--bereiche) + var(--abstand-4));
+  }
+}
 
 /* DIE PROTOKOLLLISTE (.protokoll-liste). UNTER 720 px STEHT DIE PLAKETTE
  * UNTER DEM TEXT. Gemessen bei 376 px: Neben einer Plakette von

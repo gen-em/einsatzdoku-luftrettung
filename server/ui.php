@@ -439,6 +439,18 @@ function ui_hat_tagesleiste(?bool $setzen = null): bool
  * Dasselbe für die Einstellungsleiste — sie braucht `assets/menue.js`
  * (Akkordeonzustand der drei Blöcke).
  */
+/**
+ * Merkt sich, ob das Gerüst eine Rahmenkarte geöffnet hat (Konzept OF,
+ * NV-02) — `ui_leiste_ende()` schließt dann die Leistenspalte mit,
+ * `ui_geruest_ende()` die Karte. Eine Seite ohne Leiste hat keine.
+ */
+function ui_hat_rahmenkarte(?bool $setzen = null): bool
+{
+    static $hat = false;
+    if ($setzen !== null) { $hat = $setzen; }
+    return $hat;
+}
+
 function ui_hat_menueleiste(?bool $setzen = null): bool
 {
     static $ja = false;
@@ -550,9 +562,45 @@ function ui_artzeichen(?string $kind, string $klassen = '', ?string $typ = null)
  *     menue   false = kein Menüknopf und kein Zahnrad (öffentliche Hülle)
  *     zurueck ['text' => …, 'href' => …] statt der Hauptpunkte (öffentlich)
  * ------------------------------------------------------------------------ */
+/**
+ * Die Handbuchmarke eines Menüpunkts der Einstellungen (Konzept OF, E-OF-56).
+ *
+ * DAS „?" DER KOPFLEISTE ÖFFNET DAS KAPITEL DER SEITE, nicht das ganze
+ * Handbuch — und deshalb steht in den Seiten kein „Handbuch: …" mehr
+ * (E-OF-02). Die Marken stehen hier als ganzer Verweis `hilfe.php#…`, damit
+ * der Riegel `anker` sie findet und jedes Ziel hält. Die Schlüssel sind die
+ * des Menüs (`ui_einstellungen_punkte()`); eine Seite mit eigenem Kapitel
+ * (Kontoseite, Sicherheit) gibt ihre Marke selbst an `ui_geruest_start()`.
+ * Ohne Marke führt das „?" auf das ganze Handbuch.
+ */
+function ui_hilfe_marke(string $menue): ?string
+{
+    $marken = [
+        ''                        => 'hilfe.php#3-die-web-oberflaeche-ueberblick',
+        'profil'                  => 'hilfe.php#3-1a-profil-name-adresse-logo-und-darstellung',
+        'geraete'                 => 'hilfe.php#10-geraete',
+        'standorte'               => 'hilfe.php#9-stammdaten-standorte-und-rettungsmittel',
+        'backup'                  => 'hilfe.php#6-backup',
+        'import'                  => 'hilfe.php#7-import-und-export',
+        'admin'                   => 'hilfe.php#11-2-die-liste-der-nutzerinnen',
+        'admin_sicherungen'       => 'hilfe.php#11-4-konto-backups',
+        'admin_installation'      => 'hilfe.php#11-5-installation',
+        'admin_rechtstexte'       => 'hilfe.php#11-5a-rechtstexte',
+        'admin_protokoll'         => 'hilfe.php#11-7-protokoll',
+        'betrieb_status'          => 'hilfe.php#12-1-status',
+        'betrieb_statistik'       => 'hilfe.php#12-2-statistik',
+        'betrieb_updates'         => 'hilfe.php#12-3-updates',
+        'betrieb_jobs'            => 'hilfe.php#12-4-hintergrundjobs',
+        'betrieb_server'          => 'hilfe.php#12-5-servereinstellungen',
+        'admin_komplettsicherung' => 'hilfe.php#12-6-komplett-backup',
+    ];
+    return $marken[$menue] ?? null;
+}
+
 function ui_kopf(array $o = []): void
 {
     $aktiv  = (string)($o['aktiv'] ?? '');
+    $hilfe  = (string)($o['hilfe'] ?? '') !== '' ? (string)$o['hilfe'] : 'hilfe.php';
     $menue  = ($o['menue'] ?? true) !== false;
     $zurueck = $o['zurueck'] ?? null;
     /* DIE FARBE DER UMGEBUNG. Eine Stelle fuer
@@ -600,10 +648,26 @@ function ui_kopf(array $o = []): void
                  weiterweiss. Genau dann will man nicht erst ein Menue
                  aufziehen. */ ?>
         <a class="knopf knopf-symbol kopf-hilfe<?= $aktiv === 'hilfe' ? ' aktiv' : '' ?>"
-           href="hilfe.php" aria-label="Hilfe und Handbuch"
+           href="<?= ui_e($hilfe) ?>" aria-label="Hilfe und Handbuch"
            <?= $aktiv === 'hilfe' ? 'aria-current="page"' : '' ?>>
           <?= ui_symbol('hilfe', 'symbol-gross') ?>
         </a>
+        <?php /* MOND UND SONNE (Konzept OF, OF-08, E-OF-09): zwischen „?" und
+                 Zahnrad, nur angemeldet und nur bei Umschalter oder Folgt
+                 System (`darstellung_umschalter()`). Beide Zeichen stehen im
+                 Knopf, das Stylesheet zeigt das passende — so stimmt das Bild
+                 schon vor jedem Skript, auch wenn das Geraet entscheidet.
+                 Name und `aria-pressed` setzt `assets/darstellung.js`, weil
+                 nur der Browser weiss, was das Geraet will. */
+              if (function_exists('darstellung_umschalter') && darstellung_umschalter()):
+                  $dunkel = darstellung_attribut() === 'dark'; ?>
+        <button type="button" class="knopf knopf-symbol kopf-darstellung" data-darstellung
+                aria-pressed="<?= $dunkel ? 'true' : 'false' ?>"
+                aria-label="<?= $dunkel ? 'Dunkel aus' : 'Dunkel ein' ?>">
+          <?= ui_symbol('mond', 'symbol-gross symbol-mond') ?>
+          <?= ui_symbol('sonne', 'symbol-gross symbol-sonne') ?>
+        </button>
+        <?php endif; ?>
         <a class="knopf knopf-symbol kopf-zahnrad<?= $aktiv === 'einstellungen' ? ' aktiv' : '' ?>"
            href="einstellungen.php" aria-label="Einstellungen"
            <?= $aktiv === 'einstellungen' ? 'aria-current="page"' : '' ?>>
@@ -637,6 +701,8 @@ function ui_kopf(array $o = []): void
  *     menue    aktiver Eintrag des Einstellungsmenüs (nur bei 'einstellungen')
  *     lesespalte  true = Inhaltsspalte auf Lesebreite (760 px) begrenzen
  *     titel    Überschrift der Leiste bei 'filter'
+ *     hilfe    Ziel des „?" (`hilfe.php#…`), Vorgabe die Marke des
+ *              Menüpunkts (ui_hilfe_marke()) bzw. das ganze Handbuch
  *
  * Bei 'filter' gibt diese Funktion die Leiste NICHT aus: Die Suchseite füllt
  * sie selbst und ruft danach ui_leiste_ende(). Bei allen anderen Werten ist
@@ -647,16 +713,45 @@ function ui_geruest_start(array $o = []): void
     $leiste = (string)($o['leiste'] ?? '');
     ui_hat_tagesleiste($leiste === 'diensttage');
     ui_hat_menueleiste($leiste === 'einstellungen');
-    ui_kopf(['aktiv' => (string)($o['aktiv'] ?? '')]);
+    /* DAS „?" FÜHRT INS KAPITEL DER SEITE (E-OF-56): eine Marke, die die
+     * Seite selbst angibt (`hilfe`), sonst die des Menüpunkts. */
+    $hilfe = (string)($o['hilfe'] ?? '');
+    if ($hilfe === '' && $leiste === 'einstellungen') {
+        $hilfe = (string)ui_hilfe_marke((string)($o['menue'] ?? ''));
+    }
+    ui_kopf(['aktiv' => (string)($o['aktiv'] ?? ''), 'hilfe' => $hilfe]);
+    /* DIE BEREICHSZEILE steht nur im Einstellungsbereich, zwischen Kopfleiste
+     * und Rahmen (Konzept OF, NV-01). Der Rahmen erfaehrt davon, damit die
+     * Leiste ab 1024 px unter BEIDEN klebt. */
+    $bereiche = $leiste === 'einstellungen';
+    if ($bereiche) { ui_bereichszeile((string)($o['menue'] ?? '')); }
     /* LESESPALTE: Eine Seite mit wenigen Karten und viel
      * Erklärtext liest sich auf 760 px besser als über die volle Breite eines
      * 1920er Bildschirms. Die Regel `.rahmen-lesespalte` gab es längst — sie
      * war nur für Seiten OHNE Leiste gebaut (Anmeldung, Rechtstexte,
      * Wiederherstellung) und über das Gerüst nicht erreichbar. */
-    $rahmen = 'rahmen' . (!empty($o['lesespalte']) ? ' rahmen-lesespalte' : '');
+    $rahmen = 'rahmen' . (!empty($o['lesespalte']) ? ' rahmen-lesespalte' : '')
+            . ($bereiche ? ' rahmen-bereiche' : '');
+    /* DIE RAHMENKARTE (Konzept OF, NV-02, E-NV-01, E-OF-36, -38): Leiste und
+     * Inhalt in EINER Fläche, für alle drei Leistentypen. Im Bereich
+     * Einstellungen sind die Karten darin Abschnitte mit Trennlinie
+     * (`.rahmenkarte-abschnitte`, E-NV-03 — reines CSS, ui_karte_start()
+     * bleibt); auf Startseite und Suche bleiben Karten Karten. Ohne Leiste
+     * (404 von apk.php) keine: Ein Rahmen um eine einzelne Karte wäre eine
+     * Karte in der Karte. */
+    $karte = in_array($leiste, ['diensttage', 'einstellungen', 'filter'], true);
+    ui_hat_rahmenkarte($karte);
     ?>
 <div class="schleier" data-schublade="zu" hidden></div>
 <div class="<?= ui_e($rahmen) ?>">
+<?php if ($karte): ?>
+<div class="rahmenkarte<?= $bereiche ? ' rahmenkarte-abschnitte' : '' ?>">
+  <?php /* Die Spalte trägt Fläche und Linie bis zum Kartenboden; die
+           Leiste darin klebt und rollt in sich (E-OF-37). Unter 1024 px
+           ist sie ohne eigene Box (`display: contents`), die Leiste dort
+           die Schublade wie bisher. */ ?>
+  <div class="leiste-spalte">
+<?php endif; ?>
   <?php /* tabindex="-1": Beim Öffnen der Schublade fokussiert schublade.js
            die Leiste SELBST, nicht ihr erstes Bedienelement — sonst trüge
            das X beim Öffnen einen Fokusring, den niemand bestellt hat.
@@ -715,6 +810,7 @@ function ui_geruest_start(array $o = []): void
 function ui_leiste_ende(): void
 {
     echo "  </aside>\n";
+    if (ui_hat_rahmenkarte()) { echo "  </div>\n"; }
     echo '  <main class="inhalt" id="inhalt">' . "\n";
     ui_hinweise();
 }
@@ -725,7 +821,7 @@ function ui_leiste_ende(): void
  * Schließt Inhalt und Rahmen, setzt die Fußzeile darunter und lädt die
  * Skripte des Gerüsts.
  *
- * DIE VIER SKRIPTE DES GERÜSTS stehen hier und nicht auf den Seiten: Sie
+ * DIE SKRIPTE DES GERÜSTS stehen hier und nicht auf den Seiten: Sie
  * gehören zur Hülle, und eine Seite, die eines davon zu laden vergisst, fällt
  * nicht auf — sie verhält sich nur an einer Stelle anders als alle anderen.
  * So ging es einmal mit confirm.js, das auf drei Seiten zweimal und auf
@@ -738,7 +834,7 @@ function ui_leiste_ende(): void
  */
 function ui_geruest_ende(array $o = []): void
 {
-    echo "  </main>\n</div>\n";
+    echo "  </main>\n" . (ui_hat_rahmenkarte() ? "</div>\n" : '') . "</div>\n";
     ui_fuss_seite($o);
 
     /* `api.js` STAND HIER EINEN NACHMITTAG LANG und gehoert nicht hierher —
@@ -747,7 +843,11 @@ function ui_geruest_ende(array $o = []): void
      * und auf genau diesen beiden ruft `unlock.js` seinen Sendeweg zur
      * LADEZEIT. */
     $skripte = ['assets/symbol.js', 'assets/schublade.js', 'assets/blatt.js',
-                'assets/confirm.js'];
+                'assets/confirm.js', 'assets/klappkarte.js'];
+    /* Mond und Sonne der Kopfleiste (OF-08) — nur, wenn es den Knopf gibt. */
+    if (function_exists('darstellung_umschalter') && darstellung_umschalter()) {
+        $skripte[] = 'assets/darstellung.js';
+    }
     if (ui_hat_tagesleiste()) { $skripte[] = 'assets/daylist.js'; }
     if (ui_hat_menueleiste()) { $skripte[] = 'assets/menue.js'; }
     foreach ($skripte as $s) {
@@ -1093,11 +1193,11 @@ function ui_einstellungen_punkte(): array
                 ['admin_sicherungen',  'admin_sicherungen.php',  'Konto-Backups', 'sicherung',
                                                                   $z('admin_sicherungen')],
                 /* `haus` fuer „Installation" (freigegeben), und eine eigene
-                 * Seite „Rechtstexte" mit ihrem Zeichen aus dem Vorrat:
-                 * zwischen Installation und Demo-Konto. */
+                 * Seite „Rechtstexte" mit ihrem Zeichen aus dem Vorrat.
+                 * „Demo-Konto" ist seit Web 24.6 eine Karte unter
+                 * Installation (Konzept OF, E-OF-46, F-OF-07). */
                 ['admin_installation', 'admin_installation.php', 'Installation',  'haus'],
                 ['admin_rechtstexte',  'admin_rechtstexte.php',  'Rechtstexte',   'rechtstexte'],
-                ['admin_demo',         'admin_demo.php',         'Demo-Konto',    'kolben'],
                 /* PROTOKOLL UNTER VERWALTUNG, nicht unter Betrieb: Der Admin
                  * sieht vier seiner Reiter, und ein
                  * Admin sieht Betrieb nicht. Menueeintrag und Zeichen kommen
@@ -1144,8 +1244,9 @@ function ui_einstellungen_punkte(): array
                 ['betrieb_server',    'betrieb_server.php',    'Servereinstellungen', 'server'],
                 ['admin_komplettsicherung', 'admin_komplettsicherung.php',
                                                                'Komplett-Backup',     'datenbank'],
-                ['admin_sicherungsziele',   'admin_sicherungsziele.php',
-                                                               'Backup-Ziele',        'ziel-fern'],
+                /* „Backup-Ziele" ist seit Web 24.7 eine Karte in den
+                 * Servereinstellungen und im Komplett-Backup (Konzept OF,
+                 * E-OF-24, -45, F-OF-07); die Seite leitet um. */
             ],
         ];
     }
@@ -1223,8 +1324,13 @@ function ui_leiste_einstellungen(string $aktiv): void
         $hatAkt = false;
         foreach ($b['punkte'] as $pk) { if ($aktiv === $pk[0]) { $hatAkt = true; } }
         $offen  = $hatAkt || $b['schluessel'] === 'einstellungen';
+        /* DER AKTIVE BEREICH (Konzept OF, NV-03, E-NV-02): Ab 1024 px zeigt
+         * die Leiste nur ihn, ohne Kopfzeile — die Bereiche stehen in der
+         * Bereichszeile. Auf der Uebersicht ist es „Einstellungen". In der
+         * Schublade bleiben alle drei als Akkordeon. */
+        $istBereich = $hatAkt || ($aktiv === '' && $b['schluessel'] === 'einstellungen');
         ?>
-        <details class="akkordeon leiste-gruppe"<?= $offen ? ' open' : '' ?>
+        <details class="akkordeon leiste-gruppe<?= $istBereich ? ' leiste-gruppe-aktiv' : '' ?>"<?= $offen ? ' open' : '' ?>
                  data-gruppe="<?= ui_e($b['schluessel']) ?>">
           <summary class="akkordeon-zeile">
             <?= ui_symbol('winkel', 'akkordeon-winkel') ?>
@@ -1262,8 +1368,8 @@ function ui_leiste_einstellungen(string $aktiv): void
  * gibt — dort ist die Leiste eine Schublade, und ein Zahnrad, das ungefragt
  * auf „Profil" landet, verschweigt die übrigen sechzehn Punkte.
  *
- * Jeder Bereich ist eine Bereichskarte. „Abmelden" steht
- * getrennt am Ende, darunter nur der Name der angemeldeten Person.
+ * Jeder Bereich ist eine Bereichskarte. „Abmelden" steht seit Web 24.1
+ * nur noch in der Leiste (E-OF-27).
  */
 function ui_einstellungen_uebersicht(): void
 {
@@ -1308,12 +1414,9 @@ function ui_einstellungen_uebersicht(): void
         ui_karte_ende();
     }
     echo '  </div>' . "\n";
-    ui_karte_start();
-    echo '    ' . ui_knopf(['text' => 'Abmelden', 'href' => 'logout.php', 'art' => 'leise',
-        'symbol' => 'abmelden', 'breit' => true,
-        'attr' => ' data-confirm="Wirklich abmelden?" data-confirm-ok="Abmelden"'
-                . ' data-confirm-tone="normal"']) . "\n";
-    ui_karte_ende();
+    /* „ABMELDEN" STEHT NUR IN DER LEISTE (Konzept OF, E-OF-27): am
+     * Schreibtisch unten in der Leiste, auf dem Handy in der Schublade. Bis
+     * Web 24.0 stand hier zusaetzlich ein breiter Knopf in eigener Karte. */
     ui_geruest_ende();
     ui_seite_ende();
 }
@@ -1798,11 +1901,18 @@ function ui_ladeplatz(string $text, array $o = []): string
  * Eine zweite Kopfaktion gibt es nicht — was mehr braucht, bekommt ein
  * Aktionsmenü.
  *
- * Zugeklappte Karten tragen den Winkel links im Kopf und eine Vorschau rechts
- * („keine", „vom Diensttag", „3 · 1 ausgewählt").
+ * Zugeklappte Karten tragen den Winkel links im Kopf, rechts den STAND
+ * („keine", „vom Diensttag", „kein Streifen") und die Plakette (Konzept OF,
+ * OF-02, E-OF-42). Bis Web 24.2 hiess der Stand `vorschau`, und die Plakette
+ * fiel im zugeklappten Zweig still weg — Status, Hintergrundjobs,
+ * Servereinstellungen und Komplett-Backup brauchen beides im Kopf. Eine
+ * KOPFAKTION traegt die Klappkarte weiter nicht: Sie stuende im <summary>,
+ * ein Knopf im Knopf. Steht der Anker der Adresse auf der Karte oder in
+ * ihr, klappt `assets/klappkarte.js` sie auf — so ist sie nach dem
+ * Speichern offen und die Meldung zu sehen.
  *
  * $o: titel, zahl, aktion ['text','href','symbol','art','form','attr'],
- *     zu (bool), vorschau, klasse, id, plakette, geschuetzt (bool),
+ *     zu (bool), stand, offen (bool), klasse, id, plakette, geschuetzt (bool),
  *     symbol (Bereichszeichen vor dem Titel — nur mit 'klasse' => 'karte-bereich')
  *
  * DIE BEREICHSKARTE. `symbol` setzt ein
@@ -1821,7 +1931,7 @@ function ui_ladeplatz(string $text, array $o = []): string
  * ------------------------------------------------------------------------ */
 function ui_karte_start(array $o = []): void
 {
-    $zu = !empty($o['zu']) || isset($o['vorschau']);
+    $zu = !empty($o['zu']) || isset($o['stand']);
 
     /* 'geschuetzt' => true haengt das SCHLOSS an den Kartentitel.
      *
@@ -1856,8 +1966,19 @@ function ui_karte_start(array $o = []): void
         if (isset($o['zahl'])) {
             echo '    <span class="karte-zahl">' . ui_e((string)$o['zahl']) . "</span>\n";
         }
-        if (isset($o['vorschau'])) {
-            echo '    <span class="karte-vorschau">' . ui_e((string)$o['vorschau']) . "</span>\n";
+        /* STAND UND PLAKETTE SIND EINE GRUPPE: Bricht der Kopf am Handy um,
+           gehen beide zusammen rechtsbuendig in die zweite Zeile. Bis Web
+           24.6 waren es zwei Geschwister, und die Plakette stand dann allein
+           links unter dem Titel (OF-06, Servereinstellungen bei 390 px). */
+        if (isset($o['stand']) || !empty($o['plakette'])) {
+            echo '    <span class="karte-stand-gruppe">';
+            if (isset($o['stand'])) {
+                echo '<span class="karte-stand">' . ui_e((string)$o['stand']) . '</span>';
+            }
+            if (!empty($o['plakette'])) {
+                echo (string)$o['plakette'];
+            }
+            echo "</span>\n";
         }
         echo "  </summary>\n";
         echo '  <div class="karte-inhalt">' . "\n";
@@ -2189,25 +2310,89 @@ function ui_zeile_mehr(array $o, array $daten): void
  * SEITEN MIT REITERN TRAGEN KEINE UNTERPUNKTE IN DER LEISTE: `menue.js` baut
  * keine, wenn `#inhalt` eine `.reiter`-Reihe enthaelt.
  *
- * $o: label (fuer die Vorlesesoftware), punkte [ ['text', 'href',
+ * EIN BAUSTEIN FUER ZWEI EBENEN (Konzept OF, E-OF-17, -40). Die
+ * Bereichszeile der Einstellungen (`ui_bereichszeile()`) ist dieselbe Reihe
+ * in einer zweiten LAGE (`klasse` => 'reiter-bereiche'): gleiche Schrift,
+ * gleiche Hoehe, gleicher Unterstrich. Zwei Formen fuer zwei Reihen
+ * uebereinander waeren zwei Bausteine gewesen.
+ *
+ * $o: label (fuer die Vorlesesoftware), klasse (Lagevariante am Rahmen),
+ *     punkte [ ['text', 'href',
  *     'aktiv' => bool, 'abgesetzt' => bool (am rechten Rand, fuer eine
- *     Ablage wie „Archiv"), 'attr' => fertige Attribute] ]
+ *     Ablage wie „Archiv"), 'attr' => fertige Attribute,
+ *     'zahl' => ?int (leise hinter dem Namen, z. B. Zahl der Punkte),
+ *     'zaehler' => ?array (Plakette wie `ui_zaehler()`)] ]
  * ------------------------------------------------------------------------ */
 function ui_reiter(array $o): void
 {
+    static $skriptGeladen = false;
     $punkte = (array)($o['punkte'] ?? []);
     if (!$punkte) { return; }
-    echo '<div class="reiter-rahmen"><nav class="reiter" aria-label="'
+    $rahmen = 'reiter-rahmen' . (isset($o['klasse']) ? ' ' . (string)$o['klasse'] : '');
+    echo '<div class="' . ui_e($rahmen) . '"><nav class="reiter" aria-label="'
        . ui_e((string)($o['label'] ?? 'Bereiche dieser Seite')) . '">';
     foreach ($punkte as $p) {
         $k = 'reiter-punkt' . (!empty($p['abgesetzt']) ? ' reiter-abgesetzt' : '')
            . (!empty($p['aktiv']) ? ' aktiv' : '');
+        $zahl = isset($p['zahl'])
+              ? '<span class="bereich-zahl" aria-hidden="true">' . (int)$p['zahl'] . '</span>' : '';
         echo '<a class="' . $k . '" href="' . ui_e((string)$p['href']) . '"'
            . (!empty($p['aktiv']) ? ' aria-current="page"' : '')
-           . (string)($p['attr'] ?? '') . '>' . ui_e((string)$p['text']) . '</a>';
+           . (string)($p['attr'] ?? '') . '><span>' . ui_e((string)$p['text']) . '</span>'
+           . $zahl . ui_zaehler($p['zaehler'] ?? null) . '</a>';
     }
     echo "</nav></div>\n";
-    echo '<script src="' . ui_e(ui_asset('assets/reiter.js')) . '" defer></script>' . "\n";
+    /* EINMAL JE SEITE. Seit es die Bereichszeile gibt, stehen auf Protokoll,
+     * Statistik und Rechtstexte zwei Reihen — das Skript zweimal geladen
+     * haengte jeder Reihe zwei Horcher an. */
+    if (!$skriptGeladen) {
+        $skriptGeladen = true;
+        echo '<script src="' . ui_e(ui_asset('assets/reiter.js')) . '" defer></script>' . "\n";
+    }
+}
+
+
+/**
+ * Die Bereichszeile der Einstellungen (Konzept OF, NV-01) — Einstellungen ·
+ * Verwaltung · Betrieb als Reiter unter der Kopfleiste.
+ *
+ * Sie baut nur die Punkte und ruft `ui_reiter()` (E-OF-40). Jeder Reiter
+ * fuehrt auf den ERSTEN Punkt seines Blocks, ohne Sonderregel (E-OF-51);
+ * dahinter steht leise die Zahl der Punkte, und der Aufmerksamkeitszaehler
+ * ist die Summe ueber den Block (E-OF-14). Ist einer der Zaehler rot, ist es
+ * die Summe auch — sonst traegt sie den Ton des ersten.
+ *
+ * Aktiv ist der Block, der `$aktiv` enthaelt; auf der Uebersicht (`''`)
+ * ist es „Einstellungen". Rollen, die einen Bereich nicht sehen, sehen
+ * seinen Reiter nicht — `ui_einstellungen_punkte()` liefert ihn gar nicht.
+ */
+function ui_bereichszeile(string $aktiv): void
+{
+    $punkte = [];
+    foreach (ui_einstellungen_punkte() as $b) {
+        if (!$b['punkte']) { continue; }
+        $hatAkt = false;
+        $n = 0; $ton = null;
+        foreach ($b['punkte'] as $pk) {
+            if ($aktiv === $pk[0]) { $hatAkt = true; }
+            $z = $pk[4] ?? null;
+            if ($z !== null && (int)$z['n'] > 0) {
+                $n += (int)$z['n'];
+                $zt = (string)($z['ton'] ?? 'rot');
+                $ton = ($ton === null || $zt === 'rot') ? $zt : $ton;
+            }
+        }
+        if ($aktiv === '' && $b['schluessel'] === 'einstellungen') { $hatAkt = true; }
+        $punkte[] = [
+            'text'    => $b['titel'] !== '' ? $b['titel'] : 'Einstellungen',
+            'href'    => $b['punkte'][0][1],
+            'aktiv'   => $hatAkt,
+            'zahl'    => count($b['punkte']),
+            'zaehler' => $n > 0 ? ['n' => $n, 'ton' => $ton] : null,
+        ];
+    }
+    ui_reiter(['label' => 'Bereiche der Einstellungen', 'klasse' => 'reiter-bereiche',
+               'punkte' => $punkte]);
 }
 
 
@@ -2233,9 +2418,14 @@ function ui_reiter(array $o): void
  *              Protokollseite): aktive Pille mit Kreuz, der Verweis nimmt
  *              ihn weg
  *   auswahl    optional ['name', 'label', 'wert', 'optionen' => [Wert =>
- *              Text]] — ein Auswahlfeld in der Filterreihe; mit Skript
+ *              Text], 'kurz' (Name auf der Pille), 'weg' (Verweis ohne die
+ *              Auswahl)] — ein Auswahlfeld in der Filterreihe; mit Skript
  *              (`assets/listenkopf.js`) schickt es sofort ab, ohne steht
  *              ein Knopf „Filtern" daneben
+ *   filter[]   dazu 'vorgabe' => true (kein gesetzter Filter, z. B. „Alle")
+ *              und 'weg' (Verweis, der den aktiven Filter zuruecknimmt)
+ *   treffer    optional, fertiger Text neben den gesetzten Filtern
+ *              („18 von 2.580")
  * ------------------------------------------------------------------------ */
 function ui_listenkopf(array $o): void
 {
@@ -2259,12 +2449,52 @@ function ui_listenkopf(array $o): void
        . '" value="' . ui_e((string)($s['wert'] ?? '')) . '" placeholder="'
        . ui_e((string)($s['platzhalter'] ?? '')) . '" autocomplete="off"></div>' . "\n";
     echo '    <button class="knopf knopf-neutral nur-vorlesen" type="submit">Suchen</button>' . "\n";
-    echo "  </form>\n";
 
     $filter = (array)($o['filter'] ?? []);
     $auswahl = $o['auswahl'] ?? null;
+    /* DER FILTERKNOPF (Konzept OF, OF-03, E-OF-18, Bild OF-P22-B). Neben dem
+     * Suchfeld, so hoch wie es, mit der Zahl der GESETZTEN Filter; er klappt
+     * die Filterreihe auf. Gesetzt ist ein aktiver Filter, der nicht die
+     * Vorgabe ist (`vorgabe` => true, etwa „Alle"), und eine Auswahl mit
+     * Wert. Die gesetzten stehen darunter als Pillen mit Kreuz — ihr Verweis
+     * (`weg`, sonst `href`) nimmt sie zurueck —, daneben die Trefferzahl.
+     * OHNE SKRIPT ist der Knopf verborgen und die Reihe offen;
+     * `assets/listenkopf.js` dreht das um. Er merkt sich nichts: Wer
+     * filtert, sieht seine Filter als Pillen. */
+    $gesetzt = [];
+    foreach ($filter as $f) {
+        if (!empty($f['aktiv']) && empty($f['vorgabe'])) {
+            $gesetzt[] = ['text' => (string)$f['text'], 'href' => (string)($f['weg'] ?? $f['href'])];
+        }
+    }
+    if (is_array($auswahl) && (string)($auswahl['wert'] ?? '') !== '' && isset($auswahl['weg'])) {
+        $gesetzt[] = ['text' => (string)($auswahl['kurz'] ?? $auswahl['label'] ?? '') . ': '
+                              . (string)($auswahl['optionen'][$auswahl['wert']] ?? $auswahl['wert']),
+                      'href' => (string)$auswahl['weg']];
+    }
+    $reiheId = $id . '-filter';
     if ($filter || $auswahl) {
-        echo '  <div class="filterreihe">' . "\n";
+        echo '    <button type="button" class="knopf knopf-neutral filterknopf" hidden'
+           . ' data-filterknopf aria-expanded="true" aria-controls="' . ui_e($reiheId) . '">'
+           . ui_symbol('filter') . '<span>Filter</span>'
+           . ($gesetzt ? '<span class="plakette plakette-blau">' . count($gesetzt) . '</span>' : '')
+           . "</button>\n";
+    }
+    echo "  </form>\n";
+    if ($gesetzt || !empty($o['treffer'])) {
+        echo '  <div class="filtergesetzt">' . "\n";
+        foreach ($gesetzt as $g) {
+            echo '    <a class="listenfilter aktiv" href="' . ui_e($g['href']) . '"><span>'
+               . ui_e($g['text']) . '</span>' . ui_symbol('schliessen', '', 'Filter entfernen') . "</a>\n";
+        }
+        if (!empty($o['treffer'])) {
+            echo '    <span class="listenzahl">' . ui_e((string)$o['treffer']) . "</span>\n";
+        }
+        echo "  </div>\n";
+    }
+
+    if ($filter || $auswahl) {
+        echo '  <div class="filterreihe" id="' . ui_e($reiheId) . '" data-filterreihe>' . "\n";
         foreach ($filter as $f) {
             $aktiv = !empty($f['aktiv']);
             echo '    <a class="listenfilter' . ($aktiv ? ' aktiv' : '') . '" href="'
@@ -2291,9 +2521,9 @@ function ui_listenkopf(array $o): void
             echo '    ' . ui_knopf(['text' => 'Filtern', 'art' => 'neutral', 'typ' => 'submit',
                                    'attr' => ' form="' . ui_e($id) . '" data-absenden-knopf'])
                . "\n";
-            echo '    <script src="' . ui_e(ui_asset('assets/listenkopf.js')) . '" defer></script>' . "\n";
         }
         echo "  </div>\n";
+        echo '  <script src="' . ui_e(ui_asset('assets/listenkopf.js')) . '" defer></script>' . "\n";
     }
     echo "</div>\n";
 }
@@ -2388,10 +2618,12 @@ function ui_zeitraumwahl(array $o): void
     echo '  <div class="zeitraumwahl-felder" data-zeitraum>' . "\n";
     foreach (['von' => 'Von', 'bis' => 'Bis'] as $name => $text) {
         $fid = $id . '-' . $name;
+        /* TT.MM.JJJJ (Konzept OF, E-OF-54); `statistik_zeitraum()` liest
+         * beide Formen. */
         echo '    <div class="feld"><label class="feld-label" for="' . ui_e($fid) . '">' . $text
-           . '</label><input class="feld-eingabe" type="date" id="' . ui_e($fid) . '" name="'
-           . $name . '" value="' . ui_e((string)($o[$name] ?? '')) . '"'
-           . (!empty($o['max']) ? ' max="' . ui_e((string)$o['max']) . '"' : '') . "></div>\n";
+           . '</label>' . ui_datum_eingabe(['id' => $fid, 'name' => $name,
+                                           'wert' => (string)($o[$name] ?? ''),
+                                           'max' => $o['max'] ?? null]) . "</div>\n";
     }
     echo '    ' . ui_knopf(['text' => 'Anwenden', 'art' => 'neutral', 'typ' => 'submit',
                            'attr' => ' data-absenden-knopf']) . "\n";
@@ -2657,10 +2889,49 @@ function ui_aktionen(array $o): string
  * einmal auseinandergelaufen: `file` fehlte, `time` stand da, ohne dass es
  * irgendwo benutzt wird.
  * ------------------------------------------------------------------------ */
+/**
+ * Das Datumsfeld (Konzept OF, OF-03, E-OF-06, -44): ein Textfeld mit der
+ * Maske `TT.MM.JJJJ`, ohne Kalender, `--feld-datum` breit. Nimmt den Wert
+ * als 'JJJJ-MM-TT' und zeigt ihn deutsch; `min` und `max` (ISO) gehen als
+ * `data-min` / `data-max` an `assets/datumsfeld.js`. Gelesen wird der Wert
+ * mit `post_datum()` / `get_datum()` (Server) bzw. `EdFormat.datumLesen()`
+ * (Browser). Ohne Skript prüft `pattern` die Form.
+ *
+ * EINE STELLE FÜR ALLE ACHT: `ui_feld(['art' => 'date'])`, die Zeitraumwahl
+ * und die Felder, die eine Seite von Hand setzt (Suche, Geburtsdatum),
+ * holen ihr Markup hier.
+ *
+ * $o: id, name, wert (ISO), min, max, pflicht (bool), attr, klasse
+ */
+function ui_datum_eingabe(array $o): string
+{
+    static $skriptGeladen = false;
+    $attr = (string)($o['attr'] ?? '');
+    if (!empty($o['pflicht'])) { $attr .= ' required'; }
+    foreach (['min', 'max'] as $g) {
+        if (!empty($o[$g])) { $attr .= ' data-' . $g . '="' . ui_e((string)$o[$g]) . '"'; }
+    }
+    $html = '<input class="feld-eingabe feld-datum' . (!empty($o['klasse']) ? ' ' . ui_e((string)$o['klasse']) : '')
+          . '" type="text" inputmode="numeric" autocomplete="off" maxlength="10"'
+          . ' placeholder="TT.MM.JJJJ" pattern="\d{1,2}\.\d{1,2}\.\d{4}"'
+          . ' title="Datum als TT.MM.JJJJ"'
+          . (!empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '')
+          . (!empty($o['name']) ? ' name="' . ui_e((string)$o['name']) . '"' : '')
+          . ' value="' . ui_e(datum_de((string)($o['wert'] ?? '')) ?: (string)($o['wert'] ?? '')) . '"'
+          . $attr . '>';
+    if (!$skriptGeladen) {
+        $skriptGeladen = true;
+        $html .= '<script src="' . ui_e(ui_asset('assets/datumsfeld.js')) . '" defer></script>';
+    }
+    return $html;
+}
+
 function ui_feld(array $o): void
 {
     /* $o: name, id, label, label_zusatz (gedämpft, in der Beschriftung),
      *     art (text|email|number|date|password|file|select|textarea), wert,
+     *     min, max (nur date, ISO — seit Web 24.4 ein Textfeld TT.MM.JJJJ,
+     *     ui_datum_eingabe()),
      *     optionen, zeilen (nur textarea, Vorgabe 3), platzhalter, pflicht,
      *     klein, klasse (an der HÜLLE .feld, nicht am Eingabefeld), attr
      *
@@ -2698,6 +2969,10 @@ function ui_feld(array $o): void
   <?php elseif ($art === 'textarea'): ?>
     <textarea class="feld-eingabe feld-mehrzeilig" id="<?= ui_e($id) ?>"
               name="<?= ui_e($name) ?>" rows="<?= (int)($o['zeilen'] ?? 3) ?>"<?= $attr ?>><?= ui_e((string)($o['wert'] ?? '')) ?></textarea>
+  <?php elseif ($art === 'date'): ?>
+    <?= ui_datum_eingabe(['id' => $id, 'name' => $name, 'wert' => (string)($o['wert'] ?? ''),
+                          'min' => $o['min'] ?? null, 'max' => $o['max'] ?? null,
+                          'attr' => $attr]) ?>
   <?php else: ?>
     <input class="feld-eingabe" type="<?= ui_e($art) ?>" id="<?= ui_e($id) ?>"
            name="<?= ui_e($name) ?>" value="<?= ui_e((string)($o['wert'] ?? '')) ?>"<?= $attr ?>>
@@ -2768,12 +3043,26 @@ function ui_segment(array $o): void
  */
 function ui_segment_markup(array $o): string
 {
+    /* ABWAEHLBAR (Konzept OF, OF-02, E-OF-33): Ein zweiter Klick auf das
+     * gewaehlte Feld nimmt die Wahl zurueck — „keines" ist dann ein Zustand,
+     * kein viertes Feld. Getragen wird er von einem verborgenen Radio ohne
+     * Wert, das vorn in der Gruppe steht und gewaehlt ist, wenn `wert` leer
+     * ist. Ohne Skript bleibt das Formular gueltig: Es sendet die letzte
+     * Wahl oder den leeren Wert. `assets/segment.js` macht das Abwaehlen,
+     * einmal je Seite geladen. */
+    static $skriptGeladen = false;
+    $abwaehlbar = !empty($o['abwaehlbar']);
     ob_start();
     $name = (string)($o['name'] ?? '');
     ?>
-<div class="segment<?= !empty($o['klasse']) ? ' ' . ui_e((string)$o['klasse']) : '' ?>"
+<div class="segment<?= !empty($o['klasse']) ? ' ' . ui_e((string)$o['klasse']) : '' ?><?= $abwaehlbar ? ' segment-abwaehlbar' : '' ?>"
      <?= !empty($o['id']) ? 'id="' . ui_e((string)$o['id']) . '" ' : '' ?>role="group"<?=
         !empty($o['label']) ? ' aria-label="' . ui_e((string)$o['label']) . '"' : '' ?>>
+  <?php if ($abwaehlbar): ?>
+    <input type="radio" class="segment-box segment-leer" name="<?= ui_e($name) ?>" value=""
+           aria-hidden="true" tabindex="-1" hidden
+           <?= (string)($o['wert'] ?? '') === '' ? 'checked' : '' ?>>
+  <?php endif; ?>
   <?php $i = 0; foreach ((array)($o['optionen'] ?? []) as $wert => $text):
       $id = 'sg-' . preg_replace('/[^\w-]/', '-', $name . '-' . $wert . '-' . $i++); ?>
     <input type="radio" class="segment-box" id="<?= ui_e($id) ?>" name="<?= ui_e($name) ?>"
@@ -2782,7 +3071,10 @@ function ui_segment_markup(array $o): string
     <label class="segment-taste" for="<?= ui_e($id) ?>"><?= ui_e((string)$text) ?></label>
   <?php endforeach; ?>
 </div>
-<?php return (string)ob_get_clean();
+<?php if ($abwaehlbar && !$skriptGeladen): $skriptGeladen = true; ?>
+<script src="<?= ui_e(ui_asset('assets/segment.js')) ?>" defer></script>
+<?php endif;
+    return (string)ob_get_clean();
 }
 
 
@@ -2980,8 +3272,16 @@ function ui_speichern_leiste(array $o = []): void
      *     Seite, Orange statt Dunkelblau — nur dort, wo das Formular der
      *     Zweck der Seite ist, E-MA-27) */
     $id = !empty($o['id']) ? ' id="' . ui_e((string)$o['id']) . '"' : '';
+    /* „GEÄNDERT: …" IST DIE VORGABE (Konzept OF, E-OF-32, -41): Eine
+     * Formularleiste nennt die Abschnitte, in denen etwas geändert ist; nur
+     * die Sammelleiste (`kein_haken`) zählt stattdessen ihre Auswahl. */
+    if (empty($o['kein_haken']) && !isset($o['hinweis_vorlage'])) {
+        $o['hinweis_vorlage'] = 'Geändert';
+    }
     ?>
-<div class="speichern"<?= $id ?><?= empty($o['kein_haken']) ? ' data-speichern' : '' ?> hidden>
+<div class="speichern"<?= $id ?><?= empty($o['kein_haken']) ? ' data-speichern' : '' ?><?=
+     /* Formularleiste fuer ein Formular weiter oben (forms.js, `leisteVon()`). */
+     empty($o['kein_haken']) && !empty($o['form']) ? ' data-fuer="' . ui_e((string)$o['form']) . '"' : '' ?> hidden>
   <?php /* HINWEIS ZUERST, KNOPF DANACH. Stuende der Knopf im Markup vorn und
            damit links, die Zaehlung rechts davon, waere es umgekehrt zu allem
            anderen in dieser Oberflaeche, wo die Haupthandlung rechts sitzt. Die
@@ -3211,7 +3511,8 @@ function ui_geocoder_bootstrap(): void
 }
 
 /**
- * Der Hinweis unter dem Ortsfeld — EINMAL je Seite.
+ * Der Hinweis am Ortsfeld — EINMAL je Seite, seit Web 24.4 als Zeichen neben
+ * der Lupe (Markup zurück, nicht ausgegeben).
  *
  * WARUM NUR EINMAL. „Ein Hinweis am Ortsfeld" heisst es im Auftrag, und beim
  * Einsatzformular waeren das drei gleiche Saetze auf einer Seite. Auf
@@ -3227,16 +3528,33 @@ function ui_geocoder_bootstrap(): void
  * Ist die Suche aus, erscheint er GAR NICHT: Er sagt aus, dass etwas das
  * Geraet verlaesst — und dann verlaesst nichts das Geraet.
  */
-function ui_geocoder_hinweis(): void
+function ui_geocoder_hinweis(): string
 {
+    /* EIN ZEICHEN STATT EINES SATZES (Konzept OF, OF-03, E-OF-07). Bis Web
+     * 24.3 stand der Satz zur Adresssuche als Kleinzeile unter dem ersten
+     * Ortsfeld einer Seite — auf dem Einsatzformular mitten zwischen zwei
+     * Feldern, bei jedem Einsatz. Jetzt steht neben der Lupe dieses Feldes ein
+     * Zeichen `hinweis`; der Satz erscheint als Meldung darunter beim
+     * Darüberfahren, beim Fokus und beim Antippen (`assets/ortsfeld.js`) und
+     * hängt per `aria-describedby` am Knopf, liest sich also auch ohne
+     * Öffnen vor. Weiter EINMAL je Seite, am ersten Ortsfeld; ist die
+     * Adresssuche aus, fehlt das Zeichen wie vorher der Satz. Kein `title`
+     * am Knopf: Er stuende ein zweites Mal im Vorlesetext. */
     static $schon = false;
-    if ($schon) { return; }
+    if ($schon) { return ''; }
     require_once __DIR__ . '/geocoder_lib.php';
-    if (!geocoder_an()) { return; }
+    if (!geocoder_an()) { return ''; }
     $schon = true;
-    echo '<p class="feld-klein loc-datenschutz">Vorschläge und Umkehrsuche kommen von '
-       . ui_e(geocoder_host()) . '; getippter Text verlässt das Gerät. '
-       . 'Abschalten: Einstellungen → Profil, Karte „Datenschutz".</p>' . "\n";
+    $satz = 'Vorschläge und Umkehrsuche kommen von ' . geocoder_host()
+          . '; getippter Text verlässt das Gerät. '
+          . 'Abschalten: Einstellungen → Profil, Karte „Datenschutz".';
+    return '<div class="ortsfeld-hinweis">'
+         . '<button type="button" class="knopf knopf-symbol ortsfeld-hinweis-knopf"'
+         . ' aria-describedby="geo-hinweis" aria-expanded="false">'
+         . ui_symbol('hinweis', 'symbol-gross')
+         . '<span class="nur-vorlesen">Hinweis zur Adresssuche</span></button>'
+         . '<div class="ortsfeld-hinweis-text loc-datenschutz" id="geo-hinweis" role="tooltip" hidden>'
+         . ui_meldung_markup('info', $satz) . '</div></div>';
 }
 
 function ui_ortsfeld(array $o): void
@@ -3312,6 +3630,7 @@ function ui_ortsfeld(array $o): void
           <button type="button" class="knopf knopf-symbol" id="<?= e($p) ?>lupe"
                   title="Suchen"><?= ui_symbol('lupe', 'symbol-gross') ?><span
                   class="nur-vorlesen">Suchen</span></button>
+          <?= ui_geocoder_hinweis() ?>
           <?php if ($mitWahl) { $pinKnopf(); } ?>
         </div>
     <?php else: ?>
@@ -3335,6 +3654,7 @@ function ui_ortsfeld(array $o): void
           <button type="button" class="knopf knopf-symbol" id="<?= e($p) ?>lupe"
                   title="Suchen"><?= ui_symbol('lupe', 'symbol-gross') ?><span
                   class="nur-vorlesen">Suchen</span></button>
+          <?= ui_geocoder_hinweis() ?>
           <?php if ($mitWahl) { $pinKnopf(); } ?>
         </div>
     <?php endif; ?>
@@ -3351,7 +3671,6 @@ function ui_ortsfeld(array $o): void
       <?php /* Bestätigte Koordinaten stehen als Chip UNTER dem Textfeld, nicht
                darin — sonst vernichtet die erste getippte Bezeichnung sie. */ ?>
       <div class="rmchips" id="<?= e($p) ?>chips"></div>
-      <?php ui_geocoder_hinweis(); ?>
       <input type="hidden" id="<?= e($p) ?>lat"
              <?= isset($o['lat_name']) ? 'name="' . e((string)$o['lat_name']) . '"' : '' ?>
              value="<?= e((string)($o['lat'] ?? '')) ?>">

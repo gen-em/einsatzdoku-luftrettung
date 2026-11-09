@@ -108,8 +108,7 @@ ui_seite_start(['titel' => 'Protokoll']);
   <?php ui_titelzeile(['titel' => 'Protokoll']); ?>
   <p class="seiten-erklaerung">Hier stehen Betriebsereignisse dieser
      Installation — wer wann welchen Einsatz geöffnet hat, wird
-     <strong>nicht</strong> protokolliert.
-     <a href="hilfe.php#11-7-protokoll">Handbuch: Protokoll</a></p>
+     <strong>nicht</strong> protokolliert.</p>
 
   <?php if ($fehler !== null) { ui_meldung(null, $fehler); } ?>
 
@@ -136,8 +135,7 @@ ui_seite_start(['titel' => 'Protokoll']);
     <p class="feld-hinweis"><?= protokoll_archiv_tage() === 1 ? 'Jeden Tag'
          : 'Alle ' . protokoll_archiv_tage() . ' Tage' ?> versiegelt der
        Server die Einträge des Zeitraums als ZIP — ohne IP-Adressen,
-       aufbewahrt <?= protokoll_archiv_behalten() ?> Tage.
-       <a href="hilfe.php#das-archiv-nur-betreiberin">Handbuch: Archiv des Protokolls</a></p>
+       aufbewahrt <?= protokoll_archiv_behalten() ?> Tage.</p>
     <?php
     /* WÄHREND EINES WECHSELS: Ein Archiv unter dem
      * BISHERIGEN ist nicht verloren — der Job hüllt es um und benennt es
@@ -258,7 +256,8 @@ ui_seite_start(['titel' => 'Protokoll']);
         'versteckt' => ['r' => $reiter, 'z' => $tage ?: '', 'konto' => $konto ?: ''],
         'filter' => $pillen,
         'auswahl' => $arten ? ['name' => 'art', 'label' => 'Art des Ereignisses', 'wert' => $art,
-                               'optionen' => ['' => 'Alle Arten'] + $arten] : null,
+                               'optionen' => ['' => 'Alle Arten'] + $arten,
+                               'kurz' => 'Art', 'weg' => protokoll_weg(['art' => ''])] : null,
     ]);
     ?>
     <?php if ($liste['fehler'] !== null): ?>

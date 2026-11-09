@@ -135,13 +135,14 @@ ui_seite_start(['titel' => 'Diensttag aufnehmen']);
 <?php if ($vorschau === null): ?>
 
   <?php /* ---- Schritt 1: Welcher Tag wird aufgenommen? ------------------- */ ?>
-  <p class="seiten-erklaerung">Wurde die App während eines Dienstes
-     <strong>versehentlich mehrfach gestartet</strong>, entstehen mehrere
-     Diensttage für einen einzigen tatsächlichen Dienst. Hier lassen sie sich
-     wieder zusammenführen. Zur Wahl stehen die Diensttage der letzten
-     <?= (int)DT_NACHBARSCHAFT_TAGE ?> Tage vor und nach diesem; liegt der
-     gesuchte weiter entfernt, ist zuerst sein <strong>Datum zu
-     berichtigen</strong>.</p>
+  <?php /* EIN SATZ (Design.md 6, OF-07; bis Web 24 drei). Der Hinweis auf
+           das Datum bleibt: Ohne ihn fehlt der gesuchte Tag in der Liste,
+           und niemand weiss, warum. */ ?>
+  <p class="seiten-erklaerung">Hier wird wieder ein Dienst, was ein
+     <strong>versehentlich mehrfacher Start</strong> der App geteilt hat; zur
+     Wahl stehen die Diensttage der letzten <?= (int)DT_NACHBARSCHAFT_TAGE ?>
+     Tage vor und nach diesem, ein weiter entfernter braucht zuerst ein
+     <strong>berichtigtes Datum</strong>.</p>
 
   <?php if (!$waehlbar): ?>
     <?= ui_meldung_markup('info', $kandidaten
@@ -178,7 +179,7 @@ ui_seite_start(['titel' => 'Diensttag aufnehmen']);
 
   <?php if ($nichtWaehlbar): ?>
     <?php ui_karte_start(['titel' => 'Nicht wählbar', 'zu' => true,
-                          'vorschau' => count($nichtWaehlbar) . ' in der Nachbarschaft']); ?>
+                          'stand' => count($nichtWaehlbar) . ' in der Nachbarschaft']); ?>
       <p class="feld-hinweis">Zusammenführen geht nur zwischen Diensttagen
          <strong>derselben Art</strong>: Art, Rollensatz und Fähigkeiten sind
          eingefroren (E8), und einen luftgebundenen mit einem bodengebundenen

@@ -41,7 +41,7 @@ if ($monat !== '') {
 
 ui_seite_start(['titel' => $titel, 'karte' => true]);
 ?>
-<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage',
+<?php ui_geruest_start(['hilfe' => 'hilfe.php#4-4-diensttage-leiste-jahres-und-monatsuebersicht', 'aktiv' => 'start', 'leiste' => 'diensttage',
                         'zeitraum' => ['jahr' => $jahr, 'monat' => $monat]]); ?>
     <?php
     /* SEGMENTWAHL NACH ART (vorher eine eigene Tableiste `.arttabs`).

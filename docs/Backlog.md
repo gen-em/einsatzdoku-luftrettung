@@ -52,7 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| ab 530 | frei — höchste reservierte Nummer 529; frei blieben 525 bis 529 aus der Spanne von 26 (PR #156), 511 bis 519 aus der Spanne von 24 und BR7 (PR #152 bis #154), 501 bis 509 aus der von 23 (PR #150, #151), 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
+| 530 bis 539 | `claude/oberflaechenrunde-of` (27, OF) | 07.11.2026 |
+| ab 540 | frei — höchste reservierte Nummer 539; frei blieben 525 bis 529 aus der Spanne von 26 (PR #156), 511 bis 519 aus der Spanne von 24 und BR7 (PR #152 bis #154), 501 bis 509 aus der von 23 (PR #150, #151), 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
 
 ---
 
@@ -512,16 +513,15 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      der rollende Behälter seither nennt (Nr. 297). Die Tabelle in
      `.tabelle-scroll` rollt auf `suche.php` bei 1440 px noch um 176 px und
      bei 1600 px um 16, auf `zeitraum.php` bei 1440 px um 136 (Tagesliste)
-     bzw. bei 1200 px um 52 (Monatsliste); die Kontenliste der Verwaltung
-     bei 1024 px um 81 (BetreiberIn), 24 (Support) — dort ist die Spalte
-     „Öffnen" angeschnitten. Unter 720 px zeigen alle drei Seiten Karten
-     statt der Tabelle; betroffen ist also genau die Schreibtischbreite, für
-     die die Tabelle da ist.
+     bzw. bei 1200 px um 52 (Monatsliste). Die Kontenliste (bei 1024 px
+     81 px) ist mit Web 24.6 erledigt: Spalte „Öffnen" fort, Titel und
+     Adresse brechen um (Konzept OF, OF-05). Unter 720 px zeigen beide
+     Seiten Karten; betroffen ist genau die Schreibtischbreite.
      *Weg:* je Seite messen, welche Spalten die Breite treiben, und
      entscheiden: Spalten erst ab einer Breite zeigen, die Kartenansicht bis
      zu einer höheren Schwelle, oder umbrechen lassen. Eine Gestaltungsfrage
      mit Mockup (`CLAUDE.md` 5), keine Korrektur.
-     *Abnahme:* Bilderlauf, Spalte „Rollt bei" für die drei Seiten ab
+     *Abnahme:* Bilderlauf, Spalte „Rollt bei" für beide Seiten ab
      1280 px leer.
 
 <!-- -->
@@ -730,4 +730,3 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      umbenennen, Aufrufer und `vollstaendigkeit-streichliste.md` nachziehen.
      *Abnahme:* `vollstaendigkeit.py` keine Befunde, `grep -rn "orange"`
      findet in Klassennamen nur noch Töne der Plakette und Kennzahl.
-

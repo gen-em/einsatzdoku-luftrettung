@@ -624,8 +624,7 @@ ui_seite_start(['titel' => 'Statistik']);
       <?php endif; ?>
       <p class="feld-klein">Aktiv heißt: angemeldet <strong>oder</strong> eines der
          Geräte hat sich gemeldet.<?= $nurBisHeute !== ''
-             ? e($nurBisHeute . 'je Konto nur die letzte Anmeldung.') : '' ?>
-         <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+             ? e($nurBisHeute . 'je Konto nur die letzte Anmeldung.') : '' ?></p>
     <?php ui_karte_ende(); ?>
   </div><?php /* .form-spalte (links) */ ?>
   <div class="form-spalte">
@@ -679,7 +678,7 @@ ui_seite_start(['titel' => 'Statistik']);
       ?>
       <p class="feld-klein">Gezählt ab dem Beginn des Einsatzes, Tagesgrenzen in
          <?= e((string)konfig('app.timezone', 'Europe/Berlin')) ?> — ohne Demo-Konto,
-         ohne Papierkorb. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+         ohne Papierkorb.</p>
     <?php ui_karte_ende(); ?>
     <?php else: ?>
     <?php ui_karte_start(['titel' => 'Einsätze je Zeitraum', 'id' => 'k-einsaetze-zeit',
@@ -703,7 +702,7 @@ ui_seite_start(['titel' => 'Statistik']);
       ]);
       ?>
       <p class="feld-klein">Gezählt ab dem Beginn des Einsatzes — ohne Demo-Konto,
-         ohne Papierkorb. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+         ohne Papierkorb.</p>
     <?php ui_karte_ende(); ?>
     <?php endif; ?>
   </div><?php /* .form-spalte (links) */ ?>
@@ -741,8 +740,7 @@ ui_seite_start(['titel' => 'Statistik']);
           ['Gekoppelt',        '', $geraeteZeit['gekoppelt'], $geraeteZahl],
       ]); ?>
       <?php if ($nurBisHeute !== ''): ?>
-        <p class="feld-klein"><?= e(ltrim($nurBisHeute) . 'je Gerät nur die letzte Meldung.') ?>
-           <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+        <p class="feld-klein"><?= e(ltrim($nurBisHeute) . 'je Gerät nur die letzte Meldung.') ?></p>
       <?php endif; ?>
     <?php ui_karte_ende(); ?>
   </div><?php /* .form-spalte (links) */ ?>
@@ -774,8 +772,7 @@ ui_seite_start(['titel' => 'Statistik']);
 
       <?php /* DER SATZ STATT EINER ZEILE. Siehe Kopfkommentar. */ ?>
       <p class="feld-klein"><strong>Wear-OS-Uhren erscheinen hier nicht</strong>, weil
-         sie über das gekoppelte Handy senden.
-         <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+         sie über das gekoppelte Handy senden.</p>
     <?php ui_karte_ende(); ?>
   </div><?php /* .form-spalte (rechts) */ ?>
 <?php endif; ?>
@@ -818,7 +815,7 @@ ui_seite_start(['titel' => 'Statistik']);
       </div>
       <p class="feld-klein">Anteile bezogen auf alle <?= e(zahl_text($geraeteZahl)) ?> Geräte
          bzw. <?= e(zahl_text($kontenZahl)) ?> Konten, der Hersteller abgeleitet und nicht
-         gespeichert. <a href="hilfe.php#12-2-statistik">Handbuch: Statistik</a></p>
+         gespeichert.</p>
     <?php endif; ?>
   <?php ui_karte_ende(); ?>
 <?php endif; ?>

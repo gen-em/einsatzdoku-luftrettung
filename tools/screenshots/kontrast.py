@@ -144,9 +144,9 @@ PAARE = [
     ('Auf Hauptaktion unter dem Zeiger',  'auf-aktion-haupt', 'aktion-haupt-hover', 4.5, 'Hauptaktion unter dem Zeiger'),
     ('Aktion auf Karte',                  'aktion',        'flaeche-karte',     3.0, 'Schalter an, Radiopunkt, Fortschritt, Stern'),
     ('Auswahltext auf Auswahl',           'auswahl-text',  'auswahl-flaeche',   4.5, 'aktiver Menuepunkt, aktive Kennzahl, Chip'),
-    ('Auswahllinie auf Auswahl',          'auswahl-linie', 'auswahl-flaeche',   3.0, 'Strich am aktiven Eintrag'),
+    ('Auswahllinie auf Auswahl',          'auswahl-linie', 'auswahl-flaeche',   3.0, 'Rahmen der aktiven Kennzahl, Filterpille und Segmenttaste'),
     ('Auswahllinie auf Karte',            'auswahl-linie', 'flaeche-karte',     3.0, 'Strich des aktiven Reiters'),
-    ('Auswahllinie auf abgesetzt',        'auswahl-linie', 'flaeche-abgesetzt', 3.0, 'Strich am Vorschlag unter dem Zeiger'),
+    ('Auswahllinie auf abgesetzt',        'auswahl-linie', 'flaeche-abgesetzt', 3.0, 'Strich der hervorgehobenen Tabellenzeile'),
     ('Text auf Auswahl',                  'text',          'auswahl-flaeche',   4.5, 'Textauswahl'),
     # Status: je Fläche 100, Schrift 700
     ('Info auf Info',                     'info-text',     'info-flaeche',      4.5, 'Hinweis, Plakette blau'),
@@ -239,6 +239,21 @@ AUSNAHMEN = [
      'Rand des hervorgehobenen Phasenpunkts und Flaeche des aktiven '
      'Kartenknopfs (.pm-chip.hl, .map-ctrl-*): Sie liegen auf der Karte, und '
      'die bleibt im Dark Mode hell (E-MA-14). Dunkelblau auf blau 100 11,26:1.'),
+    # Die Bedienelemente der Karte (Konzept OF, OF-07, E-OF-29): hell wie die
+    # Karte, deshalb Grundfarben statt Rollen.
+    ('Zeichen der Kartenknöpfe', 'dunkelblau', 'genem-neutral-75',
+     'Zoom, Vollbild, Kartengroesse, Kartenart: Zeichen auf der Flaeche der '
+     'Kartenknoepfe, im Dark Mode hell wie die Karte (E-MA-14, E-OF-29).'),
+    ('Rand der Kartenknöpfe', 'genem-neutral-600', 'genem-neutral-75',
+     'Rand der Knopfgruppe und Ueberschrift „Kartenart" — der helle Wert von '
+     '--linie-stark bzw. --gedaempft, im Dark Mode unveraendert.'),
+    ('Trennlinie der Kartenknöpfe', 'genem-neutral-200', 'genem-neutral-75',
+     'Linie zwischen zwei Knoepfen derselben Gruppe — Zierrat; die Gruppe '
+     'begrenzt der Rand in neutral 600.'),
+    ('Text der Kartenart', 'genem-asphalt', 'genem-neutral-75',
+     'Namen der Kartenarten in der offenen Ebenenwahl, hell wie die Karte.'),
+    ('Kartenknopf unter dem Zeiger', 'dunkelblau', 'genem-rauch',
+     'Flaeche eines Kartenknopfs unter dem Zeiger, hell wie die Karte.'),
 ]
 
 

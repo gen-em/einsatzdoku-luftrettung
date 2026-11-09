@@ -14,6 +14,196 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.9.1] — unveröffentlicht
+
+### Geändert
+
+- **Web — die Seite „Demo-Konto" leitet nur noch um** (Schritt 27). Ihre
+  Kontrollzahlen stehen seit Web 24.7.0 auf der Statusseite in der Karte
+  „Konten", und zwei Stellen für dieselben Zahlen laufen irgendwann
+  auseinander. Die Adresse bleibt, damit alte Lesezeichen ankommen: die
+  BetreiberIn landet auf der Statuskarte, die Administration, die den
+  Betrieb nicht sieht, auf der Demo-Karte unter Installation.
+
+### Behoben
+
+- **Web — zwei Fehler, die nur WebKit (Safari) zeigte** (Schritt 27). Der
+  Knopf der Kartenart trug seinen Namen nur im Titel des Zeichens, und den
+  liest WebKit nicht vor; jetzt steht er am Knopf selbst. Auf Betrieb →
+  Updates stellte WebKit am Zeigergerät alle Karten in die linke Spalte,
+  weil es eine Klappkarte im Mehrspaltensatz falsch setzte; jede Karte ist
+  dort jetzt ein unteilbarer Block.
+
+## [Web 24.9.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — Mond und Sonne in der Kopfleiste** (Schritt 27). Hell oder dunkel
+  ließ sich bisher nur im Profil wählen, und wer nachts kurz umschalten
+  wollte, musste dorthin und zurück; jetzt steht zwischen „?“ und Zahnrad ein
+  Knopf, der sofort umschaltet und bis zur Abmeldung gilt. Er gehört zur
+  neuen Vorgabe „Umschalter“ und zu „Folgt System“; bei „Immer hell“ und
+  „Immer dunkel“ fehlt er. Der Klick bleibt bewusst in der Sitzung und nicht
+  im Konto — dauerhaft gilt, was im Profil steht.
+
+## [Web 24.8.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — Einsatz und Transport in einer Karte, Ruhesegmente auf Abruf**
+  (Schritt 27). Im Formular standen „Einsatz“ mit zwei Schaltern und
+  „Transport“ mit einer Auswahlliste als zwei Karten für eine Sache; jetzt
+  ist es eine, die Transportart eine Segmentwahl, die sich abwählen lässt,
+  und der Feldkatalog beschreibt die Anordnung, statt dass sie von Hand
+  gebaut ist. Die Karte „Ruhesegmente“ stand an jedem Tag mit Aufzeichnung
+  unter der Einsatzliste, obwohl man sie nur zum Schneiden braucht — sie
+  öffnet jetzt der Eintrag „Einsatz aus GPS-Daten ausschneiden“ im Menü des
+  Diensttags. In der Einsatzansicht stehen die Schlösser in einer eigenen
+  Spalte vor dem Wort, die Kartenknöpfe sehen aus wie die der Anwendung, und
+  die Plakette „GPS-Daten ausgedünnt“ ist fort, weil sie wie eine Warnung
+  aussah und keine war.
+
+## [Web 24.7.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — der Betrieb zeigt zuerst, was etwas braucht** (Schritt 27). Die
+  Statusseite hatte rund siebzig Zeilen in offenen Karten; die wenigen, die
+  eine Handlung verlangten, musste man suchen — jetzt stehen sie oben, jeder
+  Bereich ist zugeklappt, und Zeilen, die nie etwas verlangten, sind fort.
+  Servereinstellungen, Hintergrundjobs und Komplett-Backup zeigen jede Karte
+  zugeklappt mit ihrem Stand, „Anhalten" heißt „Pausieren", und die
+  Backup-Ziele sind keine eigene Seite mehr, sondern eine Karte an den beiden
+  Orten, an denen man sie braucht.
+
+## [Web 24.6.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — das Demo-Konto steht unter Installation, die Kontenliste ohne
+  „Öffnen“** (Schritt 27). Das Demo-Konto hatte eine eigene Seite, sein
+  Schalter stand aber in den Servereinstellungen — zwei Orte für eine Sache;
+  jetzt sind Schalter, Zurücksetzen, Anlegen und Entfernen eine Karte unter
+  Installation, und „Aus“ nimmt auch die Warnung zum Schlüsselmaterial weg.
+  In der Kontenliste ist der Name der Verweis auf die Kontoseite; die Spalte
+  „Öffnen“ war bei 1024 px angeschnitten und ließ die Tabelle rollen.
+
+## [Web 24.5.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — die Einstellungsseiten sind aufgeräumt** (Schritt 27). Profil,
+  Geräte, Import / Export und Backup trugen mehrere Absätze Erklärung,
+  Knöpfe zwischen den Abschnitten und Anleitungen, die man selten braucht.
+  Jetzt sagt der Zweitfaktor in einem Satz, wie er steht, und „Verwalten“
+  zeigt die Handlungen; die Geräte stehen nach Typ, und das Koppeln führt
+  ein Dialog in drei Schritten; Import / Export fragt zuerst, ob du eine
+  Liste übernehmen oder ausgeben willst. Gespeichert wird das Profil über
+  die Leiste am unteren Rand, die nennt, was geändert ist.
+
+## [Web 24.4.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — Daten tippt man überall als TT.MM.JJJJ** (Schritt 27). Die
+  Datumsfelder zeigten je nach Browser „dd/mm/yyyy“ oder „mm/dd/yyyy“,
+  klappten einen Kalender auf und schnitten am Schreibtisch das Jahr ab.
+  Jetzt sind es an allen acht Stellen — vom Diensttag bis zum Geburtsdatum —
+  Textfelder, die beim Tippen die Punkte setzen, wie die Zeitfelder den
+  Doppelpunkt. Gespeichert wird wie bisher; geteilte Suchlinks bleiben
+  gültig.
+- **Web — weniger Text über den Listen und am Ortsfeld** (Schritt 27). Im
+  Protokoll und in der NutzerInnen-Liste liegen die Filter hinter einem Knopf
+  „Filter“ mit der Zahl der gesetzten; die gesetzten stehen als Pillen mit
+  Kreuz unter der Suche. Der Satz zur Adresssuche, der im Einsatzformular
+  zwischen zwei Feldern stand, ist ein Infozeichen neben der Lupe, das ihn
+  bei Bedarf zeigt.
+
+## [Web 24.3.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — zugeklappte Abschnitte zeigen ihren Stand** (Schritt 27).
+  Klappbare Karten sagten zugeklappt nur, wie sie heißen; ob darin etwas
+  stimmt, sah man erst nach dem Aufklappen. Jetzt stehen rechts im Kopf der
+  eingestellte Stand und eine farbige Plakette, und springt man auf einen
+  solchen Abschnitt — etwa nach dem Speichern —, klappt er von selbst auf.
+  Eine Segmentwahl kann außerdem so gebaut sein, dass ein zweiter Klick die
+  Wahl wieder zurücknimmt; gebraucht wird das für die Transportart.
+
+### Behoben
+
+- **Web — Plaketten saßen neben einem Knopf zu tief** (Schritt 27). Eine
+  Regel, die nur für die Plaketten am Fuß der Einsatzkarte gedacht war,
+  rückte jede Plakette in einer Liste innerhalb einer Karte um einige Pixel
+  nach unten, etwa bei den Konto-Backups. Sie gilt jetzt nur noch dort, wo
+  sie hingehört.
+
+## [Web 24.2.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — das Fragezeichen führt ins passende Kapitel, die Seiten verweisen
+  nicht mehr selbst ins Handbuch** (Schritt 27). Unter vielen Karten stand
+  ein Satz mit „Handbuch: …“ dahinter, und wer die Seite kannte, musste
+  trotzdem jedes Mal daran vorbei. Jetzt öffnet das Fragezeichen der
+  Kopfleiste das Kapitel der Seite, auf der man steht, und die Seiten tragen
+  höchstens einen Satz je Abschnitt. Druckblätter und die öffentlichen
+  Seiten ohne Kopfleiste behalten ihren Verweis, weil sie keinen anderen Weg
+  ins Handbuch haben.
+- **Web — eine rechte Kante und eine sichtbarere Speicherleiste** (Schritt
+  27). Manche Einstellungsseiten waren schmaler als andere, und beim
+  Wechseln sprangen die Linien der Abschnitte; jetzt reichen alle bis an den
+  Rand, begrenzt sind nur die Eingabefelder. Die Leiste, die nach einer
+  Änderung zum Speichern auffordert, ist blau hinterlegt und nennt, in
+  welchen Abschnitten etwas geändert ist.
+
+## [Web 24.1.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — die Leiste der Einstellungen zeigt nur noch den Bereich, in dem
+  man steht** (Schritt 27). Seit die Bereiche als Reiter über dem Inhalt
+  stehen, wiederholte die Leiste sie als Klappblöcke darunter. Am breiten
+  Bildschirm steht dort jetzt nur noch der aktive Bereich, in der Schublade
+  des Handys bleiben alle drei. Der aktive Menüpunkt ist nur noch blau
+  hinterlegt, ohne Strich daneben, und „Abmelden“ steht nur noch unten in
+  der Leiste statt zusätzlich auf der Übersicht.
+
+### Behoben
+
+- **Web — eine Sprungmarke führte zu einer unsichtbaren Karte** (Schritt
+  27). Auf der Backup-Seite stand eine Marke „Für dich freigegebenes
+  Backup“ auch dann, wenn nichts freigegeben war und die Karte gar nicht
+  angezeigt wurde. Jetzt bekommen nur sichtbare Karten eine Marke, und
+  blendet eine Seite eine Karte ein, erscheint ihre Marke mit.
+
+## [Web 24.0.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — Leiste und Inhalt liegen in einer gemeinsamen Karte** (Schritt
+  27). Am breiten Bildschirm schwamm die Seitenleiste neben Karten mit
+  eigenem Rand, und man sah ihr nicht an, dass sie zum Inhalt gehört. Jetzt
+  rahmt eine Karte beide; in den Einstellungen sind die Abschnitte einer
+  Seite nur noch durch Linien getrennt, auf Startseite und Suche bleiben
+  Karten Karten. Die Leiste bleibt beim Rollen stehen, ohne dass ihr Fuß aus
+  dem Bild läuft, und die Fußzeile ist ein dunkelblauer Streifen, der die
+  Seite unten so abschließt wie die Kopfleiste oben.
+
+## [Web 23.12.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — die Bereiche der Einstellungen stehen als Reiter unter der
+  Kopfleiste** (Schritt 27). Einstellungen, Verwaltung und Betrieb waren nur
+  als Klappblöcke in der Leiste zu finden, und wer in einem Bereich stand,
+  sah die anderen erst nach dem Aufklappen. Jetzt steht über dem Inhalt eine
+  Zeile mit den Bereichen, ihrer Zahl an Punkten und einer roten oder orangen
+  Zahl, wenn darin etwas zu tun ist. Die Reiter innerhalb einer Seite
+  (Protokoll, Statistik, Rechtstexte) haben dieselbe, etwas kräftigere Form
+  bekommen, damit es in der Anwendung nur eine Art Reiter gibt.
+
 ## [Web 23.11.3] — unveröffentlicht
 
 ### Behoben

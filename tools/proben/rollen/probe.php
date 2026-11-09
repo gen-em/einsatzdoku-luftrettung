@@ -552,7 +552,13 @@ if ($s === null || $a === null) {
     pruef($gegen === [], 'Gegenprobe: beim Admin stehen die Marken da',
           $gegen === [] ? '' : 'fehlt: ' . implode(', ', $gegen));
     $r = hole('admin_protokoll.php', $s['sid']);
-    $reiter = substr_count($r['rumpf'], 'class="reiter-punkt');
+    /* NUR DIE REIHE DES PROTOKOLLS. Seit Web 23.12.0 steht darueber die
+     * Bereichszeile (Konzept OF, NV-01) mit denselben Reitern — beim
+     * Support zwei: Einstellungen und Verwaltung. Seitenweit gezaehlt
+     * waeren es vier, und die Probe mass die Zeile statt der Seite. */
+    $reihe = preg_match('~<nav class="reiter" aria-label="Bereiche des Protokolls">(.*?)</nav>~s',
+                        $r['rumpf'], $tr) ? $tr[1] : '';
+    $reiter = substr_count($reihe, 'class="reiter-punkt');
     pruef($r['code'] === 200 && $reiter === 2, 'Protokoll: genau zwei Reiter',
           'HTTP ' . $r['code'] . ', ' . $reiter . ' Reiter');
 
@@ -697,7 +703,7 @@ $prg = static function (string $was, string $pfad, array $felder, string $ziel, 
     $f1 = $r['code'] === 302 ? hole($zielOhneAnker, $b['sid']) : ['code' => 0, 'rumpf' => ''];
     $f2 = $r['code'] === 302 ? hole($zielOhneAnker, $b['sid']) : ['code' => 0, 'rumpf' => ''];
     /* GEZAEHLT, NICHT GESUCHT: Auf `betrieb_jobs.php` sagt ein Dauerhinweis
-     * dasselbe wie die Meldung („… angehalten bis"), solange die Pause gilt.
+     * dasselbe wie die Meldung („… pausiert bis"), solange die Pause gilt.
      * Die Meldung ist, was das erste GET dem zweiten voraus hat — genau
      * einmal. */
     $n1 = substr_count(html_entity_decode($f1['rumpf']), $meldung);
@@ -754,9 +760,12 @@ if ($b === null) {
     if (!sz_tabelle_da()) {
         pruef(false, 'Backup-Ziele · Versandschalter', 'Tabelle backup_targets fehlt — nicht gemessen');
     } else {
+        /* Seit Web 24.7 kommt der POST auf die Seite zurueck, die die Karte
+           zeigt (`zurueck`, Vorgabe die Servereinstellungen; OF-06). */
         $prg('Backup-Ziele · Versandschalter unverändert', 'admin_sicherungsziele.php',
-             ['action' => 'versand_schalter', 'versand_auto' => sz_auto_an() ? '1' : ''],
-             'admin_sicherungsziele.php', 'Der Versand ist');
+             ['action' => 'versand_schalter', 'versand_auto' => sz_auto_an() ? '1' : '',
+              'zurueck' => 'betrieb_server.php'],
+             'betrieb_server.php#k-backup-ziele', 'Der Versand ist');
     }
 
     /* NutzerInnen: ein Konto sichern, das es nicht gibt — die Zahl 0, der
@@ -794,10 +803,12 @@ if ($b === null) {
      * wörtlich (eine Pause, die ein anderer Lauf gesetzt hat, bleibt). */
     $pauseVorher = app_state_lesen(JOB_PAUSE_SCHLUESSEL);
     try {
-        $prg('Jobs · anhalten', 'betrieb_jobs.php', ['action' => 'jobs_pause_an', 'dauer' => '900'],
-             'betrieb_jobs.php#k-zustand', 'angehalten bis');
+        /* Seit Web 24.7 „pausieren" (E-OF-10), Umleitung ohne Anker: Die
+           Pausenkarte steht zuoberst. */
+        $prg('Jobs · pausieren', 'betrieb_jobs.php', ['action' => 'jobs_pause_an', 'dauer' => '900'],
+             'betrieb_jobs.php', 'pausiert bis');
         $prg('Jobs · Pause aufheben', 'betrieb_jobs.php', ['action' => 'jobs_pause_aus'],
-             'betrieb_jobs.php#k-zustand', 'Die Pause ist aufgehoben');
+             'betrieb_jobs.php', 'Die Pause ist aufgehoben');
     } finally {
         if ($pauseVorher === null) { app_state_loeschen(JOB_PAUSE_SCHLUESSEL); }
         else                       { app_state_setzen(JOB_PAUSE_SCHLUESSEL, $pauseVorher); }
@@ -924,8 +935,14 @@ if ($b === null || !sz_tabelle_da()) {
 
         $r = hole('admin_sicherungsziele.php?bearbeiten=' . $zid, $b['sid'],
                   ['csrf' => $b['csrf'], 'action' => 'ziel_bestand', 'id' => (string)$zid]);
-        $an = (bool)preg_match('/name="aufraeumen"[^>]*checked/', $r['rumpf']);
-        pruef($r['code'] === 200 && $an,
+        /* SEIT WEB 24.7 LEITET AUCH DAS NACHSEHEN UM (OF-06): Der Schalter
+           steht danach im Dialog des Ziels auf der Seite der Karte. */
+        $nf = $r['code'] === 302 ? hole(preg_replace('/#.*$/', '', (string)$r['ziel']), $b['sid'])
+                                 : ['rumpf' => ''];
+        $dlg = preg_match('~<dialog[^>]*id="dlg-sz-' . $zid . '".*?</dialog>~s', $nf['rumpf'], $mD)
+             ? $mD[0] : '';
+        $an = (bool)preg_match('/name="aufraeumen"[^>]*checked/', $dlg);
+        pruef($r['code'] === 302 && $an,
               'Nachsehen scheitert: „Auf dem Ziel aufräumen" bleibt an (F-R4-35)',
               'HTTP ' . $r['code'] . ', Schalter ' . ($an ? 'an' : 'AUS'));
     }

@@ -666,7 +666,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                 'karte' => true]);
 ?>
 
-<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]); ?>
+<?php ui_geruest_start(['hilfe' => 'hilfe.php#4-3-einsaetze-nachtragen-und-bearbeiten', 'aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $dayId]); ?>
   <?php
     /* Titelzeile: Rueckweg dorthin, wo man herkam —
        beim Bearbeiten zum Einsatz, beim Nachtragen zum Diensttag. Der Titel
@@ -712,8 +712,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
     ]);
   ?>
   <p class="seiten-erklaerung">Felder mit Schloss ver- und entschlüsselt dein
-     Browser, alle anderen liegen lesbar auf dem Server.
-     <a href="hilfe.php#schloss-und-klartext">Handbuch: Schloss und Klartext</a></p>
+     Browser, alle anderen liegen lesbar auf dem Server.</p>
   <?php if ($editing && !(int)$mission['uhr_gesperrt']):
           ui_meldung('Dieser Einsatz stammt von der Uhr. Nach dem Speichern gilt er als '
               . 'manuell bearbeitet — spätere Uhr-Uploads überschreiben ihn dann nicht '
@@ -915,7 +914,56 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               : '';
       };
 
-      $renderField = function (string $col, array $f, int $depth = 0) use (&$renderField, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, $showIfAuf, $showIfZu, &$LOC_FELDER, &$SUGGEST_FELDER, $labelSichtbar, $feldKennzeichen): void {
+      /* ---- Eine Folge von Feldern ausgeben ---------------------------
+       *
+       * EINE STELLE FUER GRUPPE UND UNTERFELDER (OF-07, E-OF-33). Bis dahin
+       * fasste nur die Gruppe 'nebeneinander' zu einer Zeile zusammen, und die
+       * Unterfelder liefen in drei gleichlautenden Schleifen (Auswahl,
+       * Ortsfeld, Text) ohne diese Faehigkeit. Die Transportfelder brauchen
+       * sie aber gerade dort: NA-Begleitung und Schockraum stehen als Kinder
+       * der Transportart nebeneinander.
+       *
+       * 'nebeneinander' fasst unmittelbar aufeinanderfolgende Felder mit
+       * diesem Schluessel in EINE Zeile (`.fld-reihe`). Es sind bewusst nur
+       * unmittelbare Nachbarn: Sonst haenge die Anordnung davon ab, was
+       * dazwischen steht — und das ist beim Lesen des Katalogs nicht zu sehen.
+       *
+       * SCHALTER DUERFEN SEIT E-OF-33 IN DIE REIHE. Bis dahin standen sie
+       * immer untereinander („ein Griff neben einem Griff in halber Breite
+       * waere zum Tippen zu eng"); die Betreiberin hat die Zweierreihe mit
+       * Mockup freigegeben (OF-P32), und die Trefferflaeche bleibt die ganze
+       * Beschriftung der halben Zeile.
+       *
+       * Mit $elternCol bekommt jedes Feld seinen 'show_if'-Rahmen; ohne ihn
+       * (Gruppe, Kinder eines Hakens) nicht — dort haengt nichts an einem
+       * Wert. */
+      $felderRendern = function (array $felder, int $depth = 0, ?string $elternCol = null, $elternWert = null) use (&$renderField, $showIfAuf, $showIfZu): void {
+          $offen = false;                 // laeuft gerade eine `.fld-reihe`?
+          foreach ($felder as $col => $f) {
+              $reihe = !empty($f['nebeneinander']);
+              if ($reihe && !$offen) { echo '<div class="fld-reihe">'; $offen = true; }
+              if (!$reihe && $offen)  { echo '</div>'; $offen = false; }
+              if ($elternCol !== null) { $showIfAuf($elternCol, $f, $elternWert); }
+              $renderField((string)$col, $f, $depth);
+              if ($elternCol !== null) { $showIfZu($f); }
+          }
+          if ($offen) { echo '</div>'; }
+      };
+      /* Unterfelder eines Auswahl-, Orts- oder Textfeldes: eingerueckt unter
+       * einem Randstrich (`.childfields`), oder — mit 'einzug' => false im
+       * Katalog — ohne beides, als Teil der Karte. */
+      $kinderRendern = function (string $col, array $f, int $depth, $val) use (&$felderRendern): void {
+          if (empty($f['children'])) { return; }
+          if (($f['einzug'] ?? true) === false) {
+              $felderRendern($f['children'], $depth, $col, $val);
+              return;
+          }
+          echo '<div class="childfields">';
+          $felderRendern($f['children'], $depth + 1, $col, $val);
+          echo '</div>';
+      };
+
+      $renderField = function (string $col, array $f, int $depth = 0) use (&$felderRendern, $kinderRendern, $optSrc, $suggestSrc, $dayRoles, $dayKind, $dayCaps, &$LOC_FELDER, &$SUGGEST_FELDER, $labelSichtbar, $feldKennzeichen): void {
           $type = $f['type'] ?? 'text';
           $val = fieldValue($col);
           /* FILTER: verstecken, aber immer rendern (siehe mission_fields.php).
@@ -991,7 +1039,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
             </div>
             <?php if (!empty($f['children'])): ?>
               <div class="childfields" id="ch_<?= e($col) ?>" <?= $on ? '' : 'hidden' ?>>
-                <?php foreach ($f['children'] as $cc => $cf) { $renderField($cc, $cf, $depth + 1); } ?>
+                <?php $felderRendern($f['children'], $depth + 1); ?>
               </div>
             <?php endif; ?>
           <?php return; }
@@ -1003,6 +1051,27 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
               // fuer options_src-Listen — feste 'options' bleiben streng.
               if (isset($f['options_src']) && $val !== '' && !array_key_exists($val, $opts)) {
                   $opts = [$val => $val] + $opts;
+              }
+              /* ---- SEGMENTWAHL ('darstellung' => 'segment', E-OF-33) ----
+               * Derselbe Feldname, dieselben Werte: Die Radios heissen
+               * `f_<spalte>` wie das Dropdown, und „keine Wahl" sendet wie
+               * dessen „–" den leeren Wert (verborgenes Radio `.segment-leer`
+               * aus ui_segment()). Die Speicherlogik oben merkt keinen
+               * Unterschied. Nur mit festen 'options' — eine Stammdatenliste
+               * ist fuer eine Zeile Tasten zu lang.
+               *
+               * DIE BESCHRIFTUNG IST KEIN <label>: Sie gehoert zu einer Gruppe
+               * von drei Radios, nicht zu einem Feld. `.feld-label` gibt ihr
+               * die Gestalt, `aria-label` an der Gruppe den Namen. */
+              if (($f['darstellung'] ?? '') === 'segment' && !isset($f['options_src'])) { ?>
+            <div class="feldblock<?= $depth ? ' fld-sub' : '' ?>"<?= $hideAttr ?>>
+              <span class="feld-label"><?= $labelSichtbar($f['label']) . $feldKennzeichen($f) ?></span>
+              <?php ui_segment(['name' => 'f_' . $col, 'wert' => $val,
+                                'label' => (string)$f['label'],
+                                'optionen' => $opts, 'abwaehlbar' => true]); ?>
+            </div>
+            <?php $kinderRendern($col, $f, $depth, $val);
+                  return;
               } ?>
             <label class="<?= $depth ? 'fld-sub' : '' ?>"<?= $hideAttr ?>><?= e($f['label']) ?>
               <select name="f_<?= e($col) ?>">
@@ -1014,15 +1083,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                 <?php endforeach; ?>
               </select>
             </label>
-            <?php if (!empty($f['children'])): ?>
-              <div class="childfields">
-                <?php foreach ($f['children'] as $cc => $cf) {
-                        $showIfAuf($col, $cf, $val);
-                        $renderField($cc, $cf, $depth + 1);
-                        $showIfZu($cf);
-                      } ?>
-              </div>
-            <?php endif; ?>
+            <?php $kinderRendern($col, $f, $depth, $val); ?>
           <?php return; }
           /* ---- ORTSFELD ------------------------------------------------
            * Bezeichnung, versteckte Koordinaten, Chip und Zustandszeile kommen
@@ -1069,15 +1130,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                    * bekommt — nicht diese Datei. */
                   'ortswahl'    => !empty($f['ortswahl']),
               ]);
-              if (!empty($f['children'])) { ?>
-                <div class="childfields">
-                  <?php foreach ($f['children'] as $cc => $cf) {
-                          $showIfAuf($col, $cf, $val);
-                          $renderField($cc, $cf, $depth + 1);
-                          $showIfZu($cf);
-                        } ?>
-                </div>
-              <?php }
+              $kinderRendern($col, $f, $depth, $val);
               return;
           }
           if ($type === 'textarea') {
@@ -1116,27 +1169,15 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                 <ul id="vl_<?= e($col) ?>" class="vorschlaege" hidden></ul>
               <?php endif; ?>
             </label>
-            <?php if (!empty($f['children'])): ?>
-              <div class="childfields">
-                <?php foreach ($f['children'] as $cc => $cf) {
-                        $showIfAuf($col, $cf, $val);
-                        $renderField($cc, $cf, $depth + 1);
-                        $showIfZu($cf);
-                      } ?>
-              </div>
-            <?php endif; ?>
+            <?php $kinderRendern($col, $f, $depth, $val); ?>
       <?php };
 
       /* ---- Gruppen ------------------------------------------
        *
        * Der Katalog sagt, WOHIN ein Feld gehoert ('gruppe'); diese beiden
        * Helfer holen die Felder einer Gruppe und geben sie aus. Die
-       * Reihenfolge innerhalb der Gruppe ist die des Katalogs.
-       *
-       * 'nebeneinander' fasst unmittelbar aufeinanderfolgende Felder mit
-       * diesem Schluessel in EINE Zeile (`.fld-reihe`). Es sind bewusst nur
-       * unmittelbare Nachbarn: Sonst haenge die Anordnung davon ab, was
-       * dazwischen steht — und das ist beim Lesen des Katalogs nicht zu sehen.
+       * Reihenfolge innerhalb der Gruppe ist die des Katalogs; die Zeilen
+       * ('nebeneinander') bildet $felderRendern() oben.
        */
       $gruppeFelder = static function (string $name) use ($FIELDS): array {
           $raus = [];
@@ -1164,19 +1205,8 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
           }
           return false;
       };
-      $gruppeRendern = function (string $name) use ($gruppeFelder, &$renderField): void {
-          $felder = $gruppeFelder($name);
-          $offen = false;                 // laeuft gerade eine `.fld-reihe`?
-          foreach ($felder as $col => $f) {
-              /* Schalter stehen IMMER untereinander: Ein Griff
-               * neben einem Griff in halber Breite waere zum Tippen zu eng —
-               * 'nebeneinander' gilt nur fuer Text- und Auswahlfelder. */
-              $reihe = !empty($f['nebeneinander']) && ($f['type'] ?? 'text') !== 'checkbox';
-              if ($reihe && !$offen) { echo '<div class="fld-reihe">'; $offen = true; }
-              if (!$reihe && $offen)  { echo '</div>'; $offen = false; }
-              $renderField($col, $f);
-          }
-          if ($offen) { echo '</div>'; }
+      $gruppeRendern = function (string $name) use ($gruppeFelder, $felderRendern): void {
+          $felderRendern($gruppeFelder($name));
       };
 
       /* Gewaehlte Regel des Abfahrtorts. Sie steht hier und nicht im Markup,
@@ -1254,7 +1284,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
         </div>
         <div class="fld-reihe">
           <label>Geburtsdatum<?= $SCHLOSS ?>
-            <input type="date" id="pat_dob" max="<?= e(heute_lokal()) ?>"></label>
+            <?= ui_datum_eingabe(['id' => 'pat_dob', 'max' => heute_lokal()]) ?></label>
           <label>Alter<?= $SCHLOSS ?>
             <input type="number" id="pat_age" min="0" max="120" step="1">
             <span class="feld-klein-inline" id="agehint"></span></label>
@@ -1363,23 +1393,22 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
       </div>
     <?php ui_karte_ende(); ?>
 
-    <?php /* ---- Karte "Einsatz": die Schalter (Sekundaer, Fehleinsatz) und
-             die Bergrettung (Winde, Bergwacht) in EINER Karte.
-             Die Bergrettungsfelder haengen an Faehigkeiten des Diensttags —
-             fehlen sie und ist nichts belegt, stehen hier nur die zwei
-             Schalter. */ ?>
-    <?php ui_karte_start(['titel' => 'Einsatz', 'klasse' => 'form-block-einsatz']); ?>
+    <?php /* ---- Karte „Einsatz und Transport" (OF-07, E-OF-33) ------------
+             EINE Karte statt zwei: „Einsatz" mit zwei Schaltern und darunter
+             „Transport" mit einer Auswahlliste und eingerückten Unterfeldern
+             waren zwei Überschriften für eine Sache. Was in welcher Folge
+             steht und was wovon abhängt, sagt der Katalog (Gruppe 'einsatz':
+             die zwei Schalter nebeneinander, die Transportart als
+             Segmentwahl, darunter ohne Einzug Ziel und die zwei Transport-
+             Schalter; „Ambulant" blendet sie aus, und der Server LEERT sie
+             dann auch).
+
+             DIE BERGRETTUNG STEHT DARUNTER, wie bisher in derselben Karte wie
+             die zwei Schalter. Sie hängt an Fähigkeiten des Diensttags —
+             fehlen sie und ist nichts belegt, fällt sie weg. */ ?>
+    <?php ui_karte_start(['titel' => 'Einsatz und Transport', 'klasse' => 'form-block-einsatz']); ?>
       <?php $gruppeRendern('einsatz'); ?>
       <?php if ($gruppeSichtbar('bergrettung')) { $gruppeRendern('bergrettung'); } ?>
-    <?php ui_karte_ende(); ?>
-
-    <?php /* ---- GRUPPE 3: Transport -----------------------------------------
-             Transportart, NA-Begleitung, Transportziel samt Schockraum. Die
-             Abhängigkeiten stehen im Katalog ('show_if'): „Ambulant" blendet
-             NA-Begleitung und Transportziel aus, und der Server LEERT sie dann
-             auch. */ ?>
-    <?php ui_karte_start(['titel' => 'Transport', 'klasse' => 'form-block-transport']); ?>
-      <?php $gruppeRendern('transport'); ?>
     <?php ui_karte_ende(); ?>
     </div><?php /* .form-spalte (links) */ ?>
     <div class="form-spalte">
@@ -1395,7 +1424,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
              Wahrheit. */ ?>
     <?php $besatzungAbw = fieldValue('crew_override') === '1';
           ui_karte_start(['titel' => 'Abweichende Besatzung',
-                          'vorschau' => $besatzungAbw ? 'abweichend' : 'vom Diensttag',
+                          'stand' => $besatzungAbw ? 'abweichend' : 'vom Diensttag',
                           'offen' => $besatzungAbw,
                           'klasse' => 'form-block-besatzung']); ?>
       <?php $gruppeRendern('besatzung'); ?>
@@ -1462,7 +1491,7 @@ ui_seite_start(['titel' => $editing ? 'Einsatz bearbeiten' : 'Einsatz nachtragen
                              oder „nicht lesbar“. Bis Web 23.7.0 stand „keine“
                              auch im gesperrten Formular eines Einsatzes mit
                              Reanimation. */
-                          'vorschau' => $ortHuelleB64 !== null ? '' : 'keine',
+                          'stand' => $ortHuelleB64 !== null ? '' : 'keine',
                           'offen' => false,
                           'geschuetzt' => true,
                           'klasse' => 'form-block-rea']); ?>
@@ -1755,7 +1784,7 @@ function reaSperren(zu) {
     .forEach(el => { el.disabled = zu; });
 }
 function reaVorschau(text) {
-  const el = document.querySelector('.form-block-rea .karte-vorschau');
+  const el = document.querySelector('.form-block-rea .karte-stand');
   const n = document.querySelectorAll('#rearows .rea-sitzung').length;
   if (el) { el.textContent = text || (n ? n + ' erfasst' : 'keine'); }
 }
@@ -2039,13 +2068,33 @@ if (startSel && startBox) {
  * versteckt: Der Server LEERT ein ausgeblendetes Unterfeld beim Speichern.
  * Deshalb ist die Aenderung sichtbar, bevor sie wirkt — das Feld verschwindet
  * vor dem Absenden und nicht danach (A5). */
+/* WERT EINES KATALOGFELDS, AUCH ALS SEGMENTWAHL (OF-07, E-OF-33). Seit die
+ * Transportart drei Radios statt eines Dropdowns ist, traegt der Name
+ * `f_<spalte>` mehrere Elemente, und das erste davon ist das verborgene
+ * Radio ohne Wert — `querySelector(…).value` laese immer „". Gefragt wird
+ * deshalb das GEWAEHLTE Radio; ein Dropdown oder Textfeld liefert seinen
+ * Wert wie bisher. */
+function katalogQuellen(spalte) {
+  return [...document.querySelectorAll('[name="f_' + spalte + '"]')];
+}
+function katalogWert(quellen) {
+  const radios = quellen.filter(el => el.type === 'radio');
+  if (radios.length) {
+    const an = radios.find(el => el.checked);
+    return an ? an.value : '';
+  }
+  return quellen.length ? quellen[0].value : '';
+}
+
 document.querySelectorAll('.showif').forEach(box => {
-  const eltern = document.querySelector('[name="f_' + box.dataset.ifField + '"]');
-  if (!eltern) { return; }
+  const quellen = katalogQuellen(box.dataset.ifField);
+  if (!quellen.length) { return; }
   const aus = (box.dataset.ifNot || '').split('|').filter(Boolean);
-  const pruefe = () => { box.hidden = aus.includes(eltern.value); };
-  eltern.addEventListener('change', pruefe);
-  eltern.addEventListener('input', pruefe);
+  const pruefe = () => { box.hidden = aus.includes(katalogWert(quellen)); };
+  quellen.forEach(el => {
+    el.addEventListener('change', pruefe);
+    el.addEventListener('input', pruefe);
+  });
   pruefe();
 });
 
@@ -2115,7 +2164,7 @@ async function patLaden(){
     if (o.mission_no != null) document.getElementById('pat_mission_no').value = o.mission_no;
     if (o.last != null) document.getElementById('pat_last').value = o.last;
     if (o.first != null) document.getElementById('pat_first').value = o.first;
-    if (o.dob != null) document.getElementById('pat_dob').value = o.dob;
+    if (o.dob != null) document.getElementById('pat_dob').value = EdFormat.tag(o.dob, o.dob);
     if (o.dx != null) document.getElementById('pat_dx').value = o.dx;
     if (o.site_desc != null) document.getElementById('pat_site_desc').value = o.site_desc;
     if (o.age != null) document.getElementById('pat_age').value = o.age;
@@ -2158,7 +2207,11 @@ document.getElementById('unlockbtn').addEventListener('click', () => patLaden())
 // Geburtsdatum gesetzt ist. Ohne Geburtsdatum (unbekannte Person) bleibt es
 // von Hand eintragbar.
 function zeigeAlter(){
-  const dob = document.getElementById('pat_dob').value.trim();
+  /* Das Feld zeigt TT.MM.JJJJ (Konzept OF, E-OF-44); gerechnet wird mit ISO.
+     Die Umrechnung steht hier im Browser, weil das Geburtsdatum
+     verschluesselt wird und den Server nie im Klartext erreicht. */
+  const dob = EdFormat.datumLesen(document.getElementById('pat_dob').value)
+           || document.getElementById('pat_dob').value.trim();
   const feld = document.getElementById('pat_age');
   const hint = document.getElementById('agehint');
   const berechnet = EdPat.alterAm(dob, MISSION_DAY);
@@ -2171,22 +2224,23 @@ function zeigeAlter(){
     hint.textContent = dob !== '' ? 'Geburtsdatum unvollständig' : '';
   }
 }
-// Zweistellige Jahreszahlen (z. B. "23.04.33"): Der native Date-Picker
-// liefert dafuer teils "0033-04-23" statt "1933-04-23". Korrektur per
-// gleitender Fensterregel: zunaechst 2000+JJ; laege das Datum damit in der
-// Zukunft, stattdessen 1900+JJ. Greift vor der Altersberechnung; die
-// bestehende max-Grenze (heute) des Feldes bleibt unangetastet.
+// Zweistellige Jahreszahlen (z. B. "23.04.33"): gleitende Fensterregel —
+// zunaechst 2000+JJ; laege das Datum damit in der Zukunft, stattdessen
+// 1900+JJ. Bis Web 24.3 korrigierte das hier, was der native Kalender aus
+// "33" machte ("0033-04-23"); seit dem Datumsfeld TT.MM.JJJJ (Konzept OF,
+// E-OF-44) greift sie auf die deutsche Form und erst beim VERLASSEN des
+// Feldes (`change`) — beim Tippen von "19…" fuhre sie sonst dazwischen.
 function korrigiereZweistelligesJahr(){
   const feld = document.getElementById('pat_dob');
-  const m = feld.value.match(/^(\d{1,4})-(\d{2})-(\d{2})$/);
-  if (!m || parseInt(m[1], 10) >= 100) return;
-  const jj = parseInt(m[1], 10);
+  const m = feld.value.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{2})$/);
+  if (!m) return;
+  const jj = parseInt(m[3], 10);
+  const tt = m[1].padStart(2, '0'), mm = m[2].padStart(2, '0');
   let jahr = 2000 + jj;
-  const kandidat = `${String(jahr).padStart(4, '0')}-${m[2]}-${m[3]}`;
-  if (new Date(kandidat + 'T00:00:00') > new Date()) { jahr = 1900 + jj; }
-  feld.value = `${String(jahr).padStart(4, '0')}-${m[2]}-${m[3]}`;
+  if (new Date(`${jahr}-${mm}-${tt}T00:00:00`) > new Date()) { jahr = 1900 + jj; }
+  feld.value = `${tt}.${mm}.${jahr}`;
 }
-document.getElementById('pat_dob').addEventListener('input', () => { korrigiereZweistelligesJahr(); zeigeAlter(); });
+document.getElementById('pat_dob').addEventListener('input', zeigeAlter);
 document.getElementById('pat_dob').addEventListener('change', () => { korrigiereZweistelligesJahr(); zeigeAlter(); });
 zeigeAlter();
 
@@ -2223,7 +2277,14 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
   const missionNo = document.getElementById('pat_mission_no').value.trim();
   const last  = document.getElementById('pat_last').value.trim();
   const first = document.getElementById('pat_first').value.trim();
-  const dob   = document.getElementById('pat_dob').value.trim();
+  /* TT.MM.JJJJ im Feld, ISO im Blob (E-OF-44); ein Wert, der kein Tag ist,
+     haelt das Datumsfeld schon an (`setCustomValidity`, datumsfeld.js). */
+  const dobFeld = document.getElementById('pat_dob').value.trim();
+  const dob   = dobFeld === '' ? '' : EdFormat.datumLesen(dobFeld);
+  if (dobFeld !== '' && dob === '') {
+    document.getElementById('pat_dob').reportValidity();
+    return;
+  }
   const dx    = document.getElementById('pat_dx').value.trim();
   const siteDesc = document.getElementById('pat_site_desc').value.trim();
   const age   = document.getElementById('pat_age').value.trim();
@@ -2342,19 +2403,22 @@ document.querySelectorAll('.parentcheck').forEach(cb => {
  * Ein gespeicherter Wert wird nie beim Öffnen überschrieben — es passiert nur
  * etwas, wenn jemand die Transportart gerade umstellt. */
 document.querySelectorAll('input[data-vor-feld]').forEach(cb => {
-  const quelle = document.querySelector('[name="f_' + cb.dataset.vorFeld + '"]');
-  if (!quelle) { return; }
+  /* Die Quelle kann eine Segmentwahl sein (katalogWert() oben): Jedes ihrer
+   * Radios meldet `change`, gefragt wird das gewählte. */
+  const quellen = katalogQuellen(cb.dataset.vorFeld);
+  if (!quellen.length) { return; }
   let vonHand = false;
   cb.addEventListener('change', () => { vonHand = true; });
-  quelle.addEventListener('change', () => {
+  const nachziehen = () => {
     if (vonHand) { return; }
-    if (quelle.value === cb.dataset.vorWert && !cb.checked) {
+    if (katalogWert(quellen) === cb.dataset.vorWert && !cb.checked) {
       cb.checked = true;
       // Unterfelder eines vorbelegten Hakens müssen mit aufgehen.
       cb.dispatchEvent(new Event('change', { bubbles: true }));
       vonHand = false;   // das eigene Ereignis zählt nicht als Handgriff
     }
-  });
+  };
+  quellen.forEach(el => el.addEventListener('change', nachziehen));
 });
 
 

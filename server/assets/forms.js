@@ -49,8 +49,17 @@
    * verschwindet mit dem Absenden. Ein Formular ohne Leiste bleibt davon
    * unberuehrt. */
   function leisteZeigen(f, an) {
-    const l = f.querySelector('[data-speichern]');
+    const l = leisteVon(f);
     if (l) { l.hidden = !an; }
+  }
+
+  /* DIE LEISTE KANN AUSSERHALB DES FORMULARS STEHEN (seit Web 24.5,
+   * Konzept OF, E-OF-32): Am unteren Rand der Rahmenkarte sitzt sie als
+   * letztes Kind des Inhalts, und das Formular des Profils endet weiter oben.
+   * Sie traegt dann `data-fuer="<Formular-id>"`, ihr Knopf `form=`. */
+  function leisteVon(f) {
+    return f.querySelector('[data-speichern]')
+        || (f.id ? document.querySelector('[data-speichern][data-fuer="' + f.id + '"]') : null);
   }
 
   /* DIE LEISTE NENNT, WAS UNGESPEICHERT IST.
@@ -66,7 +75,7 @@
    * (ein Formular ohne Karten), bleibt es ebenfalls beim Ausgangstext — ein
    * Doppelpunkt ohne Aufzaehlung waere schlechter als der allgemeine Satz. */
   function hinweisSetzen(f) {
-    const l = f.querySelector('[data-speichern]');
+    const l = leisteVon(f);
     if (!l) { return; }
     const p = l.querySelector('.speichern-hinweis');
     if (!p || !p.hasAttribute('data-hinweis-vorlage')) { return; }

@@ -576,4 +576,27 @@
     }
 
     global.EdOrtsfeld = { init: init };
+
+    /* DAS ZEICHEN ZUR ADRESSSUCHE (`ui_geocoder_hinweis()`, Konzept OF,
+     * E-OF-07): Der Satz erscheint beim Darueberfahren, beim Fokus und beim
+     * Antippen, und geht beim Verlassen, beim Wegklicken und mit Esc. Der
+     * Knopf traegt ihn ohnehin als Beschreibung (`aria-describedby`); das
+     * Aufklappen ist fuer die Augen. Es gibt hoechstens eines je Seite. */
+    var hinweisKnopf = document.querySelector('.ortsfeld-hinweis-knopf');
+    if (hinweisKnopf) {
+        var kasten = document.getElementById('geo-hinweis');
+        var fest = false;
+        var zeigen = function (an) {
+            kasten.hidden = !an;
+            hinweisKnopf.setAttribute('aria-expanded', an ? 'true' : 'false');
+        };
+        hinweisKnopf.addEventListener('mouseenter', function () { zeigen(true); });
+        hinweisKnopf.addEventListener('mouseleave', function () { if (!fest) { zeigen(false); } });
+        hinweisKnopf.addEventListener('focus', function () { zeigen(true); });
+        hinweisKnopf.addEventListener('blur', function () { fest = false; zeigen(false); });
+        hinweisKnopf.addEventListener('click', function () { fest = !fest; zeigen(fest || kasten.hidden); });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !kasten.hidden) { fest = false; zeigen(false); }
+        });
+    }
 })(window);

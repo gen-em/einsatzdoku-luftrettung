@@ -6,13 +6,13 @@ require_once __DIR__ . '/auth_guard.php';
 require_betreiberin();
 require_once __DIR__ . '/komplett_lib.php';
 require_once __DIR__ . '/jobs_lib.php';
+require_once __DIR__ . '/sicherungsziele_teile.php';  /* die Karte „Backup-Ziele" (E-OF-24) */
 require_once __DIR__ . '/format_lib.php';  /* groesse_text(), zahl_text() — ausdruecklich, nicht ueber die Ladekette. */
 
 /**
  * KOMPLETT-BACKUP — die ganze Installation als versiegelter SQL-Dump.
  *
- * WARUM EINE EIGENE SEITE UND KEINE KARTE AUF „BACKUPS". Dieselbe
- * Begründung wie bei den Backup-Zielen: „Backups" ist die
+ * WARUM EINE EIGENE SEITE UND KEINE KARTE AUF „BACKUPS". „Backups" ist die
  * Seite der REGELN — Aufbewahrung, Grenze, Schwellen. Hier steht eine Liste
  * von Ständen mit Handgriffen daran, dazu ein Lauf, der Minuten dauert und
  * einen Fortschritt hat. Das ist der Zuschnitt einer Seite.
@@ -22,6 +22,12 @@ require_once __DIR__ . '/format_lib.php';  /* groesse_text(), zahl_text() — au
  *   2. Der LAUF selbst, mit Fortschritt und Wiederaufnahme.
  *   3. Die STÄNDE, jeder mit zwei Wegen heraus: unverschlüsselt für `mysql`
  *      und phpMyAdmin, oder unter einer Passphrase zum Weitergeben.
+ *   4. Die BACKUP-ZIELE als letzte Karte — dieselbe wie in den
+ *      Servereinstellungen (`sicherungsziele_teile.php`, E-OF-24).
+ *
+ * DIE FORM (E-OF-23, Bild OF-P26): oben der Stand, offen; darunter Regeln,
+ * Stände und Backup-Ziele als Klappkarten mit Stand und Plakette, wie die
+ * Servereinstellungen.
  *
  * DER DOWNLOAD IST EIN POST UND KEIN LINK. Für die unverschlüsselte Fassung
  * wäre ein Link bequem; für die Fassung mit Passphrase wäre er falsch, weil
@@ -219,9 +225,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === null) {
     }
 }
 
-// Meldung aus der Umleitung uebernehmen
+/* Meldung aus der Umleitung uebernehmen. EINE MELDUNG DER BACKUP-ZIELE
+ * gehört in deren Karte, nicht oben auf die Seite: Sie kommt mit dem `ort`
+ * der Karte von `admin_sicherungsziele.php` zurück (sicherungsziele_teile.php). */
 $flash = flash_holen();
-if ($flash !== null) {
+$zielMeldung = null;
+if ($flash !== null && $flash['ort'] === SZ_KARTE_ID) {
+    $zielMeldung = $flash;
+} elseif ($flash !== null) {
     if ($flash['ton'] === 'error') { $error = $flash['text']; }
     else                           { $notice = $flash['text']; }
 }
@@ -233,6 +244,7 @@ $laeuft       = in_array($stand, ['dump', 'siegel'], true);
 $staende      = komp_staende();
 $zahlen       = edbak_ablage_zahlen(true);
 $plan         = komp_plan();
+$rueck        = komp_rueckstand();
 
 ui_seite_start(['titel' => 'Komplett-Backup']);
 ?>
@@ -254,11 +266,15 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
     <?= csrf_field() ?><input type="hidden" name="action" value="abbrechen">
   </form>
 
+  <?php /* „JETZT SICHERN" IST DIE EINE HAUPTAKTION DER SEITE (Knopfart
+           `haupt`, E-OF-23, E-OF-55 — die siebte Seite nach E-MA-27). Läuft
+           ein Stand, gibt es nichts zu starten; dann stehen „Fortsetzen" und
+           „Abbrechen" an ihrer Stelle, und keine von beiden ist orange: Sie
+           setzen eine Handlung fort, statt sie zu beginnen. */ ?>
   <?php ui_titelzeile([
       'titel' => 'Komplett-Backup',
       'unter' => 'Die ganze Installation als versiegelter SQL-Dump, ohne '
-               . '<code>config.php</code> — sie gehört ins Wiederanlaufpaket. '
-               . '<a href="hilfe.php#12-6-komplett-backup">Handbuch: Komplett-Backup</a>',
+               . '<code>config.php</code> — sie gehört ins Wiederanlaufpaket.',
       'aktionen' => $schluesselDa
           ? ($laeuft
               ? ui_knopf(['text' => 'Fortsetzen', 'symbol' => 'sicherung',
@@ -266,7 +282,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                 . ui_knopf(['text' => 'Abbrechen', 'symbol' => 'schliessen',
                             'art' => 'gefahr', 'attr' => ' form="f-ab"'])
               : ui_knopf(['text' => 'Jetzt sichern', 'symbol' => 'sicherung',
-                          'art' => 'primaer', 'attr' => ' form="f-sichern"']))
+                          'art' => 'haupt', 'attr' => ' form="f-sichern"']))
           : '',
   ]); ?>
   <?php /* DER BALKEN, WIE AUF JEDER AUSNAHMESEITE DES WARTUNGSMODUS — diese
@@ -278,11 +294,10 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
   <?php if (!$schluesselDa): ?>
     <?php ui_karte_start(['titel' => 'Serverschlüssel fehlt', 'id' => 'k-schluessel-fehlt']); ?>
       <?php /* DER SCHLÜSSEL ENTSTEHT unter Betrieb → Servereinstellungen
-               (Karte „Schlüssel des Servers"), nicht unter „Backup-Ziele";
-               Backup-Ziele verweist selbst nur dorthin. */ ?>
+               (Karte „Schlüssel des Servers"), nicht in der Karte der
+               Backup-Ziele; die verweist selbst nur dorthin. */ ?>
       <p class="feld-hinweis">Ein Komplett-Backup wird immer versiegelt, und dafür
-      fehlt der Serverschlüssel aus <code>config.php</code>.
-      <a href="hilfe.php#karte-schluessel-des-servers-seit-web-20-1-0">Handbuch: Schlüssel des Servers</a></p>
+      fehlt der Serverschlüssel aus <code>config.php</code>.</p>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Zu den Servereinstellungen', 'symbol' => 'schloss',
                       'art' => 'primaer',
@@ -290,6 +305,66 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
       </div>
     <?php ui_karte_ende(); ?>
   <?php endif; ?>
+
+  <?php /* ---- Stand (offen) ----------------------------------------------
+       OFFEN, WEIL ER ZÄHLT (E-OF-23): Wie alt der jüngste Stand ist, wie viel
+       Platz die Stände belegen und ob einer fällig ist — das will wissen,
+       wer die Seite aufruft. Bis Web 24.6 standen diese drei Zeilen unter
+       dem Formular der Regeln, und der letzte Lauf hatte eine Karte für sich.
+       Die Plakette sagt den Zustand in einem Wort. */ ?>
+  <?php
+  $standPlakette = $laeuft
+      ? ui_plakette('läuft', ['ton' => 'blau'])
+      : ($staende === []
+          ? ui_plakette('keiner', ['ton' => 'orange'])
+          : ($rueck !== null
+              ? ui_plakette('fällig', ['ton' => 'orange'])
+              : ui_plakette('aktuell', ['ton' => 'gruen'])));
+  ui_karte_start(['titel' => 'Stand', 'id' => 'k-stand', 'plakette' => $standPlakette]);
+  ?>
+    <?php
+    /* DER JÜNGSTE STAND TRÄGT DEN UMFANG DES LETZTEN LAUFS, wenn er aus ihm
+     * stammt — vorher stand das in einer eigenen Karte „Letzter Lauf". */
+    $umfang = '';
+    if ($stand === 'fertig' && $staende !== []
+        && (string)($z['name'] ?? '') === (string)$staende[0]['datei']) {
+        $umfang = ' · ' . zahl_text((int)($z['zeilen'] ?? 0)) . ' Zeilen aus '
+                . (int)($z['tabellen'] ?? 0) . ' Tabellen';
+    }
+    ui_zeile(['text' => 'Jüngster Stand',
+              'klein' => $staende === [] ? 'Es gibt noch keinen.'
+                       : (string)$staende[0]['datei'] . $umfang,
+              'plaketten' => $staende === []
+                  ? ui_plakette('keiner', ['ton' => 'orange'])
+                  : ui_plakette(edbak_zeitpunkt_text((string)$staende[0]['zeit']),
+                                ['ton' => 'blau'])]);
+    ui_zeile(['text' => 'Belegt von Komplett-Backups',
+              'klein' => 'Zählt auf die Speichergrenze unter '
+                       . 'Betrieb → Servereinstellungen mit.',
+              'href' => 'betrieb_server.php',
+              'plaketten' => ui_plakette(groesse_text((int)$zahlen['komplett_bytes']),
+                                         ['ton' => 'neutral'])]);
+    ui_zeile(['text' => 'Wartet auf den nächsten Lauf',
+              'klein' => $plan === 'aus'
+                  ? 'Der Plan steht auf „Nur von Hand“.'
+                  : 'Fällig heisst: Der jüngste Stand ist älter als der Plan erlaubt.',
+              'plaketten' => $rueck === null
+                  ? ui_plakette('nichts', ['ton' => 'neutral'])
+                  : ui_plakette((string)$rueck, ['ton' => 'orange'])]);
+    if ($stand === 'fertig') {
+        if (($z['verdraengt'] ?? []) !== []) {
+            ui_zeile(['text' => 'Verdrängt',
+                      'klein' => implode(', ', (array)$z['verdraengt']),
+                      'plaketten' => ui_plakette((string)count((array)$z['verdraengt']),
+                                                 ['ton' => 'orange'])]);
+        }
+        foreach ((array)($z['warnung'] ?? []) as $w) {
+            ui_zeile(['text' => 'Hinweis', 'klein' => (string)$w,
+                      'plaketten' => ui_plakette('beachten', ['ton' => 'orange'])]);
+        }
+    }
+    ?>
+  <?php ui_karte_ende(); ?>
 
   <?php if ($laeuft): ?>
     <?php ui_karte_start(['titel' => 'Läuft gerade', 'id' => 'k-laeuft-gerade']); ?>
@@ -303,7 +378,6 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                                            ['ton' => 'blau'])]);
       if ($stand === 'dump') {
           ui_zeile(['text' => 'Tabellen',
-                    'klein' => 'In einspielbarer Reihenfolge, Fremdschlüssel zuerst.',
                     'plaketten' => ui_plakette((int)($z['i'] ?? 0) . ' von ' . $tabellen,
                                                ['ton' => 'neutral'])]);
       }
@@ -319,45 +393,26 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
                                            ['ton' => 'neutral'])]);
       ?>
     <?php ui_karte_ende(); ?>
-  <?php elseif ($stand === 'fertig'): ?>
-    <?php ui_karte_start(['titel' => 'Letzter Lauf', 'id' => 'k-letzter-lauf']); ?>
-      <?php
-      ui_zeile(['text' => 'Fertig geworden',
-                'klein' => (string)($z['name'] ?? ''),
-                'plaketten' => ui_plakette(edbak_zeitpunkt_text((string)($z['beendet'] ?? '')),
-                                           ['ton' => 'blau'])]);
-      ui_zeile(['text' => 'Umfang',
-                'plaketten' => ui_plakette(
-                    zahl_text((int)($z['zeilen'] ?? 0)) . ' Zeilen',
-                    ['ton' => 'neutral'])
-                  . ui_plakette((int)($z['tabellen'] ?? 0) . ' Tabellen', ['ton' => 'neutral'])
-                  . ui_plakette(groesse_text((int)($z['bytes'] ?? 0)), ['ton' => 'neutral'])]);
-      if (($z['verdraengt'] ?? []) !== []) {
-          ui_zeile(['text' => 'Verdrängt',
-                    'klein' => implode(', ', (array)$z['verdraengt']),
-                    'plaketten' => ui_plakette((string)count((array)$z['verdraengt']),
-                                               ['ton' => 'orange'])]);
-      }
-      foreach ((array)($z['warnung'] ?? []) as $w) {
-          ui_zeile(['text' => 'Hinweis', 'klein' => (string)$w,
-                    'plaketten' => ui_plakette('beachten', ['ton' => 'orange'])]);
-      }
-      ?>
-    <?php ui_karte_ende(); ?>
   <?php endif; ?>
 
-  <?php ui_karte_start(['titel' => 'Regeln', 'id' => 'k-regeln']); ?>
+  <?php /* ---- Regeln (Klappkarte) ----------------------------------------
+       ZUGEKLAPPT DER PLAN UND DIE AUFBEWAHRUNG in einer Zeile — gebildet aus
+       denselben Werten, die das Formular zeigt, keine zweite Quelle. */ ?>
+  <?php $aufbewahrung = komp_aufbewahrung(); ?>
+  <?php ui_karte_start(['titel' => 'Regeln', 'id' => 'k-regeln', 'zu' => true,
+                        'stand' => (KOMP_PLAENE[$plan] ?? $plan) . ' · behält '
+                                 . $aufbewahrung . ($aufbewahrung === 1 ? ' Stand' : ' Stände')]); ?>
     <form method="post">
       <?= csrf_field() ?><input type="hidden" name="action" value="regeln">
       <div class="fld-reihe">
         <?php ui_feld(['name' => 'plan', 'label' => 'Von selbst sichern',
                        'art' => 'select', 'optionen' => KOMP_PLAENE, 'wert' => $plan,
-                       'klein' => 'Wie alt der jüngste Stand höchstens sein darf — '
-                                . 'wann gearbeitet wird, entscheidet der Auslöser unter '
+                       'klein' => 'Wie alt der jüngste Stand höchstens sein darf; wann '
+                                . 'gearbeitet wird, entscheidet der Auslöser unter '
                                 . 'Betrieb → Hintergrundjobs.']); ?>
         <?php ui_feld(['name' => 'aufbewahrung', 'label' => 'Stände aufbewahren',
                        'art' => 'number', 'attr' => 'min="1" max="20"',
-                       'wert' => (string)komp_aufbewahrung(),
+                       'wert' => (string)$aufbewahrung,
                        'klein' => 'Ältere werden nach einem erfolgreichen Lauf gelöscht — '
                                 . 'hier, nicht auf dem Backup-Ziel.']); ?>
       </div>
@@ -365,31 +420,13 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </div>
     </form>
-    <?php
-    $rueck = komp_rueckstand();
-    ui_zeile(['text' => 'Jüngster Stand',
-              'klein' => $staende === [] ? 'Es gibt noch keinen.' : (string)$staende[0]['datei'],
-              'plaketten' => $staende === []
-                  ? ui_plakette('keiner', ['ton' => 'orange'])
-                  : ui_plakette(edbak_zeitpunkt_text((string)$staende[0]['zeit']),
-                                ['ton' => 'blau'])]);
-    ui_zeile(['text' => 'Belegt von Komplett-Backups',
-              'klein' => 'Zählt auf die Speichergrenze unter '
-                       . 'Betrieb → Servereinstellungen mit.',
-              'href' => 'betrieb_server.php',
-              'plaketten' => ui_plakette(groesse_text((int)$zahlen['komplett_bytes']),
-                                         ['ton' => 'neutral'])]);
-    ui_zeile(['text' => 'Wartet auf den nächsten Lauf',
-              'klein' => $plan === 'aus'
-                  ? 'Der Plan steht auf „Nur von Hand".'
-                  : 'Fällig heisst: Der jüngste Stand ist älter als der Plan erlaubt.',
-              'plaketten' => $rueck === null
-                  ? ui_plakette('nichts', ['ton' => 'neutral'])
-                  : ui_plakette((string)$rueck, ['ton' => 'orange'])]);
-    ?>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
 
-  <?php ui_karte_start(['titel' => 'Stände', 'id' => 'k-staende', 'zahl' => count($staende)]); ?>
+  <?php /* ---- Stände (Klappkarte) ---------------------------------------- */ ?>
+  <?php ui_karte_start(['titel' => 'Stände', 'id' => 'k-staende', 'zu' => true,
+                        'stand' => $staende === [] ? 'noch keiner'
+                            : 'zuletzt ' . edbak_zeitpunkt_text((string)$staende[0]['zeit']),
+                        'plakette' => ui_plakette((string)count($staende), ['ton' => 'neutral'])]); ?>
     <?php if ($staende === []): ?>
       <p class="feld-hinweis">Es liegt noch kein Komplett-Backup vor.</p>
     <?php else: ?>
@@ -453,7 +490,8 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
           <input type="hidden" name="art" value="pw">
           <input type="hidden" name="datei" value="<?= ui_e($s['datei']) ?>">
           <div class="fld-reihe">
-            <?php ui_feld(['name' => 'passphrase', 'label' => 'Mit Passphrase herunterladen',
+            <?php ui_feld(['name' => 'passphrase', 'id' => 'f-passphrase-' . $id,
+                           'label' => 'Mit Passphrase herunterladen',
                            'art' => 'password', 'wert' => '',
                            'klein' => 'Mindestens 8 Zeichen, zum Weitergeben — sie wird '
                                     . 'nirgends gespeichert.']); ?>
@@ -473,7 +511,15 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
         <?php endif; ?>
       <?php endforeach; ?>
     <?php endif; ?>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
+
+  <?php /* ---- Backup-Ziele -------------------------------------------------
+       DIESELBE KARTE WIE IN DEN SERVEREINSTELLUNGEN (E-OF-24): ein Baustein,
+       zwei Orte. Ihre Formulare posten an `admin_sicherungsziele.php`, und
+       das leitet hierher zurück. */ ?>
+  <?php sicherungsziele_karte('admin_komplettsicherung.php', $zielMeldung); ?>
+
+  <?php sicherungsziele_dialoge('admin_komplettsicherung.php', $zielMeldung); ?>
 
 <?php ui_geruest_ende(); ?>
-<?php ui_seite_ende(); ?>
+<?php ui_seite_ende(['skripte' => sicherungsziele_skripte()]); ?>

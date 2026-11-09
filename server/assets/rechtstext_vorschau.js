@@ -67,7 +67,9 @@
      * („Vorschau gerade nicht erreichbar."); „Die Vorschau ist
      * fehlgeschlagen:" davor hieße dasselbe zweimal. */
     EdApi.postJson('api/rechtstext_vorschau.php',
-                   { text: feld.value, stand: stand ? stand.value : '' })
+                   { text: feld.value,
+                     /* TT.MM.JJJJ im Feld (E-OF-54), ISO an den Server */
+                     stand: stand ? (EdFormat.datumLesen(stand.value) || stand.value.trim()) : '' })
       .then(function (a) {
         if (meine !== nummer) { return; }       // eine neuere Anfrage läuft
         if (!a.ok) {

@@ -106,10 +106,11 @@ const EINBAUORTE = [
 /** Das Transportziel sichtbar machen: `show_if` haengt an der Transportart. */
 async function transportzielAuf(seite) {
   await seite.evaluate(() => {
-    const s = document.querySelector('select[name="f_transport_mode"]');
-    if (s && s.value === 'ambulant') {
-      s.value = 'air';
-      s.dispatchEvent(new Event('change', { bubbles: true }));
+    /* Seit Web 24.8.0 eine Segmentwahl (Radiofelder) statt einer Liste
+       (Konzept OF, E-OF-33); `click()` loest `change` aus wie die Hand. */
+    const amb = document.querySelector('input[name="f_transport_mode"][value="ambulant"]');
+    if (amb && amb.checked) {
+      document.querySelector('input[name="f_transport_mode"][value="air"]').click();
     }
   });
   await seite.waitForTimeout(200);
@@ -404,7 +405,10 @@ export const wege = [
     async fahren(k) {
       const e = await einsaetze(k);
       await k.gehZu(formular(k, e.ohneSpur));
-      await k.seite.locator('.loc-datenschutz').first().scrollIntoViewIfNeeded();
+      /* Seit Web 24.4 ist der Hinweis ein Zeichen neben der Lupe, sein Satz
+       * ein verborgener Tooltip (E-OF-07): ins Bild geholt wird das Zeichen,
+       * gezaehlt und gelesen wird weiter `.loc-datenschutz`. */
+      await k.seite.locator('.ortsfeld-hinweis-knopf').first().scrollIntoViewIfNeeded();
       await k.seite.waitForTimeout(200);
       const b = await k.seite.evaluate(() => {
         const n = document.querySelectorAll('.loc-datenschutz');

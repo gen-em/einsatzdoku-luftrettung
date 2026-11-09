@@ -339,9 +339,9 @@ dieselben, ihre Werte nicht.
 | Auf Aktion unter dem Zeiger | 8,92:1 | 8,75:1 | 4,5 | Primaerknopf unter dem Zeiger |
 | Aktion auf Karte | 12,88:1 | 6,65:1 | 3,0 | Schalter an, Radiopunkt, Fortschritt, Stern |
 | Auswahltext auf Auswahl | 11,26:1 | 8,92:1 | 4,5 | aktiver Menuepunkt, aktive Kennzahl, Chip |
-| Auswahllinie auf Auswahl | 11,26:1 | 4,45:1 | 3,0 | Strich am aktiven Eintrag |
+| Auswahllinie auf Auswahl | 11,26:1 | 4,45:1 | 3,0 | Rahmen der aktiven Kennzahl, Filterpille und Segmenttaste |
 | Auswahllinie auf Karte | 12,88:1 | 6,65:1 | 3,0 | Strich des aktiven Reiters |
-| Auswahllinie auf abgesetzt | 12,48:1 | 4,45:1 | 3,0 | Strich am Vorschlag unter dem Zeiger |
+| Auswahllinie auf abgesetzt | 12,48:1 | 4,45:1 | 3,0 | Strich der hervorgehobenen Tabellenzeile |
 | Text auf Auswahl | 16,30:1 | 8,92:1 | 4,5 | Textauswahl |
 | Info auf Info | 7,54:1 | 7,54:1 | 4,5 | Hinweis, Plakette blau |
 | Erfolg auf Erfolg | 7,13:1 | 8,49:1 | 4,5 | Vollzug, Plakette gruen |
@@ -430,10 +430,19 @@ dunkle Markenfarbe; ein Schwarz aus der Neutral-Reihe kippte die Marke ins
 Beige (Board MA-04).
 
 **Zwei Auslöser, dieselben Werte.** Ohne Wahl folgt die Oberfläche dem
-Gerät (`prefers-color-scheme`); im Profil lässt sich „Hell" oder „Dunkel"
-fest wählen, und `ui_seite_start()` setzt dann `data-theme` am `<html>` —
-serverseitig, damit nichts aufblitzt (E-MA-13). Der Schalter ist eine
-**Wahlliste** (9.31) im Profil, kein neuer Baustein in der Kopfleiste.
+Gerät (`prefers-color-scheme`); im Profil lässt sich „Immer hell" oder
+„Immer dunkel" fest wählen, und `ui_seite_start()` setzt dann `data-theme`
+am `<html>` — serverseitig, damit nichts aufblitzt (E-MA-13). Die Wahl ist
+eine **Wahlliste** (9.31) im Profil.
+
+**Mond und Sonne** (seit Web 24.9.0, Konzept OF, E-OF-09): Bei „Umschalter"
+(Vorgabe) und „Folgt System" steht in der Kopfleiste zwischen „?" und
+Zahnrad ein Symbolknopf (`.kopf-darstellung`, `--knopf`, Zeichen
+`mond`/`sonne` in `--auf-dunkel`) — gezeigt wird, wohin ein Klick führt:
+hell der Mond, dunkel die Sonne, über dieselben zwei Auslöser, also schon
+vor jedem Skript richtig. Ein Klick gilt bis zur Abmeldung. Kein neuer
+Baustein (ein Symbolknopf wie Hilfe und Zahnrad), kein neues Kontrastpaar
+(dieselbe Schrift auf Dunkelblau).
 
 **Was nicht umschaltet:**
 
@@ -466,7 +475,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
-142 Token in 21 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+146 Token in 21 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Leitwerte**
 
@@ -476,7 +485,7 @@ auseinanderlaufen kann.
 | `--rauch` | `var(--genem-rauch)` | 1 |  |
 | `--sand` | `var(--genem-sand)` | 1 |  |
 | `--asphalt` | `var(--genem-asphalt)` | 1 |  |
-| `--dunkelblau` | `var(--genem-dunkelblau)` | 11 |  |
+| `--dunkelblau` | `var(--genem-dunkelblau)` | 14 |  |
 | `--orange` | `var(--genem-philipp-orange)` | 0 |  |
 | `--blau` | `var(--genem-max-blau)` | 4 |  |
 | `--rot` | `var(--genem-newroz-rot)` | 4 |  |
@@ -486,9 +495,9 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--flaeche-seite` | `var(--genem-flaeche-standard)` | 1 |  |
-| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 19 |  |
+| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 21 |  |
 | `--flaeche-abgesetzt` | `var(--genem-flaeche-abgesetzt)` | 35 |  |
-| `--flaeche-feld` | `var(--genem-flaeche-standard)` | 5 |  |
+| `--flaeche-feld` | `var(--genem-flaeche-standard)` | 6 |  |
 | `--flaeche-marke` | `var(--genem-dunkelblau)` | 1 |  |
 
 **Schrift**
@@ -496,9 +505,9 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--text` | `var(--genem-text-standard)` | 21 |  |
-| `--text-titel` | `var(--genem-text-alternativ)` | 36 |  |
-| `--gedaempft` | `var(--genem-text-sekundaer)` | 70 |  |
-| `--text-link` | `var(--genem-text-blau)` | 19 |  |
+| `--text-titel` | `var(--genem-text-alternativ)` | 37 |  |
+| `--gedaempft` | `var(--genem-text-sekundaer)` | 69 |  |
+| `--text-link` | `var(--genem-text-blau)` | 18 |  |
 | `--text-link-hover` | `var(--genem-text-blau)` | 4 |  |
 | `--auf-dunkel` | `var(--genem-schnee)` | 7 | Schrift auf Dunkelblau, 13,33:1 |
 
@@ -506,8 +515,8 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--linie` | `var(--genem-linie)` | 46 |  |
-| `--linie-stark` | `var(--genem-linie-stark)` | 20 |  |
+| `--linie` | `var(--genem-linie)` | 48 |  |
+| `--linie-stark` | `var(--genem-linie-stark)` | 22 |  |
 | `--mechanik` | `var(--genem-sand)` | 11 |  |
 
 **Aktion — Dunkelblau**
@@ -530,9 +539,9 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--auswahl-flaeche` | `var(--genem-blau-100)` | 16 |  |
-| `--auswahl-text` | `var(--genem-dunkelblau)` | 8 |  |
-| `--auswahl-linie` | `var(--genem-aktion)` | 11 |  |
+| `--auswahl-flaeche` | `var(--genem-blau-100)` | 19 |  |
+| `--auswahl-text` | `var(--genem-dunkelblau)` | 9 |  |
+| `--auswahl-linie` | `var(--genem-aktion)` | 9 |  |
 | `--kopf-aktiv` | `var(--genem-blau-300)` | 1 |  |
 
 **Status**
@@ -563,7 +572,7 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--fokus` | `var(--genem-max-blau)` | 5 |  |
+| `--fokus` | `var(--genem-max-blau)` | 6 |  |
 
 **Umgebungsetikett (Staging, Demo)**
 
@@ -599,60 +608,64 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--groesse-2` | `13px` | 69 |  |
-| `--groesse-3` | `15px` | 16 |  |
+| `--groesse-2` | `13px` | 71 |  |
+| `--groesse-3` | `15px` | 17 |  |
 | `--groesse-4` | `16px` | 15 |  |
 | `--groesse-5` | `19px` | 13 |  |
 | `--groesse-6` | `24px` | 5 |  |
 | `--groesse-titel` | `28px` | 2 |  |
 | `--zeile-eng` | `1.3` | 5 | Titel, Kacheln |
-| `--zeile` | `1.55` | 3 | Oberfläche |
+| `--zeile` | `1.55` | 4 | Oberfläche |
 | `--zeile-lesen` | `1.6` | 4 | Fließtext in der Lesespalte |
 
 **Abstände**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 86 |  |
-| `--abstand-2` | `8px` | 121 |  |
-| `--abstand-3` | `12px` | 164 |  |
-| `--abstand-4` | `16px` | 67 |  |
-| `--abstand-5` | `24px` | 35 |  |
+| `--abstand-1` | `4px` | 89 |  |
+| `--abstand-2` | `8px` | 137 |  |
+| `--abstand-3` | `12px` | 171 |  |
+| `--abstand-4` | `16px` | 77 |  |
+| `--abstand-5` | `24px` | 39 |  |
 
 **Radien**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--radius-klein` | `6px` | 29 | Plakette, Kästchen, Eingabefeld |
-| `--radius` | `10px` | 21 | Knopf, Meldung |
+| `--radius` | `10px` | 23 | Knopf, Meldung |
 | `--radius-gross` | `12px` | 8 | Karte, Blatt, Dialog |
 
 **Maße**
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--kopf` | `56px` | 13 |  |
-| `--knopf` | `44px` | 46 |  |
+| `--kopf` | `56px` | 19 |  |
+| `--knopf` | `44px` | 51 |  |
+| `--bereiche` | `48px` | 5 |  |
 | `--leiste` | `260px` | 2 | Seitenleiste ab 1200 |
 | `--leiste-schmal` | `220px` | 2 | Seitenleiste 1024–1199 |
 | `--leiste-filter` | `280px` | 1 | Filterleiste der Suche ab 1200 |
 | `--leiste-filter-schmal` | `240px` | 1 | Filterleiste 1024–1199 |
-| `--rahmen` | `1680px` | 3 | Leiste und Inhalt als Einheit |
+| `--rahmen` | `1680px` | 4 | Leiste und Inhalt als Einheit |
 | `--lesespalte` | `760px` | 5 | Fließtext |
 | `--schublade` | `320px` | 1 | Höchstbreite der mobilen Schublade |
 | `--blatt-zeile` | `50px` | 1 | Zeilenhöhe im Aktionsblatt |
 | `--unterpunkt` | `28px` | 2 | Sprungmarke unter dem Menüpunkt |
-| `--listensuche-breit` | `36rem` | 1 | Höchstbreite des Suchfelds einer Liste |
+| `--feld-breit` | `36rem` | 4 | Höchstbreite eines Felds: Listensuche, Felder der Einstellungen |
+| `--lese-beschriftung` | `14rem` | 1 | Beschriftungsspalte der Einsatzansicht ab 720 px (E-OF-28, Bild OF-P34) |
+| `--feld-datum` | `calc(11ch + 2 * var(--abstand-3) + 2 * var(--strich))` | 1 |  |
 | `--uebersicht-spalte` | `240px` | 1 | schmalste Spalte der Einstellungs-Übersicht |
 | `--suchfeld` | `48px` | 2 | das große Suchfeld |
-| `--symbol-klein` | `16px` | 11 | Zusatzzeichen an einer Beschriftung |
+| `--symbol-klein` | `16px` | 14 | Zusatzzeichen an einer Beschriftung |
 | `--symbol-winzig` | `calc(var(--symbol-klein) - var(--abstand-1))` | 4 | 12 px, im Chip |
 | `--ziel-chip` | `calc(var(--symbol-gross) + var(--abstand-1))` | 2 | 28 px, Treffziel |
 | `--symbol-text` | `1em` | 2 | Symbol im Fliesstext |
-| `--symbol` | `20px` | 13 | Symbolgröße in der Zeile |
+| `--symbol` | `20px` | 14 | Symbolgröße in der Zeile |
 | `--symbol-gross` | `24px` | 14 | Symbolgröße im Knopf und Kartenkopf |
-| `--strich` | `1px` | 64 | Haarlinie |
+| `--strich` | `1px` | 74 | Haarlinie |
 | `--strich-stark` | `2px` | 37 | Aktivstrich, Randstrich, Fokus |
+| `--strich-reiter` | `calc(var(--strich-stark) + var(--strich))` | 1 | 3 px |
 | `--radius-rund` | `999px` | 20 | Zähler, Griff, Punkt — voll rund |
 | `--schalter-breit` | `46px` | 2 | der Schalter, 46 breit … |
 | `--schalter-hoch` | `26px` | 4 | … 26 hoch, damit er in eine |
@@ -841,34 +854,49 @@ Redesign zurückzunehmen.
 > braucht `input[type=checkbox].meine-klasse` — `.meine-klasse` allein
 > verliert, und das Kästchen bleibt 20 × 20 px groß und fängt Klicks ab.
 
-### Erklärtext: ein Satz je Karte, der Rest steht im Handbuch
+### Erklärtext: ein Satz je Karte, ohne Verweis — das „?" führt ins Handbuch
 
-*Seit Web 21.1.0 (P5c/AP9, E-P5c-06, -49, -128).* Wer eine Seite zum
-zehnten Mal öffnet, liest den Text darauf nicht mehr und muss trotzdem daran
-vorbei. Deshalb gilt unter **Verwaltung** und **Betrieb**:
+*Seit Web 21.1.0 (P5c/AP9, E-P5c-06, -49, -128); seit Web 24.2.0 ohne
+Verweis und für alle Bereiche (Konzept OF, OF-01, E-OF-02, -56).* Wer eine
+Seite zum zehnten Mal öffnet, liest den Text darauf nicht mehr und muss
+trotzdem daran vorbei. Deshalb gilt **auf jeder Seite**, auch im Bereich
+Einstellungen (E-P5c-06 ist damit aufgehoben):
 
 - **Je Karte höchstens ein Satz**, der sagt, was hier passiert — als
-  `<p class="feld-hinweis">`, dahinter der Verweis ins Handbuch
-  (`<a href="hilfe.php#…">`) auf die Stelle, an der das Erklärende steht.
-  Die Sprungmarke ist die, die `doku_marke()` aus der Überschrift bildet; die
-  Ankerprüfung im Tor hält jeden Verweis dagegen.
+  `<p class="feld-hinweis">`, **ohne** Verweis „Handbuch: …". Bis Web 24.1
+  stand dahinter ein Verweis auf die Stelle im Handbuch; 62 solcher Verweise
+  in 25 Dateien sind entfallen.
+- **Der Weg ins Handbuch ist das „?" der Kopfleiste**, und es öffnet das
+  **Kapitel der Seite**: Einstellungsseiten über `ui_hilfe_marke()` (eine
+  Marke je Menüpunkt), andere Seiten über `ui_geruest_start(['hilfe' =>
+  'hilfe.php#…'])`; ohne Marke das ganze Handbuch. Die Marken stehen als
+  ganzer Verweis im Quelltext, und der Riegel `anker` hält jedes Ziel.
 - **Der Seitenkopf** (`ui_titelzeile(['unter' => …])` oder
   `<p class="seiten-erklaerung">`) trägt höchstens einen Satz.
 - **Eine Kleinzeile bleibt eine Zeile** — unter einem Feld wie unter einer
   Zeile (`'klein'`): höchstens ein Satz.
-- **Warnungen bleiben Meldungen** (`ui_meldung()`), keine Absätze.
+- **Warnungen bleiben Meldungen** (`ui_meldung()`), keine Absätze. Wo der
+  eine Satz nicht reicht („Konto löschen": was mit den Daten geschieht, die
+  Frist), steht das Wesentliche als Meldung.
 - **Keine Karte „Was hier gilt"** mehr (bis Web 21.0.0 nach R74 (5) die
   zugeklappte Karte am Seitenende). Ihr Inhalt steht im Handbuch am Ende des
-  Kapitels, und jede Karte der Seite verweist auf ihre Stelle.
+  Kapitels.
 
 Ausgenommen sind, weil sie Zustand und keine Erklärung sind: der Satz eines
 **Leerzustands** („Zurzeit keine."), die **Befundzeilen** der Statusseite
 (`status_erhebung()`, `plattform_pruefen()`), Meldungen, Dialoge und
-Kopierwerte. Der Bereich **Einstellungen** folgt der Regel noch nicht
-(E-P5c-06). Die drei Seiten außerhalb von Verwaltung und Betrieb, die die
-Karte „Was hier gilt" noch trugen — Import / Export, das Einsatzformular und
-die Wiederherstellung —, haben sie seit Web 21.4.1 nicht mehr (R4-20,
-Nr. 287); ihr Text steht im Handbuch 4.3, 7 und 12.6.
+Kopierwerte. **Den Verweis behalten** die Druckblätter (Notfall-, Code-,
+Schlüsselblatt — auf Papier gibt es kein „?") und die öffentlichen Seiten
+ohne Kopfmenü (Wiederherstellung, Notzugang zum Zweitfaktor), auf denen er
+der einzige Weg ins Handbuch ist (E-OF-64). Die drei Seiten außerhalb von
+Verwaltung und Betrieb, die die Karte „Was hier gilt" noch trugen — Import /
+Export, das Einsatzformular und die Wiederherstellung —, haben sie seit Web
+21.4.1 nicht mehr (R4-20, Nr. 287); ihr Text steht im Handbuch 4.3, 7 und
+12.6.
+
+**Gemessen wird es seit Web 24.2.0 im Bilderlauf** (E-OF-49, Nr. 530): je
+`.karte` höchstens ein Satz in `.feld-hinweis` und `.seiten-erklaerung`
+außerhalb von Meldungen, Leerzuständen und Befundzeilen.
 
 **Gezählt wird so** (E-P5c-128): S = fester Kartentext in Sätzen, Sb_max =
 die meisten bedingten Sätze, die gleichzeitig sichtbar sind; Soll
@@ -1008,12 +1036,13 @@ zählt nur Breiten.
 | `@media (min-width:1200px)` | 5 |
 | `@media (hover: hover) and (pointer: fine) and (min-width:1024px)` | 1 |
 | `@media (min-width:1024px) and (max-height:949px)` | 1 |
-| `@media (min-width:1024px)` | 3 |
-| `@media (min-width:720px)` | 15 |
+| `@media (min-width:1024px)` | 4 |
+| `@media (min-width:720px)` | 18 |
 | `@media screen and (min-width:720px)` | 1 |
+| `@media (max-width:719px)` | 1 |
 | `@media (max-width:479px)` | 3 |
 
-Zusammen 31 Medienblöcke über 5 verschiedene Breiten: 479 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 36 Medienblöcke über 6 verschiedene Breiten: 479 px, 719 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -1095,67 +1124,73 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 
 | Datei | Herkunft (Tabler-Name) | Nennungen im Code |
 |---|---|--:|
-| `abmelden.svg` | Tabler Icons „logout" (MIT) | 2 |
+| `abmelden.svg` | Tabler Icons „logout" (MIT) | 1 |
 | `aktualisieren.svg` | Tabler Icons „refresh" (MIT) | 1 |
 | `balken.svg` | Tabler Icons „chart-bar" (MIT) | 4 |
 | `bergwacht.svg` | Tabler Icons „mountain" (MIT) | 32 |
-| `datenbank.svg` | Tabler Icons „database" (MIT) | 11 |
+| `datenbank.svg` | Tabler Icons „database" (MIT) | 10 |
 | `drucken.svg` | Tabler Icons „printer" (MIT) | 3 |
 | `einsatzort.svg` | Tabler Icons „map-pin-plus" (MIT) | 1 |
 | `fahrzeug.svg` | Tabler Icons „ambulance" (MIT) | 21 |
+| `filter.svg` | Tabler Icons „filter" (MIT) | 12 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 22 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 38 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 41 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
-| `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 3 |
-| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 37 |
+| `herunterladen.svg` | Tabler Icons „download" (MIT) | 7 |
+| `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 18 |
+| `hinweis.svg` | Tabler Icons „info-circle" (MIT) | 38 |
+| `hochladen.svg` | Tabler Icons „upload" (MIT) | 1 |
 | `hubschrauber.svg` | Tabler Icons „helicopter" (MIT) | 23 |
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
 | `karte-breit.svg` | Tabler Icons „arrows-horizontal" (MIT) | 1 |
 | `karte-gross.svg` | Tabler Icons „arrows-vertical" (MIT) | 1 |
-| `karte.svg` | Tabler Icons „map-2" (MIT) | 15 |
+| `karte.svg` | Tabler Icons „map-2" (MIT) | 14 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
-| `kolben.svg` | Tabler Icons „flask" (MIT) | 3 |
-| `korb.svg` | Tabler Icons „trash" (MIT) | 23 |
+| `kolben.svg` | Tabler Icons „flask" (MIT) | 2 |
+| `korb.svg` | Tabler Icons „trash" (MIT) | 22 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 13 |
 | `mail.svg` | Tabler Icons „mail" (MIT) | 15 |
 | `menu.svg` | Tabler Icons „menu-2" (MIT) | 1 |
+| `mond.svg` | Tabler Icons „moon" (MIT) | 1 |
 | `ohne-zuordnung.svg` | Tabler Icons „circle-dashed" (MIT) | 2 |
 | `ordner-plus.svg` | Tabler Icons „folder-plus" (MIT) | 1 |
 | `pfeil-hoch.svg` | Tabler Icons „arrow-up" (MIT) | 6 |
-| `plus.svg` | Tabler Icons „plus" (MIT) | 24 |
+| `plus.svg` | Tabler Icons „plus" (MIT) | 26 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
-| `profil.svg` | Tabler Icons „user" (MIT) | 17 |
-| `protokoll.svg` | Tabler Icons „list" (MIT) | 21 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 65 |
+| `profil.svg` | Tabler Icons „user" (MIT) | 18 |
+| `protokoll.svg` | Tabler Icons „list" (MIT) | 23 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 70 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
-| `schliessen.svg` | Tabler Icons „x" (MIT) | 15 |
+| `schliessen.svg` | Tabler Icons „x" (MIT) | 16 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
 | `server.svg` | Tabler Icons „server" (MIT) | 21 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 25 |
+| `sonne.svg` | Tabler Icons „sun" (MIT) | 2 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
 | `sortieren.svg` | Tabler Icons „arrows-sort" (MIT) | 4 |
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
 | `status.svg` | Tabler Icons „activity" (MIT) | 49 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
-| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 14 |
+| `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 16 |
 | `uhr.svg` | Tabler Icons „device-watch" (MIT) | 282 |
-| `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 3 |
+| `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 4 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 11 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
 | `warnung.svg` | Tabler Icons „alert-triangle" (MIT) | 30 |
 | `werkzeug.svg` | Tabler Icons „tool" (MIT) | 0 |
-| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 19 |
-| `zahnrad.svg` | Tabler Icons „settings" (MIT) | 2 |
-| `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 1 |
+| `wiederherstellen.svg` | Tabler Icons „restore" (MIT) | 4 |
+| `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 18 |
+| `zahnrad.svg` | Tabler Icons „settings" (MIT) | 3 |
+| `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 0 |
 | `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 34 |
 
-58 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
-**Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`.
+64 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
+**Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`, `ziel-fern`.
 
 ## 9. Bausteine
 
@@ -1204,7 +1239,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | einen Hinweis vor einem Feld | `<p class="feld-hinweis">` | dasselbe wie oben |
 | einen Zusatz **in** einer Beschriftung | `<span class="feld-klein-inline">` | Klammern im Beschriftungstext |
 | einen Satz oben auf der Seite | `ui_titelzeile(['unter' => …])` oder `<p class="seiten-erklaerung">` — **höchstens einen Satz** (Kapitel 6, Erklärtext) | zwei Absätze Vorrede |
-| erklären, **wie** etwas funktioniert | ein Absatz im Handbuch am Kapitelende, in der Karte ein Satz mit Verweis `hilfe.php#…` (Kapitel 6, Erklärtext) | eine Karte „Was hier gilt", mehrere Absätze in der Karte |
+| erklären, **wie** etwas funktioniert | ein Absatz im Handbuch am Kapitelende; in der Karte ein Satz **ohne** Verweis, das „?" der Kopfleiste öffnet das Kapitel (Kapitel 6, Erklärtext) | eine Karte „Was hier gilt", mehrere Absätze in der Karte, „Handbuch: …" |
 | einen Knopf am Ende eines Formulars | `ui_knopf()` in `<div class="listen-form-fuss">` | einen blanken `<button>` |
 | einen **Wert zum Abschreiben oder Kopieren** (Kennung, Schlüssel, Prüfsumme, Adresse) | `ui_codeblock_lang()` — beide Stufen und wann welche: 9.18 | ein `<code>` im Fließtext |
 | eine **Liste von Einmalcodes** zeigen oder einen **Code eintippen** lassen | `.codeblock-liste` im Codeblock, `ui_feld([… 'klasse' => 'feld-code'])`: 9.38 | eine Tabelle, ein Feld in Normalschrift |
@@ -1232,60 +1267,61 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_seite_start()` | — | Hüllenfunktion, kein eigenes Element | 53 |
 | `ui_seite_ende()` | — | Hüllenfunktion, kein eigenes Element | 181 |
 | `ui_favicon()` | — | Hüllenfunktion, kein eigenes Element | 248 |
-| `ui_symbol()` | `.symbol` | ja (+9 Unterklassen) | 309 |
-| `ui_logo_masse()` | `.logo-masse` | **keine** | 492 |
-| `ui_kopf()` | `.kopf` | ja (+25 Unterklassen) | 553 |
-| `ui_geruest_start()` | `.inhalt` | ja | 645 |
-| `ui_leiste_ende()` | `.leiste` | ja (+17 Unterklassen) | 715 |
-| `ui_geruest_ende()` | `.inhalt` | ja | 739 |
-| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 789 |
-| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1038 |
-| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1197 |
-| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1268 |
-| `ui_fuss_seite()` | `.fuss-seite` | ja | 1347 |
-| `ui_hinweise()` | `.hinweise` | ja | 1395 |
-| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1423 |
-| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1458 |
-| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1511 |
-| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1564 |
-| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1629 |
-| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1675 |
-| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1727 |
-| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1755 |
-| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1782 |
-| `ui_karte_start()` | `.karte` | ja (+37 Unterklassen) | 1822 |
-| `ui_karte_ende()` | `.karte` | ja (+37 Unterklassen) | 1906 |
-| `ui_nach_oben()` | `.nach-oben` | ja | 1941 |
-| `ui_sprungliste()` | `.sprungliste` | ja | 1983 |
-| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2031 |
-| `ui_zeile()` | `.zeile` | ja (+35 Unterklassen) | 2093 |
-| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2148 |
-| `ui_reiter()` | `.reiter` | ja (+9 Unterklassen) | 2196 |
-| `ui_listenkopf()` | `.listenkopf` | ja | 2240 |
-| `ui_listenfuss()` | `.listenfuss` | ja | 2312 |
-| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2370 |
-| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2416 |
-| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2450 |
-| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2522 |
-| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2546 |
-| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2588 |
-| `ui_feld()` | `.feld` | ja (+27 Unterklassen) | 2660 |
-| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 2725 |
-| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 2769 |
-| `ui_wahlliste()` | `.wahlliste` | ja | 2822 |
-| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 2866 |
-| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 2965 |
-| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3029 |
-| `ui_abbruch()` | `.rahmen` | ja (+1 Unterklassen) | 3070 |
-| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3162 |
-| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3200 |
-| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3230 |
-| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3242 |
-| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3385 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3464 |
+| `ui_symbol()` | `.symbol` | ja (+14 Unterklassen) | 309 |
+| `ui_logo_masse()` | `.logo-masse` | **keine** | 504 |
+| `ui_kopf()` | `.kopf` | ja (+30 Unterklassen) | 600 |
+| `ui_geruest_start()` | `.inhalt` | ja | 711 |
+| `ui_leiste_ende()` | `.leiste` | ja (+28 Unterklassen) | 810 |
+| `ui_geruest_ende()` | `.inhalt` | ja | 835 |
+| `ui_leiste_diensttage()` | `.leiste-liste` | ja | 889 |
+| `ui_zaehler()` | `.zaehler` | ja (+2 Unterklassen) | 1138 |
+| `ui_leiste_einstellungen()` | `.leiste-liste` | ja | 1298 |
+| `ui_einstellungen_uebersicht()` | `.uebersicht-raster` | ja | 1374 |
+| `ui_fuss_seite()` | `.fuss-seite` | ja | 1450 |
+| `ui_hinweise()` | `.hinweise` | ja | 1498 |
+| `ui_umgebung_hinweis()` | `.hinweis-umgebung` | ja | 1526 |
+| `ui_ankuendigung()` | `.meldung-ankuendigung` | ja | 1561 |
+| `ui_demo_hinweis()` | `.demo-hinweis` | ja | 1614 |
+| `ui_datenschutz_hinweis()` | `.datenschutz-hinweis` | **keine** | 1667 |
+| `ui_meldung_markup()` | `.meldung` | ja (+19 Unterklassen) | 1732 |
+| `ui_knopf()` | `.knopf` | ja (+19 Unterklassen) | 1778 |
+| `ui_codeblock_lang()` | `.codeblock-lang` | ja | 1830 |
+| `ui_plakette()` | `.plakette` | ja (+6 Unterklassen) | 1858 |
+| `ui_ladeplatz()` | `.ladeplatz` | ja (+3 Unterklassen) | 1885 |
+| `ui_karte_start()` | `.karte` | ja (+44 Unterklassen) | 1932 |
+| `ui_karte_ende()` | `.karte` | ja (+44 Unterklassen) | 2027 |
+| `ui_nach_oben()` | `.nach-oben` | ja | 2062 |
+| `ui_sprungliste()` | `.sprungliste` | ja | 2104 |
+| `ui_kartenfilter()` | `.kartenfilter` | ja (+4 Unterklassen) | 2152 |
+| `ui_zeile()` | `.zeile` | ja (+40 Unterklassen) | 2214 |
+| `ui_zeile_mehr()` | `.zeile-mehr` | ja | 2269 |
+| `ui_reiter()` | `.reiter` | ja (+18 Unterklassen) | 2326 |
+| `ui_listenkopf()` | `.listenkopf` | ja | 2430 |
+| `ui_listenfuss()` | `.listenfuss` | ja | 2542 |
+| `ui_zeitraumwahl()` | `.zeitraumwahl` | ja (+5 Unterklassen) | 2600 |
+| `ui_diagramm_skala()` | `.diagramm-skala` | **keine** | 2648 |
+| `ui_diagramm_saeulen()` | `.diagramm-saeulen` | ja | 2682 |
+| `ui_diagramm_balken()` | `.diagramm-balken` | ja | 2754 |
+| `ui_titelzeile()` | `.titelzeile` | ja (+7 Unterklassen) | 2778 |
+| `ui_aktionen()` | `.aktionen` | ja (+2 Unterklassen) | 2820 |
+| `ui_datum_eingabe()` | `.datum-eingabe` | **keine** | 2906 |
+| `ui_feld()` | `.feld` | ja (+31 Unterklassen) | 2929 |
+| `ui_schalter()` | `.schalter` | ja (+27 Unterklassen) | 3000 |
+| `ui_segment_markup()` | `.segment` | ja (+23 Unterklassen) | 3044 |
+| `ui_wahlliste()` | `.wahlliste` | ja | 3114 |
+| `ui_zeilenaktionen()` | `.zeile-aktionen` | ja | 3158 |
+| `ui_speichern_leiste()` | `.speichern` | ja (+4 Unterklassen) | 3257 |
+| `ui_kennzahl()` | `.kennzahl` | ja (+20 Unterklassen) | 3329 |
+| `ui_abbruch()` | `.rahmen` | ja (+3 Unterklassen) | 3370 |
+| `ui_csrf_bootstrap()` | `.csrf-bootstrap` | **keine** | 3462 |
+| `ui_geocoder_bootstrap()` | `.geocoder-bootstrap` | **keine** | 3500 |
+| `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3531 |
+| `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3560 |
+| `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3704 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3783 |
 
-54 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
-**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
+55 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
+**Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_datum_eingabe()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.
 
 ### 9.1 Karte — der Inhaltsblock
 
@@ -1305,19 +1341,27 @@ Zahl (gedämpft), genau **eine** Kopfaktion rechts.
 ```
 
 **Zustände:** offen (`<section>`) · klappbar (`<details class="karte
-karte-klappbar">` mit Winkel links und Vorschau rechts) · mit Plakette.
+karte-klappbar">` mit Winkel links, rechts **Stand** und **Plakette**) · mit
+Plakette.
 
-> **Die drei Zustände sind nicht frei kombinierbar, und der Unterschied fällt
-> still aus** (notiert 16.09.2026, P5a/AP8). Eine **klappbare** Karte zeigt
-> **weder `plakette` noch `aktion`**: `ui_karte_start()` kehrt im
-> `<details>`-Zweig zurück, bevor beides ausgegeben wird. Sie kennt dort nur
-> Winkel, Titel, `zahl` und `vorschau`. Wer `vorschau` setzt und eine Plakette
-> mitgibt, verliert die Plakette — ohne Fehlermeldung, und kein Bild zeigt es,
-> weil der zugeklappte Kartenkopf ohnehin anders aussieht.
->
-> **Wer beides braucht, nimmt eine offene Karte.** Was in die Plakette
-> gehörte, steht dann nicht zusätzlich in der Vorschau: Die Vorschau ist der
-> Ersatz für den Inhalt, nicht für den Zustand.
+**Die Klappkarte trägt Stand und Plakette** (seit Web 24.3.0, Konzept OF,
+OF-02, E-OF-42, Bilder OF-P24 bis -P27): `ui_karte_start(['zu' => true,
+'stand' => 'kein Streifen', 'plakette' => ui_plakette(…)])` gibt im
+`<summary>` Winkel, Titel, `zahl`, den Stand (`.karte-stand`, gedämpft,
+rechts) und die Plakette aus. Stand und Plakette stehen in einer Gruppe
+(`.karte-stand-gruppe`, seit Web 24.7.0): Bricht der Kopf am Handy um, gehen
+beide zusammen rechtsbündig in die zweite Zeile — vorher stand die Plakette
+dann allein links. **Eine Kopfaktion trägt sie weiterhin nicht** —
+im `<summary>` wäre sie ein Knopf im Knopf. Steht der Anker der Adresse auf
+der Karte oder in ihr, klappt `assets/klappkarte.js` (Gerüst) sie auf; nach
+dem Speichern einer Karte, die auf `#k-…` umleitet, steht sie damit offen
+mit ihrer Meldung.
+
+> **Bis Web 24.2 fiel die Plakette im `<details>`-Zweig still weg**
+> (notiert 16.09.2026, P5a/AP8): `ui_karte_start()` kehrte zurück, bevor sie
+> ausgegeben wurde, und der Stand hieß `vorschau` (`.karte-vorschau`). Wer
+> beides brauchte, nahm eine offene Karte. Das ist überholt; die Regel „die
+> Plakette sagt den Zustand, der Stand ersetzt den Inhalt" bleibt.
 
 **Eine zweite Kopfaktion gibt es nicht** (E-P3-25). Was mehr braucht, bekommt
 ein Aktionsmenü.
@@ -1382,6 +1426,18 @@ Plaketten, Aktionen rechts.
   <div class="zeile-aktionen">…</div>
 </div>
 ```
+
+**Plakette und Knopf stehen auf einer Linie** (seit Web 24.3.0, OF-P-08):
+`.zeile-plaketten` und `.zeile-aktionen` sind beide mittig ausgerichtet. Bis
+dahin rückte die Regel für die Plaketten am Fuß der Einsatzkarte
+(`.karte-inhalt .zeile-plaketten`, Abstand oben) jede Zeile in einer Karte
+um 12 px herunter; sie gilt jetzt nur dem direkten Kind.
+
+**Mehrere Plaketten oder Plakette und Knopf: `'klasse' => 'zeile-umbruch'`**
+(seit Web 24.7.0, OF-06). Die Plaketten stehen nebeneinander statt
+gestapelt, und unter 720 px steht der Satz über ihnen und dem Knopf — sonst
+quetschten sie ihn am Handy auf zwei, drei Wörter je Zeile. Verwender: die
+Jobs (Zeitpunkt, Auslöser, Rückstand) und die Backup-Ziele.
 
 **`vorn` ist nicht `aktionen`.** Was vorn steht, *wählt die Zeile aus*; was
 rechts steht, *handelt an ihr*. Zwei Verwendungen: die NutzerInnen-Liste
@@ -1602,6 +1658,15 @@ sind **kein Bedienelement** — wer eine anklickbar braucht, nimmt einen Knopf
 > verschlüsselte Angaben", das Schloss sagt „diese hier."** Bei einer
 > Schutzauskunft ist Redundanz kein Lärm.
 
+> **In der Einsatzansicht steht das Schloss vor dem Wort, in einer eigenen
+> Spalte** (seit Web 24.8.0, Konzept OF, E-OF-28, Bild OF-P34-links). Jede
+> Beschriftung rückt um die Spalte ein (`--symbol-klein` plus `--abstand-2`),
+> das Schloss (`.lese-schloss`) zieht sich mit negativem Rand hinein; ab 720 px
+> ist die Beschriftungsspalte `--lese-beschriftung` breit, und die Werte
+> beginnen in einer Flucht. Die Beschriftung steht senkrecht mittig neben
+> ihrem Wert. Im **Formular** bleibt das Schloss hinter dem Wort: Dort trägt
+> die Beschriftung den Fokus.
+
 ### 9.7 Feld, Schalter, Segment, Wahlliste
 
 Vier Eingabebausteine, und die Wahl zwischen ihnen ist keine Geschmacksfrage:
@@ -1610,7 +1675,7 @@ Vier Eingabebausteine, und die Wahl zwischen ihnen ist keine Geschmacksfrage:
 |---|---|
 | **`.feld`** | Beschriftung plus Eingabe. Die Beschriftung steht in **Normalschrift** — im Bestand waren Feldnamen gesperrte Versalien, das prägende Stilmittel und zugleich das, was auf 360 px am meisten Breite kostete (E-P3-21). |
 | **`.schalter`** | **eines** an oder aus. 44-px-Zeile, Beschriftung links, an in Orange. Abhängige Felder klappen darunter auf, eingerückt mit orangem Randstrich (E-P3-28). |
-| **`.segment`** | **eine aus wenigen** kurzen Möglichkeiten nebeneinander („Gemischt / Luft / Boden"). |
+| **`.segment`** | **eine aus wenigen** kurzen Möglichkeiten nebeneinander („Gemischt / Luft / Boden"). **Abwählbar** (`'abwaehlbar' => true`, seit Web 24.3.0, E-OF-33): Ein zweiter Klick oder die Leertaste auf das gewählte Feld nimmt die Wahl zurück; den Zustand „keines" trägt ein verborgenes Radio ohne Wert (`.segment-leer`), `assets/segment.js` macht das Abwählen. Ohne Skript bleibt das Formular gültig. |
 | **`.wahlliste`** | **eine aus mehreren** mit Erklärung daneben. 44-px-Zeilen untereinander, die gewählte hell orange (E-P3-20). **Schlichte Liste, keine umrandeten Einzelzeilen** (seit Web 12.3.3): Vier Zeilen mit eigenem Rahmen auf eigener Fläche sahen aus wie vier Karten und sind eine Wahl. Erkennbar ist die Auswahl am gezeichneten Punkt und an der Fläche der gewählten Zeile — dafür braucht keine Zeile eine Umrandung. |
 
 Alle vier sind aus **echten** `<input>` gebaut: Tastaturbedienung,
@@ -1620,10 +1685,27 @@ Skript.
 ```html
 <div class="feld">
   <label class="feld-label" for="f-x">Datum <span class="feld-klein-inline">optional</span></label>
-  <input class="feld-eingabe" type="date" id="f-x" name="x">
+  <input class="feld-eingabe feld-datum" type="text" inputmode="numeric" placeholder="TT.MM.JJJJ"
+         pattern="\d{1,2}\.\d{1,2}\.\d{4}" id="f-x" name="x">
   <p class="feld-klein">Hinweis unter dem Feld.</p>
 </div>
 ```
+
+**Das Datumsfeld ist ein Textfeld `TT.MM.JJJJ`** (seit Web 24.4.0, Konzept
+OF, OF-03, E-OF-06, -44, -54): `ui_feld(['art' => 'date'])` bzw.
+`ui_datum_eingabe()` — an allen acht Stellen, auch Geburtsdatum,
+Suchfilter, Export und Zeitraumwahl. Bis dahin `<input type="date">`, das je
+nach Browser „dd/mm/yyyy" zeigte, einen Kalender aufklappte und schmal das
+Jahr abschnitt. `assets/datumsfeld.js` setzt die Punkte beim Tippen wie
+`zeitfeld.js` die Doppelpunkte, füllt beim Verlassen auf („7.1.2026" →
+„07.01.2026"), macht aus einem eingefügten ISO-Datum die deutsche Form und
+markiert einen Tag, den es nicht gibt; `data-min` / `data-max` (ISO)
+grenzen ein. Breite `--feld-datum` (11 ch plus Innenabstand und Rand),
+Ziffern gleich breit. **Umgerechnet wird einmal:** `datum_de()`
+(`format_lib.php`) und `datum_de_lesen()` / `post_datum()` / `get_datum()`
+(`eingabe_lib.php`, Registerzeile Z50) auf dem Server, `EdFormat.tag()` /
+`EdFormat.datumLesen()` im Browser — das Geburtsdatum nur dort, weil es
+verschlüsselt wird. Beide Formen gelten beim Lesen.
 
 **Platzhalter tragen ausschließlich Phantasienamen** (E-S3-13). Ein
 Platzhalter ist ein Beispiel, kein Vorschlag: Steht dort der Name der echten
@@ -1709,13 +1791,29 @@ Hängt an `data-dirty-track` (`assets/forms.js`).
 **Kein „Verwerfen".** Der Rückweg oben genügt, und ein Verwerfen-Knopf neben
 einem Speichern-Knopf ist die Stelle, an der man sich vergreift (E-P3-29).
 
-**Sie hat die Form der Karte** (E-R43-1, seit Web 12.2.3): derselbe Radius,
-dieselbe Breite. Bis dahin brach sie mit einem negativen Rand seitlich aus dem
-Inhalt aus und lief ohne Radius von Rand zu Rand — sie wirkte dadurch eckig
-und breiter als die Karte darüber, obwohl sie zu ihr gehört. **Was bleibt, ist
-alles, was die Funktion trägt:** der klebende Sitz, die Trennlinie nach oben
-und der Schatten. Die Leiste soll auffallen, weil sie folgt, nicht weil sie
-anders geschnitten ist.
+**Sie ist eine Fläche, keine Karte** (seit Web 24.2.0, Konzept OF, OF-01,
+E-OF-32, -41, Bild OF-P07): `--auswahl-flaeche` (schaltet im Dunkelmodus
+mit), ohne Linie, Bogen und Schatten. Steht sie direkt im Inhalt oder in
+dessen Formular, nimmt sie dessen Innenabstand seitlich und unten zurück und
+ist damit **der untere Rand der Rahmenkarte**, bündig von der Leiste bis zum
+Kartenrand. Links steht fett in der Auswahlschrift, **was** geändert ist
+(„Geändert: Logo und Darstellung" — die Titel der Abschnitte mit Änderung,
+`forms.js`); „Geändert" ist die Vorgabe jeder Formularleiste
+(`hinweis_vorlage`), nur die Sammelleiste zählt stattdessen ihre Auswahl.
+*Bis Web 24.1 hatte sie die Form der Karte* (E-R43-1, seit Web 12.2.3:
+Radius, Linie oben, Schatten), weil sie zwischen Karten stand; seit die
+Karten der Einstellungen Abschnitte sind, gehört sie zu keinem.
+
+**Sie kann außerhalb ihres Formulars stehen** (seit Web 24.5.0): Am Boden der
+Rahmenkarte sitzt sie als letztes Kind des Inhalts, auch wenn das Formular
+weiter oben endet (Profil). Dann trägt sie `data-fuer="<Formular-id>"`, ihr
+Knopf `form=` (`ui_speichern_leiste(['form' => …])`), und `forms.js` findet
+sie dort.
+
+**Die Regel dazu gilt für jede Seite** (Kapitel 6, gemessen im Bilderlauf):
+Speichert ein Knopf **einen** Abschnitt, steht er als letztes Element darin;
+speichert er **mehrere**, erscheint diese Leiste. Ein Knopf zwischen zwei
+Abschnitten gehört optisch zum falschen.
 
 **Der Knopf steht rechts, die Zählung links daneben.** Im Markup steht der
 Hinweis zuerst — das ist zugleich die Vorlesereihenfolge („12 ausgewählt",
@@ -1949,8 +2047,16 @@ Mindestlänge.
 > eingetippten Buchstaben dorthin. Stehen bereits Koordinaten, ruht die Suche
 > ganz — die Formaterkennung läuft lokal und hat Vorrang.
 
-**Die Kleinzeile darunter nennt den Dienst — einmal je Seite** (Web 15.8.0,
-`ui_geocoder_hinweis()`, `.loc-datenschutz`). Nicht je Feld: Auf der
+**Ein Zeichen neben der Lupe nennt den Dienst — einmal je Seite** (seit Web
+24.4.0, Konzept OF, E-OF-07; bis dahin die Kleinzeile darunter, Web 15.8.0,
+`ui_geocoder_hinweis()`, `.loc-datenschutz`). Das Zeichen `hinweis` ist ein
+Knopf; sein Satz liegt als Meldung `info` in einem Tooltip unter der
+Feldzeile (`.ortsfeld-hinweis-text`, `role="tooltip"`, über
+`aria-describedby` am Knopf, also auch ohne Öffnen vorgelesen) und erscheint
+beim Darüberfahren, beim Fokus und beim Antippen; Esc und Verlassen
+schließen ihn (`assets/ortsfeld.js`). Die Breite ist die der Feldzeile — am
+Zeichen ausgerichtet ragte er über die Leiste. Einmal je Seite und nicht je
+Feld aus demselben Grund wie zuvor: Nicht je Feld: Auf der
 Standortseite steht ein Ortsfeld je Standort **und** je Zielklinik, das wären
 zehn gleiche Sätze und mehr. Zehnmal derselbe Datenschutzhinweis ist keine
 Auskunft mehr, sondern Tapete. Sie steht am **ersten** Ortsfeld der Seite und
@@ -2040,6 +2146,13 @@ freigegeben am 31.08.2026.* Gebaut wird er in `assets/schneiden.js`, nicht in
 `ui.php`: Die Segmentliste entsteht im Browser aus `api/day.php`, es gibt
 keine PHP-Seite, die ihn ausgeben könnte. In der erzeugten Bausteintabelle
 (Kapitel 9, Anfang) steht er deshalb nicht — sie liest `ui.php`.
+
+**Die Karte um ihn herum steht seit Web 24.8.0 auf Abruf** (Konzept OF,
+E-OF-05): Bis dahin stand „Ruhesegmente“ an jedem Tag mit Aufzeichnung unter
+der Einsatzliste. Jetzt öffnet sie der Eintrag „Einsatz aus GPS-Daten
+ausschneiden“ im Aktionsmenü des Diensttags (bei genau einem Segment gleich
+mit aufgeklapptem Bereich), die Adresse `#ruheliste` und jede Rückmeldung,
+die `schneiden.js` in sie schreibt.
 
 ```
 .schnitt-bereich      der aufklappbare Block unter einer Segmentzeile
@@ -2175,8 +2288,20 @@ der aufklappt, den Rest der Seite verschiebt.
 gerenderte Liste im Browser ausdünnt, ist der Kartenfilter — 9.32.
 
 `.listenkopf` ist eine **Spalte, in jeder Breite**: oben `.listensuche` (mit
-der Höchstbreite `--listensuche-breit`, 36 rem), darunter `.filterreihe` mit
+der Höchstbreite `--feld-breit`, 36 rem), darunter `.filterreihe` mit
 `flex-wrap`.
+
+**Mit Filterknopf** (seit Web 24.4.0, Konzept OF, OF-03, E-OF-18, Bild
+OF-P22-B): Hat die Liste Filter, steht rechts neben dem Suchfeld der Knopf
+„Filter" (`.filterknopf`, Zeichen `filter`, so hoch wie das Suchfeld, Rand
+`--linie-stark`, fett) mit der Zahl der **gesetzten** Filter als Plakette;
+das Suchfeld füllt dann die Zeile. Er klappt die `.filterreihe` auf und zu
+(`aria-expanded`, `assets/listenkopf.js`); ohne Skript ist er verborgen und
+die Reihe offen. Gesetzt ist ein aktiver Filter, der nicht die Vorgabe ist
+(`vorgabe`), und eine Auswahl mit Wert; sie stehen unter der Suche als
+Pillen mit Kreuz (`.filtergesetzt`, Verweis `weg`), daneben die Trefferzahl
+(`treffer`, „4 von 12"). Verwender: Protokoll und NutzerInnen; die Suche hat
+ihre eigene Filterleiste.
 
 **Bis Web 15.4.0 rückten beide ab 1024 px nebeneinander**, das Suchfeld auf
 `flex:0 1 26rem`. Gemessen an der NutzerInnen-Liste mit fünf Filtern (zusammen
@@ -2219,7 +2344,7 @@ hält die Klassen außerhalb von `ui.php` auf **null**.
 freigegeben mit Q-R4-16). Betrieb → Statistik wählt ihren Zeitraum in einer
 Reihe zwischen Kennzahlen und Reitern: links die festen Fenster als
 **Pillen der Filterreihe** (9.18a), rechts zwei **Datumsfelder**
-(`.feld-eingabe type=date`, Beschriftung klein und gedämpft daneben statt
+(seit Web 24.4.0 das Datumsfeld `TT.MM.JJJJ` aus 9.7 — bis dahin `.feld-eingabe type=date`; abgeschickt wird erst, wenn beide einen gültigen Tag tragen —, Beschriftung klein und gedämpft daneben statt
 darüber) und ein **neutraler Knopf** „Anwenden". Ein eigener Zeitraum steht
 als **aktive Pille mit Kreuz** hinter dem Knopf; ihr Verweis nimmt ihn weg.
 Die Reihe bricht am Ende, wie die Filterreihe.
@@ -2405,6 +2530,18 @@ Drei Bausteine, die nur hier vorkommen und zusammengehören (S8/AP5, E-S8-04,
 E-S8-07, E-S8-15). Alle drei entstehen in `ui_leiste_einstellungen()` und
 `assets/menue.js`.
 
+**Am Schreibtisch zeigt die Leiste nur den aktiven Block** (seit Web 24.1.0,
+Konzept OF, NV-03, E-NV-02): `ui_leiste_einstellungen()` rendert alle
+Blöcke und zeichnet den aktiven mit `.leiste-gruppe-aktiv` aus (auf der
+Übersicht „Einstellungen"); ab 1024 px blendet das Stylesheet die übrigen
+aus und dem aktiven die Kopfzeile, Linie und Luft davor. Die Bereiche stehen
+in der Bereichszeile (9.37). **Unter 1024 px, in der Schublade, gilt alles
+Folgende unverändert** — drei Blöcke als Akkordeon, `menue.js` merkt den
+Klappzustand; den aktiven Block lässt es offen. Der aktive Eintrag trägt in
+jeder Leiste **nur die Auswahlfläche, keinen Strich** (E-OF-16, Bild
+OF-P04-A; bis Web 24.0 dazu ein Strich `--auswahl-linie` links), ebenso die
+markierte Jahres- oder Monatszeile der Diensttage-Leiste.
+
 **Der Block ist ein Akkordeon.** `<details class="akkordeon leiste-gruppe">`
 mit `<summary class="akkordeon-zeile">` — derselbe Baustein wie in der
 Diensttage-Leiste. **Seit Web 21.1.0 nach Option 1 „Linie"** (P5c/AP9,
@@ -2440,7 +2577,9 @@ bewerten.
 
 **Die Unterpunkte** (`.eintrag-unterliste` mit `.eintrag-unter`, Marke der
 obersten sichtbaren Karte `.hier`) stehen unter dem aktiven Eintrag: die
-Kartentitel der Seite als Sprungmarken, `--unterpunkt` (28 px) hoch, eine
+Kartentitel der Seite als Sprungmarken — **nur sichtbarer Karten** (seit Web
+24.1.0, OF-P-16: eine Karte in einem `[hidden]`-Behälter bekommt keine, und
+blendet die Seite eine ein oder aus, baut `menue.js` die Marken neu), `--unterpunkt` (28 px) hoch, eine
 Schriftstufe kleiner, ohne Symbol und ohne Randstrich. Sie sind **keine**
 Menüpunkte zweiter Ordnung; wer sie dafür hält, sucht dahinter eine eigene
 Seite. Die Markierung ist **fett, nicht farbig**: Die Auswahlfläche heißt in
@@ -2505,7 +2644,12 @@ gleicher Spezifität; die zwei `.form-spalte` bleiben.
 
 `.karten-raster` nimmt die Karten **direkt** als Kinder und lässt sie
 fließen; `break-inside:avoid` hält jede zusammen. Eine Karte, die dazukommt,
-braucht keine Zuordnung — dafür lässt sich keine erzwingen.
+braucht keine Zuordnung — dafür lässt sich keine erzwingen. **Seit Web 24.9.1
+ist jede Karte darin ein `inline-block` mit voller Spaltenbreite:** WebKit
+setzte eine Klappkarte (`<details>`) im Mehrspaltensatz am Zeigergerät
+falsch und stellte alle Karten in die linke Spalte (Konzept OF, OF-09,
+gefunden von der Seitenregel „rechte Kante"); ein unteilbarer Block wird in
+jeder Engine gleich gesetzt.
 
 **Wann zwei Spalten?** Nicht nach Anzahl, sondern nach Höhe. Gemessen an
 Betrieb → Updates: vier Karten, einspaltig 1206 px, zweispaltig 977 px. Ab
@@ -2621,7 +2765,7 @@ Handlung.
 | `.vorschlaege` | schwebt (`position:absolute`, **`z-index:35`**); der Behälter trägt `position:relative` |
 | `.vorschlaege-gruppe` | Herkunftszeile auf Rauch, `--groesse-2`, versal — keine Bedienhöhe, sie ist nicht anzufassen |
 | `.vorschlag` | `min-height: var(--knopf)` — folgt beiden Bedienhöhen von selbst (44/36, R76) |
-| `.vorschlag.aktiv`, `:hover` | Rauch mit `--abstand-1` in `--auswahl-linie` (Dunkelblau) links — **eine** Markierung für Zeiger und Pfeiltaste. Bis Web 21.1.5 stand dort `--orange` (2,09:1 auf Rauch), bis Schritt 26 Orange tief (4,04:1); der Strich steht allein und braucht 3:1 |
+| `.vorschlag.aktiv`, `:hover` | `--auswahl-flaeche` (Blau 100), **ohne Strich** — **eine** Markierung für Zeiger und Pfeiltaste (seit Web 24.1.0, E-OF-16). Bis dahin Rauch mit einem Strich `--abstand-1` links: bis Web 21.1.5 in `--orange` (2,09:1 auf Rauch), bis Schritt 26 in Orange tief (4,04:1), danach in `--auswahl-linie`; der Strich trug die Markierung allein, weil Rauch sich von der Karte kaum abhebt |
 | `.vorschlag-haupt` | eine Zeile, mit Ellipse; der getippte Teil in `<b>` |
 | `.vorschlag-neben` | die Herkunft, gedämpft, `--groesse-2` |
 | `.vorschlag-neu` | die freie Eingabe: `--text-link` (bis Schritt 26 Orange tief), Kopfschrift — sie ist eine Handlung, kein Datensatz |
@@ -2794,6 +2938,18 @@ Betroffen: `--geo-schild` / `SCHILD_PX`, `--geo-kreis` / `KREIS_PX`,
 Herkunft. 14 px und 18 px stehen auf keiner Skala des Projekts, und die Skala
 ist geschlossen; eine begründete Ableitung ist der Weg, den Kapitel 6 dafür
 vorsieht.
+
+**Die Bedienelemente der Karte** (seit Web 24.8.0, Konzept OF, OF-07,
+E-OF-29, Bilder OF-P36): Zoom, Vollbild, Kartengröße, Phasenumschalter und
+Ebenenwahl tragen die Bedienhöhe `--knopf` (44 px, am Zeigergerät 36 px),
+die Kartenfläche `--flaeche-karte`, die Linie `--linie-stark`, den Radius
+eines Knopfes und keinen Schatten. Die Ebenenwahl zeigt das Zeichen `karte`
+statt des Leaflet-Bildes und offen die Überschrift „Kartenart“, Zeilen in
+Bedienhöhe, gewählt in Dunkelblau; die Namen nennen keinen Anbieter, der steht
+im Attributionsband (E-OF-13). Die Regeln stehen in `style.css` mit einer
+Klasse mehr als Leaflets eigene (`.leaflet-control`), weil `leaflet.css` auf
+der Spurenseite nach `style.css` lädt; die Bibliothek bleibt unberührt. Der
+Phasenumschalter ist Text und behält seine Breite.
 
 ### 9.31 Sprungliste (`.sprungliste` / `.sprungziel`)
 
@@ -3115,6 +3271,13 @@ Sicherung, Ziele, System, dazu Archiv; hier stand bis Web 21.1.0 ein Reiter
 Parameter steht in der Adresse, und ohne Skript funktioniert alles. **Drei
 Verwender:** Protokoll (AP2, hier entstanden), Statistik (AP7), Rechtstexte
 (AP9, seit Web 21.1.0 — der einzige, dessen Reiter ein Formular schützen).
+**Seit Web 23.12.0 dazu die Bereichszeile** der Einstellungen
+(`ui_bereichszeile()`, Konzept OF, NV-01): derselbe Baustein in einer
+zweiten **Lage** (`klasse` → `.reiter-bereiche`), nicht in einer zweiten
+Form (E-OF-17, -40). Sie steht in voller Fensterbreite zwischen Kopfleiste
+und Rahmen, die Reiter auf dem Raster der Kopfleiste, klebt ab 1024 px
+unter der Kopfleiste, und jeder Reiter trägt leise die Zahl seiner Punkte
+(`zahl` → `.bereich-zahl`) und den summierten Zähler (`zaehler`, 9.23).
 
 ```php
 ui_reiter(['label' => 'Bereiche des Protokolls', 'punkte' => [
@@ -3127,8 +3290,10 @@ ui_reiter(['label' => 'Bereiche des Protokolls', 'punkte' => [
 | Teil | Darstellung |
 |---|---|
 | `.reiter` | Reihe mit Grundlinie `--strich` in `--linie`, `--abstand-4` darunter |
-| `.reiter-punkt` | Kopfschrift 500, `--gedaempft`, `min-height: var(--knopf)` (44/36 px), nie umbrechend |
-| `.reiter-punkt.aktiv` | `--text-titel`, Unterstrich `--strich-stark` in `--auswahl-linie` (Dunkelblau), `aria-current="page"` |
+| `.reiter-punkt` | Kopfschrift **700**, `--gedaempft`, `min-height: var(--bereiche)` (**48 px in jeder Breite**, E-NV-04), Fläche `--flaeche-abgesetzt` beim Darüberfahren, nie umbrechend — bis Web 23.11 500 und `--knopf` |
+| `.reiter-punkt.aktiv` | `--text-titel`, Unterstrich `--strich-reiter` (3 px, bis Web 23.11 `--strich-stark`) in `--auswahl-linie` (Dunkelblau), `aria-current="page"` |
+| `.reiter-bereiche` | Lage der Bereichszeile: volle Breite, Fläche Karte, Linie unten am Rahmen statt an der Reihe; ab 1024 px `sticky` unter `--kopf` |
+| `.bereich-zahl` | Zahl der Punkte hinter dem Namen, `--gedaempft`, 400 |
 | `.reiter-abgesetzt` | am rechten Rand (`margin-left:auto`) — die Ablage („Archiv"), kein Ereignisreiter |
 | `.reiter-rahmen` | Behälter für den Verlauf am Rand; `.rollt` / `.rollt-links` setzt `assets/reiter.js` |
 
@@ -3383,6 +3548,31 @@ Mockup M-S11-02, Variante 1) — Ring und „Wird verdichtet: 17 von 42", darunt
 der Balken; am Ende die Meldung. Export und GPX-Archiv zeigen bis auf Weiteres
 nur die Textzeile.
 
+### 9.42 Wahlkarten (`.wahlkarten`, `.wahlkarte`, seit Web 24.5.0)
+
+*Freigegeben mit dem Mockup OF-P17-C (Konzept OF, E-OF-26).*
+
+**Zweck:** Eine Seite mit zwei Wegen — „Liste übernehmen" und „Liste
+ausgeben" — zeigt erst die Wahl und dann nur das Formular, das dazu gehört.
+Zwei Radios in Kartenform nebeneinander (ab 720 px), zusammen so breit wie
+ein Feld (`--feld-breit`); je Karte Zeichen und Titel, darunter **ein** Satz.
+Gewählt: Auswahlfläche mit dunkelblauem Rand, wie die gewählte Wahlliste
+(9.7). Das Radio ist verborgen wie in der Segmentwahl; der Fokusring steht
+an der Karte. Die Teile der Seite tragen `data-wahl-zu="<name>"
+data-wahl="<wert>"`; `assets/wahlkarten.js` blendet die nicht gewählten aus,
+und die Sprungmarken folgen (9.25). Ohne Skript stehen alle Teile da; ein
+Anker in einem Teil wählt dessen Karte. **Warum nicht die Segmentwahl:**
+Sie trägt kurze Wörter; hier gehört zu jeder Wahl ein Satz, der sagt, was
+sie tut. Verwender: Import / Export.
+
+**Der Koppel-Dialog** (Geräte, seit Web 24.5.0, E-OF-25, Bild OF-P11-B2) ist
+kein Baustein, sondern ein Formulardialog (9.11) mit einer nummerierten
+Schrittliste `.koppel-schritte` (App installieren, Kopplung starten, Code
+eingeben). **Die Zweitfaktor-Karte** im Profil (E-OF-19, Bild OF-P09-B) ist
+die aufklappbare Zeile `.zeile-mehr` (9.2): Ihr `<summary>` ist eine Zeile
+mit dem einen Satz und einem Knopfbild „Verwalten", aufgeklappt stehen die
+Zeilen mit je einer Handlung.
+
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
 ### 10.1 Sechs Typen
@@ -3406,8 +3596,28 @@ der Karte — bei 390 px war die Karte dadurch rund 200 px breit.
 `<aside class="leiste">` als Schublade über dem Inhalt, darüber steht sie fest
 daneben; der Unterschied ist ausschließlich CSS.
 
+**Leiste und Inhalt liegen in einer Rahmenkarte** (seit Web 24.0.0,
+Konzept OF, NV-02, E-NV-01): Inhalts-, Einstellungs- und Suchseite öffnen
+in `ui_geruest_start()` eine `.rahmenkarte` (Rand, großer Bogen, Fläche
+Karte, `overflow: clip` — `hidden` bräche das Kleben der Leiste) und darin
+eine `.leiste-spalte`, die Fläche und Linie bis zum Kartenboden trägt. Die
+Leiste klebt darin, ist höchstens so hoch wie das Fenster unter den Leisten
+und höchstens so hoch wie die Karte: Auf einer kurzen Seite steht ihr Fuß
+am Kartenboden, auf einer langen am Fensterboden (E-OF-37). **Im Bereich
+Einstellungen sind die Karten darin Abschnitte** (`.rahmenkarte-abschnitte`,
+E-NV-03): ohne Rand, Bogen und Fläche, mit einer Linie darüber und ohne
+Einzug — reines CSS, `ui_karte_start()` bleibt. Auf Startseite und Suche
+bleiben Karten Karten (E-OF-36, -38). Unter 1024 px haben Karte und Spalte
+keine eigene Box (`display: contents`). Seiten ohne Leiste tragen keine
+Rahmenkarte.
+
 **Jede Seite hat eine Fußzeile** — auch vor der Anmeldung, mit Lizenz,
-Versionsnummer und den Verweisen auf Impressum und Datenschutz. Die einzige
+Versionsnummer und den Verweisen auf Impressum und Datenschutz. **Seit Web
+24.0.0 ist sie ein dunkelblauer Streifen** über die ganze Fensterbreite,
+Schrift und Verweise `--auf-dunkel`, die Version `--auf-dunkel-leise`, im
+Dunkelmodus mit derselben Kante wie die Kopfleiste (E-OF-34); bis dahin
+war sie hell mit einer Linie darüber, und nur die Anmeldung trug die
+dunkle Fassung (`.fuss-dunkel`, die Klasse wirkt nicht mehr). Die einzige
 Ausnahme ist der Einrichter: Er läuft, bevor es eine Datenbank gibt, und die
 beiden Rechtstextseiten brauchen eine.
 
@@ -3488,8 +3698,9 @@ beiden Rechtstextseiten brauchen eine.
    `<h1>`; der Rückweg gehört dazu.
 4. `ui_meldung($hinweis, $fehler)` direkt darunter.
 5. `<p class="seiten-erklaerung">` (oder `'unter'` der Titelzeile) —
-   höchstens **ein Satz**; alles Erklärende steht im Handbuch, und die Karte
-   verweist darauf (Kapitel 6, Erklärtext). Wer die Seite zum zehnten Mal
+   höchstens **ein Satz**; alles Erklärende steht im Handbuch, und das „?"
+   der Kopfleiste führt dorthin (Kapitel 6, Erklärtext; die Marke gibt
+   `ui_geruest_start(['hilfe' => …])` oder der Menüpunkt). Wer die Seite zum zehnten Mal
    öffnet, liest sie nicht mehr und muss trotzdem daran vorbei.
 6. Inhalt in `ui_karte_start()` … `ui_karte_ende()`; Listen als `ui_zeile()`
    mit `ui_zeilenaktionen()`; Formulare aus `ui_feld()` und Geschwistern.
@@ -3584,6 +3795,15 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 24.9.1 (Schritt 27, Konzept OF, OF-09)** | **9.26:** `.karten-raster` setzt seine Karten als `inline-block` — WebKit verteilte eine Klappkarte im Mehrspaltensatz falsch. Kein neuer Baustein, kein Token. |
+| **Web 24.9.0 (Schritt 27, Konzept OF, OF-08)** | **3a:** Mond und Sonne in der Kopfleiste bei „Umschalter“ und „Folgt System“ (E-OF-09); vier Einstellungen im Profil. Kein neuer Baustein, kein Token, kein Kontrastpaar. |
+| **Web 24.8.0 (Schritt 27, Konzept OF, OF-07)** | **9.30:** Bedienelemente der Karte im Branding, Ebenenwahl mit Zeichen `karte` und Überschrift „Kartenart“, Namen ohne Anbieter (E-OF-13, -29). **9.6:** Schloss der Einsatzansicht in eigener Spalte vor dem Wort (E-OF-28). **9.7:** Transportart als abwählbare Segmentwahl aus dem Feldkatalog (E-OF-33). **9.17:** Die Karte „Ruhesegmente“ steht auf Abruf (E-OF-05). **4:** neues Maß `--lese-beschriftung` (14 rem, aus E-OF-28). Kein neuer Baustein. |
+| **Web 24.7.0 (Schritt 27, Konzept OF, OF-06)** | **9.1:** Stand und Plakette der Klappkarte als eine Gruppe (`.karte-stand-gruppe`). **9.2:** `zeile-umbruch` für Zeilen mit mehreren Plaketten oder Plakette und Knopf. Statusseite „Probleme zuerst", Servereinstellungen, Hintergrundjobs und Komplett-Backup aus vorhandenen Bausteinen (Klappkarte, Zeile, Segmentwahl, `haupt`); kein neuer Baustein, kein Token. |
+| **Web 24.5.0 (Schritt 27, Konzept OF, OF-04)** | **9.42 neu — Wahlkarten**, freigegeben mit OF-P17-C; dort auch Koppel-Dialog und Zweitfaktor-Karte als Verwendungen vorhandener Bausteine. **9.9:** Speicherleiste außerhalb des Formulars (`data-fuer`). **6:** Feldraster `.listen-form-felder` in den Einstellungen auf `--feld-breit` begrenzt. |
+| **Web 24.4.0 (Schritt 27, Konzept OF, OF-03)** | **9.7:** Datumsfeld `TT.MM.JJJJ` (`ui_datum_eingabe()`, `.feld-datum`, `--feld-datum`) an allen acht Stellen. **9.13:** Zeichen statt Kleinzeile am Ortsfeld, der Satz als Tooltip. **9.18a:** Filterknopf mit gesetzten Filtern als Pillen. Neues abgeleitetes Maß `--feld-datum`; kein neuer Baustein — alle drei mit den Mockups freigegeben. |
+| **Web 24.2.0–24.3.0 (Schritt 27, Konzept OF, OF-01 und OF-02)** | **6:** Erklärtext ohne Verweis, das „?" öffnet das Kapitel; drei Seitenregeln im Bilderlauf. **9.9** Speicherleiste als Auswahlfläche am Rand. **4:** `--feld-breit` statt `--listensuche-breit`. **9.1:** Klappkarte mit Stand und Plakette (`stand` statt `vorschau`). **9.2:** Plakette und Knopf auf einer Linie. **9.7:** Segmentwahl abwählbar. **8:** sechs Zeichen (`filter`, `wiederherstellen`, `herunterladen`, `hochladen`, `mond`, `sonne`), freigegeben mit den Mockups. Kein neuer Baustein. |
+| **Web 24.1.0 (Schritt 27, Konzept OF, NV-03)** | **9.25:** Am Schreibtisch nur der aktive Block (`.leiste-gruppe-aktiv`), Schublade unverändert; aktiver Eintrag, markierte Zeitraumzeile und Vorschlag **ohne Strich**, der Vorschlag auf Blau 100 statt Rauch (E-OF-16); Sprungmarken nur zu sichtbaren Karten. **3.4:** zwei Paare neu beschrieben (der Strich, den sie nannten, ist fort; die Paare tragen andere Stellen). **10.1:** „Abmelden" nur in der Leiste (E-OF-27). Kein neuer Baustein, kein Token. |
+| **Web 23.12.0–24.0.0 (Schritt 27, Konzept OF, NV-01 und NV-02)** | **9.37:** Bereichszeile als zweite Lage des Reiter-Bausteins, Reiter 700 / 48 px (`--bereiche`) / Unterstrich 3 px (`--strich-reiter`) für beide Ebenen (E-OF-17, -40). **10.1:** Rahmenkarte um Leiste und Inhalt, Abschnitte statt Karten im Bereich Einstellungen (E-NV-01, -03, E-OF-36 bis -38); Fußzeile dunkelblau (E-OF-34). Neue Token `--bereiche` und das abgeleitete `--strich-reiter`; kein neuer Baustein — Bereichszeile und Rahmenkarte sind mit den Mockups NV und OF freigegeben (Konzept OF). |
 | **Web 23.10.1–23.11.2 (Schritt 26, Konzept MA, zweite Runde)** | **Repo auf `e7bf4fc`** (Token hell und dunkel). **9.4:** Knopfart **`haupt`** (Philipp-Orange mit Asphalt, einmal je Seite, sechs Seiten, E-MA-27), `gefahr` als **Umriss** (E-MA-26), Tabelle der Arten nach dem Repo. **2.3:** in der Kopfleiste wieder der **Kurzname** (E-MA-28); Favicons aus dem Set des Repos (E-MA-35). **3.1:** Zeile Hauptaktion. **3a:** Gefahrknopf und Zähler getrennt. **6:** Links im Fließtext unterstrichen, Barrierefreiheit wird gemessen (E-MA-32, -33). Kein neuer Baustein; `haupt` ist die Form des Primärknopfs mit den Repo-Token (Board 9D). |
 | **Web 23.9.0–23.10.0 (Schritt 26, Konzept MA)** | **Die Marke kommt aus dem Branding-Repo** `gen-em/gen-em-branding`. **2** neu geschrieben: Grundtöne mit Repo-Token, Schriften 500/400/700 (die 600er entfallen, E-MA-15), **Produktmarke NAdoku** statt `gen-em_logo_*` (2.3), der Platzhalter-Abschnitt fällt, Backlog Nr. 62 erledigt (2.4). **3** neu: Aktion Dunkelblau statt Orange (E-MA-01), Auswahl blau 100, **Grün** für „in Ordnung" (E-MA-02), Status je Fläche 100 / Schrift 700 / Linie 600, Kontrasttabelle nach **Rollen** und in **zwei Modi** (58 Paare je Modus, 0 verfehlt). **3a neu — Dark Mode** (E-MA-03, -13, -14), freigegeben mit den Boards MA-03, -04, -07, -08. **5:** `--groesse-1` (12 px) entfällt (E-MA-07). **9.5** `ok` grün, **9.6** fünf Töne mit `gruen` (E-MA-08), **9.23** grün statt blau, 9.10, 9.36, 9.37, 9.40 und die Vorschlagsliste mit den neuen Rollen. **Neue Token** (Rollen statt Farbwerten, Kapitel 4 neu erzeugt); **kein neuer Baustein** — der Schalter „Darstellung" ist eine Wahlliste (9.7). |
 | **Web 23.6.0 (R17-29)** | **8, Einbindung:** Die Zeichen stehen einmal je Seite als Vorrat (`ui_symbolvorrat()`, ein `<svg display="none">` ohne Regel im Stylesheet), die Verweise zeigen dorthin; ohne Vorrat wie zuvor auf die Datei. Kein neues Zeichen, kein sichtbarer Unterschied (fünf Seiten in drei Engines pixelweise verglichen). **9.41:** Ladeplatz auch in Suche und Zeitraum; gesteuert über `EdHtml.ladeplatz()` statt `EdOrtsdaten.ladeplatz()`. Kein neuer Baustein: `ui_symbolvorrat()` gibt ein unsichtbares Element ohne Gestaltung aus und steht im Erzeuger als Handwerkszeug. |

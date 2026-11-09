@@ -48,10 +48,10 @@ export const wege = [
       await k.gehZu(SEITE(k));
       await Promise.all([
         k.seite.waitForNavigation({ waitUntil: 'domcontentloaded' }),
-        k.seite.locator('.reiter-punkt', { hasText: 'Jobs' }).first().click(),
+        k.seite.locator('#inhalt .reiter-punkt', { hasText: 'Jobs' }).first().click(),
       ]);
       const jobs = await k.seite.evaluate(() => ({
-        aktiv: (document.querySelector('.reiter-punkt.aktiv') || {}).textContent,
+        aktiv: (document.querySelector('#inhalt .reiter-punkt.aktiv') || {}).textContent,
         adresse: location.search,
         unter: document.querySelectorAll('.eintrag-unter').length,
         menue: (document.querySelector('.leiste-liste a.eintrag.aktiv') || {}).textContent?.trim(),
@@ -64,7 +64,7 @@ export const wege = [
         k.seite.press('#q', 'Enter'),
       ]);
       const system = await k.seite.evaluate(() => ({
-        aktiv: (document.querySelector('.reiter-punkt.aktiv') || {}).textContent,
+        aktiv: (document.querySelector('#inhalt .reiter-punkt.aktiv') || {}).textContent,
         q: (document.querySelector('#q') || {}).value,
       }));
       const ok = jobs.aktiv === 'Jobs' && jobs.adresse.includes('r=jobs') && jobs.unter === 0
@@ -117,6 +117,9 @@ export const wege = [
 
         const knopfVerborgen = await k.seite.evaluate(() =>
           !!document.querySelector('[data-absenden-knopf]')?.hidden);
+        /* Seit Web 24.4 liegt die Filterreihe hinter dem Filterknopf
+         * (Konzept OF, E-OF-18) — erst aufklappen, wie es eine Person tut. */
+        await k.seite.click('[data-filterknopf]');
         await Promise.all([
           k.seite.waitForNavigation({ waitUntil: 'domcontentloaded' }),
           k.seite.selectOption('select[data-absenden]', 'wartung_an'),

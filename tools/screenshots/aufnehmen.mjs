@@ -228,6 +228,10 @@ if (BREITEN.length !== BREITEN_SAETZE[SATZ].length) {
 }
 
 const { seiten } = JSON.parse(readFileSync(join(HIER, 'seiten.json'), 'utf-8'));
+/* Seiten, deren Verstoss gegen eine Seitenregel bekannt und einem Paket
+   zugeordnet ist (Nr. 530) — `ausnahmen.json`, Schluessel `seitenregeln`. */
+const AUSNAHMEN_SEITENREGELN =
+  (JSON.parse(readFileSync(join(HIER, 'ausnahmen.json'), 'utf-8')).seitenregeln) || {};
 
 const liste = (() => {
   // WELCHE SEITEN. `--nur` filtert nach Namensanfang; ohne Filter alle.
@@ -506,10 +510,134 @@ if (flag('--selbstprobe')) {
     console.log(`${ok ? ' ok ' : 'FEHL'}  ${String(f.nr).padStart(2)}  `
       + `soll ${f.soll.padEnd(8)} ist ${ist.padEnd(8)}  ${f.grund}`);
   }
-  const alle = SELBSTPROBE.length + ABGANG.length;
+  /* 25 bis 32: DIE DREI SEITENREGELN (Nr. 530) an einer nachgebauten Seite
+   * im Browser — die Abnahme von Nr. 530: Knopf zwischen Abschnitten,
+   * Lesespalte auf einer Einstellungsseite und ein zweiter Satz sind je ein
+   * Befund; ihre Gegenstuecke sind keiner. */
+  const SEITE = (inhalt, breit = 'none') => `<!doctype html><meta charset="utf-8">
+    <style>body{margin:0}.inhalt{padding:16px 24px}.karte{display:block;max-width:${breit}}
+    .knopf{display:inline-block;height:36px}</style>
+    <div class="rahmenkarte rahmenkarte-abschnitte"><main class="inhalt" id="inhalt">${inhalt}</main></div>`;
+  const K = (titel, text = '') => `<section class="karte"><h2 class="karte-titel">${titel}</h2>`
+                                + `<div class="karte-inhalt">${text}</div></section>`;
+  const REGELN = [
+    { nr: 25, grund: 'Knopf zwischen zwei Abschnitten ist ein Befund', was: 'knopf', soll: 1,
+      html: SEITE(K('A') + '<button class="knopf">Speichern</button>' + K('B')) },
+    { nr: 26, grund: 'Knopf als letztes Element im Abschnitt ist keiner', was: 'knopf', soll: 0,
+      html: SEITE(K('A', '<button class="knopf">Speichern</button>') + K('B')) },
+    { nr: 27, grund: 'Lesespalte auf einer Einstellungsseite: rechte Kante verfehlt', was: 'kante', soll: 1,
+      html: SEITE(K('A') + K('B'), '760px') },
+    { nr: 28, grund: 'Abschnitte bis an den Rand: rechte Kante gehalten', was: 'kante', soll: 0,
+      html: SEITE(K('A') + K('B')) },
+    { nr: 29, grund: 'zwei Saetze in einer Karte sind ein Befund', was: 'saetze', soll: 1,
+      html: SEITE(K('A', '<p class="feld-hinweis">Erster Satz. Zweiter Satz.</p>')) },
+    { nr: 30, grund: 'ein Satz mit Abkuerzung und Fassungsnummer ist einer', was: 'saetze', soll: 0,
+      html: SEITE(K('A', '<p class="feld-hinweis">Gilt z. B. ab Web 24.2 fuer Nr. 5 jedes Konto.</p>')) },
+    { nr: 31, grund: 'Saetze in einer Meldung zaehlen nicht', was: 'saetze', soll: 0,
+      html: SEITE(K('A', '<div class="meldung"><p class="feld-hinweis">Eins. Zwei. Drei.</p></div>')) },
+    { nr: 32, grund: 'ein Rest ohne Satzzeichen ab vier Woertern zaehlt mit', was: 'saetze', soll: 1,
+      html: SEITE(K('A', '<p class="feld-hinweis">Ein Satz. Und hier noch vier Woerter</p>')) },
+    { nr: 33, grund: 'ein Leerzustand neben dem Erklaersatz zaehlt nicht', was: 'saetze', soll: 0,
+      html: SEITE(K('A', '<p class="feld-hinweis">Vorschlaege je Rolle.</p><p class="feld-hinweis">Noch keine Eintraege.</p>')) },
+  ];
+  const probeBrowser = await starten(PW, MOTOR, {});
+  const probe = await probeBrowser.newPage({ viewport: { width: 1280, height: 800 } });
+  for (const f of REGELN) {
+    await probe.setContent(f.html);
+    const r = await probe.evaluate(seitenregelnMessen);
+    const ist = f.was === 'knopf' ? r.knopf.length
+              : f.was === 'saetze' ? r.saetze.length
+              : (Math.abs(r.kante) > 1 ? 1 : 0);
+    const ok = ist === f.soll;
+    if (ok) erfuellt++;
+    console.log(`${ok ? ' ok ' : 'FEHL'}  ${String(f.nr).padStart(2)}  `
+      + `soll ${String(f.soll).padEnd(8)} ist ${String(ist).padEnd(8)}  ${f.grund}`);
+  }
+  await probeBrowser.close();
+  const alle = SELBSTPROBE.length + ABGANG.length + REGELN.length;
   console.log(`\n${erfuellt} von ${alle} Faellen erwartungsgemaess, `
     + `${alle - erfuellt} nicht.`);
   process.exit(erfuellt === alle ? 0 : 1);
+}
+
+/* ---- Die drei Seitenregeln ------------------------------------------------
+ *
+ * DREI SEITENREGELN (Konzept OF, OF-01, E-OF-49; Anlass: Nr. 530).
+ * Sie gelten fuer jede Seite und standen bis Web 24.1 nur als
+ * Handregel in Design.md 6 — ein Knopf zwischen zwei Abschnitten oder
+ * ein zweiter Satz in einer Karte fiel nur beim Ansehen auf.
+ *
+ * (1) KNOPF ZWISCHEN ABSCHNITTEN: ein sichtbarer `.knopf` im Inhalt,
+ * der in keiner Karte, keiner Titelzeile, keiner Speicherleiste,
+ * keiner Meldung und keinem Dialog steht und vor UND hinter dem
+ * eine sichtbare Karte liegt. Er gehoert optisch zur falschen.
+ * (2) EINE RECHTE KANTE: In `.rahmenkarte-abschnitte` reicht die
+ * rechteste Karte an die Inhaltskante (Innenkante von `.inhalt`,
+ * 1 px Spiel). Gemessen ab 1024 px — darunter gibt es keine
+ * Rahmenkarte.
+ * (3) EIN SATZ JE KARTE: Saetze in `.feld-hinweis` je Karte, ohne
+ * Meldungen, Zeilen (Befundzeilen der Statusseite), Dialoge und
+ * Kopierwerte; dazu `.seiten-erklaerung` je Seite. Gezaehlt nach
+ * Design.md 6 (E-P5c-128): Ein Satz endet mit `.`, `!` oder `?`
+ * vor Grossbuchstaben oder am Ende; ein Rest ohne Satzzeichen
+ * zaehlt ab vier Woertern. Nur was sichtbar ist — ein bedingter
+ * Satz zaehlt, wenn er dasteht.
+ *
+ * EINE EIGENE FUNKTION, im Browser ausgewertet (`seite.evaluate`), damit die
+ * Selbstprobe sie an einer nachgebauten Seite fahren kann — eine Messung, die
+ * nur an echten Seiten liefe, haette nie bewiesen, dass sie anschlaegt. */
+function seitenregelnMessen() {
+        const sichtbar = el => el.getClientRects().length > 0 && !el.closest('[hidden]');
+        const inhalt = document.getElementById('inhalt');
+        const ergebnis = { knopf: [], kante: null, saetze: [], gezaehlt: 0 };
+        if (!inhalt) { return ergebnis; }
+        const name = el => ((el.querySelector('.karte-titel, h2, h3') || {}).textContent || '(ohne Titel)')
+                            .trim().replace(/\s+/g, ' ').slice(0, 40);
+        const karten = Array.from(inhalt.querySelectorAll('section.karte, details.karte')).filter(sichtbar);
+        const VOR = Node.DOCUMENT_POSITION_PRECEDING, NACH = Node.DOCUMENT_POSITION_FOLLOWING;
+        for (const k of Array.from(inhalt.querySelectorAll('.knopf')).filter(sichtbar)) {
+          if (k.closest('.karte, .titelzeile, .speichern, .meldung, dialog, .blatt, .reiter, .listenkopf, .listenfuss, .hinweise')) { continue; }
+          const davor  = karten.some(x => k.compareDocumentPosition(x) & VOR);
+          const danach = karten.some(x => k.compareDocumentPosition(x) & NACH);
+          if (davor && danach) { ergebnis.knopf.push((k.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 30)); }
+        }
+        const rk = document.querySelector('.rahmenkarte-abschnitte');
+        if (rk && window.innerWidth >= 1024 && karten.length) {
+          const st = getComputedStyle(inhalt);
+          const kante = inhalt.getBoundingClientRect().right - parseFloat(st.paddingRight);
+          const rechts = Math.max(...karten.map(x => x.getBoundingClientRect().right));
+          ergebnis.kante = Math.round(kante - rechts);
+        }
+        const saetze = t => {
+          const s = t.replace(/\b(z|d|u|o)\.\s?(B|h|a|ä)\./g, '$1$2')
+                     .replace(/\b(Nr|bzw|ca|vgl|ggf|inkl|max|min|Min|Std|etc)\./g, '$1')
+                     .replace(/(\d)\.(\d)/g, '$1$2').trim();
+          if (!s) { return 0; }
+          const teile = s.split(/[.!?…](?=\s+[A-ZÄÖÜ„"»(]|\s*$)/).map(x => x.trim()).filter(Boolean);
+          let n = (s.match(/[.!?…](?=\s+[A-ZÄÖÜ„"»(]|\s*$)/g) || []).length;
+          const rest = /[.!?…]\s*$/.test(s) ? '' : teile[teile.length - 1] || '';
+          if (rest && rest.split(/\s+/).length >= 4) { n++; }
+          return n;
+        };
+        for (const k of karten) {
+          let n = 0;
+          for (const h of Array.from(k.querySelectorAll('.feld-hinweis')).filter(sichtbar)) {
+            if (h.closest('.meldung, .zeile, dialog, .blatt, .codeblock') || h.closest('.karte') !== k) { continue; }
+            /* LEERZUSTAENDE ZAEHLEN NICHT (Design.md 6): „Noch keine
+               Einträge.", „Zurzeit keine." sind Zustand, keine Erklärung. Sie
+               tragen keine eigene Klasse; erkannt werden sie am Anfang. */
+            if (/^\s*(Noch kein|Zurzeit kein|Kein[e]? )/.test(h.innerText || '')) { continue; }
+            n += saetze(h.innerText || '');
+          }
+          ergebnis.gezaehlt++;
+          if (n > 1) { ergebnis.saetze.push(name(k) + ' (' + n + ')'); }
+        }
+        let seite = 0;
+        for (const h of Array.from(inhalt.querySelectorAll('.seiten-erklaerung')).filter(sichtbar)) {
+          seite += saetze(h.innerText || '');
+        }
+        if (seite > 1) { ergebnis.saetze.push('Seitenerklärung (' + seite + ')'); }
+        return ergebnis;
 }
 
 rmSync(AUSGABE, { recursive: true, force: true });
@@ -925,7 +1053,10 @@ async function platzhalter() {
     const erstes = segs[0];
     if (erstes && erstes.bis_ts != null && erstes.bis_ts - erstes.von_ts >= 70 * 60
         && !(erstes.schnitte || []).length) {
-      p['__TAG_SCHNITT__'] = `index.php?d=${t.id}`;
+      /* MIT `#ruheliste` (seit Web 24.8.0, E-OF-05): Die Karte steht nicht
+         mehr von selbst da, die Adresse oeffnet sie wie der Menueeintrag
+         „Einsatz aus GPS-Daten ausschneiden". */
+      p['__TAG_SCHNITT__'] = `index.php?d=${t.id}#ruheliste`;
       break;
     }
   }
@@ -1008,13 +1139,28 @@ async function kopplungSitzung(seite, schluessel, fehlerSammler) {
 }
 
 async function vorher(seite, schritte, fehlerSammler) {
-  const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc',
+  const BEKANNT = ['schublade', 'kopplung-dialog', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc',
                    'notfallblatt', 'code-schritt', 'codeblatt',
                    'schnitt-grund', 'schnitt-vorschau', 'nachladezeile'];
   for (const schritt of schritte || []) {
     if (!BEKANNT.includes(schritt)) {
       fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
                        + BEKANNT.join(', '));
+      continue;
+    }
+    if (schritt === 'kopplung-dialog') {
+      /* DER KOPPEL-DIALOG OFFEN, vor jeder Eingabe (Konzept OF, OF-09: seit
+         Web 24.5 koppelt man im Dialog, E-OF-25). Der Schritt schreibt nichts.
+         Die Seite steht in `seiten.json` VOR `33a`: Danach haelt die Sitzung
+         eine angefangene Kopplung, und dann gibt die Seite keinen Dialog aus. */
+      const auf = seite.locator('[data-dialog="koppeln"]').first();
+      if (!(await auf.count())) {
+        fehlerSammler.push('Kein Knopf zum Koppeln auf der Seite — Gerätelimit erreicht?');
+        continue;
+      }
+      if (!(await seite.locator('dialog#koppeln[open]').count())) { await auf.click(); }
+      await seite.locator('dialog#koppeln[open]').waitFor({ timeout: 5000 })
+        .catch(() => fehlerSammler.push('Der Koppel-Dialog ging nicht auf.'));
       continue;
     }
     if (schritt === 'kopplung-rueckfrage' || schritt === 'kopplung-warten') {
@@ -1028,6 +1174,11 @@ async function vorher(seite, schritte, fehlerSammler) {
         fehlerSammler.push('Kein Feld „Code vom Gerät" auf der Seite — steht die '
                          + 'Kopplungskarte in einem anderen Zustand (Gerätelimit erreicht)?');
         continue;
+      }
+      /* Seit Web 24.5 steht das Feld im Koppel-Dialog (E-OF-25) — öffnen. */
+      if (!(await seite.locator('dialog#koppeln[open]').count())
+          && await seite.locator('[data-dialog="koppeln"]').count()) {
+        await seite.locator('[data-dialog="koppeln"]').click();
       }
       await feld.fill(sitzung.code);
       await Promise.all([seite.waitForNavigation({ timeout: 30000 }),
@@ -1751,10 +1902,13 @@ for (const eintrag of liste) {
            * sichert eine MINDESTflaeche; groesser ist kein Verstoss, nur
            * ungleich. Damit die Zahl im Bericht trotzdem etwas heisst, wird
            * dieser eine Fall benannt statt stillschweigend geduldet. */
-          suchzwilling: !!el.closest('.suchzeile'),
+          /* Seit Web 24.4 auch der Filterknopf im Listenkopf (E-OF-18) —
+           * nur er, nicht der verborgene Suchknopf daneben. */
+          suchzwilling: !!el.closest('.suchzeile') || el.matches('.listensuche .filterknopf'),
         })),
     })).catch(() => ({ scrollWidth: 0, innerWidth: b, knoepfe: [], taeter: null,
                        ausbruch: [], karten: 0, rollen: [] }));
+    mass.regeln = await seite.evaluate(seitenregelnMessen).catch(() => null);
 
     const datei = join(AUSGABE, 'einzeln', `${eintrag.name}-${b}.png`);
     if (hin.abbruch) {
@@ -1828,6 +1982,7 @@ for (const eintrag of liste) {
       taeter: mass.taeter || null,
       ausbruch: mass.ausbruch || [],
       karten: mass.karten || 0,
+      regeln: mass.regeln || { knopf: [], kante: null, saetze: [], gezaehlt: 0 },
       rollen: mass.rollen || [],
       konsole: rolle.fehler.slice(),
     });
@@ -1982,6 +2137,46 @@ const gesamtAusbruch = bericht.seiten.reduce((n, z) =>
   n + ((z.breiten.find(x => x.ausbruch && x.ausbruch.length) || {}).ausbruch || []).length, 0);
 console.log(`Karten im Seitengerüst: ${gesamtKarten} geprüft · `
   + `${gesamtAusbruch} außerhalb von main.inhalt (Nr. 225)`);
+/* DIE DREI SEITENREGELN (Nr. 530). Der Knopf und die Saetze haengen am
+   Markup und stehen in jeder Breite gleich — je Seite einmal genannt, aus
+   der breitesten Aufnahme. Die Kante gilt je Breite ab 1024 px. Eine
+   Seite mit Befund, die in `ausnahmen.json` unter `seitenregeln` steht,
+   haelt nicht auf; eine Ausnahme ohne Befund ist selbst einer. */
+const regelAus = (AUSNAHMEN_SEITENREGELN || {});
+const regelBefund = [];
+let regelKarten = 0, regelKanten = 0;
+const regelAusGetroffen = new Set();
+for (const z of bericht.seiten) {
+  const breiteste = z.breiten.filter(x => x.regeln).slice(-1)[0];
+  if (!breiteste) { continue; }
+  regelKarten += breiteste.regeln.gezaehlt || 0;
+  const funde = [];
+  if (breiteste.regeln.knopf.length) { funde.push(['knopf', 'Knopf zwischen Abschnitten: ' + breiteste.regeln.knopf.join(', ')]); }
+  if (breiteste.regeln.saetze.length) { funde.push(['saetze', 'mehr als ein Satz: ' + breiteste.regeln.saetze.join(', ')]); }
+  for (const x of z.breiten) {
+    if (x.regeln && x.regeln.kante !== null) {
+      regelKanten++;
+      if (Math.abs(x.regeln.kante) > 1) { funde.push(['kante', `rechte Kante ${x.regeln.kante} px vor dem Rand bei ${x.breite}`]); break; }
+    }
+  }
+  for (const [regel, text] of funde) {
+    const aus = regelAus[z.name] && regelAus[z.name][regel];
+    if (aus) { regelAusGetroffen.add(z.name + '/' + regel); continue; }
+    regelBefund.push(`${z.name}: ${text}`);
+  }
+}
+for (const [seite, regeln] of Object.entries(regelAus)) {
+  for (const regel of Object.keys(regeln)) {
+    if (regel.startsWith('_')) { continue; }
+    if (!regelAusGetroffen.has(seite + '/' + regel) && bericht.seiten.some(z => z.name === seite)) {
+      regelBefund.push(`${seite}: Ausnahme „${regel}" ohne Befund — aus ausnahmen.json streichen`);
+    }
+  }
+}
+bericht.seitenregeln = regelBefund;
+console.log(`Seitenregeln (Nr. 530): ${regelKarten} Karten auf Sätze, ${regelKanten} Aufnahmen auf die rechte Kante geprüft · `
+  + `${regelBefund.length} Befunde, ${regelAusGetroffen.size} ausgenommen`);
+for (const b of regelBefund.slice(0, 30)) { console.log('  ' + b); }
 if (verlorene.length)   { console.log(`Sitzung neu aufgebaut: ${verlorene.length}× (Demo-Reset, normal)`); }
 if (ausgefallen.length) {
   /* NACH GRUND GEZAEHLT, nicht in einen Topf: „8 ohne Bild" sagt nichts, „8
@@ -2050,5 +2245,5 @@ if (wartungHaengt) {
 }
 process.exit(gesamtUeberlauf === 0 && gesamtKonsole === 0
              && bericht.knopf.length === 0 && ausgefallen.length === 0
-             && bericht.etikett.length === 0
+             && bericht.etikett.length === 0 && regelBefund.length === 0
              && !wartungHaengt ? 0 : 1);

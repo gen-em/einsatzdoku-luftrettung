@@ -238,7 +238,9 @@
       "karte": true,
       "vervielfachen": 3,
       "ganzseitig": false,
-      "vorher": ["nachladezeile"]
+      "vorher": [
+        "nachladezeile"
+      ]
     },
     {
       "name": "15-suche",
@@ -347,6 +349,16 @@
       "pfad": "einstellungen.php?t=geraete"
     },
     {
+      "name": "33c-geraete-koppeln",
+      "gruppe": "Einstellungen",
+      "rolle": "demo",
+      "pfad": "einstellungen.php?t=geraete",
+      "vorher": [
+        "kopplung-dialog"
+      ],
+      "ganzseitig": false
+    },
+    {
       "name": "33a-geraete-rueckfrage",
       "gruppe": "Einstellungen",
       "rolle": "demo",
@@ -398,7 +410,7 @@
       "name": "43b-sicherungsziele",
       "gruppe": "Administration",
       "rolle": "betreiberin",
-      "pfad": "admin_sicherungsziele.php"
+      "pfad": "betrieb_server.php#k-backup-ziele"
     },
     {
       "name": "43c-komplettsicherung",
@@ -417,12 +429,6 @@
       "gruppe": "Administration",
       "rolle": "betreiberin",
       "pfad": "admin_rechtstexte.php?t=datenschutz"
-    },
-    {
-      "name": "44-demo-konto",
-      "gruppe": "Administration",
-      "rolle": "betreiberin",
-      "pfad": "admin_demo.php"
     },
     {
       "name": "44a-protokoll",

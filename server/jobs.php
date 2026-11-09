@@ -52,7 +52,7 @@ declare(strict_types=1);
  *                 wäre.
  *   wartung_an    Wartungsmodus einschalten, Urheber `kette`
  *   wartung_aus   ausschalten
- *   pause         Die Hintergrundjobs anhalten (`sekunden=N`) oder wieder
+ *   pause         Die Hintergrundjobs pausieren (`sekunden=N`) oder wieder
  *                 freigeben (`sekunden=0`). Dieselbe Wirkung wie
  *                 `php jobs.php --pause N` und wie die beiden Knoepfe unter
  *                 Betrieb -> Hintergrundjobs; derselbe `jobs_pause()` aus
@@ -78,7 +78,7 @@ declare(strict_types=1);
  * Client der Aktionen ist `tools/kette/tor.py`.
  *
  * WARUM `pause` UEBER DIE ADRESSE ERREICHBAR SEIN MUSS.
- * Der Kreislauftest haelt die Jobs an, bevor er ein Backup in ein frisches
+ * Der Kreislauftest pausiert die Jobs, bevor er ein Backup in ein frisches
  * Konto spielt — sonst verdichtet und duennt der Verdichtungsjob die
  * wiederhergestellten Spuren aus, und der Vergleich misst nicht mehr „kommt
  * zurueck, was hineinging", sondern „hat der Job dazwischen zugeschlagen".
@@ -133,7 +133,7 @@ if ($aufKommandozeile) {
     foreach (array_slice($argv, 1) as $arg) {
         if ($arg === '--hilfe' || $arg === '-h') {
             fwrite(STDOUT, "Aufruf: php jobs.php [jobname …]\n"
-                 . "        php jobs.php --pause <Sekunden>   Jobs anhalten (0 = aufheben)\n"
+                 . "        php jobs.php --pause <Sekunden>   Jobs pausieren (0 = aufheben)\n"
                  . "Ohne Angabe laufen alle fälligen Jobs.\n"
                  . "Bekannt: " . implode(', ', array_keys(jobs_katalog())) . "\n");
             exit(0);
@@ -145,7 +145,7 @@ if ($aufKommandozeile) {
             jobs_pause($s);
             $bis = jobs_pause_bis();
             fwrite(STDOUT, $bis === null ? "Jobs laufen wieder.\n"
-                                         : "Jobs angehalten bis $bis UTC.\n");
+                                         : "Jobs pausiert bis $bis UTC.\n");
             exit(0);
         }
         if (is_numeric($arg)) { continue; }   // Zahl hinter --pause
@@ -348,7 +348,7 @@ if ($aktion === 'pause') {
     if (!is_string($roh) && !is_int($roh)) {
         kette_antwort(['ok' => false, 'aktion' => 'pause', 'error' => 'sekunden',
                        'meldung' => 'Parameter `sekunden` fehlt. '
-                                  . '0 hebt die Pause auf, N haelt N Sekunden an.'], 400);
+                                  . '0 hebt die Pause auf, N pausiert N Sekunden.'], 400);
     }
     /* GANZE ZAHL, NICHT „irgendwie numerisch". Die erste Fassung schrieb
      * `!is_numeric($roh) || (int)$roh < 0` — und liess damit genau das durch,
@@ -383,7 +383,7 @@ if ($aktion === 'pause') {
         'grenze'   => JOB_PAUSE_MAX_S,
         'bis'      => $bis,
         'meldung'  => $bis === null ? 'Jobs laufen wieder.'
-                                    : "Jobs angehalten bis $bis UTC.",
+                                    : "Jobs pausiert bis $bis UTC.",
     ]);
 }
 

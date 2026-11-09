@@ -17,5 +17,8 @@
       ],
       "grund": "Die Adresse fuer den Jobaufruf traegt ein ZUFAELLIGES Hex-Token. Seine Ziffern und Buchstaben verteilen sich bei jedem Lauf anders, also aendert sich auch die FORM der Zeile — ohne dass jemand etwas geaendert haette."
     }
+  },
+  "seitenregeln": {
+    "_lies_mich": "Seiten mit bekanntem Verstoss gegen eine der drei Seitenregeln (Konzept OF, OF-01, Nr. 530): `knopf` (Knopf zwischen zwei Abschnitten), `kante` (rechte Kante), `saetze` (mehr als ein Satz je Karte oder Seitenerklaerung). Je Seite die Regel und das Paket, das den Verstoss behebt. Das Paket streicht seine Zeilen; eine Ausnahme ohne Befund ist selbst ein Befund. Bis OF-09 ist die Liste leer."
   }
 }

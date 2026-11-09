@@ -90,6 +90,14 @@ try {
   pruef('Der Menüpunkt ist markiert',
         await seite.locator('.leiste-liste a.aktiv', { hasText: 'Komplett-Backup' }).count() > 0);
 
+  /* SEIT WEB 24.7 sind „Regeln" und „Stände" Klappkarten (Konzept OF,
+     OF-06, E-OF-23); der Weg klappt sie auf, wie eine Nutzerin es tut. */
+  const auf = async (id) => {
+    if (await seite.locator(`details#${id}:not([open])`).count()) {
+      await seite.locator(`details#${id} > summary`).click();
+    }
+  };
+
   const staendeVor = await seite.locator('.zeile-aktionen').count();
 
   // 1. „Jetzt sichern" mit Bestaetigungsdialog
@@ -111,6 +119,7 @@ try {
         staendeNach >= 1, `${staendeVor} -> ${staendeNach}`);
 
   // 2. Download unverschlüsselt
+  await auf('k-staende');
   const [dl] = await Promise.all([
     seite.waitForEvent('download', { timeout: 120000 }),
     seite.locator('button[form^="f-klar-"]').first().click(),
@@ -141,6 +150,7 @@ try {
 
   // 4. Zu kurze Passphrase wird abgewiesen
   await seite.goto(`${BASIS}/admin_komplettsicherung.php`, { waitUntil: 'domcontentloaded' });
+  await auf('k-staende');
   await seite.fill('input[name="passphrase"]', 'kurz');
   await Promise.all([seite.waitForLoadState('domcontentloaded'),
                      seite.locator('button', { hasText: 'Versiegelt herunterladen' }).first().click()]);
@@ -150,11 +160,13 @@ try {
         fehlermeldung.slice(0, 90));
 
   // 5. Zeitplan speichern und wieder zurückstellen
+  await auf('k-regeln');
   await seite.selectOption('select[name="plan"]', 'woechentlich');
   await Promise.all([seite.waitForLoadState('domcontentloaded'),
                      seite.locator('button', { hasText: 'Speichern' }).first().click()]);
   pruef('Der Zeitplan lässt sich speichern',
         await seite.locator('select[name="plan"]').inputValue() === 'woechentlich');
+  await auf('k-regeln');
   await seite.selectOption('select[name="plan"]', 'aus');
   await Promise.all([seite.waitForLoadState('domcontentloaded'),
                      seite.locator('button', { hasText: 'Speichern' }).first().click()]);

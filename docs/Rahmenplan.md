@@ -1,13 +1,13 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 227 (07.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 229 (07.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `f27c977`, PR #156, gemessen 07.11.2026): Web 23.11.3 ·
+**Stand `origin/main`** (Commit `ac4a7bd`, PR #157, gemessen 07.11.2026): Web 23.11.3 ·
 Uhr 4.3.3 · Android 0.22.0; auf Staging, Produktiv noch auf Web 23.8.2 · Uhr 4.3.2 · Android 0.21.0 (Tags auf `bfaca8b`).
-**Läuft:** nichts; 26 (MA) abgeschlossen 07.11.2026 (PR #156).
-**Als Nächstes:** 13 (P7).
+**Läuft:** 27 (OF, Oberflächenrunde), Zweig `claude/oberflaechenrunde-of` — Konzept steht (OF-00), Umsetzung ab NV-01.
+**Als Nächstes:** 13 (P7), nach 27.
 **Offene PRs:** keine.
 **Fällig bei der Betreiberin:** 41 Posten (Abschnitt 6.1). **`update.php`:** auf Staging nichts offen (Betreiberin, 07.11.2026, nach Web 23.10); auf Produktiv nach dem Tag `web-v23.11.3` fällig (Migration `2026_11_07_darstellung`).
 
@@ -104,7 +104,7 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 ## 3. Fahrplan — die nächsten Schritte
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
-**Die Reihenfolge der offenen Schritte ist:** 13 → 14 (E-BE-02 bis -04, 02.11.2026; PR, 21 bis 24, BR7 und 26 davor sind erledigt); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
+**Die Reihenfolge der offenen Schritte ist:** 27 → 13 → 14 (27 als Einschub nach E-OF-39, bestätigt 07.11.2026; 13 → 14 nach E-BE-02 bis -04, 02.11.2026; PR, 21 bis 24, BR7 und 26 davor sind erledigt); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
 der Reihe: die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
 frei). **Warum so:** P6 liegt in zwei Hälften um S11 (R86): das
 **Bedrohungsmodell (12, abgeschlossen) vor S11 (12a, abgeschlossen)**, weil es dessen
@@ -119,6 +119,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 |---|---|---|---|---|---|
 | 6 | **S4 — Rest, Teil C** | Play Console nach R65: interner Test-Track für Handy und Uhr unter einem Eintrag, Versionscode-Versatz, Signaturweg; Android 1.0.0 (E-R45-7). Die Vorbereitung ohne D-U-N-S und Schlüssel ist gebaut (Android 0.13.0), die Gerätetests sind erfolgt (24.09.2026) | D-U-N-S, Organisationskonto und Play App Signing — erledigt 26.09.2026 (SD-M1); offen in 6.2: Wear-OS-Uhr, Demo-Video, Datensicherheitsformular | `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md` 13; `Vorbereitung-Play-Console.md` | offen — Teile A bis C gemergt 04.09.2026 (PR #33, Abschnitt 8); Android 1.0.0 und der interne Test-Track können beginnen |
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
+| 27 | **OF — Oberflächenrunde** | Gerüst aus NV (Bereichszeile, Rahmenkarte), drei Regeln für alle Seiten (Kante, Speicherknopf, Erklärtext), neue Bausteine (Klappkarte, Filterknopf, Koppel-Dialog, Datumsfeld), die 37 Punkte der Betreiberin vom 07.11.2026, Dark-Mode-Umschalter | 26 | `docs/konzepte/Konzept-OF-Oberflaechenrunde.md` | Konzept — Einschub vor 13 (E-OF-39, bestätigt 07.11.2026); Umsetzung Opus, Pakete NV-01 bis -04, OF-01 bis -09 |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen, Tabellen mit Mockup (Nr. 342) | 26 | eigenes Konzept nach K1 | offen — Konzeptsitzung kann neben 24 laufen, Umsetzung nach 24 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13; die Inventur (R68) entscheidet die zwölf Werkzeug-Punkte mit `gehört zu: 14` (E-BE-04) |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |

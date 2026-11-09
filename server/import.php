@@ -64,14 +64,31 @@ ui_seite_start(['titel' => 'Import / Export']);
         'titel' => 'Import / Export',
         'unter' => 'Die Einsatzliste als Ganzes — herein und hinaus. Das '
                  . 'vollständige <a href="' . ui_e($backupZ) . '">Backup</a> und '
-                 . 'einzelne GPS-Aufzeichnungen laufen über andere Wege; welche das '
-                 . 'sind, steht im <a href="hilfe.php#die-uebrigen-wege">Handbuch</a>.',
+                 . 'einzelne GPS-Aufzeichnungen laufen über andere Wege.',
     ]); ?>
-    <p class="seiten-erklaerung">Übernimmt eine vorhandene Einsatzliste (Excel oder
-       CSV) in dieses Konto. Die Datei wird <strong>nicht hochgeladen</strong> — sie
-       wird in deinem Browser gelesen, geprüft und dort verschlüsselt. Der Server
-       erhält Name, Geburtsdatum, Diagnose und Einsatzort nur als Chiffretext.</p>
+    <?php /* ERST WÄHLEN, DANN FÜLLEN (Konzept OF, OF-04, E-OF-26, Bild
+             OF-P17-C). Bis Web 24.4 standen zwei Erklärungen über der Seite
+             und Import und Export als zwei lange Formulare untereinander. Jetzt
+             zwei Wahlkarten (`.wahlkarten`, `assets/wahlkarten.js`) mit je
+             einem Satz; darunter steht nur das gewählte Formular. Ohne Skript
+             stehen beide da. Steht `#exportform` in der Adresse, ist „Liste
+             ausgeben" gewählt. */ ?>
+    <div class="wahlkarten" role="radiogroup" aria-label="Was möchtest du tun?" data-wahlkarten="iewahl">
+      <label class="wahlkarte">
+        <input type="radio" class="wahlkarte-box" name="iewahl" value="import" checked>
+        <span class="wahlkarte-titel"><?= ui_symbol('tausch') ?>Liste übernehmen</span>
+        <span class="wahlkarte-text">Excel oder CSV aus einem anderen Programm — in
+          deinem Browser gelesen und verschlüsselt, <strong>nicht hochgeladen</strong>.</span>
+      </label>
+      <label class="wahlkarte">
+        <input type="radio" class="wahlkarte-box" name="iewahl" value="export">
+        <span class="wahlkarte-titel"><?= ui_symbol('tausch') ?>Liste ausgeben</span>
+        <span class="wahlkarte-text">Deine Einsätze als Excel oder CSV zum
+          Weiterverarbeiten.</span>
+      </label>
+    </div>
 
+    <div data-wahl-zu="iewahl" data-wahl="import">
     <div id="lockwarn" hidden>
       <?php ui_meldung(
           'Die geschützten Angaben lassen sich gerade nicht verschlüsseln — die '
@@ -167,15 +184,16 @@ ui_seite_start(['titel' => 'Import / Export']);
         <div id="commitstate" class="zustandszeile"></div>
       <?php ui_karte_ende(); ?>
     </div>
+    </div>
+
+    <div data-wahl-zu="iewahl" data-wahl="export">
 
     <?php ui_karte_start(['titel' => 'Export', 'id' => 'exportform']); ?>
       <?php /* „KEIN BACKUP" STEHT HIER UND NICHT ALS RÜCKFRAGE IM
                DIALOG. */ ?>
-      <p class="feld-hinweis">Erzeugt eine Datei aus den vorhandenen Einsätzen dieses
-         Kontos — zum Weiterverarbeiten in anderen Programmen. Der Aufbau der Datei
-         passiert vollständig <strong>in deinem Browser</strong>. Ein Export ist
-         <strong>kein Backup</strong>: Das vollständige, verschlüsselte Backup steht
-         unter <a href="<?= ui_e($backupZ) ?>">Einstellungen → Backup</a>.</p>
+      <p class="feld-hinweis">Ein Export ist <strong>kein Backup</strong> — das
+         vollständige, verschlüsselte steht unter
+         <a href="<?= ui_e($backupZ) ?>">Einstellungen → Backup</a>.</p>
       <div class="feld">
         <span class="feld-label">Zeitraum</span>
         <?php ui_segment(['name' => 'exp_zr', 'wert' => 'range',
@@ -276,6 +294,8 @@ ui_seite_start(['titel' => 'Import / Export']);
       </div>
       <div id="exp_state" class="zustandszeile"></div>
     <?php ui_karte_ende(); ?>
+    </div>
+    <script src="<?= asset('assets/wahlkarten.js') ?>"></script>
 
     <script src="<?= asset('assets/vendor/xlsx.full.min.js') ?>"></script>
     <script src="<?= asset('assets/vendor/zipjs.min.js') ?>"></script>

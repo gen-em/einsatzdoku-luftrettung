@@ -21,7 +21,12 @@ require_once __DIR__ . '/format_lib.php';         // groesse_text(), datum_zeit_
  *
  * DIE SEITE IST EINSPALTIG AUF LESEBREITE, auch am Schreibtisch.
  *
- * Es sind acht Karten. EINSPALTIG BLEIBT SIE TROTZDEM, bis jemand das
+ * JEDE KARTE IST KLAPPKARTE (Konzept OF, OF-06, E-OF-22): zugeklappt Titel,
+ * Stand in einer Zeile und Plakette, aufgeklappt das Formular mit seinem
+ * Speicherknopf. Neun Karten untereinander las man vorher nur, indem man
+ * die Felder las; der Stand je Karte steht in `bs_stand_…()` unten.
+ *
+ * Es sind neun Karten. EINSPALTIG BLEIBT SIE TROTZDEM, bis jemand das
  * Gegenteil mit
  * einem Mockup freigibt (`CLAUDE.md` 5): Die Karten hier sind keine Kacheln,
  * sondern Formulare mit langen Erklaerungstexten — sie leben von der
@@ -57,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
     } else {
         $ankForm = ['text' => post_text('ank_text'),
                     'ton'  => post_text('ank_ton', 'info'),
-                    'tag'  => trim(post_text('ank_bis')),
+                    'tag'  => post_datum('ank_bis'),
                     'zeit' => trim(post_text('ank_bis_zeit'))];
         require_once __DIR__ . '/validate_lib.php';
         $bisUtc = pruef_ortszeit_zu_utc($ankForm['tag'], $ankForm['zeit'], 0, 'Sichtbar bis');
@@ -366,7 +371,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'demo_
               'Demo-Anmeldung abgeschaltet (mit dem Wechsel auf „nur auf Einladung")',
               ['geaendert' => [KONTEN_K_DEMO_ANMELDUNG]]);
     $notice = 'Die Demo-Anmeldung ist abgeschaltet. Der Bestand des Demo-Kontos '
-            . 'bleibt; ein Umlegen des Schalters macht es sofort wieder zugänglich.';
+            . 'bleibt; der Schalter unter Installation → Demo-Konto macht es sofort wieder zugänglich.';
 }
 
 /* ---- Konten: Registrierung, Fristen, Grenzen --------
@@ -460,10 +465,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
         }
     }
 
-    /* ---- Demo-Anmeldung ------------------------------------------------ */
-    if ($error === null) {
-        $neu[KONTEN_K_DEMO_ANMELDUNG] = empty($_POST['demo_anmeldung']) ? '0' : '1';
-    }
+    /* DIE DEMO-ANMELDUNG STEHT NICHT MEHR HIER (seit Web 24.6, E-OF-46):
+     * Ihr Schalter ist in der Karte „Demo-Konto" unter Installation. Stuende
+     * sie noch in `$neu`, schaltete jedes Speichern dieser Karte sie ab — das
+     * Formular schickt das Feld nicht mehr. Die Rueckfrage darunter bleibt. */
 
     /* Die Protokollfrist steht nicht hier: Sie hat eine eigene Karte,
      * zusammen mit dem Archiv — und wird protokolliert. */
@@ -511,7 +516,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
          * blockiert nichts, und sie verschwindet beim naechsten Speichern. */
         if ($art === 'einladung'
             && ($vorher[KONTEN_K_REG_ART] ?? '') !== 'einladung'
-            && $neu[KONTEN_K_DEMO_ANMELDUNG] === '1') {
+            && konten_demo_anmeldung_an()) {
             $demoFrage = true;
         }
     }
@@ -745,6 +750,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 /* Die Meldung aus der Umleitung steht in der Karte, in der geklickt wurde —
  * die Umleitung springt dorthin, und oben saehe sie niemand. */
 $bsFlash = flash_holen();
+/* DIE MELDUNG DER BACKUP-ZIELE gehoert ihrer Karte aus
+ * `sicherungsziele_teile.php` (OF-06, E-OF-45) — sie traegt Daten
+ * (Pruefschritte, verworfene Eingabe), die nur die Karte liest. */
+require_once __DIR__ . '/sicherungsziele_teile.php';
+$zielMeldung = null;
+if ($bsFlash !== null && $bsFlash['ort'] === SZ_KARTE_ID) { $zielMeldung = $bsFlash; $bsFlash = null; }
 if ($bsFlash !== null && !in_array($bsFlash['ton'], ['ok', 'fehler', 'warn', 'info'], true)) {
     $bsFlash = null;
 }
@@ -833,14 +844,119 @@ function speicher_balken(array $teile, int $bezug, array $schwellen): string
     return $h . '</div>';
 }
 
+/* ---- DER STAND JEDER KARTE (Konzept OF, OF-06, E-OF-22) -------------------
+ *
+ * Zugeklappt zeigt jede Karte in EINER Zeile, was eingestellt ist. WARUM
+ * EINE FUNKTION JE KARTE UND KEIN FESTER TEXT: Der Stand liest dieselben
+ * Getter wie das Formular darunter — eine zweite Quelle (ein gespeicherter
+ * Satz, eine eigene Vorgabe) liefe beim ersten Speichern auseinander, und
+ * die zugeklappte Karte sagte dann etwas anderes als die offene.
+ *
+ * KURZ, OHNE SATZ: Der Stand ist eine Wertanzeige wie eine Plakette, keine
+ * Erklärung — die Plakette daneben trägt die Wertung (Design.md 9.23), der
+ * Stand nur die Zahlen. */
+
+/** Ankündigung: bis wann und in welchem Ton — oder „kein Streifen". */
+function bs_stand_ankuendigung(?array $gesp): string
+{
+    if ($gesp === null) { return 'kein Streifen'; }
+    /* „Hinweis — blau" → „Hinweis": Die Farbe sagt die Plakette. */
+    $ton = trim(explode('—', (string)(ANKUENDIGUNG_TOENE[$gesp['ton']] ?? ''))[0]);
+    return 'bis ' . datum_zeit_text(iso_utc($gesp['bis'])) . ($ton !== '' ? ' · ' . $ton : '');
+}
+
+/** Schlüssel: Kennung des Anteils und wie viele Konten auf ihm stehen. */
+function bs_stand_schluessel(array $sk, array $an, array $zaehlung): string
+{
+    $teile = [];
+    /* DER SERVERSCHLUESSEL NUR, WENN ER NICHT STEHT: Im Normalfall sagt die
+     * Plakette „in Ordnung", und eine zweite Kennung machte die Zeile lang,
+     * ohne etwas zu sagen. */
+    if ($sk['stand'] !== 'bereit') {
+        $teile[] = ['fehlt' => 'Serverschlüssel fehlt', 'abweichend' => 'Serverschlüssel abweichend',
+                    'rotation' => 'Schlüsselwechsel läuft'][$sk['stand']] ?? 'Serverschlüssel ?';
+    }
+    if ($an['stand'] === 'fehlt') {
+        $teile[] = 'kein Anteil';
+    } else {
+        $teile[] = 'Anteil ' . ($an['kennung'] ?? '—');
+        $teile[] = (int)$zaehlung['neu'] . ' Konten umgestellt';
+    }
+    return implode(' · ', $teile);
+}
+
+/** Speicher: Belegung der Backups gegen die Grenze, wie die Überschrift „Backups". */
+function bs_stand_speicher(array $sp): string
+{
+    return groesse_text((int)$sp['backups']['summe']) . ' von '
+         . groesse_text((int)$sp['backups']['bezug']);
+}
+
+/** Sicherheitskopfzeilen: HSTS-Dauer und Zahl der CSP-Berichte. */
+function bs_stand_kopfzeilen(int $berichte): string
+{
+    $t = kopf_hsts_tage();
+    return 'HSTS ' . ($t === 0 ? 'aus' : ($t === 365 ? '1 Jahr' : $t . ($t === 1 ? ' Tag' : ' Tage')))
+         . ' · ' . ($berichte === 0 ? 'keine Berichte'
+                                    : $berichte . ($berichte === 1 ? ' Bericht' : ' Berichte'));
+}
+
+/** Konten: die beiden Mengengrenzen je Konto. */
+function bs_stand_konten(): string
+{
+    return konten_grenze_einsaetze() . ' Einsätze · ' . konten_grenze_mb() . ' MB je Konto';
+}
+
+/** Anmeldung: „Gerät merken" für beide Gruppen. */
+function bs_stand_anmeldung(callable $tageText): string
+{
+    return 'NutzerInnen ' . $tageText(zweitfaktor_geraet_tage('user'))
+         . ' · Verwaltung ' . $tageText(zweitfaktor_geraet_tage('verwaltung'));
+}
+
+/** Protokoll: Frist der Verwaltungseinträge und Takt des Archivs. */
+function bs_stand_protokoll(): string
+{
+    return 'Einträge ' . protokoll_frist_verwaltung() . ' Tage · Archiv alle '
+         . protokoll_archiv_tage() . ' Tage';
+}
+
+/** Ratenschutz: Fehlversuche bis zur Sperre und die Leiter von–bis. */
+function bs_stand_ratenschutz(): string
+{
+    $leiter = array_map(static fn(int $s): int => (int)($s / 60), rate_leiter());
+    return (int)rate_grenze('login')['max'] . ' Fehlversuche je Konto · Sperre '
+         . (int)reset($leiter) . '–' . (int)end($leiter) . ' min';
+}
+
+/** Adresssuche: der Rechnername des Dienstes. */
+function bs_stand_adresssuche(): string
+{
+    $d = geocoder_dienst();
+    return (string)(parse_url($d, PHP_URL_HOST) ?: $d);
+}
+
+/* EINE KARTE MIT MELDUNG STEHT OFFEN. Nach einer Umleitung öffnet
+ * `assets/klappkarte.js` sie über den Anker; `'offen'` tut es zusätzlich
+ * ohne Skript. WARUM AUCH OHNE UMLEITUNG: Eine abgewiesene Eingabe leitet
+ * nicht um (oben, „UMLEITEN NACH DEM POST") — die Adresse trägt dann keinen
+ * Anker, die Meldung steht oben, und das Getippte stuende in einer
+ * zugeklappten Karte. Dann ist die Karte der Handlung offen. */
+$bsOffenOrt = ($_SERVER['REQUEST_METHOD'] === 'POST' && ($error !== null || $notice !== null))
+    ? ($bsOrt ?? '') : '';
+$kartenOffen = static function (string $id) use ($bsFlash, $bsOffenOrt): bool {
+    return ($bsFlash !== null && $bsFlash['ort'] === $id) || $bsOffenOrt === $id;
+};
+
 ui_seite_start(['titel' => 'Servereinstellungen']);
 ?>
 
-<?php /* Lesespalte — damals zwei Karten mit viel
-         Erklärtext; heute acht mit je einem Satz, einspaltig aus dem Grund
-         im Kopf dieser Datei. */ ?>
+<?php /* KEINE LESESPALTE MEHR (Konzept OF, E-OF-31): Die Abschnitte reichen
+         wie auf jeder Einstellungsseite bis an den Rand; begrenzt sind die
+         Felder (style.css, „Eine rechte Kante"). Einspaltig bleibt sie aus
+         dem Grund im Kopf dieser Datei. */ ?>
 <?php ui_geruest_start(['aktiv' => 'einstellungen', 'leiste' => 'einstellungen',
-                        'menue' => 'betrieb_server', 'lesespalte' => true]); ?>
+                        'menue' => 'betrieb_server']); ?>
 
   <?php ui_titelzeile(['titel' => 'Servereinstellungen']); ?>
   <?= wartung_balken() ?>
@@ -874,17 +990,20 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
     $rundHeute   = rundmail_heute_gesendet() !== null;
     $rundZahl    = count(rundmail_empfaenger());
   ?>
-  <?php ui_karte_start(['titel' => 'Ankündigung', 'id' => 'k-ankuendigung',
+  <?php /* „sichtbar" STATT „sichtbar bis …": Das Datum steht im Stand
+           daneben, zweimal in einer Zeile wäre es Rauschen. */
+    ui_karte_start(['titel' => 'Ankündigung', 'id' => 'k-ankuendigung', 'zu' => true,
+      'offen' => $kartenOffen('k-ankuendigung'),
+      'stand' => bs_stand_ankuendigung($ankGesp),
       'plakette' => $ankGesp === null
           ? ui_plakette('keine', ['ton' => 'neutral'])
           : ($ankGesp['abgelaufen']
               ? ui_plakette('abgelaufen', ['ton' => 'neutral'])
-              : ui_plakette('sichtbar bis ' . datum_zeit_text(iso_utc($ankGesp['bis'])),
+              : ui_plakette('sichtbar',
                             ['ton' => $ankGesp['ton'] === 'warn' ? 'orange' : 'blau']))]); ?>
   <?= $kartenMeldung('k-ankuendigung') ?>
     <p class="feld-hinweis">Ein Streifen über jeder Seite, bis er abläuft —
-       als Rundmail höchstens einmal je Tag.
-       <a href="hilfe.php#12-8-ankuendigung-und-rundmail">Wie er wirkt</a></p>
+       als Rundmail höchstens einmal je Tag.</p>
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?>
       <?php /* VON HAND, NICHT DURCH ui_feld: Der Zähler darunter braucht eine
@@ -938,7 +1057,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           ? 'Letzte Rundmail: ' . e(datum_zeit_text($rundZuletzt))
           : 'noch keine Rundmail' ?><?= $rundHeute ? ' · heute schon gesendet' : '' ?></p>
     </form>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Die Schlüssel des Servers -------------------
        SIE STEHT VOR DEM SPEICHER (unter der Ankündigung). Die
@@ -976,7 +1095,11 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
               'abweichend' => 'rot'][$anZustand['stand']] ?? 'neutral';
     $anOffen = $anZaehlung['ohne'] + $anZaehlung['alt'];
   ?>
-  <?php ui_karte_start(['titel' => 'Schlüssel des Servers', 'id' => 'k-schluessel',
+  <?php ui_karte_start(['titel' => 'Schlüssel des Servers', 'id' => 'k-schluessel', 'zu' => true,
+      /* Auch offen, wenn die Konten sich nicht zählen ließen: Die Meldung
+         dazu steht unten in der Karte und sonst niemandem vor Augen. */
+      'offen' => $kartenOffen('k-schluessel') || isset($anZaehlung['fehler']),
+      'stand' => bs_stand_schluessel($skZustand, $anZustand, $anZaehlung),
       'plakette' => ($skZustand['stand'] === 'bereit' && $anZustand['stand'] === 'bereit')
           ? ui_plakette('in Ordnung', ['ton' => 'gruen'])
           : (($skZustand['stand'] === 'abweichend' || $anZustand['stand'] === 'abweichend')
@@ -989,8 +1112,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
   <?= $kartenMeldung('k-schluessel') ?>
 
     <p class="feld-hinweis">Zwei Geheimnisse in <code>config.php</code>, nicht
-       in der Datenbank — gedruckt gehören beide auf das Schlüsselblatt.
-       <a href="hilfe.php#karte-schluessel-des-servers-seit-web-20-1-0">Handbuch: was sie schützen und was tun, wenn einer fehlt</a></p>
+       in der Datenbank — gedruckt gehören beide auf das Schlüsselblatt.</p>
 
     <?php
       ui_zeile([
@@ -1336,16 +1458,26 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <?= ui_meldung_markup('fehler', 'Die Konten ließen sich nicht zählen: '
           . $anZaehlung['fehler']) ?>
     <?php endif; ?>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
 
-  <?php ui_karte_start(['titel' => 'Speicher', 'id' => 'k-speicher',
-      'zahl' => $sp['stand'] !== null
-          ? 'Stand ' . datum_zeit_text((string)$sp['stand'])
-          : 'noch nicht gemessen',
-      'plakette' => $sp['backups']['bezug'] > 0
-          ? ui_plakette($sp['backups']['prozent'] . ' %',
-                        ['ton' => speicher_ton($sp['backups']['prozent'], $sp['schwellen'])])
-          : '']); ?>
+  <?php /* DER MESSZEITPUNKT STEHT NICHT MEHR NEBEN DEM TITEL (bis Web 24.6
+           als `zahl`): Zugeklappt trägt der Kopf den Stand, und zwei
+           gedämpfte Angaben nebeneinander liest niemand auseinander. Er
+           steht jetzt an der Überschrift „Installation gesamt", der einzigen,
+           die aus der Messung kommt.
+
+           EINE ABLAGE, IN DIE NICHT GESCHRIEBEN WERDEN KANN, IST ROT, nicht
+           ein Prozentsatz (Design.md 9.23: es arbeitet nicht) — sonst stuende
+           die rote Zeile unsichtbar in einer zugeklappten Karte. */
+    ui_karte_start(['titel' => 'Speicher', 'id' => 'k-speicher', 'zu' => true,
+      'offen' => $kartenOffen('k-speicher'),
+      'stand' => bs_stand_speicher($sp),
+      'plakette' => !$sp['ablage']['ok']
+          ? ui_plakette('Ablage nicht beschreibbar', ['ton' => 'rot'])
+          : ($sp['backups']['bezug'] > 0
+              ? ui_plakette($sp['backups']['prozent'] . ' %',
+                            ['ton' => speicher_ton($sp['backups']['prozent'], $sp['schwellen'])])
+              : '')]); ?>
   <?= $kartenMeldung('k-speicher') ?>
 
     <?php if ($sp['stand'] === null): ?>
@@ -1370,7 +1502,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         if ($sp['gesamt']['bezug'] > 0): ?> von
         <?= groesse_text($sp['gesamt']['bezug']) ?> Webspace ·
         <?= (int)$sp['gesamt']['prozent'] ?> %<?php
-        else: ?> — ohne Webspace-Angabe kein Anteil<?php endif; ?></span></h3>
+        else: ?> — ohne Webspace-Angabe kein Anteil<?php endif; ?><?php
+        if ($sp['stand'] !== null): ?> · gemessen <?= e(datum_zeit_text((string)$sp['stand'])) ?><?php
+        endif; ?></span></h3>
     <?= speicher_balken([
           ['klasse' => 'sb-db',       'bytes' => $sp['gesamt']['datenbank'],
            'text' => 'Datenbank'],
@@ -1383,8 +1517,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         ], $sp['gesamt']['bezug'], $sp['schwellen']) ?>
 
     <p class="feld-hinweis">Der freie Webspace wird nicht gemessen, nur was
-       diese Installation belegt.
-       <a href="hilfe.php#speicher">Handbuch: was gezählt wird</a></p>
+       diese Installation belegt.</p>
 
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="speicher">
@@ -1450,7 +1583,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         'plaketten' => ui_plakette((string)$sp['pakete'], ['ton' => 'neutral']),
       ]);
     ?>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Sicherheitskopfzeilen --
            Sie steht zwischen Speicher und Adresssuche: naeher an „was der
@@ -1463,14 +1596,15 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                FROM csp_berichte ORDER BY zuletzt DESC LIMIT 20')->fetchAll();
     } catch (Throwable $ex) { /* Tabelle fehlt — Migration steht noch aus */ }
   ?>
-  <?php ui_karte_start(['titel' => 'Sicherheitskopfzeilen', 'id' => 'k-kopfzeilen',
+  <?php ui_karte_start(['titel' => 'Sicherheitskopfzeilen', 'id' => 'k-kopfzeilen', 'zu' => true,
+      'offen' => $kartenOffen('k-kopfzeilen'),
+      'stand' => bs_stand_kopfzeilen(count($cspBerichte)),
       'plakette' => kopf_csp_scharf()
           ? ui_plakette('CSP scharf', ['ton' => 'gruen'])
           : ui_plakette('CSP meldet nur', ['ton' => 'orange'])]); ?>
   <?= $kartenMeldung('k-kopfzeilen') ?>
     <p class="feld-hinweis">Die Content-Security-Policy sagt dem Browser, woher
-       er etwas laden darf — erst beobachten, dann scharf schalten.
-       <a href="hilfe.php#karte-sicherheitskopfzeilen-seit-web-20-7-0">Handbuch: Sicherheitskopfzeilen</a></p>
+       er etwas laden darf — erst beobachten, dann scharf schalten.</p>
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="kopfzeilen">
       <?php ui_schalter(['name' => 'csp_scharf', 'label' => 'Richtlinie scharf schalten',
@@ -1503,7 +1637,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
                    . 'einer Seite, die etwas nachlädt (Karten, Import, Export).',
           'plaketten' => ui_plakette('0', ['ton' => 'gruen'])]); ?>
     <?php endif; ?>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Konten ---------------------------------
      *
@@ -1516,7 +1650,9 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
   <?php require_once __DIR__ . '/konten_einstellungen_lib.php';
         require_once __DIR__ . '/protokoll_lib.php';
         $kE = konten_einstellungen(); ?>
-  <?php ui_karte_start(['titel' => 'Konten', 'id' => 'k-konten',
+  <?php ui_karte_start(['titel' => 'Konten', 'id' => 'k-konten', 'zu' => true,
+      'offen' => $kartenOffen('k-konten') || $demoFrage,
+      'stand' => bs_stand_konten(),
       'plakette' => ui_plakette(
           ['offen' => 'Registrierung offen',
            'freischaltung' => 'mit Freischaltung',
@@ -1558,8 +1694,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       </div>
     <?php endif; ?>
     <p class="feld-hinweis">Die Vorgabe ist „nur auf Einladung", damit niemand
-       durch Untätigkeit eine offene Registrierung bekommt.
-       <a href="hilfe.php#karte-konten-seit-web-20-16-5">Handbuch: Konten</a></p>
+       durch Untätigkeit eine offene Registrierung bekommt.</p>
 
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="konten">
@@ -1598,16 +1733,11 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           'wert' => (string)konten_grenze_mb(),
           'klein' => 'Einsätze samt GPS-Daten und Ruhesegmenten, gemessen wie die '
                    . 'Statistik zählt.']); ?>
-      <h3 class="listen-form-titel">Demo</h3>
-      <?php ui_schalter(['name' => 'demo_anmeldung', 'label' => 'Demo-Anmeldung zulassen',
-          'an' => konten_demo_anmeldung_an(),
-          'klein' => 'Aus heißt: Die Demo-Adresse gilt bei der Anmeldung als '
-                   . 'unbekannt, ihr Bestand bleibt.']); ?>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </div>
     </form>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Anmeldung -----
      *
@@ -1621,14 +1751,21 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         foreach (ZF_GERAET_TAGE_WAHL as $t) { $zfWahl[(string)$t] = $zfTageText($t); }
         $zfTageU = zweitfaktor_geraet_tage('user');
         $zfTageV = zweitfaktor_geraet_tage('verwaltung'); ?>
-  <?php ui_karte_start(['titel' => 'Anmeldung', 'id' => 'k-anmeldung',
-      'plakette' => ui_plakette('Gerät merken ' . $zfTageText($zfTageU) . ' / ' . $zfTageText($zfTageV),
-                                ['ton' => 'neutral'])]); ?>
+  <?php /* DIE PLAKETTE WERTET, DER STAND ZÄHLT: Bis Web 24.6 stand beides
+           („Gerät merken 30 Tage / 7 Tage") in der Plakette. Orange nur, wenn
+           die Tabelle fehlt — dann fragt die Anmeldung jedes Mal, und die
+           Meldung dazu steht sonst in einer zugeklappten Karte. */
+    ui_karte_start(['titel' => 'Anmeldung', 'id' => 'k-anmeldung', 'zu' => true,
+      'offen' => $kartenOffen('k-anmeldung'),
+      'stand' => bs_stand_anmeldung($zfTageText),
+      'plakette' => !zweitfaktor_geraete_da()
+          ? ui_plakette('update.php fehlt', ['ton' => 'orange'])
+          : ($zfTageU === 0 && $zfTageV === 0
+              ? ui_plakette('Gerät merken aus', ['ton' => 'neutral'])
+              : ui_plakette('Gerät merken an', ['ton' => 'blau']))]); ?>
   <?= $kartenMeldung('k-anmeldung') ?>
-    <p class="feld-hinweis">Nach einem Code aus der App kann ein Browser gemerkt
-       werden; dort fragt die Anmeldung dann so lange keinen Code. Kürzer
-       stellen wirkt sofort — auch für schon gemerkte Geräte, „aus" meldet alle ab.
-       <a href="hilfe.php#karte-anmeldung-seit-web-21-8-0">Handbuch: Anmeldung</a></p>
+    <p class="feld-hinweis">Ein gemerkter Browser fragt so lange keinen Code
+       aus der App; kürzer stellen wirkt sofort, „aus" meldet alle Geräte ab.</p>
     <?php if (!zweitfaktor_geraete_da()): ?>
       <?= ui_meldung_markup('warn', 'Die Tabelle für gemerkte Geräte fehlt noch — eine '
           . 'AdministratorIn muss update.php aufrufen. Bis dahin fragt die Anmeldung '
@@ -1638,7 +1775,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
       <?= csrf_field() ?><input type="hidden" name="action" value="anmeldung">
       <?php ui_feld(['name' => ZF_GERAET_K_USER, 'label' => 'Gerät merken — NutzerInnen',
           'art' => 'select', 'optionen' => $zfWahl, 'wert' => (string)$zfTageU,
-          'klein' => 'Vorgabe ' . ZF_GERAET_VORGABE_USER . ' Tage. Gilt nur für Konten mit '
+          'klein' => 'Vorgabe ' . ZF_GERAET_VORGABE_USER . ' Tage, nur für Konten mit '
                    . 'eingeschaltetem Zweitfaktor.']); ?>
       <?php ui_feld(['name' => ZF_GERAET_K_VERWALTUNG, 'label' => 'Gerät merken — Support, Admin, BetreiberIn',
           'art' => 'select', 'optionen' => $zfWahl, 'wert' => (string)$zfTageV,
@@ -1648,7 +1785,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </div>
     </form>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Protokoll: Frist und Archiv ----
            Die Frist der Verwaltungseinträge gehört zu dem, was sie begrenzt: dem
@@ -1656,14 +1793,17 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
            Verwaltung → Protokoll; hier steht, wie lange es liegt. */
         require_once __DIR__ . '/protokoll_archiv_lib.php';
         $archive = protokoll_archive(); ?>
-  <?php ui_karte_start(['titel' => 'Protokoll', 'id' => 'k-protokoll',
+  <?php /* KEINE KOPFAKTION MEHR: Eine Klappkarte trägt keine — sie stuende
+           im <summary>, ein Knopf im Knopf (Design.md 9.1). „Protokoll
+           lesen" steht deshalb im Fuß neben „Speichern". */
+    ui_karte_start(['titel' => 'Protokoll', 'id' => 'k-protokoll', 'zu' => true,
+      'offen' => $kartenOffen('k-protokoll'),
+      'stand' => bs_stand_protokoll(),
       'plakette' => ui_plakette(count($archive) . (count($archive) === 1 ? ' Archiv' : ' Archive'),
-                                ['ton' => $archive ? 'blau' : 'neutral']),
-      'aktion' => ['text' => 'Protokoll lesen', 'href' => 'admin_protokoll.php']]); ?>
+                                ['ton' => $archive ? 'blau' : 'neutral'])]); ?>
   <?= $kartenMeldung('k-protokoll') ?>
     <p class="feld-hinweis">Was hier steht, begrenzt, wie lange Betriebsereignisse
-       liegen — in der Datenbank und im versiegelten Archiv.
-       <a href="hilfe.php#das-archiv-nur-betreiberin">Wie das Archiv arbeitet</a></p>
+       liegen — in der Datenbank und im versiegelten Archiv.</p>
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="protokoll">
       <?php ui_feld(['name' => 'protokoll_frist',
@@ -1690,9 +1830,11 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           'klein' => 'Mit dem Versandjob, wie Konto-Backups und Komplett-Stände.']); ?>
       <div class="listen-form-fuss">
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+        <?= ui_knopf(['text' => 'Protokoll lesen', 'art' => 'leise',
+                      'href' => 'admin_protokoll.php']) ?>
       </div>
     </form>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Ratenschutz --------------------
            Sie steht NEBEN den Sicherheitskopfzeilen, weil beide dieselbe Frage
@@ -1702,14 +1844,15 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
            sie jetzt hier baut, baut sie zweimal. */ ?>
   <?php require_once __DIR__ . '/ratelimit_lib.php'; ?>
   <?php $vBr = rate_verlangsamung(true); ?>
-  <?php ui_karte_start(['titel' => 'Ratenschutz', 'id' => 'k-ratenschutz',
+  <?php ui_karte_start(['titel' => 'Ratenschutz', 'id' => 'k-ratenschutz', 'zu' => true,
+      'offen' => $kartenOffen('k-ratenschutz'),
+      'stand' => bs_stand_ratenschutz(),
       'plakette' => $vBr['stufe'] > 0
           ? ui_plakette('Verlangsamung Stufe ' . $vBr['stufe'], ['ton' => 'orange'])
           : ui_plakette('ruhig', ['ton' => 'gruen'])]); ?>
   <?= $kartenMeldung('k-ratenschutz') ?>
     <p class="feld-hinweis">Eine Sperre dauert beim zweiten Mal länger und
-       zählt am eingetippten Namen, nicht am Konto.
-       <a href="hilfe.php#11-4a-ratenschutz-was-jemanden-aufhaelt-der-es-von-aussen-versucht">Handbuch: Ratenschutz</a></p>
+       zählt am eingetippten Namen, nicht am Konto.</p>
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="ratenschutz">
 
@@ -1767,21 +1910,22 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
           'klein' => 'Keine — das ist der Normalfall.',
           'plaketten' => ui_plakette('0', ['ton' => 'gruen'])]); ?>
     <?php endif; ?>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
 
   <?php /* ---- Adresssuche ------------------------
            Sie steht im Betrieb und nicht in den Kontoeinstellungen, weil sie
            die Installation betrifft: Wer sie hier abschaltet, schaltet sie
            fuer alle ab (BetreiberIn, trifft alle). Der Kontoschalter
            daneben steht im Profil und kann nur noch einschraenken. */ ?>
-  <?php ui_karte_start(['titel' => 'Adresssuche', 'id' => 'k-adresssuche',
+  <?php ui_karte_start(['titel' => 'Adresssuche', 'id' => 'k-adresssuche', 'zu' => true,
+      'offen' => $kartenOffen('k-adresssuche'),
+      'stand' => bs_stand_adresssuche(),
       'plakette' => geocoder_installation_an()
           ? ui_plakette('an', ['ton' => 'gruen'])
           : ui_plakette('aus', ['ton' => 'neutral'])]); ?>
   <?= $kartenMeldung('k-adresssuche') ?>
     <p class="feld-hinweis">Beim Tippen in einem Ortsfeld und nach jeder Wahl auf
-       der Karte gehen der getippte Text und die Koordinate an einen Adressdienst.
-       <a href="hilfe.php#karte-adresssuche-seit-web-15-8-0">Handbuch: Adresssuche</a></p>
+       der Karte gehen der getippte Text und die Koordinate an einen Adressdienst.</p>
 
     <form method="post" action="betrieb_server.php">
       <?= csrf_field() ?><input type="hidden" name="action" value="geocoder">
@@ -1800,7 +1944,7 @@ ui_seite_start(['titel' => 'Servereinstellungen']);
         <?= ui_knopf(['text' => 'Speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
       </div>
     </form>
-  <?php ui_karte_ende(); ?>
+  <?php ui_karte_ende(true); ?>
 
 <?php /* DIE BALKENBREITEN — nach dem Aufbau, nicht im Markup.
          Siehe `speicher_balken()` oben: Ein `style`-Attribut faellt unter
@@ -1812,5 +1956,13 @@ document.querySelectorAll('.speicher-balken [data-breite]').forEach(function (el
 });
 </script>
 
+<?php /* BACKUP-ZIELE als letzte Karte (OF-06, E-OF-24, -45): dieselbe Karte
+         wie im Komplett-Backup, aus `sicherungsziele_teile.php`; ihre
+         Formulare posten an admin_sicherungsziele.php und kommen hierher
+         zurueck. Ausserhalb jedes <form>. */ ?>
+<?php sicherungsziele_karte('betrieb_server.php', $zielMeldung); ?>
+<?php sicherungsziele_dialoge('betrieb_server.php', $zielMeldung); ?>
+
 <?php ui_geruest_ende(); ?>
-<?php ui_seite_ende(['skripte' => ['assets/zeitfeld.js', 'assets/ankuendigung.js']]); ?>
+<?php ui_seite_ende(['skripte' => array_values(array_unique(array_merge(
+    ['assets/zeitfeld.js', 'assets/ankuendigung.js'], sicherungsziele_skripte())))]); ?>

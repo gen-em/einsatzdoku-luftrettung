@@ -160,17 +160,45 @@ if ($flash !== null && $flash['ort'] === 'k-mail') {
     $mailMeldung ??= [$flash['ton'], $flash['text']];
 }
 
-$karten = status_karten();
+$erhebung = status_erhebung();
+$karten   = $erhebung['karten'];
 $nach   = static function (string $id) use ($karten): array {
     foreach ($karten as $k) { if ($k['id'] === $id) { return $k; } }
     return ['titel' => '', 'id' => $id, 'zeilen' => []];
 };
 
-/* Die frisch erhobene Ampel geht in den Zwischenspeicher des Menuezaehlers —
- * wer hier steht, hat gerade die vollstaendige Erhebung bezahlt, und der
- * Zaehler auf den naechsten Seiten kann sie mitbenutzen. */
 $z = status_zaehlen($karten);
 status_ampel_merken($z);
+
+/* PROBLEME ZUERST (Konzept OF, OF-06, E-OF-20, Bild OF-P23-A). Oben stehen
+ * genau die Zeilen, die nicht gruen sind — rot vor orange, je mit ihrem
+ * Bereich als Vorsatz —, darunter jeder Bereich als Klappkarte mit Zahl und
+ * Plakette. Bis Web 24.6 standen vier offene Karten mit rund siebzig Zeilen
+ * da, und die sechs, die etwas brauchten, musste man suchen. */
+$aufmerksam = [];
+foreach (['rot', 'orange'] as $ton) {
+    foreach ($karten as $k) {
+        foreach ($k['zeilen'] as $zeile) {
+            if ($zeile['ton'] === $ton) {
+                $aufmerksam[] = ['klein' => $k['titel'] . ' · ' . $zeile['klein']] + $zeile;
+            }
+        }
+    }
+}
+
+/** Plakette einer Bereichskarte: rot zaehlt vor orange, sonst „in Ordnung". */
+$bereichPlakette = static function (array $k): string {
+    $rot = 0; $orange = 0;
+    foreach ($k['zeilen'] as $zeile) {
+        if ($zeile['ton'] === 'rot')    { $rot++; }
+        if ($zeile['ton'] === 'orange') { $orange++; }
+    }
+    if ($rot > 0)    { return ui_plakette($rot . ($rot === 1 ? ' Fehler' : ' Fehler'), ['ton' => 'rot']); }
+    if ($orange > 0) { return ui_plakette($orange . ($orange === 1 ? ' Hinweis' : ' Hinweise'), ['ton' => 'orange']); }
+    return ui_plakette('in Ordnung', ['ton' => 'gruen']);
+};
+$pruefungen = static fn(array $k): string
+    => count($k['zeilen']) . (count($k['zeilen']) === 1 ? ' Prüfung' : ' Prüfungen');
 
 ui_seite_start(['titel' => 'Status']);
 ?>
@@ -203,164 +231,73 @@ ui_seite_start(['titel' => 'Status']);
 
   <?= wartung_balken() ?>
 
-  <?php
-  /* DIE MELDUNG OBEN ZAEHLT, WAS DIE KARTEN GEFUNDEN HABEN. Die Erhebung
-     steht in `status_lib.php`; die Zahl liegt damit vor dem ersten Zeichen
-     fest, und es braucht keinen Puffer, der sie nach vorn schiebt. */
-  if ($z['rot'] > 0 || $z['orange'] > 0) {
-      $teile = [];
-      if ($z['rot'] > 0)    { $teile[] = $z['rot'] . ($z['rot'] === 1 ? ' Punkt arbeitet nicht' : ' Punkte arbeiten nicht'); }
-      if ($z['orange'] > 0) { $teile[] = $z['orange'] . ($z['orange'] === 1 ? ' Punkt braucht Aufmerksamkeit' : ' Punkte brauchen Aufmerksamkeit'); }
-      echo ui_meldung_markup($z['rot'] > 0 ? 'fehler' : 'warn',
-          implode(' · ', $teile) . '. Sie stehen unten rot beziehungsweise orange; '
-          . 'jede Zeile führt dorthin, wo sich etwas ändern lässt.');
-  } else {
-      echo ui_meldung_markup('info',
-          'Wartungsmodus aus, keine ausstehende Migration, Jobs laufen, Backups '
-          . 'aktuell, Speicher unter der Warnschwelle.', 'Alles läuft.');
-  }
-  ?>
-
-  <?php /* DAS FORMULAR STEHT EINMAL IM MARKUP, der Knopf im Kartenkopf zeigt
-           per `form=` darauf — ein <form> laesst sich dort nicht unterbringen,
-           und zwei ineinander erst recht nicht. Dasselbe Muster wie
-           „Alle sichern" in admin_sicherungen.php. */ ?>
+  <?php /* DAS FORMULAR STEHT EINMAL IM MARKUP, der Knopf in der Karte
+           E-Mail zeigt per `form=` darauf. */ ?>
   <form method="post" action="betrieb_status.php" id="f-testmail" hidden>
     <?= csrf_field() ?><input type="hidden" name="action" value="testmail">
   </form>
 
-  <div class="form-raster">
-  <div class="form-spalte">
-    <?php foreach (['k-server', 'k-mail'] as $id): $k = $nach($id); ?>
-      <?php /* DIE KOPFAKTION HAENGT AN DER KARTE, NICHT AN EINER ZEILE
-               (freigegeben 12.09.2026). Sie gehoert der
-               Karte E-Mail als Ganzes: Geprueft wird der Versand, und den
-               beschreiben beide Zeilen zusammen. Damit bleibt `status_lib.php`
-               unberuehrt — die Datei sagt in ihrem Kopf, dass sie misst und
-               nichts ueber Darstellung entscheidet, und DIESE Datei
-               entscheidet ueber Anordnung.
+  <?php if ($aufmerksam === []): ?>
+    <?= ui_meldung_markup('info',
+        'Keine Prüfung meldet etwas; die Bereiche darunter zeigen, was gemessen wurde.',
+        'Alles läuft.') ?>
+  <?php else: ?>
+    <?php ui_karte_start(['titel' => 'Braucht Aufmerksamkeit', 'id' => 'k-aufmerksam',
+                          'zahl' => (string)count($aufmerksam)]); ?>
+      <?php foreach ($aufmerksam as $zeile) { status_zeile($zeile); } ?>
+    <?php ui_karte_ende(); ?>
+  <?php endif; ?>
 
-               Art `blau`: Die Kopfaktion kennt nur `blau` und `orange`
-               (`.karte-aktion-blau` / `-orange` im Stylesheet). `neutral`
-               gaebe eine Klasse ohne Regel — einen ungestalteten Knopf ohne
-               jede Fehlermeldung. Orange waere eine Haupthandlung; die hat
-               diese Seite nicht.
+  <?php foreach (['k-server', 'k-konten', 'k-mail', 'k-jobs', 'k-backups'] as $id):
+    $k = $nach($id);
+    if ($k['zeilen'] === []) { continue; } ?>
+    <?php /* DIE ANTWORT DER TESTMAIL STEHT IN DER KARTE, in der geklickt
+             wurde; mit ihr ist die Karte offen. Die Kopfaktion „Testmail an
+             mich" ist ein Knopf im Inhalt geworden — eine Klappkarte traegt
+             keine Kopfaktion (Design.md 9.1). */ ?>
+    <?php ui_karte_start(['titel' => $k['titel'], 'id' => $k['id'], 'zu' => true,
+                          'stand' => $pruefungen($k), 'plakette' => $bereichPlakette($k),
+                          'offen' => $id === 'k-mail' && $mailMeldung !== null]); ?>
+      <?php if ($id === 'k-mail' && $mailMeldung): ?>
+        <?= ui_meldung_markup($mailMeldung[0], $mailMeldung[1]) ?>
+      <?php endif; ?>
+      <?php foreach ($k['zeilen'] as $zeile) { status_zeile($zeile); } ?>
+      <?php if ($id === 'k-mail'): ?>
+        <div class="listen-form-fuss">
+          <?= ui_knopf(['text' => 'Testmail an mich', 'symbol' => 'mail', 'art' => 'neutral',
+                        'attr' => ' form="f-testmail"']) ?>
+        </div>
+      <?php endif; ?>
+    <?php ui_karte_ende(true); ?>
+  <?php endforeach; ?>
 
-               Symbol `mail`: das 53. Zeichen des Vorrats, Tabler „mail",
-               neu aufgenommen fuer diesen Knopf. Alle elf uebrigen
-               Kopfaktionen tragen eines; eine textnackte waere die erste
-               gewesen und damit eine neue Darstellung. */ ?>
-      <?php ui_karte_start(['titel' => $k['titel'], 'id' => $k['id']]
-          + ($id === 'k-mail'
-              ? ['aktion' => ['text' => 'Testmail an mich', 'symbol' => 'mail',
-                              'art' => 'blau', 'form' => 'f-testmail']]
-              : [])); ?>
-        <?php /* DIE ANTWORT STEHT IN DER KARTE, IN DER GEKLICKT WURDE.
-                 Oben auf der Seite haette sie neben der Zusammenfassung
-                 („5 Punkte brauchen Aufmerksamkeit") gestanden — zwei
-                 Meldungen uebereinander, von denen die obere nichts mit dem
-                 Klick zu tun hat. Dasselbe Muster wie auf
-                 `betrieb_jobs.php`. */ ?>
-        <?php if ($id === 'k-mail' && $mailMeldung): ?>
-          <?= ui_meldung_markup($mailMeldung[0], $mailMeldung[1]) ?>
-        <?php endif; ?>
-        <?php foreach ($k['zeilen'] as $zeile) { status_zeile($zeile); } ?>
-      <?php ui_karte_ende(); ?>
-    <?php endforeach; ?>
-  </div><?php /* .form-spalte (links) */ ?>
-
-  <div class="form-spalte">
-    <?php foreach (['k-jobs', 'k-backups'] as $id): $k = $nach($id); ?>
-      <?php ui_karte_start(['titel' => $k['titel'], 'id' => $k['id']]); ?>
-        <?php foreach ($k['zeilen'] as $zeile) { status_zeile($zeile); } ?>
-      <?php ui_karte_ende(); ?>
-    <?php endforeach; ?>
-  </div><?php /* .form-spalte (rechts) */ ?>
-  </div><?php /* .form-raster */ ?>
-
-  <?php /* DIE PLATTFORM STEHT UEBER DIE GANZE BREITE UND NICHT IN EINER SPALTE.
-           Sie hat mehr Zeilen als die vier anderen Karten zusammen
-           — in einer Spalte machte sie das Raster so schief, dass die rechte
-           Spalte auf halber Hoehe endete. Ueber die ganze Breite ist sie
-           ausserdem das, was sie ist: die Auskunft UNTER der Anwendung, nicht
-           eine vierte gleichrangige Sache.
-
-           EINGEKLAPPT (`vorschau`). Wer sie braucht,
-           braucht sie einmal nach dem Deploy oder wenn oben etwas rot steht;
-           wer sie nicht braucht, soll nicht an zwanzig Zeilen vorbeiscrollen. */ ?>
-  <?php $kp = $nach('k-plattform'); ?>
-  <?php ui_karte_start(['titel' => $kp['titel'], 'id' => $kp['id'],
-                        'vorschau' => 'Muss · Empfohlen · gemessen']); ?>
-    <p class="feld-hinweis">Dieselbe Liste, die <code>install.php</code> vor
-       der Einrichtung prüft — ein fehlendes <em>Muss</em> färbt die Ampel rot,
-       ein knappes orange, ein <em>Empfohlen</em> gar nicht.
-       <a href="hilfe.php#12-1-status">Handbuch: Muss und Empfohlen</a></p>
+  <?php /* DIE PLATTFORM: dieselbe Liste, die `install.php` vor der
+           Einrichtung prueft. Ein fehlendes Muss faerbt rot, ein knappes
+           orange, eine Empfehlung gar nicht — ihre Zahl steht im Stand. */
+        $kp = $nach('k-plattform');
+        [$empfOk, $empfGesamt] = $erhebung['zahlen']['empfohlen']; ?>
+  <?php ui_karte_start(['titel' => $kp['titel'], 'id' => $kp['id'], 'zu' => true,
+                        'stand' => $pruefungen($kp) . ' · ' . $empfOk . '/' . $empfGesamt . ' empfohlen',
+                        'plakette' => $bereichPlakette($kp)]); ?>
+    <p class="feld-hinweis">Dieselbe Liste, die <code>install.php</code> vor der
+       Einrichtung prüft; eine Empfehlung färbt die Ampel nicht.</p>
     <?php foreach ($kp['zeilen'] as $zeile) { status_zeile($zeile); } ?>
   <?php ui_karte_ende(true); ?>
 
-  <?php /* DIE LESEKARTE DER config.php. Gebaut wie die
-           Plattform darueber — eingeklappt, Zeilen mit Plakette, kein neuer
-           Baustein. Sie LIEST nur; Geheimnisse stehen als „gesetzt" oder
-           „leer" da, die Liste und ihre Begruendung stehen in
-           `status_konfig_zeilen()`. Sie zaehlt nicht in der Meldung oben. */ ?>
-  <?php ui_karte_start(['titel' => 'Einstellungen aus der config.php', 'id' => 'k-konfig',
-                        'vorschau' => 'nur lesend · Geheimnisse als gesetzt/leer']); ?>
-    <p class="feld-hinweis">Die Datei liegt nur auf dem Server und lässt sich
-       hier nicht ändern — geändert wird sie per FTP. Passwörter und Schlüssel
-       stehen nie im Klartext da.
-       <a href="hilfe.php#12-1-status">Handbuch: Status</a></p>
-    <?php foreach (status_konfig_zeilen() as $zeile) { status_zeile($zeile); } ?>
+  <?php /* DIE LESEKARTE DER config.php — zugeklappt, ohne Ampel; die Liste
+           und ihre Begruendung stehen in `status_konfig_zeilen()`. */
+        $konfig = status_konfig_zeilen(); ?>
+  <?php ui_karte_start(['titel' => 'Konfiguration', 'id' => 'k-konfig', 'zu' => true,
+                        'stand' => count($konfig) . ' Werte aus der config.php',
+                        'plakette' => ui_plakette('nur lesend', ['ton' => 'neutral'])]); ?>
+    <p class="feld-hinweis">Geändert wird die Datei per FTP; Passwörter und
+       Schlüssel stehen nie im Klartext da.</p>
+    <?php foreach ($konfig as $zeile) { status_zeile($zeile); } ?>
   <?php ui_karte_ende(true); ?>
 
-  <?php /* ---- Betriebsprotokoll: eine Zaehlkarte -------
-     *
-     * WARUM HIER NUR ZAHLEN STEHEN UND KEINE EINTRAEGE. Die Eintraege stehen
-     * unter Verwaltung → Protokoll, mit Reitern, Suche und
-     * Archiv; jede Zeile hier fuehrt auf ihren Reiter. Diese Karte bleibt
-     * der Beleg, dass geschrieben wird — und zaehlt ueber dieselben
-     * Quellen wie die Seite, also auch E-Mail, Jobs und Ziele.
-     *
-     * DIE FEHLERZEILE IST DER EIGENTLICHE ZWECK. Ein Protokoll, dessen
-     * Schreiben scheitert, laesst die Handlung weiterlaufen — richtig
-     * so, aber dann muss es jemandem auffallen. Hier faellt es auf.
-     * ------------------------------------------------------------------- */ ?>
-  <?php require_once __DIR__ . '/protokoll_lib.php';
-        $pz = protokoll_zaehlkarte();
-        $pf = protokoll_fehler_zahl(); ?>
-  <?php ui_karte_start(['titel' => 'Betriebsprotokoll', 'id' => 'k-protokoll',
-      'plakette' => $pf > 0
-          ? ui_plakette($pf . ' nicht geschrieben', ['ton' => 'rot'])
-          : ui_plakette((string)$pz['alle'] . ' Einträge', ['ton' => 'blau'])]); ?>
-    <p class="feld-hinweis">Gezählt werden Betriebsereignisse — kein
-       Zugriffsprotokoll.
-       <a href="hilfe.php#karte-betriebsprotokoll-seit-web-20-16-5">Handbuch: Betriebsprotokoll</a></p>
-    <?php if ($pf > 0): ?>
-      <?php status_zeile(['text' => 'Einträge, die nicht geschrieben werden konnten',
-          'klein' => 'Die Handlungen sind gelungen, aber nicht festgehalten — der '
-                   . 'Grund steht im Serverprotokoll unter „protokoll:".',
-          'href' => null, 'plakette' => (string)$pf, 'ton' => 'rot']); ?>
-    <?php endif; ?>
-    <?php foreach (PROTOKOLL_SEITE_REITER as $r => $titel): ?>
-      <?php status_zeile([
-          'text'  => $titel,
-          'klein' => $r === 'verwaltung'
-              ? 'Das Audit — ' . protokoll_frist_verwaltung() . ' Tage, einstellbar '
-                . 'unter Servereinstellungen → Protokoll'
-              : 'verfällt nach ' . PROTOKOLL_FRIST_UEBRIGE . ' Tagen',
-          'href'  => 'admin_protokoll.php?r=' . $r,
-          'plakette' => $pz['tag'][$r] . ' heute · ' . $pz['gesamt'][$r] . ' gesamt',
-          'ton'   => $pz['gesamt'][$r] > 0 ? 'blau' : 'neutral']); ?>
-    <?php endforeach; ?>
-  <?php /* OHNE `true`: Die Karte ist weder zugeklappt
-           noch hat sie eine Vorschau, sie oeffnet also ein <section>. Bis Web
-           21.0.0 stand hier `ui_karte_ende(true)` und schloss mit </details> —
-           der Browser liess das <section> offen, und die folgende Karte
-           rutschte hinein. */ ?>
-  <?php ui_karte_ende(); ?>
-
-  <?php /* KEINE KARTE „WAS HIER GILT": Die
-           Ampel, die zwei Ausnahmen und das Alter der Zahlen stehen im
-           Handbuch 12.1. */ ?>
+  <?php /* KEINE KARTE „BETRIEBSPROTOKOLL" MEHR (E-OF-72): Die Zahlen stehen
+           an den Reitern des Protokolls; dass Schreiben scheitert, meldet die
+           Zeile „Betriebsprotokoll" im Bereich Server. */ ?>
 
 <?php ui_geruest_ende(); ?>
 <?php ui_seite_ende(); ?>

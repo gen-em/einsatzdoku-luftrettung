@@ -336,8 +336,15 @@ Die Kopfleiste zeigt links das Zeichen der Produktmarke und den Kurznamen
 der Anlage (Vorgabe **Gen-EM NAdoku**, einstellbar unter Verwaltung →
 Installation, 11.5); am breiten
 Bildschirm steht der eigene Name daneben (im Profil setzbar, sonst die
-E-Mail-Adresse). Rechts stehen **Startseite**, **Suche** (Abschnitt 4.6) und
-das Zahnrad für die **Einstellungen**. Sie bleibt beim Scrollen oben stehen.
+E-Mail-Adresse). Rechts stehen **Startseite**, **Suche** (Abschnitt 4.6), das
+**Fragezeichen** für dieses Handbuch, bei der Darstellung „Umschalter“ oder
+„Folgt System“ **Mond oder Sonne** zum Umschalten zwischen hell und dunkel
+(seit Web 24.9.0, Abschnitt 3.1a) und das Zahnrad für die
+**Einstellungen**. Sie bleibt beim Scrollen oben stehen. **Das Fragezeichen
+öffnet das Kapitel der Seite, auf der du gerade bist** (seit Web 24.2.0) —
+von den Servereinstellungen aus also 12.5, von der Tagesübersicht 4.1. Die
+Seiten selbst tragen deshalb keine Verweise „Handbuch: …" mehr, sondern
+höchstens einen Satz je Abschnitt.
 Nach 30 Minuten ohne Aktivität meldet das System automatisch ab.
 
 ![Die Web-Oberfläche am Schreibtisch](bilder/tagesuebersicht-desktop.png)
@@ -356,13 +363,13 @@ Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
 | Block | wer sieht ihn | was darin steht |
 |---|---|---|
 | **Einstellungen** | alle | Profil, Geräte, **Standorte**, Backup, Import / Export — Kapitel 3 bis 10 |
-| **Verwaltung** | Admins; der **Support** nur NutzerInnen und Protokoll | NutzerInnen, **Konto-Backups**, **Installation**, **Rechtstexte**, Demo-Konto, Protokoll — **Kapitel 11** |
-| **Betrieb** | BetreiberInnen | **Status**, **Statistik**, **Updates**, **Hintergrundjobs**, **Servereinstellungen**, **Komplett-Backup**, **Backup-Ziele** — **Kapitel 12** |
+| **Verwaltung** | Admins; der **Support** nur NutzerInnen und Protokoll | NutzerInnen, **Konto-Backups**, **Installation** (mit dem Demo-Konto), **Rechtstexte**, Protokoll — **Kapitel 11** |
+| **Betrieb** | BetreiberInnen | **Status**, **Statistik**, **Updates**, **Hintergrundjobs**, **Servereinstellungen**, **Komplett-Backup** (die **Backup-Ziele** sind seit Web 24.7.0 eine Karte darin und in den Servereinstellungen) — **Kapitel 12** |
 
-Jeder Block ist eine eigene Karte; im Kopf stehen ein rundes Zeichen, sein
-Name und die Zahl der Einträge. Am Schreibtisch stehen die Blöcke
-nebeneinander, auf schmalen Geräten untereinander. Abmelden steht getrennt
-am Ende und fragt sicherheitshalber nach.
+Jeder Block hat einen Kopf mit rundem Zeichen, Namen und der Zahl der
+Einträge. Am Schreibtisch stehen die Blöcke nebeneinander, auf schmalen
+Geräten untereinander. **Abmelden** steht unten in der Leiste (auf dem
+Handy unten in der Schublade) und fragt sicherheitshalber nach.
 
 Der Punkt für die Stammdaten hat zweimal den Namen gewechselt, und beide alten
 Links funktionieren weiter. Bis Web 6.3.0 hieß er „Standortdaten" und trug
@@ -373,7 +380,29 @@ dessen eigener Seite. Der Grund war, dass beide Reiter denselben Bestand
 luden und man zwischen ihnen hin und her ging, um einen einzigen Standort
 einzurichten.
 
-**In der Leiste klappen dieselben drei Blöcke auf und zu.** Ihre Namen
+**Am breiten Bildschirm liegen Leiste und Inhalt in einer gemeinsamen
+Karte** (seit Web 24.0.0). Die Leiste bleibt beim Rollen stehen und rollt,
+wenn sie länger ist als das Fenster, in sich; ihr Fuß — „Abmelden",
+„Diensttag anlegen", „Papierkorb" — bleibt dabei sichtbar. In den
+Einstellungen sind die Abschnitte einer Seite durch Linien getrennt statt
+als einzelne Karten gezeichnet. Unter allem steht ein dunkelblauer Streifen
+mit Lizenz, Fassung, Impressum und Datenschutz.
+
+**Unter der Kopfleiste stehen dieselben Blöcke als Reiter** (seit Web
+23.12.0): Einstellungen · Verwaltung · Betrieb, je mit der Zahl seiner
+Einträge und — wenn darin etwas zu tun ist — der Summe der Zahlen an seinen
+Menüpunkten. Ein Klick führt auf den ersten Punkt des Blocks, bei Betrieb
+also auf den Status. Am breiten Bildschirm bleibt die Zeile beim Scrollen
+unter der Kopfleiste stehen, auf dem Handy rollt sie mit der Seite weg. Die
+Reiter innerhalb einer Seite (Protokoll, Statistik, Rechtstexte) sehen
+genauso aus; welche Reihe die obere Ebene ist, sagt ihre Lage.
+
+**Am breiten Bildschirm zeigt die Leiste nur den Bereich, in dem du
+stehst** (seit Web 24.1.0) — die anderen erreichst du über die Reiter
+darüber. Der aktive Menüpunkt ist blau hinterlegt.
+
+**In der Schublade auf schmalen Geräten klappen die drei Blöcke auf und
+zu.** Ihre Namen
 stehen eine Stufe größer in Dunkelblau, der Winkel zum Aufklappen rechts, und
 eine Linie trennt die Blöcke voneinander (seit Web 21.1.0 — bis dahin stand
 der Winkel links, dort, wo die Einträge ihr Symbol tragen). Offen sind
@@ -394,7 +423,8 @@ höchstens eine Minute alt.
 
 **Unter dem geöffneten Menüpunkt stehen die Karten der Seite** als
 Sprungmarken — kleiner und ohne Symbol, damit sie nicht wie eigene Seiten
-aussehen. Ein Klick springt zur Karte; während man liest, ist die Marke der
+aussehen. Eine Karte, die die Seite gerade nicht zeigt (etwa „Für dich
+freigegebenes Backup", solange nichts freigegeben ist), hat keine Marke. Ein Klick springt zur Karte; während man liest, ist die Marke der
 Karte fett, die gerade oben steht. **Ist das Fenster niedriger als 950 px**
 (seit Web 21.1.3; vorher 800 px), fallen die Sprungmarken in der festen
 Leiste weg: Sonst
@@ -649,15 +679,26 @@ angemeldete Konten — aber nur bei denen, die hier „Standard der Installation
 stehen haben. Eine getroffene eigene Wahl bleibt unberührt.
 
 **Karte „Darstellung": hell oder dunkel.** Seit Web 23.10.0 wählst du im
-Profil, wie die Oberfläche aussieht: **Wie das Gerät** (die Vorgabe — sie
-folgt der Einstellung von Handy oder Rechner), **Hell** oder **Dunkel**. Die
-Wahl gilt für dein Konto auf jedem Gerät und wirkt sofort nach dem
-Speichern. Dunkel heißt: dunkelblaue Flächen, helle Schrift, dieselben
+Profil, wie die Oberfläche aussieht, seit Web 24.9.0 aus vier Einstellungen:
+
+- **Umschalter** (die Vorgabe): Die Seite folgt der Einstellung von Handy
+  oder Rechner, und in der Kopfleiste steht zwischen „?" und Zahnrad ein
+  Knopf mit **Mond** (zu dunkel) oder **Sonne** (zu hell). Ein Klick schaltet
+  sofort um und gilt **bis zur Abmeldung**; danach folgt die Seite wieder dem
+  Gerät.
+- **Immer hell** und **Immer dunkel**: fest, ohne Knopf.
+- **Folgt System**: wie Umschalter — die Seite folgt dem Gerät, der Knopf
+  steht da, ein Klick gilt bis zur Abmeldung.
+
+*(Bis Web 24.8.0 gab es drei Einstellungen ohne Knopf: Wie das Gerät, Hell,
+Dunkel. Ein Konto, das „Wie das Gerät" stehen hatte, hat jetzt den
+Umschalter.)* Die Wahl gilt für dein Konto auf jedem Gerät und wirkt sofort
+nach dem Speichern. Dunkel heißt: dunkelblaue Flächen, helle Schrift, dieselben
 Farben für Hinweise und Warnungen in dunklen Tönen. **Die Karte bleibt hell**
 — eine dunkle Karte bräuchte einen weiteren Kartendienst, der deinen
 Ausschnitt sähe —, ebenso alles, was du druckst. Die Anmeldeseite kennt
 dein Konto noch nicht und folgt immer dem Gerät. Im Demo-Konto lässt sich
-das Profil nicht speichern; dort gilt die Einstellung des Geräts.
+das Profil nicht speichern; dort gilt der Umschalter.
 
 **Karte „Datenschutz": die Adresssuche.** Seit Web 15.8.0 steht im Profil
 darunter der Schalter **„Adressvorschläge aus dem Internet"**. Er entscheidet
@@ -890,7 +931,15 @@ Blatt eintippen. **„Zurück zur Anmeldung"** bricht ab. Nach **fünf falschen
 Codes** ist die Anmeldung dieses Kontos eine Viertelstunde gesperrt, bei
 Wiederholung länger; die Meldung nennt, ab wann es wieder geht.
 
-**Ausschalten** geht nur, wo er kein Muss ist: Karte → **„Ausschalten"**.
+**Die Karte zeigt eingeschaltet einen Satz** (seit Web 24.5.0): seit wann,
+wie viele Codes übrig sind, ob der Rückweg steht, wie viele Geräte gemerkt und
+wie viele Passkeys angelegt sind. **„Verwalten"** klappt darunter die Zeilen
+auf — Codes zur Wiederherstellung (**„Neu erzeugen"**), Gemerkte Geräte
+(**„Vergessen"**), Passkeys und Rückweg (**„Erneuern"**), jede mit ihrer
+Handlung.
+
+**Ausschalten** geht nur, wo er kein Muss ist: Karte → „Verwalten" →
+**„Ausschalten"**.
 Für Support, Admin und BetreiberIn gibt es den Knopf nicht; dort **setzt die
 Verwaltung zurück** (11.1) — die BetreiberIn für alle Rollen, ein Admin nur
 für NutzerInnen, und niemand am eigenen Konto. Du bekommst dann eine Mail, und
@@ -967,7 +1016,7 @@ Support, Admin und BetreiberIn 7 (Betrieb → Servereinstellungen, Karte
 - **Nicht an einem Rechner, den andere mitbenutzen.** Ein gemerkter Browser
   ist so gut wie dein Handy: Wer dort dein Passwort kennt, ist drin.
 - **Vergessen:** Einstellungen → Profil, Karte „Zweitfaktor", Zeile
-  „Gemerkte Geräte" → **„Alle vergessen"**. Von selbst vergessen werden alle
+  „Gemerkte Geräte" (unter „Verwalten") → **„Vergessen"**. Von selbst vergessen werden alle
   gemerkten Geräte, wenn du dein **Passwort wechselst oder zurücksetzt**, wenn
   der Zweitfaktor **ausgeschaltet oder zurückgesetzt** wird, und wenn die
   BetreiberIn die Dauer **kürzer** stellt, als dein Gerät schon gemerkt ist.
@@ -1137,7 +1186,7 @@ damit die nächste Person hereinkommt. Alles andere ist offen.
 Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
 **gesperrt**, die Karte „Konto-Backups" fehlt dort ganz, und der Anzeigename
 lautet **„Demo NutzerIn"**. Verwaltet wird das Konto ausschließlich über den
-Reiter **Demo-Konto**: anlegen, zurücksetzen, entfernen. Der Grund ist der
+Karte **Demo-Konto** unter Installation: anlegen, zurücksetzen, entfernen. Der Grund ist der
 Reset — was auf der Kontoseite eingetragen würde, wäre beim nächsten Reset
 wieder weg, und zwar ohne Hinweis. **Die Geräte bleiben offen:** Eine
 Uhr zu koppeln ist gerade der Sinn dieses Kontos, und der Reset räumt das
@@ -1182,9 +1231,12 @@ aus; seit Web 9.0.0 sind es gezeichnete Symbole, die sich mitfärben.)
 Über allem steht die **Titelzeile** (seit Web 9.2.0): Wochentag und Datum
 als Überschrift, darunter Rettungsmittel, Standort und Dienstbeginn in
 einer Zeile. Rechts daneben öffnet der Knopf **„···"** das Aktionsblatt des
-Tages mit **„Einsatz nachtragen"**, **„Diensttag-Daten bearbeiten"**,
+Tages mit **„Einsatz nachtragen"**, **„Einsatz aus GPS-Daten
+ausschneiden"** (Abschnitt 4.1b, nur an Tagen mit Ruhesegment),
+**„Diensttag-Daten bearbeiten"**,
 **„Datum ändern"** (Abschnitt 4.2a), **„Anderen Diensttag aufnehmen"**
-(Abschnitt 4.5a), **„GPS-Daten als GPX"** (Abschnitt 4.1a) und **„Tag löschen"**
+(Abschnitt 4.5a), **„GPS-Daten als GPX"** (Abschnitt 4.1a), **„GPX
+importieren"** (Abschnitt 4.1c) und **„Tag löschen"**
 (Abschnitt 8). Auf dem Handy fährt
 das Blatt von unten herein, am Desktop steht es als Menü am Knopf; Escape
 schließt es, die Tastatur bedient es vollständig. Rechts neben dem Menü
@@ -1269,9 +1321,11 @@ Pro Tag:
   auf sehr breiten Bildschirmen (ab 1600 px) rückt sie neben Daten und
   Tabelle. Oben links lässt sich die Karte per Klick auf **Vollbild**
   stellen (erneuter Klick oder ESC verlässt den Vollbildmodus wieder), oben
-  rechts zwischen vier Kartenebenen umschalten: **Standard**, **Wanderkarte**
-  (mit Höhenlinien), **Topographisch** und — seit Web 7.0.0 —
-  **Satellitenbild**. Das Luftbild zeigt, was Höhenlinien nicht leisten: ob
+  rechts über das Kartenzeichen zwischen vier Kartenarten umschalten:
+  **Standard**, **Wanderkarte** (mit Höhenlinien), **Topografisch** und —
+  seit Web 7.0.0 — **Satellitenbild**. Wer die Kacheln liefert
+  (OpenStreetMap, OpenHikingMap, OpenTopoMap, Esri), steht seit Web 24.8.0
+  nicht mehr in der Auswahl, sondern je Kartenart in der Zeile unten rechts. Das Luftbild zeigt, was Höhenlinien nicht leisten: ob
   der Einsatzort auf einer Wiese, im Wald oder auf einem Parkplatz lag. Es ist
   bewusst nicht der Standard, weil es deutlich größere Kacheln lädt. Beide
   Controls stehen auf allen drei Kartenseiten der Anwendung zur Verfügung.
@@ -1350,8 +1404,10 @@ Pro Tag:
 Erreichbar über **„···" → „GPS-Daten als GPX"**. Die Seite zeigt oben die Karte
 des Tages und darunter **jede Aufzeichnung als eigene Zeile**, in der
 Reihenfolge, in der der Tag verlaufen ist: Ruhezeit, Einsatz, Ruhezeit,
-Einsatz. Einsätze tragen ihre Nummer. Je Zeile stehen Zeitraum, Punktzahl und,
-wo zutreffend, die Plakette **„ausgedünnt"**.
+Einsatz. Einsätze tragen ihre Nummer. Je Zeile stehen Zeitraum und
+Punktzahl. Ob eine Aufzeichnung schon ausgedünnt ist, zeigt die Seite seit
+Web 24.8.0 nicht mehr an; die GPX-Datei trägt es weiter in sich (Dateiname
+und Kennzeichnung je Track, siehe unten).
 
 Wer auf eine Zeile zeigt, sieht auf der Karte, welche Linie gemeint ist; ein
 Klick zoomt auf sie. **GPX** lädt genau diese Aufzeichnung herunter.
@@ -1397,8 +1453,13 @@ auf der Uhr einen Knopf gedrückt. Er fehlt also in der Liste — aber der
 Ruhezeit gebucht. Wer den Einsatz einfach nachträgt, bekommt einen Einsatz
 ohne GPS-Daten, und die Fahrt bleibt als Ruhezeit stehen.
 
-Unter der Einsatzliste steht deshalb die Karte **„Ruhesegmente"**: jede
-Aufzeichnung zwischen den Einsätzen mit Zeitraum, Dauer und Punktzahl.
+Dafür gibt es im Aktionsmenü des Diensttags (**„···"**) den Eintrag
+**„Einsatz aus GPS-Daten ausschneiden"**, direkt unter „Einsatz nachtragen".
+Er steht nur an Tagen, die Aufzeichnung zwischen den Einsätzen haben, und
+öffnet unter der Einsatzliste die Karte **„Ruhesegmente"**: jede solche
+Aufzeichnung mit Zeitraum, Dauer und Punktzahl. Hat der Tag genau ein
+Segment, ist dessen Schneide-Bereich gleich aufgeklappt. *(Bis Web 24.8.0
+stand die Karte an jedem Tag mit Ruhesegment fest unter der Einsatzliste.)*
 
 **So geht es:**
 
@@ -1473,8 +1534,9 @@ GPS-Daten willst du nicht behalten, den echten Dienst daneben aber schon.
 Dafür steht im selben aufgeklappten Bereich neben „Einsatz erzeugen" der rote
 Knopf **„Zeitraum löschen"**:
 
-1. **„Schneiden"** an der Zeile des Segments, Beginn und Ende des Zeitraums
-   eintragen — wie beim Schneiden.
+1. **„Einsatz aus GPS-Daten ausschneiden"**, dann **„Schneiden"** an der
+   Zeile des Segments, Beginn und Ende des Zeitraums eintragen — wie beim
+   Schneiden.
 2. **„Zeitraum löschen"**. Die Anwendung fragt nach und nennt, wie viele
    Punkte zwischen welchen Uhrzeiten wegfallen.
 3. Nach **„Löschen"** sind diese Punkte **endgültig** fort; es gibt kein
@@ -1546,6 +1608,8 @@ die Datei zu verwerfen; wie viele es waren, steht in der Rückmeldung.
 
 Nach dem Import steht das neue Segment beziehungsweise der Einsatz an seiner
 Stelle in der Tagesansicht, und die Rückmeldung nennt Punktzahl und Zeitraum.
+Beim Import als Ruhesegment öffnet sich dazu die Karte „Ruhesegmente", denn
+dort steht die Rückmeldung, und dort schneidest du die Einsätze heraus.
 Der Diensttag verlängert sich, wenn die Aufzeichnung über seinen bisherigen Zeitraum
 hinausreicht.
 
@@ -1604,10 +1668,12 @@ weiter, und das sendet. Der Unterschied sagt, **wo du getippt hast**, nicht
 welches Gerät hochgeladen hat.
 
 Trägt der Einsatz GPS-Daten, steht dort außerdem die Plakette
-**„GPS-Daten"** — und ob die Aufzeichnung noch vollständig ist oder bereits
-**ausgedünnt** (das geschieht sechs Monate nach dem Einsatz, siehe
-Abschnitt 9). Dann heißt die Plakette **„GPS-Daten ausgedünnt"** und ist
-orange.
+**„GPS-Daten"**. Ob die Aufzeichnung schon ausgedünnt ist (das geschieht
+sechs Monate nach dem Einsatz, siehe Abschnitt 9), sagt sie seit
+Web 24.8.0 nicht mehr: Die orange Plakette „GPS-Daten ausgedünnt" las sich
+wie eine Warnung, und es ist keine — die Aufzeichnung ist vollständig in
+der Form, die bleibt. Die GPX-Datei trägt die Angabe weiter (Abschnitt
+4.1a).
 
 **Seit Web 15.9.0 steht keine Zahl mehr darin.** Bis dahin hieß sie
 „Spur · 852 Punkte" bzw. „Spur ausgedünnt · 113 von 443 Punkten". Die Zahlen
@@ -1638,8 +1704,9 @@ ist danach nicht noch einmal nötig.
 **Einsatz** und **PatientIn** tragen im Kopf die blaue Plakette
 **„verschlüsselt"**, und die einzelnen geschützten Zeilen — Einsatzort,
 Beschreibung, manueller Abfahrtort, Diagnose, Name, Geburtsdatum, Alter und
-die Notizen des Einsatzes — tragen daneben ein kleines
-**Schloss**. Die Plakette sagt „hier stehen verschlüsselte Angaben", das
+die Notizen des Einsatzes — tragen vor ihrer Beschriftung ein kleines
+**Schloss** (seit Web 24.8.0 in einer eigenen schmalen Spalte, damit die
+Werte in einer Flucht beginnen; bis dahin stand es hinter dem Wort). Die Plakette sagt „hier stehen verschlüsselte Angaben", das
 Schloss sagt „diese hier". Auch die **Einsatznummer** trägt es (seit
 Web 19.1.1) — sie ist seit langem verschlüsselt, war aber die einzige Zeile
 des Blocks ohne das Zeichen. Der **manuelle Abfahrtort** steht seit
@@ -1651,13 +1718,15 @@ Die Angaben selbst stehen in **vier Karten**:
 - **Einsatz**: Einsatzort (darunter klein Höhe — sofern luftgebunden und aus
   dem Track ermittelbar —, Luftlinie und Strecke), Beschreibung des
   Einsatzorts, Abfahrtort (nur bei „Manueller Ort", Abschnitt 4.3),
-  Diagnose, Notizen, weitere Rettungsmittel. Am Fuß der Karte
-  stehen **Plaketten**: Winde (mit Cycles), Bergwacht (mit Bereitschaft),
-  Sekundär, Fehleinsatz — nur was zutrifft.
+  Diagnose, Notizen, weitere Rettungsmittel.
 - **PatientIn**: Einsatznummer, Name, Geburtsdatum mit Alter. Diese
   geschützten Angaben erscheinen **nur hier**, nicht in den Übersichten.
-- **Transport**: Transportart (mit NA-Begleitung in derselben Zeile), Ziel,
-  Schockraum.
+- **Einsatz und Transport**: Transportart (mit NA-Begleitung in derselben
+  Zeile), Ziel, Schockraum, „Namen / Infos" der Bergwacht; am Fuß der Karte
+  stehen **Plaketten**: Winde (mit Cycles), Bergwacht (mit Bereitschaft),
+  Sekundär, Fehleinsatz — nur was zutrifft. *(Bis Web 24.8.0 hieß die Karte
+  „Transport", und die Plaketten standen in der Karte „Einsatz" — im
+  Formular gehören ihre Schalter aber hierher.)*
 - **Besatzung**: die für **diesen Einsatz** gültige Besatzung — normalerweise
   die des Diensttags, bei einer abweichenden Besatzung (Abschnitt 4.3) die
   abweichende Person, klein gekennzeichnet mit „(abweichend vom Diensttag)".
@@ -1751,17 +1820,20 @@ in dieser Reihenfolge:
 1. **PatientIn** — Einsatznummer, Nachname, Vorname, Geburtsdatum, Alter,
    Diagnose, **Einsatzort**, Beschreibung des Einsatzorts, Abfahrtort
    (alles gemeinsam Ende-zu-Ende-verschlüsselt)
-2. **Einsatz** — Sekundärtransport, Fehleinsatz, Windeneinsatz und Bergwacht
-   als **Schalter**; die Detailfelder eines eingeschalteten Schalters
-   (Cycles, Bereitschaft …) erscheinen eingerückt hinter einer orangen Linie
-3. **Transport** — Transportart, NA-Begleitung, Transportziel, Schockraum
-4. **Weitere Rettungsmittel** — Rettungsmittel (RTW, NEF, RTH …), weitere
+2. **Einsatz und Transport** (seit Web 24.8.0 eine Karte, vorher zwei) —
+   oben Sekundärtransport und Fehleinsatz als **Schalter** nebeneinander,
+   darunter die **Transportart** als drei Tasten Luft · Boden · Ambulant,
+   dann Transportziel, NA-Begleitung und Schockraum; Windeneinsatz und
+   Bergwacht folgen als Schalter, die Detailfelder eines eingeschalteten
+   Schalters (Cycles, Bereitschaft …) erscheinen eingerückt hinter einer
+   Linie
+3. **Weitere Rettungsmittel** — Rettungsmittel (RTW, NEF, RTH …), weitere
    NotärztIn
-5. **Abweichende Besatzung** — zugeklappt mit der Vorschau „vom Diensttag";
+4. **Abweichende Besatzung** — zugeklappt mit der Vorschau „vom Diensttag";
    mit gespeicherter Abweichung offen
-6. **Notizen** — seit Web 19 **verschlüsselt** wie die Patientendaten
-7. **Einsatzphasen**
-8. **Reanimation** — zugeklappt („keine"), mit Bestand offen
+5. **Notizen** — seit Web 19 **verschlüsselt** wie die Patientendaten
+6. **Einsatzphasen**
+7. **Reanimation** — zugeklappt („keine"), mit Bestand offen
 
 Unter dem Titel steht ein Satz zu den beiden Zeichen an den Feldern, mit einem
 Verweis auf ihre Erklärung am Ende dieses Abschnitts (**Schloss und
@@ -1802,12 +1874,18 @@ Uhrzeiten stehen immer im **24-Stunden-Format `HH:MM`**, unabhängig davon, wie
 dein Gerät sonst eingestellt ist. Du kannst einfach die Ziffern tippen: aus
 `930` wird `09:30`, aus `9` wird `09:00`, der Doppelpunkt setzt sich von
 selbst. Ergibt die Eingabe keine gültige Uhrzeit, färbt sich das Feld rot, und
-gespeichert wird sie nicht. Datumsfelder bleiben die gewohnten Kalenderfelder
-deines Geräts.
+gespeichert wird sie nicht. **Daten tippst du als `TT.MM.JJJJ`** (seit Web
+24.4.0), überall in der Anwendung gleich und ohne Kalender: Aus `07112026`
+wird `07.11.2026`, aus `7.1.2026` beim Verlassen des Felds `07.01.2026`.
+Beim Geburtsdatum genügt ein zweistelliges Jahr — `23.04.33` wird
+`23.04.1933`, weil 2033 in der Zukunft läge. Ein Tag, den es nicht gibt,
+färbt das Feld rot.
 
 Gespeichert wird über die **Speichern-Leiste**, die am unteren Rand erscheint,
 sobald du etwas geändert hast (seit Web 9.4.0) — vorher gibt es nichts zu
-speichern und keinen Knopf. Einen „Verwerfen"-Knopf gibt es bewusst nicht:
+speichern und keinen Knopf. Sie ist blau hinterlegt und nennt links, in
+welchen Abschnitten etwas geändert ist („Geändert: Einsatzort und Zeiten",
+seit Web 24.2.0). Einen „Verwerfen"-Knopf gibt es bewusst nicht:
 Der Rückweg oben genügt, und beim Verlassen mit ungespeicherten Änderungen
 fragt der Browser nach. **Strg-Enter** (bzw. Cmd-Enter auf macOS) speichert
 ohne Maus — in Notizen bleibt einfaches Enter ein Zeilenumbruch.
@@ -1827,11 +1905,13 @@ auch eine zweistellige Jahreszahl (z. B. „23.04.33") — die Anwendung ergänz
 automatisch das plausible Jahrhundert. Der Einsatzort sucht beim Tippen: Ab
 drei Buchstaben erscheinen Adressvorschläge (OpenStreetMap); die Auswahl
 eines Vorschlags speichert die Koordinaten und setzt den Pin auf den Karten.
-Freitext ohne Vorschlag geht auch — dann ohne Pin. **Unter dem ersten
-Ortsfeld einer Seite** steht eine Kleinzeile, die den Adressdienst beim Namen
-nennt und sagt, was ihn erreicht; sie fehlt, wenn die Adresssuche
-abgeschaltet ist (Abschnitt 3.1a). Sie steht nur einmal je Seite — auf der
-Standortseite wären es sonst zehn gleiche Sätze.
+Freitext ohne Vorschlag geht auch — dann ohne Pin. **Neben der Lupe des
+ersten Ortsfelds einer Seite** steht ein kleines Infozeichen (seit Web
+24.4.0; bis dahin eine Kleinzeile darunter). Fährst du darüber, tippst es an
+oder springst mit der Tabulatortaste darauf, nennt es den Adressdienst beim
+Namen und sagt, was ihn erreicht; Esc schließt den Satz wieder. Es fehlt,
+wenn die Adresssuche abgeschaltet ist (Abschnitt 3.1a), und steht nur einmal
+je Seite — auf der Standortseite wären es sonst zehn gleiche Zeichen.
 
 **So wird eine Vorschlagsliste bedient** (seit Web 15.7.0 überall dieselbe —
 Einsatzort, Abfahrtort, Transportziel, Besatzung, weitere Rettungsmittel).
@@ -1952,7 +2032,10 @@ Luftlinienlänge ein — eine Luftlinie und eine gefahrene Strecke sind nicht
 dieselbe Größe.
 
 **Transport.** Die **Transportart** (Luft, Boden, Ambulant) — bis Web 6.3.0
-schlicht „Transport" — steuert, was darunter erscheint: Bei Luft und Boden die **NA-Begleitung**, die **Zielklinik** samt
+schlicht „Transport" — wählst du seit Web 24.8.0 mit drei Tasten statt einer
+Auswahlliste; ein zweiter Klick auf die gewählte Taste nimmt die Wahl zurück
+(dann ist die Transportart offen, wie früher „–"). Sie steuert, was darunter
+erscheint: Bei Luft und Boden die **NA-Begleitung**, die **Zielklinik** samt
 Koordinaten und den **Schockraum**; bei „Ambulant" — die PatientIn wurde nicht
 transportiert — entfallen alle drei. Die Zielklinik ist seit Web 22.1.0
 verschlüsselt (Schloss): Sie steht erst nach dem Entsperren im Feld, ihr Pin
@@ -2920,8 +3003,10 @@ das Ruhesegment abgeschlossen ist, und **dünnt sie 31 Tage nach dem Ende aus**
 - **Auf der Startseite** erledigt er bei jedem Aufruf still bis zu zwanzig
   Aufzeichnungen — sobald die geschützten Angaben entsperrt sind. Nach dem
   Passwort fragt er dafür nie.
-- **Hier, unter Backup**, steht die Karte **„GPS-Daten verdichten"**. Sie
-  nennt, was fällig ist („42 Aufzeichnungen aus 11 Diensttagen"), und arbeitet
+- **Hier, unter Backup**, steht die Karte **„GPS-Daten verdichten"** — seit
+  Web 24.5.0 nur, wenn nach der Startseite noch etwas fällig ist; sonst steht
+  im Profil unter „Was dein Konto hält" die Zeile „GPS-Daten verdichten:
+  erledigt". Die Karte nennt, was fällig ist („42 Aufzeichnungen aus 11 Diensttagen"), und arbeitet
   es ab, solange die Seite offen ist: Ring, Zahl und Balken zeigen, wie weit er
   ist; am Ende steht das Ergebnis. Fehlt bei einem Einsatz die Höhe des
   Einsatzorts, trägt er sie dabei nach.
@@ -3001,7 +3086,9 @@ Einspielen ist nicht nötig.
 
 Unter **Einstellungen → Import / Export** lässt sich eine vorhandene
 Einsatzliste (Excel oder CSV) übernehmen — etwa eine über Jahre gepflegte
-Jahresliste.
+Jahresliste — oder die eigene als Datei ausgeben. **Oben wählst du zwischen
+„Liste übernehmen" und „Liste ausgeben"** (seit Web 24.5.0); darunter steht
+nur das Formular, das dazu gehört.
 
 ### Die übrigen Wege
 
@@ -3348,8 +3435,11 @@ automatisch endgültig weg.
   und die Diensttag-Angaben. Beim Wiederherstellen kehrt alles gemeinsam zurück.
 - **Papierkorb:** eigene Seite, erreichbar über das Papierkorb-Symbol unten in
   der Diensttage-Leiste (gedämpft, solange nichts darin liegt) — je eine Karte
-  für gelöschte Diensttage und einzeln gelöschte Einsätze. Zu jedem Eintrag
-  stehen „Wiederherstellen" und „Endgültig löschen" bereit; auf schmalen
+  für gelöschte Diensttage und einzeln gelöschte Einsätze. Ein gelöschter
+  Diensttag trägt vor dem Datum das Zeichen seines Rettungsmittels, wie in
+  der Diensttage-Leiste. Zu jedem
+  Eintrag stehen „Wiederherstellen" (Zeichen: kreisender Pfeil) und
+  „Endgültig löschen" bereit; auf schmalen
   Geräten hinter dem **⋯** am rechten Rand der Zeile. Endgültiges Löschen führt
   auf eine Seite, die den Umfang beziffert, und ist unwiderruflich.
 
@@ -3731,12 +3821,22 @@ eingefroren.
 Unter **Einstellungen → „Geräte"** verwaltet jede/r die eigenen Geräte — die
 Uhr, seit Web 12.8.0 auch das Handy mit der Android-App.
 
-**Die Karte „Gerät koppeln" steht oben und hat drei Zustände** *(seit Web
-13.1.0)*. Sie führt den Weg, den Abschnitt 2.2 von der Uhr aus beschreibt:
+**Die Geräte stehen nach Typ in zwei Karten** (seit Web 24.5.0): „Garmin-Uhr"
+und „Android-Handy und Wear-OS-Uhr" — eine Wear-OS-Uhr steht nicht selbst
+darin, sie sendet über das Handy. Unter jeder Karte öffnet **„Weitere Uhr
+koppeln"** bzw. **„Weiteres Gerät koppeln"** einen Dialog mit drei
+Schritten: App installieren (Connect IQ Store bzw. Play Store, dazu das APK
+von Hand), Kopplung am Gerät starten, Code eingeben. Darunter steht, wie
+viele der Plätze belegt sind; sind alle belegt, fehlt der Knopf, und eine
+Meldung sagt es.
 
-1. **Ein Feld „Code vom Gerät".** Du startest die Kopplung **am Gerät**; es
-   zeigt sechs Zeichen, die du hier eintippst. Groß- und Kleinschreibung und
-   ein Leerzeichen in der Mitte sind egal.
+**Das Koppeln hat drei Zustände** *(seit Web 13.1.0)*. Es führt den Weg, den
+Abschnitt 2.2 von der Uhr aus beschreibt:
+
+1. **Ein Feld „Code vom Gerät"** im Dialog. Du startest die Kopplung **am
+   Gerät**; es zeigt sechs Zeichen, die du hier eintippst. Groß- und
+   Kleinschreibung und ein Leerzeichen in der Mitte sind egal. Ist der Code
+   falsch, geht der Dialog mit der Meldung wieder auf.
 2. **Eine Rückfrage.** Sie zeigt, **welches Gerät** sich meldet: die Art
    („Uhr" oder „Handy") und das Modell, das es selbst gemeldet hat, dazu den
    Code in zwei Dreiergruppen und die gekürzte Gerätekennung. Erst **„Verbinden"** ordnet die Sitzung deinem
@@ -4106,16 +4206,16 @@ lässt sich nicht trennen; erst den Dienst beenden.
 ## 11. Verwaltung (Admin)
 
 **Was andere Konten und die Anlage nach außen betrifft.** Der Block
-**Verwaltung** unter dem Zahnrad hat sechs Punkte, und dieses Kapitel folgt
-ihnen:
+**Verwaltung** unter dem Zahnrad hat fünf Punkte (bis Web 24.6.0 sechs: das
+Demo-Konto ist seither eine Karte unter Installation), und dieses Kapitel
+folgt ihnen:
 
 | Menüpunkt | Abschnitt | wozu |
 |---|---|---|
 | **NutzerInnen** | 11.2, 11.3 | Konten sehen, anlegen, ändern, löschen; je Konto die Kontoseite (11.1) |
 | **Konto-Backups** | 11.4 | die Regeln, die für **alle** Konten gelten |
-| **Installation** | 11.5 | Name, Adressen, Logo |
+| **Installation** | 11.5, 11.6 | Name, Adressen, Logo, Demo-Konto |
 | **Rechtstexte** | 11.5a | Impressum, Datenschutzerklärung, Nutzungsbedingungen, AVV — mit Vorschau beim Tippen |
-| **Demo-Konto** | 11.6 | anlegen, zurücksetzen, entfernen |
 | **Protokoll** | 11.7 | nachlesen, wer wann was im Betrieb getan hat; für die BetreiberIn dazu das Archiv |
 
 Angelegt wird in der Liste, gelöscht auf der Kontoseite — dort gehört die
@@ -4349,6 +4449,9 @@ eigene Backups macht, fragt die Person.
 
 Darunter die Liste selbst.
 
+- **Die Filter liegen hinter dem Knopf „Filter"** rechts neben dem Suchfeld
+  (seit Web 24.4.0). Ist einer gesetzt, steht er unter der Suche als Pille
+  mit Kreuz, daneben wie viele Konten passen („4 von 12").
 - **Suchen** nach Name oder E-Mail-Adresse. Das Feld steht seit Web 15.4.1 in
   einer eigenen Zeile über den Filtern — vorher standen beide nebeneinander,
   und bei üblicher Schreibtischbreite fiel der letzte Filter allein in eine
@@ -4625,8 +4728,8 @@ Betrieb → Komplett-Backup (12.6).
 Warteschlange überlebt einen Abbruch. Wie oft er läuft, hängt vom
 eingerichteten Auslöser ab (12.4).
 
-**Wohin die Pakete von hier aus gehen**, steht unter Betrieb → Backup-Ziele
-(12.7) — FTPS- oder SFTP-Gegenstellen. Ohne ein solches Ziel liegen die
+**Wohin die Pakete von hier aus gehen**, steht in der Karte „Backup-Ziele"
+unter Betrieb → Servereinstellungen (12.7) — FTPS- oder SFTP-Gegenstellen. Ohne ein solches Ziel liegen die
 Backups auf demselben Server, dessen Ausfall der Grund für ein Backup wäre.
 Die Ablage selbst ist über den Browser nicht erreichbar: Eine `.htaccess`
 sperrt sie, und der Ordnername je Konto ist nicht zu erraten.
@@ -4785,7 +4888,7 @@ versiegelten Abzug eines Komplett-Backups.
 ### 11.5 Installation
 
 Unter **„Installation"** steht, wie diese Anlage nach außen auftritt: der
-**Name**, die **Adressen** und das **Logo**, untereinander in einer Spalte. Die
+**Name**, die **Adressen**, das **Logo** und das **Demo-Konto** (11.6), untereinander in einer Spalte. Die
 vier Rechtstexte stehen seit Web 21.1.0 auf einer eigenen Seite
 (11.5a); bis dahin standen sie hier in der rechten Spalte.
 
@@ -5058,8 +5161,11 @@ fertiger Text.
 
 ### 11.6 Demo-Konto
 
-Unter **Verwaltung → Demo-Konto** wird das Demo-Konto **angelegt**,
-**zurückgesetzt** oder **entfernt**. Was es ist, wann es sich selbst
+In der Karte **Demo-Konto** unter **Verwaltung → Installation** wird das
+Demo-Konto **angelegt**, **auf Standard zurückgesetzt** (Kopfaktion) oder
+**entfernt** (Zeile „Konto“), und dort steht der Schalter **„Demo-Anmeldung
+zulassen“**. Bis Web 24.5 war das eine eigene Seite und der Schalter stand
+in den Servereinstellungen. Was es ist, wann es sich selbst
 zurücksetzt und was darin nicht geht, steht in Abschnitt 3.2 —
 dort aus Sicht dessen, der es benutzt. **Entfernen** löscht es wie jedes
 andere Konto (seit Web 21.1.8): samt Konto-Backups und mit einem Eintrag im
@@ -5069,10 +5175,12 @@ Zwei Dinge, die nur die Verwaltung betreffen: Auf der **Kontoseite** des
 Demo-Kontos sind Ändern, Sichern, Einspielen, Freigeben und Löschen
 abgeschaltet, und in **jeder Zahl der Statistik** (12.2) bleibt es außen vor.
 
-Auf der Seite stehen der Zustand (Konto, letzter Reset, ob seither etwas
-geändert wurde, nächster Reset), die
-drei **Papierkorbzahlen** und — sobald es einen gibt — der **Bericht des
-letzten Laufs**, zugeklappt. Die Papierkorbzahlen sind die Kontrolle des
+Die Karte zeigt Konto, letzten und nächsten Reset; nach einem Anlegen oder
+Zurücksetzen steht darunter der **Bericht des letzten Laufs**, zugeklappt.
+Die Warnung zum Schlüsselmaterial steht nur, solange die Anmeldung
+zugelassen ist. Die **Kontrollzahlen** — Bestand und die drei
+**Papierkorbzahlen** — stehen seit Web 24.7.0 auf der Statusseite in der
+Karte **„Konten"** (12.1); die frühere Seite `admin_demo.php` leitet dorthin. Die Papierkorbzahlen sind die Kontrolle des
 Resets: Der Papierkorb kommt **aus der Fixture** zurück, nicht aus einem
 Nachlauf. Stehen sie auf null, ist beim Einspielen etwas übersprungen worden.
 Ausgelöst wird der Reset von der nächsten Anfrage des Demo-Kontos, sobald er
@@ -5083,6 +5191,16 @@ Absenden im Demo-Konto und jeder angenommene Upload eines seiner Geräte;
 mehr — das Verdichten der Spuren im Hintergrund lässt das Demo-Konto aus. **Nach einem Deploy mit neuer
 Fixture** zeigt das Demo-Konto deshalb bis zu einem Tag lang den alten
 Bestand — „Zurücksetzen" holt den neuen sofort.
+
+**Demo-Anmeldung zulassen.** Ist sie aus, wird die Demo-Adresse bei der
+Anmeldung **wie eine unbekannte Adresse** behandelt — dieselbe Meldung,
+dieselbe Antwortdauer, auch beim richtigen Passwort. Die Seite verrät damit
+nicht, ob diese Installation ein Demo-Konto hat. **Der Bestand bleibt
+liegen:** Abgeschaltet ist die Anmeldung, nicht das Konto. Der Reset ruht,
+weil ihn nur Anfragen des Demo-Kontos auslösen — es sei denn, ein
+gekoppeltes Demo-Gerät lädt weiter hoch. Wenn die Registrierung auf „nur
+auf Einladung“ wechselt, bieten die Servereinstellungen an, die
+Demo-Anmeldung mit abzuschalten (12.5, Karte „Konten“).
 
 #### Was der Reset umfasst
 
@@ -5173,6 +5291,10 @@ Angaben, die nicht in den Satz passen.
   365 Tage. Ohne Auswahl siehst du alles, was noch da ist.
 - **Art:** ein Auswahlfeld, das sofort filtert.
 - **Ein zweiter Klick auf die aktive Pille** nimmt den Zeitraum zurück.
+- **Zeitraum und Art liegen hinter dem Knopf „Filter"** rechts neben dem
+  Suchfeld (seit Web 24.4.0); seine Zahl sagt, wie viele Filter gesetzt
+  sind. Die gesetzten stehen unter der Suche als Pillen mit Kreuz — das
+  Kreuz nimmt den Filter zurück, ohne dass du den Knopf öffnen musst.
 - **50 Einträge je Seite**; darunter die Seitenwahl.
 - **Ein Wechsel des Reiters beginnt neu:** Suche, Zeitraum, Art und
   Kontofilter gelten nur im Reiter, in dem sie gesetzt wurden.
@@ -5246,7 +5368,8 @@ Ratenschutz von vorn.
 ## 12. Betrieb (BetreiberIn)
 
 **Der Server selbst.** Dieser Block erscheint nur für die Rolle
-**BetreiberIn** (11.3) und hat sieben Punkte — dieses Kapitel folgt ihnen:
+**BetreiberIn** (11.3) und hat sechs Punkte (bis Web 24.7.0 sieben: die
+Backup-Ziele sind seither eine Karte, 12.7) — dieses Kapitel folgt ihnen:
 
 | Menüpunkt | Abschnitt | wozu |
 |---|---|---|
@@ -5255,8 +5378,7 @@ Ratenschutz von vorn.
 | **Updates** | 12.3 | Wartungsmodus und ausstehende Datenbank-Updates |
 | **Hintergrundjobs** | 12.4 | ob die regelmäßige Arbeit läuft, und die drei Auslöser |
 | **Servereinstellungen** | 12.5 | Speichergrenze, Warnschwellen, Kontingente, Belegung, Ablage, Adresssuche, Sicherheitskopfzeilen |
-| **Komplett-Backup** | 12.6 | die ganze Installation in eine Datei |
-| **Backup-Ziele** | 12.7 | wohin die Konto-Backups zusätzlich geschoben werden |
+| **Komplett-Backup** | 12.6, 12.7 | die ganze Installation in eine Datei; die Karte „Backup-Ziele“ (auch in den Servereinstellungen): wohin die Konto-Backups zusätzlich geschoben werden |
 
 **Der Unterschied zu Kapitel 11 in einem Satz:** Die Verwaltung kümmert sich um
 **Konten**, der Betrieb um die **Anlage**. Wer den Betrieb sieht, sieht auch
@@ -5290,18 +5412,31 @@ Speicherstand unter den Backups, ein Job-Fehler als Plakette in einer Liste.
 Wer wissen wollte, ob die Installation in Ordnung ist, musste sechs Seiten
 aufrufen.
 
-Oben steht eine Meldung mit einer Zahl — *„2 Punkte brauchen Aufmerksamkeit"*
-oder *„Alles läuft"*. Darunter vier Karten: **Server**, **E-Mail**,
-**Hintergrundjobs** und **Backups**, je Sache eine Zeile mit einer Plakette.
-Ganz unten, eingeklappt, eine fünfte: **Plattform** (seit Web 20.5.0), und
-darunter, ebenso eingeklappt, seit Web 23.5.0 **„Einstellungen aus der
-config.php"**.
+**Probleme zuerst** (seit Web 24.7.0). Oben steht der Abschnitt **„Braucht
+Aufmerksamkeit"** mit genau den Zeilen, die nicht grün sind — rote vor
+orangen, je mit ihrem Bereich davor („E-Mail · …"). Steht nichts an, steht
+dort *„Alles läuft."*. Darunter jeder Bereich als **zugeklappter Abschnitt**
+mit der Zahl seiner Prüfungen und einer Plakette (*in Ordnung*, *N Hinweise*,
+*N Fehler*): **Server**, **Konten**, **E-Mail**, **Hintergrundjobs**,
+**Backups**, **Plattform** und **Konfiguration** (die Werte der
+`config.php`, nur lesend). Bis Web 24.6 standen dort vier offene Karten mit
+rund siebzig Zeilen; die wenigen, die etwas brauchten, musste man suchen.
+
+**Was nicht mehr dasteht, weil es nie etwas verlangte** (seit Web 24.7.0):
+die Zeilen „Datenbank" (Größe — steht in der Plattform und unter
+Servereinstellungen → Speicher), „Gerätemodelle" (heilt beim nächsten Joblauf;
+der Job steht unter Hintergrundjobs), „PHP und Zeitzone", „Gesperrt" (läuft
+von selbst ab; die Liste steht unter Sicherheit), „SMTP" (misst die
+Plattform), „Ablage" (misst die Plattform) und die Karte
+„Betriebsprotokoll" (die Zahlen stehen an den Reitern des Protokolls, 11.7).
+Die Hintergrundjobs stehen nur einzeln da, wenn sie nicht grün sind; den Rest
+zählt die Zeile „Übrige Jobs".
 
 **Neben dem Titel steht seit Web 20.12.0 ein zweiter Knopf: „Sicherheit".**
 Er führt auf die Unterseite, auf der steht, wer gerade ausgesperrt ist — und
 auf der sich eine Sperre aufheben lässt. Beschrieben in Abschnitt **11.4b**.
-Dorthin führen auch die drei Zeilen „Verlangsamung", „Gesperrt" und
-„Abgewiesene Geräte" der Karte **Server**.
+Dorthin führen auch die Zeilen „Verlangsamung" und „Abgewiesene Geräte" des
+Bereichs **Server**.
 
 **Die Plakettenfarbe bedeutet auf dieser Seite überall dasselbe:**
 
@@ -5326,13 +5461,9 @@ Web 23 (**Betrieb → Updates**) hält an, solange noch ein Konto Klartext hat,
 nennt die Konten mit ihren Einsätzen und läuft nur nach ausdrücklicher
 Freigabe — wer freigibt, verliert diese Ortsdaten.
 
-**Die Zeile „Umgebung"** (seit Web 20.38.0) steht oben in der Karte
-**Server**, und zwar immer. Ihre Plakette nennt die Anlage: den Namen aus dem
-Eintrag `app.umgebung` in der `config.php` — auf der Testanlage „Staging" —
-oder **„Produktiv"**, wenn dort keiner steht. Das ist keine Vermutung über die
-Adresse, sondern die Lesart eines leeren Eintrags: Ohne Etikett verhält sich
-die Anlage wie die für den Echtbetrieb, und genau das sagt die Zeile. Sie
-wird **orange** in zwei Fällen: Die Mails tragen den Betreff-Präfix
+**Die Zeile „Umgebung"** (seit Web 20.38.0) steht seit Web 24.7.0 **nur
+noch, wenn sich die `config.php` widerspricht** — welche Anlage es ist, zeigt
+die Kopfleiste ohnehin. Sie ist dann **orange**, in zwei Fällen: Die Mails tragen den Betreff-Präfix
 „[Staging]", die Oberfläche aber kein Etikett — dann fehlt `app.umgebung` in
 der `config.php`. Oder das Etikett nennt eine Farbe, die die Anwendung nicht
 kennt; die Kopfleiste steht dann trotzdem rot. Einstellen lässt sich beides
@@ -5351,7 +5482,7 @@ Zeile in der `config.php` berichtigen (per FTP — hier lässt sie sich nicht
 ändern). Wer `base_url` umstellt, muss Passkeys neu anlegen; sie gehören zur
 alten Adresse.
 
-**Die Karte „Einstellungen aus der config.php"** (seit Web 23.5.0) zeigt, was
+**Der Bereich „Konfiguration"** (seit Web 23.5.0, bis Web 24.6 „Einstellungen aus der config.php") zeigt, was
 in der Datei steht — eine Zeile je Einstellung. Passwörter und Schlüssel
 (Datenbank, Mailserver, Serverschlüssel, Server-Anteil) stehen nur als
 **„gesetzt"** oder **„leer"** da, nie der Wert. Ändern lässt sich hier nichts:
@@ -5359,7 +5490,15 @@ Die Datei ist während des Betriebs bewusst nicht beschreibbar, damit auch eine
 übernommene Sitzung sie nicht ändern kann. Die Karte zählt nicht in der
 Meldung oben mit.
 
-**Die Zeile „Verwaltungskonten"** (seit Web 20.42.0) steht darunter und sagt,
+**Der Bereich „Konten"** (seit Web 24.7.0) hält die Zeilen „Verwaltungskonten"
+und „Konto-Backups" (bis dahin unter Server und Backups) und, wenn es ein
+Demo-Konto gibt, dessen **Kontrollzahlen** (bis dahin auf einer eigenen
+Seite): „Demo-Konto · Bestand" (Diensttage, Einsätze, Ruhesegmente, Geräte)
+und „Demo-Konto · Papierkorb". Die Papierkorbzahlen sind die Kontrolle des
+Resets — der Papierkorb kommt aus der Fixture zurück; steht eine auf null, ist
+die Zeile **orange**, denn dann hat das Einspielen etwas übersprungen.
+
+**Die Zeile „Verwaltungskonten"** (seit Web 20.42.0) sagt,
 ob die Anlage **vertreten** ist. Gezählt werden **handlungsfähige** Konten
 mit Rolle Admin oder BetreiberIn: aktiv und mit eingerichtetem Zweitfaktor
 (3.1f) — ein Konto ohne ihn kann nach der Anmeldung nichts, bevor er steht.
@@ -5387,10 +5526,11 @@ zurücksetzt, wenn Handy und Codes fehlen. Grün „prüft" mit Weg und Dauer:
 Anmeldung nicht angeboten; Codes und das Zurücksetzen durch die Verwaltung
 gehen weiter. Was dann zu tun ist, steht im Runbook (`docs/Technik.md` 13).
 
-**Eine Testmail an dich selbst.** Im Kopf der Karte **E-Mail** steht seit
-Web 19.3.0 der Knopf **„Testmail an mich"**. Er schickt eine kurze Nachricht
-über den regulären Versandweg an die Adresse, mit der du angemeldet bist —
-und beantwortet damit die Frage, die die Zeile „SMTP" nicht beantworten kann:
+**Eine Testmail an dich selbst.** Im Bereich **E-Mail** steht seit Web
+19.3.0 der Knopf **„Testmail an mich"** (seit Web 24.7.0 unter den Zeilen,
+bis dahin im Kartenkopf). Er schickt eine kurze Nachricht über den regulären
+Versandweg an die Adresse, mit der du angemeldet bist — und beantwortet
+damit die Frage, die die Einrichtung allein nicht beantworten kann:
 *Eingerichtet* heißt nicht *funktioniert*. Ein falsches Passwort im
 SMTP-Zugang fiel bis dahin erst auf, wenn jemand einen Einladungslink
 vermisste.
@@ -5440,14 +5580,16 @@ Sie hat zwei Stufen, und der Unterschied ist wichtig:
 | **Muss** | Fehlt es, läuft die Anwendung nicht. Die Zeile steht **rot** und zählt oben mit. |
 | **Empfohlen** | Die Anwendung läuft vollständig — nur langsamer oder mit einem Handgriff mehr. Die Zeile steht als **Hinweis** und **färbt die Ampel nicht**. |
 
-Erfüllte Empfehlungen stehen nicht einzeln da; die letzte Zeile nennt ihre
-Zahl („6 von 6 erfüllt"). Und wo die Anwendung etwas **nicht messen kann**,
+Erfüllte Empfehlungen stehen nicht einzeln da; ihre Zahl steht im Kopf des
+Bereichs („7/8 empfohlen"). Seit Web 24.7.0 gehört **„Antwort und Versand"**
+dazu (bis dahin eine orange Zeile unter E-Mail): Kennt die PHP-Anbindung
+weder `fastcgi_finish_request` noch `litespeed_finish_request`, kann im
+ungünstigen Fall die Dauer von „Passwort vergessen" verraten, ob es zu einer
+Adresse ein Konto gibt. Ändern kann das nur der Hoster; deshalb färbt es die
+Ampel nicht. Und wo die Anwendung etwas **nicht messen kann**,
 sagt sie das, statt zu raten: Der freie Plattenplatz ist auf geteiltem
 Webspace die Zahl des ganzen Hosts und nicht dein Kontingent — die Zeile
 schreibt es dazu.
-
-Die Karte ist **eingeklappt**. Wer sie braucht, braucht sie einmal nach einem
-Update oder wenn oben etwas rot steht.
 
 **Die Seite ändert nichts am Bestand.** Jede Zeile führt auf die Seite, auf
 der sich etwas ändern lässt — ein fehlender **Serverschlüssel** etwa auf die
@@ -5460,8 +5602,8 @@ die Servereinstellungen.*
 
 **Die Zahlen sind nicht alle gleich alt.** Wartungsmodus, Migrationen, Jobs,
 Konto-Backups und die Ablage werden bei jedem Aufruf gelesen. Die Größe von
-Datenbank und Dateien kommt aus der täglichen Messung im Aufräumjob; die
-Zeile „Datenbank" sagt, wann sie entstanden ist.
+Datenbank und Dateien kommt aus der täglichen Messung im Aufräumjob; wann
+sie entstanden ist, sagt die Karte „Speicher" der Servereinstellungen.
 
 #### Wenn die einzige BetreiberIn den Zweitfaktor verliert (seit Web 21.13.0)
 
@@ -5512,7 +5654,7 @@ ihrer Reihenfolge, als letzten das SQL von Hand.
 
 #### Die Zeile „Verbindungen" (seit Web 20.13.0)
 
-In der Karte **Server**, unter „Datenbank". Sie beantwortet eine Frage, die
+Im Bereich **Server**. Sie beantwortet eine Frage, die
 sonst niemand stellt: **Wie oft hat die Datenbank in der letzten Zeit keine
 Verbindung mehr angenommen?**
 
@@ -5542,59 +5684,17 @@ im Browser **zurück**, findet die Eingaben noch im Formular und schickt es
 gleich noch einmal ab. Uhr und Handy behalten ihre Daten und liefern von
 selbst nach.
 
-#### Die Zeile „Gerätemodelle" (seit Web 20.15.0)
+#### Wenn das Betriebsprotokoll nicht schreibt
 
-Ebenfalls in der Karte **Server**. Eine Garmin-Uhr kennt ihren Modellnamen
-nicht — sie sendet beim Koppeln eine **Teilenummer**, und eine Tabelle in der
-Anwendung macht daraus „Venu 3S". Kennt diese Tabelle die Nummer noch nicht
-(das Gerät ist neuer als die Tabelle), steht in der Geräteliste die
-Teilenummer, und die Geräteart ist nur das, was die Uhr-App über sich selbst
-behauptet.
-
-Die Zeile sagt, ob das nachgetragen ist:
-
-| Plakette | heißt |
-|---|---|
-| **aktuell** | Die Tabelle ist verarbeitet. Daneben steht, wann und wie viele Zeilen nachgezogen wurden. |
-| **steht aus** (orange) | Ein Update hat eine neue Tabelle mitgebracht. Der Hintergrundjob zieht beim nächsten Lauf nach — meist innerhalb weniger Minuten. Ist es nach einem Tag noch orange, laufen die Hintergrundjobs nicht (Karte *Hintergrundjobs*). |
-| **ungeprüft** | Es ist noch nie gelaufen. Auch das holt der nächste Jobdurchlauf. |
-
-**„M unbekannt" ist kein Fehler.** So viele Geräte tragen eine Angabe, die die
-Tabelle nicht kennt — Handys (die ihren Namen selbst mitbringen) und Modelle,
-die noch nicht in der Tabelle stehen. Sie werden **nicht** angefasst: Was ein
-Gerät über sich gesagt hat, bleibt stehen.
-
-#### Karte „Betriebsprotokoll" (seit Web 20.16.5)
-
-**Die Anwendung führt Buch über den Betrieb** — Konten angelegt,
-freigeschaltet, gesperrt, gelöscht; Rollen und Adressen geändert; Sicherungen
-eingespielt; Wartung gefahren; Post versandt.
-
-**Sie führt kein Buch darüber, wer welchen Einsatz angesehen hat.** Das steht
-nicht darin und soll nicht darin stehen. Wenn dich jemand fragt, ob du
-nachsehen kannst, wer einen bestimmten Einsatz geöffnet hat: Du kannst es
-nicht, und zwar mit Absicht.
-
-**Sieben Reiter, zwei Fristen.** *Verwaltung* ist das Audit — wer wann was
-getan hat — und bleibt **365 Tage**; die Zahl stellst du unter
-Servereinstellungen → Protokoll ein (zwischen 90 und 1095). Alle übrigen
-verfallen nach **30 Tagen**, und das ist keine Einstellung.
-
-**Die Karte zählt, gelesen wird unter Verwaltung → Protokoll** (11.7). Je
-Reiter stehen die Einträge der letzten 24 Stunden und insgesamt; jede Zeile
-führt auf ihren Reiter. Seit Web 20.39.0 zählt die Karte auch E-Mail, Jobs,
-Sicherheit und Ziele mit — dort stand bis dahin eine Null, obwohl es Einträge
-gab.
-
-*Aktive Sperren* hebst du weiter unter Status → Sicherheit auf; der Reiter
-Sicherheit im Protokoll zeigt, was geschehen ist, auch die aufgehobenen.
-
-**Steht dort eine rote Plakette „n nicht geschrieben", sieh hin.** Die
-Handlungen selbst sind gelungen — das Protokoll lässt nie eine Handlung
-scheitern, nur weil es selbst nicht schreiben kann. Aber es hat sie nicht
-festgehalten, und der Grund steht im Serverprotokoll deines Hosters unter der
-Kennung `protokoll:`. Der häufigste Grund: Ein Update ist eingespielt, aber
-`update.php` ist noch nicht gelaufen.
+**Steht im Bereich Server eine rote Zeile „Betriebsprotokoll — n nicht
+geschrieben", sieh hin.** Die Handlungen selbst sind gelungen — das Protokoll
+lässt nie eine Handlung scheitern, nur weil es selbst nicht schreiben kann.
+Aber es hat sie nicht festgehalten, und der Grund steht im Serverprotokoll
+deines Hosters unter der Kennung `protokoll:`. Der häufigste Grund: Ein
+Update ist eingespielt, aber `update.php` ist noch nicht gelaufen. Was das
+Protokoll festhält und wie lange, steht in 11.7. *(Bis Web 24.6 stand das in
+einer eigenen Karte „Betriebsprotokoll" mit den Zahlen je Reiter, und die
+Zeile „Gerätemodelle" hatte hier einen Abschnitt.)*
 
 #### Die Ampel der Statusseite
 
@@ -5603,7 +5703,7 @@ der Seite (P5c/AP9).* Die Ampel hat **vier Töne**, und sie bedeuten auf der
 ganzen Seite dasselbe: **Grün** — es ist in Ordnung (bis Web 23.9.0 Blau). **Orange** — es braucht
 Aufmerksamkeit, arbeitet aber. **Rot** — es arbeitet nicht, oder es geht dabei
 etwas verloren. **Neutral** — nicht eingerichtet, oder eine reine Zahl ohne
-Wertung. Die Meldung oben zählt die roten und orangen Zeilen.
+Wertung. Der Abschnitt „Braucht Aufmerksamkeit" hält die roten und orangen Zeilen.
 
 Einen **Zwischenspeicher** über die ganze Seite gibt es bewusst nicht: Eine
 Statusseite, die einen Zustand zeigt, den es nicht mehr gibt, ist schlechter
@@ -5955,9 +6055,10 @@ zu verlieren. Und die Uhr kann zu einem ausgedünnten Einsatz keine Punkte mehr
 nachliefern; sie bekommt eine Bestätigung, damit sie ihren Speicher leert, die
 Punkte werden aber nicht mehr aufgenommen.
 
-**Die Arbeit anhalten.** Am Ende der Karte „Zustand" steht **„Jobs
-anhalten"** mit einer Dauerwahl: *15 Min.*, *30 Min.*, *1 Std.* oder
-*2 Std.*. Das ist für den Fall gedacht, dass etwas schiefläuft oder ein großes
+**Die Jobs pausieren.** Ganz oben steht die Karte **„Jobs vorübergehend
+pausieren"** (seit Web 24.7.0; bis dahin hieß der Knopf „Jobs anhalten" und
+stand am Ende der Karte „Zustand") mit einer Dauerwahl: *15 Min.*,
+*30 Min.*, *1 Std.* oder *2 Std.*, und dem Knopf **„Pausieren"**. Das ist für den Fall gedacht, dass etwas schiefläuft oder ein großes
 Backup einzuspielen ist. **Während der Pause geschieht gar nichts** — nichts
 wird aufgeräumt, gesichert oder versendet, auch das geplante Komplett-Backup
 nicht. Das Verdichten der GPS-Daten im Browser hält sie nicht an; es gehört
@@ -5965,10 +6066,15 @@ nicht zu diesen Jobs. Die Rückfrage sagt genau das.
 
 Die Pause **läuft von selbst ab**; länger als zwei Stunden am Stück geht
 nicht, damit eine vergessene Pause die Installation nicht dauerhaft anhält.
-Solange sie läuft, steht an der Karte die Plakette **„angehalten"** und
-darunter eine orange Meldung mit dem Zeitpunkt und dem Knopf **„Pause
-aufheben"**; der Knopf zum Anhalten ist dann nicht da, weil es nichts
-anzuhalten gibt. Auch **Betrieb → Status** zeigt die Pause als eigene Zeile.
+Solange sie läuft, trägt die Karte die Plakette **„pausiert bis …"**, und
+statt „Pausieren" steht dort **„Pause aufheben"**. Auch **Betrieb → Status**
+zeigt die Pause als eigene Zeile.
+
+**Der Zustand je Job** ist eine Zeile mit einem Satz und zwei Plaketten:
+wann er zuletzt lief („heute 23:24", „gestern 07:10", sonst das Datum) und
+wodurch („Anfrage", „Kommandozeile", „Adresse"); Rückstand und Fehler kommen
+dazu, wenn es sie gibt. Auslöser, Auslieferungskette und Monitoring sind
+zugeklappte Karten mit ihrem Stand im Kopf.
 
 *Seit Web 19.3.0.* Vorher ging das nur auf der Kommandozeile
 (`php jobs.php --pause <Sekunden>`, `0` hebt auf) — und die gibt es auf
@@ -6037,8 +6143,14 @@ die Schrittfolge steht im Runbook (`Technik.md` 13).
 
 ### 12.5 Servereinstellungen
 
+**Jede Karte ist zugeklappt** (seit Web 24.7.0): Im Kopf stehen der
+eingestellte Stand in einer Zeile („5000 Einsätze · 250 MB je Konto") und
+eine Plakette; ein Klick klappt das Formular auf. So ist die Seite eine
+Übersicht, und wer eine Sache ändern will, öffnet nur ihre Karte. Ganz unten
+steht seit derselben Fassung die Karte **„Backup-Ziele"** (12.7).
+
 **Nach dem Speichern steht die Meldung in der Karte, in der du geklickt
-hast**, und die Seite springt dorthin (seit Web 21.8.0). „Neu laden" schickt
+hast**, die Karte ist offen, und die Seite springt dorthin (seit Web 21.8.0). „Neu laden" schickt
 danach nichts noch einmal ab — bis dahin wiederholte es die Handlung, etwa
 eine Rundmail. Hat die Seite eine Eingabe abgewiesen, bleibt sie mit dem
 Getippten stehen, und die Meldung steht oben.
@@ -6355,18 +6467,9 @@ Kontoverwaltung überschreibbar: Zahl der Einsätze und Speicher in Megabyte
 unter Verwaltung → Konto-Backups (11.4); die Überschreibung je Konto steht
 auf der Kontoseite.
 
-**Demo-Anmeldung zulassen.** Ist sie aus, wird die Demo-Adresse bei der
-Anmeldung **wie eine unbekannte Adresse** behandelt — dieselbe Meldung,
-dieselbe Antwortdauer, auch beim richtigen Passwort. Die Seite verrät damit
-nicht, ob diese Installation ein Demo-Konto hat.
-
-**Der Bestand bleibt liegen.** Abgeschaltet ist die Anmeldung, nicht das
-Konto: Seine Einsätze, sein Selbst-Reset und sein Platz in der
-Kontoverwaltung sind unberührt, und ein Umlegen des Schalters macht es sofort
-wieder zugänglich.
-
 **Schaltest du die Registrierung auf „nur auf Einladung", fragt die Seite
-einmal nach**, ob die Demo-Anmeldung mit abgeschaltet werden soll — wer die
+einmal nach** (der Schalter selbst steht seit Web 24.6 unter Installation →
+Demo-Konto, 11.6), ob die Demo-Anmeldung mit abgeschaltet werden soll — wer die
 Tür schließt, hat meist auch das Demo-Konto im Sinn. Ein Angebot, keine
 Bedingung: Eine geschlossene Installation kann gute Gründe für ein
 Demo-Konto zum Vorzeigen haben.
@@ -6405,7 +6508,7 @@ Wie lange Betriebsereignisse liegen — in der Datenbank und im Archiv. Bis Web
 
 **Jede Änderung steht selbst im Protokoll** (Reiter Verwaltung, Art
 „Fristen") — ein kürzeres Audit ist eine Handlung, die ins Audit gehört.
-Die Plakette am Kartenkopf zählt die Archive, „Protokoll lesen" führt auf
+Die Plakette am Kartenkopf zählt die Archive, der Knopf „Protokoll lesen" neben „Speichern" führt auf
 die Seite. Was ins Archiv geht und was nicht: 11.7.
 
 #### Das Schlüsselblatt
@@ -6444,7 +6547,11 @@ Kennung des bisherigen; gefragt wird nach den **heutigen** Werten.
 ### 12.6 Komplett-Backup
 
 Seit Web 12.2.0 gibt es unter **Betrieb → Komplett-Backup** einen
-zweiten, grösseren Knopf. Der Unterschied zu allem darüber ist der Zweck:
+zweiten, grösseren Knopf. Seit Web 24.7.0 steht oben die offene Karte
+**„Stand"** (jüngster Stand, belegter Speicher, nächster Lauf),
+**„Jetzt sichern"** ist die eine orange Hauptaktion der Seite, und
+**„Regeln"**, **„Stände"** und **„Backup-Ziele"** (12.7) sind zugeklappte
+Karten mit ihrem Stand im Kopf. Der Unterschied zu allem darüber ist der Zweck:
 
 | | Backup eines Kontos | Komplett-Backup |
 |---|---|---|
@@ -6570,9 +6677,18 @@ Mischung, die niemand mehr auseinanderbekommt.
 
 ### 12.7 Backup-Ziele
 
-Seit Web 12.1.0 kann die BetreiberIn unter **Betrieb →
-Backup-Ziele** eine Gegenstelle eintragen, auf die die Konto-Backups
-geschoben werden — per **SFTP oder FTPS**; dazu die Komplett-Stände und seit
+Seit Web 12.1.0 kann die BetreiberIn eine Gegenstelle eintragen — seit Web
+24.7.0 in der Karte **„Backup-Ziele"**, die an zwei Orten steht: als letzte
+Karte unter **Betrieb → Servereinstellungen** und unter den Ständen im
+**Komplett-Backup** (bis dahin eine eigene Seite „Backup-Ziele"). Es ist
+dieselbe Karte; was du an einem Ort änderst, steht am anderen auch. Zugeklappt
+zeigt sie, ob automatisch versendet wird, und wie viele Ziele aktiv sind;
+aufgeklappt den Schalter **„Backups automatisch versenden"**, je Ziel eine
+Zeile mit Menü („Bearbeiten" öffnet einen Dialog), „Wartet auf den nächsten
+Lauf" mit **„Jetzt versenden"** und den Knopf **„Ziel anlegen"** (ebenfalls
+ein Dialog; wird eine Eingabe abgewiesen, geht er mit ihr und dem Grund
+wieder auf). Auf ein Ziel werden die Konto-Backups
+geschoben — per **SFTP oder FTPS**; dazu die Komplett-Stände und seit
 Web 20.39.0 die Archive des Protokolls. Der Grund ist schlicht: Ein
 Paket, das auf demselben Server liegt wie das Gesicherte, hilft nicht,
 wenn dieser Server ausfällt.
@@ -6646,7 +6762,7 @@ Was dabei zu wissen ist:
   gespeichert.
 - Was am Ziel liegt, zählt **nicht** in die Speichergrenze — der Server kennt
   die Größe nicht. Wächst ein Ziel seit über einem Monat, ohne dass dort je
-  etwas entfernt wurde, sagt es die Statusseite (Karte *Backups*, Zeile
+  etwas entfernt wurde, sagt es die Statusseite (Bereich *Backups*, Zeile
   *Aufbewahrung am Ziel*).
 
 Für dein Konto ändert sich dadurch nichts: Der Inhalt des Backups bleibt

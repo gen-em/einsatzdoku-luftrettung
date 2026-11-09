@@ -51,7 +51,9 @@ Daten erst nach Server-Bestätigung.
 │   │                       transaktion_lib.php ein
 │   ├── eingabe_lib.php    post_text(), get_text(): ein Formularfeld als
 │   │                       Text, sonst die Vorgabe — auch bei einer Liste
-│   │                       (Nr. 355, seit Web 23.6.5). LAEDT NICHTS; db.php
+│   │                       (Nr. 355, seit Web 23.6.5); post_datum(),
+│   │                       get_datum(): TT.MM.JJJJ oder ISO als ISO (seit
+│   │                       Web 24.4.0). LAEDT NICHTS; db.php
 │   │                       und install.php binden sie ein
 │   ├── transaktion_lib.php Der EINE Transaktionsrahmen db_transaktion()
 │   │                       (Schritt 15 AP5, E-ZE-20). Bis Web 20.37.2 in
@@ -263,8 +265,14 @@ Daten erst nach Server-Bestätigung.
 │   │                       Schema (P5c/AP8). Dazu Pflege in der
 │   │                       Tabelle backup_targets, „Verbindung prüfen" und
 │   │                       der Versandschub
-│   ├── admin_sicherungsziele.php  BetreiberIn-Seite dazu (Nr. 286): Ziele anlegen und prüfen,
-│   │                       Versand ein/aus; fehlt der Serverschlüssel, der
+│   ├── sicherungsziele_teile.php  Die Karte „Backup-Ziele" samt Dialogen, eingebunden
+│   │                       in Servereinstellungen und Komplett-Backup (seit
+│   │                       Web 24.7.0, Konzept OF, E-OF-45; Muster
+│   │                       zweitfaktor_teile.php)
+│   ├── admin_sicherungsziele.php  Ziel der Formulare dieser Karte: nimmt nur POST an
+│   │                       und leitet auf die Seite der Karte zurück, GET auf
+│   │                       die Servereinstellungen (seit Web 24.7.0; bis
+│   │                       dahin die eigene Seite, Nr. 286); fehlt der Serverschlüssel, der
 │   │                       Weg zur Karte unter Servereinstellungen (bis
 │   │                       Web 21.12.0 stand hier „Serverschlüssel
 │   │                       nachtragen" — so war es bis S10, F-SR-03)
@@ -326,6 +334,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       Proxys (config.php, netz.vertrauenswuerdige_proxys),
 │   │                       byteweiser CIDR-Vergleich, letzter Eintrag der
 │   │                       Kette. Dieselbe Liste traegt X-Forwarded-Proto
+│   ├── api/darstellung.php  Klick auf Mond/Sonne: legt die Wahl in der Sitzung
+│   │                       ab, nicht im Konto (seit Web 24.9.0, 4.41)
 │   ├── api/csp_bericht.php  Sammelstelle fuer CSP-Meldungen (P5a/AP4). OHNE
 │   │                       Anmeldung — ein Verstoss auf der ANMELDESEITE ist
 │   │                       der interessanteste von allen. Topf `csp`,
@@ -497,7 +507,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      SPEICHERT NICHTS und kann nichts speichern —
 │   │                      deshalb spaeter nicht erneut druckbar
 │   ├── admin_installation.php  Wie diese Installation nach aussen auftritt
-│   │                       (S8/AP3): Name, Adressen, Logo — eine Spalte;
+│   │                       (S8/AP3): Name, Adressen, Logo, Demo-Konto
+│   │                       (seit Web 24.6.0) — eine Spalte;
 │   │                       die Rechtstexte standen hier bis Web 21.0.0
 │   ├── admin_rechtstexte.php  Die vier Rechtstexte, ein Reiter je Text, Feld
 │   │                       links, Vorschau rechts (P5c/AP9, E-P5c-28); von
@@ -546,9 +557,17 @@ Daten erst nach Server-Bestätigung.
 │   ├── assets/            style.css (Schriften werden lokal ausgeliefert, s. u.),
 │   │                      crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
 │   │                      zeitfeld.js (Zeiteingabe im 24-Stunden-Format, s. u.),
+│   │                      datumsfeld.js (Datumseingabe TT.MM.JJJJ, seit Web 24.4.0),
+│   │                      segment.js (abwählbare Segmentwahl, seit Web 24.3.0),
+│   │                      wahlkarten.js (erst wählen, dann füllen: Import / Export,
+│   │                        seit Web 24.5.0),
+│   │                      klappkarte.js (Gerüst: öffnet die Klappkarte, auf die
+│   │                        der Anker zeigt, seit Web 24.3.0),
 │   │                      keyguard.js (Bindung/Lebensdauer des Inhaltsschlüssels),
 │   │                      pwquality.js (Passwortgüte), patient.js, daylist.js, confirm.js,
 │   │                      menue.js (Einstellungsleiste: Blöcke klappen, Unterpunkte),
+│   │                      darstellung.js (Mond und Sonne der Kopfleiste, nur
+│   │                        bei Umschalter und Folgt System; seit Web 24.9.0, 4.41),
 │   │                      html.js (HTML-Maskierung und Meldungs-Markup, die eine
 │   │                        Fassung für alle Seiten; seit Web 21.1.11 im Kopf jeder Seite),
 │   │                      missiontable.js (gemeinsame Einsatztabelle, s. u.),
@@ -602,7 +621,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      wird; erzeugt von tools/referenzdatensatz/fixture/
 │   ├── demo_lib.php       Demo-Konto: anlegen, zurücksetzen, entfernen,
 │   │                      Reset-Fälligkeit (Abschnitt 4.21)
-│   ├── admin_demo.php     die zugehörige Adminseite
+│   ├── admin_demo.php     nur noch Umleitung (seit Web 24.9.1): Kontrollzahlen
+│   │                      in der Statuskarte „Konten", Handlungen unter Installation
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
 │   ├── migrations/        Migrationen als nachlesbare SQL-Dateien (ausgeführt
 │   │                      wird über Betrieb → Updates, siehe migration_lib.php)
@@ -1027,7 +1047,7 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle (`role`, seit Web 20.41.0 vier Werte: `user`, `admin`, `betreiberin`, `support` — R75, E-P5c-14); Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 23.10.0 dazu **`darstellung`** (`''` = wie das Gerät, sonst `hell` / `dunkel`; Migration `2026_11_07_darstellung`, Schritt 26, MA-07) — gelesen bei der Anmeldung wie `logo_wahl`, ausgegeben als `data-theme` (4.41). Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.38. **Seit Web 20.43.0 das Paar des Rückwegs** (Konzept RW, E-RW-05): `rw_oeffentlich` (öffentlicher Teil eines ECDSA-P-256-Paars, SPKI in Base64, 124 Zeichen), `rw_privat` (der private Teil als Chiffretext unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:` — er muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie `pat_wrap_rc`), `rw_seit` (wann es entstand). Leer heißt: noch kein Paar. Ein Abzug enthält den öffentlichen Teil und einen Chiffretext unter einem Schlüssel, den der Server nie kennt — er kann prüfen, nicht signieren (4.38). **Seit Web 22.0.0 das Schlüsselpaar des Kontos** (S11-03): `kp_oeffentlich` (öffentlicher Teil eines ECDH-P-256-Paars, SPKI, **versiegelt** mit `sk_versiegeln()`, Zweck `kontopaar|<user_id>`), `kp_privat` (privater Teil unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:`), `kp_seit`. Leer heißt: noch kein Paar. Siehe 4.40 |
+| `users` | Login (E-Mail = Username), Rolle (`role`, seit Web 20.41.0 vier Werte: `user`, `admin`, `betreiberin`, `support` — R75, E-P5c-14); Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 23.10.0 dazu **`darstellung`** (`''` = Umschalter, `system`, `hell` / `dunkel` — vier Werte seit Web 24.9.0, ohne Migration; bis dahin `''` = wie das Gerät; Migration `2026_11_07_darstellung`, Schritt 26, MA-07) — gelesen bei der Anmeldung wie `logo_wahl`, ausgegeben als `data-theme` (4.41). Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.38. **Seit Web 20.43.0 das Paar des Rückwegs** (Konzept RW, E-RW-05): `rw_oeffentlich` (öffentlicher Teil eines ECDSA-P-256-Paars, SPKI in Base64, 124 Zeichen), `rw_privat` (der private Teil als Chiffretext unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:` — er muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie `pat_wrap_rc`), `rw_seit` (wann es entstand). Leer heißt: noch kein Paar. Ein Abzug enthält den öffentlichen Teil und einen Chiffretext unter einem Schlüssel, den der Server nie kennt — er kann prüfen, nicht signieren (4.38). **Seit Web 22.0.0 das Schlüsselpaar des Kontos** (S11-03): `kp_oeffentlich` (öffentlicher Teil eines ECDH-P-256-Paars, SPKI, **versiegelt** mit `sk_versiegeln()`, Zweck `kontopaar|<user_id>`), `kp_privat` (privater Teil unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:`), `kp_seit`. Leer heißt: noch kein Paar. Siehe 4.40 |
 | `vertraute_geraete` | „Gerät merken" beim Zweitfaktor (seit Web 21.8.0, Schritt 18, SR-02, E-SR-07): `user_id` (`ON DELETE CASCADE`), `token_hash` (SHA-256 des Cookies `EDGERAET`, eindeutig), `angelegt_am`, `zuletzt_am` (fortgeschrieben bei jeder Anmeldung ohne Code, ohne Protokoll). **Kein User-Agent, kein Gerätename** (R36). **Gültig ist eine Zeile, solange `angelegt_am` plus die heutige Dauer ihrer Rollengruppe in der Zukunft liegt** — gerechnet beim Prüfen, nicht beim Merken (E-SR-17); der Aufräumjob löscht abgelaufene. Reist im Komplett-Stand mit (nur Hashes), **nicht** im Konto-Backup: Ein Cookie gehört zu einem Browser, nicht zu einem Konto. Mehr in 4.38 |
 | `passkeys` | Passkeys als Verfahren des Zweitfaktors (seit Web 21.10.0, Schritt 18, SR-09, E-SR-29 bis -33): `user_id` (`ON DELETE CASCADE`), `credential_id` (Base64url der Kennung, höchstens 1023 Byte → `VARCHAR(1364)`, `ascii_bin`), `credential_hash` (SHA-256 der Kennung, `CHAR(64)`, **eindeutig** — seit Web 21.11.0, E-SR-47: Ein Index über die Kennung selbst reichte über 767 Byte und scheiterte unter einem älteren Zeilenformat), `rp_id` (die Adresse, für die der Passkey entstand, seit Web 21.11.0, E-SR-48; Index `idx_konto` über `user_id, rp_id`), `oeffentlich` (der öffentliche Schlüssel als SPKI-PEM — bei der Registrierung aus COSE überführt, damit die Anmeldung ohne CBOR auskommt), `alg` (-7 ES256 oder -257 RS256), `zaehler` (Signaturzähler, E-SR-33), `bezeichnung` (bis 40 Zeichen oder leer), `angelegt_am`, `zuletzt_am`, `gewarnt_am` (letzte Mail wegen eines zurückgelaufenen Zählers, höchstens eine je Tag, E-SR-46). **Kein User-Agent, keine AAGUID, kein Gerätename** (E-SR-31, R36); höchstens zehn je Konto **und Adresse** (`PK_HOECHSTENS`, geprüft unter `FOR UPDATE`). Reist im Komplett-Stand mit, **nicht** im Konto-Backup: Ein Passkey gilt nur für die Adresse, an der er entstand (Backup-Format 4, 6.11). Mehr in 4.38 |
 | `totp_codes` | Die Wiederherstellungscodes des Zweitfaktors (seit Web 20.42.0, P5c/AP5): `user_id`, `hash` (`password_hash()`), `benutzt_am` (NULL = offen). **Nicht am Serverschlüssel** (E-P5c-42) — sie sind der Rückweg für genau den Fall, dass das Geheimnis nicht mehr zu öffnen ist. `ON DELETE CASCADE` mit dem Konto. Angenommen wird atomar (`UPDATE … WHERE benutzt_am IS NULL`, gültig bei `rowCount() = 1`) |
@@ -4029,7 +4049,7 @@ Ratenschutz:
 | `komplett` | **nur** das Komplett-Backup — und legt einen Auftrag an, wenn keiner steht | `{ok, fertig, bericht, komplett}` |
 | `wartung_an` / `wartung_aus` | Wartungsmodus, Urheber `kette` | `{ok, wartung}` |
 | `zustand` | Auskunft **ohne Nebenwirkung**: Version, Wartung, jüngster Komplett-Stand, Migration ausstehend | `{ok, version, wartung, komplett, migration_ausstehend}` |
-| `pause` | Jobs anhalten (`sekunden=N`) oder freigeben (`sekunden=0`); seit Web 20.16.0 | `{ok, sekunden, grenze, bis, meldung}` |
+| `pause` | Jobs pausieren (`sekunden=N`) oder freigeben (`sekunden=0`); seit Web 20.16.0 | `{ok, sekunden, grenze, bis, meldung}` |
 
 **`pause` ist kein zweiter Mechanismus**, sondern ein vierter Aufrufer von
 `jobs_pause()` — neben der Kommandozeile und den beiden Knöpfen unter Betrieb
@@ -4236,11 +4256,12 @@ Laufzeiten am Messstand —, steht in der Git-Historie dieser Datei (bis
 `0db03e9`). Die Ausdünnung selbst (Stufe 3, oben) gilt unverändert; sie läuft
 nur an anderer Stelle.
 
-#### Die Jobs anhalten (ab Web 10.2.0, Knopf ab Web 19.3.0)
+#### Die Jobs pausieren (ab Web 10.2.0, Knopf ab Web 19.3.0)
 
 **Zwei Wege, ein Schalter.** `php jobs.php --pause <Sekunden>` (0 hebt auf) und
-seit Web 19.3.0 der Knopf **„Jobs anhalten"** in der Karte „Zustand" auf
-Betrieb → Hintergrundjobs, mit einer Dauerwahl aus 15 Min., 30 Min., 1 Std.
+seit Web 19.3.0 der Knopf auf Betrieb → Hintergrundjobs — seit Web 24.7.0
+**„Pausieren"** in der eigenen Karte „Jobs vorübergehend pausieren" (bis dahin
+„Jobs anhalten" in der Karte „Zustand"; Konzept OF, E-OF-10), mit einer Dauerwahl aus 15 Min., 30 Min., 1 Std.
 und 2 Std. Beide rufen `jobs_pause()` und schreiben denselben Schlüssel
 `jobs_pause_bis` nach `app_state` — es gibt keinen zweiten Speicherort und
 keine zweite Deckelung. Der Knopf ist dort nötig, wo es keine Kommandozeile
@@ -4435,12 +4456,16 @@ einem Archiv. Bis Web 22.2.0 ging er zusätzlich durch eine HTTP-Kopfzeile.
 waren sie eine schwarze Linie, ohne Zeile, ohne Popup; `api/day.php` lieferte
 nicht einmal ihre Kennung. *(Seit Web 12.6.0 gilt das nur noch für die Karte
 selbst: Die Tagesansicht führt sie als eigene Karte „Ruhesegmente" — dort wird
-geschnitten, siehe 4.11.)* Ein Knopf je Ruhesegment hätte nirgendwo hingekonnt
+geschnitten, siehe 4.11. Seit Web 24.8.0 steht diese Karte nur auf Abruf da:
+Der Eintrag „Einsatz aus GPS-Daten ausschneiden" im Aktionsmenü, die Adresse
+`index.php?d=…#ruheliste` und eine Rückmeldung von Schnitt oder GPX-Import
+blenden sie ein, E-OF-05.)* Ein Knopf je Ruhesegment hätte nirgendwo hingekonnt
 — die Abnahme verlangt den Abruf aber „je Einsatz **und** je Ruhesegment".
 
 `tag_spuren.php` gibt beiden dieselbe Identität: die Karte des Tages, darunter
-jede Spur als eigene Zeile — nummeriert wie in der Tagesansicht, mit Stufe,
-Punktzahl und Abruf. Zeigen hebt die zugehörige Linie hervor, ein Klick zoomt
+jede Spur als eigene Zeile — nummeriert wie in der Tagesansicht, mit
+Punktzahl und Abruf (bis Web 24.8.0 auch mit der Plakette „ausgedünnt“,
+E-OF-12; die Stufe trägt die GPX-Datei). Zeigen hebt die zugehörige Linie hervor, ein Klick zoomt
 auf sie.
 
 **Die Liste steht chronologisch, nicht nach Art gruppiert.** Der erste Entwurf
@@ -4550,7 +4575,7 @@ benannten Zweig (`sftp`), und alles Übrige fiel in `ZielFtp`, wo
 **Seit Web 21.0.0 kennt auch das Schema den Wert nicht mehr** (Migration
 `2026_09_25_ftp_entfernen`, P5c/AP8, E-P5c-124). Sie sperrt mit
 Vorbedingung, solange ein FTP-Ziel dasteht, und nennt den Weg: unter
-Betrieb → Backup-Ziele umstellen oder löschen (seit Web 21.1.0 auch im
+Betrieb → Backup-Ziele (seit Web 24.7.0 die Karte unter Servereinstellungen) umstellen oder löschen (seit Web 21.1.0 auch im
 Wartungsmodus offen, E-P5c-134; bis dahin nannte der Satz „Verwaltung →
 Sicherungsziele", F-P5c-159). **Mit dem Wert ist der
 Weg gefallen, der ein solches Ziel von 20.2.0 bis 20.47.0 umschiffte:** die
@@ -6366,14 +6391,18 @@ nachgezogen werden.
 
 | Schlüssel | Wirkung |
 |---|---|
-| `gruppe` | Formulargruppe (`einsatz`, `transport`, `bergrettung`, `mittel`, `besatzung`, `notizen`). Nur an Feldern der obersten Ebene; Unterfelder folgen ihrem Elternfeld. Ohne Angabe landet das Feld in der Auffanggruppe „Weitere Angaben" — es verschwindet also nicht. |
-| `nebeneinander` | Unmittelbar aufeinanderfolgende Felder mit diesem Schlüssel teilen sich eine Zeile (`.fld-reihe`). Bewusst nur unmittelbare Nachbarn: Sonst hinge die Anordnung davon ab, was dazwischen steht. |
+| `gruppe` | Formulargruppe (`einsatz`, `bergrettung`, `mittel`, `besatzung`, `notizen`; bis Web 24.8.0 dazu `transport`, seither steht die Transportart in `einsatz` und die Karte heißt „Einsatz und Transport“, E-OF-33). Nur an Feldern der obersten Ebene; Unterfelder folgen ihrem Elternfeld. Ohne Angabe landet das Feld in der Auffanggruppe „Weitere Angaben" — es verschwindet also nicht. |
+| `nebeneinander` | Unmittelbar aufeinanderfolgende Felder mit diesem Schlüssel teilen sich eine Zeile (`.fld-reihe`). Bewusst nur unmittelbare Nachbarn: Sonst hinge die Anordnung davon ab, was dazwischen steht. Seit Web 24.8.0 auch für Schalter und Unterfelder (bis dahin war der Schlüssel an Schaltern ohne Wirkung); ein Schalter mit Kindern gehört nicht in eine Reihe. |
+| `darstellung` | `'segment'` an einem `select` mit festen `options`: abwählbare Segmentwahl statt Auswahlliste (Design.md 9.7, seit Web 24.8.0). Abgewählt sendet sie den leeren Wert wie früher „–“; Name, Werte und Spalte bleiben gleich. Nicht für `options_src`. |
+| `einzug` | `false` an einem Feld mit `children`: Die Unterfelder stehen ohne Einzug und Randstrich darunter (kein `.childfields`, seit Web 24.8.0). `show_if` wirkt unverändert. |
 | `vorbelegt_bei` | Checkbox setzt sich, sobald ein anderes Feld einen genannten Wert annimmt — **nur solange niemand sie von Hand angefasst hat** und **nur beim Nachtragen**. Wirkt ausschliesslich im Browser. |
 | `such_label` | Beschriftung des Suchfeldes eines Ortsfelds (`loc`). |
 
-Drei Helfer in `einsatz_form.php` werten das aus: `$gruppeFelder()` holt die
-Felder einer Gruppe, `$gruppeRendern()` gibt sie samt `.fld-reihe`-Klammerung
-aus, `$gruppeSichtbar()` beantwortet, ob eine Gruppe überhaupt etwas zu zeigen
+Vier Helfer in `einsatz_form.php` werten das aus: `$gruppeFelder()` holt die
+Felder einer Gruppe, `$felderRendern()` gibt eine Feldliste samt
+`.fld-reihe`-Klammerung aus — für die Gruppe wie für Unterfelder, seit
+Web 24.8.0 eine Stelle statt drei gleichlautender Schleifen —,
+`$gruppeRendern()` ruft es für eine Gruppe, `$gruppeSichtbar()` beantwortet, ob eine Gruppe überhaupt etwas zu zeigen
 hat. Letzteres fragt nach **sichtbaren** Feldern (Gates plus „belegt", siehe
 4.16): Die Gruppe „Bergrettung" besteht aus zwei Feldern, die beide an einer
 Fähigkeit hängen — an einem NEF-Dienst wäre sie ein Rahmen mit Überschrift und
@@ -6454,6 +6483,7 @@ zusammengeführt und, wichtiger, ein **Maß** dafür angelegt.
 | Schema fragen | `db_hat_tabelle/spalte/index()` | 9 eigene `information_schema` |
 | Transaktion | `db_transaktion()` | 33 eigene `beginTransaction()` |
 | Formularfeld als Text lesen — seit Web 23.6.5 | `post_text()`, `get_text()` (`eingabe_lib.php`) | 149 `(string)($_POST[…])`/`($_GET[…])`, 3 eigene Hüllen (`$feld` zweimal, `konten_param()`); eine Liste (`feld[]=x`) gab eine Warnung im Reiter System oder, ohne Cast an eine `string`-Funktion, eine 500 (Nr. 355, Z47, Z48) |
+| Datum aus einem Formularfeld lesen — seit Web 24.4.0 | `datum_de_lesen()`, `post_datum()`, `get_datum()` (`eingabe_lib.php`), im Browser `EdFormat.datumLesen()`; Anzeige `datum_de()` bzw. `EdFormat.tag()` | Die Datumsfelder zeigen `TT.MM.JJJJ` statt `<input type="date">` (Konzept OF, E-OF-44); beide Formen gelten beim Lesen. Eine zweite Umrechnung mit `createFromFormat('d.m.Y')` zählt Z50 |
 | Kindtabellen eines Einsatzes | `einsatz_lib.php` | 30 eigene `INSERT`/`DELETE` |
 | Spalten von `missions` | `mf_spalten($zweck)` | 12 Handlisten |
 | Zahl, Größe, Zeit (PHP) | `format_lib.php` | 4 Byte-Formatierer, 2 Zeitformen, 27 `number_format` |
@@ -6578,7 +6608,7 @@ Die Bausteine im Einzelnen:
 | Transaktionsrahmen | `transaktion_lib.php` (bis Web 20.37.2 `db.php`, Nr. 288) | `db_transaktion($pdo, $fn)` — beginnen, den Rumpf laufen lassen, bestätigen; bei jedem `Throwable` zurückrollen und **weiterwerfen**. **Verschachtelungsfest und asymmetrisch:** Wer schon in einer fremden Transaktion steht, öffnet keine eigene und bestätigt und verwirft dann auch nichts. Vor dem `rollBack()` wird nachgefragt, ob sie noch steht — ein DDL bestätigt in MySQL still, und der Rumpf darf selbst zurückgerollt haben; sonst verdeckte eine zweite Ausnahme die erste. Ab Web 20.30.0; **neun Rahmen bleiben namentlich außen vor**, die Registerzeile Z16 führt sie mit Grund. |
 | Kindtabellen eines Einsatzes | `einsatz_lib.php` | `einsatz_phasen_ersetzen()`, `einsatz_rettungsmittel_ersetzen()`, `einsatz_besatzung_ersetzen()` (bis Web 22.7.0 dazu `einsatz_reas_ersetzen()`) — fünf Schreibwege (Formular, CSV-Import, Uhr-Eingang, Backup, Schneiden), dreißig Anweisungen, jetzt null außerhalb. Schalter `loeschen` (Vorgabe `true`; das Backup schreibt in einen gerade angelegten Einsatz) und `ignorieren` (dessen `INSERT IGNORE`). **Sie prüfen nichts** — was gültig ist, entscheidet der Aufrufer. Ab Web 20.30.0. |
 | Vorbereitete Anweisung | `einsatz_lib.php` (`einsatz_anweisung()`) | Eine `PDOStatement` je Verbindung und SQL-Text. Nötig, weil `db.php` `ATTR_EMULATE_PREPARES => false` setzt: Jedes `prepare()` ist ein Roundtrip, und der CSV-Import führt seine Anweisungen bis zu 3 000-mal aus. Die Verbindung wird **mitgehalten**, nicht nur ihre Objektkennung — eine freigegebene PDO gäbe ihre `spl_object_id` an die nächste weiter. |
-| Zahl, Größe, Anteil, Datum, Zeit | `format_lib.php` | `zahl_text()` · `groesse_text()` (drei Stufen: GB zwei, MB eine, KB null Nachkommastellen) · `groesse_kurz_text()` (mit Stufe „B", abgeschnittenen Nullen und `unbegrenzt` — eine **andere** Schreibweise, keine zweite Fassung) · `groesse_paar_text($ist, $grenze)` (gemeinsame Einheit: „3 von 250 MB") · `prozent_wert($teil, $ganz, 'ab'\|'kauf')` und `prozent_text()` · `datum_text()` · `datum_zeit_text($utc, $trenner)` · `datum_stunde_text()` · `zeit_relativ()` · `heute_lokal()` · `iso_utc()` / `iso_utc_lesen()` · seit Web 23.3.1 `csv_zelle()` (entschärft eine CSV-Zelle, die mit `=`, `+`, `-`, `@`, Tabulator oder Wagenrücklauf beginnt, mit einem Apostroph; der Modellname in der Geräte-CSV der Statistik kommt vom Gerät, R17-22, F-R17-45). Ab Web 20.32.0. **Sie lädt nur `konfig_lib.php`** — `install.php` erreicht sie über `plattform_lib.php`, bevor es eine `config.php` gibt. **Zwölf Stellen bleiben namentlich außen vor**, die Registerzeilen Z22–Z26 führen sie mit Grund. |
+| Zahl, Größe, Anteil, Datum, Zeit | `format_lib.php` | `zahl_text()` · `groesse_text()` (drei Stufen: GB zwei, MB eine, KB null Nachkommastellen) · `groesse_kurz_text()` (mit Stufe „B", abgeschnittenen Nullen und `unbegrenzt` — eine **andere** Schreibweise, keine zweite Fassung) · `groesse_paar_text($ist, $grenze)` (gemeinsame Einheit: „3 von 250 MB") · `prozent_wert($teil, $ganz, 'ab'\|'kauf')` und `prozent_text()` · `datum_text()` · `datum_zeit_text($utc, $trenner)` · `datum_stunde_text()` · `zeit_relativ()` · seit Web 24.7.0 `zeit_relativ_kurz()` („heute 23:24", „gestern 07:10", sonst „TT.MM." — für Plaketten, die nicht umbrechen) · `heute_lokal()` · `iso_utc()` / `iso_utc_lesen()` · seit Web 23.3.1 `csv_zelle()` (entschärft eine CSV-Zelle, die mit `=`, `+`, `-`, `@`, Tabulator oder Wagenrücklauf beginnt, mit einem Apostroph; der Modellname in der Geräte-CSV der Statistik kommt vom Gerät, R17-22, F-R17-45). Ab Web 20.32.0. **Sie lädt nur `konfig_lib.php`** — `install.php` erreicht sie über `plattform_lib.php`, bevor es eine `config.php` gibt. **Zwölf Stellen bleiben namentlich außen vor**, die Registerzeilen Z22–Z26 führen sie mit Grund. |
 | Ortszeit | `format_lib.php` (`fmt_local()`) | **Stand bis Web 20.31.0 in `db.php`**, Name und Verhalten unverändert — alle 113 Aufrufer in 37 Dateien merken nichts, weil `db.php` die neue Datei lädt. Umgezogen, weil `datum_text()` und `datum_zeit_text()` darauf aufbauen. `local_to_utc()` **bleibt in `db.php`**: Sie liest einen Formularwert, um damit zu rechnen — die andere Richtung. |
 | Zwei Trenner für Datum und Zeit | `format_lib.php` | `datum_zeit_text($utc, $trenner)` hängt den Trenner **nach** dem Formatieren an, statt ihn ins Format-Literal zu schreiben. Sonst würde der erste Trenner mit einem Buchstaben still zu Formatzeichen (` um ` ergäbe `u` = Mikrosekunden, `m` = Monat) — und so einer steht schon im Bestand. Drei Trenner sind im Umlauf (Leerzeichen 25×, Mittelpunkt 11×, Komma 1×); die Vereinheitlichung entscheidet 10c AP9 und findet dafür **eine** Stelle statt 41. |
 | Formatierer im Browser | `assets/format.js` (`EdFormat`) | **Zahl und Größe** (`zahl()`, `groesse()`) — dieselben Regeln wie `format_lib.php`, über 2 014 Byte-Werte Zeichen für Zeichen geprüft. **Tag, Dauer und Strecke** seit Web 20.34.0 (`tag()`, `tagKurz()`, `spanne()`, `dauer()`, `dauerUhr()`, `minuten()`, `km()`, `kmSumme()`) — dafür gibt es **keine** PHP-Entsprechung: Dort geht es um UTC-Zeitstempel mit Zonenumrechnung, hier um einen nackten Tagesstring und um Dauern, die serverseitig nicht entstehen. **Der Leerwert ist überall ein Parameter**, kein fester Wert — die Lehre aus AP7, wo ein fester Frühausstieg aus „– um –“ ein „–“ machte. Sechs verschiedene Leer-Antworten waren im Bestand gemessen worden. **Die Datei steht im `<head>`** (`ui_seite_start()`), damit die Ladereihenfolge keine Frage mehr ist. **Fünf dünne Weiterleitungen bleiben** (Z34), jede bindet einen anderen Leerwert. |
@@ -9097,7 +9127,7 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Komplett-Backup: abbrechen | `POST admin_komplettsicherung.php action=abbrechen` | 403 | 403 | 403 | durch | — |
 | Komplett-Backup: Regeln | `POST admin_komplettsicherung.php action=regeln` | 403 | 403 | 403 | durch | — |
 | Komplett-Backup: Stand löschen | `POST admin_komplettsicherung.php action=stand_loeschen` | 403 | 403 | 403 | durch | — |
-| Backup-Ziele: die Seite | `GET admin_sicherungsziele.php` | 403 | 403 | 403 | 200 | — |
+| Backup-Ziele: die Seite (leitet seit Web 24.7.0 auf die Servereinstellungen um) | `GET admin_sicherungsziele.php` | 403 | 403 | 403 | 302 | — |
 | Backup-Ziele: Ziel speichern | `POST admin_sicherungsziele.php action=ziel_speichern` | 403 | 403 | 403 | durch | — |
 | Backup-Ziele: Ziel löschen | `POST admin_sicherungsziele.php action=ziel_loeschen` | 403 | 403 | 403 | durch | — |
 | Backup-Ziele: Abdruck vergessen | `POST admin_sicherungsziele.php action=abdruck_vergessen` | 403 | 403 | 403 | durch | — |
@@ -9157,10 +9187,11 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Rechtstexte: die Seite | `GET admin_rechtstexte.php` | 403 | 403 | 200 | 200 | — |
 | Rechtstexte: speichern | `POST admin_rechtstexte.php` | 403 | 403 | durch | durch | — |
 | Rechtstexte: Vorschau beim Tippen | `POST api/rechtstext_vorschau.php` | 403 | 403 | durch | durch | — |
-| Demo-Konto: die Seite | `GET admin_demo.php` | 403 | 403 | 200 | 200 | — |
-| Demo-Konto: anlegen | `POST admin_demo.php action=demo_anlegen` | 403 | 403 | durch | durch | — |
-| Demo-Konto: zurücksetzen | `POST admin_demo.php action=demo_reset` | 403 | 403 | durch | durch | — |
-| Demo-Konto: entfernen | `POST admin_demo.php action=demo_entfernen` | 403 | 403 | durch | durch | — |
+| Demo-Konto: die alte Seite (leitet seit Web 24.9.1 um — Administration auf Installation, BetreiberIn auf die Statusseite) | `GET admin_demo.php` | 403 | 403 | 302 | 302 | — |
+| Demo-Konto: anlegen | `POST admin_installation.php action=demo_anlegen` | 403 | 403 | durch | durch | — |
+| Demo-Konto: zurücksetzen | `POST admin_installation.php action=demo_reset` | 403 | 403 | durch | durch | — |
+| Demo-Konto: entfernen | `POST admin_installation.php action=demo_entfernen` | 403 | 403 | durch | durch | — |
+| Demo-Konto: Anmeldung zulassen | `POST admin_installation.php action=demo_anmeldung` | 403 | 403 | durch | durch | — |
 | Rückweg: Paar ablegen (Konzept RW) | `POST api/rueckweg_anlegen.php` | durch | durch | durch | durch | — |
 | Notzugang (SR-04): die Seite | `GET zweitfaktor_notweg.php` | 200 | 200 | 200 | 200 | — |
 | Betrieb · Server: die Seite | `GET betrieb_server.php` | 403 | 403 | 403 | 200 | — |
@@ -9191,7 +9222,7 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Betrieb · Jobs: Kettentoken neu (Web 23.1.0) | `POST betrieb_jobs.php action=kette_token_neu` | 403 | 403 | 403 | durch | ja |
 | Betrieb · Jobs: Health-Token neu (Web 23.5.0) | `POST betrieb_jobs.php action=health_token_neu` | 403 | 403 | 403 | durch | ja |
 | Betrieb · Jobs: Health-Abfrage abschalten (Web 23.5.0) | `POST betrieb_jobs.php action=health_token_aus` | 403 | 403 | 403 | durch | ja |
-| Betrieb · Jobs: anhalten | `POST betrieb_jobs.php action=jobs_pause_an` | 403 | 403 | 403 | durch | — |
+| Betrieb · Jobs: pausieren | `POST betrieb_jobs.php action=jobs_pause_an` | 403 | 403 | 403 | durch | — |
 | Betrieb · Jobs: Pause aufheben | `POST betrieb_jobs.php action=jobs_pause_aus` | 403 | 403 | 403 | durch | — |
 | Betrieb · Updates: die Seite | `GET betrieb_updates.php` | 403 | 403 | 403 | 200 | — |
 | Betrieb · Updates: Wartung an | `POST betrieb_updates.php action=wartung_an` | 403 | 403 | 403 | durch | — |
@@ -10124,6 +10155,20 @@ der fehlenden Spalte scheitert — und `einstellungen.php` setzt sie nach dem
 Speichern neu. Ohne Wahl und ohne Sitzung steht kein Attribut da, und die
 Seite folgt dem Gerät; die Anmeldeseiten wählen ihr Logo dafür mit
 `<picture>` (`logo_bild_anmeldung()`, `db.php`).
+
+**Mond und Sonne in der Kopfleiste** (seit Web 24.9.0, Konzept OF, OF-08,
+E-OF-09, -43, -79). `users.darstellung` hat vier Werte (`DARSTELLUNGEN`):
+`''` Umschalter (Vorgabe), `'system'` Folgt System, `'hell'`, `'dunkel'` —
+ohne Migration, die Spalte ist `VARCHAR(10)`; `''` hieß bis dahin „wie das
+Gerät". Bei `''` und `'system'` (`darstellung_umschalter()`, nur angemeldet)
+gibt `ui_kopf()` zwischen „?" und Zahnrad einen Knopf mit beiden Zeichen aus;
+das Stylesheet zeigt das passende, `assets/darstellung.js` setzt Name und
+`aria-pressed`, schaltet beim Klick `data-theme` sofort und meldet die Wahl
+an `api/darstellung.php`. Der Endpunkt legt sie **nur in der Sitzung** ab
+(`$_SESSION['darstellung_klick']`), `darstellung_attribut()` gibt sie auf der
+nächsten Seite aus — der Klick gilt bis zur Abmeldung, bei beiden Werten
+gleich (E-OF-79). Ändert das Profil die Einstellung, verfällt der Klick
+(`darstellung_sitzung_setzen()`).
 
 **Was nicht umschaltet:** die Karte (Leaflet) samt Kartenzeichen und
 Spurfarben — ein dunkler Kacheldienst wäre ein weiterer Dritter
@@ -13718,7 +13763,7 @@ deren Hülle nicht aufgeht, steht im **Reiter System** (Meldung des Browsers)
 und bleibt, wie sie ist. (Klartextspuren aus der Zeit vor S11 gibt es seit
 Web 23 nicht mehr; bis dahin hob sie das Einmalwerkzeug, S11-10.)
 
-**Die Jobs vorübergehend anhalten** (vor einer großen Wiederherstellung, vor
+**Die Jobs vorübergehend pausieren** (vor einer großen Wiederherstellung, vor
 einer Messung): `php jobs.php --pause 1800`, aufheben mit `--pause 0`. Die
 Pause gilt für alle drei Auslöser, läuft nach höchstens zwei Stunden von selbst
 ab, und Betrieb → Hintergrundjobs zeigt sie an. **Sie ist kein Ersatz für ein
@@ -14204,6 +14249,13 @@ oder unvollständig ausgeliefert — `sha256sum -c phpseclib3.sha256` im Ordner
 missions` in `schema.sql` anfügen (sonst weichen Neuinstallation und
 migrierter Bestand voneinander ab), 3) Eintrag in `mission_fields.php`.
 Formular, Speichern, API und Detailanzeige übernehmen es dann automatisch.
+**Wo und wie es im Formular steht**, sagt der Eintrag ebenfalls (4.17): die
+Karte über `gruppe`, die Reihenfolge über die Folge im Katalog (auch unter
+einem Elternfeld), die Abhängigkeit über `show_if`, dazu `nebeneinander`,
+`darstellung` (`'segment'`) und `einzug` — seit Web 24.8.0 trägt so die
+Karte „Einsatz und Transport“ ihre Anordnung, ohne Markup je Feld. In der
+Leseansicht (`einsatz.php`) ordnen `RANG` und `KARTE_ZIEL` die Zeilen; ein
+Feld, das dort fehlt, fällt in die Karte „Einsatz“.
 Seit Web 5.4.0 gilt das auch für `day_col`: Der Schlüssel wird an genau einer
 Stelle ausgewertet — `mf_tagesspalten()` in `mission_fields_lib.php` —, und
 `api/day.php` liefert die Spalte daraufhin von selbst mit, `index.php` zeigt
@@ -15050,7 +15102,7 @@ Plakette stand auf „nicht aktuell" (F-P5c-154); der Bedienweg
 | `admin_rechtstexte.php` | Editor, ein Reiter je Text, Vorschau daneben (seit Web 21.1.0; von 15.2.0 bis 21.0.0 eine Weiterleitung auf `admin_installation.php`) |
 | `api/rechtstext_vorschau.php` | Vorschau beim Tippen: `rt_html()` auf dem Server, speichert nichts, Topf `rt_vorschau` |
 | `assets/rechtstext_vorschau.js` | Entprellung, jüngste Antwort, Plakette, anteiliges Mitrollen |
-| `admin_installation.php` | Name, Adressen, Logo der Installation (S8/AP3, E-S8-05); bis Web 21.0.0 auch der Editor der Rechtstexte |
+| `admin_installation.php` | Name, Adressen, Logo der Installation (S8/AP3, E-S8-05), seit Web 24.6.0 die Karte „Demo-Konto“ mit Schalter und Handlungen (Konzept OF, E-OF-46); bis Web 21.0.0 auch der Editor der Rechtstexte |
 | `tools/proben/rechtstexte/` | Angriffsprobe für `rt_html()` |
 
 #### `rt_html()` — erst maskieren, dann Struktur erkennen

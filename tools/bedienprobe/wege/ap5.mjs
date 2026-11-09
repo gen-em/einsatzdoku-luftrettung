@@ -425,7 +425,11 @@ export const wege = [
             gefunden: !!z,
             text: z ? z.textContent.replace(/\s+/g, ' ').trim() : '',
             flaeche: z ? getComputedStyle(z).backgroundColor : '',
-            meldungen: document.querySelectorAll('.meldung').length,
+            /* NUR SICHTBARE: Seit Web 24.4 liegt am Ortsfeld eine verborgene
+             * Meldung im Tooltip zur Adresssuche (E-OF-07) — sie steht nicht
+             * am Seitenkopf. */
+            meldungen: Array.from(document.querySelectorAll('.meldung'))
+              .filter(m => m.getClientRects().length > 0).length,
           };
         });
         await k.bild('ap5-dialog-landung');
@@ -479,7 +483,7 @@ export const wege = [
           offen: d.open,
           imDialog: (d.querySelector('.meldung')?.textContent || '').replace(/\s+/g, ' ').trim(),
           amKopf: Array.from(document.querySelectorAll('.meldung'))
-            .filter(m => !m.closest('dialog')).length,
+            .filter(m => !m.closest('dialog') && m.getClientRects().length > 0).length,
           name: d.querySelector('input[name="name"]').value,
         };
       });

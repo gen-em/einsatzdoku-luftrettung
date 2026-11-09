@@ -103,7 +103,7 @@ export const wege = [
       const vorher = gespeichert();
       await k.gehZu(SEITE(k));
       await tippen(k);
-      const reiter = k.seite.locator('.reiter-punkt', { hasText: 'Impressum' }).first();
+      const reiter = k.seite.locator('#inhalt .reiter-punkt', { hasText: 'Impressum' }).first();
 
       await reiter.click();
       await k.seite.waitForSelector('dialog[open]', { timeout: 4000 }).catch(() => {});

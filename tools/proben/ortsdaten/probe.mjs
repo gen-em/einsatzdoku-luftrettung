@@ -427,8 +427,10 @@ try {
   await s.goto(`${BASIS}/einsatz_form.php?id=${mid}`, { waitUntil: 'networkidle' });
   await s.waitForFunction(() => typeof PAT_CK !== 'undefined' && PAT_CK, null, { timeout: 30000 }).catch(() => null);
   await s.evaluate((hhmm) => {
-    const sel = document.querySelector('select[name="f_transport_mode"]');
-    sel.value = 'air'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+    /* Segmentwahl seit Web 24.8.0 (E-OF-33): das Radiofeld klicken, nur
+       wenn es noch nicht gewaehlt ist. */
+    { const r = document.querySelector('input[name="f_transport_mode"][value="air"]');
+      if (!r.checked) { r.click(); } }  // ein zweiter Klick waehlte ab
     ORTSFELD_PAT.transport_dest.steuer.setzen({ addr: 'Klinikum Probe', lat: 47.8, lon: 10.2 });
     document.getElementById('addrow').click();
     const zeilen = document.querySelectorAll('#phaserows .phasen-eingabe');
@@ -469,8 +471,10 @@ try {
   await s.waitForFunction(() => typeof PAT_CK !== 'undefined' && PAT_CK
     && document.getElementById('f_transport_dest_addr').value !== '', null, { timeout: 30000 }).catch(() => null);
   await s.evaluate(() => {
-    const sel = document.querySelector('select[name="f_transport_mode"]');
-    sel.value = 'ambulant'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+    /* Segmentwahl seit Web 24.8.0 (E-OF-33): das Radiofeld klicken, nur
+       wenn es noch nicht gewaehlt ist. */
+    { const r = document.querySelector('input[name="f_transport_mode"][value="ambulant"]');
+      if (!r.checked) { r.click(); } }  // ein zweiter Klick waehlte ab
   });
   await Promise.all([s.waitForURL(/einsatz\.php\?id=/, { timeout: 60000 }),
                      s.evaluate(() => document.getElementById('missionform').requestSubmit())]);
@@ -496,8 +500,14 @@ try {
     WHERE owner_type = 'rest' AND owner_id = ${rid2} ORDER BY seq_from")->fetchAll(PDO::FETCH_NUM));`);
   const segVorher = stand13();
   const tagAuf = async () => {
-    await s.goto(`${BASIS}/index.php?d=${dayId}`, { waitUntil: 'networkidle' });
-    await s.click(`[data-schnitt-auf="${rid2}"]`);
+    /* `#ruheliste` oeffnet die Karte „Ruhesegmente" (seit Web 24.8.0 nur
+       noch auf Abruf, E-OF-05). Bei genau einem Segment klappt die Seite
+       den Bereich selbst auf — dann nicht noch einmal klicken, das schloesse
+       ihn wieder. */
+    await s.goto(`${BASIS}/index.php?d=${dayId}#ruheliste`, { waitUntil: 'networkidle' });
+    if (!(await s.locator(`#s-beg-${rid2}`).isVisible())) {
+      await s.click(`.zeile-knoepfe [data-schnitt-auf="${rid2}"]`);
+    }
     await s.fill(`#s-beg-${rid2}`, hhmm(von13));
     await s.fill(`#s-end-${rid2}`, hhmm(bis13));
     await s.dispatchEvent(`#s-end-${rid2}`, 'input');
@@ -517,14 +527,16 @@ try {
   await s.waitForFunction(() => typeof M !== 'undefined' && M.spur_punkte, null, { timeout: 30000 }).catch(() => null);
   const e13 = await s.evaluate(() => (typeof M !== 'undefined' && M.spur_punkte) ? M.spur_punkte.length : -1);
   pruefe(e13 === soll13, '13 geschnittener Einsatz zeigt seine Spur', `${e13} Punkte`);
-  await s.goto(`${BASIS}/index.php?d=${dayId}`, { waitUntil: 'networkidle' });
+  /* `#ruheliste`: „Schnitt zurücknehmen" steht in der Karte „Ruhesegmente",
+     und die ist seit Web 24.8.0 nur auf Abruf offen. */
+  await s.goto(`${BASIS}/index.php?d=${dayId}#ruheliste`, { waitUntil: 'networkidle' });
   await s.waitForFunction((r) => (typeof dayRest !== 'undefined') && dayRest.some(x => x.id === r && x.track.length),
                           rid2, { timeout: 30000 }).catch(() => null);
   const gesperrt13 = await s.evaluate((r) => dayRest.find(x => x.id === r).track.length, rid2);
   pruefe(gesperrt13 === 10 - soll13, '13 Tagesansicht: der Zeitraum fehlt im Ruhesegment', `${gesperrt13} von 10`);
   /* Rücknahme über den Knopf am Segment */
   await Promise.all([s.waitForSelector('[data-schnittmeldung]', { timeout: 60000 }).catch(() => null),
-                     s.click(`[data-rueck="${cut.id}"]`)]);
+                     s.click(`.zeile-knoepfe [data-rueck="${cut.id}"]`)]);
   const rueck13 = php(`echo (int)db()->query("SELECT COUNT(*) FROM missions WHERE id = ${cut.id}")->fetchColumn()
     . '/' . (int)db()->query("SELECT COUNT(*) FROM track_stuecke WHERE owner_type = 'mission' AND owner_id = ${cut.id}")->fetchColumn()
     . '/' . (int)db()->query("SELECT COUNT(*) FROM track_cuts WHERE owner_type = 'rest' AND owner_id = ${rid2}")->fetchColumn();`);
@@ -578,8 +590,10 @@ try {
   await s.goto(`${BASIS}/einsatz_form.php?id=${mid}`, { waitUntil: 'networkidle' });
   await s.waitForFunction(() => typeof PAT_CK !== 'undefined' && PAT_CK, null, { timeout: 30000 }).catch(() => null);
   await s.evaluate(() => {
-    const sel = document.querySelector('select[name="f_transport_mode"]');
-    sel.value = 'air'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+    /* Segmentwahl seit Web 24.8.0 (E-OF-33): das Radiofeld klicken, nur
+       wenn es noch nicht gewaehlt ist. */
+    { const r = document.querySelector('input[name="f_transport_mode"][value="air"]');
+      if (!r.checked) { r.click(); } }  // ein zweiter Klick waehlte ab
     ORTSFELD_PAT.transport_dest.steuer.setzen({ addr: 'Klinikum Probe', lat: 47.8, lon: 10.2 });
   });
   await Promise.all([s.waitForURL(/einsatz\.php\?id=/, { timeout: 60000 }),
@@ -596,7 +610,8 @@ try {
     }
   };
   const exportieren = async (pers) => {
-    await s.goto(`${BASIS}/import.php`, { waitUntil: 'networkidle' });
+    /* Seit Web 24.5 erst die Wahlkarte „Liste ausgeben" (E-OF-26). */
+    await s.goto(`${BASIS}/import.php#exportform`, { waitUntil: 'networkidle' });
     await setze('input[name="exp_zr"][value="all"]', true);
     await s.selectOption('#exp_fmt', 'b');
     await setze('#exp_pat', pers);

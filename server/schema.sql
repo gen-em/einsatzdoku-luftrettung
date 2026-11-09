@@ -28,7 +28,7 @@ CREATE TABLE users (
   session_epoch INT UNSIGNED NOT NULL DEFAULT 0,     -- wird beim Passwortwechsel erhoeht; beendet offene Sitzungen
   account_key   CHAR(16) NULL UNIQUE,                -- Ordnername der Admin-Sicherung; einmalig vergeben, danach unveraenderlich
   logo_wahl     VARCHAR(20) NOT NULL DEFAULT '',     -- '' = Standard der Installation, sonst 'hubschrauber' | 'fahrzeug' | 'wechselnd'
-  darstellung   VARCHAR(10) NOT NULL DEFAULT '',     -- '' = wie das Geraet, sonst 'hell' | 'dunkel' (data-theme, seit Web 23.10.0)
+  darstellung   VARCHAR(10) NOT NULL DEFAULT '',     -- '' = Umschalter (Mond/Sonne, ohne Klick wie das Geraet), 'system' = Folgt System (mit Knopf), 'hell' | 'dunkel' ohne Knopf (data-theme, seit Web 23.10.0; vier Werte seit Web 24.9.0, ohne Migration)
   adresssuche   TINYINT(1) NOT NULL DEFAULT 1,       -- Adressvorschlaege aus dem Internet; die Installation ist die Obergrenze (app_state.adresssuche)
   last_login    DATETIME NULL,                       -- UTC, letzte erfolgreiche Anmeldung; NULL = noch nie (Kontoseite, NutzerInnen-Liste)
   -- LEBENSZYKLUS. Der Bestand wird bei der Migration

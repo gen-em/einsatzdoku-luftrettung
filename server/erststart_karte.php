@@ -104,8 +104,7 @@ $schritte = [
         'bit'    => ERSTSTART_GERAET,
         'schl'   => 'geraet',
         'titel'  => 'Uhr oder Handy koppeln',
-        'klein'  => 'Die App erfasst Einsätze unterwegs und gleicht sie hier ab. '
-                  . 'Anleitung im Handbuch.',
+        'klein'  => 'Die App erfasst Einsätze unterwegs und gleicht sie hier ab.',
         'knopf'  => 'Koppeln',
         'href'   => 'einstellungen.php?t=geraete',
         'art'    => 'primaer',

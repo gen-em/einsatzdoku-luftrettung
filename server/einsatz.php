@@ -21,7 +21,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
                         . ' data-vorladen="api/mission.php?id=' . $mid . '"></script>']);
 ?>
 
-<?php ui_geruest_start(['aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $missionDayId]); ?>
+<?php ui_geruest_start(['hilfe' => 'hilfe.php#4-2-einsatzansicht', 'aktiv' => 'start', 'leiste' => 'diensttage', 'tag' => $missionDayId]); ?>
   <?php /* Titelzeile: Rueckweg zum Diensttag, Titel „Einsatz N"
            (ab 720 px mit Uhrzeit), Unterzeile mit Zeitspanne,
            Herkunfts-Plakette und Rettungsmittel. „Bearbeiten" ist die eine
@@ -33,8 +33,8 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
     /* DER SPURZUSTAND, EINMAL.
      *
      * Er entscheidet zweierlei, und die beiden duerfen nicht auseinanderlaufen:
-     * ob es den GPX-Abruf im Aktionsmenue ueberhaupt gibt, und was die Plakette
-     * in der Metazeile sagt. Deshalb hier eine Ermittlung, nicht zwei — die
+     * ob es den GPX-Abruf im Aktionsmenue ueberhaupt gibt, und ob die Plakette
+     * „GPS-Daten" in der Metazeile steht. Deshalb hier eine Ermittlung, nicht zwei — die
      * Plakette bekommt den Wert unten als Konstante, statt ihn noch einmal aus
      * der API zu holen und dabei vielleicht etwas anderes zu erfahren. */
     require_once __DIR__ . '/spur_lib.php';
@@ -72,9 +72,10 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
            * Primaerknopf neben „Bearbeiten": zwei primaere Knoepfe sind
            * ausdruecklich ein Anti-Muster.
            *
-           * OHNE SYMBOL. Der Vorrat hat keines fuer „herunterladen"; ein neues
-           * Zeichen braucht dieselbe Freigabe wie ein neuer Baustein. Der
-           * Export-Knopf traegt aus demselben Grund keines.
+           * MIT DEM ZEICHEN `herunterladen` (Konzept OF, E-OF-11). Bis dahin
+           * ohne Symbol, weil der Vorrat keines hatte; das Zeichen ist mit
+           * OF-07 freigegeben und steht an allen GPX-Abrufen gleich
+           * (Tagesuebersicht, Spurenseite, hier).
            *
            * NUR WENN ES EINE SPUR GIBT. Ein Eintrag, der zu einer Fehlermeldung
            * fuehrt, ist schlechter als keiner. */
@@ -94,6 +95,7 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
                * Deshalb kein Ziel im Link, sondern ein eigener Handler mit
                * derselben Rueckfrage (`edConfirm`). */
               $eintraege[] = ['text' => 'GPS-Daten als GPX',
+                              'symbol' => 'herunterladen',
                               'href' => '#',
                               'attr' => 'data-gpx-laden data-gpx-frage="Die Datei zeigt den '
                                       . 'gefahrenen oder geflogenen Weg — also '
@@ -182,7 +184,6 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
         <?php /* <dl> STATT <div> (F-MA-22, axe `dlitem`): Die Zeilen sind
                  dt/dd-Paare in einem `.tagfeld`. */ ?>
         <dl class="tag-lese" id="liste-einsatz"></dl>
-        <div class="zeile-plaketten" id="plaketten" hidden></div>
       </div>
     </section>
 
@@ -201,9 +202,19 @@ ui_seite_start(['titel' => 'Einsatz', 'karte' => true,
       <div class="karte-inhalt"><dl class="tag-lese" id="liste-patientin"></dl></div>
     </section>
 
+    <?php /* „EINSATZ UND TRANSPORT" — DIESELBE GRUPPE WIE IM FORMULAR (OF-07,
+             E-OF-33): Transportart, Ziel, Schockraum, dazu am Fuss die
+             Plaketten Sekundär, Fehleinsatz, Winde und Bergwacht. Die standen
+             bis dahin am Fuss der Karte „Einsatz" — im Formular gehören ihre
+             Schalter aber in diese Karte, und wer vom einen zum anderen
+             wechselt, soll sie an derselben Stelle finden. Plaketten bleiben
+             es (E-P3-33): „Ja" in einer Zeile sagte weniger als das Wort. */ ?>
     <section class="karte karte-block-transport" hidden>
-      <div class="karte-kopf"><h2 class="karte-titel">Transport</h2></div>
-      <div class="karte-inhalt"><dl class="tag-lese" id="liste-transport"></dl></div>
+      <div class="karte-kopf"><h2 class="karte-titel">Einsatz und Transport</h2></div>
+      <div class="karte-inhalt">
+        <dl class="tag-lese" id="liste-transport"></dl>
+        <div class="zeile-plaketten" id="plaketten" hidden></div>
+      </div>
     </section>
 
     <section class="karte karte-block-besatzung" id="crew-section" hidden>
@@ -507,17 +518,20 @@ const RANG = {
   notes:           80,
   other_resources: 90,
   other_ema:      100,
-  bw_info:        142,
   transport_mode: 150,
   transport_dest: 160,
-  schockraum:     170
+  schockraum:     170,
+  /* „Namen / Infos" der Bergwacht steht seit OF-07 hinter dem Transport, in
+     derselben Karte und derselben Folge wie im Formular (E-OF-33). */
+  bw_info:        180
 };
 
 /* In welcher Karte eine Zeile landet. Fehlt ein Feld hier, faellt es in die
  * Einsatz-Karte — dieselbe Rueckfalllinie wie RANG_SONST. */
 const KARTE_ZIEL = {
   mission_no: 'patientin', pat_name: 'patientin', pat_dob: 'patientin',
-  transport_mode: 'transport', transport_dest: 'transport', schockraum: 'transport'
+  transport_mode: 'transport', transport_dest: 'transport', schockraum: 'transport',
+  bw_info: 'transport'
 };
 const LISTEN = {
   einsatz: 'liste-einsatz', patientin: 'liste-patientin', transport: 'liste-transport'
@@ -556,19 +570,26 @@ function markiere(rang, id){
 function plakette(ton, text){
   return `<span class="plakette plakette-${ton}">${esc(text)}</span>`;
 }
-/* Beschriftung eines Feldes, das im pat_blob liegt (F-N1-B). Nur fuer Felder
- * der Einsatz-Karte: Dort stehen sie zwischen Klartextfeldern, und ohne
- * Kennzeichen sieht man ihnen nicht an, dass sie den Server nie im Klartext
- * erreichen. In der PatientIn-Karte waere das Zeichen an jeder Zeile Laerm —
- * dort sagt es die Plakette der Karte einmal.
+/* Beschriftung eines Feldes, das im pat_blob liegt (F-N1-B). Dort stehen
+ * sie zwischen Klartextfeldern, und ohne Kennzeichen sieht man ihnen nicht
+ * an, dass sie den Server nie im Klartext erreichen.
+ *
+ * DAS SCHLOSS STEHT VOR DEM WORT, IN EINER EIGENEN SCHMALEN SPALTE (Konzept
+ * OF, E-OF-28, Bild OF-P34-links). Hinter dem Wort stand es bei jedem Feld
+ * an einer anderen Stelle, und die Werte daneben begannen je Zeile anders
+ * weit rechts. Jetzt ist es eine Markierung am Zeilenanfang; die Spalte
+ * stellt `.lese-schloss` im Stylesheet her, und Beschriftungen ohne Schloss
+ * ruecken gleich weit ein. Name und Rolle dieser Funktion bleiben — der
+ * Riegel `kennzeichnung` haelt jede Zeile an ihr fest. Im FORMULAR bleibt das
+ * Schloss hinter dem Wort: Dort traegt die Beschriftung den Fokus.
  *
  * Das <title> ist keine Zier: Ohne es waere das Symbol fuer einen
  * Bildschirmleser stumm (aria-hidden), und die Auskunft ginge genau denen
  * verloren, die sie nicht sehen koennen. */
 function dtGeschuetzt(text){
-  return esc(text)
-    + (typeof edSymbol === 'function'
-       ? edSymbol('schloss', 'symbol-schutz', 'Ende-zu-Ende-verschlüsselt') : '');
+  return (typeof edSymbol === 'function'
+       ? edSymbol('schloss', 'symbol-schutz lese-schloss', 'Ende-zu-Ende-verschlüsselt') : '')
+    + esc(text);
 }
 function minutenDiff(a, b){
   const [ah, am] = a.split(':').map(Number), [bh, bm] = b.split(':').map(Number);
@@ -648,16 +669,16 @@ async function init(){
   const zeitteil = m.hat_ende
     ? `${m.start_hhmm} – ${m.end_hhmm} Uhr`
     : `${m.start_hhmm} Uhr – kein Ende`;
-  /* SPUR-PLAKETTE (S2/AP4, E-S2-09): welche Fassung der Spur hier liegt.
+  /* SPUR-PLAKETTE (S2/AP4, E-S2-09): dass hier eine Spur liegt.
      Sie steht in derselben Zeile wie „Uhr" und „editiert" — auch das sind
      Aussagen ueber die Beschaffenheit des Datensatzes, nicht ueber den
-     Einsatz. Ohne Spur keine Plakette; ein leeres Etikett erklaert nichts. */
-  const spurPlakette = SPUR.hat
-    ? ' ' + plakette(SPUR.stufe === 3 ? 'orange' : 'neutral',
-        SPUR.stufe === 3
-          ? 'GPS-Daten ausgedünnt'
-          : 'GPS-Daten')
-    : '';
+     Einsatz. Ohne Spur keine Plakette; ein leeres Etikett erklaert nichts.
+
+     KEIN „GPS-Daten ausgedünnt" MEHR (Konzept OF, E-OF-12). Die orange
+     Plakette fuer Stufe 3 las sich wie eine Warnung, und es war keine: Die
+     Spur ist vollstaendig in der Form, die bleibt. Die Auskunft steht in der
+     GPX-Datei (Stufentext, `GPX_TOL`) und im Handbuch 4. */
+  const spurPlakette = SPUR.hat ? ' ' + plakette('neutral', 'GPS-Daten') : '';
   const kennzeichen = plakette('neutral', ORIGIN_LABEL[m.origin] || m.origin || 'Uhr')
     + (m.edited ? ' ' + plakette('neutral', 'editiert') : '')
     + spurPlakette;
@@ -673,7 +694,8 @@ async function init(){
 
   /* Zusatzfelder (Server liefert nur befuellte) auf die Karten verteilen.
    * Winde, Bergwacht, Sekundaer und Fehleinsatz werden NICHT als Zeilen
-   * gerendert, sondern unten als Plaketten gebuendelt (E-P3-33). */
+   * gerendert, sondern als Plaketten am Fuss der Karte „Einsatz und
+   * Transport" gebuendelt (E-P3-33, E-OF-33). */
   const wert = {};
   m.fields.forEach(f => { wert[f.col] = f.value; });
   const PLAKETTEN_FELDER = new Set(['secondary', 'false_alarm', 'winch',

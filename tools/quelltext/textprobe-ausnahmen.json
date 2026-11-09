@@ -130,20 +130,20 @@
       "begruendung": "`watch/` und `tools/uhr-pruefstand/eingabe-probe/` SIND Connect-IQ-Projekte. Der Begriff bezeichnet hier die Sache, nicht die Einstellungen der Uhr-App."
     },
     {
-      "id": "garmin-zusatz-kopplung",
+      "id": "geraete-nach-typ",
       "datei": "server/einstellungen.php",
-      "von": "Auf Garmin-Uhren:",
-      "bis": "</p>",
+      "von": "---- DIE GERAETE NACH TYP",
+      "bis": "assets/dialog\\.js",
       "klasse": "G",
-      "begruendung": "Der Tastenweg der Kopplung als ausdruecklicher Zusatz mit genannter Plattform (E-P2-02). Er steht getrennt vom geraetefreien Ablauf darueber, weil er nur fuer Fenix und Forerunner gilt; die Venu 3s hat weder START noch DOWN. Die Tabelle je Uhr steht im Handbuch, Abschnitt 2.0."
+      "begruendung": "Seit Web 24.5 (Konzept OF, E-OF-25) stehen die Geraete nach TYP in zwei Karten, „Garmin-Uhr\" und „Android-Handy und Wear-OS-Uhr\", und der Koppel-Dialog fuehrt je Typ: App aus dem Connect IQ Store bzw. Play Store, der Tastenweg der Kopplung (Fenix, Forerunner: DOWN, dann START halten — die Venu 3s hat beides nicht). Genannt wird die Plattform dort, wo sie die Sache IST; ein geraetefreies „Store\" waere eine Anleitung, der niemand folgen kann. Vorgaenger: `garmin-zusatz-kopplung` (E-P2-02) und `app-installieren-plattformen` (S8/AP6), beide hier aufgegangen."
     },
     {
-      "id": "app-installieren-plattformen",
-      "datei": "server/einstellungen.php",
-      "von": "ui_karte_start\\(\\['titel' => 'App installieren'",
-      "bis": "ui_karte_ende\\(\\); \\?>",
+      "id": "handbuch-geraete-nach-typ",
+      "datei": "docs/Handbuch.md",
+      "von": "\\*\\*Die Geräte stehen nach Typ in zwei Karten\\*\\*",
+      "bis": "Meldung sagt es\\.",
       "klasse": "G",
-      "begruendung": "Die Karte „App installieren\" auf dem Geraete-Reiter (S8/AP6, Mockup 10) nennt die Plattformen, WEIL der Weg zur App je Plattform ein anderer ist: Die Uhr-App kommt aus dem Connect-IQ-Store, die Handy- und Wear-OS-App aus dem Play Store, und das APK ist der Rueckfall fuer den zweiten Fall. Ein geraetefreies „Store\" waere hier keine Neutralitaet, sondern eine Anleitung, der niemand folgen kann. Dieselbe Ueberlegung wie `garmin-zusatz-kopplung` (E-P2-02) und `statistik-hersteller-garmin`: genannt wird die Plattform dort, wo sie die Sache IST."
+      "begruendung": "Das Handbuch beschreibt die Karten so, wie sie heissen (Konzept OF, E-OF-25): „Garmin-Uhr\" und der Connect IQ Store gehoeren zur Sache, wie in `geraete-nach-typ`."
     },
     {
       "id": "handbuch-app-installieren",
@@ -698,14 +698,6 @@
       "klasse": "F",
       "zeile": "Spurteil",
       "begruendung": "Aufgestellt in S9/AP3 (E-S9-03). „Spur“ ist der Fachbegriff des Projekts und bleibt dort, wo er Fachbegriff ist. CLAUDE.md 4 nennt ihn namentlich: „Spuren nur über spur_lib.php“. „Spurteil“ ist der NAME DER DATEI im Sicherungsarchiv (docs/Backup-Format.md), nicht eine Beschreibung. Wer ein Archiv oeffnet, sieht ihn dort stehen; eine Meldung, die ihn anders nennt als das Verzeichnis, hilft niemandem beim Suchen. Das Backup-Format ist von E-S9-03 ausdruecklich ausgenommen."
-    },
-    {
-      "id": "spur-gpx-fachbegriff",
-      "datei": "server/tag_spuren.php",
-      "muster": "spur",
-      "klasse": "Homonym",
-      "zeile": "eine eigene Spur",
-      "begruendung": "Hier ist „Spur“ der Fachbegriff des GPX-FORMATS: Eine GPX-Datei enthaelt Tracks, und der Satz erklaert genau das — „jede Aufzeichnung bleibt darin eine eigene Spur“. Ein Kartenprogramm nennt sie so; die Anwendung waere die einzige, die es anders schriebe."
     },
     {
       "id": "spur-fachdokument-technik",

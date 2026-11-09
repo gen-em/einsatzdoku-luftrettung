@@ -115,9 +115,11 @@ ui_seite_start(['titel' => 'Einsatz verschieben']);
   ]); ?>
   <?php ui_meldung(null, $fehler, 'info', '  '); ?>
 
-  <p class="seiten-erklaerung">Die <strong>Uhrzeiten bleiben unverändert</strong>
-     — es ändert sich allein, zu welchem Dienst der Einsatz gehört. Sollen auch
-     die Zeiten mitwandern, weil die Uhr falsch gestellt war, ist
+  <?php /* EIN SATZ (Design.md 6, OF-07; bis Web 24 zwei). Der Verweis auf
+           „Datum des Diensttags ändern" bleibt: Er ist der andere Weg, nicht
+           eine Stelle im Handbuch. */ ?>
+  <p class="seiten-erklaerung">Die <strong>Uhrzeiten bleiben unverändert</strong>,
+     nur die Zuordnung zum Dienst wechselt — war die Uhr falsch gestellt, ist
      <?php if ($altDayId > 0): ?><a href="diensttag_datum.php?d=<?= (int)$altDayId ?>">Datum
      des Diensttags ändern</a><?php else: ?>„Datum des Diensttags ändern"<?php endif; ?>
      der richtige Weg.</p>

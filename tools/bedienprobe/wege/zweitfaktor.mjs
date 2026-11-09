@@ -166,7 +166,13 @@ export const wege = [
         const zeile = await s.evaluate(() => {
           const z = [...document.querySelectorAll('#k-zweitfaktor .zeile')]
             .find(e => e.textContent.includes('Gemerkte Geräte'));
-          return z ? z.querySelector('.plakette')?.textContent.trim() : null;
+          /* Seit Web 24.5 (E-OF-19) steht die Zahl in der Kleinzeile
+             („1 Gerät · …"), und „Verwalten" ist zugeklappt, solange der
+             Code nicht frisch ist — fürs Bild aufgeklappt. */
+          const d = document.querySelector('#k-zweitfaktor details.zf-verwalten');
+          if (d) { d.open = true; }
+          const m = z ? /^(\d+|kein)\b/.exec(z.querySelector('.zeile-klein')?.textContent.trim() || '') : null;
+          return m ? (m[1] === 'kein' ? '0' : m[1]) : null;
         });
         const zeileZf = s.locator('#k-zweitfaktor .zeile', { hasText: 'Gemerkte Geräte' }).first();
         if (await zeileZf.count()) { await zeileZf.scrollIntoViewIfNeeded(); }

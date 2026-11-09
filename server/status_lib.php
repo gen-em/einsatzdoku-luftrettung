@@ -285,7 +285,6 @@ function status_erhebung(): array
     require_once __DIR__ . '/mail_lib.php';
     $umgebung = umgebung();
     $praefix  = trim(mail_praefix());
-    $mailSatz = $praefix !== '' ? 'Mails mit „' . $praefix . '" im Betreff' : 'Mails ohne Präfix';
     if ($umgebung === null && $praefix !== '') {
         $server[] = status_z('Umgebung',
             'Mails tragen den Betreff-Präfix „' . $praefix . '", die Oberfläche trägt '
@@ -297,16 +296,10 @@ function status_erhebung(): array
             . '" — bekannt ist nur „' . implode('", „', UMGEBUNG_FARBEN) . '". Die '
             . 'Kopfleiste steht deshalb ' . $umgebung['farbe'],
             'orange', 'Farbe unbekannt');
-    } elseif ($umgebung !== null) {
-        $server[] = status_z('Umgebung',
-            $umgebung['name'] . '-Umgebung zum Testen, nicht für den Echtbetrieb. '
-            . 'Kopfleiste ' . $umgebung['farbe'] . ', ' . $mailSatz,
-            'blau', $umgebung['name']);
-    } else {
-        $server[] = status_z('Umgebung',
-            'Produktivumgebung für den Echtbetrieb. Kopfleiste dunkelblau, ' . $mailSatz,
-            'blau', 'Produktiv');
     }
+    /* DER NORMALFALL STEHT NICHT MEHR DA (seit Web 24.7, Konzept OF, E-OF-72):
+       ein Etikett mit bekannter Farbe oder keines — die Kopfleiste zeigt es
+       ohnehin. Die Zeile erscheint nur, wenn config.php sich widerspricht. */
 
     /* ---- Adresse der Anlage ---------------------------------------------
      *
@@ -370,7 +363,8 @@ function status_erhebung(): array
      * OHNE DIE SPALTEN DES ZWEITFAKTORS (vor `update.php`) zaehlt jedes
      * aktive Konto als handlungsfaehig — das Einrichtungstor schweigt dann
      * ebenfalls. */
-    $server[] = status_verwaltungszeile(status_verwaltungskonten($pdo));
+    $kontenZeilen = [];
+    $kontenZeilen[] = status_verwaltungszeile(status_verwaltungskonten($pdo));
 
     /* ---- Rückweg-Prüfung --------------------------
      *
@@ -553,18 +547,9 @@ function status_erhebung(): array
         $kdfVerwaist !== [] ? 'Anmeldung blockiert'
             : ($kdfAlt > 0 ? 'Übergang läuft' : 'in Ordnung'));
 
-    /* Dass diese Seite überhaupt antwortet, beweist die Erreichbarkeit — die
-       Zeile sagt deshalb die GRÖSSE. „Nicht erreichbar" käme nie zur Anzeige;
-       es gäbe keine Seite. */
-    $server[] = status_z('Datenbank',
-        $sp['stand'] !== null
-            ? groesse_text($sp['gesamt']['datenbank'])
-              . ' · Dateien ' . groesse_text($sp['gesamt']['dateien'])
-              . ' · gemessen ' . zeit_relativ($sp['stand'])
-            : 'Noch nicht gemessen — die Messung läuft im täglichen Aufräumjob',
-        $sp['stand'] !== null ? 'gruen' : 'neutral',
-        $sp['stand'] !== null ? 'erreichbar' : 'ungemessen',
-        'betrieb_server.php');
+    /* KEINE ZEILE „DATENBANK" MEHR (E-OF-72): Sie wurde nie auffaellig —
+       erreichbar beweist die Seite selbst, die Groesse steht in der Plattform
+       („Kontingent der Datenbank") und in den Servereinstellungen. */
 
     /* ---- DIE VERBINDUNGSGRENZE ----------------------
      *
@@ -636,49 +621,10 @@ function status_erhebung(): array
     }
     $server[] = status_z('Verbindungen', $ulText, $ulTon, $ulPlak);
 
-    /* ---- DIE MODELLTABELLE UND IHR NACHLOESE-JOB ---
-     *
-     * WOGEGEN. `pair.php` löst die Teilenummer einer Uhr im Moment der
-     * Kopplung auf. Trifft sie dabei auf eine ältere Tabelle, bleibt das
-     * Modell leer und die Geräteart steht auf der ungeprüften Selbstauskunft
-     * des Geräts — die Uhr-App sendet dort fest „uhr". Der Job zieht das
-     * nach, sobald eine neue Tabelle da ist.
-     *
-     * DREI ZUSTÄNDE, und der mittlere ist der Grund für die Zeile: Ein Update
-     * hat eine neue Tabelle mitgebracht, der Job hat sie noch nicht
-     * verarbeitet. Ohne diesen Hinweis wäre das ein Zustand, den niemand
-     * sieht — er löst sich beim nächsten Jobdurchlauf von selbst, und wenn
-     * nicht, merkt es keiner. */
-    require_once __DIR__ . '/geraetemodelle_lib.php';
-    $gmStand = gm_stand_lesen();
-    $gmSoll  = gm_tabellen_hash();
-    $gmZahl  = count(GERAETE_MODELLE);
-    if ($gmStand['hash'] === null) {
-        $gmText = $gmZahl . ' Teilenummern · noch nie nachgelöst — der Job holt '
-                . 'es beim nächsten Lauf nach';
-        $gmTon  = 'neutral';
-        $gmPlak = 'ungeprüft';
-    } elseif ($gmStand['hash'] !== $gmSoll) {
-        $gmText = $gmZahl . ' Teilenummern · die Tabelle hat sich geändert, der '
-                . 'Nachlöse-Job zieht beim nächsten Lauf nach';
-        $gmTon  = 'orange';
-        $gmPlak = 'steht aus';
-    } else {
-        $gmText = $gmZahl . ' Teilenummern · zuletzt nachgelöst '
-                . datum_zeit_text((string)$gmStand['am']) . ' Uhr · '
-                . $gmStand['nachgeloest'] . ' nachgezogen, '
-                . $gmStand['unbekannt'] . ' unbekannt (Handys und fremde Modelle, '
-                . 'sie bleiben unberührt)';
-        $gmTon  = 'gruen';
-        $gmPlak = 'aktuell';
-    }
-    $server[] = status_z('Gerätemodelle', $gmText, $gmTon, $gmPlak,
-                         'betrieb_jobs.php');
-
-    $server[] = status_z('PHP und Zeitzone',
-        PHP_VERSION . ' · Anzeige in ' . date_default_timezone_get()
-        . ' · gespeichert wird UTC',
-        'neutral', PHP_SAPI);
+    /* KEINE ZEILEN „GERAETEMODELLE" UND „PHP UND ZEITZONE" MEHR (E-OF-72).
+       Die erste heilte beim naechsten Joblauf von selbst und steht als Job
+       „Geraetemodelle nachloesen" unter Hintergrundjobs; die zweite wurde nie
+       auffaellig, die PHP-Fassung misst die Plattform. */
 
     /* ---- RATENSCHUTZ --------------------------------
      *
@@ -702,31 +648,10 @@ function status_erhebung(): array
             'orange', 'aktiv', 'betrieb_sicherheit.php#k-bremse-global');
     }
 
-    $rsSperren = rate_sperren_aktiv(200);
-    if ($rsSperren !== []) {
-        /* `$rsZeile` und nicht `$sp` — jene Variable traegt in dieser Funktion
-         * den SPEICHERSTAND, und die Schleife ueberschriebe sie. Die Folge
-         * waere kein Syntaxfehler, sondern ein 500er dreihundert Zeilen weiter unten
-         * (`speicher_ton(): Argument #2 must be of type array, null given`) —
-         * und zwar NUR, wenn gerade etwas gesperrt war. */
-        /* `art` KOMMT AUS DER BIBLIOTHEK, nicht aus einem zweiten
-         * `str_starts_with` hier. Die Ableitung stand dreimal im
-         * Bestand; sie steht einmal, in `rate_sperren_aktiv()`. */
-        $konten = 0; $adressen = 0; $hoechste = 0;
-        foreach ($rsSperren as $rsZeile) {
-            if ($rsZeile['art'] === 'konto') { $konten++; } else { $adressen++; }
-            $hoechste = max($hoechste, $rsZeile['stufe']);
-        }
-        $teile = [];
-        if ($adressen > 0) { $teile[] = $adressen . ' Anschluss' . ($adressen === 1 ? '' : 'e'); }
-        if ($konten > 0)   { $teile[] = $konten . ' Name' . ($konten === 1 ? '' : 'n'); }
-        $server[] = status_z('Gesperrt',
-            implode(' und ', $teile) . ' — höchste Stufe ' . $hoechste
-            . '. Eine Sperre ist ein Ereignis, kein Fehler: Sie läuft von selbst ab',
-            $hoechste >= rate_stufe_hoechste() ? 'orange' : 'gruen',
-            count($rsSperren) . ($hoechste >= rate_stufe_hoechste() ? ' · Stufe ' . $hoechste : ''),
-            'betrieb_sicherheit.php#k-sperren');
-    }
+    /* KEINE ZEILE „GESPERRT" MEHR (E-OF-72): Eine Sperre laeuft von selbst
+       ab und verlangt keine Handlung; die Liste mit „aufheben" steht unter
+       Sicherheit (Kopfaktion dieser Seite). Die Verlangsamung darueber bleibt
+       — sie sagt, dass gerade jemand rät. */
 
     /* ---- ABGEWIESENE GERAETEANMELDUNGEN -------------
      *
@@ -767,13 +692,8 @@ function status_erhebung(): array
 
     /* ---- E-Mail --------------------------------------------------------- */
     $mail = [];
-    $mail[] = status_z('SMTP',
-        $smtpDa
-            ? 'Eingerichtet in der config.php'
-            : 'Nicht eingerichtet. Ohne SMTP gibt es keine Einladungslinks, keine '
-              . 'Setz-Links und keine Erinnerung an überfällige Konto-Backups',
-        $smtpDa ? 'gruen' : 'neutral',
-        $smtpDa ? 'eingerichtet' : 'nicht eingerichtet');
+    /* KEINE ZEILE „SMTP" MEHR (E-OF-72): Ob SMTP eingerichtet ist, misst
+       die Plattform; ob es zustellt, sagt „Letzter Versand". */
 
     /* DER VERSAND WIRD VERMERKT. Sonst koennte niemand
        sagen, ob je eine Mail hinausging: `smtp_eingerichtet()` prüft die
@@ -837,18 +757,11 @@ function status_erhebung(): array
         }
     }
 
+    /* „ANTWORT UND VERSAND" STEHT BEI DEN EMPFEHLUNGEN DER PLATTFORM (seit
+       Web 24.7, E-OF-72). Auf vielen Hostern fehlt fastcgi_finish_request
+       dauerhaft; die Zeile stand dann fuer immer orange, und handeln kann nur
+       die Hosterin. Als Empfehlung faerbt sie die Ampel nicht. */
     $entkoppelt = antwort_entkoppelbar();
-    $mail[] = status_z('Antwort und Versand',
-        $entkoppelt
-            ? '„Passwort vergessen" dauert für vorhandene und unbekannte '
-              . 'Adressen gleich lang — die Antwort ist fertig, bevor der '
-              . 'Versand beginnt'
-            : 'Diese PHP-Anbindung kennt weder fastcgi_finish_request noch '
-              . 'litespeed_finish_request. Im ungünstigen Fall verrät die '
-              . 'Dauer von „Passwort vergessen", ob es zu einer Adresse ein '
-              . 'Konto gibt',
-        $entkoppelt ? 'gruen' : 'orange',
-        $entkoppelt ? 'entkoppelt' : 'nicht sicher');
 
     /* ---- Hintergrundjobs ------------------------------------------------- */
     $jobZeilen = [];
@@ -859,11 +772,11 @@ function status_erhebung(): array
     } else {
         if ($jobPause !== null) {
             $jobZeilen[] = status_z('Pause',
-                'Die Hintergrundarbeit ist angehalten bis '
+                'Die Hintergrundarbeit ist pausiert bis '
                 . datum_zeit_text($jobPause)
                 . ' Uhr. Aufheben über Betrieb → Hintergrundjobs '
                 . '(oder php jobs.php --pause 0)',
-                'orange', 'angehalten', 'betrieb_jobs.php');
+                'orange', 'pausiert', 'betrieb_jobs.php');
         }
 
         /* DER AUSLÖSER IST DIE WICHTIGSTE ZEILE DIESER KARTE. Ein Job ohne
@@ -904,6 +817,7 @@ function status_erhebung(): array
                 'betrieb_jobs.php');
         }
 
+        $jobsGruen = 0;
         foreach ($jobs as $j) {
             $fehler = (string)($j['letzter_fehler'] ?? '');
             $rueck  = $j['rueckstand'] === null ? null : (int)$j['rueckstand'];
@@ -920,7 +834,17 @@ function status_erhebung(): array
                 $ton = 'gruen'; $pl = 'in Ordnung';
                 $klein = 'Zuletzt gelaufen ' . zeit_relativ($j['letzter_lauf']);
             }
+            /* NUR, WAS NICHT GRUEN IST, STEHT EINZELN (E-OF-72). Die
+               Hintergrundjobs zeigen jeden Job ohnehin Zeile fuer Zeile; hier
+               zaehlt eine Sammelzeile den Rest. */
+            if ($ton === 'gruen') { $jobsGruen++; continue; }
             $jobZeilen[] = status_z((string)$j['titel'], $klein, $ton, $pl, 'betrieb_jobs.php');
+        }
+        if ($jobsGruen > 0) {
+            $jobZeilen[] = status_z('Übrige Jobs',
+                $jobsGruen . ($jobsGruen === 1 ? ' Job ohne Befund' : ' Jobs ohne Befund')
+                . ' — Einzelheiten unter Hintergrundjobs',
+                'gruen', 'in Ordnung', 'betrieb_jobs.php');
         }
     }
 
@@ -955,7 +879,7 @@ function status_erhebung(): array
     }
 
     $krank = (int)$zahlen['ueberfaellig'] + (int)$zahlen['nie'];
-    $backups[] = status_z('Konto-Backups',
+    $kontenZeilen[] = status_z('Konto-Backups',
         $krank === 0
             ? $zahlen['konten'] . ' Konten, keines überfällig'
             : (int)$zahlen['ueberfaellig'] . ' überfällig, ' . (int)$zahlen['nie']
@@ -971,7 +895,7 @@ function status_erhebung(): array
         $backups[] = status_z('Backup-Ziele',
             'Kein Ziel eingetragen. Die Konto-Backups liegen damit auf demselben '
             . 'Server, dessen Ausfall der Grund für ein Backup wäre',
-            'neutral', 'keines', 'admin_sicherungsziele.php');
+            'neutral', 'keines', 'betrieb_server.php#k-backup-ziele');
     } else {
         $nieVersandt = array_values(array_filter($aktiv,
             static fn($z) => empty($z['letzter_lauf'])));
@@ -990,7 +914,7 @@ function status_erhebung(): array
             $klein = count($ziele) . ' eingetragen · Versand '
                    . (sz_auto_an() ? 'automatisch' : 'nur von Hand');
         }
-        $backups[] = status_z('Backup-Ziele', $klein, $ton, $pl, 'admin_sicherungsziele.php');
+        $backups[] = status_z('Backup-Ziele', $klein, $ton, $pl, 'betrieb_server.php#k-backup-ziele');
     }
 
     /* ---- WÄCHST EIN ZIEL, OHNE DASS DORT JE ETWAS ENTFERNT WURDE?
@@ -1028,7 +952,7 @@ function status_erhebung(): array
                   . $erstes['name'] . '" mit ' . groesse_text($erstes['bytes']),
             'orange',
             count($waechst) === 1 ? 'wächst' : count($waechst) . ' wachsen',
-            'admin_sicherungsziele.php');
+            'betrieb_server.php#k-backup-ziele');
     }
 
     /* Speicher: derselbe Ton wie der Balken auf den Servereinstellungen —
@@ -1044,14 +968,8 @@ function status_erhebung(): array
         $proz . ' %',
         'betrieb_server.php');
 
-    $backups[] = status_z('Ablage',
-        $ablageBereit
-            ? (string)$sp['ablage']['pfad'] . ' · ' . $sp['pakete'] . ' Pakete in '
-              . $sp['ordner'] . ' Ordnern'
-            : (string)($ablageGrund ?? 'Nicht beschreibbar — es entsteht kein Backup'),
-        $ablageBereit ? 'gruen' : 'rot',
-        $ablageBereit ? 'beschreibbar' : 'nicht beschreibbar',
-        'betrieb_server.php');
+    /* KEINE ZEILE „ABLAGE" MEHR (E-OF-72): Die Plattform misst dieselbe
+       Ablage („Ablage der Sicherungen", rot, wenn nicht beschreibbar). */
 
     /* ---- Plattform ----------------------------------
      *
@@ -1075,7 +993,8 @@ function status_erhebung(): array
      *
      * NUR ABWEICHENDE EMPFOHLEN-ZEILEN. Erfuellte Empfehlungen sind
      * Bestaetigung ohne Handlung — zehn davon draengten die drei Zeilen weg,
-     * auf die es ankommt. Die Schlusszeile nennt dafuer die Zahl.
+     * auf die es ankommt. Die Zahl steht seit Web 24.7 im Kartenkopf
+     * (`empfohlen` in der Rueckgabe), nicht mehr als Schlusszeile.
      */
     $plattform = [];
     $pBefunde  = plattform_pruefen($pdo, false);
@@ -1107,15 +1026,73 @@ function status_erhebung(): array
             $ton, (string)$plakette,
             $f['einstellung'] === 'db_gb' ? 'betrieb_server.php' : null);
     }
-    $plattform[] = status_z('Empfohlen insgesamt',
-        $empfOk . ' von ' . $empfGesamt . ' erfüllt. Eine Abweichung steht oben als '
-        . 'Hinweis; sie färbt die Ampel nicht — die Anwendung läuft vollständig, '
-        . 'nur langsamer oder mit einem Handgriff mehr',
-        'neutral', $empfOk . '/' . $empfGesamt);
+    $empfGesamt++;
+    if ($entkoppelt) {
+        $empfOk++;
+    } else {
+        $plattform[] = status_z('Antwort und Versand',
+            'Empfohlen: fastcgi_finish_request oder litespeed_finish_request · gemessen: '
+            . 'keines — im ungünstigen Fall verrät die Dauer von „Passwort vergessen", '
+            . 'ob es zu einer Adresse ein Konto gibt',
+            'neutral', 'Hinweis');
+    }
+
+    /* ---- Konten (seit Web 24.7, E-OF-72) ----------------------------
+     *
+     * EIGENE KARTE fuer das, was die Konten der Anlage betrifft: wer handeln
+     * kann (aus Server), wie es um ihre Backups steht (aus Backups) und die
+     * Kontrollzahlen des Demo-Kontos (bis Web 24.6 auf `admin_demo.php`,
+     * E-OF-71). Die Papierkorbzahlen sind die Kontrolle des Resets: Der
+     * Papierkorb kommt aus der Fixture zurueck — steht eine auf null, hat
+     * das Einspielen etwas uebersprungen. */
+    require_once __DIR__ . '/demo_lib.php';
+    $demoId = demo_id();
+    if ($demoId !== null) {
+        $eine = static function (string $sql) use ($pdo, $demoId): int {
+            $st = $pdo->prepare($sql);
+            $st->execute([$demoId]);
+            return (int)$st->fetchColumn();
+        };
+        $dTage  = $eine('SELECT COUNT(*) FROM days WHERE user_id = ? AND deleted_at IS NULL');
+        $dEins  = $eine('SELECT COUNT(*) FROM missions WHERE user_id = ? AND deleted_at IS NULL');
+        $dRuhe  = $eine('SELECT COUNT(*) FROM rest_segments WHERE user_id = ? AND deleted_at IS NULL');
+        $dGer   = $eine('SELECT COUNT(*) FROM devices WHERE user_id = ? AND ' . GERAETE_ECHT_SQL);
+        $pkEins = $eine('SELECT COUNT(*) FROM missions WHERE user_id = ? AND deleted_at IS NOT NULL');
+        $pkTage = $eine('SELECT COUNT(*) FROM days WHERE user_id = ? AND deleted_at IS NOT NULL');
+        $pkRuhe = $eine('SELECT COUNT(*) FROM rest_segments WHERE user_id = ? AND deleted_at IS NOT NULL');
+        $kontenZeilen[] = status_z('Demo-Konto · Bestand',
+            $dTage . ' Diensttage · ' . $dEins . ' Einsätze · ' . $dRuhe . ' Ruhesegmente · '
+            . $dGer . ($dGer === 1 ? ' Gerät' : ' Geräte'),
+            'neutral', 'Fixture', 'admin_installation.php#k-demo');
+        $pkLeer = $pkEins === 0 || $pkTage === 0 || $pkRuhe === 0;
+        $kontenZeilen[] = status_z('Demo-Konto · Papierkorb',
+            $pkEins . ' Einsätze · ' . $pkTage . ' Diensttage · ' . $pkRuhe . ' Ruhesegmente'
+            . ($pkLeer ? ' — eine Null heißt: Der Reset hat etwas übersprungen' : ''),
+            $pkLeer ? 'orange' : 'gruen',
+            $pkLeer ? 'unvollständig' : 'vollständig',
+            'admin_installation.php#k-demo');
+    }
+
+    /* ---- Das Betriebsprotokoll, nur wenn es nicht schreibt -----------
+     *
+     * Die Karte „Betriebsprotokoll" ist fort (E-OF-72) — ihre Zahlen stehen
+     * an den Reitern des Protokolls. Ihr eigentlicher Zweck bleibt hier:
+     * Scheitert das Schreiben, laeuft die Handlung weiter, und das muss
+     * jemandem auffallen. */
+    require_once __DIR__ . '/protokoll_lib.php';
+    $pf = protokoll_fehler_zahl();
+    if ($pf > 0) {
+        $server[] = status_z('Betriebsprotokoll',
+            $pf . ' Einträge konnten nicht geschrieben werden — die Handlungen sind '
+            . 'gelungen, aber nicht festgehalten; der Grund steht im Serverprotokoll '
+            . 'unter „protokoll:"',
+            'rot', $pf . ' nicht geschrieben', 'admin_protokoll.php');
+    }
 
     return [
         'karten' => [
             ['titel' => 'Server',          'id' => 'k-server',  'zeilen' => $server],
+            ['titel' => 'Konten',          'id' => 'k-konten',  'zeilen' => $kontenZeilen],
             ['titel' => 'E-Mail',          'id' => 'k-mail',    'zeilen' => $mail],
             ['titel' => 'Hintergrundjobs', 'id' => 'k-jobs',    'zeilen' => $jobZeilen],
             ['titel' => 'Backups',         'id' => 'k-backups', 'zeilen' => $backups],
@@ -1131,6 +1108,7 @@ function status_erhebung(): array
                 static fn($j) => (string)($j['letzter_fehler'] ?? '') !== '')),
             'backups_krank' => $krank,
             'plattform_muss' => $pZahlen['muss_offen'],
+            'empfohlen'      => [$empfOk, $empfGesamt],
         ],
     ];
 }

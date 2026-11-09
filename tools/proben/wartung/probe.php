@@ -497,12 +497,16 @@ pruefe($ohneBalken === [],
  * beide antworten UND den Balken tragen: Ein Statuscode allein sagt nicht,
  * was die Seite zeigt (siehe oben). */
 $a6g = hole('admin_komplettsicherung.php', $sidAdmin);
+/* SEIT WEB 24.7 IST „BACKUP-ZIELE" EINE KARTE (Konzept OF, E-OF-24, -45):
+ * `admin_sicherungsziele.php` leitet bei GET auf die Servereinstellungen um
+ * und muss das auch in der Wartung tun — nicht mit 503 stehen bleiben. */
 $a6h = hole('admin_sicherungsziele.php', $sidAdmin);
-pruefe($a6g['code'] === 200 && $a6h['code'] === 200
-       && str_contains($a6g['rumpf'], 'Wartungsmodus seit')
-       && str_contains($a6h['rumpf'], 'Wartungsmodus seit'),
-       '6b  Komplett-Backup und Backup-Ziele offen, mit Balken (P5c/AP9)',
-       'komplett ' . $a6g['code'] . ', ziele ' . $a6h['code']);
+$a6hZiel = preg_match('/^Location:\s*(\S+)/mi', (string)$a6h['kopf'], $mZ) ? $mZ[1] : '';
+pruefe($a6g['code'] === 200 && str_contains($a6g['rumpf'], 'Wartungsmodus seit')
+       && str_contains($a6g['rumpf'], 'k-backup-ziele')
+       && $a6h['code'] === 302 && str_starts_with($a6hZiel, 'betrieb_server.php'),
+       '6b  Komplett-Backup offen, mit Balken und Ziele-Karte; die Ziele-Seite leitet um (P5c/AP9, OF-06)',
+       'komplett ' . $a6g['code'] . ', ziele ' . $a6h['code'] . ' → ' . $a6hZiel);
 
 /* DAS SCHLUESSELBLATT TRAEGT IHN NICHT — UND ZWAR ABSICHTLICH.
  *

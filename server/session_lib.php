@@ -341,13 +341,11 @@ function logo_stamm(): string
 }
 
 /* ---------------------------------------------------------------------------
- * DARSTELLUNG JE KONTO: System, hell oder dunkel (Schritt 26, MA-07)
+ * DARSTELLUNG JE KONTO: Umschalter, System, hell oder dunkel (Schritt 26, MA-07; Schritt 27, OF-08)
  *
- * Drei Werte stehen in `users.darstellung`:
- *
- *   ''        System — folgt `prefers-color-scheme` des Geraets. Vorgabe.
- *   'hell'    immer hell, auch auf einem Geraet im Dunkelmodus
- *   'dunkel'  immer dunkel
+ * Vier Werte stehen in `users.darstellung` — welche, steht unten an
+ * `DARSTELLUNGEN` (seit Web 24.9.0; bis dahin drei: '' System, 'hell',
+ * 'dunkel').
  *
  * WIE BEI DER LOGO-WAHL: gelesen bei der Anmeldung, abgelegt in der Sitzung,
  * nach dem Speichern im Profil sofort neu gesetzt. Jede Seite liest nur die
@@ -362,8 +360,24 @@ function logo_stamm(): string
  * das ab und liefert '' (System) — die Anmeldung haengt nicht daran.
  * ------------------------------------------------------------------------ */
 
+/* VIER WERTE SEIT WEB 24.9.0 (Konzept OF, OF-08, E-OF-09, -43, -79):
+ *
+ *   ''        Umschalter — Mond/Sonne in der Kopfleiste, ohne Klick wie das
+ *             Geraet. Vorgabe; bis Web 24.8.0 hiess '' „wie das Geraet" ohne
+ *             Knopf, und Bestandskonten ohne Wahl bekommen damit den Knopf
+ *             (E-OF-55).
+ *   'system'  Folgt System — wie das Geraet, mit Knopf. Neu, keine
+ *             Migration: Die Spalte ist VARCHAR(10).
+ *   'hell'    immer hell, ohne Knopf
+ *   'dunkel'  immer dunkel, ohne Knopf
+ *
+ * DER KLICK LIEGT IN DER SITZUNG (`$_SESSION['darstellung_klick']`,
+ * 'hell' oder 'dunkel'), nicht im Konto — bei beiden Werten mit Knopf gilt
+ * er bis zur Abmeldung (E-OF-79: so entschieden, obwohl ''/'system' sich
+ * damit in der Sitzung gleich verhalten). */
+
 /** Die waehlbaren Werte — auch die Pruefliste beim Speichern. */
-const DARSTELLUNGEN = ['', 'hell', 'dunkel'];
+const DARSTELLUNGEN = ['', 'system', 'hell', 'dunkel'];
 
 /** Die gespeicherte Wahl eines Kontos; '' ohne Spalte oder ohne Konto. */
 function darstellung_lesen(int $userId): string
@@ -378,17 +392,42 @@ function darstellung_lesen(int $userId): string
     return in_array($w, DARSTELLUNGEN, true) ? $w : '';
 }
 
-/** Die Wahl in der Sitzung ablegen (Anmeldung, Profil-Speichern). */
+/** Die Wahl in der Sitzung ablegen (Anmeldung, Profil-Speichern). Aendert
+ *  sich die Wahl, gilt der Klick des Knopfs nicht mehr — wer im Profil eine
+ *  neue Einstellung speichert, will sie sehen. Bleibt sie gleich (das
+ *  Profilformular speichert auch Name und Logo), bleibt der Klick. */
 function darstellung_sitzung_setzen(?string $wahl): void
 {
     $w = (string)$wahl;
-    $_SESSION['darstellung'] = in_array($w, DARSTELLUNGEN, true) ? $w : '';
+    $w = in_array($w, DARSTELLUNGEN, true) ? $w : '';
+    if (($_SESSION['darstellung'] ?? null) !== $w) { unset($_SESSION['darstellung_klick']); }
+    $_SESSION['darstellung'] = $w;
 }
 
-/** Der Wert fuer `data-theme`: 'light', 'dark' oder '' (kein Attribut). */
+/** Zeigt die Kopfleiste den Knopf Mond/Sonne? Nur angemeldet und nur bei
+ *  Umschalter oder Folgt System. */
+function darstellung_umschalter(): bool
+{
+    return !empty($_SESSION['user_id'])
+        && in_array((string)($_SESSION['darstellung'] ?? ''), ['', 'system'], true);
+}
+
+/** Den Klick des Knopfs in der Sitzung ablegen; false, wenn es keinen Knopf
+ *  gibt oder der Wert unbekannt ist. */
+function darstellung_klick_setzen(string $wahl): bool
+{
+    if (!darstellung_umschalter() || !in_array($wahl, ['hell', 'dunkel'], true)) { return false; }
+    $_SESSION['darstellung_klick'] = $wahl;
+    return true;
+}
+
+/** Der Wert fuer `data-theme`: 'light', 'dark' oder '' (kein Attribut). Erst
+ *  die feste Wahl des Kontos, dann der Klick der Sitzung, sonst das Geraet. */
 function darstellung_attribut(): string
 {
-    return match ((string)($_SESSION['darstellung'] ?? '')) {
+    $wahl = (string)($_SESSION['darstellung'] ?? '');
+    if (darstellung_umschalter()) { $wahl = (string)($_SESSION['darstellung_klick'] ?? ''); }
+    return match ($wahl) {
         'hell'   => 'light',
         'dunkel' => 'dark',
         default  => '',

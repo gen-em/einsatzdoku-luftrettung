@@ -1,6 +1,6 @@
 # Symbolvorrat Gen-EM NAdoku (P3, E-P3-18)
 
-58 Zeichen, je eine Datei. Grundlage ist **Tabler Icons** (MIT-Lizenz,
+64 Zeichen, je eine Datei. Grundlage ist **Tabler Icons** (MIT-Lizenz,
 Paweł Kuna; Lizenztext in `LICENSE-tabler-icons.txt`): 24 × 24, Strich 2 px,
 runde Enden und Ecken, Farbe über `currentColor`. Ein Zeichen (Luftlinie)
 ist ein eigener Entwurf im selben Stil. Jede Datei trägt im Kommentar den
@@ -81,3 +81,9 @@ CSS-Drehung. Gefüllter Stern: per CSS `fill:currentColor`.
 | `mail.svg` | mail | Testmail auf Betrieb → Status (Backlog Nr. 120) |
 | `karte-gross.svg` | arrows-vertical | Karte der Tagesübersicht höher/niedriger (Backlog Nr. 45) |
 | `karte-breit.svg` | arrows-horizontal | dieselbe Karte ab 1600 px breiter/schmaler — ein Knopf, zwei Wirkungen je Breite (E-MR-19) |
+| `filter.svg` | filter | Filterknopf im Listenkopf (Konzept OF, E-OF-18) |
+| `wiederherstellen.svg` | restore | Papierkorb: Wiederherstellen (E-OF-30) — nicht neben „Aktualisieren" stellen |
+| `herunterladen.svg` | download | GPS-Daten als GPX ausgeben (E-OF-11) |
+| `hochladen.svg` | upload | GPX importieren (E-OF-11) |
+| `mond.svg` | moon | Umschalter Darstellung in der Kopfleiste (E-OF-09) |
+| `sonne.svg` | sun | Umschalter Darstellung in der Kopfleiste (E-OF-09) |

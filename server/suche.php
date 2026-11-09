@@ -32,7 +32,7 @@ ui_seite_start(['titel' => 'Suche']);
          Menue. `ui_geruest_start()` mit leiste => 'filter' oeffnet die Leiste
          und ueberlaesst der Seite den Inhalt; ui_leiste_ende() schliesst sie
          und oeffnet den Inhalt. */ ?>
-<?php ui_geruest_start(['aktiv' => 'suche', 'leiste' => 'filter', 'titel' => 'Filter']); ?>
+<?php ui_geruest_start(['hilfe' => 'hilfe.php#4-6-suche', 'aktiv' => 'suche', 'leiste' => 'filter', 'titel' => 'Filter']); ?>
 
     <?php
       /* ---- Bausteine dieser Seite -------------------------------------
@@ -103,10 +103,13 @@ ui_seite_start(['titel' => 'Suche']);
           <div class="feldblock">
             <span class="feld-label">Datum</span>
             <div class="fld-reihe">
-              <label for="f-dv">von <input type="date" id="f-dv"
-                     aria-label="Datum von"></label>
-              <label for="f-db">bis <input type="date" id="f-db"
-                     aria-label="Datum bis"></label>
+              <?php /* TT.MM.JJJJ statt `type="date"` (Konzept OF, E-OF-54);
+                       in Adresse und Vergleich steht weiter ISO (Art
+                       `datum` unten). */ ?>
+              <label for="f-dv">von <?= ui_datum_eingabe(['id' => 'f-dv',
+                     'attr' => ' aria-label="Datum von"']) ?></label>
+              <label for="f-db">bis <?= ui_datum_eingabe(['id' => 'f-db',
+                     'attr' => ' aria-label="Datum bis"']) ?></label>
             </div>
           </div>
           <div class="feldblock">
@@ -500,8 +503,11 @@ const esc = EdHtml.escape;
  * ================================================================== */
 const FILTER = [
   { kurz: 'q', el: 'f-q', art: 'text', gruppe: null },
-  { kurz: 'dv', el: 'f-dv', art: 'text', gruppe: 'einsatz', titel: 'seit' },
-  { kurz: 'db', el: 'f-db', art: 'text', gruppe: 'einsatz', titel: 'bis' },
+  /* ART `datum` (seit Web 24.4, Konzept OF, E-OF-54): Das Feld zeigt
+     TT.MM.JJJJ, Adresse und Vergleich tragen weiter JJJJ-MM-TT — verschickte
+     Links mit `#dv=2026-01-01` bleiben gueltig. */
+  { kurz: 'dv', el: 'f-dv', art: 'datum', gruppe: 'einsatz', titel: 'seit' },
+  { kurz: 'db', el: 'f-db', art: 'datum', gruppe: 'einsatz', titel: 'bis' },
   { kurz: 'zv', el: 'f-zv', art: 'text', gruppe: 'einsatz', titel: 'Alarm ab' },
   { kurz: 'zb', el: 'f-zb', art: 'text', gruppe: 'einsatz', titel: 'Alarm bis' },
   { kurz: 'wd', el: 'f-wd', art: 'haken', gruppe: 'einsatz', titel: 'Wochentage' },
@@ -559,6 +565,7 @@ function wertLesen(f) {
     const an = $(f.el).querySelector('input:checked');
     return an ? an.value : '';
   }
+  if (f.art === 'datum') { return EdFormat.datumLesen($(f.el).value); }
   return $(f.el).value.trim();
 }
 
@@ -598,6 +605,7 @@ function wertSetzen(f, v) {
     return;
   }
   const el = $(f.el);
+  if (f.art === 'datum') { el.value = EdFormat.tag(v || ''); return; }
   // Ein Wert, den die Auswahlliste (noch) nicht kennt, wird still verworfen —
   // das passiert z. B., wenn ein geteilter Link auf eine Besatzung zeigt, die
   // im Bestand der empfangenden Person nicht vorkommt.
@@ -810,7 +818,7 @@ function trifft(m) {
      irgendwo vorkommen" — UND über die Wörter, ODER über die Felder. */
   if (freitext !== null && !freitext(m._hay)) { return false; }
 
-  const dv = feld('f-dv'), db = feld('f-db');
+  const dv = EdFormat.datumLesen(feld('f-dv')), db = EdFormat.datumLesen(feld('f-db'));
   if (dv !== '' && m.day < dv) { return false; }
   if (db !== '' && m.day > db) { return false; }
 

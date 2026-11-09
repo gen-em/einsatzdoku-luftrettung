@@ -191,50 +191,38 @@ async function rueckfragen(hoechstens = 3) {
   }
 }
 
-/** Kennzahlen der Adminseite auslesen. */
+/** Kennzahlen des Demo-Kontos auslesen.
+ *
+ * SEIT WEB 24.9.0 AUS ZWEI SEITEN (Konzept OF, E-OF-71, OF-09): Bestand und
+ * Papierkorb stehen als zwei Zeilen in der Karte „Konten" der Statusseite,
+ * Konto und „Letzter Reset" in der Karte „Demo-Konto" unter Installation.
+ * `admin_demo.php`, wo bis dahin alles stand, leitet nur noch um. Die
+ * Schluessel des Ergebnisses bleiben dieselben, damit die Erwartungen unten
+ * unveraendert gelten. Gelesen wird `textContent`: Die Statuskarten sind
+ * zugeklappt, und `innerText` eines nicht gezeichneten Inhalts haengt am
+ * Motor. */
 async function zustand() {
-  await seite.goto(`${basis}/admin_demo.php`, { waitUntil: 'domcontentloaded' });
-  await seite.waitForTimeout(700);
-  /* ZWEI TRAEGER STATT EINER TABELLE. Frueher stand
-     der ganze Zustand in einer `table.data`; heute baut die Seite auf den
-     Bausteinen auf, und die Zahlen des Bestands sind jetzt Kacheln
-     (`.kennzahl`: Wert oben, Beschriftung darunter), die uebrigen Angaben
-     Zeilen (`.zeile`: Beschriftung oben, Wert darunter). Beide liefern zwei
-     Zeilen Text — nur in umgekehrter Reihenfolge, und getrennt durch einen
-     Umbruch statt durch einen Tabulator. */
-  /* GETEILT WIRD AN EINEM ODER MEHREREN UMBRUECHEN.
-   *
-   * `innerText` liefert fuer eine Kennzahlkachel heute `"83\n\nEinsätze"` —
-   * zwei Umbrueche, weil Wert und Beschriftung zwei `<p>` sind. Geteilt wurde
-   * hier an EINEM: Das zweite Stueck war die leere Zeichenkette, der
-   * Schluessel damit leer, und `if (k)` weiter unten warf das Paar weg.
-   *
-   * Die Folge war keine rote Zeile, sondern etwas Schlimmeres: `zustand()`
-   * lieferte die vier Kennzahlen (Diensttage, Einsätze, Ruhesegmente,
-   * Geräte) GAR NICHT mehr, und jede Erwartung darauf verglich `undefined`
-   * gegen '83'. Der Bericht meldete „Einsätze nach Reset: undefined" — was
-   * wie ein Fehler der Anwendung aussieht und keiner war.
-   *
-   * `split(/\n+/)` statt `split('\n')`: Es traegt beide Formen, die alte wie
-   * die heutige. Eine Probe, die am Abstand zweier Absaetze zerbricht, misst
-   * die Gestaltung mit, und das soll sie nicht. */
-  const paare = [];
-  for (const t of await seite.locator('.kennzahl').allInnerTexts().catch(() => [])) {
-    const [v, k] = t.split(/\n+/);
-    paare.push([k, v]);
-  }
-  for (const t of await seite.locator('.zeile').allInnerTexts().catch(() => [])) {
-    const [k, v] = t.split(/\n+/);
-    paare.push([k, v]);
-  }
   const aus = {};
-  for (const p of paare) {
-    const [k, v] = p.map(x => (x || '').trim());
-    /* SCHLÜSSEL KLEINGESCHRIEBEN. Die Beschriftungen stehen per CSS in
-       Versalien, und innerText liefert den GERENDERTEN Text — „EINSÄTZE",
-       nicht „Einsätze". Ein Vergleich auf die Schreibweise im Markup fand
-       hier nichts und meldete dreimal „undefined". Dieselbe Falle wie bei
-       der Diagnose-Beschriftung in `angriffswerte.mjs`. */
+  await seite.goto(`${basis}/betrieb_status.php`, { waitUntil: 'domcontentloaded' });
+  await seite.waitForTimeout(500);
+  const konten = (await seite.locator('#k-konten').textContent().catch(() => '') || '')
+    .replace(/\s+/g, ' ');
+  const bestand = konten.match(/Demo-Konto · Bestand\s*(\d+) Diensttage · (\d+) Einsätze · (\d+) Ruhesegmente · (\d+) Gerät/);
+  if (bestand) {
+    [aus['diensttage'], aus['einsätze'], aus['ruhesegmente'], aus['geräte']] = bestand.slice(1);
+  }
+  const korb = konten.match(/Demo-Konto · Papierkorb\s*(\d+) Einsätze · (\d+) Diensttage · (\d+) Ruhesegmente/);
+  if (korb) {
+    [aus['einsätze im papierkorb'], aus['diensttage im papierkorb'], aus['ruhesegmente im papierkorb']] = korb.slice(1);
+  }
+  await seite.goto(`${basis}/admin_installation.php`, { waitUntil: 'domcontentloaded' });
+  await seite.waitForTimeout(500);
+  /* Die Zeilen der Demo-Karte: Beschriftung oben, Wert darunter, getrennt
+     durch einen oder mehrere Umbrueche (dieselbe Lehre wie zuvor auf
+     `admin_demo.php`: `split(/\n+/)`, sonst faellt das Paar weg). Schluessel
+     kleingeschrieben — `innerText` liefert den gerenderten Text. */
+  for (const t of await seite.locator('#k-demo .zeile').allInnerTexts().catch(() => [])) {
+    const [k, v] = t.split(/\n+/).map(x => (x || '').trim());
     if (k) { aus[k.toLowerCase()] = v; }
   }
   /* LEER IST EIN ERGEBNIS, KEIN ZUSTAND. Steht kein Zustand auf der Seite,
@@ -319,11 +307,17 @@ async function zustand() {
 // ---- 1. Anlegen ---------------------------------------------------------
 if (schritte.includes('anlegen')) {
   pruefe(await anmelden(admin, adminPw), 'Anmeldung als Administration gescheitert');
-  await seite.goto(`${basis}/admin_demo.php`, { waitUntil: 'domcontentloaded' });
+  /* SEIT WEB 24.6 stehen die Knöpfe in der Karte „Demo-Konto" unter
+     Installation (Konzept OF, E-OF-46); `zustand()` liest Statusseite und
+     Installation (E-OF-71). Erst den Zustand, dann die Seite der Knöpfe. */
+  /* Die Zeile „Demo-Konto · Bestand" gibt es nur mit Demo-Konto; die Zeile
+     „Konto" der Installation steht immer da („noch keines angelegt"). */
+  const schonDa = ((await zustand())['diensttage'] || '') !== '';
+  await seite.goto(`${basis}/admin_installation.php`, { waitUntil: 'domcontentloaded' });
   await seite.waitForTimeout(700);
   /* DEN KNOPF GIBT ES NUR, WENN ES NOCH KEIN DEMO-KONTO GIBT.
    *
-   * `admin_demo.php` zeigt entweder „Demo-Konto anlegen" ODER
+   * Die Karte „Demo-Konto" zeigt entweder „Demo-Konto anlegen" ODER
    * „Zurücksetzen" — nie beides. Die Erwartung stand hier unbedingt und
    * meldete auf jeder Installation MIT Demo-Konto einen Befund, der keiner
    * ist. Gegriffen wird am `form`-Attribut statt am Text (dieselbe Falle wie
@@ -331,7 +325,6 @@ if (schritte.includes('anlegen')) {
    * ein Demo-Konto auf der Seite, ist das die Antwort, und der Schritt zählt
    * als nicht gemessen statt als verfehlt. */
   const knopf = seite.locator('button[form="f-demo-anlegen"]');
-  const schonDa = ((await zustand())['konto'] || '') !== '';
   if (await knopf.count() === 0 && schonDa) {
     nichtGemessen += 1;
     melde('Abschnitt 1 (anlegen): NICHT GEMESSEN — es gibt bereits ein '
@@ -341,8 +334,6 @@ if (schritte.includes('anlegen')) {
     pruefe(await knopf.count() > 0,
            'Knopf zum Anlegen fehlt (gesucht: button[form="f-demo-anlegen"])');
   }
-  await seite.goto(`${basis}/admin_demo.php`, { waitUntil: 'domcontentloaded' });
-  await seite.waitForTimeout(500);
   if (await knopf.count() > 0) {
     await knopf.first().click();
     await seite.waitForTimeout(1000);
@@ -594,11 +585,11 @@ if (schritte.includes('spurfaelle')) {
 // ---- 4. Zurücksetzen ----------------------------------------------------
 if (schritte.includes('reset')) {
   pruefe(await anmelden(admin, adminPw), 'Anmeldung als Administration gescheitert');
-  await seite.goto(`${basis}/admin_demo.php`, { waitUntil: 'domcontentloaded' });
-  await seite.waitForTimeout(700);
   const vorher = await zustand();
   melde(`vor dem Reset: ${JSON.stringify(vorher)}`);
   ergebnis.vor_reset = vorher;
+  await seite.goto(`${basis}/admin_installation.php`, { waitUntil: 'domcontentloaded' });
+  await seite.waitForTimeout(700);
   /* DER KNOPF HEISST „Zurücksetzen", NICHT „Auf Standard zurücksetzen".
    *
    * Hier stand der lange Text, und `hasText` fand nichts. Die Erwartung
