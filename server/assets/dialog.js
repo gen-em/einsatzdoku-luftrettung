@@ -137,7 +137,12 @@
     if (!dialog || typeof dialog.showModal !== 'function') { return false; }
     if (oeffner) { fuellen(dialog, oeffner); }
     if (!dialog.open) { dialog.showModal(); }
-    var erstes = dialog.querySelector('input:not([type=hidden]),select,textarea');
+    /* `data-ohne-feldfokus`: ein Dialog zum Nachsehen, in dem ein Feld nur
+       nebenbei steht („Zweitfaktor verwalten", seit Web 24.10.0) — dort
+       bliebe sonst am Handy bei jedem Oeffnen die Tastatur stehen. Der
+       Fokus bleibt dann, wo `showModal()` ihn hinsetzt. */
+    var erstes = dialog.hasAttribute('data-ohne-feldfokus') ? null
+      : dialog.querySelector('input:not([type=hidden]),select,textarea');
     if (erstes) { erstes.focus(); }
     return true;
   }

@@ -8859,4 +8859,13 @@ declare(strict_types=1);
  *   ein Popup schliesst es wie Esc (`confirm.js`, fuer jedes modale
  *   <dialog>), ausser bei `data-dialog-fest` — den fuenf Schluessel-Dialogen.
  *   Korrektur; kein Schema. */
-const WEB_VERSION = '24.9.3';
+/* 24.10.0 — ZWEITFAKTOR VERWALTEN IM DIALOG, PASSKEYS UMBENENNEN
+ *   (Rueckmeldung der Betreiberin, Mockup freigegeben am 09.11.2026). Die
+ *   Karte im Profil traegt eine Zeile; „Verwalten" oeffnet den Dialog
+ *   `#zf-verwalten` mit Codes, Geraeten, Passkeys und Rueckweg, im Fuss
+ *   „Ausschalten". Neu: `passkey_umbenennen` (`pk_umbenennen()`, Protokoll
+ *   `passkey_umbenannt`, ohne frischen Code — eine Beschriftung). Nach einer
+ *   Handlung oder einer Code-Bestaetigung geht der Dialog mit der Meldung
+ *   wieder auf (Blitzmeldung mit Ort 'zf', Ruecksprung `#zf-verwalten`).
+ *   `dialog.js` kennt `data-ohne-feldfokus`. Neben; kein Schema. */
+const WEB_VERSION = '24.10.0';

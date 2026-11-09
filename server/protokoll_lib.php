@@ -356,6 +356,7 @@ const PROTOKOLL_ARTEN = [
      * orange: ein Klon-Verdacht, den die Betroffene sehen soll. */
     'passkey_angelegt'          => ['Passkey angelegt', 'neutral'],
     'passkey_entfernt'          => ['Passkey entfernt', 'neutral'],
+    'passkey_umbenannt'         => ['Passkey umbenannt', 'neutral'],
     'passkey_zaehler'           => ['Passkey-Zähler', 'orange'],
     /* Eine abgewiesene Registrierung mit ihrem Grund —
      * nach aussen heisst jede nur „nicht angenommen". */
@@ -591,7 +592,7 @@ function protokoll_arten_des_reiters(string $reiter): array
                          'adresse_bestaetigt', 'adresse_widersprochen',
                          'kontopaar_angelegt', 'kontopaar_abweichung',
                          'zweitfaktor_geraet_gemerkt', 'zweitfaktor_geraete_vergessen',
-                         'passkey_angelegt', 'passkey_entfernt', 'passkey_zaehler',
+                         'passkey_angelegt', 'passkey_entfernt', 'passkey_umbenannt', 'passkey_zaehler',
                          'passkey_abgewiesen',
                          'rechtstext_geaendert', 'schluessel_erneuert',
                          'schluesselblatt_bestaetigt', 'geraet_umgeschaltet',

@@ -129,7 +129,9 @@ export const wege = [
           s.waitForNavigation({ waitUntil: 'domcontentloaded' }),
           s.locator('#codeform button[type="submit"]').click(),
         ]);
-        await s.goto(`${basisL}/einstellungen.php?t=profil#k-zweitfaktor`, { waitUntil: 'domcontentloaded' });
+        /* `#zf-verwalten`: Seit Web 24.10.0 steht die Verwaltung in einem
+           Dialog, und dieser Anker öffnet ihn beim Laden. */
+        await s.goto(`${basisL}/einstellungen.php?t=profil#zf-verwalten`, { waitUntil: 'domcontentloaded' });
         await s.waitForSelector('[data-passkey-anlegen]:not([hidden])', { timeout: 10000 });
         const karte = async () => s.evaluate(() => {
           const zeilen = [...document.querySelectorAll('#k-zweitfaktor .zeile')];
@@ -164,7 +166,7 @@ export const wege = [
            (`InvalidStateError`) — der Server würde nie gefragt. So lief die
            erste Fassung dieses Schritts in eine Zeitüberschreitung. */
         const zweiteSeite = await kontext.newPage();
-        await zweiteSeite.goto(`${basisL}/einstellungen.php?t=profil#k-zweitfaktor`,
+        await zweiteSeite.goto(`${basisL}/einstellungen.php?t=profil#zf-verwalten`,
                                { waitUntil: 'domcontentloaded' });
         await zweiteSeite.close();
         const abgewiesenVorher = Number(php(`echo (int)db()->query("SELECT COUNT(*) FROM protokoll_ereignisse
@@ -242,7 +244,7 @@ export const wege = [
         ]);
         const nachPasskey = new URL(s.url()).pathname.split('/').pop();
         const geraet = (await kontext.cookies()).some(c => c.name === 'EDGERAET');
-        await s.goto(`${basisL}/einstellungen.php?t=profil#k-zweitfaktor`, { waitUntil: 'domcontentloaded' });
+        await s.goto(`${basisL}/einstellungen.php?t=profil#zf-verwalten`, { waitUntil: 'domcontentloaded' });
         const frisch = await karte();
 
         /* 3. Entfernen (frisch, also ohne Umweg) */
@@ -259,7 +261,7 @@ export const wege = [
         await s.goto(`${basisL}/logout.php`, { waitUntil: 'domcontentloaded' });
         await anmelden(s, basisL);
         const ueberGeraet = new URL(s.url()).pathname.split('/').pop();
-        await s.goto(`${basisL}/einstellungen.php?t=profil#k-zweitfaktor`, { waitUntil: 'domcontentloaded' });
+        await s.goto(`${basisL}/einstellungen.php?t=profil#zf-verwalten`, { waitUntil: 'domcontentloaded' });
         const unfrisch = await karte();
 
         /* 5. Ein neuer Browser: Code-Schritt, und kein Passkey-Knopf mehr */

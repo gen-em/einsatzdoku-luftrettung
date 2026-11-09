@@ -1148,7 +1148,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `karte.svg` | Tabler Icons „map-2" (MIT) | 14 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 2 |
-| `korb.svg` | Tabler Icons „trash" (MIT) | 22 |
+| `korb.svg` | Tabler Icons „trash" (MIT) | 23 |
 | `luftlinie.svg` | — | 0 |
 | `lupe.svg` | Tabler Icons „search" (MIT) | 13 |
 | `mail.svg` | Tabler Icons „mail" (MIT) | 15 |
@@ -1175,7 +1175,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `standort.svg` | Tabler Icons „map-pin" (MIT) | 26 |
 | `status.svg` | Tabler Icons „activity" (MIT) | 49 |
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
-| `stift.svg` | Tabler Icons „pencil" (MIT) | 8 |
+| `stift.svg` | Tabler Icons „pencil" (MIT) | 9 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 16 |
 | `uhr.svg` | Tabler Icons „device-watch" (MIT) | 282 |
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 4 |
@@ -1875,7 +1875,10 @@ Web 24.9.3, `confirm.js`, für jedes modale `<dialog>`). Er wirkt wie Esc
 gilt nicht für Dialoge mit `data-dialog-fest`: die fünf Schlüssel-Dialoge
 (neuer Wiederherstellungsschlüssel, Rückweg, Schlüsselpaar, Schlüsselblatt-
 und Konto-Rückfrage). Ein neuer Dialog, der etwas Einmaliges zeigt, trägt
-das Attribut ebenfalls.
+das Attribut ebenfalls. **`data-ohne-feldfokus`** (seit Web 24.10.0) lässt
+den Fokus beim Öffnen auf dem ersten Knopf statt im ersten Feld — für einen
+Dialog zum Nachsehen, in dem ein Feld nur nebenbei steht; am Handy bliebe
+sonst bei jedem Öffnen die Tastatur stehen.
 
 > *Hier stand bis Web 17.0.0: „Am Schreibtisch eine Karte im Schleier, mobil
 > ein Blatt von unten (E-P3-27). Dasselbe Markup, das Stylesheet
@@ -3576,10 +3579,11 @@ sie tut. Verwender: Import / Export.
 **Der Koppel-Dialog** (Geräte, seit Web 24.5.0, E-OF-25, Bild OF-P11-B2) ist
 kein Baustein, sondern ein Formulardialog (9.11) mit einer nummerierten
 Schrittliste `.koppel-schritte` (App installieren, Kopplung starten, Code
-eingeben). **Die Zweitfaktor-Karte** im Profil (E-OF-19, Bild OF-P09-B) ist
-die aufklappbare Zeile `.zeile-mehr` (9.2): Ihr `<summary>` ist eine Zeile
-mit dem einen Satz und einem Knopfbild „Verwalten", aufgeklappt stehen die
-Zeilen mit je einer Handlung.
+eingeben). **Die Zweitfaktor-Karte** im Profil (E-OF-19, Bild OF-P09-B)
+trägt eine Zeile mit dem einen Satz und dem Knopf „Verwalten"; der öffnet
+seit Web 24.10.0 den Dialog „Zweitfaktor verwalten" (9.11) mit den Zeilen
+und je einer Handlung, im Fuß „Ausschalten" und „Schließen". Bis dahin war
+sie die aufklappbare Zeile `.zeile-mehr` (9.2).
 
 ## 10. Seitentypen und das Rezept für eine neue Seite
 
@@ -3803,6 +3807,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 24.10.0** | **9.11:** `data-ohne-feldfokus`. **9.42:** Die Zweitfaktor-Karte öffnet einen Dialog statt aufzuklappen; die Passkey-Zeilen tragen „Umbenennen" und „Entfernen" als Zeilenaktionen. Kein Token, kein Baustein. |
 | **Web 24.9.3** | **9.11:** Ein Klick neben einen Dialog schließt ihn, außer `data-dialog-fest` (Schlüssel-Dialoge). **9.37:** Reiter in Open Sans 700 statt Bricolage 700 — den Schnitt gibt es nicht, der Browser rechnete ihn nach, die Reiter sahen verschmiert aus (Rückmeldung vom 09.11.2026). Kein Token, kein Baustein. |
 | **Web 24.9.1 (Schritt 27, Konzept OF, OF-09)** | **9.26:** `.karten-raster` setzt seine Karten als `inline-block` — WebKit verteilte eine Klappkarte im Mehrspaltensatz falsch. Kein neuer Baustein, kein Token. |
 | **Web 24.9.0 (Schritt 27, Konzept OF, OF-08)** | **3a:** Mond und Sonne in der Kopfleiste bei „Umschalter“ und „Folgt System“ (E-OF-09); vier Einstellungen im Profil. Kein neuer Baustein, kein Token, kein Kontrastpaar. |

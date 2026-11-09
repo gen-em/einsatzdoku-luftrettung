@@ -187,8 +187,9 @@ export const wege = [
         merke(plakette === 'eingerichtet' && knopf === 1, `Karte „${plakette}", Knopf ${knopf}`);
 
         /* 7. Erneuern: zuerst mit falschem Passwort, dann mit dem richtigen.
-              Ohne frischen Code ist „Verwalten" zugeklappt (E-OF-19). */
-        await s.click('#k-zweitfaktor details.zf-verwalten > summary');
+              Seit Web 24.10.0 steht „Erneuern" im Dialog „Zweitfaktor
+              verwalten" — erst öffnen. */
+        await s.click('#k-zweitfaktor [data-dialog="zf-verwalten"]');
         await s.click('#k-zweitfaktor [data-rueckweg-auf]');
         await s.fill('#rw-pw', 'falsch-falsch-falsch');
         await s.click('#dlg-rueckweg [data-rw-erneuern]');
