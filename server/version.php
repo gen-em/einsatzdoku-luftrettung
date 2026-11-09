@@ -8868,4 +8868,11 @@ declare(strict_types=1);
  *   Handlung oder einer Code-Bestaetigung geht der Dialog mit der Meldung
  *   wieder auf (Blitzmeldung mit Ort 'zf', Ruecksprung `#zf-verwalten`).
  *   `dialog.js` kennt `data-ohne-feldfokus`. Neben; kein Schema. */
-const WEB_VERSION = '24.10.0';
+/* 24.10.1 — DER ZWEITFAKTOR-DIALOG OHNE TASTATUR. Ging „Zweitfaktor
+ *   verwalten" nach einer Handlung ueber den Anker `#zf-verwalten` wieder
+ *   auf, sprang das Anker-Skript der Einstellungen danach ins erste Feld
+ *   darin („Bezeichnung" des Passkeys) — in Chromium und Firefox, gefunden
+ *   bei der Nachpruefung auf Staging; oertlich fehlte das Feld, weil
+ *   127.0.0.1 keine Passkey-Adresse ist. Das Skript laesst einen <dialog>
+ *   jetzt aus. Korrektur; kein Schema. */
+const WEB_VERSION = '24.10.1';
