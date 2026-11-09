@@ -49,10 +49,10 @@ es im Kopf von `server/version.php`.
 | OF-06 | Betrieb: Status „Probleme zuerst“ (E-OF-20; Q-OF-02 → OF-M1); Hintergrundjobs (E-OF-10, -21); Servereinstellungen als Klappkarten (E-OF-22); Komplett-Backup (E-OF-23); Backup-Ziele an beiden Orten, die Seite entfällt (E-OF-24, E-OF-45) | Opus · **gefächert** nach OF-M1: je ein Agent für Status, Hintergrundjobs, Servereinstellungen und Komplett-Backup samt Ziele; `ui.php`, `style.css`, `status_lib.php`, Texte und Prüfarbeit seriell | **erledigt** 08.11.2026 (Web 24.7.0; gefächert auf drei Agenten, E-OF-74) |
 | OF-07 | Einsatz, Diensttag, Karte, Papierkorb: Ruhesegmente-Kachel entfällt (E-OF-05); GPX-Zeichen (E-OF-11); Plakette „ausgedünnt“ entfällt (E-OF-12); Karte „Einsatz und Transport“ im Feldkatalog (E-OF-33); Schlösser in eigener Spalte (E-OF-28); Kartenart ohne Anbieter (E-OF-13); Leaflet-Bedienelemente im Branding (E-OF-29); Papierkorb mit `restore`, Artzeichen vor das Datum (E-OF-30, E-OF-48) | Opus · **gefächert**: ein Agent Formular und Leseansicht (`einsatz_form.php`, `mission_fields.php`, `einsatz.php`), einer Karte (`geo.js`, `map_layers.js`, Leaflet-Regeln), einer Tagesübersicht und Papierkorb (`index.php`, `tag_spuren.php`, `papierkorb.php`); `style.css`, Design.md und Prüfarbeit seriell | **erledigt** 08.11.2026 (Web 24.8.0; Karte seriell, die zwei Seitenteile gefächert auf zwei Agenten, E-OF-75 bis -78) |
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | **erledigt** 08.11.2026 (Web 24.9.0; Klick nur in der Sitzung, E-OF-79) |
-| OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | **in Arbeit** (Dokumente und Prüfmittel erledigt, Prüfstand läuft; E-OF-80) |
+| OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | **erledigt** 09.11.2026 (Web 24.9.1; vier volle Läufe, 3 und 4 grün; PR #159, gemergt) |
 
-**In Arbeit:** OF-09 Abschluss. **Erledigt:**
-OF-00, NV-01 bis NV-04 (das Gerüst), OF-01 bis OF-08 (OF-M1 entschieden
+**In Arbeit:** nichts — Schritt 27 ist mit PR #159 gemergt. **Erledigt:**
+OF-00, NV-01 bis NV-04 (das Gerüst), OF-01 bis OF-09 (OF-M1 entschieden
 08.11.2026: E-OF-72, -73). **`seitenregeln` in
 `tools/screenshots/ausnahmen.json` ist leer** (E-OF-65): OF-06 und OF-07
 haben ihre Zeilen gestrichen. **Vorgelegt zur Kenntnis:** „Transportart“
@@ -1549,6 +1549,20 @@ Bilderlauf-Selbstprobe **33 / 33**, Rollenprobe **616 / 0**,
 `demo_pruefen.mjs anlegen,reset` **16 Prüfungen, 0 Befunde** (1 nicht
 gemessen: das Konto bestand schon).
 
-**Prüfstand:** zwei volle Läufe (Hauptstufe, drei Engines, E-MA-34); der
-Bericht des zweiten steht im Kopf-Commit des Pull Requests, die Zahlen
-beider Läufe kommen mit dem Abschluss hierher (E-OF-80 (4)).
+**Prüfstand** (Hauptstufe, voll, zehn Breiten, drei Engines; E-MA-34):
+
+| Lauf | Ergebnis | Zeit | Was rot war und was es war |
+|---|---|---|---|
+| 1 | 59 grün, 5 rot | 9216 s | Rückwegprobe (Zeile hieß seit OF-04 „Codes zur Wiederherstellung“); Bilderlauf (Schritt `kopplung-dialog` hinter der angefangenen Kopplung; in WebKit Updates bei 1200 px alles links — Mehrspaltensatz mit Klappkarte); Barrierefreiheit WebKit (Kartenart-Knopf ohne Namen, 12 Befunde `link-name`); CSV-Kreislauf und Messstand (Exportformular hinter der Wahlkarte) |
+| 2 | 63 grün, 1 rot | 8938 s | Messstand: Statistik suchte den Reitertext ohne `<span>` (NV-01) |
+| 3 | 64 / 64 grün | 9050 s | Bericht in `5acd6df` |
+| 4 | 64 / 64 grün | 8954 s | Bericht im Kopf-Commit von PR #159 (`f0b74ec`, Baum `e4d334f`) |
+
+Aus Lauf 1 kamen zwei Fehler der Anwendung, beide nur in WebKit (24.9.1:
+`aria-label` am Kartenart-Knopf, `.karten-raster > .karte` als
+`inline-block`); alle übrigen Roten waren Prüfmittel an der alten Form.
+Lauf 3 und 4 hintereinander grün — die Abnahme ist erfüllt.
+
+**Erledigt mit dem Merge:** F-OF-25 (die Signaturen gegen `main` misst
+der nächste Vergleich gegen ein `main`, das OF schon enthält). Die
+Handprüfpunkte stehen in `docs/konzepte/Pruefliste.md` (P-OF-…, P-NV-…).
