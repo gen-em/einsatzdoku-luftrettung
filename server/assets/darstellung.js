@@ -14,8 +14,9 @@
  * WELCHES ZEICHEN ZU SEHEN IST, entscheidet das Stylesheet, nicht dieses
  * Skript (`.kopf-darstellung`): So stimmt es auch vor dem ersten Klick.
  *
- * SCHEITERT DIE MELDUNG, bleibt die Seite trotzdem umgeschaltet — sie gilt
- * dann nur bis zum nächsten Seitenwechsel. Eine Fehlermeldung für eine
+ * DIE MELDUNG UEBERDAUERT DEN SEITENWECHSEL (`ueberdauert`, seit Web
+ * 24.9.2, Nr. 550). SCHEITERT SIE dennoch, bleibt die Seite umgeschaltet —
+ * sie gilt dann nur bis zum nächsten Seitenwechsel. Eine Fehlermeldung für eine
  * Farbe wäre lauter als der Fehler.
  */
 (function () {
@@ -38,14 +39,42 @@
     knopf.setAttribute('aria-label', d ? 'Dunkel aus' : 'Dunkel ein');
   }
 
+  /* Die Meldung, solange sie unterwegs ist — sonst null. */
+  let unterwegs = null;
+
   knopf.addEventListener('click', function () {
     const dunkel = !istDunkel();
     wurzel.setAttribute('data-theme', dunkel ? 'dark' : 'light');
     beschriften();
     if (window.EdApi) {
-      EdApi.postForm('api/darstellung.php', { wahl: dunkel ? 'dunkel' : 'hell' })
+      /* `ueberdauert`: Wer gleich nach dem Klick einen Verweis nimmt, haette
+         sonst die Wahl verloren — `EdApi` bricht beim Seitenwechsel ab, und
+         die naechste Seite kam in der alten Farbe (Nr. 550). */
+      const meldung = EdApi.postForm('api/darstellung.php', { wahl: dunkel ? 'dunkel' : 'hell' },
+                                     { ueberdauert: true })
         .catch(function () { /* siehe Kopf: die Seite bleibt umgeschaltet */ });
+      unterwegs = meldung;
+      meldung.then(function () { if (unterwegs === meldung) { unterwegs = null; } });
     }
+  });
+
+  /* EIN VERWEIS WARTET AUF DIE MELDUNG (Nr. 550). `ueberdauert` rettet die
+     Wahl, aber die naechste Seite kann den Server VOR ihr erreichen und kaeme
+     dann noch in der alten Farbe. Solange die Meldung unterwegs ist, haelt
+     ein Klick auf einen Verweis dieser Anlage an, bis sie da ist —
+     hoechstens anderthalb Sekunden. Neuer Tab, Anker und fremde Seiten
+     bleiben unberuehrt. */
+  document.addEventListener('click', function (e) {
+    if (!unterwegs || e.defaultPrevented || e.button !== 0
+        || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) { return; }
+    const a = e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a || a.target || a.hasAttribute('download')) { return; }
+    const ziel = new URL(a.href, location.href);
+    if (ziel.origin !== location.origin
+        || (ziel.pathname === location.pathname && ziel.hash)) { return; }
+    e.preventDefault();
+    Promise.race([unterwegs, new Promise(function (r) { setTimeout(r, 1500); })])
+      .then(function () { location.href = ziel.href; });
   });
 
   /* Ohne Klick folgt die Seite dem Gerät — auch wenn es umschaltet, während

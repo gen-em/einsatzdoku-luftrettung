@@ -14,6 +14,17 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.9.2] — unveröffentlicht
+
+### Behoben
+
+- **Web — ein Klick auf Mond oder Sonne ging verloren, wenn gleich danach
+  die Seite wechselte** (Nr. 550). Die Meldung an den Server lief über den
+  gemeinsamen Sendeweg, der beim Verlassen einer Seite absichtlich alles
+  abbricht, und die folgenden Seiten kamen dann in der alten Farbe. Jetzt
+  überdauert diese eine Meldung den Seitenwechsel, und ein Verweis wartet
+  kurz, bis sie angekommen ist, damit schon die nächste Seite stimmt.
+
 ## [Web 24.9.1] — unveröffentlicht
 
 ### Geändert
