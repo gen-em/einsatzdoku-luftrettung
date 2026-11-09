@@ -730,3 +730,19 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      umbenennen, Aufrufer und `vollstaendigkeit-streichliste.md` nachziehen.
      *Abnahme:* `vollstaendigkeit.py` keine Befunde, `grep -rn "orange"`
      findet in Klassennamen nur noch Töne der Plakette und Kennzahl.
+
+<!-- -->
+
+550. **Ein Klick auf Mond/Sonne geht verloren, wenn gleich danach die Seite wechselt.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 09.11.2026
+     *Aufgenommen 09.11.2026 mit der Nachprüfung von P-OF-32 auf Staging
+     (R91), in Chromium, Firefox und WebKit gleich.* `assets/darstellung.js`
+     schaltet `data-theme` sofort und meldet die Wahl danach mit
+     `EdApi.postForm()` an `api/darstellung.php`. Wechselt die Seite, bevor
+     die Antwort da ist (Klick auf Mond, gleich danach auf einen Verweis),
+     bricht der Browser die Anfrage ab: Die Sitzung behält die alte Wahl,
+     und jede folgende Seite kommt in der alten Farbe. Mit Warten auf die
+     Antwort stimmt alles. *Weg:* die Meldung mit `keepalive: true` senden
+     (eine Option für `EdApi.postForm()`, die `senden()` an `fetch`
+     durchreicht) oder über `navigator.sendBeacon()` mit dem CSRF-Feld im
+     Rumpf. *Abnahme:* Klick und sofortiger Seitenwechsel in drei Engines —
+     die nächste Seite trägt die neue Wahl schon im Markup.

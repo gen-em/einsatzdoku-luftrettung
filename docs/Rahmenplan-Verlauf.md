@@ -9,7 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
-| 230 | 09.11.2026 | 27 | 27 (OF) abgeschlossen (PR #159): Erledigt-Zeile, Fahrplanzeile gestrichen, Konzept gelöscht (`3bd5282`), P-OF und P-NV in der Prüfliste, 6.1 „Prüfliste OF“. Kopf: Stand `ced4a27`, Web 24.9.1. Spanne 530–539 frei (531–539 unbenutzt). |
+| 230 | 09.11.2026 | 27 | 27 (OF) abgeschlossen (PR #159): Erledigt-Zeile, Konzept gelöscht (`3bd5282`), 6.1 „Prüfliste OF“, Kopf `ced4a27` (Web 24.9.1). Spanne 530–539 frei. Staging (R91): sechs Punkte bestanden, Fund als Nr. 550. |
 | 229 | 07.11.2026 | 27 | Q-OF-11 bestätigt: 27 vor 13 steht; Q-OF-03, Q-OF-08/Q-NV-03 und Q-NV-02 entschieden (E-OF-49 bis -51). Neu Nr. 530 (Bilderlauf misst die drei Seitenregeln). |
 | 228 | 07.11.2026 | 27 | Schritt 27 (OF, Oberflächenrunde) begonnen als Einschub vor 13 (E-OF-39, Q-OF-11): Konzept `Konzept-OF-Oberflaechenrunde.md`; NV und die Vorbereitung OF gehen darin auf (E-OF-35, -47). Kopf: Stand `ac4a7bd` (PR #157). Spanne 530–539. |
 | 227 | 07.11.2026 | 26 | 26 (MA) abgeschlossen (PR #156): Erledigt-Zeile, Konzept gelöscht (`57ef0f0`), P-MA in der Prüfliste, 6.1 „Prüfliste MA“, E-MA-36 bestätigt. Kopf: Stand `f27c977`. Spanne 520–529 frei. |
