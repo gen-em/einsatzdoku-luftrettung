@@ -153,8 +153,14 @@
     const kasten = ebenen.getContainer();
     const umschalter = kasten.querySelector('.leaflet-control-layers-toggle');
     if (umschalter && typeof window.edSymbol === 'function') {
-      umschalter.innerHTML = window.edSymbol('karte', '', 'Kartenart');
+      /* DER NAME STEHT AM VERWEIS, NICHT IM ZEICHEN. Bis OF-09 trug das
+       * Zeichen den Titel „Kartenart" und der Verweis keinen: Chromium und
+       * Firefox lasen den Titel des SVG als Namen, WebKit nicht (axe
+       * `link-name`, gefunden im Prüfstand). Jetzt ist das Zeichen Schmuck,
+       * und `aria-label` gilt in jeder Engine. */
+      umschalter.innerHTML = window.edSymbol('karte', '');
       umschalter.removeAttribute('title');
+      umschalter.setAttribute('aria-label', 'Kartenart');
     }
     const liste = kasten.querySelector('.leaflet-control-layers-list');
     if (liste) {

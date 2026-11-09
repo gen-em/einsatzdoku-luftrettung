@@ -72,6 +72,13 @@ pruefe(!seite.url().includes('login.php'), 'Anmeldung gescheitert');
 await seite.goto(`${basis}/import.php`, { waitUntil: 'domcontentloaded' });
 await seite.waitForTimeout(1500);
 schritt(2, 'Einstellungen → Import / Export öffnen');
+/* SEIT WEB 24.5.0 (Konzept OF, E-OF-26): erst waehlen, dann fuellen — das
+   Exportformular steht verborgen hinter der Wahlkarte „Liste ausgeben". */
+await seite.evaluate(() => {
+  const r = document.querySelector('input[name="iewahl"][value="export"]');
+  if (r && !r.checked) { r.click(); }
+});
+await seite.waitForTimeout(300);
 
 await ankreuzen(seite, 'input[name="exp_zr"][value="all"]');
 schritt(3, 'Zeitraum: Alles');

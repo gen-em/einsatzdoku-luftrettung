@@ -25,6 +25,15 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
   BetreiberIn landet auf der Statuskarte, die Administration, die den
   Betrieb nicht sieht, auf der Demo-Karte unter Installation.
 
+### Behoben
+
+- **Web — zwei Fehler, die nur WebKit (Safari) zeigte** (Schritt 27). Der
+  Knopf der Kartenart trug seinen Namen nur im Titel des Zeichens, und den
+  liest WebKit nicht vor; jetzt steht er am Knopf selbst. Auf Betrieb →
+  Updates stellte WebKit am Zeigergerät alle Karten in die linke Spalte,
+  weil es eine Klappkarte im Mehrspaltensatz falsch setzte; jede Karte ist
+  dort jetzt ein unteilbarer Block.
+
 ## [Web 24.9.0] — unveröffentlicht
 
 ### Hinzugefügt

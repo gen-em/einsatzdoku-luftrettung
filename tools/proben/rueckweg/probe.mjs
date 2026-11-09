@@ -176,7 +176,10 @@ async function weg(browser, rolle) {
       pruefe(st === 'da', 'nach dem Tor: das Paar entsteht still', `RW_STAND ${st}`);
     }
     const codes = await s.goto(`${BASIS}/einstellungen.php?t=profil`, { waitUntil: 'domcontentloaded' })
-      .then(() => s.locator('#k-zweitfaktor .zeile', { hasText: 'Wiederherstellungscodes' }).count());
+      /* „Codes zur Wiederherstellung" seit Web 24.5.0 (Konzept OF, E-OF-70):
+         die Zeile steht in der Verwaltung des Zweitfaktors und hiess bis dahin
+         „Wiederherstellungscodes". Gezaehlt wird im DOM, auch zugeklappt. */
+      .then(() => s.locator('#k-zweitfaktor .zeile', { hasText: 'Codes zur Wiederherstellung' }).count());
     pruefe(codes === 1, 'Zweitfaktor eingeschaltet', `${codes} Zeile Codes`);
 
     /* 4: der dritte Weg */

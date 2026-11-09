@@ -1150,7 +1150,9 @@ async function vorher(seite, schritte, fehlerSammler) {
     }
     if (schritt === 'kopplung-dialog') {
       /* DER KOPPEL-DIALOG OFFEN, vor jeder Eingabe (Konzept OF, OF-09: seit
-         Web 24.5 koppelt man im Dialog, E-OF-25). Der Schritt schreibt nichts. */
+         Web 24.5 koppelt man im Dialog, E-OF-25). Der Schritt schreibt nichts.
+         Die Seite steht in `seiten.json` VOR `33a`: Danach haelt die Sitzung
+         eine angefangene Kopplung, und dann gibt die Seite keinen Dialog aus. */
       const auf = seite.locator('[data-dialog="koppeln"]').first();
       if (!(await auf.count())) {
         fehlerSammler.push('Kein Knopf zum Koppeln auf der Seite — Gerätelimit erreicht?');

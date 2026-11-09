@@ -710,6 +710,12 @@ if (!ziele || !ziele.einsatz || !ziele.tag) {
   for (const pwOn of [true, false]) {
   const gpx = await messen(`GPX über einen Zeitraum (Export Profil B, Passwort ${pwOn ? 'an' : 'aus'})`, async () => {
     await seite.goto(`${basis}/import.php`, { waitUntil: 'domcontentloaded', timeout: 180000 });
+    /* Seit Web 24.5.0 (Konzept OF, E-OF-26) steht das Exportformular hinter
+       der Wahlkarte „Liste ausgeben" — erst waehlen, dann fuellen. */
+    await seite.evaluate(() => {
+      const r = document.querySelector('input[name="iewahl"][value="export"]');
+      if (r && !r.checked) { r.click(); }
+    });
     await seite.locator('#exp_go').waitFor({ state: 'visible', timeout: 180000 });
     await seite.fill('#exp_von', `${zeitraumJahr}-01-01`);
     await seite.fill('#exp_bis', `${zeitraumJahr}-12-31`);

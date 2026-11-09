@@ -8841,5 +8841,8 @@ declare(strict_types=1);
  *   E-OF-71). `admin_demo.php` leitet nur noch um — die BetreiberIn auf die
  *   Karte „Konten" der Statusseite, die Administration auf die Demo-Karte
  *   unter Installation; die Kontrollzahlen standen seit 24.7.0 doppelt.
- *   Korrektur; kein Schema. */
+ *   Dazu drei Funde des vollen Pruefstands: Der Knopf der Kartenart traegt
+ *   seinen Namen am Verweis (WebKit las den Titel des Zeichens nicht), und
+ *   `.karten-raster` setzt seine Karten als `inline-block` (WebKit stellte
+ *   auf Updates alles in die linke Spalte). Korrektur; kein Schema. */
 const WEB_VERSION = '24.9.1';

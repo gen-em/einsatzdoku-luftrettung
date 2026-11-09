@@ -3048,6 +3048,12 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
    * sie keine thematische Ordnung haben. */
   .karten-raster{columns:2;column-gap:var(--abstand-4)}
   .karten-raster > .karte{break-inside:avoid}
+  /* WEBKIT VERTEILT EINE KLAPPKARTE (`<details>`) IM MEHRSPALTENSATZ NICHT
+   * VERLAESSLICH: Auf Updates stand bei 1200 px am Zeigergeraet alles in der
+   * linken Spalte, rechts 449 px leer (Konzept OF, OF-09, gefunden vom
+   * Bilderlauf). `inline-block` macht jedes Kind zu einem unteilbaren Block,
+   * den jede Engine gleich setzt; `width:100%` haelt die Spaltenbreite. */
+  .karten-raster > .karte{display:inline-block;width:100%;vertical-align:top}
 }
 
 

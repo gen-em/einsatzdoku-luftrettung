@@ -349,6 +349,16 @@
       "pfad": "einstellungen.php?t=geraete"
     },
     {
+      "name": "33c-geraete-koppeln",
+      "gruppe": "Einstellungen",
+      "rolle": "demo",
+      "pfad": "einstellungen.php?t=geraete",
+      "vorher": [
+        "kopplung-dialog"
+      ],
+      "ganzseitig": false
+    },
+    {
       "name": "33a-geraete-rueckfrage",
       "gruppe": "Einstellungen",
       "rolle": "demo",
@@ -364,15 +374,6 @@
       "pfad": "einstellungen.php?t=geraete",
       "vorher": [
         "kopplung-warten"
-      ]
-    },
-    {
-      "name": "33c-geraete-koppeln",
-      "gruppe": "Einstellungen",
-      "rolle": "demo",
-      "pfad": "einstellungen.php?t=geraete",
-      "vorher": [
-        "kopplung-dialog"
       ]
     },
     {

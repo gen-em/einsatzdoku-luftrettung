@@ -32,6 +32,7 @@ katalog.html  div.form-raster-einspaltig <div.rahmenkarte-abschnitte>  :  max-wi
 katalog.html  div.fuss-seite <div>  :  background, background-color, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, border-width, color, height, outline
 katalog.html  div.fuss-version <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, outline
 katalog.html  div.inhalt <div>  :  height
+katalog.html  div.karte <div.karten-raster>  :  display, vertical-align
 katalog.html  div.karte <div.rahmenkarte-abschnitte>  :  background, background-color, border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-radius, border-right, border-width, height, margin, margin-bottom
 katalog.html  div.karte-bereich <div.rahmenkarte-abschnitte>  :  height
 katalog.html  div.karte-inhalt <div.rahmenkarte-abschnitte>  :  height, padding, padding-bottom, padding-left, padding-right, padding-top
@@ -41,6 +42,7 @@ katalog.html  div.karte-kopf <div.karte-klappbar>  :  border, border-bottom, bor
 katalog.html  div.karte-kopf <div.rahmenkarte-abschnitte>  :  border, border-bottom, border-bottom-color, border-color, border-width, height, padding, padding-bottom, padding-left, padding-right, padding-top
 katalog.html  div.karte-stand <div>  :  border, border-bottom, border-bottom-color, border-color, border-left, border-left-color, border-right, border-top, border-top-color, color, font, font-size, height, line-height, outline, text-align
 katalog.html  div.karte-stand-gruppe <div>  :  align-items, column-gap, display, flex-wrap, gap, justify-content, margin, width
+katalog.html  div.karten-raster <div>  :  height
 katalog.html  div.kartenfilter-lupe <div>  :  bottom, top
 katalog.html  div.kartenfilter-x <div>  :  bottom, top
 katalog.html  div.knopf-breit <div.speichern>  :  width

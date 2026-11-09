@@ -2644,7 +2644,12 @@ gleicher Spezifität; die zwei `.form-spalte` bleiben.
 
 `.karten-raster` nimmt die Karten **direkt** als Kinder und lässt sie
 fließen; `break-inside:avoid` hält jede zusammen. Eine Karte, die dazukommt,
-braucht keine Zuordnung — dafür lässt sich keine erzwingen.
+braucht keine Zuordnung — dafür lässt sich keine erzwingen. **Seit Web 24.9.1
+ist jede Karte darin ein `inline-block` mit voller Spaltenbreite:** WebKit
+setzte eine Klappkarte (`<details>`) im Mehrspaltensatz am Zeigergerät
+falsch und stellte alle Karten in die linke Spalte (Konzept OF, OF-09,
+gefunden von der Seitenregel „rechte Kante"); ein unteilbarer Block wird in
+jeder Engine gleich gesetzt.
 
 **Wann zwei Spalten?** Nicht nach Anzahl, sondern nach Höhe. Gemessen an
 Betrieb → Updates: vier Karten, einspaltig 1206 px, zweispaltig 977 px. Ab
@@ -3790,6 +3795,7 @@ genau das, wogegen sie schützt.
 
 | Fassung | Was |
 |---|---|
+| **Web 24.9.1 (Schritt 27, Konzept OF, OF-09)** | **9.26:** `.karten-raster` setzt seine Karten als `inline-block` — WebKit verteilte eine Klappkarte im Mehrspaltensatz falsch. Kein neuer Baustein, kein Token. |
 | **Web 24.9.0 (Schritt 27, Konzept OF, OF-08)** | **3a:** Mond und Sonne in der Kopfleiste bei „Umschalter“ und „Folgt System“ (E-OF-09); vier Einstellungen im Profil. Kein neuer Baustein, kein Token, kein Kontrastpaar. |
 | **Web 24.8.0 (Schritt 27, Konzept OF, OF-07)** | **9.30:** Bedienelemente der Karte im Branding, Ebenenwahl mit Zeichen `karte` und Überschrift „Kartenart“, Namen ohne Anbieter (E-OF-13, -29). **9.6:** Schloss der Einsatzansicht in eigener Spalte vor dem Wort (E-OF-28). **9.7:** Transportart als abwählbare Segmentwahl aus dem Feldkatalog (E-OF-33). **9.17:** Die Karte „Ruhesegmente“ steht auf Abruf (E-OF-05). **4:** neues Maß `--lese-beschriftung` (14 rem, aus E-OF-28). Kein neuer Baustein. |
 | **Web 24.7.0 (Schritt 27, Konzept OF, OF-06)** | **9.1:** Stand und Plakette der Klappkarte als eine Gruppe (`.karte-stand-gruppe`). **9.2:** `zeile-umbruch` für Zeilen mit mehreren Plaketten oder Plakette und Knopf. Statusseite „Probleme zuerst", Servereinstellungen, Hintergrundjobs und Komplett-Backup aus vorhandenen Bausteinen (Klappkarte, Zeile, Segmentwahl, `haupt`); kein neuer Baustein, kein Token. |
