@@ -1139,13 +1139,26 @@ async function kopplungSitzung(seite, schluessel, fehlerSammler) {
 }
 
 async function vorher(seite, schritte, fehlerSammler) {
-  const BEKANNT = ['schublade', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc',
+  const BEKANNT = ['schublade', 'kopplung-dialog', 'kopplung-rueckfrage', 'kopplung-warten', 'tagdaten-adhoc',
                    'notfallblatt', 'code-schritt', 'codeblatt',
                    'schnitt-grund', 'schnitt-vorschau', 'nachladezeile'];
   for (const schritt of schritte || []) {
     if (!BEKANNT.includes(schritt)) {
       fehlerSammler.push(`Unbekannter Bedienschritt „${schritt}" — bekannt sind: `
                        + BEKANNT.join(', '));
+      continue;
+    }
+    if (schritt === 'kopplung-dialog') {
+      /* DER KOPPEL-DIALOG OFFEN, vor jeder Eingabe (Konzept OF, OF-09: seit
+         Web 24.5 koppelt man im Dialog, E-OF-25). Der Schritt schreibt nichts. */
+      const auf = seite.locator('[data-dialog="koppeln"]').first();
+      if (!(await auf.count())) {
+        fehlerSammler.push('Kein Knopf zum Koppeln auf der Seite — Gerätelimit erreicht?');
+        continue;
+      }
+      if (!(await seite.locator('dialog#koppeln[open]').count())) { await auf.click(); }
+      await seite.locator('dialog#koppeln[open]').waitFor({ timeout: 5000 })
+        .catch(() => fehlerSammler.push('Der Koppel-Dialog ging nicht auf.'));
       continue;
     }
     if (schritt === 'kopplung-rueckfrage' || schritt === 'kopplung-warten') {

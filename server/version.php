@@ -8837,4 +8837,9 @@ declare(strict_types=1);
  *   nicht im Konto. `users.darstellung` bekommt den Wert 'system', '' heisst
  *   jetzt Umschalter — Bestandskonten ohne Wahl haben damit den Knopf. Neben;
  *   kein Schema, keine Migration (VARCHAR(10)). */
-const WEB_VERSION = '24.9.0';
+/* 24.9.1 — ABSCHLUSS DER OBERFLAECHENRUNDE (Schritt 27, Konzept OF, OF-09;
+ *   E-OF-71). `admin_demo.php` leitet nur noch um — die BetreiberIn auf die
+ *   Karte „Konten" der Statusseite, die Administration auf die Demo-Karte
+ *   unter Installation; die Kontrollzahlen standen seit 24.7.0 doppelt.
+ *   Korrektur; kein Schema. */
+const WEB_VERSION = '24.9.1';

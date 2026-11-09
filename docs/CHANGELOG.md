@@ -14,6 +14,17 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.9.1] — unveröffentlicht
+
+### Geändert
+
+- **Web — die Seite „Demo-Konto" leitet nur noch um** (Schritt 27). Ihre
+  Kontrollzahlen stehen seit Web 24.7.0 auf der Statusseite in der Karte
+  „Konten", und zwei Stellen für dieselben Zahlen laufen irgendwann
+  auseinander. Die Adresse bleibt, damit alte Lesezeichen ankommen: die
+  BetreiberIn landet auf der Statuskarte, die Administration, die den
+  Betrieb nicht sieht, auf der Demo-Karte unter Installation.
+
 ## [Web 24.9.0] — unveröffentlicht
 
 ### Hinzugefügt

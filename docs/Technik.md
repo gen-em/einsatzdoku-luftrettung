@@ -621,8 +621,8 @@ Daten erst nach Server-Bestätigung.
 │   │                      wird; erzeugt von tools/referenzdatensatz/fixture/
 │   ├── demo_lib.php       Demo-Konto: anlegen, zurücksetzen, entfernen,
 │   │                      Reset-Fälligkeit (Abschnitt 4.21)
-│   ├── admin_demo.php     Kontrollzahlen des Resets, nur lesend (seit Web
-│   │                      24.6.0; die Handlungen unter Installation)
+│   ├── admin_demo.php     nur noch Umleitung (seit Web 24.9.1): Kontrollzahlen
+│   │                      in der Statuskarte „Konten", Handlungen unter Installation
 │   ├── schema.sql         Voll-Schema für Neuinstallationen
 │   ├── migrations/        Migrationen als nachlesbare SQL-Dateien (ausgeführt
 │   │                      wird über Betrieb → Updates, siehe migration_lib.php)
@@ -9187,7 +9187,7 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Rechtstexte: die Seite | `GET admin_rechtstexte.php` | 403 | 403 | 200 | 200 | — |
 | Rechtstexte: speichern | `POST admin_rechtstexte.php` | 403 | 403 | durch | durch | — |
 | Rechtstexte: Vorschau beim Tippen | `POST api/rechtstext_vorschau.php` | 403 | 403 | durch | durch | — |
-| Demo-Konto: Kontrollzahlen | `GET admin_demo.php` | 403 | 403 | 200 | 200 | — |
+| Demo-Konto: die alte Seite (leitet seit Web 24.9.1 um — Administration auf Installation, BetreiberIn auf die Statusseite) | `GET admin_demo.php` | 403 | 403 | 302 | 302 | — |
 | Demo-Konto: anlegen | `POST admin_installation.php action=demo_anlegen` | 403 | 403 | durch | durch | — |
 | Demo-Konto: zurücksetzen | `POST admin_installation.php action=demo_reset` | 403 | 403 | durch | durch | — |
 | Demo-Konto: entfernen | `POST admin_installation.php action=demo_entfernen` | 403 | 403 | durch | durch | — |
@@ -14249,6 +14249,13 @@ oder unvollständig ausgeliefert — `sha256sum -c phpseclib3.sha256` im Ordner
 missions` in `schema.sql` anfügen (sonst weichen Neuinstallation und
 migrierter Bestand voneinander ab), 3) Eintrag in `mission_fields.php`.
 Formular, Speichern, API und Detailanzeige übernehmen es dann automatisch.
+**Wo und wie es im Formular steht**, sagt der Eintrag ebenfalls (4.17): die
+Karte über `gruppe`, die Reihenfolge über die Folge im Katalog (auch unter
+einem Elternfeld), die Abhängigkeit über `show_if`, dazu `nebeneinander`,
+`darstellung` (`'segment'`) und `einzug` — seit Web 24.8.0 trägt so die
+Karte „Einsatz und Transport“ ihre Anordnung, ohne Markup je Feld. In der
+Leseansicht (`einsatz.php`) ordnen `RANG` und `KARTE_ZIEL` die Zeilen; ein
+Feld, das dort fehlt, fällt in die Karte „Einsatz“.
 Seit Web 5.4.0 gilt das auch für `day_col`: Der Schlüssel wird an genau einer
 Stelle ausgewertet — `mf_tagesspalten()` in `mission_fields_lib.php` —, und
 `api/day.php` liefert die Spalte daraufhin von selbst mit, `index.php` zeigt

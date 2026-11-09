@@ -337,7 +337,9 @@ der Anlage (Vorgabe **Gen-EM NAdoku**, einstellbar unter Verwaltung →
 Installation, 11.5); am breiten
 Bildschirm steht der eigene Name daneben (im Profil setzbar, sonst die
 E-Mail-Adresse). Rechts stehen **Startseite**, **Suche** (Abschnitt 4.6), das
-**Fragezeichen** für dieses Handbuch und das Zahnrad für die
+**Fragezeichen** für dieses Handbuch, bei der Darstellung „Umschalter“ oder
+„Folgt System“ **Mond oder Sonne** zum Umschalten zwischen hell und dunkel
+(seit Web 24.9.0, Abschnitt 3.1a) und das Zahnrad für die
 **Einstellungen**. Sie bleibt beim Scrollen oben stehen. **Das Fragezeichen
 öffnet das Kapitel der Seite, auf der du gerade bist** (seit Web 24.2.0) —
 von den Servereinstellungen aus also 12.5, von der Tagesübersicht 4.1. Die
@@ -362,7 +364,7 @@ Blöcke** geteilt, und wer welchen sieht, hängt an der Rolle:
 |---|---|---|
 | **Einstellungen** | alle | Profil, Geräte, **Standorte**, Backup, Import / Export — Kapitel 3 bis 10 |
 | **Verwaltung** | Admins; der **Support** nur NutzerInnen und Protokoll | NutzerInnen, **Konto-Backups**, **Installation** (mit dem Demo-Konto), **Rechtstexte**, Protokoll — **Kapitel 11** |
-| **Betrieb** | BetreiberInnen | **Status**, **Statistik**, **Updates**, **Hintergrundjobs**, **Servereinstellungen**, **Komplett-Backup**, **Backup-Ziele** — **Kapitel 12** |
+| **Betrieb** | BetreiberInnen | **Status**, **Statistik**, **Updates**, **Hintergrundjobs**, **Servereinstellungen**, **Komplett-Backup** (die **Backup-Ziele** sind seit Web 24.7.0 eine Karte darin und in den Servereinstellungen) — **Kapitel 12** |
 
 Jeder Block hat einen Kopf mit rundem Zeichen, Namen und der Zahl der
 Einträge. Am Schreibtisch stehen die Blöcke nebeneinander, auf schmalen
@@ -4204,8 +4206,9 @@ lässt sich nicht trennen; erst den Dienst beenden.
 ## 11. Verwaltung (Admin)
 
 **Was andere Konten und die Anlage nach außen betrifft.** Der Block
-**Verwaltung** unter dem Zahnrad hat sechs Punkte, und dieses Kapitel folgt
-ihnen:
+**Verwaltung** unter dem Zahnrad hat fünf Punkte (bis Web 24.6.0 sechs: das
+Demo-Konto ist seither eine Karte unter Installation), und dieses Kapitel
+folgt ihnen:
 
 | Menüpunkt | Abschnitt | wozu |
 |---|---|---|
@@ -5176,8 +5179,8 @@ Die Karte zeigt Konto, letzten und nächsten Reset; nach einem Anlegen oder
 Zurücksetzen steht darunter der **Bericht des letzten Laufs**, zugeklappt.
 Die Warnung zum Schlüsselmaterial steht nur, solange die Anmeldung
 zugelassen ist. Die **Kontrollzahlen** — Bestand und die drei
-**Papierkorbzahlen** — stehen auf einer eigenen, nur lesenden Seite
-(`admin_demo.php`). Die Papierkorbzahlen sind die Kontrolle des
+**Papierkorbzahlen** — stehen seit Web 24.7.0 auf der Statusseite in der
+Karte **„Konten"** (12.1); die frühere Seite `admin_demo.php` leitet dorthin. Die Papierkorbzahlen sind die Kontrolle des
 Resets: Der Papierkorb kommt **aus der Fixture** zurück, nicht aus einem
 Nachlauf. Stehen sie auf null, ist beim Einspielen etwas übersprungen worden.
 Ausgelöst wird der Reset von der nächsten Anfrage des Demo-Kontos, sobald er
@@ -5365,7 +5368,8 @@ Ratenschutz von vorn.
 ## 12. Betrieb (BetreiberIn)
 
 **Der Server selbst.** Dieser Block erscheint nur für die Rolle
-**BetreiberIn** (11.3) und hat sieben Punkte — dieses Kapitel folgt ihnen:
+**BetreiberIn** (11.3) und hat sechs Punkte (bis Web 24.7.0 sieben: die
+Backup-Ziele sind seither eine Karte, 12.7) — dieses Kapitel folgt ihnen:
 
 | Menüpunkt | Abschnitt | wozu |
 |---|---|---|
@@ -5374,8 +5378,7 @@ Ratenschutz von vorn.
 | **Updates** | 12.3 | Wartungsmodus und ausstehende Datenbank-Updates |
 | **Hintergrundjobs** | 12.4 | ob die regelmäßige Arbeit läuft, und die drei Auslöser |
 | **Servereinstellungen** | 12.5 | Speichergrenze, Warnschwellen, Kontingente, Belegung, Ablage, Adresssuche, Sicherheitskopfzeilen |
-| **Komplett-Backup** | 12.6 | die ganze Installation in eine Datei |
-| **Backup-Ziele** | 12.7 | wohin die Konto-Backups zusätzlich geschoben werden |
+| **Komplett-Backup** | 12.6, 12.7 | die ganze Installation in eine Datei; die Karte „Backup-Ziele“ (auch in den Servereinstellungen): wohin die Konto-Backups zusätzlich geschoben werden |
 
 **Der Unterschied zu Kapitel 11 in einem Satz:** Die Verwaltung kümmert sich um
 **Konten**, der Betrieb um die **Anlage**. Wer den Betrieb sieht, sieht auch

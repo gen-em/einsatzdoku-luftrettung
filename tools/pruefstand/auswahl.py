@@ -241,7 +241,10 @@ def seiten_laden():
 def seitendatei(seite, platzhalter):
     """Die Datei unter server/ hinter einer Seite — None bei einem
     unbekannten Platzhalter (die Selbstprobe hält das bei null)."""
-    pfad = seite['pfad'].split('?')[0]
+    # Ohne Abfrageteil UND ohne Anker: Seit OF-06 zeigt `43b` eine Karte der
+    # Servereinstellungen (`betrieb_server.php#k-backup-ziele`), und bis OF-09
+    # schnitt diese Zeile nur `?` ab — die Datei hiess dann mit Anker.
+    pfad = seite['pfad'].split('?')[0].split('#')[0]
     if pfad.startswith('__'):
         return platzhalter.get(pfad)
     return 'server/' + pfad

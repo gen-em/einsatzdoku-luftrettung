@@ -49,7 +49,7 @@ es im Kopf von `server/version.php`.
 | OF-06 | Betrieb: Status „Probleme zuerst“ (E-OF-20; Q-OF-02 → OF-M1); Hintergrundjobs (E-OF-10, -21); Servereinstellungen als Klappkarten (E-OF-22); Komplett-Backup (E-OF-23); Backup-Ziele an beiden Orten, die Seite entfällt (E-OF-24, E-OF-45) | Opus · **gefächert** nach OF-M1: je ein Agent für Status, Hintergrundjobs, Servereinstellungen und Komplett-Backup samt Ziele; `ui.php`, `style.css`, `status_lib.php`, Texte und Prüfarbeit seriell | **erledigt** 08.11.2026 (Web 24.7.0; gefächert auf drei Agenten, E-OF-74) |
 | OF-07 | Einsatz, Diensttag, Karte, Papierkorb: Ruhesegmente-Kachel entfällt (E-OF-05); GPX-Zeichen (E-OF-11); Plakette „ausgedünnt“ entfällt (E-OF-12); Karte „Einsatz und Transport“ im Feldkatalog (E-OF-33); Schlösser in eigener Spalte (E-OF-28); Kartenart ohne Anbieter (E-OF-13); Leaflet-Bedienelemente im Branding (E-OF-29); Papierkorb mit `restore`, Artzeichen vor das Datum (E-OF-30, E-OF-48) | Opus · **gefächert**: ein Agent Formular und Leseansicht (`einsatz_form.php`, `mission_fields.php`, `einsatz.php`), einer Karte (`geo.js`, `map_layers.js`, Leaflet-Regeln), einer Tagesübersicht und Papierkorb (`index.php`, `tag_spuren.php`, `papierkorb.php`); `style.css`, Design.md und Prüfarbeit seriell | **erledigt** 08.11.2026 (Web 24.8.0; Karte seriell, die zwei Seitenteile gefächert auf zwei Agenten, E-OF-75 bis -78) |
 | OF-08 | Darstellung: Umschalter Mond/Sonne in der Kopfleiste, vier Einstellungen im Profil, keine Migration (E-OF-09, -43, -55) | Opus · keine | **erledigt** 08.11.2026 (Web 24.9.0; Klick nur in der Sitzung, E-OF-79) |
-| OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | offen |
+| OF-09 | Abschluss (NV-05 geht auf): Dokumentation, Prüfmittel, Prüfstand voll, Pull Request, Prüfdokument | Opus · keine | **in Arbeit** (Dokumente und Prüfmittel erledigt, Prüfstand läuft; E-OF-80) |
 
 **In Arbeit:** OF-09 Abschluss. **Erledigt:**
 OF-00, NV-01 bis NV-04 (das Gerüst), OF-01 bis OF-08 (OF-M1 entschieden
@@ -820,6 +820,7 @@ der Vorbereitung und der NV-Übergabe übernommen; neu ab E-OF-39.
 | E-OF-77 | OF-07, Leseansicht (E-OF-28): Die Karte „Transport“ heißt „Einsatz und Transport“ und trägt jetzt auch die Plaketten Sekundär, Fehleinsatz, Winde, Bergwacht und „Namen / Infos“ der Bergwacht — dieselbe Gruppe wie im Formular; „Einsatz“ (Ort, Diagnose, Notizen) bleibt eine eigene Karte, wie im Formular. Das Schloss steht vor dem Wort (`.lese-schloss`), die Beschriftungsspalte ist ab 720 px `--lese-beschriftung` (14 rem, neues Maß aus dem Bild), darunter so breit wie ihr Wort. **Die „Leerzeile unter Einsatzort“** war der Freiraum unter der Beschriftung neben zweizeiligem Wert; im Bild steht sie senkrecht mittig — `align-items: center` am Feld | Umsetzung, 08.11.2026 |
 | E-OF-78 | OF-07, Papierkorb (E-OF-48): Das Artzeichen steht in `vorn` der Zeile (eigene Spalte links, senkrecht mittig), nicht in der Datumszeile wie im Bild: `ui_zeile()` maskiert `text`, und dieselbe Form trägt schon die Liste der Rettungsmittel. Will die Betreiberin genau das Bild, ist es eine Option in `ui_zeile()`. Weiter in OF-07: je Karte und Seitenerklärung ein Satz auf Tagesübersicht (Diensttag-Daten, Ruhesegmente), Spurenseite, Papierkorb, Diensttag anlegen / Datum / zusammenführen, Einsatz verschieben; Besatzungshinweis am Ad-hoc-Tag entfällt (der Satz der Ad-hoc-Felder trägt ihn). Die Ausnahme `spur-gpx-fachbegriff` der Wortliste fällt mit ihrem Satz | Umsetzung, 08.11.2026 |
 | E-OF-79 | Q zu OF-08 (E-OF-09 gegen E-OF-43): Der Klick auf Mond/Sonne liegt **nur in der Sitzung**, auch bei „Umschalter“ — E-OF-09 („Wahl gespeichert“) und E-OF-43 (Sitzung) widersprachen sich, und mit E-OF-43 verhalten sich „Umschalter“ und „Folgt System“ gleich. Vorgelegt mit drei Wegen (Konto, Sitzung, nur drei Einstellungen); gewählt: Sitzung, vier Einstellungen bleiben. Umsetzung: `darstellung_umschalter()`, `darstellung_klick_setzen()`, `$_SESSION['darstellung_klick']`; ändert das Profil die Einstellung, verfällt der Klick, speichert es dieselbe (Name, Logo), bleibt er. Der Knopf trägt beide Zeichen, das Stylesheet zeigt das passende (kein Aufblitzen, auch wenn das Gerät entscheidet); Name „Dunkel ein“/„Dunkel aus“ und `aria-pressed` setzt `assets/darstellung.js`. Ohne Knopf lehnt `api/darstellung.php` mit 409 ab | Betreiberin, 08.11.2026 („Nur in der Sitzung“) |
+| E-OF-80 | OF-09: (1) Die Leaflet-Knöpfe stehen in Design.md **9.30** (Karte), nicht in einem neuen 9.43 — sie sind kein Baustein in `ui.php`, sondern Regeln an der Bibliothek. (2) `43b` im Bilderlauf bleibt und zeigt die aufgeklappte Karte `betrieb_server.php#k-backup-ziele`; `44-demo-konto` fällt (die Adresse leitet um, die Zahlen zeigt `45-betrieb-status`); neu `33c-geraete-koppeln` mit dem Schritt `kopplung-dialog`. (3) Die Umleitung von `admin_demo.php` (E-OF-71) war in OF-06 liegen geblieben und kommt jetzt (Web 24.9.1): BetreiberIn → `betrieb_status.php#k-konten`, Administration → `admin_installation.php#k-demo`; `demo_pruefen.mjs` liest Statusseite und Installation. (4) Wie in Schritt 26: Der PR trägt den Bericht des zweiten vollen Laufs; Erledigt-Zeile, Verlaufszeile, Prüfliste und das Löschen des Konzepts kommen nach dem Merge in einem eigenen kleinen PR, mit den Zahlen beider Läufe | Umsetzung, 09.11.2026 |
 
 Aus Schritt 26 übernommen: E-MA-36 (Beenden-Knöpfe der App bleiben
 vollflächig rot) ist bestätigt.
@@ -1529,3 +1530,25 @@ rund 20 Minuten.
 **Nicht geprüft:** Barrierefreiheit des Knopfs mit `tools/barrierefreiheit/`
 (P-OF-34, OF-09); ein Wechsel der Geräteeinstellung bei offener Seite (der
 Name folgt über `change`, nur gelesen); P-OF-33 (Staging nach dem Deploy).
+
+### OF-09 Abschluss (09.11.2026, Web 24.9.1)
+
+**Was getan ist.** Dokumente gegengelesen und nachgezogen: Handbuch 3
+(Kopfleiste mit Mond/Sonne, Betrieb ohne Menüpunkt „Backup-Ziele“),
+11 (fünf Punkte), 11.6 (Kontrollzahlen auf der Statusseite), 12 (sechs
+Punkte); Technik 2 (Baum), 4.37 (Rollenmatrix `admin_demo.php` 302), 13
+(Runbook Feldkatalog: Gruppe, Reihenfolge, Abhängigkeit). Liegen gebliebene
+Umleitung `admin_demo.php` (E-OF-80 (3)). Prüfmittel: `seiten.json` (E-OF-80
+(2)), Schritt `kopplung-dialog`, `demo_pruefen.mjs` (`zustand()` aus zwei
+Seiten), `auswahl.py` (`seitendatei()` schneidet den Anker ab — die
+Selbstprobe meldete `43b` seit OF-06 als Datei mit `#`, 102 von 103).
+
+**Gemessen vor dem Prüfstand.** `auswahl.py --selbstprobe` **103 / 0**,
+`--abdeckung` **0 ohne Muster**, `bericht.py lesen --selbstprobe` **51 / 0**,
+Bilderlauf-Selbstprobe **33 / 33**, Rollenprobe **616 / 0**,
+`demo_pruefen.mjs anlegen,reset` **16 Prüfungen, 0 Befunde** (1 nicht
+gemessen: das Konto bestand schon).
+
+**Prüfstand:** zwei volle Läufe (Hauptstufe, drei Engines, E-MA-34); der
+Bericht des zweiten steht im Kopf-Commit des Pull Requests, die Zahlen
+beider Läufe kommen mit dem Abschluss hierher (E-OF-80 (4)).

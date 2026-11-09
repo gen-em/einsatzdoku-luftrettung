@@ -238,7 +238,9 @@
       "karte": true,
       "vervielfachen": 3,
       "ganzseitig": false,
-      "vorher": ["nachladezeile"]
+      "vorher": [
+        "nachladezeile"
+      ]
     },
     {
       "name": "15-suche",
@@ -365,6 +367,15 @@
       ]
     },
     {
+      "name": "33c-geraete-koppeln",
+      "gruppe": "Einstellungen",
+      "rolle": "demo",
+      "pfad": "einstellungen.php?t=geraete",
+      "vorher": [
+        "kopplung-dialog"
+      ]
+    },
+    {
       "name": "34-einstellungen-backup",
       "gruppe": "Einstellungen",
       "rolle": "demo",
@@ -417,12 +428,6 @@
       "gruppe": "Administration",
       "rolle": "betreiberin",
       "pfad": "admin_rechtstexte.php?t=datenschutz"
-    },
-    {
-      "name": "44-demo-konto",
-      "gruppe": "Administration",
-      "rolle": "betreiberin",
-      "pfad": "admin_demo.php"
     },
     {
       "name": "44a-protokoll",
