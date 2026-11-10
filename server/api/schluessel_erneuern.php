@@ -67,6 +67,16 @@ require_once __DIR__ . '/../ratelimit_lib.php';
 api_methode();
 csrf_check();
 
+/* DAS DEMO-KONTO ERNEUERT NICHTS (seit Web 24.12.0, KA-03, F-KA-41). Sein
+ * Passwort ist oeffentlich; bis dahin konnte jeder Besucher `pat_wrap_rc`
+ * tauschen und je Aufruf eine Mail einreihen. Der Reset der Verwaltung stellt
+ * das Konto ohnehin aus der Vorlage her. */
+require_once __DIR__ . '/../demo_lib.php';
+if (demo_ist_demo($userId)) {
+    json_out(['error' => 'demo',
+              'meldung' => 'Im Demo-Konto lässt sich der Wiederherstellungsschlüssel nicht erneuern.'], 403);
+}
+
 /* ---- Wer ist das, und stimmt das Passwort? ------------------------------ */
 
 $st = db()->prepare('SELECT email, password_hash, pat_wrap_rc FROM users WHERE id = ?');

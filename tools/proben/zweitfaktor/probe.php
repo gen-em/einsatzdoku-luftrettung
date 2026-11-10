@@ -415,6 +415,27 @@ if (!zweitfaktor_geraete_da($pdo)) {
     pruefe($a['code'] === 302 && str_ends_with($a['ort'], 'index.php'),
            'derselbe Browser nach dem Abmelden: Passwort → 302 auf index.php, kein Code', $a['code'] . ' ' . $a['ort']);
 
+    // 2a. Die Kontosperre trifft den Rater, nicht das gemerkte Gerät (KA-03, F-KA-42)
+    for ($i = 0; $i < 60 && rate_erlaubt('login', null, rate_nur_konto($mail)); $i++) {
+        rate_misserfolg('login', null, rate_nur_konto($mail));
+    }
+    pruefe(!rate_erlaubt('login', null, rate_nur_konto($mail)), 'Kontosperre gesetzt', "$i Fehlversuche");
+    http('GET', 'logout.php');
+    $merkKeks = $keks;
+    $keks = [];
+    $s = http('GET', 'login.php');
+    $fremd = http('POST', 'login.php', ['csrf' => csrf_von($s['rumpf']), 'email' => $mail,
+                                        'tokens' => json_encode([(string)$iter => $token])]);
+    pruefe($fremd['code'] === 200 && str_contains($fremd['rumpf'], 'Zu viele Anmeldeversuche für diesen Namen'),
+           'gesperrtes Konto, neuer Browser, richtiges Passwort: Sperrmeldung (GEGENPROBE)', (string)$fremd['code']);
+    $keks = $merkKeks;
+    $a = $mitGeraet();
+    pruefe($a['code'] === 302 && str_ends_with($a['ort'], 'index.php'),
+           'gesperrtes Konto, gemerktes Gerät: angemeldet — die Sperre trifft es nicht (F-KA-42)',
+           $a['code'] . ' ' . $a['ort']);
+    http('GET', 'logout.php');
+    $pdo->prepare('DELETE FROM rate_limits WHERE merkmal = ?')->execute([$merkmal]);
+
     // 3. Ein fremdes Cookie an einem anderen Konto zählt nicht
     $mail2 = 'zweitfaktor-bf-geraet@probe.pruefung';
     $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$mail2]);
@@ -651,7 +672,7 @@ if (!zweitfaktor_geraete_da($pdo)) {
         $frischStellen(time() + 600);
         $faelle = ['https://boese.invalid/'                  => 'index.php',
                    '//boese.invalid/betrieb_server.php'      => 'index.php',
-                   'admin_users.php'                         => 'index.php',
+                   'admin_installation.php'                  => 'index.php',   // keine Seite der Liste (bis KA-03: admin_users.php)
                    'betrieb_server.php?x=<script>#k-schluessel' => 'betrieb_server.php#k-schluessel',
                    'admin_user.php?id=' . $uid               => 'admin_user.php?id=' . $uid];
         $ist = [];

@@ -66,9 +66,9 @@ declare(strict_types=1);
  * beim Hoster —, koennte jeder, der das Protokoll liest, die Anlage in die
  * Wartung schalten. Deshalb:
  *
- *   ohne `aktion`   das JOB-Token (`jobs_token()`), per GET oder POST — der
+ *   ohne `aktion`   das JOB-Token (`jobs_token_pruefen()`), per GET oder POST — der
  *                   „Cronjob per URL" kann nur GET.
- *   mit `aktion`    das KETTENTOKEN (`kette_token()`), NUR per POST, Token
+ *   mit `aktion`    das KETTENTOKEN (`kette_token_pruefen()`), NUR per POST, Token
  *                   und Aktion im Rumpf. Eine `aktion` in der Adresse ist
  *                   405 `method`, bevor ein Token verglichen wird — so faellt
  *                   ein Werkzeug, das wieder per GET ruft, sofort auf, statt
@@ -214,32 +214,21 @@ $token = $aktion !== ''
     ? post_text('token')
     : get_text('token', post_text('token'));
 
-$erwartet = '';
+$passt = false;
 try {
-    if ($aktion !== '') {
-        /* Legt das Kettentoken beim ersten Mal an — als Uebernahme des
-         * Job-Tokens, siehe `kette_token()`. */
-        $erwartet = kette_token();
-    } else {
-        /* Das Job-Token wird hier NICHT angelegt: Ohne Eintrag ist der Weg
-         * aus, bis die BetreiberIn ihn unter Betrieb → Hintergrundjobs
-         * einrichtet. */
-        $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
-        $st->execute([JOB_TOKEN_SCHLUESSEL]);
-        $erwartet = (string)($st->fetchColumn() ?: '');
-    }
+    /* Seit Web 24.12.0 liegen die Tokens gehasht (KA-03); verglichen wird in
+     * fester Zeit (`token_passt()`, `hash_equals`). Mit Aktion das
+     * Kettentoken, ohne Aktion das Job-Token. Keines wird hier angelegt:
+     * Ohne Eintrag ist der Weg aus. */
+    $passt = $aktion !== '' ? kette_token_pruefen($token) : jobs_token_pruefen($token);
 } catch (Throwable $ex) {
     rate_gleiche_dauer($t0);
     json_out(['error' => 'datenbank'], 500);
 }
 
-/* `hash_equals` und nicht `===`: Ein Zeichenvergleich, der beim ersten
- * Unterschied abbricht, verraet ueber die Laufzeit, wie viele Zeichen
- * stimmten. Dieselbe Regel wie bei jedem anderen Geheimnisvergleich hier.
- *
- * `rate_gleiche_dauer` gleicht die Antwortzeit zusaetzlich an — ein „Token
- * gibt es gar nicht" darf nicht schneller kommen als ein „Token ist falsch". */
-if ($erwartet === '' || $token === '' || !hash_equals($erwartet, $token)) {
+/* `rate_gleiche_dauer` gleicht die Antwortzeit an — ein „Token gibt es gar
+ * nicht" darf nicht schneller kommen als ein „Token ist falsch". */
+if (!$passt) {
     rate_misserfolg('pair');
     rate_gleiche_dauer($t0);
     // Nicht sagen, ob ueberhaupt ein Token eingerichtet ist. Wer den Weg

@@ -19,12 +19,21 @@ require_once __DIR__ . '/konto_lib.php';
  * Frage der Versuchszahl. Ein Topf hier wuerde eine Adresse sperren, die
  * gerade ihren eigenen Link anklickt, weil der Mailclient ihn zweimal
  * abruft.
+ *
+ * DER LINK AENDERT NICHTS, ERST DER KNOPF (seit Web 24.12.0, KA-03,
+ * F-KA-35). Bis dahin bestaetigte schon der Abruf per GET — und ein
+ * Mailscanner, der Links vorab oeffnet, bestaetigte den Wechsel, bevor ihn
+ * jemand gesehen hatte. Jetzt zeigt der Link eine Seite mit einem Knopf, und
+ * die Aenderung geschieht per POST. Kein Formular-Token: Es gibt keine
+ * Sitzung, und der 32-Byte-Token im Feld ist selbst der Nachweis.
  */
 
-$token = get_text('token');
+$post  = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST';
+$token = $post ? post_text('token') : get_text('token');
+$gueltig = $token !== '' && preg_match('/\A[0-9a-f]{64}\z/', $token) === 1;
 $ergebnis = null;
 
-if ($token !== '' && preg_match('/^[0-9a-f]{64}$/', $token)) {
+if ($post && $gueltig) {
     $ergebnis = adresse_bestaetigen($token);
 }
 
@@ -48,6 +57,14 @@ ui_seite_start(['titel' => 'Anmeldeadresse bestätigen']);
       <p class="text"><strong>Deine bisherige Adresse gilt weiter.</strong> Es ist
          nichts verlorengegangen, und du kannst dich wie gewohnt anmelden.</p>
       <p class="text"><a href="login.php">Zur Anmeldung</a></p>
+
+    <?php elseif ($gueltig): ?>
+      <p class="text">Bestätige hier, dass du die Anmeldeadresse ändern willst.
+         Bis dahin gilt deine bisherige Adresse.</p>
+      <form method="post" action="adresse_bestaetigen.php">
+        <input type="hidden" name="token" value="<?= e($token) ?>">
+        <?= ui_knopf(['text' => 'Adresse bestätigen', 'art' => 'primaer', 'symbol' => 'haken']) ?>
+      </form>
 
     <?php else: ?>
       <?= ui_meldung_markup('warn', 'Dieser Link ist unvollständig.') ?>

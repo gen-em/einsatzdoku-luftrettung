@@ -119,6 +119,15 @@ $auswahlVerbraucht = false; $auswahlRest = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = post_text('action');
     handlung_erlaubt($action);   // der Support hat hier keine (Rolle vor Token)
+    /* EIN KONTO MIT RECHTEN NUR MIT FRISCHEM CODE (seit Web 24.12.0, KA-03,
+     * F-KA-03). Der Rollenwechsel eines bestehenden Kontos verlangt ihn seit
+     * P5c; das gleichwertige Anlegen war der Nachbarweg, ueber den eine
+     * uebernommene Sitzung sich ein dauerhaftes Konto mit Rechten
+     * verschaffen konnte. Ein Konto der Rolle `user` braucht ihn nicht. Vor
+     * dem Formular-Token, wie in `admin_user.php`. */
+    if ($action === 'user_add' && rolle_darf_support(post_text('role', 'user'))) {
+        zweitfaktor_frisch_verlangen('konto_mit_rechten');
+    }
     csrf_check();
 
     /* ---- NutzerIn anlegen --------------------------------------
@@ -200,6 +209,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
+                if ($angelegt && rolle_darf_support($role)) {
+                    /* JEDE BETREIBERIN ERFAEHRT VON EINEM NEUEN KONTO MIT
+                     * RECHTEN (KA-03) — ohne Adressen im Text, wie der
+                     * Widerspruch gegen einen Adresswechsel. Wer es nicht
+                     * selbst angelegt hat, sieht hier zuerst davon. */
+                    foreach (mail_betreiberinnen() as $an) {
+                        mail_einreihen('konto_mit_rechten', $an, [
+                            'kern' => 'in der Verwaltung wurde ein neues Konto mit der Rolle „'
+                                    . rolle_text($role) . "“ angelegt (Konto Nr. " . $uid . ").\n\n"
+                                    . "Wer es angelegt hat, steht im Protokoll (Reiter Verwaltung).\n"
+                                    . 'War das nicht beabsichtigt, das Konto sperren oder löschen.',
+                            'link' => app_url('/admin_user.php?id=' . $uid)]);
+                    }
+                }
                 if ($angelegt) {
                     $link = app_url('/pw_handling.php?token=' . $token);
                     /* DREI ZUSTAENDE, UND `wartet` GEHOERT AUF DIE SEITE DES SCHEITERNS.

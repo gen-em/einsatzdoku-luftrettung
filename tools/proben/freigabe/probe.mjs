@@ -135,6 +135,9 @@ try {
      Protokolleintrag. */
   pruefe(q.fremd_erlaubt === false, 'Freigabe an ein fremdes Konto ist abgewiesen (R17-20)',
          'erlaubt=' + q.fremd_erlaubt);
+  pruefe(q.adresse_ohne_frist === true && q.adresse_mit_frist === false,
+         'Freigabe über die Adresse: ohne offene Bestätigung erlaubt, mit offener abgewiesen (KA-03, F-KA-08)',
+         `ohne ${q.adresse_ohne_frist}, mit ${q.adresse_mit_frist}`);
   pruefe(q.protokolliert >= 1, 'Die Freigabe steht im Protokoll (R17-20)',
          q.protokolliert + ' Einträge kontobackup_freigegeben');
   pruefe(q.begleit_versiegelt === true,
@@ -188,6 +191,18 @@ try {
   pruefe(await seite.locator('#freigabecode').isVisible(),
          'Und er fragt nach dem Wiederherstellungsschlüssel',
          'das Paket trägt geschützte Angaben');
+
+  /* ---- 3a. Das Paket kommt ohne `pat_key_check` (KA-03, F-KA-08) -------
+   * Der Browser prüft den Schlüssel an `pat_wrap_rc`; die Prüfsumme der
+   * Quelle braucht er nicht, und mit ihr ließ sich deren Anmeldung
+   * übernehmen. Gemessen an der Antwort, die der Kasten selbst abruft. */
+  const paketAntwort = await seite.evaluate(async () => {
+    const r = await fetch('api/adminbackup_freigabe.php', { credentials: 'same-origin' });
+    return r.ok ? r.json() : { status: r.status };
+  });
+  pruefe(typeof paketAntwort.pat_wrap_rc === 'string' && !('pat_key_check' in paketAntwort),
+         'Die Freigabe liefert pat_wrap_rc, aber kein pat_key_check (KA-03, F-KA-08)',
+         Object.keys(paketAntwort).filter(k => k.startsWith('pat_')).join(', '));
 
   /* ---- 4. Ein FALSCHER Schlüssel schreibt nichts ----------------------- */
   const falsch = await seite.evaluate(() => EdCrypto.newRecoveryCode());

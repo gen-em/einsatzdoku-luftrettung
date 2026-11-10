@@ -608,7 +608,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
                . ($bis !== null ? ' — wieder ab ' . fmt_local($bis, 'H:i') . ' Uhr.' : '.')
                . ' Ein eigenes Konto ist davon nicht betroffen.';
         rate_gleiche_dauer($t0);
-    } elseif (!rate_erlaubt('login', null, rate_nur_konto($email)) || !rate_erlaubt('login_ip', null)) {
+    } elseif (!($geraetGemerkt = zweitfaktor_geraet_fuer_adresse($email))
+                  && !rate_erlaubt('login', null, rate_nur_konto($email))
+              || !rate_erlaubt('login_ip', null)) {
+        /* EIN GEMERKTES GERAET DIESES KONTOS GEHT AN DER KONTOSPERRE VORBEI
+         * (seit Web 24.12.0, KA-03, F-KA-42) — die Sperre trifft dann den,
+         * der die Adresse raet, nicht die Inhaberin an ihrem Geraet. Die
+         * Sperre je Anschluss gilt fuer alle. */
         /* ZWEI TOEPFE, EINE MELDUNG — aber die Meldung sagt, WELCHER greift.
          * „Für diesen Namen gesperrt" waere schlicht falsch, wenn
          * in Wahrheit die Adresssperre haelt, und wer den Unterschied nicht
@@ -618,7 +624,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
          * Merkmal ist der EINGETIPPTE Name (`rate_merkmale()`), nicht die
          * Kontozeile — deshalb gibt die Sperre keine Kontoauskunft, und
          * deshalb darf sie ihn nennen. */
-        $sperre = rate_sperre('login', null, rate_nur_konto($email)) ?? rate_sperre('login_ip', null);
+        $sperre = ($geraetGemerkt ? null : rate_sperre('login', null, rate_nur_konto($email)))
+                  ?? rate_sperre('login_ip', null);
         $bis = $sperre['bis'] ?? null;
         $error = ($sperre !== null && $sperre['art'] === 'adresse'
                     ? 'Zu viele Anmeldeversuche von diesem Anschluss.'

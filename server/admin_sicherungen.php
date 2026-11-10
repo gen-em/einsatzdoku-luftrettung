@@ -192,6 +192,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $paket = edbak_paket_kopf_lesen($kennung, $datei);
         if (!$ziel) {
             $error = 'Zielkonto nicht gefunden.';
+        } elseif (rolle_ist_betreiberin($ziel['role'] ?? null) && !ist_betreiberin()) {
+            /* NACH OBEN KEIN GRIFF — derselbe Riegel wie in `admin_user.php`
+             * (seit Web 24.12.0, KA-03, F-KA-21). Bis dahin spielte ein Admin
+             * ein Paket in jedes Konto ein, auch in das einer BetreiberIn. */
+            $error = 'In ein Konto mit der Rolle „BetreiberIn" spielt nur eine BetreiberIn ein — '
+                   . 'es wurde nichts eingespielt.';
         } elseif (!$paket) {
             $error = 'Das Paket liess sich nicht lesen.';
         } elseif (!edbak_bestaetigung_passt(post_text('confirm_email'), (string)$ziel['email'])) {
@@ -261,9 +267,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * ihre Stelle tritt eine ausdrückliche Bestätigung (Kriterium 64).
      */
     if ($action === 'paket_loeschen' || $action === 'ordner_loeschen') {
-        $sollAdresse = post_text('soll_email');
+        /* DEN SOLLWERT BILDET DER SERVER (seit Web 24.12.0, KA-03, F-KA-21).
+         * Bis dahin kamen Sollwert (`soll_email`) und „unlesbar" aus dem
+         * Formular — wer beide selbst schickte, bestaetigte gegen seinen
+         * eigenen Wert. */
+        $sollAdresse = trim((string)(edbak_begleit_lesen($kennung)['email'] ?? ''));
         $eingabe = post_text('confirm_email');
-        $unlesbar = ($_POST['unlesbar'] ?? '') === '1';
+        $unlesbar = $sollAdresse === '';
 
         $bestaetigt = $unlesbar
             ? (($_POST['confirm_unlesbar'] ?? '') === 'ja')

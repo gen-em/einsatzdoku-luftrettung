@@ -332,6 +332,7 @@ const PROTOKOLL_ARTEN = [
     'rundmail'                  => ['Rundmail', 'neutral'],
     /* Verwaltung — Rollen, Setz-Links, Zweitfaktor */
     'rolle_geaendert'           => ['Rolle geändert', 'orange'],
+    'installation_adressen'     => ['Adressen der Installation', 'orange'],
     'setzlink_gesendet'         => ['Setz-Link', 'neutral'],
     'verifikation_gesendet'     => ['Bestätigung erneut', 'neutral'],
     'totp_eingerichtet'         => ['Zweitfaktor eingeschaltet', 'gruen'],
@@ -584,7 +585,7 @@ function protokoll_arten_des_reiters(string $reiter): array
 {
     $je = [
         'verwaltung' => ['konto_angelegt', 'konto_status', 'konto_geloescht',
-                         'loeschung_beantragt', 'adresse_geaendert', 'rolle_geaendert',
+                         'loeschung_beantragt', 'adresse_geaendert', 'rolle_geaendert', 'installation_adressen',
                          'konto_grenzen', 'setzlink_gesendet', 'verifikation_gesendet', 'einwilligung',
                          'totp_eingerichtet', 'totp_codes_erneuert', 'totp_ausgeschaltet',
                          'totp_zurueckgesetzt', 'totp_code_benutzt',

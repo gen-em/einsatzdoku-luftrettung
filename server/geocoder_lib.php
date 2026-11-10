@@ -198,7 +198,25 @@ function geocoder_adresse_pruefen(string $roh): ?string
     if (mb_strlen($roh) > 180) { return null; }        // app_state.v ist VARCHAR(190)
     $t = parse_url($roh);
     if (!is_array($t) || ($t['scheme'] ?? '') !== 'https') { return null; }
-    if (($t['host'] ?? '') === '') { return null; }
-    if (isset($t['query']) || isset($t['fragment'])) { return null; }
+    if (!geocoder_host_gueltig((string)($t['host'] ?? ''))) { return null; }
+    if (isset($t['query']) || isset($t['fragment']) || isset($t['user']) || isset($t['pass'])) { return null; }
+    if (isset($t['path']) && !preg_match('#\A(?:/[A-Za-z0-9._~-]+)*\z#', $t['path'])) { return null; }
     return $roh;
+}
+
+/**
+ * Ein Rechnername, wie er in einer Kopfzeile stehen darf: Buchstaben, Ziffern,
+ * Bindestrich, Punkte zwischen den Teilen — sonst nichts.
+ *
+ * WARUM SO STRENG (seit Web 24.12.0, KA-03, F-KA-28). `parse_url()` nimmt
+ * Leerzeichen und Semikolons in den Host auf, und der Host ging ungeprueft in
+ * `connect-src` der CSP: Eine Adresse wie `https://x.example; script-src-elem
+ * * data` setzte eine eigene Direktive. Dieselbe Pruefung steht in
+ * `kopf_csp()` noch einmal, damit auch ein Wert von vorher nicht durchkommt.
+ */
+function geocoder_host_gueltig(string $host): bool
+{
+    return strlen($host) <= 253
+        && preg_match('/\A(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)*'
+                    . '[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\z/', $host) === 1;
 }
