@@ -105,8 +105,9 @@ Daten erst nach Server-Bestätigung.
 │   ├── zweitfaktor_teile.php  QR, Geheimnis, Codefeld und Codeliste — EIN
 │   │                       Markup für Tor und Profilkarte
 │   ├── codeblatt.php      die zehn Wiederherstellungscodes auf Papier
-│   │                       (`.blatt-druck`). SPEICHERT NICHTS — nicht
-│   │                       nachdruckbar
+│   │                       (`.blatt-druck`). NIMMT NICHTS AN (POST = 400,
+│   │                       seit Web 24.11.0); die Codes kommen von Fenster
+│   │                       zu Fenster — nicht nachdruckbar
 │   ├── auth_salt.php      KDF-Salt (mit Pseudo-Salt gegen User-Enumeration)
 │   ├── login/logout/reset_request.php   Auth-Flows; login.php seit Web 20.42.0
 │   │                       mit dem Code-Schritt VOR der Sitzung (4.38)
@@ -420,6 +421,11 @@ Daten erst nach Server-Bestätigung.
 │   │                       JavaScript verborgen und ruft `window.print()`.
 │   │                       Ein Knopf, der ohne Skript nichts tut, ist
 │   │                       schlimmer als keiner
+│   ├── assets/blatt-uebergabe.js
+│   │                       Notfall- und Codeblatt ohne Netz (seit Web
+│   │                       24.11.0, KA-02): Knoepfe mit `data-blatt-ziel`
+│   │                       oeffnen das leere Blatt, das Blatt holt seine
+│   │                       Werte per `postMessage` vom Ursprungsfenster
 │   ├── speicher_lib.php   Was die Installation belegt (S8/AP2): Datenbank aus
 │   │                       information_schema, Dateien per Verzeichnislauf,
 │   │                       Stand in settings, Ton nach Schwellen. Gemessen
@@ -504,8 +510,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      Kontoseite (E-P5b-20, R83)
 │   ├── blatt_dialog.php  die Betreiber-Rueckfrage zum Schluesselblatt
 │   ├── notfallblatt.php  der Wiederherstellungsschluessel auf Papier.
-│   │                      SPEICHERT NICHTS und kann nichts speichern —
-│   │                      deshalb spaeter nicht erneut druckbar
+│   │                      Der Schluessel kommt seit Web 24.11.0 NICHT mehr
+│   │                      hierher (POST = 400); das leere Blatt fuellt sich
+│   │                      von Fenster zu Fenster — nicht erneut druckbar
 │   ├── admin_installation.php  Wie diese Installation nach aussen auftritt
 │   │                       (S8/AP3): Name, Adressen, Logo, Demo-Konto
 │   │                       (seit Web 24.6.0) — eine Spalte;
@@ -8888,25 +8895,41 @@ nur wenn `pat_wrap_rc` gesetzt ist: Ein eingeladenes Konto ohne gesetztes
 Passwort hat kein Notfallblatt, und es 30 Tage später danach zu fragen wäre
 eine Frage ohne Gegenstand.
 
-#### Das Notfallblatt speichert nichts — und kann nichts speichern
+#### Das Notfallblatt entsteht im Browser — der Schlüssel verlässt den Tab nicht
 
-`notfallblatt.php` bekommt den Wiederherstellungsschlüssel **per POST aus dem
-Browser** und gibt ihn in derselben Antwort zurück. Er wird nicht gelesen,
-nicht geschrieben, nicht protokolliert. Das ist keine Vorsicht, sondern die
-einzig mögliche Bauform: Der Server kennt diesen Schlüssel nicht.
+**Seit Web 24.11.0 (KA-02, F-KA-01).** Bis dahin bekam `notfallblatt.php` den
+Wiederherstellungsschlüssel **per POST** und gab ihn in derselben Antwort
+zurück. Gespeichert wurde nichts — aber der Schlüssel lief durch das Netz und
+durch jedes Anfrageprotokoll dazwischen (WAF, Proxy, TLS-Inspektion, Hoster),
+und er öffnet den Inhaltsschlüssel ohne Passwort und ohne Server-Anteil.
 
-Daraus folgt die Eigenschaft, die das Blatt ausmacht: **Es lässt sich später
-nicht erneut drucken.** Wer es verliert, erzeugt einen neuen Schlüssel — das
-alte Blatt wird damit ungültig, und genau das steht darauf.
+**Jetzt liefert der Server nur das leere Blatt.** Der Knopf „Notfallblatt
+drucken" (`data-blatt-ziel`) öffnet `notfallblatt.php` in einem neuen Fenster;
+das Blatt meldet sich bei seinem Ursprungsfenster, und
+`assets/blatt-uebergabe.js` reicht Code und — bei der Erstvergabe, ohne
+Sitzung — die Kontoadresse per `postMessage` hinüber. Beide Seiten prüfen
+Ursprung **und** Fenster; das Blatt setzt die Werte per `textContent`, nach
+dem Format geprüft (20 Zeichen aus dem Alphabet ohne 0/1/I/L/O/U, fünf
+Vierergruppen; eine Adresse). Die Fragmentkennung (`#code`) wäre der
+einfachere Weg gewesen; sie steht aber im Verlauf, und viele Browser gleichen
+ihn zwischen Geräten ab. **Ein POST an das Blatt bekommt 400** und wird weder
+gelesen noch protokolliert.
+
+Daraus folgt weiter die Eigenschaft, die das Blatt ausmacht: **Es lässt sich
+später nicht erneut drucken.** Ohne Ursprungsfenster — aus dem Verlauf, ohne
+JavaScript — bleibt es leer und sagt warum. Wer es verliert, erzeugt einen
+neuen Schlüssel.
 
 **Kein `auth_guard.php`, und das ist kein Versehen.** Der Schlüssel wird an
 zwei Stellen gezeigt, und an einer davon gibt es noch keine Sitzung: beim
-ersten Setzen des Passworts (`pw_handling.php`). Was stattdessen schützt: Die
-Seite gibt nur wieder, was ihr gesendet wurde, und zwar **geprüfte Werte in
-festem Text** — der Code muss dem Format entsprechen (20 Zeichen aus dem
-Alphabet ohne 0/1/I/L/O/U, fünf Vierergruppen), die Adresse muss eine Adresse
-sein; alles andere wird ausgelassen. Kein freier Text, kein Verweis nach
-draußen, kein Markup aus der Eingabe.
+ersten Setzen des Passworts (`pw_handling.php`). Mit Sitzung kommt die
+Adresse auf dem Blatt aus der Sitzung und geht der aus dem Fenster vor.
+
+**Gemessen** wird das von der Notfallblattprobe (`tools/proben/notfallblatt/`,
+drei Engines): Sie schneidet jede Anfrage von Erstvergabe, Erneuerung und
+Codeblatt mit und findet den Wert in keiner. Der Riegel `druckblatt`
+(`tools/quelltext/`) hält in Stufe 1, dass kein Formular und kein Abruf an
+ein Druckblatt geht und beide Blätter keinen Anfragewert lesen.
 
 #### Die Schlüsselerneuerung: eine Komponente, zwei Verbraucher
 
@@ -9453,8 +9476,11 @@ Faktor, der aus ist, hat keine. `totp_einrichtung_abschliessen()` setzt
 stehen **genau einmal** in der Antwort auf diesen POST. Der QR-Code entsteht
 im Browser (`assets/qr.js` aus `qrcode-generator`, 9.38 in `Design.md`),
 daneben die otpauth-Adresse als Verweis und das Geheimnis in Base32. Das
-Codeblatt (`codeblatt.php`, `.blatt-druck`) bekommt die Codes per POST und
-speichert nichts.
+Codeblatt (`codeblatt.php`, `.blatt-druck`) bekommt die Codes seit Web
+24.11.0 von Fenster zu Fenster wie das Notfallblatt (KA-02, F-KA-36) — bis
+dahin per POST, und es gab jeden geschickten Wert auf einem echt aussehenden
+Blatt wieder; ein POST bekommt jetzt 400. Es speichert nichts und nimmt nur
+mit Sitzung etwas an.
 
 **Zurücksetzen** (Kontoseite, E-P5c-42): die BetreiberIn für alle Rollen, ein
 Admin nur für Konten der Rolle user (`rolle_darf_zweitfaktor_zuruecksetzen()`,

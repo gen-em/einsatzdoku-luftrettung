@@ -326,4 +326,5 @@ ui_seite_start(['titel' => 'Zweitfaktor einrichten', 'klasse' => 'anmeldung-body
  </nav>
 </main>
 <?php ui_fuss_seite(['dunkel' => true]); ?>
-<?php ui_seite_ende(['skripte' => ZF_SKRIPTE]); ?>
+<?php /* Das Codeblatt: Übergabe von Fenster zu Fenster (KA-02). */
+ui_seite_ende(['skripte' => [...ZF_SKRIPTE, 'assets/blatt-uebergabe.js']]); ?>

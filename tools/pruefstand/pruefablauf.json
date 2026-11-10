@@ -39,6 +39,11 @@
       "braucht": "nichts",
       "bemerkung": "R17-26, F-R17-50 und -51. Rechnet die SHA-256 im Herkunftskopf jeder Datei unter server/assets/vendor/ nach und haelt sie gegen die Pruefsummentabelle in docs/Lizenzen.md. Bis dahin rechnete niemand nach: leaflet.css trug die Summe des Originals mit CRLF, openlocationcode.js lag ohne Kopf ausserhalb von vendor/. Seit KA-01 (F-KA-26) auch die Listen unter server/vendor/ (jede Zeile, keine Datei daneben), Parsedown.php und die Gradle-Wrapper-JAR."
     },
+    "druckblatt": {
+      "aufruf": "bash tools/quelltext/pruefen.sh druckblatt",
+      "braucht": "nichts",
+      "bemerkung": "KA-02, Anlass Nr. 560 (F-KA-01, -36). Kein Formular und kein Abruf schickt an notfallblatt.php oder codeblatt.php, beide Blaetter lesen keinen Anfragewert und weisen einen POST mit 400 ab. Bis Web 24.10.1 ging der Wiederherstellungsschluessel zum Drucken per POST an den Server."
+    },
     "dokumente": {
       "aufruf": "bash tools/quelltext/pruefen.sh dokumente",
       "braucht": "nichts",
@@ -353,6 +358,12 @@
       "demo": true,
       "bemerkung": "RFC-6238-Vektoren 6/6, Code-Schritt über HTTP, Einrichtungstor, Demo-Reset, Bus-Faktor (P5c/AP5); seit SR-09 Teil 5d, Passkeys an Anmeldung, Bestaetigung und Endpunkt (stellt app.base_url fuer den Teil auf localhost); seit SR-04 Teil 8, der Notzugang (stellt die uebrigen BetreiberInnen fuer den Teil auf admin und zurueck). Den Demo-Reset misst sie an seinem Schritt demo_zweitfaktor_leeren() und nicht am ganzen Reset -- bis F-P5c-117 setzte sie den Demo-Bestand zurueck und machte die GPX-Probe danach blind."
     },
+    "notfallblattprobe": {
+      "aufruf": "bash tools/proben/proben.sh notfallblatt",
+      "braucht": "installation",
+      "bemerkung": "KA-02, Anlass Nr. 560 (F-KA-01, -36). Erstvergabe, Erneuerung und Codeblatt in je einem Kontext, der jede Anfrage aller Fenster mitschneidet: Der Wert steht auf dem Blatt, und keine Anfrage enthaelt ihn. Dazu POST an beide Blaetter = 400 und ein Blatt ohne Ursprungsfenster bleibt leer. Legt ein Wegwerfkonto umlauf-notfallblatt an und loescht es.",
+      "motoren": true
+    },
     "rueckwegprobe": {
       "aufruf": "bash tools/proben/proben.sh rueckweg",
       "braucht": "installation",
@@ -426,6 +437,7 @@
       "anker",
       "kennzeichnung",
       "fremdsummen",
+      "druckblatt",
       "dokumente",
       "bestand",
       "syntax-py",
@@ -1025,6 +1037,25 @@
       "anlass": "E-PK-02"
     },
     {
+      "id": "notfallblatt",
+      "ab": "klein",
+      "pfade": [
+        "server/notfallblatt.php",
+        "server/codeblatt.php",
+        "server/assets/blatt-uebergabe.js",
+        "server/pw_handling.php",
+        "server/schluessel_teile.php",
+        "server/assets/rueckfrage.js",
+        "server/zweitfaktor_teile.php",
+        "tools/proben/notfallblatt/**",
+        "tools/referenzdatensatz/vergleich/pruefkonto.py"
+      ],
+      "proben": [
+        "notfallblattprobe"
+      ],
+      "anlass": "Nr. 560 (F-KA-01: der Druck des Notfallblatts schickte den Schluessel an den Server; F-KA-36: das Codeblatt gab geschickte Werte wieder)"
+    },
+    {
       "id": "kontopaar",
       "ab": "klein",
       "pfade": [
@@ -1138,7 +1169,8 @@
         "rueckwegprobe",
         "sitzungsprobe",
         "passkeyprobe",
-        "schluesselwechselprobe"
+        "schluesselwechselprobe",
+        "notfallblattprobe"
       ],
       "anlass": "Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09, schluesselwechselprobe mit SR-03. Bilderlauf und Bedienprobe stehen seit PU-04 nicht mehr hier: Sie laufen wie in klein nur ueber ihre eigenen Muster, beim vollen Lauf immer (E-PU-04, Q-PU-03)."
     },
@@ -1222,6 +1254,7 @@
         "kreislauf-csv",
         "kreislauf-edbak",
         "rueckwegprobe",
+        "notfallblattprobe",
         "barrierefreiheit"
       ],
       "anlass": "Nr. 390 — die Engine-Wahl und das Register gelten fuer jede Browserprobe; wer sie aendert, faehrt alle Browserproben. tools/motor.mjs hebt ab neben auf drei Engines (umfang.engine_wahl, E-PU-16); bis PU-03 hiess es hier pauschal drei (R87)."

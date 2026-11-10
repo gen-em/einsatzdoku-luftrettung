@@ -29,7 +29,10 @@ import kreislauf  # noqa: E402
 
 def main() -> int:
     p = argparse.ArgumentParser(description="Pruefkonto anlegen oder loeschen")
-    p.add_argument("befehl", choices=["anlegen", "loeschen"])
+    # `einladen` (seit KA-02): anlegen, aber das Passwort NICHT setzen — der
+    # Link zu `pw_handling.php` geht in `--link-datei`. Die Notfallblattprobe
+    # setzt das Passwort selbst, damit sie die Erstvergabe mitschneidet.
+    p.add_argument("befehl", choices=["anlegen", "loeschen", "einladen"])
     p.add_argument("konto")
     p.add_argument("--passwort", default=kreislauf.UMLAUF_PASSWORT)
     p.add_argument("--basis", default="https://127.0.0.1:8443")
@@ -51,6 +54,8 @@ def main() -> int:
     # von der Seite liest. Die Rueckwegprobe braucht beides.
     p.add_argument("--rolle", default="user", choices=["user", "betreiberin"],
                    help="Rolle des angelegten Kontos (Vorgabe user)")
+    p.add_argument("--link-datei", default="",
+                   help="einladen: Datei fuer den Link zum Passwortsetzen")
     p.add_argument("--rc-datei", default="",
                    help="JSON-Datei fuer den Wiederherstellungsschluessel (Feld recovery_code)")
     a = p.parse_args()
@@ -63,6 +68,14 @@ def main() -> int:
         weg = kreislauf.konto_loeschen(a.basis, admin, a.konto)
         if a.befehl == "loeschen":
             kreislauf.melde(f"  Konto {a.konto} {'geloescht' if weg else 'bestand nicht'}.")
+            return 0
+        if a.befehl == "einladen":
+            if not a.link_datei:
+                print("einladen braucht --link-datei", file=sys.stderr)
+                return 2
+            link = kreislauf.konto_einladen(a.basis, admin, a.konto, rolle=a.rolle)
+            with open(a.link_datei, "w", encoding="utf-8") as f:
+                f.write(link + "\n")
             return 0
         kreislauf.konto_anlegen(a.basis, admin, a.konto, a.passwort,
                                 rolle=a.rolle, rc_datei=a.rc_datei or None)

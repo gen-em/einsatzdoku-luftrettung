@@ -1,6 +1,6 @@
 # Quelltextprüfungen
 
-**Anlass: Nr. 148, 170, 188, 205, 208, 238, 248, 283, 293, 315, 318** — sechzehn Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24), je Prüfung mit Anlass in der Tabelle.
+**Anlass: Nr. 148, 170, 188, 205, 208, 238, 248, 283, 293, 315, 318, 560** — siebzehn Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24), je Prüfung mit Anlass in der Tabelle.
 
 ## Aufruf
 
@@ -25,15 +25,15 @@
 | `anker` | jeder Verweis `hilfe.php#…` trifft eine Überschrift des gerenderten Handbuchs | Nr. 188 |
 | `kennzeichnung` | Schloss an jedem verschlüsselten Feld in Formular und Leseansicht, gegen `kennzeichnung-soll.md`; Kleinzeile an jedem Klartext-Freitextfeld des Katalogs | Nr. 170 |
 | `fremdsummen` | die SHA-256 im Herkunftskopf jeder Datei unter `server/assets/vendor/`, nachgerechnet ohne den Kopf und gegen die Tabelle in `Lizenzen.md` 3; seit KA-01 auch jede Zeile der zwei Listen unter `server/vendor/` (keine Datei daneben), `Parsedown.php` und die Gradle-Wrapper-JAR | F-R17-50, -51, F-KA-26 |
+| `druckblatt` | kein Formular und kein Abruf schickt an `notfallblatt.php` oder `codeblatt.php`; beide lesen keinen Anfragewert und weisen einen POST mit 400 ab | Nr. 560 |
 | `dokumente` | jeder Pfad in den Dokumenten gegen den Baum (Ausnahmen mit Grund in `dokumente-ausnahmen.md`), Zahlen an Verzeichnissen gegen `ls`, keine „Stand:"-Kopfzeile, Gliederung von `Technik.md`; im Code jeder Abschnittsverweis („`Technik.md` 4.14") gegen die Überschriften | Nr. 188 |
 
 ## Was es braucht
 
 `php`, `python3`, `bash`; für `handbuch` und `bestand` `cmark-gfm` (Ausbaustufe `web`) — fehlt es, ist `handbuch` rc 2 und `bestand` rot.
-
 ## Erwartete Zahl
 
-`alle` → **16 von 16 grün**, `--selbstprobe` → **14 von 14**; ohne Schwelle. Die Textprobe meldet nur **neue** Treffer gegen `textprobe-altbestand.json` (neu schreiben mit `--altbestand-schreiben`, nie von Hand).
+`alle` → **17 von 17 grün**, `--selbstprobe` → **15 von 15**; ohne Schwelle. Die Textprobe meldet nur **neue** Treffer gegen `textprobe-altbestand.json` (neu schreiben mit `--altbestand-schreiben`, nie von Hand).
 
 ## Was es nicht kann
 

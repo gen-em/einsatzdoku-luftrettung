@@ -66,11 +66,12 @@ function zf_einrichtung(string $roh, string $konto): void
  * Die zehn Wiederherstellungscodes, einmal sichtbar — mit dem Haken
  * „gesichert" und dem Druckknopf fürs Codeblatt.
  *
- * DAS DRUCKFORMULAR STEHT IM CODEBLOCK und trägt die Codes in versteckten
- * Feldern zu `codeblatt.php` — POST und neues Fenster, wie beim
- * Notfallblatt: Die Codes gehören in keine Adresszeile, und die Seite mit
- * den Codes soll stehen bleiben. Der Codeblock darf deshalb in keinem
- * anderen Formular stehen; verschachtelte Formulare gibt es in HTML nicht.
+ * DER DRUCKKNOPF STEHT IM CODEBLOCK und trägt die Codes in einem
+ * Datenattribut; `assets/blatt-uebergabe.js` öffnet `codeblatt.php` in einem
+ * neuen Fenster und reicht sie von Fenster zu Fenster (seit Web 24.11.0,
+ * KA-02, F-KA-36 — bis dahin ein POST, und das Blatt gab jeden geschickten
+ * Wert wieder). Die Codes gehören in keine Adresszeile, und die Seite mit
+ * den Codes soll stehen bleiben. Die Seite muss das Skript einbinden.
  *
  * @param list<string> $codes
  */
@@ -82,10 +83,12 @@ function zf_codes(array $codes): void
       <ol class="codeblock-liste"><?php foreach ($codes as $c): ?><li><?= ui_e(totp_code_anzeige($c)) ?></li><?php endforeach; ?></ol>
       <p class="feld-klein">Jeder Code gilt einmal, wenn das Handy fehlt.</p>
       <label><input type="checkbox" data-zf-gesichert> Ich habe die Codes gesichert.</label>
-      <form method="post" action="codeblatt.php" target="_blank" rel="noopener" class="rf-druck">
-        <?php foreach ($codes as $c): ?><input type="hidden" name="codes[]" value="<?= ui_e($c) ?>"><?php endforeach; ?>
-        <?= ui_knopf(['text' => 'Codeblatt drucken', 'art' => 'neutral', 'symbol' => 'drucken']) ?>
-      </form>
+      <div class="rf-druck">
+        <?= ui_knopf(['text' => 'Codeblatt drucken', 'art' => 'neutral', 'symbol' => 'drucken',
+                      'typ' => 'button', 'attr' => ' data-blatt-ziel="codeblatt.php" data-blatt-codes="'
+                                               . ui_e(json_encode(array_values($codes))) . '"']) ?>
+        <p class="feld-klein rf-druck-hinweis" data-blatt-blockiert hidden>Der Browser hat das Druckfenster blockiert. Erlaube Pop-ups für diese Seite und drück noch einmal.</p>
+      </div>
     </div>
     <?php
 }

@@ -220,15 +220,11 @@ def konto_loeschen(basis: str, admin: AdminZugang, konto: str,
     return True
 
 
-def konto_anlegen(basis: str, admin: AdminZugang, konto: str,
-                  passwort: str, rolle: str = "user", rc_datei: str | None = None) -> None:
-    """Konto ueber den Einladungsweg anlegen und das Passwort im Browser setzen.
+def konto_einladen(basis: str, admin: AdminZugang, konto: str, rolle: str = "user") -> str:
+    """Konto ueber den Einladungsweg anlegen; gibt den Link zum Passwortsetzen.
 
-    `rolle` und `rc_datei`: Die Rueckwegprobe braucht
-    auch eine BetreiberIn, und sie braucht den Wiederherstellungsschluessel,
-    den `passwort_setzen.mjs` von der Seite liest — ohne ihn gibt es den
-    Rueckweg nicht zu gehen. `rc_datei` ist die Ausgabedatei dieses
-    Skripts (JSON, Feld `recovery_code`)."""
+    Eigene Funktion seit KA-02: Die Notfallblattprobe setzt das Passwort
+    selbst im Browser, damit sie die Erstvergabe mitschneiden kann."""
     s = sitzungsmodul.Sitzung(basis).anmelden(*admin)
     s.csrf_auffrischen("admin_users.php")
     antwort = s.post("admin_users.php", {"csrf": s.csrf, "action": "user_add",
@@ -243,6 +239,19 @@ def konto_anlegen(basis: str, admin: AdminZugang, konto: str,
                            + " \u2014 " + sitzungsmodul.seitenkennung(antwort))
     link = f"{basis}/pw_handling.php?token={m.group(1)}"
     melde(f"  Konto {konto} angelegt.")
+    return link
+
+
+def konto_anlegen(basis: str, admin: AdminZugang, konto: str,
+                  passwort: str, rolle: str = "user", rc_datei: str | None = None) -> None:
+    """Konto ueber den Einladungsweg anlegen und das Passwort im Browser setzen.
+
+    `rolle` und `rc_datei`: Die Rueckwegprobe braucht
+    auch eine BetreiberIn, und sie braucht den Wiederherstellungsschluessel,
+    den `passwort_setzen.mjs` von der Seite liest — ohne ihn gibt es den
+    Rueckweg nicht zu gehen. `rc_datei` ist die Ausgabedatei dieses
+    Skripts (JSON, Feld `recovery_code`)."""
+    link = konto_einladen(basis, admin, konto, rolle)
     lauf(["node", str(WURZEL / "einspielen" / "passwort_setzen.mjs"), link, passwort]
          + ([rc_datei] if rc_datei else []),
          env={**os.environ, "PLAYWRIGHT_MODUL": PLAYWRIGHT})

@@ -734,27 +734,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 <!-- -->
 
-540. **Druckblätter und Druck nehmen im Dunkeln Farben des Bildschirms mit.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 08.11.2026
-     *Aufgenommen 08.11.2026 bei der Nachprüfung auf Staging (P-MA-07,
-     Chromium, Gerät dunkel).* Notfallblatt und Codeblatt zeigen das Papier
-     hell (`--papier-*`), aber Titel und „Zur Startseite" in den Rollen des
-     dunklen Modus (Blau 100/300 auf Schnee, kaum lesbar), und die Meldung
-     „Dieses Blatt lässt sich nicht nachträglich drucken" steht als dunkle
-     Fläche (Orange 800) auf dem Papier. Im Druck der Tagesübersicht stellt
-     der `@media print`-Block nur Flächen, Schrift und Linien zurück; die
-     Statusflächen (`--genem-status-*`), Auswahl und Aktion bleiben dunkel —
-     die Meldung „Staging" druckte als braune Fläche. *Weg:* auf dem Blatt
-     und im Druck alle Rollen auf hell stellen, die dort vorkommen (Status,
-     Auswahl, Aktion, Titel, Link), nicht nur die drei Gruppen. *Abnahme:*
-     beide Blätter und die Druckvorschau einer Tagesübersicht bei dunklem
-     Gerät — keine Fläche dunkler als Rauch, Titel in Dunkelblau.
-     *Gegengelesen 10.11.2026 am Code von Web 24.10.1:* Der `@media
-     print`-Block stellt die Statusflächen weiter nicht zurück; die Blätter
-     im Browser sind seither nicht neu geprüft. Das Notfallblatt baut
-     Schritt 28 (KA-02) neu — dort mitnehmen.
-
-<!-- -->
-
 541. **Zwei Plaketten tragen den falschen Ton: Konto-Backup „aktuell" blau, „räumt dort auf" orange.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 08.11.2026
      *Aufgenommen 08.11.2026 bei der Nachprüfung auf Staging (P-MA-14).*
      Seit E-MA-08 heißt Grün „Zustand", Blau „Eigenschaft". Der Stand eines

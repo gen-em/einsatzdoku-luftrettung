@@ -780,8 +780,14 @@
 
 /* DRUCKEN IST IMMER HELL. Ein Drucker auf dunklem Geraet bekaeme sonst
  * blau-900-Flaechen aufs Papier. Die Spezifitaet (0,3,0) liegt ueber beiden
- * Ausloesern (0,2,0); zurueckgestellt werden die Rollen, die der Druck
- * zeigt — Flaechen, Schrift, Linien. */
+ * Ausloesern (0,2,0).
+ *
+ * ZURUECKGESTELLT WIRD JEDE ROLLE, DIE DER DUNKLE MODUS UMFAERBT, nicht nur
+ * Flaechen, Schrift und Linien (Nr. 540, KA-02). Bis Web 24.10.1 blieben
+ * Status, Auswahl und Aktion dunkel — die Meldung „Staging" druckte als
+ * braune Flaeche. Die Werte sind die hellen der Rollen oben, aufgeloest auf
+ * die Leitwerte: Eine Rolle, die hier auf eine `--genem-*`-Rolle zeigte,
+ * zeigte auf deren DUNKLEN Wert, weil der Block darueber sie umdefiniert. */
 @media print {
   :root:root:root {
     color-scheme:light;
@@ -796,7 +802,79 @@
     --text-link-hover:var(--genem-blau-600);
     --linie:var(--genem-neutral-200);
     --linie-stark:var(--genem-neutral-600);
+    --mechanik:var(--genem-sand);
+    --aktion:var(--genem-dunkelblau);
+    --aktion-hover:var(--genem-blau-700);
+    --auf-aktion:var(--genem-schnee);
+    --aktion-haupt:var(--genem-philipp-orange);
+    --aktion-haupt-hover:var(--genem-orange-400);
+    --auf-aktion-haupt:var(--genem-asphalt);
+    --auswahl-flaeche:var(--genem-blau-100);
+    --auswahl-text:var(--genem-dunkelblau);
+    --auswahl-linie:var(--genem-dunkelblau);
+    --info-flaeche:var(--genem-blau-100);
+    --info-text:var(--genem-blau-700);
+    --info-linie:var(--genem-blau-600);
+    --erfolg-flaeche:var(--genem-gruen-100);
+    --erfolg-text:var(--genem-gruen-700);
+    --erfolg-linie:var(--genem-gruen-600);
+    --warnung-flaeche:var(--genem-orange-100);
+    --warnung-text:var(--genem-orange-700);
+    --warnung-linie:var(--genem-orange-600);
+    --fehler-flaeche:var(--genem-rot-100);
+    --fehler-text:var(--genem-rot-700);
+    --fehler-linie:var(--genem-rot-600);
+    --gefahr:var(--genem-rot-700);
+    --auf-gefahr:var(--genem-schnee);
+    --fokus:var(--genem-max-blau);
+    --flaeche-marke:var(--genem-dunkelblau);
   }
+}
+
+/* DIE DRUCKBLAETTER SIND AUCH AM BILDSCHIRM HELL (Nr. 540, KA-02). Das Papier
+ * hat eigene Token (`--papier-*`, schalten nicht um); aber Titel, Verweis,
+ * Knopf und Meldung auf dem Blatt nahmen die Rollen des dunklen Modus mit —
+ * Blau 100/300 auf Schnee, kaum lesbar, und eine Meldung in Orange 800 auf
+ * dem Papier. Dieselben Werte wie im Druck, auf dem `<body>` des Blatts. */
+.blatt-seite {
+    color-scheme:light;
+    --flaeche-seite:var(--genem-schnee);
+    --flaeche-karte:var(--genem-neutral-75);
+    --flaeche-abgesetzt:var(--genem-rauch);
+    --flaeche-feld:var(--genem-schnee);
+    --text:var(--genem-asphalt);
+    --text-titel:var(--genem-dunkelblau);
+    --gedaempft:var(--genem-neutral-600);
+    --text-link:var(--genem-blau-600);
+    --text-link-hover:var(--genem-blau-600);
+    --linie:var(--genem-neutral-200);
+    --linie-stark:var(--genem-neutral-600);
+    --mechanik:var(--genem-sand);
+    --aktion:var(--genem-dunkelblau);
+    --aktion-hover:var(--genem-blau-700);
+    --auf-aktion:var(--genem-schnee);
+    --aktion-haupt:var(--genem-philipp-orange);
+    --aktion-haupt-hover:var(--genem-orange-400);
+    --auf-aktion-haupt:var(--genem-asphalt);
+    --auswahl-flaeche:var(--genem-blau-100);
+    --auswahl-text:var(--genem-dunkelblau);
+    --auswahl-linie:var(--genem-dunkelblau);
+    --info-flaeche:var(--genem-blau-100);
+    --info-text:var(--genem-blau-700);
+    --info-linie:var(--genem-blau-600);
+    --erfolg-flaeche:var(--genem-gruen-100);
+    --erfolg-text:var(--genem-gruen-700);
+    --erfolg-linie:var(--genem-gruen-600);
+    --warnung-flaeche:var(--genem-orange-100);
+    --warnung-text:var(--genem-orange-700);
+    --warnung-linie:var(--genem-orange-600);
+    --fehler-flaeche:var(--genem-rot-100);
+    --fehler-text:var(--genem-rot-700);
+    --fehler-linie:var(--genem-rot-600);
+    --gefahr:var(--genem-rot-700);
+    --auf-gefahr:var(--genem-schnee);
+    --fokus:var(--genem-max-blau);
+    --flaeche-marke:var(--genem-dunkelblau);
 }
 
 /* Die Kopfleiste traegt im Dunkeln eine Linie nach unten: Dunkelblau auf
@@ -2411,12 +2489,16 @@ input[type=checkbox].segment-box{position:absolute;opacity:0;width:0;height:0;mi
   margin-top:var(--abstand-3);font-size:var(--groesse-3);
 }
 
-/* Das Druckformular steht im Fuss und soll sich wie ein Knopf verhalten —
- * sonst schrumpft es auf seine Inhaltsbreite, waehrend „Fertig" daneben den
- * ganzen Rest nimmt. Im Codeblock von `pw_handling.php` steht dasselbe
- * Formular unter dem Haken und braucht dort Luft nach oben. */
-.rf-druck{display:flex;flex:1 1 auto}
+/* Der Druckknopf steht im Fuss und soll sich wie ein Knopf verhalten —
+ * sonst schrumpft er auf seine Inhaltsbreite, waehrend „Fertig" daneben den
+ * ganzen Rest nimmt. Im Codeblock von `pw_handling.php` steht derselbe
+ * Knopf unter dem Haken und braucht dort Luft nach oben. Seit KA-02 ist es
+ * kein Formular mehr, sondern ein Knopf, der das Blatt in einem neuen
+ * Fenster oeffnet; blockiert der Browser das Fenster, steht darunter eine
+ * Zeile, die es sagt (`.rf-druck-hinweis`, ganze Breite). */
+.rf-druck{display:flex;flex:1 1 auto;flex-wrap:wrap}
 .rf-druck .knopf{flex:1 1 auto}
+.rf-druck-hinweis{flex:1 0 100%;margin:var(--abstand-1) 0 0}
 .codeblock > .rf-druck{margin-top:var(--abstand-3)}
 
 /* ---- Betreiber-Rueckfrage: vier Gruppen in zwei Spalten ------------------
@@ -5392,6 +5474,14 @@ a.konto-name:hover{color:var(--text-link)}
 .blatt-druck-gruppe{display:flex;flex-direction:column;align-items:center;
   font-family:var(--schrift-fest);font-size:var(--groesse-5);font-weight:700;letter-spacing:.08em;line-height:1.25}
 .blatt-druck-gruppen-5 .blatt-druck-gruppe{font-size:var(--groesse-6)}
+/* SCHMALES HANDY: DREI GRUPPEN JE ZEILE (KA-02). Fünf Gruppen in Stufe 6
+ * brauchen rund 400 px; darunter standen sie ohne Abstand nebeneinander und
+ * lasen sich wie eine Zeichenkette (Bilderlauf 360 px). Unter 480 px brechen
+ * sie in drei und zwei um, mit Abstand zwischen den Spalten. Nur am
+ * Bildschirm: Auf A4 ist Platz für fünf. */
+@media screen and (max-width:479px){
+  .blatt-druck-gruppen-5{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:var(--abstand-3)}
+}
 .blatt-druck-gruppe::before{content:attr(data-nr);font-family:var(--schrift-text);font-weight:400;
   font-size:var(--groesse-2);letter-spacing:0;color:var(--papier-leise)}
 .blatt-fuss{margin-top:var(--abstand-3);padding-top:var(--abstand-2);border-top:var(--strich) solid var(--linie);

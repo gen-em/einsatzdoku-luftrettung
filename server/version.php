@@ -8875,4 +8875,12 @@ declare(strict_types=1);
  *   bei der Nachpruefung auf Staging; oertlich fehlte das Feld, weil
  *   127.0.0.1 keine Passkey-Adresse ist. Das Skript laesst einen <dialog>
  *   jetzt aus. Korrektur; kein Schema. */
-const WEB_VERSION = '24.10.1';
+/* 24.11.0 — DAS NOTFALLBLATT ENTSTEHT IM BROWSER (KA-02, Audit KA F-KA-01,
+ *   -36). Der Wiederherstellungsschluessel ging zum Drucken per POST an
+ *   `notfallblatt.php` und damit durch jedes Anfrageprotokoll; jetzt oeffnet
+ *   der Knopf das leere Blatt, und `assets/blatt-uebergabe.js` reicht Code und
+ *   Adresse von Fenster zu Fenster (`postMessage`). Dasselbe fuer das
+ *   Codeblatt; beide Blaetter weisen einen POST mit 400 ab. Dazu Nr. 540:
+ *   Blaetter und Druck stellen jede Rolle des dunklen Modus auf hell.
+ *   Neben (ein Weg durch die Anwendung aendert sich); kein Schema. */
+const WEB_VERSION = '24.11.0';

@@ -177,7 +177,9 @@
       /* AB HIER IST DER ALTE SCHLÜSSEL UNGÜLTIG. Der Wert steht auf dem
        * Bildschirm und nirgends sonst — deshalb erst zeigen, dann melden. */
       codeFeld.textContent = code;
-      if (druckWert) { druckWert.value = code; }
+      /* An den Druckknopf, nicht in ein Formular: Er reicht den Wert von
+       * Fenster zu Fenster weiter, nie über das Netz (KA-02). */
+      if (druckWert) { druckWert.dataset.blattCode = code; }
       if (feldPw) { feldPw.value = ''; }
       festgehalten = true;
       zeige('schluessel');

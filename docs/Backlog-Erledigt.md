@@ -11194,3 +11194,40 @@ zutreffen.
      Seitenwechsel (keepalive, ohne Abbruchsignal), ein Verweis wartet
      höchstens 1,5 s; mit zurückgehaltener Anfrage in drei Engines 0 von 6
      vorher, 6 von 6 nachher.
+
+540. **Druckblätter und Druck nehmen im Dunkeln Farben des Bildschirms mit.** · gehört zu: nächste Backlog-Runde · Stand: erledigt · seit 08.11.2026
+     *Aufgenommen 08.11.2026 bei der Nachprüfung auf Staging (P-MA-07,
+     Chromium, Gerät dunkel).* Notfallblatt und Codeblatt zeigen das Papier
+     hell (`--papier-*`), aber Titel und „Zur Startseite" in den Rollen des
+     dunklen Modus (Blau 100/300 auf Schnee, kaum lesbar), und die Meldung
+     „Dieses Blatt lässt sich nicht nachträglich drucken" steht als dunkle
+     Fläche (Orange 800) auf dem Papier. Im Druck der Tagesübersicht stellt
+     der `@media print`-Block nur Flächen, Schrift und Linien zurück; die
+     Statusflächen (`--genem-status-*`), Auswahl und Aktion bleiben dunkel —
+     die Meldung „Staging" druckte als braune Fläche. *Weg:* auf dem Blatt
+     und im Druck alle Rollen auf hell stellen, die dort vorkommen (Status,
+     Auswahl, Aktion, Titel, Link), nicht nur die drei Gruppen. *Abnahme:*
+     beide Blätter und die Druckvorschau einer Tagesübersicht bei dunklem
+     Gerät — keine Fläche dunkler als Rauch, Titel in Dunkelblau.
+     *Gegengelesen 10.11.2026 am Code von Web 24.10.1:* Der `@media
+     print`-Block stellt die Statusflächen weiter nicht zurück; die Blätter
+     im Browser sind seither nicht neu geprüft. Das Notfallblatt baut
+     Schritt 28 (KA-02) neu — dort mitnehmen.
+     Erledigt 10.11.2026 mit Web 24.11.0 (Schritt 28, KA-02): Druckblätter
+     und Druck stellen jede Rolle des dunklen Modus auf ihren hellen Wert;
+     gemessen in Chromium, hell gegen dunkel: beide Blätter, Druck und
+     eine Meldung im Druck ohne Abweichung; Papier bleibt Handprüfung.
+
+560. **Der Druck des Notfallblatts schickte den Wiederherstellungsschlüssel an den Server.** · gehört zu: 28 · Stand: erledigt · seit 10.11.2026
+     *Aufgenommen 10.11.2026 als Anlass der Probe und des Riegels von KA-02
+     (Audit KA, F-KA-01 und -36).* Der Knopf „Notfallblatt drucken" sendete
+     den Schlüssel per POST an `notfallblatt.php`; gespeichert wurde nichts,
+     aber er lief durch das Netz und jedes Anfrageprotokoll dazwischen —
+     und er öffnet den Inhaltsschlüssel ohne Passwort und ohne
+     Server-Anteil. `codeblatt.php` gab jeden geschickten Wert auf einem
+     Blatt wieder. *Weg:* das Blatt leer öffnen und die Werte von Fenster
+     zu Fenster reichen (`postMessage`). *Abnahme:* eine Browserprobe, die
+     jede Anfrage der ganzen Folge mitschneidet und den Schlüssel in keiner
+     findet, und ein Riegel gegen jedes Formular an ein Druckblatt.
+     Erledigt 10.11.2026 mit Web 24.11.0 (Schritt 28, KA-02): Übergabe von
+     Fenster zu Fenster; Notfallblattprobe und Riegel druckblatt.

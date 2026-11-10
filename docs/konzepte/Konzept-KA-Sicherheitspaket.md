@@ -12,9 +12,9 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-01** gebaut und geprüft, Pull Request offen — wartet auf Merge; danach KA-02 |
-| Erledigt | — (KA-01 gilt als erledigt, wenn es auf `main` ist) |
-| Hakt | nichts im Code. **Nicht örtlich belegbar:** `security: strict` (Punkt 1) — erst der erste Lauf auf `main` (Staging) und der Probelauf der BetreiberIn gegen Produktiv zeigen, ob das Zertifikat zum Namen in `FTP_SERVER` passt (KA-M2, P-KA-02) |
+| In Arbeit | **KA-02** gebaut und geprüft (Web 24.11.0), Pull Request offen — wartet auf Merge; danach Tag (KA-M3), dann KA-03 |
+| Erledigt | **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) |
+| Hakt | nichts im Code. **Offen bei der BetreiberIn:** der Probelauf gegen Produktiv mit `security: strict` (KA-M2, P-KA-02) — Staging ist belegt |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
 **Die Umsetzung findet in einer eigenen Sitzung statt** — ein Paket nach
@@ -68,6 +68,11 @@ Safari.
 | E-KA-13 | **`integritaet.yml` bekommt in F-KA-44 ebenfalls ein Zeitlimit** — dieselbe Lücke wie die übrigen Arbeitsläufe | 10.11.2026, BetreiberIn |
 | E-KA-14 | **Riegel 3 sperrt jeden Eingang im Skript, nicht nur die vom Typ `string`.** Ein `boolean` kann nichts einschleusen, aber eine Regel ohne Typ-Nachschlagen hat keine Lücke, wenn jemand den Typ eines Eingangs ändert; die vier `boolean`-Stellen kosteten je eine `env:`-Zeile | 10.11.2026, Umsetzung |
 | E-KA-15 | **Geheimnisse der Stufe-2-Werkzeuge über `--…-aus NAME`**, der Schalter nennt die Umgebungsvariable. `kreislauf.py` liest das Kettentoken bewusst **nicht** still aus `JOBS_TOKEN` (Kommentar vom 17.09.2026: ein vergessenes `export` schickte den Kreislauf sonst gegen die falsche Anlage); der Schalter bleibt deshalb ausdrücklich, nur der Wert verlässt die Befehlszeile. Die reinen Kettenwerkzeuge (`tor.py`, `zielprobe.py`, `zustand.py`, `apkablage.py`) lesen fest `JOBS_TOKEN` bzw. `FTP_PASSWORD`; `--token` und `--ftp-pass` gibt es nicht mehr | 10.11.2026, Umsetzung |
+| E-KA-16 | **Es gibt eine Nutzerin, die BetreiberIn — keine Benachrichtigung, keine Rückwärtsverträglichkeit.** Daraus: KA-02 Punkt 6 (Satz nach der Erneuerung) entfällt; KA-M4 schrumpft auf „die BetreiberIn erneuert ihren Schlüssel nach dem Tag"; ein alter Aufrufer der Blätter bekommt 400 statt eines Übergangs. Für KA-05 Punkt 7 und KA-06e heißt das: kein Rückfall und keine Übergangsfrist für alte Formate — **aber** die eigenen Daten der BetreiberIn im Altformat müssen lesbar umziehen; das wird vor KA-06 noch einmal gefragt | 10.11.2026, BetreiberIn |
+| E-KA-17 | **Übergabe an das Druckfenster per `postMessage`**, Ursprung und Fenster geprüft auf beiden Seiten. Die Fragmentkennung (`#code`) erreicht den Server nicht, steht aber im Verlauf, und viele Browser gleichen ihn zwischen Geräten ab; ein Druck im selben Fenster hätte den Bedienweg geändert (kein Blatt am Bildschirm) | 10.11.2026, BetreiberIn (Vorschlag der Umsetzung) |
+| E-KA-18 | **Die Kontoadresse geht bei der Erstvergabe mit dem Code ans Blatt** — sie ist kein Geheimnis, und ohne Sitzung kennt das Blatt sie sonst nicht; mit Sitzung geht die aus der Sitzung vor | 10.11.2026, BetreiberIn |
+| E-KA-19 | **Nr. 540 ohne Mockup:** Blätter und Druck stellen die Rollen auf ihre hellen Werte zurück — vorhandene Token, kein neuer Farbwert, kein neuer Baustein; das Druckbild bleibt das gedachte | 10.11.2026, BetreiberIn |
+| E-KA-20 | **Der Riegel aus KA-02 Punkt 5 misst Formulare und Abrufe mit einem Druckblatt als Ziel, nicht den Feldnamen.** `code` heißt auch das Feld der Zweitfaktor-Formulare; ein Riegel über den Namen schlüge falsch an oder würde ausgenommen | 10.11.2026, BetreiberIn |
 
 ---
 
@@ -252,6 +257,23 @@ in derselben Workflow-Datei.
 7. **Backlog Nr. 540 mitnehmen:** Notfall- und Codeblatt nehmen im Dunkeln
    Farben des Bildschirms mit (Nachprüfung MA, 08.11.2026). Das Blatt wird
    hier ohnehin neu gebaut; die Abnahme aus Nr. 540 gilt für das neue.
+
+**Umgesetzt (10.11.2026, Web 24.11.0)** — Einzelheiten in Abschnitt 9 und 10:
+
+| Punkt | Was gebaut ist |
+|---|---|
+| 1 | `assets/blatt-uebergabe.js`: Knöpfe mit `data-blatt-ziel` öffnen das leere Blatt; das Blatt meldet sich beim Ursprungsfenster und bekommt Code und Adresse per `postMessage` (E-KA-17, -18), gesetzt per `textContent` nach Formatprüfung |
+| 2 | `notfallblatt.php` liest keinen Anfragewert; alles außer GET bekommt 400 ohne Protokoll |
+| 3 | `pw_handling.php`, `schluessel_teile.php`, `rueckfrage.js` ohne Formular; Kopfkommentare, `docs/Technik.md` |
+| 4 | `codeblatt.php` und `zweitfaktor_teile.php` ebenso; das Blatt nimmt nur mit Sitzung etwas an |
+| 5 | Riegel `druckblatt` in `tools/quelltext/` (E-KA-20), Anlass Nr. 560 |
+| 6 | **entfällt** (E-KA-16) |
+| 7 | Nr. 540: `.blatt-seite` und `@media print` stellen jede Rolle des dunklen Modus hell (E-KA-19) |
+
+Dazu die Notfallblattprobe (`tools/proben/notfallblatt/`, drei Engines), ein
+Hinweis unter dem Knopf, wenn der Browser das Fenster blockiert
+(`.rf-druck-hinweis`), und `pruefkonto.py einladen` (Konto ohne gesetztes
+Passwort, für die Probe).
 
 **Berührt:** Web, Stufe **neben** (ein Weg durch die Anwendung ändert sich).
 **Pflege:** `docs/Handbuch.md` (Verschlüsselung, Notfallblatt),
@@ -512,7 +534,7 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 | KA-M1 | In GitHub ansehen und setzen: Umgebung `produktion` und Freigabe von Fork-Läufen — **erledigt 10.11.2026** (Abschnitt 3): Umgebung auf `main` und die drei Tag-Muster beschränkt | erledigt |
 | KA-M2 | Tag-Rulesets — **erledigt 10.11.2026**, gemessen. **Mit KA-01:** Probelauf der Auslieferung mit `security: strict` gegen Staging und Produktiv starten und freigeben; danach „Require actions to be pinned to a full-length commit SHA“ einschalten und einen Lauf abwarten; die Protokolle älterer Auslieferungsläufe löschen, soweit sie `wartung.von` nennen | in KA-01 |
 | KA-M3 | Tag nach KA-01 und KA-02 — beide hohen Befunde auf Produktiv (E-KA-09) | nach KA-02 |
-| KA-M4 | Wiederherstellungsschlüssel erneuern lassen: eine Ankündigung an alle Konten, die ein Notfallblatt gedruckt haben können (E-KA-07) | nach KA-M3 |
+| KA-M4 | Wiederherstellungsschlüssel erneuern — seit E-KA-16 nur der eigene der BetreiberIn (es gibt keine weiteren Konten); unter Einstellungen → Profil, danach das alte Blatt vernichten (E-KA-07) | nach KA-M3 |
 | KA-M5 | Freigaberunde zum Formatentwurf: Lage des Zählerstands, Bauart der Herkunft, Frist für Geräte ohne Schlüssel, Stichtag für Fassung 1 | nach KA-06a |
 | KA-M6 | Gerätetests: Kopplung mit Vergleichswert, Übergabe im laufenden Dienst, Sperrbildschirm | nach KA-04 und nach KA-06c |
 
@@ -601,6 +623,39 @@ aus), -37 (`--ftp-pass`, `--token` in den Aufrufen), -39 (`image: mysql:8.4.0`,
 
 Der Prüfbericht des Commits trägt den Lauf von `tools/pruefstand/pruefen.sh`.
 
+**Nach dem Merge (Lauf 191 auf `main`, 10.11.2026):** alle Jobs grün. Der
+Schritt „server/ per FTPS synchronisieren" gegen Staging lief mit
+`security: strict` durch — das Zertifikat von Staging passt zum Namen in
+`FTP_SERVER`. Stufe 2 lief mit den `--…-aus`-Schaltern: Kreislauf `edbak`
+(18 min) und Rückwegprobe grün. **Produktiv belegt erst der Probelauf der
+BetreiberIn** (KA-M2).
+
+### KA-02 (10.11.2026)
+
+**Was nicht geprüft werden konnte — zuerst.**
+
+1. **Papier und ein echter Safari.** Der Druck ist am Bildschirm und mit
+   `emulateMedia('print')` gemessen, nicht auf Papier; WebKit ist nicht
+   Safari. Prüfliste.
+2. **Der dunkle Modus ist nur in Chromium gegen den hellen gehalten**, mit
+   einem Werkzeug aus der Sitzung, nicht mit einer Probe des Bestands: Der
+   Bilderlauf nimmt den dunklen Modus nicht auf (Nr. 521). Die Druckvorschau
+   der **Tagesübersicht** aus Nr. 540 ist nicht nachgestellt; gemessen ist
+   stattdessen eine Seite mit Fehlermeldung im Druck — dieselben Rollen.
+3. **Ein Browser, der `window.open` blockiert:** Der Hinweis unter dem Knopf
+   ist gebaut, aber nicht ausgelöst gemessen.
+
+**Gemessen** (jede Zahl mit ihrem Gegenstand):
+
+| Mittel | Ergebnis | Was es belegt |
+|---|---|---|
+| Notfallblattprobe, Chromium, örtlich | **16 von 16**: Erstvergabe 0 Treffer in 22 Anfragen bis zum Blatt und 31 bis zum Abschluss; Erneuerung 0 in 99; Codeblatt 0 in 9; Blatt zeigt Schlüssel, Adresse (ohne und mit Sitzung) und zehn Codes; POST an beide Blätter 400 ohne Wiedergabe; ohne Ursprungsfenster kein Blatt | F-KA-01, -36 behoben |
+| dieselbe Probe gegen `server/` von `main` | **4 von 16**: der Schlüssel in 1 von 20 Anfragen (Erstvergabe) und 1 von 97 (Erneuerung), die Codes 10-mal in 8 Anfragen; POST 200 | sie wäre ohne die Behebung rot |
+| Riegel `druckblatt` | Selbstprobe **9/0**; gegen diesen Stand 226 Dateien, **0 Befunde**; gegen `server/` von `main` **8 Befunde** (drei Formulare, drei Lesestellen, zwei fehlende Abweisungen) | der Riegel hält den alten Weg auf |
+| hell gegen dunkel, Chromium, fünf Ansichten (Notfallblatt leer, gefüllt, gefüllt im Druck, Codeblatt, Anmeldung mit Fehlermeldung im Druck) | **0 von 158 Elementen** weichen ab (Farbe, Fläche, Rand); mit `style.css` von `main` **49** | Nr. 540 |
+
+Prüfstand und Bericht: im Commit von KA-02.
+
 ---
 
 ## 10. Befunde der Umsetzung
@@ -611,6 +666,12 @@ Der Prüfbericht des Commits trägt den Lauf von `tools/pruefstand/pruefen.sh`.
 | F-KA-45 | **`tools/kettenaufrufe/LIESMICH.md` und `tools/kette/LIESMICH.md` gingen beim Nachtragen über 40 Zeilen** (`bestand` misst die Decke) | beide neu gefasst, je 40 Zeilen; die Zahlengeschichte steht hier, nicht dort |
 | F-KA-46 | **`docs/Pruefablauf.md` 6.8 nannte die Ausnahmeliste „von acht Pfaden"** — seit Web 23.3.1 sind es sieben (`CLAUDE.md` 3) | an Ort und Stelle berichtigt |
 | F-KA-47 | **Ein Satz in `android/LIESMICH.md`, dass `fremdsummen` die Wrapper-JAR jetzt misst, hätte den Android-Bau ausgelöst** (Muster `android/**`), und das Android-SDK fehlt in dieser Arbeitsumgebung (`/opt/android-sdk` nicht vorhanden) — der Prüfstand wäre für eine Zeile Text rot | Satz zurückgenommen; **geht mit KA-04 hinein**, das `android/` ohnehin anfasst. Bis dahin sagen es `Lizenzen.md` 3a, `Technik.md` 12.14 und der Kopf von `fremdsummen.py` (`WRAPPER_SOLL`) |
+| F-KA-48 | **Der Container wurde neu gestartet, während die Sitzung auf die Antwort der BetreiberIn wartete** (`uptime` 44 min um 12:21; die örtliche Anlage antwortete nicht mehr) | `hochfahren.sh` wieder gefahren, die Anlage stand ohne `--neu`; nichts verloren, weil nichts lief. Bestätigt `docs/Sandbox-Setup.md` 6.1a |
+| F-KA-49 | **Der erste Schlusssatz zu Nr. 540 sagte „abgenommen im Bilderlauf"** — der Bilderlauf nimmt den dunklen Modus aber nicht auf (Nr. 521) | nachgemessen mit einem Vergleich hell gegen dunkel (Abschnitt 9, KA-02), Satz berichtigt, bevor er committet war |
+| F-KA-50 | **Der Schritt in `pruefung.yml` hieß „Quelltext — vierzehn Prüfungen"**, es waren schon sechzehn, mit `druckblatt` siebzehn; ebenso der Kopf von `tools/quelltext/pruefen.sh` („fünfzehn") | beide berichtigt; niemand liest den Schrittnamen (gesucht) |
+| F-KA-51 | **Der Bilderlauf baute das gefüllte Notfall- und Codeblatt über den alten POST** (`tools/screenshots/aufnehmen.mjs`, Schritte `notfallblatt` und `codeblatt`) — im ersten Prüfstand von KA-02 rot mit 20 Konsolenfehlern („Stylesheet nicht angewendet": die 400-Antwort ist Text) | `blattUeberFenster()`: ein Helferfenster derselben Sitzung öffnet das Blatt und beantwortet dessen Meldung wie der Druckknopf; das gefüllte `<main>` geht in die aufgenommene Seite. Einzeln nachgefahren: 9 Bilder, 0 Konsolenfehler |
+| F-KA-52 | **Der Stilvergleich war rot mit 19 ungeplanten Signaturen je Engine** — alle aus `.rf-druck` (Umbruch, neue Zeile `.rf-druck-hinweis`) und der um 4 px längeren Katalogseite; keine weitere | geplante Listen neu geschrieben (`gegen.sh --schreiben`), je 19 Signaturen; die drei geerbten Zeilen des vorigen Schritts fallen weg |
+| F-KA-53 | **Bei 360 px stoßen die fünf Schlüsselgruppen des Notfallblatts aneinander** (gesehen im Bilderlauf, Baustein unverändert seit Web 21.1.0) | **in KA-02 behoben** (Wunsch der BetreiberIn, statt eines Backlog-Punkts; die zuerst angelegte Nr. 561 ist nie gepusht worden und entfällt): unter 480 px am Bildschirm drei Gruppen je Zeile mit Spaltenabstand, auf Papier weiter fünf; Bilderlauf 02f bei 360 px ohne Überlauf, Gruppen getrennt |
 
 **Keine neue Probe, keine neue Backlog-Nummer:** KA-01 erweitert vorhandene
 Riegel (`kettenaufrufe`, Anlass Nr. 217; `fremdsummen`, F-R17-50/-51;

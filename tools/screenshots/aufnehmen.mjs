@@ -1215,39 +1215,21 @@ async function vorher(seite, schritte, fehlerSammler) {
     }
     if (schritt === 'notfallblatt') {
       /* DAS NOTFALLBLATT MIT SCHLUESSEL.
-         `notfallblatt.php` nimmt den Wiederherstellungsschluessel per POST
-         entgegen und speichert ihn nicht — es gibt also keine Adresse, unter
-         der die gefuellte Fassung per GET zu haben waere. Genau das ist ihr
-         Wesen, und der Bilderlauf muss es nachbauen statt umgehen: Er baut
-         dasselbe Formular, das `pw_handling.php` abschickt.
+         Seit Web 24.11.0 (KA-02) nimmt `notfallblatt.php` nichts mehr an:
+         Das Blatt holt Schluessel und Adresse per `postMessage` von dem
+         Fenster, das es geoeffnet hat. Der Bilderlauf geht denselben Weg
+         (`blattUeberFenster()`) und uebernimmt das gefuellte Blatt in die
+         Seite, die er aufnimmt.
 
          DER CODE IST ERFUNDEN und entspricht nur dem Format (20 Zeichen aus
          dem Alphabet ohne 0/1/I/L/O/U, fuenf Vierergruppen). Er oeffnet
-         nichts — die Seite prueft ihn gegen das Muster, nicht gegen ein
+         nichts — das Blatt prueft ihn gegen das Muster, nicht gegen ein
          Konto, und mehr braucht ein Bild nicht. */
-      await Promise.all([
-        seite.waitForNavigation({ timeout: 30000 }),
-        seite.evaluate(() => {
-          const f = document.createElement('form');
-          f.method = 'post';
-          f.action = 'notfallblatt.php';
-          for (const [n, w] of [['code', 'K7MQ-3RXP-9TWB-2FHZ-VNJ4'],
-                                ['konto', 'probe@example.org']]) {
-            const i = document.createElement('input');
-            i.type = 'hidden'; i.name = n; i.value = w;
-            f.appendChild(i);
-          }
-          document.body.appendChild(f);
-          f.submit();
-        }),
-      ]);
-      await seite.waitForLoadState('networkidle');
-      /* Der Schluessel steht in fuenf `.blatt-druck-gruppe`
-         (Druckblatt); frueher in einem `.codeblock-wert`. */
-      if ((await seite.locator('.blatt-druck-gruppe').count()) !== 5) {
-        fehlerSammler.push('Notfallblatt ohne Schlüsselblock — der Code wurde '
-                         + 'abgewiesen (Format?) oder die Seite hat den '
-                         + 'Ohne-Code-Zweig gezeigt.');
+      await blattUeberFenster(seite, 'notfallblatt.php',
+                              { code: 'K7MQ-3RXP-9TWB-2FHZ-VNJ4', konto: 'probe@example.org' });
+      if ((await seite.locator('.blatt-druck-gruppe').filter({ hasText: /\S/ }).count()) !== 5) {
+        fehlerSammler.push('Notfallblatt ohne Schlüsselblock — die Übergabe von Fenster '
+                         + 'zu Fenster kam nicht an, oder der Code wurde abgewiesen (Format?).');
       }
       continue;
     }
@@ -1276,32 +1258,17 @@ async function vorher(seite, schritte, fehlerSammler) {
       continue;
     }
     if (schritt === 'codeblatt') {
-      /* DAS CODEBLATT. `codeblatt.php` bekommt die Codes per POST
-         und speichert sie nicht — wie beim Notfallblatt baut der Schritt das
-         Formular nach, das Tor und Profilkarte abschicken. Die Codes sind
-         die festen des Pruefkontos (`tools/zweitfaktor/pruefkonto.php`); die
-         Seite prueft nur ihr Format, und die Adresse auf dem Blatt kommt aus
-         der Sitzung. */
-      await Promise.all([
-        seite.waitForNavigation({ timeout: 30000 }),
-        seite.evaluate(() => {
-          const f = document.createElement('form');
-          f.method = 'post';
-          f.action = 'codeblatt.php';
-          for (const c of ['PRFA2345', 'PRFB2345', 'PRFC2345', 'PRFD2345', 'PRFE2345',
-                           'PRFF2345', 'PRFG2345', 'PRFH2345', 'PRFJ2345', 'PRFK2345']) {
-            const i = document.createElement('input');
-            i.type = 'hidden'; i.name = 'codes[]'; i.value = c;
-            f.appendChild(i);
-          }
-          document.body.appendChild(f);
-          f.submit();
-        }),
-      ]);
-      await seite.waitForLoadState('networkidle');
+      /* DAS CODEBLATT. Wie beim Notfallblatt: Seit Web 24.11.0 holt das
+         Blatt die Codes per `postMessage` vom Ursprungsfenster (KA-02). Die
+         Codes sind die festen des Pruefkontos (`tools/zweitfaktor/
+         pruefkonto.php`); das Blatt prueft nur ihr Format, und die Adresse
+         kommt aus der Sitzung. */
+      await blattUeberFenster(seite, 'codeblatt.php', {
+        codes: ['PRFA2345', 'PRFB2345', 'PRFC2345', 'PRFD2345', 'PRFE2345',
+                'PRFF2345', 'PRFG2345', 'PRFH2345', 'PRFJ2345', 'PRFK2345'] });
       if ((await seite.locator('.blatt-codes li').count()) !== 10) {
-        fehlerSammler.push('Codeblatt ohne zehn Codes — nicht angemeldet, oder das '
-                         + 'Format wurde abgewiesen.');
+        fehlerSammler.push('Codeblatt ohne zehn Codes — nicht angemeldet, oder die '
+                         + 'Übergabe kam nicht an.');
       }
       continue;
     }
@@ -1564,6 +1531,37 @@ const WARTUNGSDATEI = join(WURZEL, 'server', '.zustand', 'wartung.lock');
 const WARTUNGSDATEI_ALT = join(WURZEL, 'server', 'wartung.lock');
 const TOR = join(WURZEL, 'tools', 'kette', 'tor.py');
 let wartungVonUns = false;
+
+/* EIN DRUCKBLATT UEBER DEN WEG DER ANWENDUNG FUELLEN (seit KA-02).
+ * Ein Helferfenster derselben Sitzung oeffnet das Blatt und beantwortet
+ * seine Meldung „bereit" mit den Werten — genau wie der Druckknopf in
+ * `assets/blatt-uebergabe.js`. Aufgenommen wird aber `seite`, und die hat
+ * kein Ursprungsfenster: Deshalb wird das gefuellte `<main>` danach in
+ * `seite` uebernommen, die schon auf derselben Adresse steht. Das Bild zeigt
+ * so, was die Uebergabe tatsaechlich erzeugt hat. */
+async function blattUeberFenster(seite, ziel, werte) {
+  const kontext = seite.context();
+  const helfer = await kontext.newPage();
+  try {
+    await helfer.goto(new URL(ziel, seite.url()).href, { waitUntil: 'domcontentloaded' });
+    const [blatt] = await Promise.all([
+      kontext.waitForEvent('page', { timeout: 30000 }),
+      helfer.evaluate(({ ziel, werte }) => {
+        window.addEventListener('message', ev => {
+          if (ev.origin !== location.origin || !ev.data || ev.data.art !== 'nadoku-blatt-bereit') { return; }
+          ev.source.postMessage(Object.assign({ art: 'nadoku-blatt-daten' }, werte), location.origin);
+        });
+        window.open(ziel, '_blank');
+      }, { ziel, werte }),
+    ]);
+    await blatt.waitForSelector('main > [data-blatt-mit]:not([hidden])', { timeout: 30000 }).catch(() => null);
+    const inhalt = await blatt.evaluate(() => document.querySelector('main').outerHTML);
+    await blatt.close();
+    await seite.evaluate(html => { document.querySelector('main').outerHTML = html; }, inhalt);
+  } finally {
+    await helfer.close().catch(() => null);
+  }
+}
 
 /* Ein Aufruf an tor.py, synchron. SYNCHRON IST PFLICHT, nicht Geschmack:
  * `wartungAus()` haengt an `process.on('exit')`, und dort laeuft nichts

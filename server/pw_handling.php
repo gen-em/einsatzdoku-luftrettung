@@ -397,23 +397,26 @@ ui_seite_start([
         Ich habe den Schlüssel sicher notiert.</label>
       <?php /* NOTFALLBLATT DRUCKEN. Der Knopf steht
                genau hier, weil der Schluessel genau hier zum EINZIGEN Mal
-               sichtbar ist: `notfallblatt.php` bekommt ihn per POST aus
-               diesem Formular und speichert nichts — der Server kennt ihn
-               nicht und kann das Blatt spaeter nicht nachreichen.
+               sichtbar ist.
 
-               EIGENES FORMULAR, nicht `#pwform`. Das daneben setzt das
-               Passwort; dieses druckt. Zwei Ziele, zwei Formulare — ein
-               verschachteltes gaebe es in HTML ohnehin nicht.
+               KEIN FORMULAR, KEIN NETZ (seit Web 24.11.0, KA-02, F-KA-01).
+               Bis dahin stand hier ein Formular, das den Schluessel per POST
+               an `notfallblatt.php` schickte. Jetzt oeffnet der Knopf das
+               leere Blatt in einem neuen Fenster, und
+               `assets/blatt-uebergabe.js` reicht ihm Code und Adresse von
+               Fenster zu Fenster. Die Adresse ist kein Geheimnis; ohne
+               Sitzung kennt das Blatt sie sonst nicht.
 
-               `target="_blank"`, damit die Seite mit dem gesetzten Passwort
+               EIN NEUES FENSTER, damit die Seite mit dem gesetzten Passwort
                stehen bleibt. Wer das Blatt im selben Fenster oeffnete und
                zurueckginge, kaeme auf eine abgelaufene Erstvergabe. */ ?>
-      <form method="post" action="notfallblatt.php" target="_blank"
-            rel="noopener" class="rf-druck" id="rcdruck">
-        <input type="hidden" name="code" id="rcdruckwert">
+      <div class="rf-druck">
         <?= ui_knopf(['text' => 'Notfallblatt drucken', 'art' => 'neutral',
-                      'symbol' => 'drucken']) ?>
-      </form>
+                      'symbol' => 'drucken', 'typ' => 'button',
+                      'attr' => ' id="rcdruck" data-blatt-ziel="notfallblatt.php"'
+                              . ' data-blatt-konto="' . ui_e((string)($row['email'] ?? '')) . '"']) ?>
+        <p class="feld-klein rf-druck-hinweis" data-blatt-blockiert hidden>Der Browser hat das Druckfenster blockiert. Erlaube Pop-ups für diese Seite und drück noch einmal.</p>
+      </div>
     </div>
 
     <form method="post" id="pwform">
@@ -484,6 +487,9 @@ ui_seite_start([
 <?php /* Passwortguete: der Baustein mit Staerkeanzeige, statt die
          Mindestlaenge nur als HTML-Attribut und im Skript zu fuehren. */ ?>
 <script src="<?= asset('assets/pwquality.js') ?>"></script>
+<?php /* Der Druckknopf des Notfallblatts reicht den Schluessel von Fenster zu
+         Fenster, nicht ueber das Netz (KA-02). */ ?>
+<script src="<?= asset('assets/blatt-uebergabe.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
 const ERSTVERGABE = <?= $erstvergabe ? 'true' : 'false' ?>;
 const WRAP_RC = <?= json_js($erstvergabe ? null : $row['pat_wrap_rc']) ?>;
@@ -605,8 +611,9 @@ if (ERSTVERGABE) {
 
       document.getElementById('rccode').textContent = rc;
       document.getElementById('rcbox').hidden = false;
-      /* Derselbe Wert ins Druckformular (P5b/AP9). */
-      document.getElementById('rcdruckwert').value = rc;
+      /* Derselbe Wert an den Druckknopf — er bleibt in diesem Tab und geht
+         von hier nur von Fenster zu Fenster (KA-02). */
+      document.getElementById('rcdruck').dataset.blattCode = rc;
       /* AUF DAS <span> ZIELEN, nicht auf den Knopf (O10). ui_knopf() legt
          den Text in ein <span> und stellt ihm ggf. ein Symbol voran;
          `textContent` am Knopf selbst wuerde beides ersetzen — der Text

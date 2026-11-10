@@ -8,6 +8,24 @@
 # Vergleichsstand und zaehlt sie nicht, solange sie nicht gemessen werden
 # (Nr. 330). Die naechste Gestaltungsaenderung schreibt sie neu.
 
-katalog.html  div.reiter-punkt <div.reiter-bereiche>  :  font, font-family
-katalog.html  div.reiter-punkt <div>  :  font, font-family
-katalog.html  div.reiter-punkt.aktiv <div>  :  font, font-family
+katalog.html  body <html>  :  height
+katalog.html  div <body>  :  height
+katalog.html  div.blatt-druck-gruppen-5 <div>  :  column-gap, gap, grid-template-columns
+katalog.html  div.rf-druck <div.codeblock>  :  flex-wrap
+katalog.html  div.rf-druck <div>  :  flex-wrap
+katalog.html  div.rf-druck-hinweis <div>  :  flex, flex-basis, margin, margin-top
+katalog.html  div.suchfeld-lupe <div>  :  bottom, top
+katalog.html  div.suchfeld-x <div>  :  bottom, top
+katalog.html  div.vorschlaege <div>  :  bottom, top
+katalog.html  html <->  :  height
+katalog.html  input.schalter-box <div>  :  bottom, top
+katalog.html  input.segment-box <div>  :  bottom, top
+katalog.html  input.wahl-box <div>  :  bottom, top
+katalog.html  input.wahlkarte-box <div>  :  bottom, top
+seiten.html[notfallblatt.php]  div.blatt-druck-gruppen.blatt-druck-gruppen-5 <section.blatt-kachel>  :  column-gap, gap, grid-template-columns
+seiten.html[pw_handling.php]  div.rf-druck <div.codeblock>  :  flex-wrap
+seiten.html[pw_handling.php]  p.feld-klein.rf-druck-hinweis <div.rf-druck>  :  flex, flex-basis
+seiten.html[schluessel_teile.php]  div.rf-druck <div.dialog-fuss>  :  flex-wrap
+seiten.html[schluessel_teile.php]  p.feld-klein.rf-druck-hinweis <div.rf-druck>  :  flex, flex-basis
+seiten.html[zweitfaktor_teile.php]  div.rf-druck <div.codeblock>  :  flex-wrap
+seiten.html[zweitfaktor_teile.php]  p.feld-klein.rf-druck-hinweis <div.rf-druck>  :  flex, flex-basis

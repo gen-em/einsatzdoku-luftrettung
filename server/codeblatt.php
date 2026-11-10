@@ -5,20 +5,25 @@ declare(strict_types=1);
  * DAS CODEBLATT — die zehn Wiederherstellungscodes des Zweitfaktors auf
  * Papier.
  *
- * ES SPEICHERT NICHTS. Die Codes kommen per POST aus der Seite, die sie eben
- * einmal gezeigt hat (Einrichtungstor oder Profilkarte), und gehen in dieselbe
- * Antwort zurück. Gespeichert ist von jedem nur ein Prüfwert
- * (`password_hash()`, `totp_codes`) — deshalb lässt sich das Blatt später
- * nicht nachdrucken, und genau das steht darauf.
+ * ES NIMMT NICHTS AN (seit Web 24.11.0, KA-02, F-KA-36). Bis dahin kamen die
+ * Codes per POST aus der Seite, die sie eben gezeigt hatte, und gingen
+ * ungeprüft auf ein Blatt im Ursprung der Anlage zurück — eine fremde Seite
+ * konnte so ein echt aussehendes Blatt mit Codes ihrer Wahl anzeigen lassen.
+ * Jetzt liefert die Seite das leere Blatt, und `assets/blatt-uebergabe.js`
+ * setzt die Codes per `textContent` aus dem Fenster ein, das das Blatt
+ * geöffnet hat (`postMessage`, gleicher Ursprung). Ein POST bekommt 400.
+ * Gespeichert ist von jedem Code nur ein Prüfwert (`password_hash()`,
+ * `totp_codes`) — deshalb lässt sich das Blatt später nicht nachdrucken.
  *
  * NUR MIT SITZUNG. Anders als das Notfallblatt, das auch beim ersten Setzen
  * des Passworts gedruckt wird: Codes gibt es nur für ein angemeldetes Konto,
- * und die Adresse auf dem Blatt kommt aus der Sitzung, nie aus dem Formular.
- * Ohne Sitzung zeigt die Seite, warum es kein Blatt gibt.
+ * und die Adresse auf dem Blatt kommt aus der Sitzung. Ohne Sitzung nimmt
+ * das Blatt auch aus dem Fenster nichts an und zeigt, warum es kein Blatt
+ * gibt.
  *
  * GEPRÜFTE WERTE IN FESTEM TEXT: Ein Code muss das Format haben, das
  * `totp_codes_erzeugen()` erzeugt (acht Zeichen aus `TOTP_CODE_ZEICHEN`);
- * alles andere fällt weg. Kein freier Text aus der Eingabe, kein Markup.
+ * alles andere fällt weg — geprüft im Skript, das sie einsetzt.
  *
  * DER BAUSTEIN IST `.blatt-druck` — dasselbe wie beim Schlüssel- und
  * Notfallblatt. Genau eine A4-Seite (`@page`), auf Staging mit der
@@ -29,7 +34,6 @@ if (!is_file(__DIR__ . '/config.php')) { header('Location: install.php'); exit; 
 
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/format_lib.php';
-require_once __DIR__ . '/totp_lib.php';
 require_once __DIR__ . '/instanz_lib.php';
 require_once __DIR__ . '/umgebung_lib.php';
 require_once __DIR__ . '/ui.php';
@@ -45,6 +49,14 @@ header('Pragma: no-cache');
 header('Referrer-Policy: no-referrer');
 header('X-Robots-Tag: noindex, nofollow, noarchive');
 
+/* EIN POST WIRD ABGEWIESEN, NICHT GELESEN (KA-02). */
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+    http_response_code(400);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Dieses Blatt nimmt keine Werte an.\n";
+    exit;
+}
+
 sitzung_starten('lesend');
 $konto = '';
 if (!empty($_SESSION['user_id'])) {
@@ -53,14 +65,6 @@ if (!empty($_SESSION['user_id'])) {
         $st->execute([(int)$_SESSION['user_id']]);
         $konto = (string)($st->fetchColumn() ?: '');
     } catch (Throwable) { /* ohne Datenbank eben ohne Adresse */ }
-}
-
-$codes = [];
-if ($konto !== '') {
-    foreach ((array)($_POST['codes'] ?? []) as $roh) {
-        $c = is_string($roh) ? totp_code_normieren($roh) : null;
-        if ($c !== null && count($codes) < TOTP_CODES) { $codes[] = $c; }
-    }
 }
 
 $adresse = app_url();
@@ -80,27 +84,29 @@ kopfzeilen_seite();
 <link rel="stylesheet" href="<?= $h(asset('assets/style.css')) ?>">
 </head>
 <body class="blatt-seite">
-<main class="blatt-druck">
+<main class="blatt-druck"<?= $konto !== '' ? ' data-blatt-empfang="codeblatt"' : '' ?>>
 <header class="blatt-kopf"><img src="<?= $h(logo_src()) ?>" alt="" width="70" height="44"><span class="blatt-marke"><?= $h(instanz_kurz()) ?></span><span class="blatt-kopf-rechts"><?= $h($adresse) ?><?php
   if ($konto !== ''): ?><br>Konto <strong><?= $h($konto) ?></strong><?php endif; ?><br>gedruckt am <?= $h($jetzt) ?></span></header>
 <?php if ($umg !== null): ?>
 <p class="blatt-umgebung"><strong><?= $h($umg['name']) ?></strong> — Testdaten, kein Echtbetrieb. Dieses Blatt gilt nur für diese Anlage.</p>
 <?php endif; ?>
 <h1>Wiederherstellungscodes</h1>
-<?php if ($codes === []): ?>
 <?php /* OHNE CODES KEIN BLATT, und der Grund steht da. Hierher kommt, wer
          die Adresse aus dem Verlauf aufruft oder nicht angemeldet ist: Die
          Codes gibt es nur in dem Augenblick, in dem sie gezeigt werden. */ ?>
+<div data-blatt-ohne>
 <?= ui_meldung_markup('warn', 'Die Codes gibt es nur in dem Moment, in dem sie angezeigt '
       . 'werden — gespeichert ist nur ein Prüfwert je Code. Brauchst du ein neues Blatt, '
       . 'erzeuge unter Einstellungen → Profil neue Codes; die alten werden damit ungültig.',
       'Dieses Blatt lässt sich nicht nachträglich drucken.') ?>
-<?php else: ?>
+</div>
+<?php if ($konto !== ''): ?>
+<div data-blatt-mit hidden>
 <?= ui_meldung_markup('warn', 'Bewahre das Blatt getrennt vom Handy auf — ein Blatt in der '
       . 'Handyhülle hilft dem, der beides findet.',
       'Diese Codes ersetzen dein Handy bei der Anmeldung.') ?>
 <section class="blatt-kachel"><div class="blatt-kachel-kopf"><span class="blatt-kachel-name">Zehn Codes für den Zweitfaktor</span><span class="blatt-kachel-neben">je acht Zeichen · jeder gilt einmal · Leerzeichen sind egal</span></div>
-<ol class="blatt-codes"><?php foreach ($codes as $c): ?><li><?= $h(totp_code_anzeige($c)) ?></li><?php endforeach; ?></ol>
+<ol class="blatt-codes" data-blatt-codes></ol>
 <p>Gespeichert ist nur ein Prüfwert je Code — dieses Blatt lässt sich nicht nachdrucken.</p></section>
 <h2>Was dieses Blatt kann</h2>
 <p>Fehlt dein Handy, meldest du dich mit deinem Passwort und <strong>einem</strong> dieser Codes an. Jeder gilt einmal; hake ihn danach ab.</p>
@@ -108,6 +114,7 @@ kopfzeilen_seite();
 <ol><li>Anmelden wie immer, mit E-Mail und Passwort.</li><li>Beim Code-Schritt „Wiederherstellungscode verwenden" wählen und einen Code von diesem Blatt eintippen.</li><li>Danach unter Einstellungen → Profil den Zweitfaktor mit dem neuen Handy neu einrichten.</li></ol>
 <h2>Wann es ungültig wird</h2>
 <p>Sobald du neue Codes erzeugst, den Zweitfaktor ausschaltest oder er zurückgesetzt wird — von der Verwaltung oder von dir mit dem Wiederherstellungsschlüssel. Mehr im Handbuch, Abschnitt „Zweitfaktor": <?= $h($ohneSchema) ?>/hilfe.php#3-1f-zweitfaktor</p>
+</div>
 <?php endif; ?>
 <footer class="blatt-fuss"><span>Wiederherstellungscodes · <?= $h(instanz_kurz()) ?> · Web <?= $h(WEB_VERSION) ?> · freie Software (AGPL v3)</span><span>Seite 1 von 1</span></footer>
 <?php /* NUR AM BILDSCHIRM: Druckknopf und Rueckweg — derselbe Knopf und
@@ -116,12 +123,11 @@ kopfzeilen_seite();
          nicht am linken Fensterrand; `.nur-bildschirm` nimmt sie aus dem
          Druck. */ ?>
 <p class="nur-bildschirm">
-  <?php if ($codes !== []): ?>
-  <button type="button" class="knopf knopf-primaer" data-drucken hidden><span>Drucken</span></button>
-  <?php endif; ?>
+  <span data-blatt-mit hidden><button type="button" class="knopf knopf-primaer" data-drucken hidden><span>Drucken</span></button></span>
   <a class="knopf knopf-leise" href="<?= $konto !== '' ? 'index.php' : 'login.php' ?>"><span><?= $konto !== '' ? 'Zur Startseite' : 'Zur Anmeldung' ?></span></a>
 </p>
 </main>
 <script src="<?= $h(asset('assets/blatt-drucken.js')) ?>"></script>
+<script src="<?= $h(asset('assets/blatt-uebergabe.js')) ?>"></script>
 </body>
 </html>

@@ -14,6 +14,30 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.11.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — der Wiederherstellungsschlüssel verlässt zum Drucken den Browser
+  nicht mehr.** Der Knopf „Notfallblatt drucken" schickte ihn bisher an den
+  Server, der ihn nur zurückgab; gespeichert wurde er nie, aber er lief durch
+  jedes Protokoll dazwischen, und er öffnet die Patientendaten ohne Passwort.
+  Jetzt öffnet der Knopf ein leeres Blatt, das den Schlüssel von der Seite
+  bekommt, die ihn zeigt; das Codeblatt des Zweitfaktors geht denselben Weg,
+  und beide Blätter nehmen keine gesendeten Werte mehr an.
+
+### Behoben
+
+- **Web — Druckblätter und Ausdruck nahmen im dunklen Modus Farben des
+  Bildschirms mit.** Titel, Verweise und Meldungen standen kaum lesbar oder als
+  dunkle Fläche auf dem Papier, weil nur Flächen, Schrift und Linien auf hell
+  zurückgestellt wurden. Jetzt gilt das für jede Rolle, die der dunkle Modus
+  umfärbt (Backlog Nr. 540).
+- **Web — auf einem schmalen Handy liefen die fünf Gruppen des
+  Wiederherstellungsschlüssels auf dem Notfallblatt ineinander.** Sie brechen
+  dort jetzt in drei und zwei Gruppen um; auf Papier bleiben es fünf in einer
+  Zeile.
+
 ## [Web 24.10.1] — unveröffentlicht
 
 ### Behoben
