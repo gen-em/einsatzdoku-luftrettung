@@ -1270,6 +1270,10 @@ const ZF_FRISCH_HANDLUNGEN = [
     'kette_token_neu'    => ['seite' => 'betrieb_jobs.php',            'ort' => 'k-kette'],
     'health_token'       => ['seite' => 'betrieb_jobs.php',            'ort' => 'k-health'],
     'setzlink'           => ['seite' => 'admin_user.php',              'ort' => ''],
+    // ein NEUES Konto mit Rechten (Rolle ueber `user`): gleichwertig zum
+    // Rollenwechsel eines bestehenden, der den Code schon verlangt (KA-03,
+    // F-KA-03). Ohne diese Zeile war das Anlegen der Nachbarweg.
+    'konto_mit_rechten'  => ['seite' => 'admin_users.php',             'ort' => ''],
 ];
 
 /** Darf diese Rolle den Bereich Betrieb sehen und bedienen? */

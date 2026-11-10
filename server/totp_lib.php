@@ -579,6 +579,34 @@ function zweitfaktor_geraet_erkannt(int $userId): bool
     return true;
 }
 
+/**
+ * Traegt dieser Browser ein gueltiges gemerktes Geraet des Kontos mit dieser
+ * Adresse? Fuer die Anmeldesperre (seit Web 24.12.0, KA-03, F-KA-42): Wer
+ * eine Adresse kennt, sperrte deren Anmeldung wiederholt — mit diesem Cookie
+ * trifft die Sperre den Rater, nicht die Inhaberin.
+ *
+ * GESUCHT WIRD UEBER DAS COOKIE, NICHT UEBER DIE ADRESSE: Ohne Cookie keine
+ * Abfrage, mit Cookie genau eine, gleich ob es die Adresse gibt — die
+ * Antwortzeit verraet kein Konto. Die Adresse wird erst an der gefundenen
+ * Zeile verglichen.
+ */
+function zweitfaktor_geraet_fuer_adresse(string $email): bool
+{
+    if ($email === '' || !zweitfaktor_geraete_da()) { return false; }
+    $wert = sitzung_cookie_lesen('geraet');
+    if ($wert === null) { return false; }
+    try {
+        $st = db()->prepare('SELECT g.user_id, g.angelegt_am, u.email
+                               FROM vertraute_geraete g JOIN users u ON u.id = g.user_id
+                              WHERE g.token_hash = ?');
+        $st->execute([hash('sha256', $wert)]);
+        $z = $st->fetch(PDO::FETCH_ASSOC);
+    } catch (Throwable) { return false; }
+    if (!$z || strcasecmp((string)$z['email'], $email) !== 0) { return false; }
+    $tage = zweitfaktor_geraet_dauer_konto((int)$z['user_id']);
+    return $tage > 0 && strtotime((string)$z['angelegt_am'] . ' UTC') > time() - $tage * 86400;
+}
+
 /** Wie viele gemerkte Geraete gelten fuer das Konto heute? */
 function zweitfaktor_geraete_zahl(int $userId): int
 {

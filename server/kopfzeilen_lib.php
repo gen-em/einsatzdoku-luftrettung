@@ -301,7 +301,11 @@ function kopf_csp(bool $mitNonce = true): string
     try {
         if (geocoder_installation_an()) {
             $u = parse_url(geocoder_dienst());
-            if (!empty($u['host'])) {
+            /* NUR EIN SAUBERER RECHNERNAME (KA-03, F-KA-28) — sonst
+             * schriebe ein Wert mit Semikolon eine eigene Direktive. Ein
+             * unbrauchbarer Wert faellt still auf 'self' zurueck. */
+            if (!empty($u['host']) && geocoder_host_gueltig((string)$u['host'])
+                && (!isset($u['scheme']) || $u['scheme'] === 'https')) {
                 $verbinde[] = ($u['scheme'] ?? 'https') . '://' . $u['host']
                             . (isset($u['port']) ? ':' . (int)$u['port'] : '');
             }

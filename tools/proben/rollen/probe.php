@@ -288,6 +288,9 @@ require_once $srv . '/demo_lib.php';
 $demoZiel = zielkonto('demo', 'user');
 $demoMarkeVorher = app_state_lesen(DEMO_K_USER);
 app_state_setzen(DEMO_K_USER, (string)$demoZiel);
+/* Eine Sitzung des Demo-Kontos fuer den Teil KA-03 — hier, vor der ersten Ausgabe. */
+$demoSitzung = sitzung_anlegen($demoZiel,
+    (int)$pdo->query('SELECT session_epoch FROM users WHERE id = ' . $demoZiel)->fetchColumn());
 $neuId    = zielkonto('neu', 'user', 'unbestaetigt');
 $pdo->prepare("INSERT INTO devices (user_id, device_id, api_key_hash, label, active)
                VALUES (?, ?, '', 'Rollenprobe', 1)")
@@ -318,7 +321,8 @@ register_shutdown_function(static function () use ($pdo, $konten, $zielId, $admi
         try {
             $pdo->exec("DELETE FROM mail_warteschlange WHERE id > $mailVorher
                            AND schluessel IN ('passwort_neu', 'registrierung_erneut',
-                                              'adresswechsel_verwaltung', 'adresse_widerspruch')");
+                                              'adresswechsel_verwaltung', 'adresse_widerspruch',
+                                              'konto_mit_rechten', 'installation_adresse')");
         } catch (Throwable) {}
     }
     /* Geräte und Setz-Token hängen per ON DELETE CASCADE an `users`. */
@@ -1114,6 +1118,136 @@ if ($zrKonto !== null) {
           'zeitraum.php?m=13: keine Warnung, die Seite zeigt das Jahr',
           'HTTP ' . $r['code'] . ', Warnungen ' . $vor . ' → ' . $nach . ', Titel „' . $titel . '"');
 }
+
+/* ---- Schranken der Verwaltung (KA-03) --------------------------------------
+ *
+ * Mit GUELTIGEM Token: Was die Matrix nur als Tor misst, misst dieser Teil an
+ * der Wirkung. Jede Zeile ist ohne die Behebung rot (Gegenprobe im
+ * Pruefprotokoll des Konzepts). Was die Probe veraendert, stellt sie zurueck. */
+echo "\nSchranken der Verwaltung (KA-03)\n";
+require_once $srv . '/instanz_lib.php';
+require_once $srv . '/geocoder_lib.php';
+$mailNeu = static function (string $schluessel, int $ab) use ($pdo): int {
+    $st = $pdo->prepare('SELECT COUNT(*) FROM mail_warteschlange WHERE schluessel = ? AND id > ?');
+    $st->execute([$schluessel, $ab]);
+    return (int)$st->fetchColumn();
+};
+$mailStand = static fn (): int => (int)$pdo->query('SELECT COALESCE(MAX(id), 0) FROM mail_warteschlange')->fetchColumn();
+
+// 1. Ein Konto mit Rechten: Mail an die BetreiberInnen (F-KA-03)
+if (isset($konten['admin'])) {
+    $a = $konten['admin'];
+    $neuMail = 'rollenprobe-mitrechten@probe.pruefung';
+    $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$neuMail]);
+    $ab = $mailStand();
+    try {
+        $r = hole('admin_users.php', $a['sid'], ['csrf' => $a['csrf'], 'action' => 'user_add',
+                  'email' => $neuMail, 'name' => 'Rollenprobe mit Rechten', 'role' => 'admin']);
+        $da = (int)$pdo->query('SELECT COUNT(*) FROM users WHERE email = ' . $pdo->quote($neuMail))->fetchColumn();
+        pruef($da === 1 && $mailNeu('konto_mit_rechten', $ab) >= 1,
+              'Konto mit Rechten angelegt: Mail „konto_mit_rechten" an die BetreiberInnen (F-KA-03)',
+              'HTTP ' . $r['code'] . ', Konto ' . $da . ', Mails ' . $mailNeu('konto_mit_rechten', $ab));
+    } finally {
+        $pdo->prepare('DELETE FROM users WHERE email = ?')->execute([$neuMail]);
+    }
+}
+
+// 2. Adressen der Installation: Protokoll und Mail an die alte (F-KA-20)
+if (isset($konten['betreiberin'])) {
+    $b = $konten['betreiberin'];
+    $kVor = app_state_lesen('instanz_kontakt');
+    $mVor = app_state_lesen('betrieb_mail');
+    app_state_setzen('instanz_kontakt', 'rollenprobe-kontakt-alt@probe.pruefung');
+    $ab = $mailStand();
+    $pVor = (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse WHERE art = 'installation_adressen'")->fetchColumn();
+    try {
+        $r = hole('admin_installation.php', $b['sid'], ['csrf' => $b['csrf'], 'action' => 'instanz_adressen',
+                  'instanz_kontakt' => 'rollenprobe-kontakt-neu@probe.pruefung',
+                  'betrieb_mail' => (string)($mVor ?? '')]);
+        $pNach = (int)$pdo->query("SELECT COUNT(*) FROM protokoll_ereignisse WHERE art = 'installation_adressen'")->fetchColumn();
+        $anAlt = (int)$pdo->query("SELECT COUNT(*) FROM mail_warteschlange WHERE schluessel = 'installation_adresse'
+                                     AND id > $ab AND empfaenger = 'rollenprobe-kontakt-alt@probe.pruefung'")->fetchColumn();
+        pruef($r['code'] === 302 && app_state_lesen('instanz_kontakt') === 'rollenprobe-kontakt-neu@probe.pruefung'
+              && $pNach === $pVor + 1 && $anAlt === 1,
+              'Kontaktadresse geändert: ein Protokolleintrag, eine Mail an die alte Adresse (F-KA-20)',
+              'HTTP ' . $r['code'] . ', Protokoll ' . $pVor . ' → ' . $pNach . ', Mails an die alte ' . $anAlt);
+    } finally {
+        $pdo->exec("DELETE FROM protokoll_ereignisse WHERE art = 'installation_adressen' AND text LIKE '%rollenprobe-kontakt%'");
+        foreach (['instanz_kontakt' => $kVor, 'betrieb_mail' => $mVor] as $k => $v) {
+            if ($v === null) { app_state_loeschen($k); } else { app_state_setzen($k, $v); }
+        }
+    }
+}
+
+// 3. Konto-Backups: kein Einspielen nach oben, Sollwert vom Server (F-KA-21)
+if (isset($konten['admin'])) {
+    $a = $konten['admin'];
+    $r = hole('admin_sicherungen.php', $a['sid'], ['csrf' => $a['csrf'], 'action' => 'einspielen',
+              'ziel_user' => (string)$betreiberinZiel, 'handgriff' => '0000000000000000', 'datei' => 'x.zip']);
+    pruef($r['code'] === 200 && str_contains(html_entity_decode($r['rumpf']), 'spielt nur eine BetreiberIn ein'),
+          'Admin spielt in das Konto einer BetreiberIn ein: abgewiesen (F-KA-21)', 'HTTP ' . $r['code']);
+    $kenn = (string)$pdo->query('SELECT account_key FROM users WHERE id = ' . $zielId)->fetchColumn();
+    if (!edbak_kennung_gueltig($kenn)) {
+        $kenn = bin2hex(random_bytes(8));
+        $pdo->prepare('UPDATE users SET account_key = ? WHERE id = ?')->execute([$kenn, $zielId]);
+    }
+    $r = hole('admin_sicherungen.php', $a['sid'], ['csrf' => $a['csrf'], 'action' => 'paket_loeschen',
+              'handgriff' => edbak_handgriff($kenn), 'datei' => 'x.zip',
+              'soll_email' => 'selbst@probe.pruefung', 'confirm_email' => 'selbst@probe.pruefung']);
+    pruef(str_contains(html_entity_decode($r['rumpf']), 'Ohne die ausdrückliche Bestätigung wurde nichts gelöscht'),
+          'Löschen mit selbst geschicktem Sollwert: der Server bildet ihn, nichts bestätigt (F-KA-21)',
+          'HTTP ' . $r['code']);
+}
+
+// 4. Demo-Konto: der Wiederherstellungsschlüssel bleibt (F-KA-41)
+$wrapVor = $pdo->query('SELECT pat_wrap_rc FROM users WHERE id = ' . $demoZiel)->fetchColumn();
+$r = hole('api/schluessel_erneuern.php', $demoSitzung['sid'], ['pat_wrap_rc' => 'edk1:x'], $demoSitzung['csrf']);
+$fehler = (string)(json_decode($r['rumpf'], true)['error'] ?? '');
+pruef($r['code'] === 403 && $fehler === 'demo'
+      && $pdo->query('SELECT pat_wrap_rc FROM users WHERE id = ' . $demoZiel)->fetchColumn() === $wrapVor,
+      'Demo-Konto: Schlüssel erneuern abgewiesen (403 demo), Hülle unverändert (F-KA-41)',
+      'HTTP ' . $r['code'] . ', error ' . ($fehler !== '' ? $fehler : '—'));
+
+// 5. Dienstadresse der Adresssuche: kein Fremdtext in der CSP (F-KA-28)
+$gAn = app_state_lesen(GEOCODER_K_AN);
+$gUrl = app_state_lesen(GEOCODER_K_DIENST);
+$boese = 'https://x.example; script-src-elem * data:';
+try {
+    app_state_setzen(GEOCODER_K_AN, '1');
+    app_state_setzen(GEOCODER_K_DIENST, $boese);
+    $ch = curl_init("$basis/login.php");
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true,
+        CURLOPT_NOBODY => false, CURLOPT_TIMEOUT => 30, CURLOPT_PROXY => '']);
+    $roh = (string)curl_exec($ch);
+    curl_close($ch);
+    /* Örtlich steht die CSP im Berichtsmodus — derselbe Text, anderer Name. */
+    $csp = preg_match('/^Content-Security-Policy(?:-Report-Only)?:\s*(.+)$/mi', $roh, $cm) ? trim($cm[1]) : '';
+    pruef($csp !== '' && !str_contains($csp, 'x.example') && !str_contains($csp, 'script-src-elem *'),
+          'Dienstadresse mit Semikolon: die CSP übernimmt nichts davon (F-KA-28)',
+          $csp === '' ? 'keine CSP' : 'connect-src ' . (preg_match('/connect-src([^;]*)/', $csp, $cc) ? trim($cc[1]) : '—'));
+    pruef(geocoder_adresse_pruefen($boese) === null && geocoder_adresse_pruefen('https://photon.komoot.io') !== null,
+          'Die Prüfung der Eingabe weist dieselbe Adresse ab, die Vorgabe nicht (F-KA-28)');
+} finally {
+    foreach ([GEOCODER_K_AN => $gAn, GEOCODER_K_DIENST => $gUrl] as $k => $v) {
+        if ($v === null) { app_state_loeschen($k); } else { app_state_setzen($k, $v); }
+    }
+}
+
+// 6. Adresswechsel: der Link ändert nichts, erst der Knopf (F-KA-35)
+$tok = bin2hex(random_bytes(32));
+$pdo->prepare('UPDATE users SET email_neu = ?, email_neu_token_hash = ?,
+                                email_neu_bis = DATE_ADD(NOW(), INTERVAL 600 SECOND) WHERE id = ?')
+    ->execute(['rollenprobe-bestaetigt@probe.pruefung', hash('sha256', $tok), $neuId]);
+$adr = static fn (): string => (string)$pdo->query('SELECT email FROM users WHERE id = ' . $neuId)->fetchColumn();
+$vor = $adr();
+$r = hole('adresse_bestaetigen.php?token=' . $tok, null);
+pruef($r['code'] === 200 && $adr() === $vor && str_contains($r['rumpf'], 'method="post"'),
+      'Link per GET: Seite mit Knopf, Adresse unverändert (F-KA-35)', 'HTTP ' . $r['code'] . ', ' . $adr());
+$r = hole('adresse_bestaetigen.php', null, ['token' => $tok]);
+pruef($r['code'] === 200 && $adr() === 'rollenprobe-bestaetigt@probe.pruefung',
+      'Knopf per POST: Adresse geändert', 'HTTP ' . $r['code'] . ', ' . $adr());
+$pdo->prepare('UPDATE users SET email = ?, email_neu = NULL, email_neu_token_hash = NULL, email_neu_bis = NULL
+                WHERE id = ?')->execute([$vor, $neuId]);
 
 echo "\n-> $n Erwartungen, $offen nicht erfüllt\n";
 exit($offen === 0 ? 0 : 1);

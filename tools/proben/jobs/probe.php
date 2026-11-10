@@ -324,14 +324,32 @@ pruefe(($b2['aufraeumen']['uebersprungen'] ?? '') === 'heute schon gelaufen',
 /* ---- Teil 8 — Das Token -------------------------------------------------- */
 
 echo "\n  Teil 8 — Token fuer den Abruf ueber die Adresse\n";
-$t1 = jobs_token();
-$t2 = jobs_token();
-pruefe($t1 === $t2 && strlen($t1) === 64,
-       'Das Token ist bestaendig und 32 Byte lang', strlen($t1) . ' Hexzeichen');
-$t3 = jobs_token(true);
-pruefe($t3 !== $t1 && jobs_token() === $t3,
-       'Ein neues Token ersetzt das alte',
-       'das alte ist damit ungueltig');
+/* SEIT KA-03 (F-KA-19, E-KA-10) LIEGT ES NUR GEHASHT: Der Klartext kommt
+ * genau einmal aus `jobs_token_neu()`. Der Ausgangswert wird gemerkt und
+ * danach zurueckgelegt — die Wartungsprobe erzeugt sich ihr eigenes. */
+$jobVorher = app_state_lesen(JOB_TOKEN_SCHLUESSEL);
+$t1 = jobs_token_neu();
+$gespeichert = (string)app_state_lesen(JOB_TOKEN_SCHLUESSEL);
+pruefe(strlen($t1) === 64 && $gespeichert === token_hash($t1) && !str_contains($gespeichert, $t1),
+       'Das Token ist 32 Byte lang und liegt nur als Hash (KA-03)',
+       strlen($t1) . ' Hexzeichen, gespeichert ' . substr($gespeichert, 0, 7) . '…');
+pruefe(jobs_token_pruefen($t1) && !jobs_token_pruefen($t1 . 'x') && !jobs_token_pruefen(''),
+       'Die Pruefung nimmt genau das erzeugte Token');
+$t3 = jobs_token_neu();
+pruefe(!jobs_token_pruefen($t1) && jobs_token_pruefen($t3),
+       'Ein neues Token ersetzt das alte', 'das alte ist damit ungueltig');
+/* DER UEBERGANG OHNE update.php: ein Klartextwert von vor Web 24.12.0 gilt
+ * weiter und wird beim ersten Lesen in seinen Hash umgeschrieben. */
+$klartext = str_repeat('ab', 32);
+app_state_setzen(JOB_TOKEN_SCHLUESSEL, $klartext);
+$gilt = jobs_token_pruefen($klartext);
+pruefe($gilt && app_state_lesen(JOB_TOKEN_SCHLUESSEL) === token_hash($klartext),
+       'Ein Klartextwert von vorher gilt und liegt danach als Hash (KA-03)');
+if ($jobVorher === null) {
+    $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([JOB_TOKEN_SCHLUESSEL]);
+} else {
+    app_state_setzen(JOB_TOKEN_SCHLUESSEL, $jobVorher);
+}
 
 /* ---- Teil 9 — Nichts Fremdes angefasst ----------------------------------- */
 

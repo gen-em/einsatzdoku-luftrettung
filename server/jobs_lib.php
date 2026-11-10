@@ -596,137 +596,156 @@ function jobs_zustand(): array
     return $aus;
 }
 
-/* ---- Token fuer den Abruf ueber die Adresse ------------------------------ */
+/* ---- Die drei Tokens: gehasht gespeichert, einmal gezeigt ----------------
+ *
+ * SEIT WEB 24.12.0 (KA-03, F-KA-19, E-KA-10). Bis dahin lagen Job-, Ketten-
+ * und Health-Token im Klartext in `app_state` und standen bei jedem Aufruf
+ * von Betrieb → Hintergrundjobs auf der Seite; nur das Erneuern verlangte den
+ * frischen Code. Eine uebernommene Sitzung kopierte das Kettentoken und
+ * schaltete danach ohne Sitzung Wartung und Pause.
+ *
+ * JETZT: Gespeichert wird `sha256:` und der Hash; gezeigt wird ein Token genau
+ * einmal, in der Antwort, die es erzeugt hat (`…_neu()` gibt es zurueck). Wer
+ * es verliert, erneuert es. 32 Byte Zufall brauchen keine Streckung — ein
+ * einfacher SHA-256 genuegt, damit ein Datenbankabzug es nicht hergibt.
+ *
+ * DER UEBERGANG OHNE `update.php`: Ein Klartextwert von vorher gilt beim
+ * Vergleich weiter und wird beim ersten Lesen in seinen Hash umgeschrieben
+ * (`token_gespeichert()`). Monitoring und die Geheimnisse der Kette muessen
+ * nicht angefasst werden.
+ */
+
+const TOKEN_HASH_VORSATZ = 'sha256:';
+
+/** Die gespeicherte Form eines Tokens. */
+function token_hash(string $token): string
+{
+    return TOKEN_HASH_VORSATZ . hash('sha256', $token);
+}
 
 /**
- * Das Token fuer `jobs.php?token=…` — erzeugt es beim ersten Lesen.
- *
- * WARUM IN `app_state` UND NICHT IN `config.php`. Die Anwendung schreibt
- * `config.php` genau einmal, bei der Einrichtung; sie danach anzufassen
- * hiesse, auf jedem Webspace Schreibrecht auf die eigene Konfiguration zu
- * brauchen. Bestandsinstallationen haetten ausserdem kein Token, und niemand
- * saehe, warum der zeitgesteuerte Abruf nicht geht.
- *
- * Das Token ist ein Geheimnis wie ein Passwort — 32 Byte Zufall, hex. Wer es
- * hat, kann genau eines: die faelligen Jobs laufen lassen,
- * also das, was der Zeitplan ohnehin jede Minute tut. Die Aktionen der
- * Auslieferungskette — Komplett-Backup, Wartungsmodus, Zustand, Pause —
- * oeffnet es nicht mehr; dafuer gibt es `kette_token()`.
- *
- * WARUM DIE TRENNUNG. Dieses Token reist in der
- * ADRESSE — ein „Cronjob per URL" beim Hoster kann nichts anderes —, und eine
- * Adresse steht im Zugriffsprotokoll des Hosters, mit Zeitstempel, so lange,
- * wie der Hoster es aufhebt. Es ist NICHT das Token, mit dem
- * die Kette den Produktivserver in die Wartung schaltet: Wer das Protokoll
- * liest, hat damit hoechstens einen Job-Lauf, nicht den Schalter.
+ * Der gespeicherte Wert eines Schluessels — als Hash. '' = keiner.
+ * Ein Klartextwert von vor Web 24.12.0 wird dabei umgeschrieben; scheitert
+ * das Schreiben, gilt der gelesene Wert fuer diesen Aufruf trotzdem.
  */
-function jobs_token(bool $neu = false): string
+function token_gespeichert(string $schluessel): string
 {
-    /* NICHT `app_state_einmalig()`: `$neu = true` MUSS den bestehenden Wert
-     * ueberschreiben — das ist der Sinn von „Token erneuern". Die einmalige
-     * Fassung liesse den alten stehen. */
-    if (!$neu) {
-        $wert = app_state_lesen(JOB_TOKEN_SCHLUESSEL);
-        if ($wert !== null && $wert !== '') { return $wert; }
-    }
-    /* ZUERST DAS KETTENTOKEN. Es uebernimmt
-     * beim ersten Lesen den Wert des Job-Tokens — gedacht fuer das Update
-     * einer Anlage, deren Kette den alten Wert kennt. Entstuende das Job-Token
-     * vorher, auf einer NEUEN Anlage, uebernaehme das Kettentoken danach
-     * dessen frischen Wert, und beide blieben dauerhaft gleich — ohne
-     * Trennung. Und wer nach dem Update zuerst das Job-Token erneuerte, gaebe
-     * dem Kettentoken den NEUEN Wert, den die Kette nicht kennt. Hier vorher
-     * gelesen, bekommt es auf einer neuen
-     * Anlage einen eigenen Zufallswert und beim Erneuern den bisherigen. */
-    kette_token();
+    /* EIN EIGENES SELECT, NICHT `app_state_lesen()` — GERAETEVERTRAG: Der
+     * Helfer faengt einen Datenbankfehler und liefert null, und `jobs.php`
+     * machte daraus „Token falsch" statt 500 `datenbank` (AP4-c). Hier wirft
+     * er, und der Aufrufer entscheidet. */
+    $st = db()->prepare('SELECT v FROM app_state WHERE k = ?');
+    $st->execute([$schluessel]);
+    $wert = (string)($st->fetchColumn() ?: '');
+    if ($wert === '' || str_starts_with($wert, TOKEN_HASH_VORSATZ)) { return $wert; }
+    $hash = token_hash($wert);
+    app_state_setzen($schluessel, $hash);
+    return $hash;
+}
+
+/** Passt ein gegebenes Token zum gespeicherten? In fester Zeit (`hash_equals`). */
+function token_passt(string $gespeichert, string $gegeben): bool
+{
+    if ($gespeichert === '' || $gegeben === '') { return false; }
+    return hash_equals($gespeichert, token_hash($gegeben));
+}
+
+/** Ein neues Token unter diesem Schluessel; gibt den Klartext EINMAL zurueck. */
+function token_neu(string $schluessel, string $was): string
+{
     $token = bin2hex(random_bytes(32));
-    if (!app_state_setzen(JOB_TOKEN_SCHLUESSEL, $token)) {
-        throw new RuntimeException('Das Job-Token ließ sich nicht speichern — das bisherige gilt weiter.');
+    if (!app_state_setzen($schluessel, token_hash($token))) {
+        throw new RuntimeException($was . ' ließ sich nicht speichern — das bisherige gilt weiter.');
     }
     return $token;
 }
 
 /**
- * Das Kettentoken — der Schluessel der Auslieferungskette zu `jobs.php`.
- * 
+ * Das JOB-Token — fuer `jobs.php?token=…`, den Zeitplan beim Hoster.
  *
- * Wer es hat, kann die Aktionen der Kette ausloesen: ein Komplett-Backup
- * anstossen, den Wartungsmodus ein- und ausschalten, den Zustand abfragen,
- * die Jobs pausieren. Daten lesen oder schreiben kann er damit nicht. Es kommt
- * NUR im Rumpf einer POST-Anfrage an (`jobs.php` lehnt `aktion` per GET ab)
- * und steht deshalb in keinem Zugriffsprotokoll. In GitHub liegt es als
- * Geheimnis `JOBS_TOKEN` der Umgebungen `staging` und `produktion` — der Name
- * ist geblieben, damit beim Umstieg kein Geheimnis umbenannt werden musste.
+ * Wer es hat, kann genau eines: die faelligen Jobs laufen lassen, also das,
+ * was der Zeitplan ohnehin tut. Die Aktionen der Auslieferungskette oeffnet
+ * es nicht; dafuer gibt es das Kettentoken. Es reist in der ADRESSE (ein
+ * „Cronjob per URL" kann nichts anderes) und steht damit im
+ * Zugriffsprotokoll des Hosters — deshalb die Trennung.
  *
- * DER UEBERGANG, UND WARUM ER SO AUSSIEHT. Fehlt das Kettentoken, uebernimmt
- * es beim ersten Lesen den Wert des bisherigen Job-Tokens. Ein frisch
- * erzeugtes Token kennte die Kette nicht: Sie schaltet VOR dem Abgleich mit
- * dem alten Token die Wartung ein und fragt DANACH, gegen die neue Fassung,
- * nach Zustand und `wartung_aus` — mit einem fremden Token bliebe die Anlage
- * in der Wartung stehen, und der Lauf waere rot. Getrennt sind beide, sobald
- * eines erneuert wird; das Runbook (`docs/Technik.md` 13) verlangt nach dem
- * ersten Deploy, beide zu erneuern, weil die alten Zugriffsprotokolle den
- * gemeinsamen Wert tragen.
- *
- * `app_state_einmalig()` beim Lesen: Zwei gleichzeitige erste Anfragen legen
- * genau einen Wert an. Beim Erneuern `app_state_setzen()`, aus demselben
- * Grund wie bei `jobs_token()`.
+ * Es wird nicht von selbst angelegt: Ohne Eintrag ist der Weg aus, bis die
+ * BetreiberIn ihn unter Betrieb → Hintergrundjobs einrichtet.
  */
-function kette_token(bool $neu = false): string
+function jobs_token_pruefen(string $gegeben): bool
 {
-    if ($neu) {
-        $token = bin2hex(random_bytes(32));
-        /* Scheitert das Schreiben, gilt das alte weiter — und wer wegen eines
-         * Lecks erneuert, darf nicht „steht bereit" lesen. */
-        if (!app_state_setzen(KETTE_TOKEN_SCHLUESSEL, $token)) {
-            throw new RuntimeException('Das Kettentoken ließ sich nicht speichern — das bisherige gilt weiter.');
-        }
-        return $token;
-    }
-    return app_state_einmalig(KETTE_TOKEN_SCHLUESSEL, static function (): string {
-        $bisher = app_state_lesen(JOB_TOKEN_SCHLUESSEL);
-        return ($bisher !== null && $bisher !== '') ? $bisher : bin2hex(random_bytes(32));
-    });
+    return token_passt(token_gespeichert(JOB_TOKEN_SCHLUESSEL), $gegeben);
 }
 
+function jobs_token_eingerichtet(): bool
+{
+    return token_gespeichert(JOB_TOKEN_SCHLUESSEL) !== '';
+}
+
+/** Ein neues Job-Token; gibt den Klartext EINMAL zurueck. */
+function jobs_token_neu(): string
+{
+    return token_neu(JOB_TOKEN_SCHLUESSEL, 'Das Job-Token');
+}
 
 /**
- * Das Health-Token — der Schluessel des Monitorings zu `api/health.php`
- * (im Panel).
+ * Das KETTENTOKEN — der Schluessel der Auslieferungskette zu `jobs.php`.
  *
- * BIS DAHIN NUR IN `config.php`. Wer es erneuern wollte, brauchte den
- * Dateizugang; jetzt erzeugt es Betrieb → Hintergrundjobs wie die beiden
- * anderen Tokens. Der Preis, ausgesprochen: Es liegt in der Datenbank, und
- * ein Datenbankabzug enthaelt es (Bedrohungsmodell). Es oeffnet nur die karge
- * Zustandsauskunft von `health.php` — Fassung, Datenbank, Migration, Alter
- * der Jobs, Speicher —, keine Daten.
+ * Wer es hat, kann die Aktionen der Kette ausloesen: Komplett-Backup,
+ * Wartungsmodus, Zustand, Pause. Daten lesen oder schreiben kann er damit
+ * nicht. Es kommt NUR im Rumpf einer POST-Anfrage an. In GitHub liegt es als
+ * Geheimnis `JOBS_TOKEN` der Umgebungen `staging` und `produktion`.
  *
- * DER UEBERGANG. Fehlt der Eintrag ganz, uebernimmt das erste Lesen den Wert
- * aus `config.php` — ein laufendes Monitoring bricht beim Update nicht ab.
- * Danach gilt nur noch der Eintrag; die Zeile in `config.php` liest niemand
- * mehr. Ein LEERER Eintrag heisst „abgeschaltet" und wird nicht wieder aus
- * der Datei gefuellt — sonst liesse sich die Abfrage nicht abschalten, solange
- * die alte Zeile dort steht.
- *
- * Rueckgabe '' = keine Abfrage eingerichtet; `health.php` antwortet dann 403.
+ * KEIN UEBERGANG MEHR VOM JOB-TOKEN (seit Web 24.12.0, KA-03, E-KA-16). Bis
+ * dahin uebernahm ein fehlendes Kettentoken beim ersten Lesen den Wert des
+ * Job-Tokens — fuer das Update auf Web 23.1.0, nach dem es das Kettentoken
+ * erst gab. Mit gehashten Tokens haette dieselbe Regel auf einer neuen
+ * Anlage beide gleich gemacht, sobald das Job-Token zuerst entsteht. Jede
+ * bestehende Anlage hat ihr Kettentoken seit Web 23.1.0; fehlt es, ist der
+ * Weg aus, bis es erzeugt wird.
  */
-function health_token(): string
+function kette_token_gespeichert(): string
 {
-    $wert = app_state_lesen(HEALTH_TOKEN_SCHLUESSEL);
-    if ($wert !== null) { return $wert; }
+    return token_gespeichert(KETTE_TOKEN_SCHLUESSEL);
+}
+
+function kette_token_pruefen(string $gegeben): bool
+{
+    return token_passt(kette_token_gespeichert(), $gegeben);
+}
+
+function kette_token_neu(): string
+{
+    return token_neu(KETTE_TOKEN_SCHLUESSEL, 'Das Kettentoken');
+}
+
+/**
+ * Das HEALTH-Token — der Schluessel des Monitorings zu `api/health.php`.
+ * Es oeffnet nur die karge Zustandsauskunft, keine Daten.
+ *
+ * DER UEBERGANG AUS `config.php`: Fehlt der Eintrag ganz, uebernimmt das
+ * erste Lesen den Wert aus `betrieb.health_token` (gehasht). Ein LEERER
+ * Eintrag heisst „abgeschaltet" und wird nicht wieder aus der Datei gefuellt.
+ */
+function health_token_gespeichert(): string
+{
+    if (app_state_lesen(HEALTH_TOKEN_SCHLUESSEL) !== null) {
+        return token_gespeichert(HEALTH_TOKEN_SCHLUESSEL);
+    }
     $alt = (string)(konfig('betrieb.health_token') ?? '');
     if ($alt === '') { return ''; }
-    return app_state_einmalig(HEALTH_TOKEN_SCHLUESSEL, static fn(): string => $alt);
+    return app_state_einmalig(HEALTH_TOKEN_SCHLUESSEL, static fn(): string => token_hash($alt));
 }
 
-/** Ein neues Health-Token. Scheitert das Schreiben, gilt das alte weiter. */
+function health_token_pruefen(string $gegeben): bool
+{
+    return token_passt(health_token_gespeichert(), $gegeben);
+}
+
+/** Ein neues Health-Token; gibt den Klartext EINMAL zurueck. */
 function health_token_neu(): string
 {
-    $token = bin2hex(random_bytes(32));
-    if (!app_state_setzen(HEALTH_TOKEN_SCHLUESSEL, $token)) {
-        throw new RuntimeException('Das Health-Token ließ sich nicht speichern — das bisherige gilt weiter.');
-    }
-    return $token;
+    return token_neu(HEALTH_TOKEN_SCHLUESSEL, 'Das Health-Token');
 }
 
 /** Die Abfrage abschalten: ein leerer Eintrag, kein geloeschter (siehe oben). */

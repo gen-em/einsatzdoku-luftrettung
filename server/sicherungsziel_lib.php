@@ -1118,6 +1118,18 @@ function sz_versand_schub(callable $zeitLinks, float $reserve = SZ_VERSAND_RESER
 
         $weg = null;
         try {
+            /* OHNE GESPEICHERTEN HOSTSCHLUESSEL SENDET DER JOB NICHT (KA-03,
+             * F-KA-09). Bis Web 24.11.0 verband er sich dann trotzdem und
+             * schickte Passwort und Sicherungen an wen auch immer — gepinnt
+             * wurde nur, was jemand einmal von Hand mit „Verbindung pruefen"
+             * angesehen hatte. Uebernommen wird der Schluessel weiter nur
+             * dort, wo ein Mensch den Abdruck sieht. */
+            if ((string)($z['protokoll'] ?? '') === 'sftp' && (string)($z['fingerabdruck'] ?? '') === '') {
+                throw new ZielFehler('Für dieses SFTP-Ziel ist noch kein Hostschlüssel gespeichert. '
+                    . 'Erst unter Betrieb → Backup-Ziele „Verbindung prüfen" — dort wird der '
+                    . 'Abdruck angezeigt und übernommen. Bis dahin sendet der Job nichts, auch '
+                    . 'kein Passwort.');
+            }
             $weg = sz_weg($z);
             $weg->verbinden();
         } catch (ZielFehler $e) {

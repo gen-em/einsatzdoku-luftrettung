@@ -425,6 +425,22 @@ function mail_katalog(): array
             'text' => fn(array $d): string => mail_rahmen('Hallo,', $d['kern']),
         ],
 
+        /* DIE ADRESSEN DER INSTALLATION GEAENDERT (KA-03, F-KA-20) — an die
+         * bisherige Adresse, damit ein Umlenken der Betriebspost auffaellt. */
+        'installation_adresse' => [
+            'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['kern'],
+            'betreff' => fn(array $d): string => 'Adresse der Installation geändert — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,', $d['kern']),
+        ],
+
+        /* EIN NEUES KONTO MIT RECHTEN (KA-03, F-KA-03) — an jede BetreiberIn,
+         * ohne Adressen. */
+        'konto_mit_rechten' => [
+            'art' => 'betrieb', 'frist' => 86400, 'pflicht' => ['kern', 'link'],
+            'betreff' => fn(array $d): string => 'Neues Konto mit Rechten — ' . $n,
+            'text' => fn(array $d): string => mail_rahmen('Hallo,', $d['kern'] . "\n\n" . $d['link']),
+        ],
+
         /* WIDERSPRUCH GEGEN EINEN ADRESSWECHSEL DURCH DIE VERWALTUNG — an jede
          * BetreiberIn, ohne Adressen. */
         'adresse_widerspruch' => [

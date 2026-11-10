@@ -572,7 +572,11 @@ gelöscht hast. Beides ist harmlos: Es geht nichts verloren.
 **Nach mehreren Fehlversuchen wird die Anmeldung vorübergehend gesperrt.** Die
 Meldung nennt, ab wann es wieder geht. Die Sperre gilt für das Konto, nicht für
 den Browser: Ein anderes Gerät oder ein neues Fenster hilft nicht. Sobald die
-Anmeldung einmal gelingt, ist die Zählung zurückgesetzt.
+Anmeldung einmal gelingt, ist die Zählung zurückgesetzt. **Ausnahme seit
+Web 24.12.0:** An einem Browser, den du dir mit „Dieses Gerät merken" (3.1f,
+Zweitfaktor) gemerkt hast, gilt die Sperre deines Kontos nicht — rät jemand
+anderes dein Passwort, sperrt er damit nur sich selbst aus, nicht dich an
+deinem Gerät.
 
 Dasselbe gilt für „Passwort vergessen": Wer den Knopf zu oft drückt, bekommt
 eine Zeit lang keine weitere E-Mail. Die Seite antwortet dabei unverändert —
@@ -632,8 +636,10 @@ für das Passwort. Für **Name und Logo** brauchst du es nicht; leer lassen
 genügt, solange die Adresse stehen bleibt.
 
 **Seit Web 20.20.0 gilt die neue Adresse erst nach einem Klick.** Du bekommst
-an die **neue** Adresse eine Nachricht mit einem Link, der 24 Stunden gilt;
-erst dieser Klick schreibt sie um. Bis dahin meldest du dich weiter mit der
+an die **neue** Adresse eine Nachricht mit einem Link, der 24 Stunden gilt.
+Der Link öffnet eine Seite mit dem Knopf **„Adresse bestätigen"**; erst der
+Knopf schreibt sie um (seit Web 24.12.0 — vorher genügte das Öffnen, und
+manche Mailprogramme öffnen Links vorab). Bis dahin meldest du dich weiter mit der
 alten an — **nichts ist kaputt, wenn du dich vertippt hast**.
 
 Genau darum geht es: Bis Web 20.19.0 galt die neue Adresse sofort, ohne dass
@@ -1045,7 +1051,8 @@ zweiter Faktor wie ein Passkey), und in der Verwaltung ein Komplett-Backup
 herunterladen, ein Konto-Backup freigeben, die Anmeldeadresse einer anderen
 Person ändern und ihr einen Setz-Link senden. Seit Web 23.5.0 außerdem unter
 Betrieb → Hintergrundjobs: eines der drei Tokens erneuern oder die
-Health-Abfrage abschalten. Hast du dich eben mit dem
+Health-Abfrage abschalten. Seit Web 24.12.0 in der Verwaltung: ein Konto mit
+Rechten anlegen. Hast du dich eben mit dem
 Code oder einem Passkey angemeldet, merkst du davon nichts. Kamst du über ein
 gemerktes Gerät herein oder ist die Anmeldung älter, erscheint die Seite
 **„Code bestätigen"** — Code aus der App (oder ein Wiederherstellungscode)
@@ -4523,6 +4530,12 @@ zutrifft:
   des Kontos setzen. Die Ursache des Fehlschlags findet die BetreiberIn im
   Protokoll unter System (11.7).
 
+**Ein Konto mit Rechten** (Support, Admin, BetreiberIn) **verlangt seit
+Web 24.12.0 den frischen Code** des Zweitfaktors (3.1f, „Noch einmal den Code"),
+wie der Rollenwechsel eines bestehenden Kontos. Jede BetreiberIn bekommt
+dann eine E-Mail, dass ein solches Konto entstanden ist. Ein Konto der Rolle
+NutzerIn braucht beides nicht.
+
 **Rollenwechsel und Löschen wirken sofort**, auch bei jemandem, der gerade
 angemeldet ist: Beim nächsten Klick gelten die neuen Rechte, ein gelöschtes
 Konto wird abgemeldet. Ein Ab- und Anmelden ist nicht nötig. Beides steht im
@@ -4951,6 +4964,12 @@ beide dürfen leer bleiben:
 - **Betreiberadresse** — dorthin gehen die Betriebsmeldungen: Speicherplatz
   wird knapp, Konto-Backups sind überfällig. **Bleibt sie leer, gehen sie
   weiterhin an alle Konten mit Verwaltungsrecht**, wie bisher.
+
+**Ändern kann beide Adressen seit Web 24.12.0 nur die BetreiberIn**; ein
+Admin sieht sie, die Felder sind gesperrt. Jede Änderung steht im Protokoll
+(Reiter Verwaltung, „Adressen der Installation", alt und neu), und an die
+**bisherige** Adresse geht eine E-Mail — so fällt auf, wenn jemand die
+Betriebspost auf sich umlenkt.
 
 > **Die Kontaktadresse ist nicht der Absender.** Von welcher Adresse die Post
 > kommt, steht in der `config.php` und ist auf einer gut eingerichteten Anlage
@@ -6110,6 +6129,13 @@ geht, sagt der Hoster. Die Adresse enthält ein **Geheimnis** — sie gehört ni
 in eine Mail und nicht in ein Ticket. „Neues Token erzeugen" macht die alte
 Adresse ungültig; ein bestehender Zeitplan-Eintrag läuft danach ins Leere.
 
+**Jedes der drei Tokens steht seit Web 24.12.0 nur einmal da** — direkt nach
+„Neues Token erzeugen", in einem Kasten mit „Kopieren". Kopiere es sofort
+dorthin, wo es gebraucht wird (Zeitplan des Hosters, GitHub, Monitoring).
+Danach zeigt die Karte nur noch „eingerichtet": Gespeichert ist nur ein
+Prüfwert, aus dem sich das Token nicht zurückrechnen lässt. **Verloren?**
+Dann erzeuge ein neues und trage es überall ein, wo das alte stand.
+
 #### Die drei Auslöser, Budget und Reihenfolge
 
 *Bis Web 21.0.0 stand das auf der Seite selbst, als Absätze in der Karte
@@ -6724,6 +6750,10 @@ Was dabei zu wissen ist:
   verglichen. Meldet sich dort plötzlich ein anderer, bricht die Verbindung
   ab, bevor ein Passwort hinausgeht. Nach einem Schlüsselwechsel der
   Gegenstelle ist *Hostschlüssel vergessen* im Menü der Zielzeile der Weg.
+  **Seit Web 24.12.0 sendet der Versand an ein SFTP-Ziel erst, wenn einmal
+  „Verbindung prüfen" gelaufen ist** — vorher meldet die Zielzeile „noch kein
+  Hostschlüssel gespeichert". Nach *Hostschlüssel vergessen* gilt das
+  wieder, bis zur nächsten Prüfung.
 - **FTPS verschlüsselt die Leitung, prüft aber das Zertifikat nicht** — die
   PHP-Erweiterung nimmt jedes an, auch ein selbst ausgestelltes ohne
   Vertrauenskette. Das schützt gegen Mitlesen, nicht gegen einen

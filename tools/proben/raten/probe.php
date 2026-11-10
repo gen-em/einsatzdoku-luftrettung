@@ -64,6 +64,7 @@ declare(strict_types=1);
 
 $wurzel = dirname(__DIR__, 3);
 require_once $wurzel . '/server/db.php';
+require_once $wurzel . '/server/jobs_lib.php';   // token_hash() (KA-03)
 require_once $wurzel . '/server/ratelimit_lib.php';
 require_once $wurzel . '/server/mail_lib.php';
 
@@ -625,9 +626,10 @@ try {
     if ($vorherEintrag === null) { app_state_loeschen('health_token'); }
     else { app_state_setzen('health_token', $vorherEintrag); }
 }
-pruef('Übergang: ohne Eintrag gilt der Wert aus config.php, und er wird abgelegt (R17-26)',
-      $ueber['code'] === 200 && $abgelegt === $TOKEN,
-      'HTTP ' . $ueber['code'] . ', abgelegt ' . ($abgelegt === $TOKEN ? 'ja' : var_export($abgelegt, true)));
+/* Abgelegt wird seit Web 24.12.0 der Hash, nicht der Wert (KA-03, E-KA-10). */
+pruef('Übergang: ohne Eintrag gilt der Wert aus config.php, und er wird gehasht abgelegt (R17-26, KA-03)',
+      $ueber['code'] === 200 && $abgelegt === token_hash($TOKEN),
+      'HTTP ' . $ueber['code'] . ', abgelegt ' . ($abgelegt === token_hash($TOKEN) ? 'als Hash' : var_export($abgelegt, true)));
 pruef('… ein leerer Eintrag (abgeschaltet) wird nicht wieder aus der Datei gefüllt',
       $leer['code'] === 403, 'HTTP ' . $leer['code']);
 pruef('60 Anfragen in einer Minute gehen durch, die 61. bekommt 429',

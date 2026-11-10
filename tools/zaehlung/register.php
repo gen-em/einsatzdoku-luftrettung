@@ -196,10 +196,11 @@ return [
  'beschreibung' => 'app_state-SQL ausserhalb db.php und migration_lib.php',
  'grund' => 'Sechs Helfer in db.php (E-ZE-17). Drei Ausnahmen: migration_lib.php '
           . '(E-ZE-04), job_aufraeumen_schritte() in jobs_lib.php (DELETE mit Verbund '
-          . 'auf users, kein Schluesselzugriff) und jobs.php — GERAETEVERTRAG: Der '
+          . 'auf users, kein Schluesselzugriff) und token_gespeichert() in jobs_lib.php '
+          . '(bis Web 24.12.0 in jobs.php) — GERAETEVERTRAG: Der '
           . 'Endpunkt antwortet bei unerreichbarer app_state mit 500 "datenbank"; der '
           . 'Helfer faengt und liefert null, was daraus ein "Token falsch" machte '
-          . '(AP4-c).',
+          . '(AP4-c, KA-03).',
  'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/db.php', 'server/migration_lib.php'],
  'regel' => ['art' => 'muster', 'muster' => '~\b(FROM|INTO|UPDATE|JOIN)\s+app_state\b~i'],
