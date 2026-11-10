@@ -14,7 +14,7 @@ steht da, die Nummer setzt die Umsetzung.
 | Stand | **Konzept, zur Freigabe** (10.11.2026) |
 | In Arbeit | kein Paket |
 | Erledigt | — |
-| Hakt | **Zwei Einstellungen in GitHub sind gesetzt, greifen aber nicht** (Abschnitt 3, Stand 10.11.2026): Die Umgebung `produktion` lässt keinen Tag mehr zu — **ein Tag würde heute nicht ausliefern** —, und die drei Tag-Rulesets zielen auf nichts. Beides ist eine Berichtigung von je einer Minute bei der BetreiberIn |
+| Hakt | nichts. KA-M1 und der Tag-Teil von KA-M2 sind seit dem 10.11.2026 erledigt (Abschnitt 3) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0 |
 
 **Die Umsetzung findet in einer eigenen Sitzung statt** — ein Paket nach
@@ -75,8 +75,8 @@ Gelesen über die Schnittstelle von GitHub, nur lesend.
 | Repositorium | **öffentlich**, Forks erlaubt, heute keiner — die Lauf-Protokolle liest jeder |
 | `main` | Rulesets „Main Protect" (PR-Pflicht, Pflichtprüfung „Stufe 1" strikt, kein Löschen, kein Force-Push, kein Bypass) und „Main Merge-Recht" (Schreiben nur per PR, Bypass ein Konto) |
 | Zeiger `produktion` | Ruleset „Zeiger produktion" seit 06.11.2026 — **nur gegen Löschen**; schreiben und umsetzen darf, wer Schreibrecht hat |
-| Tags | drei Rulesets seit 10.11.2026 (`web-v*`, `android-v*`, `uhr-v*`): aktiv, Regeln und Bypass richtig — aber **ohne Ziel** (`include: []`, gemessen über die Schnittstelle). Der Name eines Rulesets ist nicht sein Ziel; ohne „Add target“ gilt es für keinen Tag |
-| Umgebung `produktion` | aus der Arbeitsumgebung nicht lesbar (der Proxy sperrt den Pfad) — **von der BetreiberIn abgelesen:** eine Pflichtprüferin (ihr Konto), „Prevent self-review“ aus, Umgehen durch Administratoren aus. „Deployment branches and tags“ stand auf „No restriction“ und ist seit 10.11.2026 beschränkt — die vier Muster sind aber alle als **Zweig**-Regeln angelegt („1 branch and 0 tags allowed“): `main` passt, **kein Tag passt** |
+| Tags | **drei Rulesets seit 10.11.2026**, gemessen über die Schnittstelle: aktiv, Ziel `refs/tags/web-v*`, `refs/tags/android-v*`, `refs/tags/uhr-v*`; Anlegen, Ändern und Löschen gesperrt, kein Force-Push; Bypass ein Konto (das der BetreiberIn) |
+| Umgebung `produktion` | aus der Arbeitsumgebung nicht lesbar (der Proxy sperrt den Pfad) — **von der BetreiberIn abgelesen:** eine Pflichtprüferin (ihr Konto), „Prevent self-review“ aus, Umgehen durch Administratoren aus. „Deployment branches and tags“ stand auf „No restriction“ und ist **seit 10.11.2026 beschränkt** auf den Zweig `main` und die Tags `web-v*`, `android-v*`, `uhr-v*` („1 branch and 21 tags allowed“ — 13, 4 und 4 Tags, mit dem Repositorium abgeglichen) |
 | Freigabe von Fork-Läufen | **von der BetreiberIn abgelesen:** „Require approval for all external contributors“ — die strengste der drei Stufen |
 | Rechte des Lauf-Tokens | abgelesen: nur lesend; Läufe dürfen keine Pull Requests anlegen oder freigeben |
 | Erlaubte Aktionen | abgelesen: alle; „Require actions to be pinned to a full-length commit SHA“ **aus** |
@@ -103,14 +103,17 @@ Die abgelesenen Zeilen stammen aus vier Bildschirmfotos der BetreiberIn vom
   KA-M2, nach einem Probelauf.
 - Das Bedrohungsmodell nannte den Zeiger „ungeschützt“, was seit dem
   06.11.2026 nur noch für das Schreiben stimmt (nachgezogen).
-- **Die Beschränkung der Umgebung sperrt im heutigen Stand die
-  Auslieferung:** Ein Lauf auf `web-v…`, `android-v…` oder `uhr-v…` passt
-  auf keine Regel und wird von der Umgebung abgewiesen, bevor die Freigabe
-  gefragt wird. Zu berichtigen sind die drei Tag-Muster — löschen und mit
-  Ref type **Tag** neu anlegen (Rest von KA-M1).
-- **Die Tag-Rulesets schützen noch nichts.** Je Ruleset fehlt das Ziel
-  („Add target“ → „Include by pattern“). Ein Ruleset mit drei Mustern
-  genügt; die anderen beiden können weg (Tag-Teil von KA-M2).
+- **F-R17-04 ist damit für fremde Konten geschlossen:** Ein Lauf von einem
+  beliebigen Zweig erreicht die Umgebung nicht mehr, und einen Tag der drei
+  Muster legt nur die BetreiberIn an. `main` bleibt zugelassen, weil die
+  Probeläufe von dort starten.
+- **Was bleibt:** Der Handlauf auf `main` mit freiem Text im Eingang und
+  einem Freigabeklick (F-KA-14, KA-01) — und alles, was unter dem Konto
+  der BetreiberIn handelt; der Bypass der Rulesets gilt auch dafür.
+- **Zwei Anläufe brauchte es:** Die Tag-Muster der Umgebung standen zuerst
+  als Zweig-Regeln da (kein Tag hätte ausgeliefert), und die Rulesets
+  hatten zuerst kein Ziel. Der Name einer Regel ist nicht ihr Ziel — der
+  Bedienweg gehört ins Runbook (KA-01, Punkt 9).
 
 ---
 
@@ -184,7 +187,10 @@ und das Protokoll nennt nichts, was eine Schranke ist.
 9. Zwei Einstellungen der BetreiberIn begleiten das Paket (KA-M2): die
    SHA-Pflicht für Aktionen in GitHub einschalten, und die Protokolle der
    Läufe vor Punkt 4 ansehen — sie tragen `komplett.datei` und
-   `wartung.von` noch bis zu 90 Tage.
+   `wartung.von` noch bis zu 90 Tage. Dazu ins Runbook (`docs/Technik.md`
+   13), wie die Umgebung und die Tag-Rulesets eingerichtet sind und woran
+   man eine wirkungslose Regel erkennt („0 tags allowed“, „does not target
+   any resources“) — wer die Anlage in Schritt 14 neu aufsetzt, braucht es.
 
 **Berührt:** `.github/`, `tools/`, `.claude/` — **keine Fassung** (`CLAUDE.md`
 2, Punkt 1). **Pflege:** `CLAUDE.md` 3 (Zahl und Wortlaut zu `uses:` bleiben,
@@ -478,8 +484,8 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 
 | Nr. | Was | Wann |
 |---|---|---|
-| KA-M1 | In GitHub ansehen und setzen: Umgebung `produktion` und Freigabe von Fork-Läufen — abgelesen am 10.11.2026 (Abschnitt 3). **Rest:** Die drei Tag-Muster der Umgebung sind als Zweig-Regeln angelegt; löschen und mit Ref type „Tag“ neu anlegen. **Bis dahin liefert kein Tag aus** | **vor dem nächsten Tag** |
-| KA-M2 | Tag-Ruleset: angelegt am 10.11.2026, **ohne Ziel** — in einem der drei „Add target“ → „Include by pattern“ mit `web-v*`, `android-v*`, `uhr-v*`, die anderen beiden löschen. Mit KA-01: Probelauf der Auslieferung mit `security: strict` gegen Staging und Produktiv starten und freigeben; danach „Require actions to be pinned to a full-length commit SHA“ einschalten und einen Lauf abwarten; die Protokolle älterer Auslieferungsläufe löschen, soweit sie `wartung.von` nennen | Ziel: sofort; Rest in KA-01 |
+| KA-M1 | In GitHub ansehen und setzen: Umgebung `produktion` und Freigabe von Fork-Läufen — **erledigt 10.11.2026** (Abschnitt 3): Umgebung auf `main` und die drei Tag-Muster beschränkt | erledigt |
+| KA-M2 | Tag-Rulesets — **erledigt 10.11.2026**, gemessen. **Mit KA-01:** Probelauf der Auslieferung mit `security: strict` gegen Staging und Produktiv starten und freigeben; danach „Require actions to be pinned to a full-length commit SHA“ einschalten und einen Lauf abwarten; die Protokolle älterer Auslieferungsläufe löschen, soweit sie `wartung.von` nennen | in KA-01 |
 | KA-M3 | Tag nach KA-01 und KA-02 — beide hohen Befunde auf Produktiv (E-KA-09) | nach KA-02 |
 | KA-M4 | Wiederherstellungsschlüssel erneuern lassen: eine Ankündigung an alle Konten, die ein Notfallblatt gedruckt haben können (E-KA-07) | nach KA-M3 |
 | KA-M5 | Freigaberunde zum Formatentwurf: Lage des Zählerstands, Bauart der Herkunft, Frist für Geräte ohne Schlüssel, Stichtag für Fassung 1 | nach KA-06a |
@@ -492,7 +498,7 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 | Nr. | Frage | Antwort |
 |---|---|---|
 | Q-KA-01 | Schreibt ein Proxy oder Hoster Anfragekörper mit? | nicht bekannt — die Schlüssel werden erneuert (E-KA-07) |
-| Q-KA-02 | Regeln für `produktion` und Tags, Fork-Läufe? | nachgemessen und abgelesen, Abschnitt 3; eine Einstellung bleibt (Rest von KA-M1) |
+| Q-KA-02 | Regeln für `produktion` und Tags, Fork-Läufe? | nachgemessen, abgelesen und am 10.11.2026 gesetzt, Abschnitt 3 |
 | Q-KA-03 | Zuordnung als Zusage oder als Grenze? | Zusage, beide Stufen in einem Zug (E-KA-05) |
 | Q-KA-04 | Wie geht der Bericht in die Steuerung ein? | Sofortpunkt mit Konzept (E-KA-06) |
 | Q-KA-05 | Soll nach KA-01 und KA-02 sofort getaggt werden, oder erst mit KA-03? | sofort (E-KA-09) |
