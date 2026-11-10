@@ -9,6 +9,10 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 236 | 10.11.2026 | 28 | Zuarbeit KA-M1 erledigt und gestrichen: Die Umgebung `produktion` lässt nur noch `main` und die drei Tag-Muster zu (abgelesen); dazu drei Tag-Rulesets (gemessen). Fassung 235 nannte beide noch ohne Wirkung; das war der Stand vor dem zweiten Anlauf. |
+| 235 | 10.11.2026 | 28, 26 | PR #158 aufgenommen (R91-Nachprüfung MA, 08.11.2026): sieben Punkte bestanden, Nr. 540 bis 542 neu, P-MA-09 bis auf die Wartungsseite. KA-M1 und der Tag-Teil von KA-M2 gesetzt, aber beide noch ohne Wirkung (gemessen). Kopf: Stand `8f9281f`. |
+| 234 | 10.11.2026 | 28 | KA-M1 bis auf einen Rest erledigt: Pflichtprüferin und Freigabe von Fork-Läufen von der Betreiberin abgelesen; offen die Beschränkung der Umgebung auf Zweige und Tags. Q-KA-05 und -06 entschieden (E-KA-09, -10). Kopf nennt PR #164. |
+| 233 | 10.11.2026 | 28, R92 | Schritt 28 (KA) beginnt als Sofortpunkt vor 13: Fahrplanzeile, R92, Konzept und Audit-Bericht (43 Befunde, 2 hoch); Zuarbeiten KA-M1 und KA-M2 in 6.1. Fassung 232 trägt der Zweig von 27 (PR #163). |
 | 232 | 09.11.2026 | 27 | Rückmeldungen nach 27 ausgeliefert (PR #161, #162: Web 24.9.3–24.10.1, Zweitfaktor im Dialog, Passkey umbenennen) und auf Staging nachgeprüft (R91); der Safari-Teil steht in P-NV-10. Kopf: Stand `e8b0fc5`. |
 | 231 | 09.11.2026 | 27 | Nachprüfung auf Staging nach PR #160 (R91): P-OF-32 mit Web 24.9.2 bestanden (Nr. 550), gestrichen; in der Prüfliste OF bleiben nur Punkte der Betreiberin. Kopf: Stand `3d4db98`. |
 | 230 | 09.11.2026 | 27 | 27 (OF) abgeschlossen (PR #159): Erledigt-Zeile, Konzept gelöscht (`3bd5282`), 6.1 „Prüfliste OF“, Kopf `ced4a27` (Web 24.9.1). Spanne 530–539 frei. Staging (R91): sechs Punkte bestanden, Fund Nr. 550 behoben (24.9.2). |
