@@ -2,7 +2,7 @@
 """Zielprobe — liegt eine hochgeladene Datei hinterher wirklich im Web?
 
     python3 tools/kette/zielprobe.py --basis https://nadoku.example \\
-            --ftp-server HOST --ftp-konto NAME --ftp-pass … [--ftp-pfad /]
+            --ftp-server HOST --ftp-konto NAME [--ftp-pfad /]   # Passwort in FTP_PASSWORD
     python3 tools/kette/zielprobe.py … --ohne-sitzungswiederverwendung
     python3 tools/kette/zielprobe.py --selbstprobe
 
@@ -1417,11 +1417,35 @@ def selbstprobe() -> int:
            "…und räumt nichts weg, weil nichts entstanden ist",
            f"{lsu.dele} Löschbefehl(e)")
 
+    # KA-01, F-KA-37: Das Passwort kommt aus der Umgebung. Ohne es endet der
+    # Aufruf mit 2 und nennt die Variable; `--ftp-pass` gibt es nicht mehr.
+    alt_pw = os.environ.pop("FTP_PASSWORD", None)
+    stumm = _io.StringIO()
+    with contextlib.redirect_stdout(stumm), contextlib.redirect_stderr(stumm):
+        r_ohne = main(["--basis", "https://a.example", "--ftp-server", "h",
+                       "--ftp-konto", "k"])
+    pruefe(r_ohne == 2 and "FTP_PASSWORD" in stumm.getvalue(),
+           "ohne FTP_PASSWORD in der Umgebung → 2, und die Meldung nennt die Variable",
+           f"rc {r_ohne}")
+    stumm = _io.StringIO()
+    try:
+        with contextlib.redirect_stdout(stumm), contextlib.redirect_stderr(stumm):
+            main(["--basis", "https://a.example", "--ftp-server", "h",
+                  "--ftp-konto", "k", "--ftp-pass", "p"])
+        r_alt = 0
+    except SystemExit as ex:
+        r_alt = ex.code
+    pruefe(r_alt == 2, "`--ftp-pass` ist kein Schalter mehr — der alte Aufruf scheitert laut",
+           f"rc {r_alt}")
+    # Für die folgenden Lagen steht ein Passwort da — sonst schlügen sie aus
+    # dem falschen Grund an.
+    os.environ["FTP_PASSWORD"] = "p"
+
     stumm = _io.StringIO()
     with contextlib.redirect_stdout(stumm), contextlib.redirect_stderr(stumm):
         r_beide = main(["--mengenprobe", "5", "--sitzungsprobe",
                         "--basis", "https://a.example", "--ftp-server", "h",
-                        "--ftp-konto", "k", "--ftp-pass", "p"])
+                        "--ftp-konto", "k"])
     pruefe(r_beide == 2,
            "Mengenprobe UND Sitzungsprobe zugleich wird abgewiesen — sonst "
            "hätte eine still Vorrang und der Lauf misst etwas anderes, als "
@@ -1433,9 +1457,14 @@ def selbstprobe() -> int:
         stumm = _io.StringIO()
         with contextlib.redirect_stdout(stumm), contextlib.redirect_stderr(stumm):
             r = main(["--mengenprobe", str(zahl), "--basis", "https://a.example",
-                      "--ftp-server", "h", "--ftp-konto", "k", "--ftp-pass", "p"])
+                      "--ftp-server", "h", "--ftp-konto", "k"])
         pruefe(r == soll, f"`--mengenprobe {zahl}` wird abgewiesen, nicht gefahren",
                f"rc {r}")
+
+    if alt_pw is None:
+        os.environ.pop("FTP_PASSWORD", None)
+    else:
+        os.environ["FTP_PASSWORD"] = alt_pw
 
     print(f"\n  -> {erfuellt + offen} Lagen, {offen} nicht erfüllt")
     return 0 if offen == 0 else 1
@@ -1447,7 +1476,6 @@ def main(argv: list[str]) -> int:
     p.add_argument("--basis", help="öffentliche Adresse, z. B. https://nadoku.example")
     p.add_argument("--ftp-server", help="FTP-Host (ohne Schema)")
     p.add_argument("--ftp-konto")
-    p.add_argument("--ftp-pass")
     p.add_argument("--ftp-pfad", default="/",
                    help="Zielverzeichnis auf dem Server (Vorgabe: /)")
     p.add_argument("--ohne-sitzungswiederverwendung", action="store_true",
@@ -1470,11 +1498,15 @@ def main(argv: list[str]) -> int:
     p.add_argument("--selbstprobe", action="store_true",
                    help="ohne Netz prüfen, ob die Probe überhaupt anschlägt")
     a = p.parse_args(argv)
+    # DAS PASSWORT KOMMT AUS DER UMGEBUNG, NIE AUS DEN ARGUMENTEN (KA-01,
+    # F-KA-37): Die Befehlszeile sieht jeder Prozess desselben Läufers.
+    # Bis KA-01 hieß das `--ftp-pass`.
+    a.ftp_pass = os.environ.get("FTP_PASSWORD", "")
 
     if a.selbstprobe:
         return selbstprobe()
     fehlt = [n for n, v in (("--basis", a.basis), ("--ftp-server", a.ftp_server),
-                            ("--ftp-konto", a.ftp_konto), ("--ftp-pass", a.ftp_pass))
+                            ("--ftp-konto", a.ftp_konto), ("FTP_PASSWORD (Umgebung)", a.ftp_pass))
              if not v]
     if fehlt:
         print("Pflicht: " + ", ".join(fehlt), file=sys.stderr)

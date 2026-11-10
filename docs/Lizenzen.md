@@ -135,7 +135,10 @@ sha256sum -c ParagonIE-ConstantTime.sha256  #  11 Dateien
 
 Das ist die einzige Abweichung von der Regel in Abschnitt 2, und sie ist eine
 Verschärfung: Eine Liste prüft jede Datei, ein Kopfkommentar behauptet etwas
-über eine.
+über eine. **Seit KA-01 rechnet ein Riegel sie in Stufe 1 nach**
+(`tools/quelltext/fremdsummen.py`, F-KA-26) — jede Zeile beider Listen, keine
+Datei im Verzeichnis ohne Zeile, dazu `Parsedown.php` nach dem Rezept in
+`HERKUNFT.md`. Bis dahin waren die Listen ausdrücklich ausgenommen.
 
 **Warum überhaupt eine Fremdbibliothek und nicht `ext/ssh2`:** Die Erweiterung
 ist auf geteiltem Webspace praktisch nie vorhanden und lässt sich dort nicht

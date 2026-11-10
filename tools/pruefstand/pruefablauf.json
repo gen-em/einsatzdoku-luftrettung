@@ -37,7 +37,7 @@
     "fremdsummen": {
       "aufruf": "bash tools/quelltext/pruefen.sh fremdsummen",
       "braucht": "nichts",
-      "bemerkung": "R17-26, F-R17-50 und -51. Rechnet die SHA-256 im Herkunftskopf jeder Datei unter server/assets/vendor/ nach und haelt sie gegen die Pruefsummentabelle in docs/Lizenzen.md. Bis dahin rechnete niemand nach: leaflet.css trug die Summe des Originals mit CRLF, openlocationcode.js lag ohne Kopf ausserhalb von vendor/."
+      "bemerkung": "R17-26, F-R17-50 und -51. Rechnet die SHA-256 im Herkunftskopf jeder Datei unter server/assets/vendor/ nach und haelt sie gegen die Pruefsummentabelle in docs/Lizenzen.md. Bis dahin rechnete niemand nach: leaflet.css trug die Summe des Originals mit CRLF, openlocationcode.js lag ohne Kopf ausserhalb von vendor/. Seit KA-01 (F-KA-26) auch die Listen unter server/vendor/ (jede Zeile, keine Datei daneben), Parsedown.php und die Gradle-Wrapper-JAR."
     },
     "dokumente": {
       "aufruf": "bash tools/quelltext/pruefen.sh dokumente",

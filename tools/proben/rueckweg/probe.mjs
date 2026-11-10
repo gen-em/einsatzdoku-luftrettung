@@ -37,6 +37,10 @@
  * Aufruf:
  *   node tools/proben/rueckweg/probe.mjs [--basis URL] [--admin E-MAIL]
  *        [--admin-pw PASSWORT] [--admin-totp GEHEIMNIS] [--motor chromium|firefox|webkit]
+ *        [--admin-pw-aus VAR] [--admin-totp-aus VAR]
+ *   Die Kette nimmt die `-aus`-Schalter: Sie nennen die Umgebungsvariable,
+ *   nicht den Wert — die Befehlszeile sieht jeder Prozess desselben Läufers
+ *   (KA-01, F-KA-37). An `pruefkonto.py` geht das Geheimnis ebenso.
  *   (Vorgabe: die Sandbox, admin@example.invalid, ihr Passwort und ihr Geheimnis.
  *   BENANNTE SCHALTER und eine Menge `BEKANNT`, damit `tools/kettenaufrufe/`
  *   den Aufruf in Stufe 2 gegen die Schnittstelle halten kann.)
@@ -55,14 +59,24 @@ import { motorWahl, starten } from '../../motor.mjs';
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..', '..');
 const ARG = process.argv.slice(2);
-const BEKANNT = new Set(['--basis', '--admin', '--admin-pw', '--admin-totp', '--motor']);
+const BEKANNT = new Set(['--basis', '--admin', '--admin-pw', '--admin-totp', '--motor',
+                         '--admin-pw-aus', '--admin-totp-aus']);
 for (let i = 0; i < ARG.length; i += 2) {
   if (!BEKANNT.has(ARG[i])) { console.error(`Unbekannter Schalter: ${ARG[i]}`); process.exit(2); }
 }
 const wert = (name, vorgabe) => { const i = ARG.indexOf(name); return i >= 0 ? ARG[i + 1] : vorgabe; };
 const BASIS  = wert('--basis', 'https://127.0.0.1:8443');
-const ADMIN  = [wert('--admin', 'admin@example.invalid'), wert('--admin-pw', 'pruefstandzugang2026'),
-                wert('--admin-totp', '')];
+/* `--…-aus VAR`: den Wert aus der Umgebung; leer ist ein Bedienfehler. */
+const ausUmgebung = (schalter, vorgabe) => {
+  const name = wert(schalter + '-aus', '');
+  if (!name) { return vorgabe; }
+  const w = process.env[name] || '';
+  if (!w.trim()) { console.error(`${schalter}-aus ${name}: die Umgebungsvariable ist leer.`); process.exit(2); }
+  return w;
+};
+const ADMIN  = [wert('--admin', 'admin@example.invalid'),
+                ausUmgebung('--admin-pw', wert('--admin-pw', 'pruefstandzugang2026')),
+                ausUmgebung('--admin-totp', wert('--admin-totp', ''))];
 const KONTO  = join(WURZEL, 'tools', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 const PASSWORT = 'umlaufpruefung2026-rueckweg';
 const lokal = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(BASIS);
@@ -87,12 +101,14 @@ const php = code => execFileSync('php', ['-r', 'require "server/db.php"; ' + cod
 const q = s => "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'";
 
 function konto(befehl, adresse, rolle, rcDatei) {
+  // Passwort und Zweitfaktor über die Umgebung, nicht über die Befehlszeile
+  // (KA-01, F-KA-37).
   const a = [KONTO, befehl, adresse, '--basis', BASIS, '--admin-email', ADMIN[0],
-             '--admin-passwort', ADMIN[1]];
-  if (ADMIN[2]) { a.push('--admin-totp', ADMIN[2]); }
+             '--admin-passwort-aus', 'RUECKWEG_ADMIN_PW'];
+  if (ADMIN[2]) { a.push('--admin-totp-aus', 'RUECKWEG_ADMIN_TOTP'); }
   if (befehl === 'anlegen') { a.push('--passwort', PASSWORT, '--rolle', rolle, '--rc-datei', rcDatei); }
   execFileSync('python3', a, { stdio: ['ignore', 'ignore', 'inherit'], env: { ...process.env,
-    PLAYWRIGHT_MODUL: MODUL } });
+    PLAYWRIGHT_MODUL: MODUL, RUECKWEG_ADMIN_PW: ADMIN[1], RUECKWEG_ADMIN_TOTP: ADMIN[2] || '' } });
 }
 
 async function anmelden(s, adresse) {

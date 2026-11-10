@@ -56,6 +56,14 @@ jobs:
     # der grünen Läufe unten; wer den Namen ändert, ändert es dort mit.
     name: ausliefern
     runs-on: ubuntu-26.04
+    # ZEITLIMIT (KA-01, F-KA-44). Gemessen: höchstens rund 3 Minuten
+    # (Produktion 23.6.0 am 01.11.2026, Staging bis 10.11.2026). Das Limit
+    # liegt über der Grenze, die das Backup-Tor selbst zieht — 2 Runden zu
+    # 40 Aufrufen, je bis 60 s Antwortzeit und 20 s Pause, also höchstens
+    # rund 107 Minuten —, damit das Tor „ABBRUCH" sagt und nicht das Limit.
+    # Darüber Luft für einen vollen Abgleich. Die Vorgabe von GitHub wären
+    # sechs Stunden mit zugeschalteter Wartung.
+    timeout-minutes: 150
     # Zeigt dieser Ausdruck ins Leere, läuft der Job ohne Pflichtfreigabe — grün
     # und ungefragt; nach jeder Änderung mit einem Probelauf nachmessen.
     environment: ${{ inputs.umgebung }}
@@ -253,14 +261,21 @@ jobs:
 
       - name: Zielprobe — liegt eine hochgeladene Datei wirklich unter der Basisadresse?
         # Selbstprobe zuerst — ein kaputtes Werkzeug sähe sonst grün aus.
+        # Eingänge nur über `env:`, nie als `${{ inputs.… }}` im Skript: Dort
+        # würde freier Text zu Shell-Code (KA-01, F-KA-14). Das Passwort liest
+        # `zielprobe.py` aus FTP_PASSWORD, nicht von der Befehlszeile (F-KA-37).
         env:
-          FTP_SERVER:   ${{ secrets.FTP_SERVER }}
-          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          FTP_SERVER:    ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME:  ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD:  ${{ secrets.FTP_PASSWORD }}
+          PROBELAUF:     ${{ inputs.probelauf }}
+          OHNE_SITZUNG:  ${{ inputs.probelauf_ohne_sitzung }}
+          MENGENPROBE:   ${{ inputs.probelauf_mengenprobe }}
+          SITZUNGSPROBE: ${{ inputs.probelauf_sitzungsprobe }}
         run: |
           OHNE=""
-          if [ "${{ inputs.probelauf }}" = "true" ] \
-             && [ "${{ inputs.probelauf_ohne_sitzung }}" = "true" ]; then
+          if [ "$PROBELAUF" = "true" ] \
+             && [ "$OHNE_SITZUNG" = "true" ]; then
             OHNE="--ohne-sitzungswiederverwendung"
             echo "::notice::TRENNVERSUCH — die Zielprobe läuft OHNE Wiederverwendung der TLS-Sitzung."
             {
@@ -276,9 +291,9 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
           fi
           MENGE=""
-          ZAHL="${{ inputs.probelauf_mengenprobe }}"
+          ZAHL="${MENGENPROBE:-}"
           if [ -n "$ZAHL" ]; then
-            if [ "${{ inputs.probelauf }}" != "true" ]; then
+            if [ "$PROBELAUF" != "true" ]; then
               echo "::error::Die Mengenprobe laeuft NUR im Probelauf. Sie legt Verzeichnisse auf dem Zielserver an; in einer echten Auslieferung hat sie nichts zu suchen."
               exit 1
             fi
@@ -308,8 +323,8 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
           fi
           SITZUNG=""
-          if [ "${{ inputs.probelauf_sitzungsprobe }}" = "true" ]; then
-            if [ "${{ inputs.probelauf }}" != "true" ]; then
+          if [ "$SITZUNGSPROBE" = "true" ]; then
+            if [ "$PROBELAUF" != "true" ]; then
               echo "::error::Die Sitzungsprobe laeuft NUR im Probelauf. Sie tritt an die Stelle der Rundlaeufe; eine echte Auslieferung braucht die Zielprobe, nicht eine Messung."
               exit 1
             fi
@@ -342,7 +357,6 @@ jobs:
             --basis "$BASIS" \
             --ftp-server "$FTP_SERVER" \
             --ftp-konto "$FTP_USERNAME" \
-            --ftp-pass "$FTP_PASSWORD" \
             --ftp-pfad "$ZIELPFAD" \
             $OHNE $MENGE $SITZUNG
 
@@ -351,7 +365,7 @@ jobs:
         # Selbstprobe zuerst — ein Tor, das immer aufgeht, sähe sonst grün aus.
         run: |
           python3 tools/kette/tor.py --selbstprobe
-          python3 tools/kette/tor.py backup --basis "$BASIS" --token "$JOBS_TOKEN"
+          python3 tools/kette/tor.py backup --basis "$BASIS"
 
       - name: Handbuch und „Was ist NAdoku" nach server/doku kopieren
         if: ${{ !inputs.probelauf }}
@@ -367,12 +381,15 @@ jobs:
 
       - name: Gesprächslauf — Riegel und Ansage
         # Ohne `if`: Ein Riegel, der nur bei stimmender Lage läuft, ist keiner.
+        env:
+          PROBELAUF: ${{ inputs.probelauf }}
+          GESPRAECH: ${{ inputs.probelauf_gespraech }}
         run: |
           set -euo pipefail
-          if [ "${{ inputs.probelauf_gespraech }}" != "true" ]; then
+          if [ "$GESPRAECH" != "true" ]; then
             exit 0
           fi
-          if [ "${{ inputs.probelauf }}" != "true" ]; then
+          if [ "$PROBELAUF" != "true" ]; then
             echo "::error::Der Gespraechslauf laeuft NUR im Probelauf. Er schaltet den Trockenlauf ab; ohne das Haekchen `probelauf` waere das eine echte Auslieferung ohne Tag."
             exit 1
           fi
@@ -432,7 +449,6 @@ jobs:
           python3 tools/kette/zustand.py \
             --ftp-server "$FTP_SERVER" \
             --ftp-konto "$FTP_USERNAME" \
-            --ftp-pass "$FTP_PASSWORD" \
             --ftp-pfad "$ZIEL" \
             --zustandspfad "$ZUSTAND"
           {
@@ -455,7 +471,7 @@ jobs:
         # Was scheitern kann, ohne den Server zu ändern, steht vor diesem
         # Schritt; direkt danach kommt der Abgleich, sonst Wartung für nichts.
         if: ${{ !inputs.probelauf }}
-        run: python3 tools/kette/tor.py wartung-an --basis "$BASIS" --token "$JOBS_TOKEN"
+        run: python3 tools/kette/tor.py wartung-an --basis "$BASIS"
 
       - name: server/ per FTPS synchronisieren
         uses: SamKirkland/FTP-Deploy-Action@110f9186c050f71550953127052e77650219c287 # v4.4.0
@@ -464,6 +480,11 @@ jobs:
           username:   ${{ secrets.FTP_USERNAME }}
           password:   ${{ secrets.FTP_PASSWORD }}
           protocol:   ftps
+          # Das Zertifikat des Hosters wird geprüft (KA-01, F-KA-02). Ohne die
+          # Zeile gilt `loose`, und wer sich dazwischensetzt, bekommt das
+          # FTP-Passwort. Scheitert die Prüfung, passt der Name in FTP_SERVER
+          # nicht zum Zertifikat: den Namen berichtigen, nicht den Schalter.
+          security:   strict
           port:       21
           local-dir:  ./server/
           # Der führende Punkt ist Absicht: `.htaccess` sperrt Punktpfade mit
@@ -507,7 +528,7 @@ jobs:
           set -euo pipefail
           tag="${GITHUB_REF#refs/tags/}"
           erwartet="${tag#web-v}"
-          gemeldet=$(python3 tools/kette/tor.py zustand --basis "$BASIS" --token "$JOBS_TOKEN" --frage version)
+          gemeldet=$(python3 tools/kette/tor.py zustand --basis "$BASIS" --frage version)
           echo "Tag: $tag · erwartet: $erwartet · gemeldet: $gemeldet"
           if [ "$gemeldet" = unbekannt ]; then
             echo "::error::Die Anlage hat ihre Fassung nicht genannt. Der Abgleich ist gelaufen, aber ob die neue Fassung oben liegt, ist damit UNBEKANNT — nicht 'in Ordnung'. Die Wartung bleibt an."
@@ -524,8 +545,8 @@ jobs:
         # Ausstehende Migration ist kein Fehlschlag: grün mit Hinweis, Wartung
         # an — rot ließe den Zeiger `produktion` auf dem alten Stand.
         run: |
-          python3 tools/kette/tor.py zustand --basis "$BASIS" --token "$JOBS_TOKEN"
-          offen=$(python3 tools/kette/tor.py zustand --basis "$BASIS" --token "$JOBS_TOKEN" --frage migration)
+          python3 tools/kette/tor.py zustand --basis "$BASIS"
+          offen=$(python3 tools/kette/tor.py zustand --basis "$BASIS" --frage migration)
           echo "Migration ausstehend: $offen"
           if [ "$offen" = ja ]; then
             echo "::warning::Migration ausstehend — die Wartung BLEIBT AN."
@@ -538,11 +559,16 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          python3 tools/kette/tor.py wartung-aus --basis "$BASIS" --token "$JOBS_TOKEN"
+          python3 tools/kette/tor.py wartung-aus --basis "$BASIS"
           echo 'Keine Migration ausstehend — Wartung wieder aus.' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Wenn etwas schiefging — was jetzt gilt und was zu tun ist
-        if: ${{ failure() }}
+        # Auch bei Abbruch: Läuft der Job in sein Zeitlimit, gilt er als
+        # abgebrochen, nicht als gescheitert — und gerade dann soll die Ansage
+        # kommen, ob die Wartung an ist (KA-01, F-KA-44).
+        if: ${{ failure() || cancelled() }}
+        env:
+          UMGEBUNG: ${{ inputs.umgebung }}
         run: |
           set -uo pipefail
           # `-e` gilt hier trotzdem (aus `defaults`; `set -uo` hebt es nicht
@@ -550,12 +576,12 @@ jobs:
           wartung=unbekannt
           fassung=unbekannt
           if [ -n "${BASIS:-}" ] && [ -n "${JOBS_TOKEN:-}" ]; then
-            wartung=$(python3 tools/kette/tor.py zustand --basis "$BASIS" --token "$JOBS_TOKEN" --frage wartung 2>/dev/null || echo unbekannt)
-            fassung=$(python3 tools/kette/tor.py zustand --basis "$BASIS" --token "$JOBS_TOKEN" --frage version 2>/dev/null || echo unbekannt)
+            wartung=$(python3 tools/kette/tor.py zustand --basis "$BASIS" --frage wartung 2>/dev/null || echo unbekannt)
+            fassung=$(python3 tools/kette/tor.py zustand --basis "$BASIS" --frage version 2>/dev/null || echo unbekannt)
           fi
-          echo "::error::Auslieferung nach ${{ inputs.umgebung }} GESCHEITERT. Wartung: $wartung · gemeldete Fassung: $fassung · Dateistand: UNBEKANNT (der Abgleich kann halb gelaufen sein)."
+          echo "::error::Auslieferung nach $UMGEBUNG GESCHEITERT. Wartung: $wartung · gemeldete Fassung: $fassung · Dateistand: UNBEKANNT (der Abgleich kann halb gelaufen sein)."
           {
-            echo "## Auslieferung nach \`${{ inputs.umgebung }}\` gescheitert"
+            echo "## Auslieferung nach \`$UMGEBUNG\` gescheitert"
             echo
             echo "| | |"
             echo "|---|---|"

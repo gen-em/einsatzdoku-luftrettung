@@ -50,12 +50,13 @@ Ein Lauf arbeitet in Häppchen und meldet je Aufruf, ob er fertig ist. Wer
 einmal ruft und das `fertig` glaubt, hat bei kleinen Beständen recht und bei
 großen unrecht — und merkt den Unterschied erst, wenn er das Backup braucht.
 
-Aufruf:
-    python3 tools/kette/tor.py backup      --basis https://… --token …
-    python3 tools/kette/tor.py wartung-an  --basis https://… --token …
-    python3 tools/kette/tor.py wartung-aus --basis https://… --token …
-    python3 tools/kette/tor.py zustand     --basis https://… --token … [--frage migration|version|wartung]
-    python3 tools/kette/tor.py pause       --basis https://… --token … --sekunden 1800
+Aufruf (das Kettentoken steht in der Umgebungsvariablen JOBS_TOKEN, seit
+KA-01 nicht mehr auf der Befehlszeile — F-KA-37):
+    python3 tools/kette/tor.py backup      --basis https://…
+    python3 tools/kette/tor.py wartung-an  --basis https://…
+    python3 tools/kette/tor.py wartung-aus --basis https://…
+    python3 tools/kette/tor.py zustand     --basis https://… [--frage migration|version|wartung]
+    python3 tools/kette/tor.py pause       --basis https://… --sekunden 1800
     python3 tools/kette/tor.py --selbstprobe
 
 Rückgabewert: 0 = Tor offen · 1 = Tor zu (und der Grund steht davor) ·
@@ -67,6 +68,8 @@ from __future__ import annotations
 import argparse
 import email.utils
 import json
+import os
+import re
 import sys
 import time
 import urllib.error
@@ -224,6 +227,38 @@ def ohne_eigenes(d: dict) -> dict:
     return {k: v for k, v in d.items() if not k.startswith("_serverzeit")}
 
 
+# DER ZUFALLSTEIL EINES KOMPLETT-NAMENS. `2026-09-21T07-54-57Z_708a0f59.edk`:
+# Die acht Hexzeichen sind die zweite Schranke des Ordners
+# (`komplett_lib.php`, `komp_bereit()`), der Zeitstempel davor nennt den
+# Stand eindeutig. Das Lauf-Protokoll ist öffentlich (KA-01, F-KA-25).
+_ZUFALL_RE = re.compile(r"_[0-9a-f]{4,}(?=\.[A-Za-z0-9]+$|$)")
+
+
+def datei_ohne_zufall(name: str) -> str:
+    """Der Dateiname eines Komplett-Standes ohne seinen Zufallsteil."""
+    kurz = _ZUFALL_RE.sub("", name.strip())
+    return kurz if kurz != name.strip() else "(Name ohne erkennbaren Zufallsteil)"
+
+
+def fuers_protokoll(d: dict) -> dict:
+    """Die Antwort des Servers, wie sie ins Lauf-Protokoll darf.
+
+    Wie `ohne_eigenes()`, dazu ohne die zwei Felder, die eine Schranke sind
+    (KA-01, F-KA-25): den Zufallsteil von `komplett.datei` und
+    `wartung.von` — den Namen des Kontos, das die Wartung geschaltet hat.
+    Seinetwegen zog `wartung.lock` aus dem Webroot nach `.zustand/`, und das
+    Protokoll eines öffentlichen Repositoriums liest jeder.
+    """
+    aus = ohne_eigenes(d)
+    k = aus.get("komplett")
+    if isinstance(k, dict) and isinstance(k.get("datei"), str):
+        aus["komplett"] = {**k, "datei": datei_ohne_zufall(k["datei"])}
+    w = aus.get("wartung")
+    if isinstance(w, dict) and "von" in w:
+        aus["wartung"] = {**w, "von": "(nicht im Protokoll)"}
+    return aus
+
+
 def backup_tor(basis: str, token: str, versuche: int, pause: int,
                ruf=rufen, schlafen=time.sleep, runden: int = RUNDEN) -> int:
     """Das Tor. Rückgabewert 0 = Deploy erlaubt, 1 = nicht.
@@ -260,7 +295,7 @@ def backup_tor(basis: str, token: str, versuche: int, pause: int,
         fremd = 0                      # Antworten, die die Frage nicht kennen
         for i in range(1, versuche + 1):
             antwort = ruf(basis, token, "komplett")
-            kurz = json.dumps(ohne_eigenes(antwort), ensure_ascii=False)[:200]
+            kurz = json.dumps(fuers_protokoll(antwort), ensure_ascii=False)[:200]
             print(f"  Aufruf {i:>2}: {kurz}")
 
             # EIN NEIN DES SERVERS IST KEIN WARTEN. Ein falsches Token, eine
@@ -327,7 +362,7 @@ def backup_tor(basis: str, token: str, versuche: int, pause: int,
             return 1
 
         zustand = ruf(basis, token, "zustand")
-        print("Zustand: " + json.dumps(ohne_eigenes(zustand),
+        print("Zustand: " + json.dumps(fuers_protokoll(zustand),
                                        ensure_ascii=False)[:400])
         stand = zustand.get("komplett")
         if not isinstance(stand, dict) or not stand.get("zeit"):
@@ -403,7 +438,9 @@ def zustand_auskunft(antwort: dict, frage: str):
         datei = k.get("datei")
         if not isinstance(datei, str) or not datei.strip():
             return "unbekannt", 1
-        return datei.strip(), 0
+        # Ohne Zufallsteil (KA-01, F-KA-25): Der Zeitstempel nennt den Stand,
+        # die Zusammenfassung des Laufs liest jeder.
+        return datei_ohne_zufall(datei), 0
 
     if frage == "wartung":
         w = antwort.get("wartung")
@@ -638,8 +675,8 @@ def selbstprobe() -> int:
 
     urllib.request.urlopen = _merken
     try:
-        rc = main(["pause", "--basis", "https://x/", "--token", "geheim",
-                   "--sekunden", "1800"])
+        os.environ["JOBS_TOKEN"] = "geheim"
+        rc = main(["pause", "--basis", "https://x/", "--sekunden", "1800"])
     finally:
         urllib.request.urlopen = _echt
     a = gemerkt.get("adresse", "")
@@ -669,8 +706,30 @@ def selbstprobe() -> int:
 
     # Und der Riegel: ein vergessenes `--sekunden` darf die Pause NICHT
     # aufheben, sondern muss abbrechen. Rückgabewert 2 = „kam nicht zustande".
-    rc = main(["pause", "--basis", "https://x", "--token", "g"])
+    rc = main(["pause", "--basis", "https://x"])
     pruefe(rc == 2, "pause ohne --sekunden → Rückgabewert 2, KEIN stilles Freigeben")
+
+    # KA-01, F-KA-37: Das Token kommt aus der Umgebung. Fehlt es dort, endet
+    # der Aufruf mit 2, ohne zu rufen — und `--token` gibt es nicht mehr: Ein
+    # alter Aufruf scheitert laut, statt das Token weiter auf die
+    # Befehlszeile zu legen.
+    os.environ.pop("JOBS_TOKEN", None)
+    gemerkt.clear()
+    urllib.request.urlopen = _merken
+    try:
+        rc = main(["zustand", "--basis", "https://x"])
+    finally:
+        urllib.request.urlopen = _echt
+    pruefe(rc == 2 and not gemerkt,
+           "ohne JOBS_TOKEN in der Umgebung → Rückgabewert 2, keine Anfrage")
+    try:
+        import contextlib, io
+        with contextlib.redirect_stderr(io.StringIO()):
+            main(["zustand", "--basis", "https://x", "--token", "g"])
+        alt = 0
+    except SystemExit as ex:
+        alt = ex.code
+    pruefe(alt == 2, "`--token` ist kein Schalter mehr — der alte Aufruf scheitert laut")
 
     # 11. EINE 4xx-ANTWORT MUSS MIT IHRER BEGRÜNDUNG ANKOMMEN. Frueher
     # fing `rufen()` die HTTPError im URLError-Zweig und machte daraus
@@ -742,8 +801,8 @@ def selbstprobe() -> int:
             "komplett": {"datei": "2026-09-21T07-54-57Z_708a0f59.edk",
                          "zeit": "2026-09-21T07:54:57Z", "groesse": 4821}}
     pruefe(zustand_auskunft(KOMP, "komplett")
-           == ("2026-09-21T07-54-57Z_708a0f59.edk", 0),
-           "--frage komplett gibt den Dateinamen und 0")
+           == ("2026-09-21T07-54-57Z.edk", 0),
+           "--frage komplett gibt den Dateinamen OHNE Zufallsteil und 0 (F-KA-25)")
     pruefe(zustand_auskunft({"ok": True}, "komplett") == ("unbekannt", 1),
            "ALTER SERVER: kein `komplett`-Feld -> 'unbekannt' und 1")
     pruefe(zustand_auskunft({"ok": True, "komplett": {}}, "komplett")
@@ -765,6 +824,19 @@ def selbstprobe() -> int:
     pruefe(ohne_eigenes({"ok": True}) == {"ok": True},
            "…und eine Antwort ohne das Feld bleibt unveraendert")
 
+    # KA-01, F-KA-25: Was ins Protokoll geht, nennt weder den Zufallsteil des
+    # Komplett-Namens noch das Konto, das die Wartung geschaltet hat.
+    roh = {**KOMP, "_serverzeit": "x",
+           "wartung": {"aktiv": True, "seit": "s", "von": "betreiberin@example.invalid"}}
+    text = json.dumps(fuers_protokoll(roh), ensure_ascii=False)
+    pruefe("708a0f59" not in text and "2026-09-21T07-54-57Z" in text,
+           "Protokoll: Komplett-Name ohne Zufallsteil, Zeitstempel bleibt")
+    pruefe("betreiberin@" not in text and '"aktiv": true' in text,
+           "Protokoll: `wartung.von` fehlt, `wartung.aktiv` bleibt")
+    pruefe("_serverzeit" not in text, "Protokoll: auch ohne `_serverzeit`")
+    pruefe(datei_ohne_zufall("abc.edk") == "(Name ohne erkennbaren Zufallsteil)",
+           "Ein Name ohne Zufallsteil wird nicht unverändert durchgereicht")
+
     print(f"\n  erfüllt: {erfuellt} · offen: {offen}")
     return 0 if offen == 0 else 1
 
@@ -778,7 +850,6 @@ def main(argv: list[str]) -> int:
                    choices=["backup", "wartung-an", "wartung-aus", "zustand",
                             "pause"])
     p.add_argument("--basis", help="Adresse der Installation, z. B. https://nadoku.example")
-    p.add_argument("--token", help="Kettentoken aus Betrieb → Hintergrundjobs → Auslieferungskette (seit Web 23.1.0; davor das Job-Token)")
     p.add_argument("--versuche", type=int, default=VERSUCHE_VORGABE)
     p.add_argument("--pause", type=int, default=PAUSE_VORGABE_S,
                    help="backup: Wartezeit ZWISCHEN zwei Aufrufen")
@@ -798,9 +869,19 @@ def main(argv: list[str]) -> int:
     if a.befehl is None:
         p.print_help()
         return 2
-    if not a.basis or not a.token:
-        print("--basis und --token sind Pflicht.", file=sys.stderr)
+    # DAS TOKEN KOMMT AUS DER UMGEBUNG, NIE AUS DEN ARGUMENTEN (KA-01,
+    # F-KA-37): Die Befehlszeile sieht jeder Prozess desselben Läufers. Bis
+    # KA-01 hieß das `--token`.
+    token = os.environ.get("JOBS_TOKEN", "").strip()
+    if not a.basis:
+        print("--basis ist Pflicht.", file=sys.stderr)
         return 2
+    if not token:
+        print("Die Umgebungsvariable JOBS_TOKEN ist leer — das Kettentoken aus "
+              "Betrieb → Hintergrundjobs → Auslieferungskette gehört dorthin, "
+              "nicht auf die Befehlszeile.", file=sys.stderr)
+        return 2
+    a.token = token
 
     if a.befehl == "backup":
         return backup_tor(a.basis, a.token, a.versuche, a.pause)
@@ -817,13 +898,13 @@ def main(argv: list[str]) -> int:
             return 2
         antwort = rufen(a.basis, a.token, "pause",
                         felder={"sekunden": a.sekunden})
-        print(json.dumps(ohne_eigenes(antwort), ensure_ascii=False))
+        print(json.dumps(fuers_protokoll(antwort), ensure_ascii=False))
         return 0 if antwort.get("ok") else 1
 
     if a.befehl in ("wartung-an", "wartung-aus"):
         aktion = "wartung_an" if a.befehl == "wartung-an" else "wartung_aus"
         antwort = rufen(a.basis, a.token, aktion)
-        print(json.dumps(ohne_eigenes(antwort), ensure_ascii=False))
+        print(json.dumps(fuers_protokoll(antwort), ensure_ascii=False))
         return 0 if antwort.get("ok") else 1
 
     antwort = rufen(a.basis, a.token, "zustand")
@@ -831,7 +912,7 @@ def main(argv: list[str]) -> int:
         text, rc = zustand_auskunft(antwort, a.frage)
         print(text)
         return rc
-    print(json.dumps(ohne_eigenes(antwort), ensure_ascii=False, indent=2))
+    print(json.dumps(fuers_protokoll(antwort), ensure_ascii=False, indent=2))
     return 0 if antwort.get("ok") else 1
 
 

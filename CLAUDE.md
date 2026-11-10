@@ -199,6 +199,16 @@ Protokoll oder einen alten Kommentar liest, liest das noch.
   bleibt die unabhängige Gegenprobe:
   `grep -rhoE 'uses: [^ ]+@[0-9a-f]{40}' .github/workflows/ | wc -l` gegen
   `grep -rh 'uses:' .github/workflows/ | grep -vc 'uses: \./'`.
+- **Seit KA-01 hält derselbe Riegel vier Dinge mehr** (Audit KA,
+  `docs/Technik.md` 12.14): **kein Eingang im Skript** — `${{ inputs.* }}`,
+  `github.event.*` und `github.head_ref` stehen nie im Text eines `run:`,
+  sondern kommen über `env:` (F-KA-14); **jedes `image:` am Digest**
+  (F-KA-39); **kein Geheimnis auf der Befehlszeile** — FTP-Passwort,
+  Kettentoken und Prüfkonto gehen über die Umgebung (F-KA-37); **der
+  FTPS-Schritt mit `security: strict`** (F-KA-02). Scheitert die
+  Zertifikatsprüfung in einem Lauf, ist der Name in `FTP_SERVER` zu
+  berichtigen, nicht der Schalter. Dazu hat **jeder Job ein Zeitlimit**
+  (`timeout-minutes`, F-KA-44); wer einen Job anlegt, gibt ihm eines.
 - `server/config.php`, `install.lock`, `server/sicherungen/`,
   `server/apk/`, — seit Web 20.26.0 — `server/.sitzungen/` (die
   PHP-Sitzungsdateien, Schritt 16, E-SA-05) und — seit Web 23.3.1 —
@@ -665,7 +675,9 @@ den Weg über ein Werkzeug: `mcp__github__merge_pull_request` und
 `.claude/settings.json`, seit R17-19 auch `mcp__github__push_files` (ein
 Schreiben an Git und am Zweigschutz-Bericht vorbei) und
 `mcp__github__actions_run_trigger` (eine Instanz startet keinen Lauf — einen
-Staging- oder App-Probelauf startet die Betreiberin, F-R17-14). Der Grund ist gemessen (F-PK-01): Die
+Staging- oder App-Probelauf startet die Betreiberin, F-R17-14), seit KA-01
+`mcp__github__create_or_update_file` und `mcp__github__delete_file` (derselbe
+Nachbarweg über die Contents-Schnittstelle, F-KA-15). Der Grund ist gemessen (F-PK-01): Die
 GitHub-Werkzeuge handeln unter der Identität der Betreiberin, und ein Ruleset
 kann sie deshalb nicht von ihr unterscheiden — ein Merge über die
 Schnittstelle ging durch. **Wer die Deny-Liste ändert, hebt diesen Riegel

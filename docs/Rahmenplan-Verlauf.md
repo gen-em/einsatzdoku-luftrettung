@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 237 | 10.11.2026 | 28 | Umsetzung von 28 begonnen (Spanne 560–569); KA-01 (Kette) gebaut, im PR. Kopf: Stand `3e06f50` (PR #164). |
 | 236 | 10.11.2026 | 28 | Zuarbeit KA-M1 erledigt und gestrichen: Die Umgebung `produktion` lässt nur noch `main` und die drei Tag-Muster zu (abgelesen); dazu drei Tag-Rulesets (gemessen). Fassung 235 nannte beide noch ohne Wirkung; das war der Stand vor dem zweiten Anlauf. |
 | 235 | 10.11.2026 | 28, 26 | PR #158 aufgenommen (R91-Nachprüfung MA, 08.11.2026): sieben Punkte bestanden, Nr. 540 bis 542 neu, P-MA-09 bis auf die Wartungsseite. KA-M1 und der Tag-Teil von KA-M2 gesetzt, aber beide noch ohne Wirkung (gemessen). Kopf: Stand `8f9281f`. |
 | 234 | 10.11.2026 | 28 | KA-M1 bis auf einen Rest erledigt: Pflichtprüferin und Freigabe von Fork-Läufen von der Betreiberin abgelesen; offen die Beschränkung der Umgebung auf Zweige und Tags. Q-KA-05 und -06 entschieden (E-KA-09, -10). Kopf nennt PR #164. |
