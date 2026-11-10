@@ -256,8 +256,15 @@ print(json.dumps({"pk": pk, "st": st, "p": P}))`], { cwd: WURZEL, encoding: 'utf
     minute: '2-digit', hour12: false }).format(new Date(t * 1000));
   const von = ruhe2Punkte[3][3] - (ruhe2Punkte[3][3] % 60), bis = ruhe2Punkte[5][3] - (ruhe2Punkte[5][3] % 60);
   const soll = ruhe2Punkte.filter(p => p[3] >= von && p[3] <= bis).length;
-  await s.goto(`${BASIS}/index.php?d=${dayId}`, { waitUntil: 'networkidle' });
-  await s.click(`[data-schnitt-auf="${rid2}"]`);
+  /* SEIT OF-07 (Web 24.8.0) STEHT DIE KARTE „Ruhesegmente" NUR AUF ABRUF DA
+   * (E-OF-05): ohne `#ruheliste` bleibt sie verborgen, und der Knopf mit ihr.
+   * Bis KA-02 rief die Probe die Tagesansicht ohne die Marke auf und lief in
+   * eine Zeitgrenze (F-KA-54). Bei genau einem Segment klappt die Seite den
+   * Bereich selbst auf — dann nicht noch einmal klicken, sonst ginge er zu. */
+  await s.goto(`${BASIS}/index.php?d=${dayId}#ruheliste`, { waitUntil: 'networkidle' });
+  if (!(await s.locator(`[data-schnitt-fuer="${rid2}"]`).count())) {
+    await s.locator(`[data-schnitt-auf="${rid2}"]:visible`).first().click();
+  }
   await s.fill(`#s-beg-${rid2}`, hhmm(von)); await s.dispatchEvent(`#s-beg-${rid2}`, 'input');
   await s.fill(`#s-end-${rid2}`, hhmm(bis)); await s.dispatchEvent(`#s-end-${rid2}`, 'input');
   await s.click('[data-zeitraum-loeschen]');

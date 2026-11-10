@@ -654,7 +654,10 @@ BetreiberIn** (KA-M2).
 | Riegel `druckblatt` | Selbstprobe **9/0**; gegen diesen Stand 226 Dateien, **0 Befunde**; gegen `server/` von `main` **8 Befunde** (drei Formulare, drei Lesestellen, zwei fehlende Abweisungen) | der Riegel hält den alten Weg auf |
 | hell gegen dunkel, Chromium, fünf Ansichten (Notfallblatt leer, gefüllt, gefüllt im Druck, Codeblatt, Anmeldung mit Fehlermeldung im Druck) | **0 von 158 Elementen** weichen ab (Farbe, Fläche, Rand); mit `style.css` von `main` **49** | Nr. 540 |
 
-Prüfstand und Bericht: im Commit von KA-02.
+Prüfstand und Bericht: im Commit von KA-02. Der volle Lauf (`39a9420`,
+Stufe neben, drei Engines, zehn Breiten, 8 852 s) war **64 grün, 1 rot** —
+die Wartungslaufprobe, unabhängig von KA-02 (F-KA-54); der Kopf des PR erbt
+die 64 und misst die berichtigte Probe neu.
 
 ---
 
@@ -672,6 +675,7 @@ Prüfstand und Bericht: im Commit von KA-02.
 | F-KA-51 | **Der Bilderlauf baute das gefüllte Notfall- und Codeblatt über den alten POST** (`tools/screenshots/aufnehmen.mjs`, Schritte `notfallblatt` und `codeblatt`) — im ersten Prüfstand von KA-02 rot mit 20 Konsolenfehlern („Stylesheet nicht angewendet": die 400-Antwort ist Text) | `blattUeberFenster()`: ein Helferfenster derselben Sitzung öffnet das Blatt und beantwortet dessen Meldung wie der Druckknopf; das gefüllte `<main>` geht in die aufgenommene Seite. Einzeln nachgefahren: 9 Bilder, 0 Konsolenfehler |
 | F-KA-52 | **Der Stilvergleich war rot mit 19 ungeplanten Signaturen je Engine** — alle aus `.rf-druck` (Umbruch, neue Zeile `.rf-druck-hinweis`) und der um 4 px längeren Katalogseite; keine weitere | geplante Listen neu geschrieben (`gegen.sh --schreiben`), je 19 Signaturen; die drei geerbten Zeilen des vorigen Schritts fallen weg |
 | F-KA-53 | **Bei 360 px stoßen die fünf Schlüsselgruppen des Notfallblatts aneinander** (gesehen im Bilderlauf, Baustein unverändert seit Web 21.1.0) | **in KA-02 behoben** (Wunsch der BetreiberIn, statt eines Backlog-Punkts; die zuerst angelegte Nr. 561 ist nie gepusht worden und entfällt): unter 480 px am Bildschirm drei Gruppen je Zeile mit Spaltenabstand, auf Papier weiter fünf; Bilderlauf 02f bei 360 px ohne Überlauf, Gruppen getrennt |
+| F-KA-54 | **Die Wartungslaufprobe war seit OF-07 (Web 24.8.0) rot, ohne dass es auffiel** — Teil C rief die Tagesansicht ohne `#ruheliste` auf, und seit OF-07 steht die Karte „Ruhesegmente" nur auf Abruf da; der Knopf blieb verborgen, der Klick lief in die Zeitgrenze. Grün zuletzt am 07.11.2026 (MA-18); seither lief sie in keinem Bericht, weil kein Paket ihr Muster berührte. Im Prüfstand von KA-02 rot in drei Engines, mit `server/` von `main` ebenso | Probe ruft `index.php?d=…#ruheliste` auf und klickt nur, wenn der Bereich nicht schon offen ist; danach 24 ok, 0 fehlen. Zwischenstand `39a9420` trägt den roten Bericht, der nächste Commit den grünen (Erbe nach `Pruefablauf.md` 5.4) |
 
 **Keine neue Probe, keine neue Backlog-Nummer:** KA-01 erweitert vorhandene
 Riegel (`kettenaufrufe`, Anlass Nr. 217; `fremdsummen`, F-R17-50/-51;
