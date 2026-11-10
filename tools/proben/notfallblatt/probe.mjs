@@ -30,7 +30,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { naechsterCode } from '../../zweitfaktor/totp.mjs';
-import { motorWahl, starten } from '../../motor.mjs';
+import { motorWahl, starten, kontextMachen } from '../../motor.mjs';
 
 const HIER   = dirname(fileURLToPath(import.meta.url));
 const WURZEL = join(HIER, '..', '..', '..');
@@ -54,7 +54,6 @@ const ADMIN  = [wert('--admin', 'admin@example.invalid'),
 const KONTO_WERKZEUG = join(WURZEL, 'tools', 'referenzdatensatz', 'vergleich', 'pruefkonto.py');
 const ADRESSE  = 'umlauf-notfallblatt@example.invalid';
 const PASSWORT = 'umlaufpruefung2026-notfallblatt';
-const lokal = /^https?:\/\/(127\.0\.0\.1|localhost)(:|\/|$)/.test(BASIS);
 const MOTOR = motorWahl(process.argv);
 const MODUL = process.env.PLAYWRIGHT_MODUL
   || '/opt/node22/lib/node_modules/playwright/index.mjs';
@@ -76,7 +75,10 @@ function konto(befehl, extra = []) {
 
 /** Ein Kontext, der jede Anfrage aller seiner Fenster mitschneidet. */
 async function kontext(browser) {
-  const k = await browser.newContext({ ignoreHTTPSErrors: lokal });
+  /* `kontextMachen()`: örtlich ohne Zertifikatsprüfung, nach draußen über
+   * den Node-Stack, der die Stelle des Proxys kennt (`Sandbox-Setup.md`
+   * 5.2) — sonst scheitert Firefox gegen Staging an SEC_ERROR_UNKNOWN_ISSUER. */
+  const k = await kontextMachen(browser, { basis: BASIS });
   await k.route('**/tile.openstreetmap.org/**', r => r.abort());
   const anfragen = [];
   k.on('request', r => {

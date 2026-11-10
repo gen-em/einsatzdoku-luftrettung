@@ -4095,9 +4095,17 @@ Zeitplandienst hat keine.
 #### Die zwei Tokens
 
 Je 32 Byte Zufall, hex, in `app_state`: das **Job-Token** unter
-`jobs_token` (`jobs_token()`), das **Kettentoken** seit Web 23.1.0 unter
-`kette_token` (`kette_token()`); beide unter **Betrieb → Hintergrundjobs**
-angezeigt und dort erneuerbar. **Nicht** in `config.php`: Die Anwendung
+`jobs_token`, das **Kettentoken** seit Web 23.1.0 unter `kette_token`; beide
+unter **Betrieb → Hintergrundjobs** erneuerbar. **Seit Web 24.12.0 liegt dort
+nur ihr Hash** (`sha256:` und 64 Hexzeichen, `token_hash()` in
+`jobs_lib.php`; KA-03, F-KA-19, E-KA-10), und der Wert erscheint **einmal**,
+in der Antwort auf „Neues Token erzeugen" — ohne Umleitung, damit er in
+keiner Sitzung und keiner Blitzmeldung liegen bleibt. Danach zeigt die Karte
+nur „eingerichtet". Wer ein Token verloren hat, erzeugt ein neues (Runbook
+7). Geprüft wird über `jobs_token_pruefen()` und `kette_token_pruefen()`
+(`hash_equals` über die Hashes); ein Klartextwert von vorher wird beim
+ersten Lesen gehasht zurückgeschrieben und gilt weiter. **Nicht** in
+`config.php`: Die Anwendung
 schreibt diese Datei genau einmal, bei der Einrichtung; sie danach
 anzufassen hieße, auf jedem Webspace Schreibrecht auf die eigene
 Konfiguration zu brauchen — und Bestandsinstallationen hätten kein Token,
@@ -4113,18 +4121,12 @@ ohnehin tut —, und das Kettentoken, das Backup, Wartung, Zustand und Pause
 öffnet, kommt nur im Rumpf einer POST-Anfrage und steht in keinem Protokoll.
 In GitHub liegt es als `JOBS_TOKEN` der Umgebungen (12.7).
 
-**Der Übergang:** Fehlt das Kettentoken, übernimmt es beim ersten Lesen den
-Wert des Job-Tokens. Ein frisch erzeugtes kennte die Kette nicht: Sie
-schaltet vor dem Abgleich mit dem alten Wert die Wartung ein und fragt danach
-die neue Fassung nach Zustand und `wartung_aus` — mit einem fremden Token
-bliebe die Anlage in der Wartung. Getrennt sind beide, sobald eines erneuert
-wird; das Runbook (7, „Die zwei Tokens nach dem Update erneuern") sagt, wann.
-**Die Übernahme greift nur beim Update:** `jobs_token()` legt das
-Kettentoken an, bevor es selbst entsteht oder erneuert wird. Auf einer neuen
-Anlage bekommt es so einen eigenen Wert, und wer nach dem Update zuerst das
-Job-Token erneuert, gibt dem Kettentoken den alten Wert, den die Kette kennt
-(Gegenprüfung R17-19; bis dahin blieben beide auf einer neuen Anlage
-dauerhaft gleich).
+**Keine Übernahme mehr** (seit Web 24.12.0, E-KA-16): Bis dahin übernahm
+ein fehlendes Kettentoken beim ersten Lesen den Wert des Job-Tokens — der
+Übergang von Web 23.1.0. Mit Hashes hätte die Übernahme beide Tokens
+dauerhaft gleich gemacht; sie ist gestrichen. Fehlt das Kettentoken, ist es
+nicht eingerichtet, und die Kette bekommt 403, bis die BetreiberIn eines
+erzeugt und in GitHub einträgt.
 
 Wer ein Token hat, kann die Wartung anstoßen; mehr nicht. Er kann damit weder
 Daten lesen noch schreiben. `jobs.php` prüft es mit `hash_equals`, hinter dem
@@ -4615,6 +4617,13 @@ Gegenstelle: Sie schreibt jeden Anmeldeversuch mit, und ihr Protokoll bleibt
 unverändert (3 Zeilen vorher, 3 nachher). Wer sich bei einem untergeschobenen
 Server anmeldet, hat sein Passwort schon abgegeben, auch wenn er danach
 abbricht.
+
+**Ohne gespeicherten Abdruck sendet der Job nicht** (seit Web 24.12.0, KA-03,
+F-KA-09). Übernommen wird der Abdruck nur, wo ein Mensch ihn sieht — in
+`Verbindung prüfen`. Bis dahin verband sich der Versand auch mit einem Ziel,
+das nie geprüft war, und gab sein Passwort an jeden Hostschlüssel ab; jetzt
+endet `sz_versand_schub()` an diesem Ziel mit „noch kein Hostschlüssel
+gespeichert", und der Satz steht als letzter Fehler am Ziel.
 
 Wechselt die Gegenstelle ihren Schlüssel, ist der gespeicherte Abdruck falsch
 — und ein falscher Abdruck blockiert jede Verbindung und sieht aus wie ein
@@ -6258,7 +6267,11 @@ Die Einstellungen dazu stehen in `server/geocoder_lib.php`:
 `geocoder_installation_an()` (`app_state`-Schlüssel `adresssuche`),
 `geocoder_konto_an($userId)` (Spalte `users.adresssuche`, Migration
 `2026_09_07_adresssuche_konto`), `geocoder_dienst()`/`geocoder_host()`
-(`app_state`-Schlüssel `geocoder_url`, Vorgabe `GEOCODER_VORGABE`) und
+(`app_state`-Schlüssel `geocoder_url`, Vorgabe `GEOCODER_VORGABE`; seit
+Web 24.12.0 nur `https`, ein Rechnername nach `geocoder_host_gueltig()`,
+ein Pfad aus einfachen Teilen, keine Abfrage, kein Anker, kein Konto in der
+Adresse — und `kopf_csp()` übernimmt den Rechner in `connect-src` nur, wenn
+er dieselbe Prüfung besteht, KA-03, F-KA-28) und
 `geocoder_an()`, das **beide** Schalter verundet — die Frage, die ein
 Aufrufer stellen sollte. Geschrieben wird über `geocoder_installation_setzen()`
 und `geocoder_konto_setzen()`; beide ziehen den Zwischenspeicher der laufenden
@@ -8430,6 +8443,12 @@ dann einen offenen Einladungslink entwerten.
 **`adresse_bestaetigen.php` läuft ohne Anmeldung**, und das ist der Zweck: Wer
 den Link hat, hat Zugang zum Postfach der neuen Adresse — genau das ist der
 Nachweis. Eine Anmeldung wäre gerade dann unmöglich, wenn sie am meisten hülfe.
+**Der Link ändert nichts, erst der Knopf** (seit Web 24.12.0, KA-03,
+F-KA-35): Ein GET zeigt eine Seite mit „Adresse bestätigen", die Änderung
+geschieht per POST mit dem Token im Rumpf. Bis dahin bestätigte schon der
+Abruf, und ein Mailscanner, der Links vorab öffnet, tat es für die
+Inhaberin. Ein Formular-Token gibt es nicht — ohne Sitzung —, der
+32-Byte-Token ist selbst der Nachweis.
 
 **Der Wechsel durch die Verwaltung geht den anderen Weg** (seit Web 23.2.0,
 R17-20): Er schreibt sofort, fragt die **alte** Adresse und sperrt bis dahin
@@ -9160,6 +9179,7 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Backup-Ziele: Bestand ansehen | `POST admin_sicherungsziele.php action=ziel_bestand` | 403 | 403 | 403 | durch | — |
 | NutzerInnen: die Liste | `GET admin_users.php` | 403 | 200 | 200 | 200 | — |
 | NutzerInnen: Konto anlegen | `POST admin_users.php action=user_add` | 403 | 403 | durch | durch | — |
+| NutzerInnen: Konto mit Rechten anlegen | `POST admin_users.php action=user_add&role=admin` | 403 | 403 | durch | durch | ja |
 | NutzerInnen: Auswahl sichern | `POST admin_users.php action=sichern_auswahl` | 403 | 403 | durch | durch | — |
 | Kontoseite: Konto einer NutzerIn | `GET admin_user.php?id={ziel}` | 403 | 200 | 200 | 200 | — |
 | Kontoseite: Konto eines Admins | `GET admin_user.php?id={admin}` | 403 | 403 | 200 | 200 | — |
@@ -9205,7 +9225,7 @@ ist dabei gegangen: Die Installation nimmt keinen Rechtstext mehr an.
 | Konto-Backups: Ordner löschen | `POST admin_sicherungen.php action=ordner_loeschen` | 403 | 403 | durch | durch | — |
 | Installation: die Seite | `GET admin_installation.php` | 403 | 403 | 200 | 200 | — |
 | Installation: Name | `POST admin_installation.php action=instanz_name` | 403 | 403 | durch | durch | — |
-| Installation: Adressen | `POST admin_installation.php action=instanz_adressen` | 403 | 403 | durch | durch | — |
+| Installation: Adressen | `POST admin_installation.php action=instanz_adressen` | 403 | 403 | 403 | durch | — |
 | Installation: Logo | `POST admin_installation.php action=logo_standard` | 403 | 403 | durch | durch | — |
 | Rechtstexte: die Seite | `GET admin_rechtstexte.php` | 403 | 403 | 200 | 200 | — |
 | Rechtstexte: speichern | `POST admin_rechtstexte.php` | 403 | 403 | durch | durch | — |
@@ -9384,6 +9404,7 @@ werden; dort fragt die Anmeldung danach keinen Code, bis die Dauer abläuft.
 | Dauer | je Rollengruppe in `app_state`: `zf_geraet_tage_user` (Vorgabe 30), `zf_geraet_tage_verwaltung` für Support, Admin und BetreiberIn (Vorgabe 7); Wahl aus 0, 1, 7, 14, 30, 90 — **0 heißt: kein Haken, und kein Gerät gilt**. Eingestellt unter Betrieb → Servereinstellungen, Karte „Anmeldung" |
 | gemerkt | in `login.php` nach `totp_anmeldung_pruefen()` mit Art `app` und Haken — **nur nach einem App-Code** (E-SR-18) **oder, seit Web 21.10.0, einem Passkey** (Art `passkey`, E-SR-32); nach Wiederherstellungscode und Rückweg nicht, auch nicht mit handgebautem `merken=1` |
 | erkannt | `zweitfaktor_geraet_erkannt()` nach dem Passwort und vor dem halben Stand: Cookie → Hash → Zeile **dieses** Kontos, deren `angelegt_am` plus die **heutige** Dauer in der Zukunft liegt; dann `anmeldung_vollenden()` ohne Code |
+| Anmeldesperre | seit Web 24.12.0 (KA-03, F-KA-42): `zweitfaktor_geraet_fuer_adresse()` vor der Kontosperre — trägt der Browser ein gültiges Gerät des Kontos mit der eingegebenen Adresse, gilt der Topf `login` (je Kontoname) für ihn nicht; der Topf `login_ip` gilt weiter. Gesucht wird über das Cookie, nicht über die Adresse: ohne Cookie keine Abfrage, mit Cookie genau eine, gleich ob es die Adresse gibt |
 | vergessen | beim Passwortwechsel und -reset — **in derselben Transaktion** wie Passwort und `session_epoch`, damit „Es wurde nichts geändert“ stimmt, wenn es scheitert —, in `totp_abschalten()` auf jedem Weg, mit dem Konto (Kaskade), im Demo-Reset, mit „Alle vergessen" im Profil; abgelaufene im Aufräumjob (Schritt „Gemerkte Geräte") |
 | Protokoll | `zweitfaktor_geraet_gemerkt` und `zweitfaktor_geraete_vergessen` (mit `daten.weg`), beide neutral — nicht je Anmeldung |
 
@@ -9393,7 +9414,8 @@ hieße „aus" erst in 30 Tagen aus. **Was es nicht ist:** kein zweiter Faktor
 aus eigenem Recht. Ein gemerktes Gerät ist Passwort plus Besitz eines
 Browsers, den die Person selbst als ihren ausgewiesen hat; ein Rechner, den
 andere mitbenutzen, gehört nicht gemerkt, und der Haken sagt es.
-Nachweis: `tools/proben/zweitfaktor/` Teil 5b (22 Fälle; Rest aus Nr. 141),
+Nachweis: `tools/proben/zweitfaktor/` Teil 5b (25 Fälle; Rest aus Nr. 141;
+seit KA-03 dazu die Kontosperre mit und ohne gemerktes Gerät),
 im Browser der Bedienweg `zweitfaktor-merken`.
 
 **Frischer Code (ab Web 21.9.0, Schritt 18, SR-07, E-SR-20).** Ein
@@ -9405,7 +9427,7 @@ die Anwendung deshalb noch einmal nach dem Code, wenn der letzte älter als
 | | |
 |---|---|
 | frisch | `$_SESSION['zf_frisch_bis']`, gesetzt nach einem App- oder Wiederherstellungscode — seit Web 21.10.0 auch nach einem Passkey (E-SR-32) — im Code-Schritt von `login.php` und auf der Bestätigungsseite; `ZF_FRISCH_S` = 900. Eine Anmeldung über ein gemerktes Gerät und der Rückweg setzen nichts, `anmeldung_vollenden()` räumt eine alte Frist weg. Ein Konto **ohne** Zweitfaktor hat nichts zu bestätigen: `zweitfaktor_frisch()` ist dort ein Durchlass |
-| die Liste | `ZF_FRISCH_HANDLUNGEN` in `db.php`, neben den Rollen: `schluessel` (alle sieben `schluessel_*`-Griffe in `betrieb_server.php`), `schluesselblatt` (die Anzeige, vor der ersten Ausgabe), `rollenwechsel`, `totp_zuruecksetzen` und `user_delete` in `admin_user.php`, `totp_ausschalten` in `einstellungen.php` (nur, wo Ausschalten geht — nicht bei einer Pflichtrolle), seit Web 21.10.0 `passkey_anlegen` (`api/passkey_anlegen.php` — der erste Endpunkt der Liste) und `passkey_entfernen` (`einstellungen.php`, E-SR-31); seit Web 23.2.0 (R17-20) `totp_codes_neu` (`einstellungen.php`, F-R17-43), `komplett_herunterladen` (`admin_komplettsicherung.php`, beide Arten, F-R17-08), `freigeben` und `freigeben_ablage` (Kontoseite und Konto-Backups, F-R17-02), `adresswechsel_verwaltung` und `setzlink` (`admin_user.php`, F-R17-06); seit Web 23.5.0 (R17-26) `jobs_token_neu`, `kette_token_neu` und `health_token` (`betrieb_jobs.php`, Erneuern und Abschalten der drei Tokens, E-R17-73). Je Handlung die Seite und die Karte des Rücksprungs, beim Blatt dazu das Ziel von „Abbrechen" |
+| die Liste | `ZF_FRISCH_HANDLUNGEN` in `db.php`, neben den Rollen: `schluessel` (alle sieben `schluessel_*`-Griffe in `betrieb_server.php`), `schluesselblatt` (die Anzeige, vor der ersten Ausgabe), `rollenwechsel`, `totp_zuruecksetzen` und `user_delete` in `admin_user.php`, `totp_ausschalten` in `einstellungen.php` (nur, wo Ausschalten geht — nicht bei einer Pflichtrolle), seit Web 21.10.0 `passkey_anlegen` (`api/passkey_anlegen.php` — der erste Endpunkt der Liste) und `passkey_entfernen` (`einstellungen.php`, E-SR-31); seit Web 23.2.0 (R17-20) `totp_codes_neu` (`einstellungen.php`, F-R17-43), `komplett_herunterladen` (`admin_komplettsicherung.php`, beide Arten, F-R17-08), `freigeben` und `freigeben_ablage` (Kontoseite und Konto-Backups, F-R17-02), `adresswechsel_verwaltung` und `setzlink` (`admin_user.php`, F-R17-06); seit Web 23.5.0 (R17-26) `jobs_token_neu`, `kette_token_neu` und `health_token` (`betrieb_jobs.php`, Erneuern und Abschalten der drei Tokens, E-R17-73); seit Web 24.12.0 (KA-03, F-KA-03) `konto_mit_rechten` (`admin_users.php`, Anlegen eines Kontos mit einer anderen Rolle als `user`). Je Handlung die Seite und die Karte des Rücksprungs, beim Blatt dazu das Ziel von „Abbrechen" |
 | das Tor | `zweitfaktor_frisch_verlangen($handlung)` in `auth_guard.php`, **vor** `csrf_check()` wie ein Rollentor (E-P5c-85). Nicht frisch: Seiten bekommen 303 auf `zweitfaktor.php?bestaetigen=1&zurueck=…` (nach einem POST mit `nochmal=1`), die API 403 JSON `zweitfaktor_frisch`. Ein Name, der nicht in der Liste steht, wirft — ein Tippfehler darf kein Durchlass sein |
 | die Bestätigung | `zweitfaktor.php?bestaetigen=1`: Codefeld wie im Code-Schritt (App-Code oder Wiederherstellungscode, seit Web 21.10.0 daneben „Mit Passkey bestätigen" mit eigener Herausforderung in `$_SESSION['passkey_best']`; Topf `totp` mit dem Merkmal des Kontos, fünf Fehlversuche sperren), bei Erfolg die Frist und 303 auf `zurueck`; nach einem POST steht in der Karte „Code bestätigt — bitte die Handlung noch einmal auslösen." Die Handlung wird **nicht nachgespielt** (ein gespeicherter POST samt Token wäre ein Zwischenspeicher, der beim nächsten Umbau falsch abgespielt wird). Steht in `WARTUNG_AUSNAHMEN` |
 | der Rücksprung | `zweitfaktor_zurueck()`: nur ein relativer Pfad auf eine Seite der Liste, die Abfrage nur mit harmlosen Zeichen (sonst fällt sie weg); alles andere wird `index.php` — sonst wäre die Seite ein offener Umleiter mit dem Vertrauen dieser Anwendung |
@@ -9770,8 +9792,9 @@ Adresse steht in jedem Zugriffsprotokoll des Hosters, eine Kopfzeile nicht.
 Die Adresse geht weiter, für Dienste, die keine Kopfzeile setzen können;
 stehen beide da, gilt die Kopfzeile.
 
-**Der Token liegt seit Web 23.5.0 in `app_state`** (`health_token`,
-`health_token()` in `jobs_lib.php`) und wird unter Betrieb → Hintergrundjobs,
+**Der Token liegt seit Web 23.5.0 in `app_state`** (`health_token`; seit
+Web 24.12.0 als Hash, geprüft über `health_token_pruefen()` in `jobs_lib.php`,
+gezeigt einmal nach dem Erzeugen, KA-03) und wird unter Betrieb → Hintergrundjobs,
 Karte „Monitoring", erzeugt, erneuert oder abgeschaltet — mit frischem Code
 des Zweitfaktors (R17-26, E-R17-72, -73). **Leer heißt: Endpunkt aus.** Bis
 23.4.x stand er in `config.php` (`'betrieb' => ['health_token' => …]`), mit
@@ -11685,6 +11708,14 @@ einer gut eingerichteten Anlage ein `noreply@`. Eine Mail, die im Fehlerfall
 auf ein Postfach verweist, das niemand liest, ist schlimmer als eine ohne
 Verweis — deshalb fällt die Zeile weg, statt etwas Falsches zu behaupten.
 
+**Ändern darf beide Adressen nur die BetreiberIn** (seit Web 24.12.0, KA-03,
+F-KA-20) — das Rollentor steht vor dem Formular-Token, ein Admin sieht die
+Felder gesperrt. Jede Änderung schreibt den Protokolleintrag
+`installation_adressen` (Reiter Verwaltung, alt → neu) und geht als Mail
+`installation_adresse` an die **alte** Adresse. Bis dahin konnte jeder Admin
+die Betreiberadresse still auf sich umstellen — und mit ihr die Sammelmails
+über auffällige Anmeldungen.
+
 **Die Betreiberadresse geht in die vorsichtige Richtung.** Steht etwas drin,
 geht die Betriebspost **nur** dorthin; bleibt sie leer, gilt die bisherige
 Rollenliste. Eine leere Einstellung darf keine Warnung verschlucken.
@@ -12998,9 +13029,9 @@ Repositorium; Staging und Produktiv sind zwei Installationen. **Seit
 Web 23.1.0 ist es das Kettentoken** (`app_state.kette_token`, Betrieb →
 Hintergrundjobs → „Auslieferungskette", 4.7) und nicht mehr das Job-Token
 der Adresse — der Name blieb, damit beim Umstieg kein Geheimnis umbenannt
-werden musste. Beim Update übernimmt das Kettentoken den bisherigen Wert;
-erneuert die BetreiberIn es danach (Runbook 7), trägt sie den neuen Wert hier
-ein, sonst ist die nächste Auslieferung rot. Jeder Lauf liest
+werden musste. Erneuert die BetreiberIn es (Runbook 7), trägt sie den neuen
+Wert hier ein, sonst ist die nächste Auslieferung rot — und seit Web 24.12.0
+steht der Wert nur in dem Augenblick da, in dem er erzeugt wird. Jeder Lauf liest
 es aus seiner eigenen Umgebung, deshalb kollidiert der gleiche Name nicht.
 **Seit Kette II/AP5 gibt es dafür keine zwei Zeilen mehr, sondern einen
 Schritt:** Der erste Schritt des gemeinsamen Laufs bestimmt Basisadresse,
@@ -13822,11 +13853,11 @@ und Adresse je in einem Wertekasten mit Knopf „kopieren":
    **Job-Token** startet seit Web 23.1.0 nur noch den Job-Lauf; es steht im
    Zugriffsprotokoll des Hosters, und mehr soll man damit nicht können.
 
-**Die zwei Tokens nach dem Update erneuern (einmal, nach Web 23.1.0):** Bis
-Web 23.0.3 reiste ein einziges Token in jeder Adresse der Kette, also steht
-es in den Zugriffsprotokollen beider Hoster. Beim Update übernimmt das neue
-Kettentoken diesen Wert (sonst bliebe die Anlage nach dem Abgleich in der
-Wartung); getrennt werden sie erst durch Erneuern. Je Anlage, Staging zuerst:
+**Ein Token verloren — oder die Tokens erneuern** (seit Web 24.12.0 der
+einzige Weg zu einem Wert: Gespeichert ist nur der Hash, die Seite zeigt den
+Wert einmal, direkt nach dem Erzeugen, E-KA-10). Den Wert sofort dorthin
+kopieren, wo er gebraucht wird; wer die Seite verlässt, ohne ihn kopiert zu
+haben, erzeugt einen neuen. Je Anlage, Staging zuerst:
 
 1. **Betrieb → Hintergrundjobs → „Auslieferungskette" → Neues Kettentoken
    erzeugen**, den Wert kopieren und in GitHub als Geheimnis `JOBS_TOKEN` der
@@ -13834,10 +13865,16 @@ Wartung); getrennt werden sie erst durch Erneuern. Je Anlage, Staging zuerst:
    Staging zusätzlich den Umgebungswert `NADOKU_STAGING_JOBS_TOKEN` der
    Cloud-Umgebung „NAdoku" (`docs/Sandbox-Setup.md`). **Bis der Eintrag
    steht, ist jede Auslieferung dorthin rot** — das Backup-Tor sagt `403 token`.
+   *(Bis Web 24.12.0 stand hier „einmal, nach Web 23.1.0": Damals übernahm
+   das neue Kettentoken den alten Wert des Job-Tokens, und erst das Erneuern
+   trennte sie.)*
 2. **Karte „Auslöser" → Neues Token erzeugen** (das Job-Token). Steht beim
    Hoster ein „Cronjob per URL", die Adresse dort austauschen; ohne einen
    solchen Eintrag ist nichts nachzuziehen.
-3. Nachweis: Ein Handlauf der Auslieferung auf Staging (Actions →
+3. **Karte „Monitoring" → Neues Token erzeugen** (das Health-Token), nur
+   wenn ein Monitoring es braucht; den Wert dort eintragen (Uptime Kuma:
+   Kopfzeile `X-Health-Token`).
+4. Nachweis: Ein Handlauf der Auslieferung auf Staging (Actions →
    „Auslieferung" → *Run workflow*) ist grün; auf Produktiv der nächste Tag.
 
 **GPS-Daten werden nicht verdichtet:** Seit Web 22.6.0 packt und dünnt der
@@ -14118,8 +14155,9 @@ seit Web 23.5.0 im Panel, R17-26):**
 
 1. **Betrieb → Hintergrundjobs**, Karte **Monitoring**, *Health-Token
    erzeugen* (fragt nach dem frischen Code des Zweitfaktors, E-R17-73). Das
-   Token steht danach in der Karte, mit „Kopieren". Es liegt in `app_state`
-   (`health_token`, `health_token()` in `jobs_lib.php`).
+   Token steht **einmal** da, mit „Kopieren" — sofort übernehmen; seit
+   Web 24.12.0 liegt in `app_state` (`health_token`) nur sein Hash, und ein
+   verlorenes wird neu erzeugt (KA-03, E-KA-10).
 2. Im Monitoring `https://<anlage>/api/health.php` mit der Kopfzeile
    `X-Health-Token: <Wert>` eintragen — **die Kopfzeile ist der empfohlene
    Weg** (seit Web 23.1.0, F-R17-22): Sie steht in keinem Zugriffsprotokoll.
@@ -14872,8 +14910,15 @@ abweicht, Herkunftsadresse —, aus beiden Seiten (Kontoseite und
 Konto-Backups), mit frischem Code. Die Auswahl im Dialog
 (`edbak_freigabe_zielkonten()`) zeigt nur Konten, an die es geht; ohne solche
 steht kein Knopf da. Eine Begleitdatei, die sich nicht lesen lässt, nennt
-keine Adresse; dann geht nur das Herkunftskonto. Nachweis: Freigabeprobe
-(Gegenfall an ein fremdes Konto, Protokolleintrag).
+keine Adresse; dann geht nur das Herkunftskonto. **Der Weg über die Adresse
+wartet die Frist ab** (seit Web 24.12.0, KA-03, F-KA-08): Hat das Zielkonto
+eine offene Adressbestätigung (`adresse_unbestaetigt()`, der Wechsel durch
+die Verwaltung schreibt die Adresse sofort), bekommt es nichts, bis sie
+bestätigt oder abgelaufen ist; die Kennung bleibt der erste Weg.
+**`api/adminbackup_freigabe.php` liefert kein `pat_key_check`** mehr — der
+Browser prüft den Schlüssel an `pat_wrap_rc` und braucht die Prüfsumme der
+Quelle nicht. Nachweis: Freigabeprobe (Gegenfall an ein fremdes Konto,
+offene Adressbestätigung, Antwort ohne Prüfsumme, Protokolleintrag).
 
 **Der Nutzerweg** (`api/adminbackup_freigabe.php` + `einstellungen.php?t=backup`)
 läuft vollständig im Browser: Wiederherstellungsschlüssel →
@@ -15054,6 +15099,13 @@ Die Aufteilung über die drei Seiten:
 Vier Kacheln (`edbak_stand_zaehlen()`, `edbak_ablage_zahlen()`), die Karten
 **Regeln**, **Ablage** und — zugeklappt — **Backups ohne Konto**
 (`edbak_verwaiste()`).
+
+**Dieselben zwei Riegel wie auf der Kontoseite** (seit Web 24.12.0, KA-03,
+F-KA-21): Ein Admin spielt nicht in das Konto einer BetreiberIn ein — nach
+oben kein Griff —, und die harte Bestätigung beim Löschen prüft gegen die
+Adresse aus der Begleitdatei, die der **Server** liest; ist sie unlesbar,
+gilt die ausdrückliche Bestätigung. Bis dahin kamen Sollwert und „unlesbar"
+als verborgene Felder aus dem Formular und ließen sich mitschicken.
 
 **Warum die Ablagezahlen hier Verzeichnisse lesen dürfen und in der Liste
 nicht:** Eine Größe in Bytes steht in keiner Begleitdatei, sie steht nur an den

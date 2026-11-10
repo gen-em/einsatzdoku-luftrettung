@@ -1244,14 +1244,24 @@ function edbak_freigeben(string $kennung, string $datei, int $zielUserId): bool
  *
  * PREIS: Wer sich mit einer neuen Adresse neu registriert hat, bekommt das
  * Paket erst, wenn die Verwaltung die Adresse angeglichen hat — und ein
- * Adresswechsel durch die Verwaltung gilt erst nach der Frist.
+ * Adresswechsel durch die Verwaltung gilt erst nach der Frist; seit KA-03
+ * auch hier, nicht nur beim Setz-Link (`adresse_unbestaetigt()`).
  * Eine Begleitdatei, die sich nicht lesen lässt, nennt keine Adresse; dann
  * geht nur das Herkunftskonto selbst.
  */
 function edbak_freigabe_erlaubt(string $kennung, array $ziel): bool
 {
     if (!edbak_kennung_gueltig($kennung)) { return false; }
+    /* DER ERSTE WEG IST DIE KENNUNG — sie ist unveraenderlich. */
     if ((string)($ziel['account_key'] ?? '') === $kennung) { return true; }
+    /* DER ZWEITE WEG, DIE ADRESSE, ERST NACH DER FRIST (KA-03, F-KA-08). Bis
+     * Web 24.11.0 genuegte die Adresse sofort: `admin_user.php` schreibt
+     * `users.email` beim Adresswechsel durch die Verwaltung sofort, und die
+     * Frist von sieben Tagen galt fuer den Setz-Link, nicht fuer die
+     * Freigabe. Ein Zielkonto mit offener Adressbestaetigung — oder eines,
+     * dessen frueherer Inhaber gerade umadressiert wurde — bekommt nichts. */
+    require_once __DIR__ . '/konto_lib.php';
+    if (isset($ziel['id']) && adresse_unbestaetigt((int)$ziel['id']) !== null) { return false; }
     $herkunft = trim((string)(edbak_begleit_lesen($kennung)['email'] ?? ''));
     $adresse  = trim((string)($ziel['email'] ?? ''));
     return $herkunft !== '' && $adresse !== '' && strcasecmp($herkunft, $adresse) === 0;
@@ -1801,7 +1811,7 @@ function edbak_zeitpunkt_text(?string $iso): string
 /** Zielkonto samt Kennung und Huelle lesen — für Rückspielung und Freigabe. */
 function edbak_ziel_konto(int $id): ?array
 {
-    $st = db()->prepare('SELECT id, email, name, account_key, pat_wrap_rc, pat_key_check
+    $st = db()->prepare('SELECT id, email, name, role, account_key, pat_wrap_rc, pat_key_check
                          FROM users WHERE id = ?');
     $st->execute([$id]);
     $r = $st->fetch();

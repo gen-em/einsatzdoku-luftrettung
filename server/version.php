@@ -8883,4 +8883,15 @@ declare(strict_types=1);
  *   Codeblatt; beide Blaetter weisen einen POST mit 400 ab. Dazu Nr. 540:
  *   Blaetter und Druck stellen jede Rolle des dunklen Modus auf hell.
  *   Neben (ein Weg durch die Anwendung aendert sich); kein Schema. */
-const WEB_VERSION = '24.11.0';
+/* 24.12.0 — SCHRANKEN DER VERWALTUNG, DIE HALTEN, WAS SIE SAGEN (KA-03,
+ *   Audit KA F-KA-03, -08, -09, -19, -20, -21, -28, -35, -41, -42). Ein
+ *   Konto mit Rechten entsteht nur mit frischem Code und meldet sich bei
+ *   jeder BetreiberIn; die Adressen der Installation aendert nur sie, mit
+ *   Protokoll und Mail an die alte. Job-, Ketten- und Health-Token liegen
+ *   gehasht und stehen nur einmal da (E-KA-10) — ein alter Klartextwert wird
+ *   beim ersten Lesen umgeschrieben. Ein SFTP-Ziel ohne gespeicherten
+ *   Hostschluessel bekommt nichts; die Freigabe ueber die Adresse wartet die
+ *   Frist ab und liefert kein `pat_key_check`; ein gemerktes Geraet geht an
+ *   der Kontosperre vorbei. Neben (ein Weg durch die Verwaltung aendert
+ *   sich); kein Schema, kein `update.php`. */
+const WEB_VERSION = '24.12.0';

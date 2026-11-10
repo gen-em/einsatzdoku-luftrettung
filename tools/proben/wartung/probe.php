@@ -535,46 +535,40 @@ pruefe($a7b['code'] === 302,
        '7   update.php (alte Adresse) leitet weiter statt 503', 'HTTP ' . $a7b['code']);
 
 require_once $wurzel . '/jobs_lib.php';
-$token = jobs_token(false);
-$a8 = hole('jobs.php?token=' . urlencode($token));
-pruefe($a8['code'] === 200, '8   jobs.php mit gueltigem Token -> 200 (Jobs laufen, E-S5W-11)',
-       'HTTP ' . $a8['code']);
-
-$a9 = hole('jobs.php?token=falsch-und-zwar-eindeutig');
-pruefe($a9['code'] === 403 && ($a9['daten']['error'] ?? '') === 'token',
-       '9   jobs.php mit falschem Token -> 403 token (wie heute)', 'HTTP ' . $a9['code']);
-
-/* 9a bis 9f  ZWEI TOKENS.
- *
- * Mit `aktion` nur POST und nur das Kettentoken, ohne `aktion` nur das
- * Job-Token. Gemessen hier und nicht in einer eigenen Probe, weil `jobs.php`
- * im Wartungsmodus offen bleiben MUSS (die Kette schaltet sie selbst aus) —
- * die Lage, in der diese Probe ohnehin steht, ist die, in der die Kette die
- * Aktionen braucht. Der Kettenwert wird vorher gemerkt und danach
- * zurueckgelegt; die Fehlversuche im Topf `pair` raeumt der Block selbst weg,
- * sonst sperrte der zehnte Lauf binnen zehn Minuten den eigenen Anschluss. */
+/* SEIT KA-03 GEHASHT: Die Probe erzeugt sich beide Tokens selbst und legt die
+ * gespeicherten Werte danach zurueck. Die Fehlversuche im Topf `pair` raeumt
+ * der Block selbst weg, sonst sperrte der zehnte Lauf den eigenen Anschluss. */
 $ketteVorher = app_state_lesen(KETTE_TOKEN_SCHLUESSEL);
 $jobVorher   = app_state_lesen(JOB_TOKEN_SCHLUESSEL);
 $pdo->exec("DELETE FROM rate_limits WHERE topf = 'pair'");
-$pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([KETTE_TOKEN_SCHLUESSEL]);
 try {
+    $token = jobs_token_neu();
+    $a8 = hole('jobs.php?token=' . urlencode($token));
+    pruefe($a8['code'] === 200, '8   jobs.php mit gueltigem Token -> 200 (Jobs laufen, E-S5W-11)',
+           'HTTP ' . $a8['code']);
+
+    $a9 = hole('jobs.php?token=falsch-und-zwar-eindeutig');
+    pruefe($a9['code'] === 403 && ($a9['daten']['error'] ?? '') === 'token',
+           '9   jobs.php mit falschem Token -> 403 token (wie heute)', 'HTTP ' . $a9['code']);
+
+    /* 9a bis 9f  ZWEI TOKENS. Mit `aktion` nur POST und nur das
+     * Kettentoken, ohne `aktion` nur das Job-Token. Gemessen hier, weil
+     * `jobs.php` im Wartungsmodus offen bleiben MUSS. */
+    $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([KETTE_TOKEN_SCHLUESSEL]);
     $a9a = hole('jobs.php', null, ['token' => $token, 'aktion' => 'zustand']);
-    $uebernommen = app_state_lesen(KETTE_TOKEN_SCHLUESSEL);
-    pruefe($a9a['code'] === 200 && $uebernommen === $token
-           && ($a9a['daten']['wartung']['aktiv'] ?? null) === true,
-           '9a  ohne Kettentoken: POST aktion=zustand mit dem Job-Token -> 200, '
-           . 'und das Kettentoken uebernimmt dessen Wert (der Uebergang)',
-           'HTTP ' . $a9a['code'] . ', uebernommen: ' . ($uebernommen === $token ? 'ja' : 'nein'));
+    pruefe($a9a['code'] === 403 && app_state_lesen(KETTE_TOKEN_SCHLUESSEL) === null,
+           '9a  ohne Kettentoken: das Job-Token oeffnet keine Aktion, und es wird nichts '
+           . 'uebernommen (seit KA-03 kein Uebergang mehr)', 'HTTP ' . $a9a['code']);
 
     $a9b = hole('jobs.php?token=' . urlencode($token) . '&aktion=zustand');
     pruefe($a9b['code'] === 405 && ($a9b['daten']['error'] ?? '') === 'method',
            '9b  aktion in der Adresse -> 405 method, vor jedem Tokenvergleich',
            'HTTP ' . $a9b['code']);
 
-    $kette = kette_token(true);
+    $kette = kette_token_neu();
     $a9c = hole('jobs.php', null, ['token' => $token, 'aktion' => 'zustand']);
     pruefe($a9c['code'] === 403 && ($a9c['daten']['error'] ?? '') === 'token',
-           '9c  getrennt: das Job-Token oeffnet keine Aktion mehr -> 403 token',
+           '9c  getrennt: das Job-Token oeffnet keine Aktion -> 403 token',
            'HTTP ' . $a9c['code']);
 
     $a9d = hole('jobs.php', null, ['token' => $kette, 'aktion' => 'zustand']);
@@ -591,36 +585,20 @@ try {
            '9f  Token in der Adresse, Aktion im Rumpf -> 403 token (genau das Protokollleck)',
            'HTTP ' . $a9f['code']);
 
-    /* 9g, 9h  WER ZUERST ENTSTEHT. Bis dahin
-     * legte die Seite das Job-Token vor dem Kettentoken an, und auf einer
-     * NEUEN Anlage uebernahm das Kettentoken danach dessen Wert — beide
-     * blieben dauerhaft gleich. */
-    $loesche = $pdo->prepare('DELETE FROM app_state WHERE k = ?');
-    $loesche->execute([KETTE_TOKEN_SCHLUESSEL]);
-    $loesche->execute([JOB_TOKEN_SCHLUESSEL]);
-    $neuJob = jobs_token();
-    $neuKette = app_state_lesen(KETTE_TOKEN_SCHLUESSEL);
-    pruefe($neuKette !== null && $neuKette !== '' && $neuKette !== $neuJob,
-           '9g  neue Anlage: das erste Job-Token legt ein EIGENES Kettentoken an, nicht denselben Wert',
-           'Kettentoken ' . ($neuKette === null ? 'fehlt' : ($neuKette === $neuJob ? 'GLEICH' : 'eigen')));
-
-    $loesche->execute([KETTE_TOKEN_SCHLUESSEL]);
-    $alt = jobs_token();
-    $erneuert = jobs_token(true);
-    $danach = app_state_lesen(KETTE_TOKEN_SCHLUESSEL);
-    pruefe($danach === $alt && $erneuert !== $alt,
-           '9h  Update, Job-Token zuerst erneuert: das Kettentoken behaelt den ALTEN Wert, den die Kette kennt',
-           'Kettentoken ' . ($danach === $alt ? 'alt' : ($danach === $erneuert ? 'NEU' : 'anders')));
+    /* 9g  GEHASHT GESPEICHERT (KA-03, F-KA-19): Keiner der beiden
+     * Klartextwerte steht in `app_state`. */
+    $roh = (string)$pdo->query("SELECT GROUP_CONCAT(v) FROM app_state WHERE k IN ('jobs_token','kette_token')")
+                       ->fetchColumn();
+    pruefe(!str_contains($roh, $token) && !str_contains($roh, $kette)
+           && app_state_lesen(KETTE_TOKEN_SCHLUESSEL) === token_hash($kette),
+           '9g  beide Tokens liegen nur als Hash in app_state');
 } finally {
-    if ($ketteVorher === null) {
-        $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([KETTE_TOKEN_SCHLUESSEL]);
-    } else {
-        app_state_setzen(KETTE_TOKEN_SCHLUESSEL, $ketteVorher);
-    }
-    if ($jobVorher === null) {
-        $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([JOB_TOKEN_SCHLUESSEL]);
-    } else {
-        app_state_setzen(JOB_TOKEN_SCHLUESSEL, $jobVorher);
+    foreach ([KETTE_TOKEN_SCHLUESSEL => $ketteVorher, JOB_TOKEN_SCHLUESSEL => $jobVorher] as $k => $v) {
+        if ($v === null) {
+            $pdo->prepare('DELETE FROM app_state WHERE k = ?')->execute([$k]);
+        } else {
+            app_state_setzen($k, $v);
+        }
     }
     $pdo->exec("DELETE FROM rate_limits WHERE topf = 'pair'");
 }

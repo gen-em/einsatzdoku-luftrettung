@@ -53,6 +53,9 @@ $bericht     = null;
  * hat — Ort und Anker sind ihre `id`. Sonst wiederholt Neuladen das
  * Speichern. Ein abgewiesener Wert bleibt auf der Seite. */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    /* DIE ADRESSEN NUR DURCH DIE BETREIBERIN (seit Web 24.12.0, KA-03,
+     * F-KA-20) — das Rollentor vor dem Formular-Token, wie ueberall. */
+    if (($_POST['action'] ?? '') === 'instanz_adressen') { require_betreiberin(); }
     csrf_check();
 
     if (($_POST['action'] ?? '') === 'instanz_name') {
@@ -69,10 +72,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $nameMeldung = ['fehler', $meldung];
     } elseif (($_POST['action'] ?? '') === 'instanz_adressen') {
         /* DIE ADRESSEN DIESER INSTALLATION. Eigenes
-         * „Speichern" wie beim Namen, und aus demselben Grund. */
+         * „Speichern" wie beim Namen, und aus demselben Grund.
+         *
+         * NUR DIE BETREIBERIN, MIT PROTOKOLL UND MAIL AN DIE ALTE ADRESSE
+         * (seit Web 24.12.0, KA-03, F-KA-20). Bis dahin aenderte jeder Admin
+         * beide ohne Spur — und Sammelmails ueber auffaellige
+         * Anmeldeversuche gingen danach an seine Adresse. */
+        $altKontakt = instanz_kontakt();
+        $altBetrieb = betrieb_mail();
         [$ok, $meldung] = instanz_adressen_setzen(post_text('instanz_kontakt'),
                                                   post_text('betrieb_mail'));
         if ($ok) {
+            /* AUS DER TABELLE, NICHT AUS `instanz_kontakt()`: Die Funktion
+             * merkt sich ihren Wert je Anfrage und nennte hier den alten. */
+            $neuKontakt = trim((string)(app_state_lesen('instanz_kontakt') ?? ''));
+            $neuBetrieb = trim((string)(app_state_lesen('betrieb_mail') ?? ''));
+            $geaendert = [];
+            if ($neuKontakt !== $altKontakt) { $geaendert[] = ['Kontaktadresse', $altKontakt, $neuKontakt]; }
+            if ($neuBetrieb !== $altBetrieb) { $geaendert[] = ['Betreiberadresse', $altBetrieb, $neuBetrieb]; }
+            if ($geaendert !== []) {
+                protokoll('verwaltung', 'installation_adressen',
+                    implode('; ', array_map(static fn(array $g): string =>
+                        $g[0] . ': ' . ($g[1] !== '' ? $g[1] : '(leer)') . ' → ' . ($g[2] !== '' ? $g[2] : '(leer)'),
+                        $geaendert)),
+                    ['felder' => array_column($geaendert, 0)]);
+                require_once __DIR__ . '/mail_lib.php';
+                foreach ($geaendert as [$was, $alt, $neu]) {
+                    if ($alt === '') { continue; }
+                    mail_einreihen('installation_adresse', $alt, [
+                        'kern' => 'die ' . $was . " dieser Installation wurde geändert —\n"
+                                . "diese Adresse gilt dafür nicht mehr.\n\n"
+                                . "War das nicht beabsichtigt, bitte die BetreiberIn fragen;\n"
+                                . 'die Änderung steht im Protokoll (Reiter Verwaltung).']);
+                }
+            }
             flash_setzen('ok', $meldung, 'k-adressen');
             header('Location: admin_installation.php#k-adressen');
             exit;
@@ -269,6 +302,9 @@ ui_seite_start(['titel' => 'Installation']);
           Kontaktzeile aus den Mails, und Betriebspost geht an alle mit
           Verwaltungsrecht.</p>
 
+        <?php if (!ist_betreiberin()): ?>
+          <p class="feld-hinweis">Ändern kann diese Adressen nur die BetreiberIn.</p>
+        <?php endif; ?>
         <form method="post" class="listen-form">
           <?= csrf_field() ?>
           <input type="hidden" name="action" value="instanz_adressen">
@@ -276,6 +312,7 @@ ui_seite_start(['titel' => 'Installation']);
                          'art' => 'email',
                          'label_zusatz' => 'steht in jeder E-Mail an NutzerInnen',
                          'wert' => instanz_kontakt(),
+                         'attr' => ist_betreiberin() ? '' : ' disabled',
                          'platzhalter' => 'leer = keine Kontaktzeile',
                          'klein' => 'Nicht der Absender — der steht als smtp.from '
                                   . 'in der config.php.']); ?>
@@ -283,9 +320,12 @@ ui_seite_start(['titel' => 'Installation']);
                          'art' => 'email',
                          'label_zusatz' => 'Warnungen zu Speicher und Sicherungen',
                          'wert' => betrieb_mail(),
+                         'attr' => ist_betreiberin() ? '' : ' disabled',
                          'platzhalter' => 'leer = an alle mit Verwaltungsrecht']); ?>
           <div class="listen-form-fuss">
+            <?php if (ist_betreiberin()): ?>
             <?= ui_knopf(['text' => 'Adressen speichern', 'symbol' => 'haken', 'art' => 'primaer']) ?>
+            <?php endif; ?>
           </div>
         </form>
       <?php ui_karte_ende(); ?>

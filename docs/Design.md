@@ -1136,7 +1136,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `filter.svg` | Tabler Icons „filter" (MIT) | 12 |
 | `geraet-entkoppeln.svg` | Tabler Icons „link-off" (MIT) | 1 |
 | `gruppe.svg` | Tabler Icons „users" (MIT) | 22 |
-| `haken.svg` | Tabler Icons „check" (MIT) | 41 |
+| `haken.svg` | Tabler Icons „check" (MIT) | 42 |
 | `haus.svg` | Tabler Icons „home" (MIT) | 4 |
 | `herunterladen.svg` | Tabler Icons „download" (MIT) | 7 |
 | `hilfe.svg` | Tabler Icons „help-circle" (MIT) | 18 |
@@ -1146,7 +1146,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `kalender.svg` | Tabler Icons „calendar" (MIT) | 4 |
 | `karte-breit.svg` | Tabler Icons „arrows-horizontal" (MIT) | 1 |
 | `karte-gross.svg` | Tabler Icons „arrows-vertical" (MIT) | 1 |
-| `karte.svg` | Tabler Icons „map-2" (MIT) | 14 |
+| `karte.svg` | Tabler Icons „map-2" (MIT) | 19 |
 | `klinik.svg` | Tabler Icons „building-hospital" (MIT) | 3 |
 | `kolben.svg` | Tabler Icons „flask" (MIT) | 2 |
 | `korb.svg` | Tabler Icons „trash" (MIT) | 23 |
@@ -1161,7 +1161,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `plus.svg` | Tabler Icons „plus" (MIT) | 26 |
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 18 |
-| `protokoll.svg` | Tabler Icons „list" (MIT) | 23 |
+| `protokoll.svg` | Tabler Icons „list" (MIT) | 24 |
 | `punkte.svg` | Tabler Icons „dots" (MIT) | 70 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |

@@ -8,7 +8,7 @@ declare(strict_types=1);
  *     GET /api/health.php?token=<Token>          (fuer Monitore ohne Kopfzeilen)
  *
  *     <Token> = das Health-Token aus Betrieb → Hintergrundjobs
- *               (`health_token()` in `jobs_lib.php`; ein
+ *               (`health_token_pruefen()` in `jobs_lib.php`, gehasht; ein
  *               `betrieb.health_token` aus `config.php` wird beim ersten
  *               Lesen uebernommen)
  *
@@ -67,7 +67,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../db.php';
 require_once __DIR__ . '/../ratelimit_lib.php';
-require_once __DIR__ . '/../jobs_lib.php';   // health_token()
+require_once __DIR__ . '/../jobs_lib.php';   // health_token_pruefen()
 
 api_methode('GET');
 $t0 = microtime(true);
@@ -80,8 +80,8 @@ rate_zaehlen('health');
 
 $kopf     = (string)($_SERVER['HTTP_X_HEALTH_TOKEN'] ?? '');
 $token    = $kopf !== '' ? $kopf : get_text('token');
-$erwartet = health_token();
-if ($erwartet === '' || $token === '' || !hash_equals($erwartet, $token)) {
+/* Gehasht gespeichert seit Web 24.12.0 (KA-03); Vergleich in fester Zeit. */
+if (!health_token_pruefen($token)) {
     rate_gleiche_dauer($t0);
     json_out(['error' => 'token'], 403);
 }

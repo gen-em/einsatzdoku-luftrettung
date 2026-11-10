@@ -12,9 +12,9 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-02** gebaut und geprüft (Web 24.11.0), Pull Request offen — wartet auf Merge; danach Tag (KA-M3), dann KA-03 |
-| Erledigt | **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) |
-| Hakt | nichts im Code. **Offen bei der BetreiberIn:** der Probelauf gegen Produktiv mit `security: strict` (KA-M2, P-KA-02) — Staging ist belegt |
+| In Arbeit | **KA-03** — gebaut (Web 24.12.0), im PR; danach KA-04 ohne die Garmin-Punkte. **Garmin-Anteile ausgegliedert an KG** (E-KA-21, Abschnitt 11) |
+| Erledigt | **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
+| Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
 **Die Umsetzung findet in einer eigenen Sitzung statt** — ein Paket nach
@@ -73,6 +73,11 @@ Safari.
 | E-KA-18 | **Die Kontoadresse geht bei der Erstvergabe mit dem Code ans Blatt** — sie ist kein Geheimnis, und ohne Sitzung kennt das Blatt sie sonst nicht; mit Sitzung geht die aus der Sitzung vor | 10.11.2026, BetreiberIn |
 | E-KA-19 | **Nr. 540 ohne Mockup:** Blätter und Druck stellen die Rollen auf ihre hellen Werte zurück — vorhandene Token, kein neuer Farbwert, kein neuer Baustein; das Druckbild bleibt das gedachte | 10.11.2026, BetreiberIn |
 | E-KA-20 | **Der Riegel aus KA-02 Punkt 5 misst Formulare und Abrufe mit einem Druckblatt als Ziel, nicht den Feldnamen.** `code` heißt auch das Feld der Zweitfaktor-Formulare; ein Riegel über den Namen schlüge falsch an oder würde ausgenommen | 10.11.2026, BetreiberIn |
+| E-KA-22 | **Die Antworten auf die drei Fragen vor KA-03:** Die bestehenden Tokens gelten weiter — ein Klartextwert wird beim ersten Lesen gehasht zurückgeschrieben, keine Migration, kein `update.php`; Punkt 10 über das „Gerät merken"-Cookie; Tag `web-v24.11.0` vor KA-03 | 10.11.2026, BetreiberIn |
+| E-KA-23 | **Die Übernahme des Kettentokens vom Job-Token fällt** (mit E-KA-16): Mit Hashes hätte sie beide Tokens dauerhaft gleich gemacht. Fehlt das Kettentoken, ist es nicht eingerichtet | 10.11.2026, Umsetzung |
+| E-KA-24 | **Die Rollentore von KA-03 stehen vor dem Formular-Token**, wie überall: Adressen der Installation (`require_betreiberin()`, 403) und der frische Code für ein Konto mit Rechten (vor `csrf_check()`, wie in `admin_user.php`). So misst die Matrix der Rollenprobe das Tor und nicht die Token-Ablehnung | 10.11.2026, Umsetzung |
+| E-KA-25 | **Punkt 10 sucht über das Cookie, nicht über die Adresse** (`zweitfaktor_geraet_fuer_adresse()`): ohne Cookie keine Abfrage, mit Cookie genau eine, gleich ob es die Adresse gibt — die Antwortzeit verrät kein Konto. Der Topf `login_ip` gilt weiter für alle | 10.11.2026, Umsetzung |
+| E-KA-21 | **Die Garmin-Anteile gehen an eine eigene Instanz, Kürzel KG** (Abschnitt 11): KA-04 Punkt 1 und 4, der Garmin-Teil von KA-06c samt der Messung für 06a, die Garmin-Kommentare aus F-KA-43 und der Garmin-Teil von KA-M6. KG zählt eigene Nummern (`KG-NN`, `F-KG-NN`, `E-KG-NN`, `P-KG-NN`), führt ein eigenes Konzept und schreibt den Rahmenplan nicht — das tut diese Instanz | 10.11.2026, BetreiberIn |
 
 ---
 
@@ -335,7 +340,7 @@ Prüfarbeit nie gefächert.
 an das es beim Aufzeichnen gekoppelt war; kein Punkt geht still verloren.
 **Befunde:** F-KA-05, -06, -07, -18, -27, -31, -32, -33.
 
-1. **Garmin-Uhr:** `Pair.start()` weist bei laufendem Dienst immer ab. Die
+1. **→ KG-01 (E-KA-21).** **Garmin-Uhr:** `Pair.start()` weist bei laufendem Dienst immer ab. Die
    Bindung an den alten Schlüssel deckt künftig auch laufende Pakete, falls
    eine Trennung auf anderem Weg entsteht (`cred` gelöscht).
 2. **Handy:** Dienstbeginn von der Wear-Uhr nur bei bestehender Kopplung —
@@ -347,7 +352,7 @@ an das es beim Aufzeichnen gekoppelt war; kein Punkt geht still verloren.
    Schlüssel kollidiert, quittiert der Server nur `spur_naechste_seq()`.
    Gegenprüfen, ob das Handy ebenso stückelt wie die Uhr (im Audit nicht
    geprüft).
-4. **Uhr:** `next_seq` höchstens `seq_from + gesendete Punkte`; die Größe
+4. **→ KG-01 (E-KA-21).** **Uhr:** `next_seq` höchstens `seq_from + gesendete Punkte`; die Größe
    eines unbestätigten Stücks merken und identisch wiederholen.
 5. **Handy:** 400, 401 und 403 nur mit dem `error`-Feld des Vertrags als
    endgültig werten, sonst „später erneut"; vor dem Räumen nach Fristablauf
@@ -471,7 +476,7 @@ nächsten Erneuern). Die drei Punkte zur Ableitung gehen hier mit und können
 brauchen keinen Formatwechsel).
 
 **KA-06c Geräte.** Geräteschlüssel, Hülle Fassung 2, Kopplung mit
-Vergleichswert — Garmin-Uhr und Handy; die Wear-Uhr bleibt ohne Schlüssel
+Vergleichswert — Garmin-Uhr (**→ KG-03, E-KA-21**) und Handy; die Wear-Uhr bleibt ohne Schlüssel
 (sie sendet nicht). **Gekoppelte Geräte haben keinen Schlüssel:** Sie
 koppeln neu oder senden bis dahin Fassung 1, die der Browser als „ohne
 Herkunftsnachweis" kennzeichnet. Die Frist dafür entscheidet KA-M5.
@@ -514,7 +519,8 @@ Verbraucher).
 1. `docs/Bedrohungsmodell.md` einmal ganz gegen den dann erreichten Stand
    lesen; die Zeilen R21 bis R27 gehen als behoben oder als benannte Grenze
    in den Bestand; die Kopfzeile „Nachgelesen gegen" hebt sich.
-2. Die fünf Kommentare aus F-KA-43 berichtigen.
+2. Die fünf Kommentare aus F-KA-43 berichtigen — die zwei in `watch/`
+   (`Huelle.mc`, `Pair.mc`) mit KG-01 (E-KA-21).
 3. `CLAUDE.md` 3 und 4, soweit die Pakete es nicht schon getan haben.
 4. Prüfdokument nach `CLAUDE.md` 7, danach Aufgehen in der Prüfliste.
 5. Abschluss nach Rahmenplan 9: Erledigt-Zeile, Reste nach 6, Backlog-
@@ -654,10 +660,53 @@ BetreiberIn** (KA-M2).
 | Riegel `druckblatt` | Selbstprobe **9/0**; gegen diesen Stand 226 Dateien, **0 Befunde**; gegen `server/` von `main` **8 Befunde** (drei Formulare, drei Lesestellen, zwei fehlende Abweisungen) | der Riegel hält den alten Weg auf |
 | hell gegen dunkel, Chromium, fünf Ansichten (Notfallblatt leer, gefüllt, gefüllt im Druck, Codeblatt, Anmeldung mit Fehlermeldung im Druck) | **0 von 158 Elementen** weichen ab (Farbe, Fläche, Rand); mit `style.css` von `main` **49** | Nr. 540 |
 
+**Nach dem Merge (Lauf 192, 10.11.2026):** alle Jobs grün; Staging meldet
+24.11.0, ein POST an `notfallblatt.php` bekommt dort 400. **R91 auf
+Staging:** Notfallblattprobe gegen Staging in drei Engines je 16 von 16
+(Wegwerfkonto, angelegt und gelöscht mit dem BetreiberIn-Konto der
+Arbeitsumgebung); hell gegen dunkel 0 von 173 Elementen abweichend.
+Offen bleiben Papier und ein echter Safari (P-KA-03).
+
 Prüfstand und Bericht: im Commit von KA-02. Der volle Lauf (`39a9420`,
 Stufe neben, drei Engines, zehn Breiten, 8 852 s) war **64 grün, 1 rot** —
 die Wartungslaufprobe, unabhängig von KA-02 (F-KA-54); der Kopf des PR erbt
 die 64 und misst die berichtigte Probe neu.
+
+### KA-03 (10.11.2026)
+
+**Was nicht geprüft werden konnte — zuerst.**
+
+1. **Der Weg der Tokens auf Produktiv.** Dass ein Klartext-Kettentoken beim
+   ersten Lesen gehasht wird und weiter gilt, belegt die Wartungsprobe
+   örtlich (Lage „Übergang aus Klartext"); ob die Kette nach dem Tag grün
+   bleibt, zeigt erst der Lauf (P-KA-06).
+2. **Ob auf Produktiv ein SFTP-Ziel ohne Abdruck liegt** — örtlich gibt es
+   keine Ziele (gemessen: 0 Zeilen in `backup_targets`). P-KA-05.
+3. **Die Gegenprobe für die Tokens ist ein Abbruch, keine rote Zeile:**
+   Jobs- und Wartungsprobe rufen die neue Schnittstelle (`jobs_token_neu()`)
+   und brechen gegen `main` mit „undefined function" ab. Rot sind sie, aber
+   nicht an der Stelle, die den Befund misst.
+4. **Eine echte Mail im Postfach** (Konto mit Rechten, Adressen der
+   Installation, Adressbestätigung im Mailprogramm): gemessen ist die Zeile
+   in der Warteschlange, nicht die Zustellung. P-KA-07.
+
+**Gemessen** (jede Zahl mit ihrem Gegenstand; Gegenprobe = dieselbe Probe
+gegen die 19 Dateien unter `server/` von `main`):
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Rollenprobe | **634 Erwartungen, 0 nicht erfüllt** — neu: zwei Matrixzeilen (Konto mit Rechten mit frischem Code; Adressen: Admin 403) und der Teil „Schranken der Verwaltung" (9 Zeilen: Mail an die BetreiberInnen, Protokoll und Mail an die alte Adresse, Einspielen nach oben abgewiesen, Löschbestätigung gegen den Serverwert, Demo 403, CSP ohne Fremdtext, Eingabeprüfung, Adresslink per GET ohne Wirkung, per POST mit) | **10 nicht erfüllt** — jede neue Zeile außer „Knopf per POST" (die gilt auch vorher) | F-KA-03, -20, -21, -28, -35, -41 |
+| Zweitfaktorprobe | **142 ok, 0 fehlen** — neu in 5b: Kontosperre gesetzt, neuer Browser bekommt die Sperrmeldung, der Browser mit gemerktem Gerät kommt herein | **1 fehlt** — genau „gemerktes Gerät: angemeldet" (200 statt 302) | F-KA-42 |
+| Freigabeprobe, Chromium | **27 Erwartungen, 0 nicht erfüllt** — neu: Adresse ohne offene Bestätigung erlaubt, mit offener abgewiesen; die Antwort trägt `pat_wrap_rc`, kein `pat_key_check` | **2 nicht erfüllt** — beide neuen | F-KA-08 |
+| Versandprobe (pyftpdlib, paramiko) | **143 Erwartungen, 0 nicht erfüllt** — neu: ohne Abdruck 0 Dateien gesendet und die Meldung „noch kein Hostschlüssel gespeichert" | **2 nicht erfüllt** — der Job sendete 8 Dateien an das ungeprüfte Ziel | F-KA-09 |
+| Jobsprobe, Wartungsprobe | **42/0 und 83/0** — Teil 8 und 9 bis 9g: gehasht gespeichert, Prüfen über `…_pruefen()`, Übergang aus Klartext, Ausgangswerte zurückgelegt | Abbruch (siehe oben, 3.) | F-KA-19 |
+
+**Die Befunde an der heutigen Stelle:** Alle zehn halten — die Gegenprobe
+ist für jeden außer F-KA-19 eine rote Zeile gegen `main`; F-KA-19 stand
+sichtbar in `app_state` (Klartext vor dem ersten Lesen durch den neuen
+Code).
+
+Prüfstand und Bericht: im Commit von KA-03.
 
 ---
 
@@ -676,9 +725,54 @@ die 64 und misst die berichtigte Probe neu.
 | F-KA-52 | **Der Stilvergleich war rot mit 19 ungeplanten Signaturen je Engine** — alle aus `.rf-druck` (Umbruch, neue Zeile `.rf-druck-hinweis`) und der um 4 px längeren Katalogseite; keine weitere | geplante Listen neu geschrieben (`gegen.sh --schreiben`), je 19 Signaturen; die drei geerbten Zeilen des vorigen Schritts fallen weg |
 | F-KA-53 | **Bei 360 px stoßen die fünf Schlüsselgruppen des Notfallblatts aneinander** (gesehen im Bilderlauf, Baustein unverändert seit Web 21.1.0) | **in KA-02 behoben** (Wunsch der BetreiberIn, statt eines Backlog-Punkts; die zuerst angelegte Nr. 561 ist nie gepusht worden und entfällt): unter 480 px am Bildschirm drei Gruppen je Zeile mit Spaltenabstand, auf Papier weiter fünf; Bilderlauf 02f bei 360 px ohne Überlauf, Gruppen getrennt |
 | F-KA-54 | **Die Wartungslaufprobe war seit OF-07 (Web 24.8.0) rot, ohne dass es auffiel** — Teil C rief die Tagesansicht ohne `#ruheliste` auf, und seit OF-07 steht die Karte „Ruhesegmente" nur auf Abruf da; der Knopf blieb verborgen, der Klick lief in die Zeitgrenze. Grün zuletzt am 07.11.2026 (MA-18); seither lief sie in keinem Bericht, weil kein Paket ihr Muster berührte. Im Prüfstand von KA-02 rot in drei Engines, mit `server/` von `main` ebenso | Probe ruft `index.php?d=…#ruheliste` auf und klickt nur, wenn der Bereich nicht schon offen ist; danach 24 ok, 0 fehlen. Zwischenstand `39a9420` trägt den roten Bericht, der nächste Commit den grünen (Erbe nach `Pruefablauf.md` 5.4) |
+| F-KA-55 | **Die Notfallblattprobe baute ihren Browserkontext von Hand** (`ignoreHTTPSErrors` nur örtlich) statt über `kontextMachen()` aus `tools/motor.mjs`; gegen Staging scheiterte Firefox an der Zertifizierungsstelle des Proxys der Arbeitsumgebung (`SEC_ERROR_UNKNOWN_ISSUER`, `Sandbox-Setup.md` 5.2). Örtlich und in Chromium/WebKit fiel es nicht auf | `kontextMachen(browser, { basis })`; danach Firefox gegen Staging 16 von 16, örtlich unverändert 16 von 16. Geht mit dem nächsten PR |
+| F-KA-56 | **Der Container wurde ein zweites Mal neu gestartet**, diesmal in der Wartezeit zwischen PR und Merge (`uptime` 20 min um 18:35); die örtliche Anlage stand nicht mehr | `hochfahren.sh`, ohne `--neu`; wie F-KA-48 |
+| F-KA-57 | **Der erste Bau von Punkt 5 erkannte nie eine Änderung:** `instanz_kontakt()` und `betrieb_mail()` merken sich ihren Wert je Anfrage, der Vergleich „alt gegen neu" nach dem Speichern verglich den alten mit sich selbst — kein Protokoll, keine Mail (gefunden von der neuen Zeile der Rollenprobe) | neu gelesen aus `app_state`; dazu die Art `installation_adressen` im Katalog `PROTOKOLL_ARTEN` und in der Reiterliste |
+| F-KA-58 | **Die Zweitfaktorprobe nahm `admin_users.php` als Beispiel einer fremden Rücksprungseite** — seit Punkt 1 ist sie eine Seite der Liste (`konto_mit_rechten`), der Fall wurde rot, ohne dass etwas falsch war | Beispiel `admin_installation.php` (keine Seite der Liste) |
+| F-KA-59 | **Die Versandprobe sendete in Teil 12 und 13 an SFTP-Ziele ohne Abdruck** — genau das, was Punkt 3 verbietet; im ersten Lauf rot mit Abbruch | Teil 12 misst zuerst die Abweisung (Lauf 0), dann übernehmen beide Teile den Abdruck mit `sz_fingerabdruck_merken()` |
+| F-KA-60 | **Örtlich steht die CSP im Berichtsmodus** (`Content-Security-Policy-Report-Only`), die erste Fassung der CSP-Zeile fand keine Kopfzeile | die Zeile liest beide Namen |
+| F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
+| F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
+| F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |
+
+**Auch KA-03 baut keine neue Probe:** Es erweitert Rollen-, Zweitfaktor-,
+Freigabe-, Versand-, Jobs- und Wartungsprobe; deshalb keine Nummer aus der
+Spanne.
 
 **Keine neue Probe, keine neue Backlog-Nummer:** KA-01 erweitert vorhandene
 Riegel (`kettenaufrufe`, Anlass Nr. 217; `fremdsummen`, F-R17-50/-51;
 `bericht.py`) um Lagen mit F-KA-Nummern. Die Spanne 560–569 bleibt für die
 Pakete ab KA-02.
+
+---
+
+## 11. Garmin-Teil — eigene Instanz KG (seit 10.11.2026, E-KA-21)
+
+Was die Instanz KG baut. Sie führt dazu ein eigenes Konzept
+(`docs/konzepte/Konzept-KG-Garmin-Sicherheit.md`, legt sie selbst an) mit
+Statusblock und Prüfprotokoll; **dieser Abschnitt ist nur der Auftrag**, sein
+Stand steht dort.
+
+| Paket | Inhalt | Befunde | Hängt an | Modell |
+|---|---|---|---|---|
+| KG-01 | `Pair.start()` weist bei laufendem Dienst immer ab; die Bindung an den alten Schlüssel deckt auch laufende Pakete (`cred` gelöscht); `next_seq` höchstens `seq_from + gesendete Punkte`; ein unbestätigtes Stück wird mit derselben Größe wiederholt; Kommentare `Huelle.mc` (Kurvenprüfung) und `Pair.mc` (Schulterblick) berichtigt | F-KA-05, -07 (Uhr-Seite), -18 (Uhr-Seite), -43 (zwei Stellen) | nichts — die Server-Seite von F-KA-07 (KA-04 Punkt 3) ist mit der Uhr-Deckelung verträglich | Opus |
+| KG-02 | **Messung für KA-06a:** Hält `Toybox.Cryptography` auf den Zielgeräten ein statisches P-256-Paar dauerhaft (Speicher, Neustart, Update der App)? Was kostet dort eine ECDSA-Signatur (Zeit, Speicher), und gibt es sie überhaupt? Ergebnis als Befund mit Zahlen für die Entwurfsrunde | — | nichts | Opus |
+| KG-03 | Garmin-Teil von KA-06c: Geräteschlüssel, Gerätehülle Fassung 2, Kopplung mit Vergleichswert — byte-gleich zur Referenz aus KA-06a | F-KA-04, -12, -17 (Garmin) | KA-06a fertig und KA-M5 freigegeben | **Fable** für den Krypto-Kern — vorher pausieren |
+| KG-04 | Garmin-Teil von KA-M6: Übergabe einer echten Uhr im laufenden Dienst, Kopplung mit Vergleichswert — als Prüfliste für die BetreiberIn | — | KG-01, KG-03 | — |
+
+**Regeln der Zusammenarbeit:**
+
+- KG fasst `watch/`, `tools/uhr-pruefstand/`, die Garmin-Abschnitte von
+  `docs/Handbuch.md`, `docs/Technik.md`, `docs/Geraete-Eingabe.md` und die
+  Garmin-Zeilen des Bedrohungsmodells an — **nicht** `server/`, `android/`,
+  `.github/` und nicht den Rahmenplan. Braucht KG eine Serveränderung, sagt
+  sie es der BetreiberIn; diese Instanz baut sie.
+- Eigene Backlog-Spanne, vor der ersten Nummer reserviert und gepusht
+  (E-SD-21); eigene Uhr-Fassung (`watch/source/Const.mc`), eigener Tag
+  `uhr-v*`.
+- Changelog-Einträge mit Präfix `Uhr`. Merkonflikte im Changelog, im
+  Bedrohungsmodell oder in diesem Konzept löst, wer als Zweiter mergt, nach
+  `Pruefablauf.md` 5.3.
+- Diese Instanz trägt Beginn und Ende von KG in den Rahmenplan ein, sobald
+  KG es meldet.
 

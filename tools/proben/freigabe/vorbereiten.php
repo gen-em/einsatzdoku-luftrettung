@@ -106,6 +106,17 @@ if ($schritt === 'quelle') {
      * Regel, Protokoll und Mail. Davor der Gegenfall — an ein fremdes Konto
      * geht es nicht, auch mit richtig abgetippter Adresse. */
     $fremd = edbak_freigabe_erlaubt($kennung, ['account_key' => 'x', 'email' => 'fremd@example.invalid']);
+    /* DIE ADRESSE ALLEIN GENUEGT ERST NACH DER FRIST (KA-03, F-KA-08): Dasselbe
+     * Zielkonto mit offener Adressbestaetigung bekommt nichts, ohne sie
+     * schon. Die Marke steht nur fuer diese zwei Fragen. */
+    $passend = ['id' => $zielId, 'account_key' => 'x', 'email' => $zielAdresse];
+    $ohneFrist = edbak_freigabe_erlaubt($kennung, $passend);
+    app_state_setzen('adresse_offen:' . $zielId, (time() + 600) . '|' . str_repeat('a', 64));
+    try {
+        $mitFrist = edbak_freigabe_erlaubt($kennung, $passend);
+    } finally {
+        app_state_loeschen('adresse_offen:' . $zielId, 'adresse_alt:' . $zielId);
+    }
     [$erteilt, $erteiltText] = edbak_freigabe_erteilen($kennung, (string)$info['datei'], $zielId,
                                                        $zielAdresse);
     if (!$erteilt) { fwrite(STDERR, "Freigabe: $erteiltText\n"); exit(2); }
@@ -144,6 +155,7 @@ if ($schritt === 'quelle') {
                       'zip_eintraege' => $eintraege, 'zip_versiegelt' => $versiegelt,
                       'begleit_versiegelt' => sk_versiegelt($begleitRoh),
                       'fremd_erlaubt' => $fremd, 'protokolliert' => $protokolliert,
+                      'adresse_ohne_frist' => $ohneFrist, 'adresse_mit_frist' => $mitFrist,
                       'quelle_blob' => (string)$daten['blob']]), "\n";
     exit(0);
 }

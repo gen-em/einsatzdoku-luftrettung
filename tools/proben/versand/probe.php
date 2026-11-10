@@ -721,8 +721,19 @@ if ($db12 === null) {
           && $zeile['behalten_komplett'] === null,
           'behalten_konto=' . var_export($zeile['behalten_konto'] ?? 'FEHLT', true));
 
-    /* ---- Lauf 1: Option AUS ------------------------------------------- */
+    /* ---- Lauf 0: noch kein Abdruck — der Job sendet nicht (KA-03, F-KA-09)
+     * Bis Web 24.11.0 verband er sich dann trotzdem und schickte Passwort
+     * und Sicherungen an jeden Hostschlüssel. Erst „Verbindung prüfen"
+     * übernimmt ihn; hier steht dafür `sz_fingerabdruck_merken()`. */
     $budget = static fn(): float => 300.0;
+    $l0 = sz_versand_schub($budget, 1.0);
+    pruef('Ohne gespeicherten Hostschlüssel sendet der Job nichts und sagt warum (F-KA-09)',
+          (int)$l0['gesendet'] === 0
+          && str_contains(implode(' ', $l0['fehler']), 'noch kein Hostschlüssel gespeichert'),
+          $l0['gesendet'] . ' Dateien, Fehler: ' . (implode(' | ', $l0['fehler']) ?: 'keine'));
+    sz_fingerabdruck_merken($zid, $sollAbdruck);
+
+    /* ---- Lauf 1: Option AUS ------------------------------------------- */
     $l1 = sz_versand_schub($budget, 1.0);
     pruef('Der Versand schickt die fünf Sicherungen hinüber',
           $l1['gesendet'] >= 5, $l1['gesendet'] . ' Dateien, Fehler: '
@@ -919,6 +930,7 @@ if ($db13 === null) {
     pruef('Ein Ziel MIT Regel „eins je Konto" lässt sich anlegen', $ok13 === true,
           is_int($zid13) ? "Kennung $zid13" : implode(' ', (array)$zid13));
     $zid13 = (int)$zid13;
+    sz_fingerabdruck_merken($zid13, $sollAbdruck);   // ohne ihn sendet der Job nicht (KA-03)
 
     /* NUR DIE EIGENEN ARCHIVE (Jahr 2020). Der
      * Versand schickt JEDES Archiv im Ordner, auch ein echtes, das der Job

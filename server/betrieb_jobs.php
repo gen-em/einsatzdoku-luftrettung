@@ -35,31 +35,31 @@ $pdo = db();
  * dreht hier ab. Die Folge — der alte Eintrag laeuft ins Leere — steht als
  * Rueckfrage daneben, damit sie niemanden ueberrascht.
  *
- * UMLEITEN NACH DEM POST: Ein neues Token
- * endet mit `flash_setzen()` und einer Umleitung in die Karte „Auslöser" —
- * sonst erzeugt Neuladen ein zweites und macht das eben eingetragene
- * ungueltig. Das Token selbst reist nicht mit; die Seite liest es danach
- * frisch. Scheitert das Erzeugen, ist nichts gespeichert, und die Seite
- * bleibt stehen. */
+ * EINMAL GEZEIGT, KEINE UMLEITUNG (seit Web 24.12.0, KA-03, F-KA-19,
+ * E-KA-10). Die drei Tokens liegen nur noch gehasht; der Klartext steht
+ * genau einmal in der Antwort, die ihn erzeugt hat (`$neuesToken`). Bis
+ * dahin leitete die Seite nach dem POST um und las das Token danach frisch —
+ * im Klartext, bei jedem Aufruf. Eine Umleitung ginge jetzt nur ueber die
+ * Sitzungsdatei, und ein Geheimnis gehoert nicht hinein. Der Preis: Neuladen
+ * fragt der Browser nach, und wer bestaetigt, erzeugt ein weiteres Token. */
 $jobsMeldung = null;
+/** Ein eben erzeugtes Token: ['karte' => …, 'wert' => …, 'titel' => …]. */
+$neuesToken = null;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'jobs_token_neu') {
     /* FRISCHER CODE, wie ein Rollentor VOR
      * csrf_check(). Gilt fuer alle drei Tokens dieser Seite. */
     zweitfaktor_frisch_verlangen('jobs_token_neu');
     csrf_check();
     try {
-        jobs_token(true);
-        $jobsMeldung = ['ok', 'Ein neues Token steht bereit. Der bisherige '
-                            . 'Zeitplan-Eintrag funktioniert damit nicht mehr — '
-                            . 'bitte die Adresse dort austauschen.'];
+        $neuesToken = ['karte' => 'k-ausloeser', 'titel' => 'Adresse',
+                       'wert' => app_url('jobs.php?token=' . jobs_token_neu())];
+        $jobsMeldung = ['ok', 'Ein neues Token steht bereit — die Adresse steht unten '
+                            . 'genau dieses eine Mal. Der bisherige Zeitplan-Eintrag '
+                            . 'funktioniert damit nicht mehr; bitte die Adresse dort '
+                            . 'austauschen.'];
     } catch (Throwable $ex) {
         $jobsMeldung = ['fehler', 'Das Token ließ sich nicht erzeugen: '
                                 . $ex->getMessage()];
-    }
-    if ($jobsMeldung[0] === 'ok') {
-        flash_setzen($jobsMeldung[0], $jobsMeldung[1], 'k-ausloeser');
-        header('Location: betrieb_jobs.php#k-ausloeser');
-        exit;
     }
 }
 
@@ -73,18 +73,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'kette
     zweitfaktor_frisch_verlangen('kette_token_neu');
     csrf_check();
     try {
-        kette_token(true);
-        $ketteMeldung = ['ok', 'Ein neues Kettentoken steht bereit. Die Auslieferung '
-                             . 'scheitert, bis es in GitHub als JOBS_TOKEN dieser '
-                             . 'Umgebung eingetragen ist.'];
+        $neuesToken = ['karte' => 'k-kette', 'titel' => 'Kettentoken',
+                       'wert' => kette_token_neu()];
+        $ketteMeldung = ['ok', 'Ein neues Kettentoken steht bereit — es steht unten genau '
+                             . 'dieses eine Mal. Die Auslieferung scheitert, bis es in '
+                             . 'GitHub als JOBS_TOKEN dieser Umgebung eingetragen ist.'];
     } catch (Throwable $ex) {
         $ketteMeldung = ['fehler', 'Das Token ließ sich nicht erzeugen: '
                                  . $ex->getMessage()];
-    }
-    if ($ketteMeldung[0] === 'ok') {
-        flash_setzen($ketteMeldung[0], $ketteMeldung[1], 'k-kette');
-        header('Location: betrieb_jobs.php#k-kette');
-        exit;
     }
 }
 
@@ -100,13 +96,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
     csrf_check();
     try {
         if ($healthAktion === 'health_token_neu') {
-            $hatteEins = health_token() !== '';
-            health_token_neu();
-            $healthMeldung = ['ok', $hatteEins
+            $hatteEins = health_token_gespeichert() !== '';
+            $neuesToken = ['karte' => 'k-health', 'titel' => 'Health-Token',
+                           'wert' => health_token_neu()];
+            $healthMeldung = ['ok', ($hatteEins
                 ? 'Ein neues Health-Token steht bereit. Ein Monitoring mit dem bisherigen '
                   . 'bekommt ab jetzt 403 — bitte dort austauschen.'
                 : 'Das Health-Token steht bereit. Trag es im Monitoring als Kopfzeile '
-                  . 'X-Health-Token ein.'];
+                  . 'X-Health-Token ein.') . ' Es steht unten genau dieses eine Mal.'];
         } else {
             health_token_aus();
             $healthMeldung = ['ok', 'Die Health-Abfrage ist abgeschaltet; jede Anfrage '
@@ -115,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
     } catch (Throwable $ex) {
         $healthMeldung = ['fehler', $ex->getMessage()];
     }
-    if ($healthMeldung[0] === 'ok') {
+    if ($healthMeldung[0] === 'ok' && $neuesToken === null) {
         flash_setzen($healthMeldung[0], $healthMeldung[1], 'k-health');
         header('Location: betrieb_jobs.php#k-health');
         exit;
@@ -238,21 +235,19 @@ if ($letzterLauf === null) {
                                      : ui_plakette('läuft', ['ton' => 'gruen']));
 }
 
-$tokenAdresse = null;
-if ($jobs !== []) {
-    try {
-        $tokenAdresse = app_url('jobs.php?token=' . jobs_token());
-    } catch (Throwable $ex) { $tokenAdresse = null; }
-}
-$ketteToken = null;
-if ($jobs !== []) {
-    try {
-        $ketteToken = kette_token();
-    } catch (Throwable $ex) { $ketteToken = null; }
-}
-/* '' = keine Abfrage eingerichtet; null = nicht lesbar (Datenbank). */
-$healthToken = null;
-try { $healthToken = health_token(); } catch (Throwable $ex) { $healthToken = null; }
+/* OB EIN TOKEN EINGERICHTET IST — nicht welches (KA-03): true/false, null =
+ * nicht lesbar (Datenbank). Den Wert kennt nur, wer ihn eben erzeugt hat. */
+$jobsDa = null;
+try { $jobsDa = jobs_token_eingerichtet(); } catch (Throwable $ex) { $jobsDa = null; }
+$ketteDa = null;
+try { $ketteDa = kette_token_gespeichert() !== ''; } catch (Throwable $ex) { $ketteDa = null; }
+$healthDa = null;
+try { $healthDa = health_token_gespeichert() !== ''; } catch (Throwable $ex) { $healthDa = null; }
+/** Das eben erzeugte Token dieser Karte, einmal — sonst nichts. */
+$einmal = static function (string $karte) use ($neuesToken): string {
+    if ($neuesToken === null || $neuesToken['karte'] !== $karte) { return ''; }
+    return ui_codeblock_lang((string)$neuesToken['wert'], (string)$neuesToken['titel']);
+};
 
 ui_seite_start(['titel' => 'Hintergrundjobs']);
 ?>
@@ -371,13 +366,10 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
      * Reihenfolge hier ist die Empfehlung: Kommandozeile zuerst.
      *
      * ZUGEKLAPPT (E-OF-21, E-OF-42): Stand und Plakette sagen im Kopf, ob
-     * ein Weg eingerichtet ist; aufklappen muss nur, wer ihn einrichtet. Das
-     * Token steht aufgeklappt offen da — die Seite ist ohnehin nur der
-     * BetreiberIn zugänglich, und ein Geheimnis, das man erst aufdecken muss,
-     * wird beim Einrichten abgetippt statt kopiert. Nach dem Erzeugen leitet
-     * die Seite auf `#k-ausloeser` um; `klappkarte.js` öffnet die Karte. Ist
-     * eine Meldung da, ohne dass umgeleitet wurde (ein Fehler), steht die
-     * Karte von sich aus offen. */ ?>
+     * ein Weg eingerichtet ist; aufklappen muss nur, wer ihn einrichtet. Seit
+     * Web 24.12.0 (KA-03) steht ein Token nur in der Antwort, die es erzeugt
+     * hat — mit „Kopieren", damit es nicht abgetippt wird —, sonst steht da,
+     * ob eines eingerichtet ist. Mit einer Meldung steht die Karte offen. */ ?>
   <?php ui_karte_start(['titel' => 'Auslöser', 'id' => 'k-ausloeser', 'zu' => true,
                         'offen' => $jobsMeldung !== null,
                         'stand' => $ausloeserStand, 'plakette' => $ausloeserPlakette]); ?>
@@ -396,12 +388,18 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
     <h3 class="listen-form-titel">2. Abruf über die Adresse</h3>
     <?= ui_meldung_markup('warn', 'Die Adresse enthält ein Geheimnis — sie gehört '
         . 'nicht in eine Mail und nicht in ein Ticket.') ?>
-    <?php if ($tokenAdresse !== null): ?>
-      <?= ui_codeblock_lang($tokenAdresse, 'Adresse') ?>
+    <?= $einmal('k-ausloeser') ?>
+    <?php if ($jobsDa === false): ?>
+      <p class="feld-hinweis">Noch kein Token eingerichtet — der Abruf über die Adresse ist aus.</p>
+    <?php elseif ($jobsDa === true && $neuesToken === null): ?>
+      <p class="feld-hinweis">Ein Token ist eingerichtet. Es wird nur beim Erzeugen
+         einmal gezeigt; wer es nicht mehr hat, erzeugt ein neues.</p>
+    <?php endif; ?>
+    <?php if ($jobsDa !== null): ?>
       <form method="post" action="betrieb_jobs.php">
         <?= csrf_field() ?><input type="hidden" name="action" value="jobs_token_neu">
         <div class="listen-form-fuss">
-          <?= ui_knopf(['text' => 'Neues Token erzeugen', 'art' => 'leise',
+          <?= ui_knopf(['text' => $jobsDa ? 'Neues Token erzeugen' : 'Token erzeugen', 'art' => 'leise',
                         'typ' => 'submit',
                         'attr' => ' data-confirm="Das bisherige Token wird damit '
                                 . 'ungültig. Ein bestehender Zeitplan-Eintrag '
@@ -426,11 +424,12 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
      * waere eine Behauptung. */ ?>
   <?php ui_karte_start(['titel' => 'Auslieferungskette', 'id' => 'k-kette', 'zu' => true,
                         'offen' => $ketteMeldung !== null,
-                        'stand' => $ketteToken !== null ? 'Geheimnis JOBS_TOKEN'
-                                                        : 'Token nicht lesbar',
-                        'plakette' => $ketteToken !== null
-                            ? ui_plakette('bereit', ['ton' => 'gruen'])
-                            : ui_plakette('nicht lesbar', ['ton' => 'rot'])]); ?>
+                        'stand' => $ketteDa === null ? 'Token nicht lesbar'
+                                 : ($ketteDa ? 'Geheimnis JOBS_TOKEN' : 'kein Token eingerichtet'),
+                        'plakette' => $ketteDa === null
+                            ? ui_plakette('nicht lesbar', ['ton' => 'rot'])
+                            : ($ketteDa ? ui_plakette('bereit', ['ton' => 'gruen'])
+                                        : ui_plakette('aus', ['ton' => 'neutral']))]); ?>
     <?php if ($ketteMeldung): ?>
       <?= ui_meldung_markup($ketteMeldung[0], $ketteMeldung[1]) ?>
     <?php endif; ?>
@@ -439,12 +438,16 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
        in die GitHub-Umgebung, die hierher ausliefert.</p>
     <?= ui_meldung_markup('warn', 'Ein Geheimnis wie ein Passwort — nicht in eine '
         . 'Adresse, nicht in eine Mail, nicht in ein Ticket.') ?>
-    <?php if ($ketteToken !== null): ?>
-      <?= ui_codeblock_lang($ketteToken, 'Kettentoken') ?>
+    <?= $einmal('k-kette') ?>
+    <?php if ($ketteDa === true && $neuesToken === null): ?>
+      <p class="feld-hinweis">Ein Kettentoken ist eingerichtet. Es wird nur beim Erzeugen
+         einmal gezeigt; wer es nicht mehr hat, erzeugt ein neues und trägt es in GitHub ein.</p>
+    <?php endif; ?>
+    <?php if ($ketteDa !== null): ?>
       <form method="post" action="betrieb_jobs.php">
         <?= csrf_field() ?><input type="hidden" name="action" value="kette_token_neu">
         <div class="listen-form-fuss">
-          <?= ui_knopf(['text' => 'Neues Kettentoken erzeugen', 'art' => 'leise',
+          <?= ui_knopf(['text' => $ketteDa ? 'Neues Kettentoken erzeugen' : 'Kettentoken erzeugen', 'art' => 'leise',
                         'typ' => 'submit',
                         'attr' => ' data-confirm="Das bisherige Kettentoken wird damit '
                                 . 'ungültig. Die nächste Auslieferung scheitert, bis '
@@ -465,13 +468,13 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
      * Karte; es ist jetzt ihr Stand im Kopf — ein Satz je Karte. */ ?>
   <?php ui_karte_start(['titel' => 'Monitoring', 'id' => 'k-health', 'zu' => true,
                         'offen' => $healthMeldung !== null,
-                        'stand' => $healthToken === null ? 'Token nicht lesbar'
-                                 : ($healthToken === '' ? 'keine Abfrage eingerichtet'
-                                                        : 'Kopfzeile X-Health-Token'),
-                        'plakette' => $healthToken === null
+                        'stand' => $healthDa === null ? 'Token nicht lesbar'
+                                 : (!$healthDa ? 'keine Abfrage eingerichtet'
+                                               : 'Kopfzeile X-Health-Token'),
+                        'plakette' => $healthDa === null
                             ? ui_plakette('nicht lesbar', ['ton' => 'rot'])
-                            : ($healthToken === '' ? ui_plakette('aus', ['ton' => 'neutral'])
-                                                   : ui_plakette('an', ['ton' => 'gruen']))]); ?>
+                            : (!$healthDa ? ui_plakette('aus', ['ton' => 'neutral'])
+                                          : ui_plakette('an', ['ton' => 'gruen']))]); ?>
     <?php if ($healthMeldung): ?>
       <?= ui_meldung_markup($healthMeldung[0], $healthMeldung[1]) ?>
     <?php endif; ?>
@@ -479,9 +482,10 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
        <code>api/health.php</code> mit der Kopfzeile <code>X-Health-Token</code> ab;
        die Antwort nennt Fassung, Datenbank, Migration, Alter der Jobs und Speicher,
        keine Daten.</p>
-    <?php if ($healthToken === null): ?>
+    <?= $einmal('k-health') ?>
+    <?php if ($healthDa === null): ?>
       <?= ui_meldung_markup('fehler', 'Das Health-Token ist gerade nicht lesbar.') ?>
-    <?php elseif ($healthToken === ''): ?>
+    <?php elseif (!$healthDa): ?>
       <form method="post" action="betrieb_jobs.php">
         <?= csrf_field() ?><input type="hidden" name="action" value="health_token_neu">
         <div class="listen-form-fuss">
@@ -492,7 +496,10 @@ ui_seite_start(['titel' => 'Hintergrundjobs']);
       <?= ui_meldung_markup('warn', 'Ein Geheimnis — nicht in eine Mail, nicht in ein '
           . 'Ticket. In der Adresse statt der Kopfzeile steht es im Zugriffsprotokoll '
           . 'des Hosters.') ?>
-      <?= ui_codeblock_lang($healthToken, 'Health-Token') ?>
+      <?php if ($neuesToken === null): ?>
+      <p class="feld-hinweis">Ein Health-Token ist eingerichtet. Es wird nur beim Erzeugen
+         einmal gezeigt; wer es nicht mehr hat, erzeugt ein neues.</p>
+      <?php endif; ?>
       <form method="post" action="betrieb_jobs.php">
         <?= csrf_field() ?>
         <div class="listen-form-fuss">

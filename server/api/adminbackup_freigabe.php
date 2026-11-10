@@ -94,7 +94,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         ],
         'fassung'       => $fassung,
         'pat_wrap_rc'   => $paket['schluessel']['pat_wrap_rc'] ?? null,
-        'pat_key_check' => $paket['schluessel']['pat_key_check'] ?? null,
+        /* KEIN `pat_key_check` MEHR (KA-03, F-KA-08): Der Browser braucht
+         * ihn hier nicht — er prueft den Wiederherstellungsschluessel an
+         * `pat_wrap_rc` —, und mit ihm liess sich die Anmeldung eines
+         * `user`-Kontos uebernehmen (Bedrohungsmodell Lage I). */
         /* Der private Teil des Ursprungskontos, unter dessen
          * Inhaltsschluessel — der Browser oeffnet ihn mit dem, was
          * `pat_wrap_rc` hergibt, und damit Huellen und Stuecke. */

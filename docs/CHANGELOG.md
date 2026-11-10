@@ -14,6 +14,53 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.12.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — die Tokens für Jobs, Kette und Health stehen nur noch einmal da.**
+  Bisher lagen sie im Klartext in der Datenbank und standen auf der Seite
+  „Jobs" für jeden Admin bereit; wer die Datenbank oder eine Sitzung hatte,
+  hatte sie auch. Jetzt liegt nur ihr Hash, der Wert erscheint direkt nach dem
+  Erzeugen, und wer ihn verliert, erzeugt einen neuen (Runbook).
+- **Web — ein Konto mit Rechten entsteht nur mit frischem Code.** Der
+  Rollenwechsel verlangte ihn schon, das gleichwertige Anlegen nicht; über
+  diesen Nachbarweg konnte eine übernommene Sitzung sich ein dauerhaftes Konto
+  mit Rechten verschaffen. Jede BetreiberIn bekommt jetzt eine Mail, wenn ein
+  solches Konto entsteht.
+- **Web — die Adressen der Installation ändert nur die BetreiberIn.** An die
+  Betreiberadresse gehen die Sammelmails über auffällige Anmeldungen, und
+  bisher konnte jeder Admin sie still auf sich umstellen. Jetzt steht die
+  Änderung im Protokoll, und die alte Adresse erfährt davon.
+- **Web — ein SFTP-Ziel ohne gespeicherten Hostschlüssel bekommt nichts.**
+  Der Job verband sich bisher auch dann und schickte Passwort und Sicherungen
+  an jeden, der sich meldete. Jetzt muss jemand einmal „Verbindung prüfen" und
+  den Abdruck übernehmen; bis dahin meldet der Job genau das.
+- **Web — der Bestätigungslink einer neuen Anmeldeadresse ändert erst auf
+  Knopfdruck.** Ein Mailprogramm, das Links vorab öffnet, bestätigte den
+  Wechsel bisher, bevor ihn jemand gesehen hatte.
+- **Web — wer an seinem gemerkten Gerät ist, sperrt sich nicht mehr mit,
+  wenn jemand anderes seine Adresse rät.** Die Sperre hängt am Kontonamen;
+  sie trifft jetzt den Rater, und die Sperre je Anschluss gilt weiter für
+  alle.
+
+### Behoben
+
+- **Web — eine Konto-Freigabe ging auch an ein Konto, dessen Adresse gerade
+  erst umgestellt worden war.** Die Frist der Adressbestätigung galt nur für
+  den Setz-Link; jetzt gilt sie auch hier. Die Freigabe liefert außerdem
+  keine Prüfsumme des Inhaltsschlüssels mehr, die der Browser nicht braucht.
+- **Web — unter „Konto-Backups" konnte ein Admin in das Konto einer
+  BetreiberIn einspielen, und die Löschbestätigung prüfte gegen einen
+  mitgeschickten Wert.** Beides folgt jetzt der Regel der Kontoseite: nach
+  oben kein Griff, und den Sollwert bildet der Server.
+- **Web — eine Dienstadresse der Adresssuche mit Semikolon schrieb eine
+  eigene Regel in die Sicherheitsrichtlinie der Seiten.** Übernommen wird nur
+  noch ein sauberer Rechnername über https.
+- **Web — im Demo-Konto ließ sich der Wiederherstellungsschlüssel erneuern.**
+  Sein Passwort ist öffentlich, also konnte jeder Besucher die Hülle tauschen
+  und Mails auslösen; jetzt weist der Endpunkt ab.
+
 ## [Web 24.11.0] — unveröffentlicht
 
 ### Geändert
