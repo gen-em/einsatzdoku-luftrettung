@@ -14,7 +14,7 @@ steht da, die Nummer setzt die Umsetzung.
 | Stand | **Konzept, zur Freigabe** (10.11.2026) |
 | In Arbeit | kein Paket |
 | Erledigt | — |
-| Hakt | KA-M1 (zwei GitHub-Einstellungen ansehen) — hält nichts auf, bestimmt aber den Zuschnitt von KA-01 Punkt 4 |
+| Hakt | KA-M1 ist bis auf einen Rest erledigt (Abschnitt 3): offen ist, ob die Umgebung `produktion` auf `main` und die Tag-Muster beschränkt ist — hält nichts auf |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0 |
 
 **Die Umsetzung findet in einer eigenen Sitzung statt** — ein Paket nach
@@ -61,6 +61,8 @@ Safari.
 | E-KA-06 | Der Bericht geht als **Sofortpunkt mit Konzept** in den Rahmenplan: Schritt 28 vor Schritt 13 (R92). Bedrohungsmodell und Prüfliste werden nachgezogen, wo nötig (Antwort auf Q-KA-04) | 10.11.2026, BetreiberIn |
 | E-KA-07 | **Die Wiederherstellungsschlüssel werden erneuert — nach KA-02, nicht davor.** Davor schickte der Druckknopf auch den neuen Schlüssel an den Server. Vollständig heilt erst Schritt 14, weil das Erneuern denselben Inhaltsschlüssel nur neu verpackt (Antwort auf Q-KA-01: ob ein Proxy mitschreibt, ist nicht bekannt) | 10.11.2026, BetreiberIn |
 | E-KA-08 | Der Formatwechsel ist ein Paket mit **eigener Entwurfsrunde** (KA-06a) vor der ersten Zeile Code; Format und Vektoren stehen wie bei S11 in einer Referenz, an der alle Umsetzungen gemessen werden | 10.11.2026, Konzept |
+| E-KA-09 | **Nach KA-01 und KA-02 wird sofort getaggt** — beide hohen Befunde auf Produktiv, ohne auf KA-03 zu warten (Antwort auf Q-KA-05) | 10.11.2026, BetreiberIn |
+| E-KA-10 | **Die Tokens für Jobs, Kette und Health werden nur einmal gezeigt,** direkt nach dem Erzeugen, und gehasht gespeichert; ein verlorenes Token wird erneuert, nicht nachgelesen (Antwort auf Q-KA-06) | 10.11.2026, BetreiberIn |
 
 ---
 
@@ -74,13 +76,35 @@ Gelesen über die Schnittstelle von GitHub, nur lesend.
 | `main` | Rulesets „Main Protect" (PR-Pflicht, Pflichtprüfung „Stufe 1" strikt, kein Löschen, kein Force-Push, kein Bypass) und „Main Merge-Recht" (Schreiben nur per PR, Bypass ein Konto) |
 | Zeiger `produktion` | Ruleset „Zeiger produktion" seit 06.11.2026 — **nur gegen Löschen**; schreiben und umsetzen darf, wer Schreibrecht hat |
 | Tags | **kein Ruleset** — einen `web-v*`-Tag setzt, wer Schreibrecht hat; davor steht dann die Pflichtfreigabe |
-| Umgebung `produktion` | **nicht lesbar** (der Proxy der Arbeitsumgebung sperrt den Pfad) |
-| Freigabe von Fork-Läufen | **nicht lesbar**, gleicher Grund |
+| Umgebung `produktion` | aus der Arbeitsumgebung nicht lesbar (der Proxy sperrt den Pfad) — **von der BetreiberIn abgelesen:** eine Pflichtprüferin (ihr Konto), „Prevent self-review“ aus. **Nicht abgelesen:** „Deployment branches and tags“ |
+| Freigabe von Fork-Läufen | **von der BetreiberIn abgelesen:** „Require approval for all external contributors“ — die strengste der drei Stufen |
+| Rechte des Lauf-Tokens | abgelesen: nur lesend; Läufe dürfen keine Pull Requests anlegen oder freigeben |
+| Erlaubte Aktionen | abgelesen: alle; „Require actions to be pinned to a full-length commit SHA“ **aus** |
+| Aufbewahrung der Lauf-Protokolle | abgelesen: 90 Tage |
 
-Folgen: F-KA-25 wiegt schwerer, weil das Protokoll öffentlich ist; das
-Bedrohungsmodell nannte den Zeiger „ungeschützt", was seit dem 06.11.2026
-nur noch für das Schreiben stimmt (nachgezogen mit diesem Konzept); die zwei
-nicht lesbaren Einstellungen sind KA-M1.
+Die abgelesenen Zeilen stammen aus vier Bildschirmfotos der BetreiberIn vom
+10.11.2026, nicht aus einer eigenen Messung.
+
+**Folgen:**
+
+- **F-KA-25 wiegt schwerer**, weil das Protokoll öffentlich ist — und was
+  die Kette bis zu KA-01 gedruckt hat, bleibt 90 Tage lesbar (KA-M2).
+- **Der Nebenbefund zu F-KA-24 ist erledigt:** Ein Lauf aus einem Fork
+  startet nie ohne Freigabe.
+- **Selbstfreigabe ist erlaubt und muss es bleiben,** solange es eine
+  einzige BetreiberIn gibt — sonst gäbe niemand ihren eigenen Tag frei. Der
+  Preis: Wer unter ihrem Konto handelt, kann auslösen **und** freigeben.
+  Die Arbeitsumgebung kann es nicht; der Proxy sperrt die Pfade unter
+  `actions/`, soweit versucht (403). Mit einem zweiten Konto mit
+  Freigaberecht wird der Haken gesetzt.
+- **Die SHA-Pflicht für Aktionen ist heute nur der eigene Riegel**
+  (`tools/kettenaufrufe/`). GitHub kann dasselbe auf seiner Seite
+  erzwingen; alle 19 fremden Aufrufe erfüllen es schon. Einschalten mit
+  KA-M2, nach einem Probelauf.
+- Das Bedrohungsmodell nannte den Zeiger „ungeschützt“, was seit dem
+  06.11.2026 nur noch für das Schreiben stimmt (nachgezogen).
+- **Offen bleibt eine Einstellung:** die Beschränkung der Umgebung auf
+  Zweige und Tags (Rest von KA-M1).
 
 ---
 
@@ -151,6 +175,10 @@ und das Protokoll nennt nichts, was eine Schranke ist.
    `gradle-wrapper.jar` (Sollwert im Werkzeug) auf.
 8. Dienst-Abbilder in `pruefung.yml` am Digest; der Riegel in
    `tools/kettenaufrufe/` sieht künftig auch `image:`.
+9. Zwei Einstellungen der BetreiberIn begleiten das Paket (KA-M2): die
+   SHA-Pflicht für Aktionen in GitHub einschalten, und die Protokolle der
+   Läufe vor Punkt 4 ansehen — sie tragen `komplett.datei` und
+   `wartung.von` noch bis zu 90 Tage.
 
 **Berührt:** `.github/`, `tools/`, `.claude/` — **keine Fassung** (`CLAUDE.md`
 2, Punkt 1). **Pflege:** `CLAUDE.md` 3 (Zahl und Wortlaut zu `uses:` bleiben,
@@ -211,7 +239,7 @@ Verwaltung stimmen mit dem Code.
 3. SFTP: ohne gespeicherten Abdruck sendet der Job nicht; die Meldung sagt
    „erst prüfen".
 4. Job-, Ketten- und Health-Token: gehasht speichern, einmalig nach dem
-   Erzeugen zeigen. **Folge für den Betrieb:** Wer ein Token verloren hat,
+   Erzeugen zeigen (E-KA-10). **Folge für den Betrieb:** Wer ein Token verloren hat,
    erneuert es — ins Runbook und nach KA-M-Liste (Uptime Kuma, Geheimnisse
    der Kette).
 5. Betriebs- und Kontaktadresse: nur BetreiberIn, mit Protokoll und Mail an
@@ -441,9 +469,9 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 
 | Nr. | Was | Wann |
 |---|---|---|
-| KA-M1 | In GitHub ansehen: Umgebung `produktion` (Pflichtprüfer, Selbstfreigabe, Beschränkung auf `main` und Tag-Muster) und Actions → General (Freigabe von Fork-Läufen); Ergebnis an die Umsetzung | vor KA-01 |
-| KA-M2 | Probelauf der Auslieferung mit `security: strict` gegen Staging und Produktiv starten und freigeben; ein Ruleset für Tags setzen (`web-v*`, `android-v*`, `uhr-v*`) | in KA-01 |
-| KA-M3 | Tag nach KA-01 und KA-02 — beide hohen Befunde auf Produktiv | nach KA-02 |
+| KA-M1 | In GitHub ansehen: Umgebung `produktion` und Freigabe von Fork-Läufen — **abgelesen am 10.11.2026** (Abschnitt 3). **Rest:** in der Umgebung `produktion` den Abschnitt „Deployment branches and tags“ ansehen und auf `main` und die drei Tag-Muster beschränken | vor KA-01 |
+| KA-M2 | Probelauf der Auslieferung mit `security: strict` gegen Staging und Produktiv starten und freigeben; ein Ruleset für Tags setzen (`web-v*`, `android-v*`, `uhr-v*`); danach „Require actions to be pinned to a full-length commit SHA“ einschalten und einen Lauf abwarten; die Protokolle älterer Auslieferungsläufe löschen, soweit sie `wartung.von` nennen | in KA-01 |
+| KA-M3 | Tag nach KA-01 und KA-02 — beide hohen Befunde auf Produktiv (E-KA-09) | nach KA-02 |
 | KA-M4 | Wiederherstellungsschlüssel erneuern lassen: eine Ankündigung an alle Konten, die ein Notfallblatt gedruckt haben können (E-KA-07) | nach KA-M3 |
 | KA-M5 | Freigaberunde zum Formatentwurf: Lage des Zählerstands, Bauart der Herkunft, Frist für Geräte ohne Schlüssel, Stichtag für Fassung 1 | nach KA-06a |
 | KA-M6 | Gerätetests: Kopplung mit Vergleichswert, Übergabe im laufenden Dienst, Sperrbildschirm | nach KA-04 und nach KA-06c |
@@ -455,11 +483,11 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 | Nr. | Frage | Antwort |
 |---|---|---|
 | Q-KA-01 | Schreibt ein Proxy oder Hoster Anfragekörper mit? | nicht bekannt — die Schlüssel werden erneuert (E-KA-07) |
-| Q-KA-02 | Regeln für `produktion` und Tags, Fork-Läufe? | nachgemessen, Abschnitt 3; zwei Einstellungen bleiben bei der BetreiberIn (KA-M1) |
+| Q-KA-02 | Regeln für `produktion` und Tags, Fork-Läufe? | nachgemessen und abgelesen, Abschnitt 3; eine Einstellung bleibt (Rest von KA-M1) |
 | Q-KA-03 | Zuordnung als Zusage oder als Grenze? | Zusage, beide Stufen in einem Zug (E-KA-05) |
 | Q-KA-04 | Wie geht der Bericht in die Steuerung ein? | Sofortpunkt mit Konzept (E-KA-06) |
-| Q-KA-05 | Soll nach KA-01 und KA-02 sofort getaggt werden, oder erst mit KA-03? | **offen** — Vorschlag: sofort (KA-M3) |
-| Q-KA-06 | Dürfen Token für Jobs, Kette und Health nach KA-03 nicht mehr nachlesbar sein (einmalige Anzeige)? Das ändert den Betrieb | **offen** — Vorschlag: ja |
+| Q-KA-05 | Soll nach KA-01 und KA-02 sofort getaggt werden, oder erst mit KA-03? | sofort (E-KA-09) |
+| Q-KA-06 | Dürfen Token für Jobs, Kette und Health nach KA-03 nicht mehr nachlesbar sein (einmalige Anzeige)? Das ändert den Betrieb | ja (E-KA-10) |
 
 ---
 

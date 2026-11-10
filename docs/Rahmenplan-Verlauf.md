@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 233 | 10.11.2026 | 28 | KA-M1 bis auf einen Rest erledigt: Pflichtprüferin und Freigabe von Fork-Läufen von der Betreiberin abgelesen; offen die Beschränkung der Umgebung auf Zweige und Tags. Q-KA-05 und -06 entschieden (E-KA-09, -10). Kopf nennt PR #164. |
 | 232 | 10.11.2026 | 28, R92 | Schritt 28 (KA) beginnt als Sofortpunkt vor 13: Fahrplanzeile, R92, Konzept und Audit-Bericht (43 Befunde, 2 hoch); Zuarbeiten KA-M1 und KA-M2 in 6.1. Kopf: Stand `e8b0fc5` (PR #162, Web 24.10.1), gemessen. |
 | 231 | 09.11.2026 | 27 | Nachprüfung auf Staging nach PR #160 (R91): P-OF-32 mit Web 24.9.2 bestanden (Nr. 550), gestrichen; in der Prüfliste OF bleiben nur Punkte der Betreiberin. Kopf: Stand `3d4db98`. |
 | 230 | 09.11.2026 | 27 | 27 (OF) abgeschlossen (PR #159): Erledigt-Zeile, Konzept gelöscht (`3bd5282`), 6.1 „Prüfliste OF“, Kopf `ced4a27` (Web 24.9.1). Spanne 530–539 frei. Staging (R91): sechs Punkte bestanden, Fund Nr. 550 behoben (24.9.2). |
