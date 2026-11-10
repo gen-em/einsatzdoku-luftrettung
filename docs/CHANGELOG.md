@@ -14,6 +14,31 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 4.4.0] — unveröffentlicht
+
+Schritt 28 (Sicherheitspaket), Paket KG-01 (Backlog Nr. 570).
+
+### Behoben
+
+- **Uhr — im laufenden Dienst lässt sich die Uhr nicht mehr neu koppeln.**
+  Die Sperre griff bisher nur, wenn ein abgeschlossenes Paket wartete; sonst
+  ließ sich die Uhr mitten im Dienst an ein anderes Konto koppeln, und der
+  laufende Einsatz ging verschlüsselt dorthin, wo ihn das andere Konto lesen
+  konnte. Jetzt sagt die Sync-Seite im Dienst immer „Erst Dienst beenden";
+  nur das Nachholen des Kontoschlüssels bleibt erlaubt, weil es dasselbe Konto
+  ist. Gehen die Zugangsdaten auf anderem Weg verloren, bleibt auch der
+  laufende Einsatz an das bisherige Konto gebunden.
+- **Uhr — eine Quittung des Servers löscht keine ungesendeten Punkte mehr.**
+  Die Uhr übernahm die gemeldete Zahl ungeprüft und räumte danach auf; eine
+  zu große Zahl, etwa von einer falschen Serveradresse, ließ sie Spurpunkte
+  löschen, die nie angekommen waren. Jetzt gilt höchstens, was sie selbst
+  gesendet hat.
+- **Uhr — nach einem Funkabriss gehen keine Spurpunkte mehr verloren.** Kam
+  auf ein Spurstück keine Antwort, schickte die Uhr beim nächsten Versuch ein
+  größeres, das an derselben Stelle begann; der Server legte es nicht ab und
+  quittierte es trotzdem. Jetzt wiederholt sie das unquittierte Stück genau
+  so, wie sie es gesendet hat.
+
 ## [Web 24.11.0] — unveröffentlicht
 
 ### Geändert

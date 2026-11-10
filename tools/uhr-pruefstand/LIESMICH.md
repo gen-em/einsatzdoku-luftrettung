@@ -21,8 +21,8 @@ von `bildreihe()`; nicht koppeln lassen — die App zeigt auf Produktiv.
 **Stufe I** übersetzt für **alle** Zielgeräte und fängt fehlende
 API-Funktionen, fehlende Ressourcen und Speicherbedarf. **Stufe II** startet
 den Simulator für die Vertreter je Geräteklasse und nimmt Bilder auf.
-Daneben, je mit Anleitung: `netzprobe/`, `eingabe-probe/`, `krypto-probe/`
-(S11-02) und `rundlauf/` (koppeln, verschlossen senden, öffnen; S11-08).
+Daneben, je mit Anleitung: `netzprobe/`, `eingabe-probe/`, `krypto-probe/`,
+`rundlauf/` (koppeln, senden, öffnen), `syncseite/`, `sendeweg/` (ohne Server).
 
 ## Was es braucht
 

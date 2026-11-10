@@ -308,6 +308,11 @@
       "braucht": "uhr",
       "bemerkung": "S11-08: eine Prueffassung der App koppelt im Simulator an das Demo-Konto der oertlichen Anlage und sendet einen Einsatz (600 Punkte, Raender) und ein Ruhesegment verschlossen; pruefen.php oeffnet die Huellen mit dem Demo-Schluessel und haelt sie Wert fuer Wert gegen. Auf der Fenix zusaetzlich der Weg ohne Schluessel und das Nachholen (E-S11-79), auf der FR945 seit R17-21 das Schrumpfen der Liste waehrend der letzten Anfrage (F-R17-52: zwei geparkte verworfen, danach Liste leer, kein Spurstueck, kein Absturz). Seit GR-04 (Nr. 431) auf der Fenix dazu das Reaktivieren: Geraet deaktiviert -> 403, nichts kommt an; wieder aktiviert -> ohne Anlass weiter nichts; Sync-Seite neu geoeffnet -> alles kommt an. Seit GR-05 das Neukoppeln trotz Rueckstand: an dasselbe Konto (Fenix) -> die Pakete kommen an; an ein Konto mit anderem Schluessel (FR945) -> nichts kommt an, Verwerfen nach Rueckfrage. Rund 17 min."
     },
+    "uhr-sendeweg": {
+      "aufruf": "bash tools/uhr-pruefstand/sendeweg/sendeweg.sh fenix6pro",
+      "braucht": "uhr",
+      "bemerkung": "Konzept KG (KG-01, Nr. 570). Eine Prueffassung haelt jede Anfrage vor dem Absenden an und spielt die Antworten des Servers selbst vor, ohne Server: Kopplung im Dienst, Bindung des laufenden Einsatzes, gleiche Stueckgroesse nach verlorener Antwort, Deckel fuer next_seq. 8 Pruefungen, rund 1 min."
+    },
     "uhr-syncseite": {
       "aufruf": "bash tools/uhr-pruefstand/syncseite/syncseite.sh",
       "braucht": "uhr",
@@ -1132,7 +1137,8 @@
       "proben": [
         "uhr-stufe1",
         "uhr-rundlauf",
-        "uhr-syncseite"
+        "uhr-syncseite",
+        "uhr-sendeweg"
       ],
       "anlass": "E-PK-02"
     },

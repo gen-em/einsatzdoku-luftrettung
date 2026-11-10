@@ -15,8 +15,12 @@
 // zeigt die Uhr, und das Web nimmt entgegen.
 //
 // DER CODE WEIST NICHTS AUS. Er ist fuer den Menschen, der ihn
-// abliest und eintippt; wer ihn ueber die Schulter sieht, kann an der Uhr
-// nichts ausloesen. Was die Uhr ausweist, sind Kennung und Schluessel aus
+// abliest und eintippt. Wer ihn ueber die Schulter sieht, kann ihn aber in
+// SEINEM Konto eintragen -- dann fragt die Uhr "Mit … koppeln?" mit dessen
+// Adresse, und nur das Lesen dieser Adresse haelt ihn auf. Das ist das
+// zweite Tor unten, nicht eine Eigenschaft des Codes (F-KA-43; bis Uhr
+// 4.3.3 stand hier, ein Schulterblick loese an der Uhr nichts aus).
+// Was die Uhr ausweist, sind Kennung und Schluessel aus
 // `start` — und die sind bis zum Ja SCHWEBEND: Der Server kennt sie,
 // ingest.php weist sie aber mit 401 ab, weil es das Geraet noch nicht gibt.
 //
@@ -261,7 +265,6 @@ module Pair {
      */
     function start() as Void {
         _warnung = null;              // ein neuer Anlauf erbt keine alte Vormerkung
-        if (!Uploader.hasCredentials()) { sitzungStarten(); return; }
 
         /* GEKOPPELT, ABER OHNE KONTOSCHLUESSEL: holen statt neu koppeln.
          * Neu koppeln setzt Trennen voraus, und das verweigert die Uhr
@@ -270,27 +273,43 @@ module Pair {
          * Sackgasse. `pair.php status` beantwortet jede gekoppelte Uhr mit
          * dem Schluessel ihres Kontos; mit den eigenen Zugangsdaten gefragt,
          * ist es DASSELBE Konto, und der Rueckstand geht dorthin, wo er
-         * hingehoert. Abgemeldet geht es nicht — dann hilft nur Neukoppeln. */
-        if (!Uploader.angehalten() && !Huelle.hatSchluessel()) { schluesselHolen(); return; }
+         * hingehoert. Abgemeldet geht es nicht — dann hilft nur Neukoppeln.
+         * Das geht auch im Dienst: Es koppelt nichts neu. */
+        if (Uploader.hasCredentials() && !Uploader.angehalten() && !Huelle.hatSchluessel()) {
+            schluesselHolen();
+            return;
+        }
+
+        /* IM DIENST WIRD NIE NEU GEKOPPELT -- gleich, ob die Uhr gekoppelt
+         * ist, ob ein Rueckstand besteht, ob sie abgemeldet ist (F-KA-05).
+         * Der laufende Einsatz und das laufende Ruhestueck liegen im
+         * Klartext auf der Uhr und werden erst beim Senden verschlossen, mit
+         * dem Schluessel der DANN bestehenden Kopplung. Eine Uhr, die im
+         * Dienst den Traeger wechselt und neu gekoppelt wird, schickte
+         * Phasenorte, Reanimation und Spur des laufenden Dienstes an das
+         * neue Konto, lesbar. Bis Uhr 4.3.3 stand die Sperre nur im Zweig
+         * "Rueckstand und abgemeldet"; ohne abgeschlossenes Paket fiel der
+         * Weg durch, obwohl das Handbuch "waehrend eines Dienstes geht das
+         * nicht" sagte. */
+        if (Model.serviceActive) {
+            status = "Erst Dienst beenden";
+            statusHint = null;
+            statusKind = :error;
+            WatchUi.requestUpdate();
+            return;
+        }
+        if (!Uploader.hasCredentials()) { sitzungStarten(); return; }
 
         /* AUSNAHME: ABGEMELDET ODER GESPERRT. Dann kann der Rueckstand
          * ohnehin nicht mehr gehen, und die Sperre waere eine Sackgasse.
          * Getrennt wird dann trotzdem -- der Rueckstand bleibt, gebunden an
          * den Schluessel dieser Kopplung (Uploader.binden), und geht nur an
-         * dasselbe Konto. Nur ausserhalb des Dienstes: Im Dienst liegen auch
-         * die laufenden Pakete ungesendet da, und die Bindung deckte sie
-         * nicht. Und nur ohne schon bestehende Bindung -- eine zweite Grenze
-         * mit einem zweiten Schluessel haelt die Bauform nicht. */
+         * dasselbe Konto. Und nur ohne schon bestehende Bindung -- eine
+         * zweite Grenze mit einem zweiten Schluessel haelt die Bauform
+         * nicht. */
         var offen = Model.backlogCount();
         var gebundenTrennen = false;
         if (offen > 0 && Uploader.angehalten() && !Uploader.gebunden()) {
-            if (Model.serviceActive) {
-                status = "Erst Dienst beenden";
-                statusHint = null;
-                statusKind = :error;
-                WatchUi.requestUpdate();
-                return;
-            }
             gebundenTrennen = true;
         } else if (offen > 0) {
             status = "Erst " + offen.toString()
@@ -440,8 +459,13 @@ module Pair {
         Uploader.alleGeparktenVerwerfen();
         /* EIN RUECKSTAND HIER heisst: Pair.start hat das Trennen trotzdem
          * zugelassen, weil die Uhr abgemeldet oder gesperrt ist. Er wird an
-         * den Schluessel gebunden, bevor der Schluessel unten geht. */
-        if (Model.backlogCount() > 0 && !Uploader.gebunden()) { Uploader.binden(); }
+         * den Schluessel gebunden, bevor der Schluessel unten geht --
+         * ebenso ein laufendes Paket mit Ungesendetem (F-KA-05): Pair.start
+         * trennt im Dienst nicht, aber dieser Weg soll auch dann halten,
+         * wenn ihn kuenftig etwas anderes ruft. */
+        if ((Model.backlogCount() > 0 || Uploader.laufendOffen()) && !Uploader.gebunden()) {
+            Uploader.binden();
+        }
         Uploader.abgemeldet = false;
         Uploader.gesperrt = null;
         Uploader.abmeldungVergessen();     // die Frist gehoert zur alten Kopplung

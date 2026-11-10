@@ -127,7 +127,8 @@ Abschnitt 2.2 gibt es erst im laufenden Dienst.
 > hin — sie gehören dir und wären dort lesbar; die Sync-Seite zeigt dann „2
 > Pakete altes Konto" und **kurz START** verwirft sie nach einer Rückfrage.
 > Die Frist läuft für sie weiter. Während eines Dienstes geht das nicht
-> („Erst Dienst beenden").
+> („Erst Dienst beenden") — seit Uhr 4.4.0 gilt das für jedes Koppeln im
+> Dienst (Abschnitt 13.1).
 >
 > „**Gerät im Web deaktiviert**" mit „**Im Web klären, bis 27.10.**"
 > darunter *(seit Uhr 4.2.0; davor stand auch hier „Abgemeldet")* heißt:
@@ -6949,7 +6950,10 @@ darunter, mit welcher Taste es einen neuen gibt.
 **Warum drei Schritte und nicht einer.** Zwischen dem Code und dem fertigen
 Gerät liegen **zwei Tore**: Die Web-Seite sieht, **wer eingibt**, und die Uhr
 sieht, **wessen Konto** es wäre. Keines allein trägt. Wer dir den Code
-abschwatzt, hat nichts — er kann an deiner Uhr nichts auslösen. Und wer dich
+abschwatzt oder ihn abliest, kann ihn in **seinem** Konto eintragen — dann
+fragt deine Uhr „Mit … koppeln?" mit **seiner** Adresse. Lies sie, bevor du
+Ja sagst; das ist das zweite Tor. *(Bis Uhr 4.3.3 stand hier, ein
+abgeschwatzter Code löse an der Uhr nichts aus.)* Und wer dich
 dazu bringt, einen **fremden** Code einzugeben, koppelt sein Gerät nicht an
 dein Konto: Das Ja fehlt ihm.
 
@@ -6983,7 +6987,15 @@ aber er beginnt mit einer Rückfrage:
    diesmal mit der Adresse der **neuen** Person in der Rückfrage. Genau dort
    fällt auf, wenn jemand den Code des falschen Kontos eingetippt hat.
 
-Zwei Dinge, die dabei bewusst so sind:
+Drei Dinge, die dabei bewusst so sind:
+
+**Im laufenden Dienst gibt es keinen neuen Code** *(seit Uhr 4.4.0)*. Die
+Uhr sagt **„Erst Dienst beenden"** — auch wenn sie gar nicht gekoppelt ist
+und auch ohne offene Pakete. Der laufende Einsatz liegt bis zum Senden
+unverschlüsselt auf der Uhr und würde mit dem Schlüssel des Kontos
+verschlossen, an das sie dann gekoppelt ist. Bis Uhr 4.3.3 ging das
+Neukoppeln im Dienst, wenn kein abgeschlossenes Paket wartete. Den
+Kontoschlüssel nachholen (gleiches Konto) geht weiter auch im Dienst.
 
 **Offene Pakete blockieren das Trennen.** Steht noch etwas zum Senden an, sagt
 die Uhr **„Erst N Pakete senden / Sonst ans neue Konto"** und trennt nicht.

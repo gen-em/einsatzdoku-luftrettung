@@ -11231,3 +11231,21 @@ zutreffen.
      findet, und ein Riegel gegen jedes Formular an ein Druckblatt.
      Erledigt 10.11.2026 mit Web 24.11.0 (Schritt 28, KA-02): Übergabe von
      Fenster zu Fenster; Notfallblattprobe und Riegel druckblatt.
+
+570. **Die Garmin-Uhr band laufende Daten nicht an ihr Konto und glaubte jeder Quittung.** · gehört zu: 28 · Stand: erledigt · seit 10.11.2026
+     *Aufgenommen 10.11.2026 als Anlass der Probe `sendeweg` von KG-01
+     (Audit KA, F-KA-05, -07, -18 Uhr-Seite).* Drei Stellen im Sendeweg
+     der Garmin-App: `Pair.start()` ließ ein Neukoppeln im laufenden Dienst
+     zu, wenn kein abgeschlossenes Paket wartete, und `_findJob()` schickte
+     den laufenden Einsatz ohne Prüfung der Kontobindung — beides zusammen
+     schickte den laufenden Dienst an das neue Konto. `onResponse()` nahm
+     `next_seq` ungeprüft und löschte danach, was als quittiert galt.
+     `_send()` ließ ein unbestätigtes Spurstück bis zum nächsten Versuch
+     wachsen; der Server sah dieselbe Stelle mit anderem Inhalt. *Weg:* im
+     Dienst nie koppeln, laufende Pakete binden und prüfen, `next_seq` auf
+     `seq_from` plus gesendete Punkte deckeln, ein unquittiertes Stück
+     identisch wiederholen. *Abnahme:* eine Simulatorprobe je Stelle, rot
+     gegen Uhr 4.3.3.
+     Erledigt 10.11.2026 mit Uhr 4.4.0 (Schritt 28, KG-01): Kopplungssperre
+     im Dienst, Bindung und Prüfung der laufenden Pakete, Deckel für
+     next_seq, identische Wiederholung; Probe sendeweg.

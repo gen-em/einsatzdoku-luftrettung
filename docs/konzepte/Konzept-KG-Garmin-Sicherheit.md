@@ -15,9 +15,9 @@ derselbe Code und dieselbe Instanz.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/vigilant-cray-9riw34`, Backlog-Spanne 570–579 |
-| In Arbeit | **KG-01** — bestätigt 10.11.2026 |
+| In Arbeit | **KG-01** — fertig, Uhr 4.4.0, Pull Request offen; wartet auf Merge und Tag `uhr-v4.4.0`. Danach KG-02 |
 | Erledigt | — |
-| Hakt | nichts. Offen: Q-KG-01 (Zeichen bei gesperrtem Druck, KG-05) |
+| Hakt | nichts. Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05) |
 | Gelesen gegen | Commit `0be2092` · Uhr 4.3.3; die vier Befunde von KG-01 am 10.11.2026 an der heutigen Stelle bestätigt (Abschnitt 4) |
 
 **Grenzen (Auftrag):** KG fasst `watch/`, `tools/uhr-pruefstand/`, die
@@ -62,6 +62,9 @@ abonnieren, anhalten.
 | E-KG-11 | **Countdown-Erinnerungen:** bei 0:30 1 × 2 s, bei 0:10 2 × 2 s, bei 0:00 3 × 2 s; Pause zwischen den Pulsen 0,6 s; jedes Muster in **einem** Aufruf. Ein Neustart des Countdowns verwirft ausstehende Erinnerungen; in der Pause gibt es keine | 10.11.2026, BetreiberIn |
 | E-KG-12 | **Bestätigungen kurz, nach einer Regel:** Ereignis **ohne** Countdown-Neustart → 1 kurzer Puls; **mit** Countdown-Neustart (Rea beginnen, Rhythmuskontrolle, Defibrillation, Rea fortsetzen) → 2 kurze Pulse. Menü öffnen, Pause, Rea beenden → keine. Lang (2 s) gehört allein dem Countdown | 10.11.2026, BetreiberIn |
 | E-KG-13 | **Alle Vibrationen im Rea-Modus mit 100 % Stärke** | 10.11.2026, BetreiberIn |
+| E-KG-14 | **Ein Druck, den die 10-s-Sperre abweist, gibt kein Zeichen** (Antwort auf Q-KG-01). Ein zweites kurzes Muster neben „1 kurz" wäre unter Stress und mit Handschuh kaum zu unterscheiden | 10.11.2026, BetreiberIn |
+| E-KG-15 | **KG-01 hebt die Uhr auf 4.4.0** (Nebenstufe, wie im Auftrag), obwohl es Behebungen sind: Das Koppeln im Dienst ist ein veränderter Bedienweg | 10.11.2026, BetreiberIn (Auftrag) |
+| E-KG-16 | **Die Probe zu KG-01 läuft ohne Server** (`tools/uhr-pruefstand/sendeweg/`): Die Prüffassung hält jede Anfrage vor dem Absenden an und spielt die Antworten selbst vor. Ein verlorenes Paket und eine falsche Quittung lassen sich mit der echten Anlage nicht gezielt erzeugen; was `ingest.php` daraus macht, misst weiter `uhr-rundlauf` | 10.11.2026, Umsetzung |
 
 ---
 
@@ -69,7 +72,7 @@ abonnieren, anhalten.
 
 | Nr. | Frage | Stand |
 |---|---|---|
-| Q-KG-01 | Ein Druck, den die 10-s-Sperre abweist: gar kein Zeichen oder ein eigenes (z. B. sehr kurzer Puls)? Die Antwort „ja" vom 10.11.2026 ließ beides offen | offen, vor KG-05 |
+| Q-KG-01 | Ein Druck, den die 10-s-Sperre abweist: gar kein Zeichen oder ein eigenes (z. B. sehr kurzer Puls)? | beantwortet 10.11.2026 → E-KG-14 |
 
 ---
 
@@ -85,7 +88,34 @@ Bestätigt am 10.11.2026 an der heutigen Stelle (Commit `0be2092`, Uhr 4.3.3):
 | 4 | F-KA-07 (Uhr) | `Uploader.mc` `_send()`: Stückgröße = offene Punkte, wächst zwischen zwei Versuchen | Größe eines unbestätigten Stücks merken, identisch wiederholen |
 | 5 | F-KA-43 | `Huelle.mc` Kommentar „Liegt er auf der Kurve?" gegen Bedrohungsmodell (F-S11-85); `Pair.mc:17-19` „wer ihn über die Schulter sieht, kann nichts auslösen" | Kommentare berichtigen |
 
-Stand: bestätigt, Umsetzung beginnt.
+**Gebaut (10.11.2026, Uhr 4.4.0):**
+
+1. `Pair.start()`: erst `schluesselHolen()` (nur gekoppelt, nicht angehalten,
+   ohne Schlüssel — dasselbe Konto, auch im Dienst erlaubt), dann **im Dienst
+   immer** „Erst Dienst beenden", dann erst `sitzungStarten()` bzw. Trennen.
+   Die alte Sperre im Zweig „gebunden trennen" ist damit überflüssig und fort.
+   Eine Kopplung, die *vor* Dienstbeginn startet und *im* Dienst bestätigt
+   wird, ist nicht erreichbar: Die Kopplungsansicht liegt oben auf dem Stapel,
+   den Dienst beginnt nur der Startbildschirm darunter — gelesen, nicht
+   gemessen.
+2. `Uploader.binden()` nimmt die laufenden Referenzen mit (`laufendeRefs()`);
+   `lokalTrennen()` bindet auch, wenn nur ein laufendes Paket Ungesendetes hat
+   (`laufendOffen()`); `_findJob()` prüft laufende Pakete auf `istGeparkt` und
+   `istFremd`; `fremdeVerwerfen()` verwirft ein laufendes Paket nie und lässt
+   seine Bindung stehen — sonst ginge es nach Fristablauf, sobald es
+   abgeschlossen ist, an die jetzige Kopplung.
+3. `onResponse()`: `next_seq` höchstens `seq` + `n` aus `_inflight`; ohne
+   Zahl „Antwort ungültig", nichts quittiert.
+4. `_send()`: Anfang und Größe des gesendeten Stücks in `Storage 'stk_<ref>'`;
+   gleicher Anfang → gleiche Größe; jede 200 und `verwerfen()` löschen die
+   Marke.
+5. Kommentare `Huelle.schluesselSetzen()` und Kopf von `Pair.mc` berichtigt;
+   **derselbe falsche Satz stand im Handbuch 13** („er kann an deiner Uhr
+   nichts auslösen") und ist mit berichtigt (F-KG-06).
+
+Dokumente: Changelog (Uhr 4.4.0), Handbuch 1 und 13.1, Technik.md
+(`Uploader.mc`, `Pair.mc`), Bedrohungsmodell (Garmin-Zeile, R24 Garmin-Teil),
+`tools/uhr-pruefstand/LIESMICH.md`, Backlog Nr. 570 (angelegt und erledigt).
 
 ---
 
@@ -130,6 +160,9 @@ Pause und Ende werden weiterhin nicht übertragen.
 | F-KG-02 | **Bei Rhythmuskontrolle und Defibrillation ist der kurze Bestätigungspuls nicht spürbar** — der unmittelbar folgende Doppelpuls des Countdown-Neustarts bricht ihn ab | Fenix 6 Pro, BetreiberIn, 10.11.2026 | → KG-05 (E-KG-12: ein Muster je Bedienung, ein Aufruf) |
 | F-KG-03 | **Kommentar und Handbuch stimmen beim Zyklusende nicht:** `Util.mc` nennt Teil 2 „einen Tick später" (es sind zwei Ticks, ~2 s); das Handbuch nennt alle fünf Pulse „kräftig" (Pulse 4 und 5 haben 75 % statt 90 %); das Handbuch nennt den Ring in der Pause gelb (Code: blau) | Lesen, 10.11.2026 | → KG-05 |
 | F-KG-04 | **Die App vibriert auch, wenn sie nicht im Vordergrund ist** (Countdown-Ende) | Fenix 6 Pro, BetreiberIn, 10.11.2026 | eingetragen in `docs/Geraete-Eingabe.md` 2 (10.11.2026) |
+| F-KG-05 | **Eine neue Uhr-Probe braucht zwei Dateien außerhalb der Grenzen von KG:** ihre Zeile in `tools/pruefstand/pruefablauf.json` und die daraus erzeugte Tabelle in `docs/Pruefablauf.md` 4 — ohne sie läuft die Probe nie, und `bestand` wäre rot (`Pruefablauf.md` 6.12). Berührt mit der kleinsten Änderung (ein Eintrag, ein Name im Muster `uhr`); der BetreiberIn gemeldet | 10.11.2026 | KG-01 |
+| F-KG-06 | **Handbuch 13 trug denselben falschen Satz wie `Pair.mc`** (F-KA-43): ein abgeschwatzter Code löse an der Uhr nichts aus. Wer ihn hat, trägt ihn im eigenen Konto ein, und die Uhr fragt mit dessen Adresse — das zweite Tor hält nur, wenn die Trägerin liest | Lesen, 10.11.2026 | berichtigt in KG-01 |
+| F-KG-07 | **Alle Fälle der Probe in einem Aufruf lösen den Watchdog aus** (mehrere Verschließungen am Stück, `Code Executed Too Long` in `Huelle.umgedreht()`). Die Probe läuft deshalb je Fall in einem eigenen Takt. Die App selbst verschließt je Antwort ein Stück und ist davon nicht betroffen — auf einer echten Uhr gemessen ist das aber nicht | Simulator fenix6pro, 10.11.2026 | Probe angepasst |
 
 **Gerätebeobachtungen stehen in `docs/Geraete-Eingabe.md` 2 und 6**, nicht
 nur hier — dieses Konzept wird am Ende der Phase gelöscht.
@@ -146,4 +179,17 @@ die Uhr (Gerätetest in KG-04/KG-05).
 
 ## 7. Prüfprotokoll
 
-Noch nichts gemessen.
+### KG-01 (10.11.2026, Uhr 4.4.0)
+
+**Nicht geprüft:** keine echte Uhr — weder das Koppeln im Dienst noch ein
+echter Funkabriss. Was `ingest.php` mit einem identisch wiederholten Stück
+tut, hängt an der Server-Seite von F-KA-07 (KA-04 Punkt 3, KA-Instanz).
+
+| Mittel | Was es misst | Ergebnis |
+|---|---|---|
+| `sendeweg.sh fenix6pro` gegen den Zweig | 8 Prüfungen in 7 Fällen (Simulator, ohne Server) | **8 von 8 grün** |
+| `SENDEWEG_WATCH=<0be2092> sendeweg.sh` (Uhr 4.3.3) | dieselben 8 gegen den Stand vor der Behebung | **5 rot** (`koppeln-ungekoppelt-im-dienst` „Hole Code…", `koppeln-gekoppelt-im-dienst` Trennen-Rückfrage, `bindung-laufender-einsatz` fremd=false, `stueck-wiederholt-gleich` 0:200 dann 0:400, `next-seq-gedeckelt` 100000); **3 Gegenproben grün** (Schlüssel holen im Dienst, nächstes Stück nach Quittung, Antwort ohne Zahl) |
+| `pruefstand.sh bauen fenix6pro` | Übersetzen der App | BUILD SUCCESSFUL |
+| `pruefen.sh bestand`, `kettenaufrufe/pruefen.py`, `pruefen.sh --selbstprobe` | Form, Einhängen, Riegel | 0 Befunde · kein Widerspruch · 15 von 15 Selbstproben |
+| `steuerung/decken.py`, `uebersicht.py`, `nummern.py` | Backlog-Form und -Nummern | 21 Decken, 0 gerissen · 0 ohne Grammatik · 0 Überschneidungen |
+| Prüfstand `pruefen.sh` (Stufe klein, schmal) | Riegel und Proben der Berührung, darunter `uhr-stufe1` (99 Geräte), `uhr-rundlauf`, `uhr-syncseite`, `uhr-sendeweg` | Bericht in der Commit-Nachricht von KG-01; ein Vorlauf über denselben Code am 10.11.2026: 32 grün, 0 rot, 0 nicht gemessen, 1 627 s |

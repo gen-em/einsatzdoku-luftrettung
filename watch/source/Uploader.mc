@@ -208,12 +208,24 @@ module Uploader {
      * Abmeldung laeuft fuer sie weiter, auch nach der neuen Kopplung. */
     const ABLAGE_BINDUNG = "rueck_bind";
 
+    /* Anfang und Groesse des zuletzt gesendeten, noch unquittierten
+     * Stuecks, je Paket: "stk_" + ref -> { "s", "n" } (F-KA-07, `_send`). */
+    const ABLAGE_STUECK = "stk_";
+
     function gebunden() as Lang.Boolean {
         return Storage.getValue(ABLAGE_BINDUNG) instanceof Lang.Dictionary;
     }
 
     /* Den jetzigen Rueckstand an den jetzigen Schluessel binden. Vor dem
-     * Loeschen des Schluessels zu rufen (Pair.lokalTrennen). */
+     * Loeschen des Schluessels zu rufen (Pair.lokalTrennen).
+     *
+     * AUCH DIE LAUFENDEN PAKETE (F-KA-05). Der laufende Einsatz und das
+     * laufende Ruhestueck stehen in keiner Liste; bis Uhr 4.3.3 band die
+     * Bindung sie nicht, und `_findJob()` schickte sie ohne Pruefung. Im
+     * Dienst wird zwar nicht mehr neu gekoppelt (Pair.start), aber wer die
+     * Zugangsdaten auf anderem Weg verliert, soll den laufenden Dienst nicht
+     * an die naechste Kopplung verschenken. Ihre Referenz bleibt dieselbe,
+     * wenn sie in die Liste wandern -- die Bindung haelt also weiter. */
     function binden() as Void {
         var refs = [] as Lang.Array<Lang.String>;
         for (var i = 0; i < Model.pendingMissions.size(); i++) {
@@ -222,6 +234,8 @@ module Uploader {
         for (var j = 0; j < Model.pendingRest.size(); j++) {
             refs.add(Model.pendingRest[j]["ref"] as Lang.String);
         }
+        var lauf = laufendeRefs();
+        for (var l = 0; l < lauf.size(); l++) { refs.add(lauf[l]); }
         var bis = abmeldeFristBis();
         if (bis == null) { bis = Util.epochNow() + Const.PARK_FRIST_S; }
         var k = Storage.getValue(Huelle.ABLAGE_SCHLUESSEL);
@@ -229,6 +243,26 @@ module Uploader {
             "k" => (k instanceof Lang.String) ? k : null,
             "refs" => refs, "bis" => bis
         } as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
+    }
+
+    /* Die Referenzen des laufenden Einsatzes und Ruhestuecks, soweit es sie
+     * gibt. */
+    function laufendeRefs() as Lang.Array<Lang.String> {
+        var refs = [] as Lang.Array<Lang.String>;
+        var mis = Model.mission;            // lokal: Null-Pruefung greift nur so
+        if (mis != null) { refs.add(mis["ref"] as Lang.String); }
+        var rest = Model.restSegment;
+        if (rest != null) { refs.add(rest["ref"] as Lang.String); }
+        return refs;
+    }
+
+    /* Hat ein laufendes Paket etwas, das noch nicht beim Server ist? */
+    function laufendOffen() as Lang.Boolean {
+        var lauf = laufendeRefs();
+        for (var i = 0; i < lauf.size(); i++) {
+            if (hasWork(lauf[i])) { return true; }
+        }
+        return false;
     }
 
     function _bindung() as Lang.Dictionary or Null {
@@ -299,10 +333,20 @@ module Uploader {
         if (b == null) { return 0; }
         var refs = b["refs"] as Lang.Array<Lang.String>;
         var n = 0;
+        /* EIN LAUFENDES PAKET WIRD NIE VERWORFEN -- es zeichnet noch auf.
+         * Seine Bindung bleibt aber stehen, sonst ginge es, sobald es
+         * abgeschlossen ist, an die jetzige Kopplung. */
+        var bleiben = [] as Lang.Array<Lang.String>;
         for (var i = 0; i < refs.size(); i++) {
             if (_inListe(refs[i])) { verwerfen(refs[i]); n += 1; }
+            else if (laufendeRefs().indexOf(refs[i]) >= 0) { bleiben.add(refs[i]); }
         }
-        Storage.deleteValue(ABLAGE_BINDUNG);
+        if (bleiben.size() == 0) {
+            Storage.deleteValue(ABLAGE_BINDUNG);
+        } else {
+            b["refs"] = bleiben;
+            Storage.setValue(ABLAGE_BINDUNG, b as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
+        }
         return n;
     }
 
@@ -402,13 +446,22 @@ module Uploader {
                 return { "kind" => "rest_segment", "data" => r };
             }
         }
+        /* Die laufenden Pakete gehen durch dieselbe Pruefung wie die in der
+         * Liste: geparkt oder fremd -> liegen lassen (F-KA-05; bis Uhr 4.3.3
+         * gingen sie ohne `istFremd` hinaus). */
         var rest = Model.restSegment;        // lokal: Null-Pruefung greift nur so
-        if (rest != null && _openPoints(rest["ref"] as Lang.String) > 0) {
-            return { "kind" => "rest_segment", "data" => rest };
+        if (rest != null) {
+            var lr = rest["ref"] as Lang.String;
+            if (!istGeparkt(lr) && !istFremd(lr) && _openPoints(lr) > 0) {
+                return { "kind" => "rest_segment", "data" => rest };
+            }
         }
         var mis = Model.mission;
-        if (mis != null && _openPoints(mis["ref"] as Lang.String) > 0) {
-            return { "kind" => "mission", "data" => mis };
+        if (mis != null) {
+            var lm = mis["ref"] as Lang.String;
+            if (!istGeparkt(lm) && !istFremd(lm) && _openPoints(lm) > 0) {
+                return { "kind" => "mission", "data" => mis };
+            }
         }
         return null;
     }
@@ -433,6 +486,25 @@ module Uploader {
         var seqFrom = _ackedSeq(ref);
         var n = _openPoints(ref);
         if (n > Const.UPLOAD_CHUNK_POINTS) { n = Const.UPLOAD_CHUNK_POINTS; }
+        /* EIN UNBESTAETIGTES STUECK GEHT GENAU SO NOCH EINMAL (F-KA-07).
+         *
+         * Kam auf `0:120` keine Antwort, kann der Server es trotzdem
+         * abgelegt haben. Wuchs das Stueck bis zum naechsten Versuch auf
+         * `0:300`, sah der Server dieselbe Stelle mit anderem Inhalt, legte
+         * nichts ab -- und quittierte bis Uhr 4.3.3 trotzdem 300: Die Punkte
+         * 120 bis 299 lagen nirgends, und bei einem abgeschlossenen Einsatz
+         * loeschte die Uhr sie. Deshalb merkt sie sich Anfang und Groesse
+         * des gesendeten Stuecks bis zur Quittung und wiederholt es
+         * identisch. Danach waechst es wieder. */
+        var stk = Storage.getValue(ABLAGE_STUECK + ref);
+        if (stk instanceof Lang.Dictionary) {
+            var sn = stk["n"];
+            if (seqFrom == stk["s"] && sn instanceof Lang.Number && sn <= n) {
+                n = sn;
+            } else {
+                Storage.deleteValue(ABLAGE_STUECK + ref);   // veraltet
+            }
+        }
 
         var flat = Track.readPoints(ref, seqFrom, n);
         var istEinsatz = "mission".equals(job["kind"] as Lang.String);
@@ -497,9 +569,16 @@ module Uploader {
         };
 
         // Kontext der laufenden Anfrage merken (Uploads laufen sequenziell,
-        // daher genuegt eine einzelne Variable).
+        // daher genuegt eine einzelne Variable). "seq" und "n" sind die
+        // Grenze, die eine Quittung nicht ueberschreiten darf.
+        var gesendet = flat.size() / 4;
         _inflight = { "ref" => ref, "kind" => job["kind"],
-                      "final" => d["final"] == true };
+                      "final" => d["final"] == true,
+                      "seq" => seqFrom, "n" => gesendet };
+        if (gesendet > 0) {
+            Storage.setValue(ABLAGE_STUECK + ref, { "s" => seqFrom, "n" => gesendet }
+                             as Lang.Dictionary<Storage.KeyType, Storage.ValueType>);
+        }
 
         // Lokal statt ueber _cb: Die Typpruefung verfolgt eine Null-Pruefung
         // nur ueber lokale Variablen. Anlegen und Merken in einem Zug, sonst
@@ -583,7 +662,22 @@ module Uploader {
             gesperrt = null;
             _nichtVor = null;
             abmeldungVergessen();
-            var nextSeq = data["next_seq"] as Lang.Number;
+            /* HOECHSTENS, WAS GESENDET WURDE (F-KA-18). Die Uhr loescht,
+             * was quittiert ist. Bis Uhr 4.3.3 nahm sie `next_seq`
+             * ungeprueft -- eine Antwort mit einer zu grossen Zahl, etwa
+             * von einer falschen Serveradresse in den Einstellungen, liess
+             * sie Punkte loeschen, die nie angekommen waren. Eine Antwort
+             * ohne Zahl quittiert nichts. */
+            var roh = data["next_seq"];
+            if (!(roh instanceof Lang.Number)) {
+                lastError = "Antwort ungültig";
+                _busy = false;
+                return;
+            }
+            var nextSeq = roh as Lang.Number;
+            var grenze = (ctx["seq"] as Lang.Number) + (ctx["n"] as Lang.Number);
+            if (nextSeq > grenze) { nextSeq = grenze; }
+            Storage.deleteValue(ABLAGE_STUECK + ref);
             _setAcked(ref, nextSeq, true);
 
             // final + alle Punkte bestaetigt -> lokal aufraeumen
@@ -721,6 +815,7 @@ module Uploader {
         Storage.deleteValue("ack_" + ref);
         Storage.deleteValue("meta_" + ref);
         Storage.deleteValue("bad_" + ref);
+        Storage.deleteValue(ABLAGE_STUECK + ref);
         for (var i = Model.pendingMissions.size() - 1; i >= 0; i--) {
             if (ref.equals(Model.pendingMissions[i]["ref"] as Lang.String)) {
                 Model.pendingMissions.remove(Model.pendingMissions[i]);
