@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 231 (09.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 232 (10.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `3d4db98`, PR #160, gemessen 09.11.2026): Web 24.9.2 ·
+**Stand `origin/main`** (Commit `e8b0fc5`, PR #162, gemessen 10.11.2026): Web 24.10.1 ·
 Uhr 4.3.3 · Android 0.22.0; auf Staging, Produktiv noch auf Web 23.8.2 · Uhr 4.3.2 · Android 0.21.0 (Tags auf `bfaca8b`).
-**Läuft:** nichts; 27 (OF) abgeschlossen 09.11.2026 (PR #159).
-**Als Nächstes:** 13 (P7).
-**Offene PRs:** keine.
-**Fällig bei der Betreiberin:** 42 Posten (Abschnitt 6.1). **`update.php`:** auf Staging nichts offen (Betreiberin, 07.11.2026, nach Web 23.10); auf Produktiv nach dem Tag `web-v23.11.3` fällig (Migration `2026_11_07_darstellung`).
+**Läuft:** 28 (KA) — Konzept zur Freigabe; Audit vom 09.11.2026 mit 43 Befunden, 2 hoch (R92).
+**Als Nächstes:** 28 (KA), danach 13 (P7).
+**Offene PRs:** der PR zu Audit und Konzept KA (28), nur `docs/`.
+**Fällig bei der Betreiberin:** 44 Posten (Abschnitt 6.1). **`update.php`:** auf Staging nichts offen (Betreiberin, 07.11.2026, nach Web 23.10); auf Produktiv nach dem Tag `web-v23.11.3` fällig (Migration `2026_11_07_darstellung`).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -104,7 +104,7 @@ liest die 7.x-Sicherung genau einmal) · Rückwärtskompatibilität ab v1.0 (R60
 ## 3. Fahrplan — die nächsten Schritte
 
 Schrittnummern sind **Namen**, keine Reihenfolge; sie werden nie umvergeben.
-**Die Reihenfolge der offenen Schritte ist:** 13 → 14 (E-BE-02 bis -04, 02.11.2026; PR, 21 bis 24, BR7, 26 und 27 davor sind erledigt); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
+**Die Reihenfolge der offenen Schritte ist:** 28 → 13 → 14 (28 als Sofortpunkt davor, R92, 10.11.2026; 13 → 14 nach E-BE-02 bis -04; PR, 21 bis 24, BR7, 26 und 27 sind erledigt); der Betriebsübergang folgt auf v1.0. Daneben, ohne Platz in
 der Reihe: die Paketschnitte von **11** und Teil C von **6** (seit SD-M1
 frei). **Warum so:** P6 liegt in zwei Hälften um S11 (R86): das
 **Bedrohungsmodell (12, abgeschlossen) vor S11 (12a, abgeschlossen)**, weil es dessen
@@ -121,6 +121,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen, Tabellen mit Mockup (Nr. 342) | 26 | eigenes Konzept nach K1 | offen — Konzeptsitzung kann neben 24 laufen, Umsetzung nach 24 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13; die Inventur (R68) entscheidet die zwölf Werkzeug-Punkte mit `gehört zu: 14` (E-BE-04) |
+| 28 | **KA — Sicherheitspaket** | Alle 43 Befunde des Audits beheben, hoch bis Hinweis (E-KA-04): Kette (FTPS-Zertifikat), Notfallblatt im Browser, Schranken der Verwaltung, Kontobindung der Geräte, Mengen und Fremdbestandteile, Bindung und Herkunft der Chiffretexte (Formatwechsel, E-KA-05), Modell und Texte | keine | `docs/konzepte/Konzept-KA-Sicherheitspaket.md`, Befunde in `Audit-KA-Sicherheit-Krypto.md` | Konzept — zur Freigabe seit 10.11.2026; Umsetzung in eigener Sitzung, sieben Pakete KA-01 bis KA-07; KA-M1 bei der Betreiberin |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 
 Kein offener Schritt hat einen Block: Die Zeilen nennen den Inhalt; den
@@ -137,7 +138,7 @@ Backlog-Nummern verlangen die Gegenproben aus 2.2.
 
 | jetzt parallel möglich | nicht parallel |
 |---|---|
-| Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 13 → 14 nacheinander in der Umsetzung (R71, R86, E-BE-02) |
+| Konzeptarbeit zu allem; ein Abschluss nach K9 zu allem — er schreibt nur Buchführung | 28 → 13 → 14 nacheinander in der Umsetzung (R71, R86, R92, E-BE-02); in 28 läuft KA-04 nicht neben einem Paket, das `server/` schreibt |
 
 **Merge-Reihenfolge auf `main`:** ein Pull Request je Phase nach Freigabe
 (K7); nach jeder Migration `update.php`; nach einem fremden Merge nimmt jeder
@@ -164,6 +165,8 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
+| **KA-M1 — zwei GitHub-Einstellungen ansehen:** Umgebung `produktion` (Pflichtprüfer, Selbstfreigabe, Beschränkung auf `main` und Tag-Muster) und Actions → General (Freigabe von Fork-Läufen); aus der Arbeitsumgebung nicht lesbar | 28 (KA) | 10.11.2026 | `Pruefliste.md` 1, P-KA-01 |
+| **KA-M2 — Ruleset für Tags** (`web-v*`, `android-v*`, `uhr-v*`; heute keines) und Probelauf der Auslieferung mit geprüftem FTPS-Zertifikat gegen Staging und Produktiv — fällig mit KA-01 | 28 (KA) | 10.11.2026 | `Pruefliste.md` 1, P-KA-02; Konzept KA 6 |
 | **P-PK-37:** `STAGING_PASS` einmal falsch, einmal leer setzen — Stufe 2 rot mit Grund im ersten Messschritt; P-PK-18 (zwei Merges in einer Minute) bei Gelegenheit. P-PK-19, -21, -38 und PK-M2 sind seit Lauf 101 erledigt | PK | 29.09.2026 | `Pruefliste.md` 1, 5s |
 | **Prüfliste PK ohne Merge:** Z12 — „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" als Pflichtprüfung (P-PK-36) | PK | 23.09.2026 | `Pruefliste.md` 1 |
 | **Health-Endpunkt auf Staging** — Token unter Betrieb → Hintergrundjobs, Karte „Monitoring“ (seit Web 23.5.0), als Kopfzeile; Produktiv überwacht Uptime Kuma seit dem 02.11.2026 | 10c AP6 | 20.09.2026 | Runbook „Health-Endpunkt einrichten"; P-P5c-29 bis -31 |
@@ -364,6 +367,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R89 | Der Prüfumfang folgt der Berührung: drei Engines, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; sonst schmal. Ersetzt R87 | umgesetzt in Schritt 20 (abgeschlossen 02.11.2026); entschieden 01.11.2026 (Betreiberin); E-PU-16 und -18 bestätigt 02.11.2026 | Konzept PU (gelöscht, `47a8567c`), E-PU-01 bis -19 |
 | R90 | Vor v1.0 liegt, was v1.0 festschreibt oder Daten gefährdet; was nicht kommt, wird verworfen statt geparkt. Schritte PR, 21 (GR), 22 (BR5) vor 13 | gilt; entschieden 02.11.2026 (Betreiberin); Stand `verworfen` in `Backlog-Erledigt.md` ersetzt `nicht umsetzen`; Zuordnung in den Kopfzeilen | `Vorbereitung-Backlog-Einordnung.md`, E-BE-01 bis -07 |
 | R91 | Nach jedem Merge auf `main` prüft die Arbeitsumgebung auf Staging die Prüflisten-Punkte „Claude" und „beide", mit eigenem BetreiberIn-Konto | gilt; entschieden 02.11.2026 (Betreiberin) | `Pruefablauf.md` 2.4, `Pruefliste.md` (Spalte „Wer") |
+| R92 | Audit KA als Sofortpunkt 28 vor 13: alle 43 Befunde werden behoben; Bindung und Herkunft der Chiffretexte in einem Zug, vor v1.0 | gilt; entschieden 10.11.2026 (Betreiberin) | `Konzept-KA-Sicherheitspaket.md`, E-KA-04 bis -07 |
 
 ## 8. Erledigt
 

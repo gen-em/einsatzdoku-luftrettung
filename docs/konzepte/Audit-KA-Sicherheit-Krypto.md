@@ -15,9 +15,9 @@ Zuschnitt vor.
 | | |
 |---|---|
 | Durchgang | abgeschlossen, 43 Befunde: **2 hoch**, 9 mittel, 4 niedrig bis mittel, 11 niedrig, 17 Hinweise; kein kritischer |
-| Umgesetzt | nichts — Befunde und Empfehlungen, keine Korrektur |
-| Nicht berührt | `Rahmenplan.md`, `Backlog.md`, `Bedrohungsmodell.md`, `Pruefliste.md` — die Einordnung ist Sache der BetreiberIn (Abschnitt 8) |
-| Hakt | vier Fragen an die BetreiberIn (Abschnitt 8) |
+| Umgesetzt | nichts — Befunde und Empfehlungen, keine Korrektur. **Seit 10.11.2026 Befundteil von Schritt 28:** `Konzept-KA-Sicherheitspaket.md` sagt, was gebaut wird (E-KA-04 bis -08) |
+| Steuerung | seit 10.11.2026: Fahrplanzeile 28 und R92 im Rahmenplan, R21 bis R27 im Bedrohungsmodell, P-KA-01 und -02 in der Prüfliste; `Backlog.md` unberührt — die Nummern entstehen in der Umsetzung |
+| Hakt | nichts — die vier Fragen sind beantwortet (Abschnitt 8) |
 
 **Entscheidungen vor Beginn** (Rückfrage am 09.11.2026):
 
@@ -541,11 +541,21 @@ KA-01 und KA-02 schließen beide hohen Befunde und den wichtigsten mittleren.
 
 ---
 
-## 8. Fragen an die BetreiberIn
+## 8. Fragen an die BetreiberIn — beantwortet am 10.11.2026
 
-| Nr. | Frage | Wofür |
+| Nr. | Frage | Antwort |
 |---|---|---|
-| Q-KA-01 | Steht vor Produktiv oder Staging ein Proxy, eine WAF oder ein Hoster-Protokoll, das Anfragekörper mitschreibt? | bestimmt, wie dringend F-KA-01 ist — und ob für schon gedruckte Blätter eine Erneuerung der Schlüssel zu empfehlen ist |
-| Q-KA-02 | Gelten in GitHub Regeln für den Zweig `produktion` und für Tags, und starten Fork-Läufe ohne Freigabe? | nicht prüfbar aus dem Repositorium; bestimmt das Gewicht von F-KA-15 und F-KA-24 |
-| Q-KA-03 | Soll die Zuordnung der verschlüsselten Daten (F-KA-04, F-KA-12) eine Zusage werden — oder eine benannte Grenze im Modell bleiben? | entscheidet, ob KA-06 ein Konzept wird oder zwei Absätze im Bedrohungsmodell |
-| Q-KA-04 | Wie soll dieser Bericht in die Steuerung eingehen — Fahrplanzeile, Backlog-Punkte je Befund, oder beides? | Rahmenplan, Backlog und Prüfliste sind bewusst nicht berührt; die Nummernspanne im Backlog ist nicht reserviert |
+| Q-KA-01 | Steht vor Produktiv oder Staging ein Proxy, eine WAF oder ein Hoster-Protokoll, das Anfragekörper mitschreibt? | nicht bekannt; die Wiederherstellungsschlüssel werden erneuert — **nach** dem Umbau des Notfallblatts (E-KA-07) |
+| Q-KA-02 | Gelten in GitHub Regeln für den Zweig `produktion` und für Tags, und starten Fork-Läufe ohne Freigabe? | nachgemessen, soweit lesbar — Tabelle unten |
+| Q-KA-03 | Soll die Zuordnung der verschlüsselten Daten (F-KA-04, F-KA-12) eine Zusage werden? | ja, Bindung und Herkunft in einem Zug (E-KA-05) |
+| Q-KA-04 | Wie soll dieser Bericht in die Steuerung eingehen? | als Sofortpunkt mit Konzept, Schritt 28 (E-KA-06, R92) |
+
+**Nachgemessen am 10.11.2026** (Schnittstelle von GitHub, nur lesend):
+
+| Was | Stand | Folge für die Befunde |
+|---|---|---|
+| Repositorium | öffentlich, Forks erlaubt, heute keiner | die Lauf-Protokolle liest jeder — **F-KA-25 wiegt schwerer** |
+| Zeiger `produktion` | Ruleset seit 06.11.2026, nur gegen Löschen | F-KA-15 nannte ihn „ungeschützt“: Das stimmt für das Schreiben, nicht mehr für das Löschen |
+| Tags | kein Ruleset | wer Schreibrecht hat, setzt einen `web-v*`-Tag; davor steht die Pflichtfreigabe |
+| `main` | zwei Rulesets, PR-Pflicht, „Stufe 1“ strikt, Bypass ein Konto per PR | wie dokumentiert |
+| Umgebung `produktion`, Freigabe von Fork-Läufen | **nicht lesbar** — der Proxy der Arbeitsumgebung sperrt beide Pfade | Handprüfung P-KA-01 |
