@@ -2,7 +2,7 @@
 """APK-Ablage — ein signiertes APK nach `server/apk/` legen, per FTPS.
 
     python3 tools/kette/apkablage.py --art handy|uhr --datei nadoku-X.Y.Z.apk \\
-            --ftp-server HOST --ftp-konto NAME --ftp-pass … [--ftp-pfad /]
+            --ftp-server HOST --ftp-konto NAME [--ftp-pfad /]   # Passwort in FTP_PASSWORD
             [--probelauf] [--zusammenfassung DATEI]
     python3 tools/kette/apkablage.py --selbstprobe
 
@@ -382,18 +382,21 @@ def main(argv: list[str]) -> int:
     p.add_argument("--datei")
     p.add_argument("--ftp-server")
     p.add_argument("--ftp-konto")
-    p.add_argument("--ftp-pass")
     p.add_argument("--ftp-pfad", default="/")
     p.add_argument("--probelauf", action="store_true",
                    help="nur auflisten und sagen, was geschähe")
     p.add_argument("--zusammenfassung", help="Datei, an die eine Markdown-Tabelle angehängt wird")
     p.add_argument("--selbstprobe", action="store_true")
     a = p.parse_args(argv)
+    # DAS PASSWORT KOMMT AUS DER UMGEBUNG, NIE AUS DEN ARGUMENTEN (KA-01,
+    # F-KA-37): Die Befehlszeile sieht jeder Prozess desselben Läufers.
+    # Bis KA-01 hieß das `--ftp-pass`.
+    a.ftp_pass = os.environ.get("FTP_PASSWORD", "")
     if a.selbstprobe:
         return selbstprobe()
     fehlt = [n for n, v in (("--art", a.art), ("--datei", a.datei),
                             ("--ftp-server", a.ftp_server), ("--ftp-konto", a.ftp_konto),
-                            ("--ftp-pass", a.ftp_pass)) if not v]
+                            ("FTP_PASSWORD (Umgebung)", a.ftp_pass)) if not v]
     if fehlt:
         print("Pflicht: " + ", ".join(fehlt), file=sys.stderr)
         return 2

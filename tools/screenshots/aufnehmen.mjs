@@ -1569,8 +1569,9 @@ let wartungVonUns = false;
  * `wartungAus()` haengt an `process.on('exit')`, und dort laeuft nichts
  * Asynchrones mehr. */
 function tor(befehl) {
-  const e = spawnSync('python3', [TOR, befehl, '--basis', BASIS,
-                                  '--token', JOBS_TOKEN], { encoding: 'utf8' });
+  // Das Token über die Umgebung, nicht über die Befehlszeile (KA-01, F-KA-37).
+  const e = spawnSync('python3', [TOR, befehl, '--basis', BASIS],
+                      { encoding: 'utf8', env: { ...process.env, JOBS_TOKEN } });
   if (e.status !== 0) {
     const grund = (e.stderr || e.stdout || `Rückgabewert ${e.status}`).trim();
     throw new Error(`tor.py ${befehl} gegen ${BASIS} fehlgeschlagen: ${grund}`);

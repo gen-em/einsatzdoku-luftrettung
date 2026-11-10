@@ -396,7 +396,6 @@ def main(argv: list[str]) -> int:
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--ftp-server")
     p.add_argument("--ftp-konto")
-    p.add_argument("--ftp-pass")
     p.add_argument("--ftp-pfad", default="/",
                    help="Zielverzeichnis der Auslieferung (wie `server-dir`)")
     p.add_argument("--zustandspfad", default="../.deploy-state-produktion.json",
@@ -405,12 +404,16 @@ def main(argv: list[str]) -> int:
                    help="nur prüfen und sagen, nichts schreiben")
     p.add_argument("--selbstprobe", action="store_true")
     a = p.parse_args(argv)
+    # DAS PASSWORT KOMMT AUS DER UMGEBUNG, NIE AUS DEN ARGUMENTEN (KA-01,
+    # F-KA-37): Die Befehlszeile sieht jeder Prozess desselben Läufers.
+    # Bis KA-01 hieß das `--ftp-pass`.
+    a.ftp_pass = os.environ.get("FTP_PASSWORD", "")
 
     if a.selbstprobe:
         return selbstprobe()
     fehlt = [n for n, v in (("--ftp-server", a.ftp_server),
                             ("--ftp-konto", a.ftp_konto),
-                            ("--ftp-pass", a.ftp_pass)) if not v]
+                            ("FTP_PASSWORD (Umgebung)", a.ftp_pass)) if not v]
     if fehlt:
         print("Pflicht: " + ", ".join(fehlt), file=sys.stderr)
         return 2

@@ -194,7 +194,15 @@ def pruefen(bericht, basis=None, commit='HEAD', riegel=None, dateien=None, baum=
 
     # (1) Baum-Hash
     ist = baum if baum is not None else git('rev-parse', f'{commit}^{{tree}}')
-    if ist and not ist.startswith(bericht['baum']) and not bericht['baum'].startswith(ist[:len(bericht['baum'])]):
+    # LEER IST ROT (KA-01, F-KA-24). Bis KA-01 stand hier `if ist and …`:
+    # Lieferte `git rev-parse` nichts — ein flacher Checkout, ein Commit, den
+    # es nicht gibt —, entfiel der Vergleich still, und der Bericht galt für
+    # jeden Baum.
+    if not ist:
+        schlecht.append(
+            f"Baum des Commits {commit} nicht ermittelbar — ohne ihn lässt sich nicht "
+            f"sagen, ob der Bericht zu diesem Stand gehört (F-KA-24).")
+    elif not ist.startswith(bericht['baum']) and not bericht['baum'].startswith(ist[:len(bericht['baum'])]):
         schlecht.append(
             f"Baum-Hash passt nicht: Bericht {bericht['baum']}, Commit {ist[:len(bericht['baum'])]} "
             f"— gemessen wurde ein anderer Stand als der eingereichte (O9c).")
@@ -398,6 +406,8 @@ def selbstprobe():
                                           riegel={}, riegel_namen=namen), 0))
     faelle.append(('rot (1) — Baum-Hash passt nicht',
                    zerlegen(guter), dict(baum='9999999', dateien=[], riegel={}, riegel_namen=namen), 1))
+    faelle.append(('rot (1b) — Baum des Commits nicht ermittelbar (F-KA-24)',
+                   zerlegen(guter), dict(baum='', dateien=[], riegel={}, riegel_namen=namen), 1))
     faelle.append(('rot (2) — Stufe kleiner als verlangt',
                    zerlegen(guter.replace('neben', 'klein')),
                    dict(baum='abc1234', dateien=[], riegel={}, stufe_verlangt='haupt',

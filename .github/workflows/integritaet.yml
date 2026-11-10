@@ -34,6 +34,10 @@ defaults:
 jobs:
   wache:
     runs-on: ubuntu-26.04
+    # Gemessen höchstens 1,8 Minuten über die letzten 50 Läufe (bis
+    # 10.11.2026). Ein hängender Abruf soll den Lauf beenden und rot machen,
+    # nicht sechs Stunden still laufen (KA-01, F-KA-44).
+    timeout-minutes: 15
     steps:
       - name: Werkzeug auschecken
         # Werkzeug von hier, nur der Vergleichsstand vom Zeiger — sonst griffe

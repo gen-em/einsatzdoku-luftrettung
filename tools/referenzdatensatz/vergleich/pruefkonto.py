@@ -40,6 +40,12 @@ def main() -> int:
     # `NADOKU_TOTP`, sonst das der Sandbox.
     p.add_argument("--admin-totp", default="",
                    help="Geheimnis des Zweitfaktors des Admin-Kontos (Base32)")
+    # Wie in `kreislauf.py` (KA-01, F-KA-37): Die Kette und die Rückwegprobe
+    # nennen die Umgebungsvariable, nicht den Wert.
+    p.add_argument("--admin-passwort-aus", default="", metavar="VAR",
+                   help="Passwort des Admin-Kontos aus dieser Umgebungsvariablen")
+    p.add_argument("--admin-totp-aus", default="", metavar="VAR",
+                   help="Geheimnis des Zweitfaktors aus dieser Umgebungsvariablen")
     # Die Rolle des neuen Kontos und wohin der
     # Wiederherstellungsschluessel geschrieben wird, den `passwort_setzen.mjs`
     # von der Seite liest. Die Rueckwegprobe braucht beides.
@@ -48,6 +54,10 @@ def main() -> int:
     p.add_argument("--rc-datei", default="",
                    help="JSON-Datei fuer den Wiederherstellungsschluessel (Feld recovery_code)")
     a = p.parse_args()
+    if a.admin_passwort_aus:
+        a.admin_passwort = kreislauf.aus_umgebung(a.admin_passwort_aus, "--admin-passwort-aus")
+    if a.admin_totp_aus:
+        a.admin_totp = kreislauf.aus_umgebung(a.admin_totp_aus, "--admin-totp-aus")
     admin = (a.admin_email, a.admin_passwort, a.admin_totp)
     try:
         weg = kreislauf.konto_loeschen(a.basis, admin, a.konto)

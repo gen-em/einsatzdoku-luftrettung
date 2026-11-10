@@ -965,12 +965,21 @@ ebenfalls.
 
 **Seit R17-19 trägt es zwei Riegel der Kette** (F-R17-16): Jede fremde
 `uses:`-Zeile hängt an einer 40-stelligen SHA mit Fassung als Kommentar, und
-die Ausnahmeliste des FTPS-Schritts hält ihre Sollliste von acht Pfaden,
+die Ausnahmeliste des FTPS-Schritts hält ihre Sollliste von sieben Pfaden (bis Web 23.3.0 acht),
 jeder Serverpfad (außer `install.php`) steht in `.gitignore`, und keine
 `server/config.php*` ist eingecheckt. Bis dahin waren das zwei Prüfwerte in
 `CLAUDE.md` 3, die ein Handbefehl nachzählte. Beide Riegel rechnen ihre
 Eingaben als Text — die Selbstprobe (`--probe`) legt ihnen jeden Fehler hin,
 ohne das Repositorium anzufassen.
+
+**Seit KA-01 sind es sechs** (Audit KA): (3) kein Eingang
+(`${{ inputs.* }}`, `github.event.*`, `github.head_ref`) im Text eines
+`run:` — er würde vor der Shell eingesetzt (F-KA-14); (4) jede `image:`-Zeile
+am Digest (F-KA-39); (5) kein Geheimnisschalter mit Variable auf der
+Befehlszeile (F-KA-37); (6) der FTPS-Schritt mit `security: strict`
+(F-KA-02). **Riegel 6 misst die Zeile, nicht die Verbindung:** Ob das
+Zertifikat des Hosters zum Namen in `FTP_SERVER` passt, zeigt erst ein
+echter Lauf (KA-M2).
 
 **Was die Kette sonst noch selbst misst** (R17-19): Teil 3 der
 Integritätswache — die Punktpfade 403, `.well-known/` offen, keine Kopie der
@@ -1087,11 +1096,11 @@ hier steht, ist nur, **was grün heißt**:
 | `tools/quelltext/` `vollstaendigkeit` | 0 Befunde in sechs Prüfungen — ohne Schwelle seit PK-04/5e (E-PK-16); die sechste, Selektoren, seit R4-05 |
 | `tools/screenshots/` | 0 Überlauf, 0 Konsolenfehler, 0 Knöpfe falscher Höhe, 0 Karten außerhalb von `main.inhalt`; mit `--etikett NAME` zusätzlich 0 Abweichungen bei Titel und Kopfleiste (P5c/AP1). Rollende Behälter werden genannt und halten nicht auf (R4-08) |
 | `tools/screenshots/` `kontrast.py` | 0 Paare unter ihrem Sollwert, 0 Paare des Stylesheets ohne Eintrag in `PAARE` oder `AUSNAHMEN` (seit R4-08); Selbstprobe alle Fälle grün |
-| `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt; seit R17-19 dazu jede fremde `uses:`-Zeile an einer SHA mit Fassung und die Ausnahmeliste bei ihren sieben Pfaden (bis Web 23.3.0 acht), `.gitignore` vollständig, keine eingecheckte `server/config.php*` |
+| `tools/kettenaufrufe/` | 0 Befunde; jeder ungeprüfte Aufruf ist benannt; seit R17-19 dazu jede fremde `uses:`-Zeile an einer SHA mit Fassung und die Ausnahmeliste bei ihren sieben Pfaden (bis Web 23.3.0 acht), `.gitignore` vollständig, keine eingecheckte `server/config.php*`; seit KA-01 kein Eingang im Skript, jedes Abbild am Digest, kein Geheimnis auf der Befehlszeile, FTPS mit `security: strict`; Selbstprobe 67 von 67 |
 | `tools/quelltext/` `bestand` | 0 Befunde in allen Regeln (`REGELN` in `bestand.py`, heute 15) — ohne Decke, ohne Ausnahmeliste (E-BR-01); die Zeilendecke einer Anleitung ist seit PU-06 ein `HINWEIS`, kein Befund im Rückgabewert (E-PU-07); seit R4-25 stehen die vier erzeugten Tabellen in `Design.md` wie ihr Erzeuger sie ausgibt (Regel `design`) |
 | `tools/quelltext/` `anker` | 0 Verweise `hilfe.php#…` ohne Ziel im gerenderten Handbuch; Selbstprobe 6 von 6 (falscher Anker rot, Kommentar zählt nicht, `-2` bei gleichem Titel) |
 | `tools/quelltext/` `kennzeichnung` | alle Kennzeichen der Sollliste stehen (heute 26 von 26: 13 Felder, Formular und Leseansicht), jedes Klartext-Freitextfeld trägt die Kleinzeile, 0 Blobfelder ohne Zeile; Selbstprobe 8 von 8 (die beiden Fehler aus 19.1.0 rot, Kommentar zählt nicht) |
-| `tools/quelltext/` `fremdsummen` | jede Datei unter `server/assets/vendor/` (heute 6) mit Herkunftskopf, SHA-256 ohne den Kopf gleich der Kopfzeile und gleich der Tabelle in `Lizenzen.md` 3; 0 Befunde; Selbstprobe 7 von 7 (die Falle aus F-R17-50 und die Datei ohne Kopf aus F-R17-51 rot) |
+| `tools/quelltext/` `fremdsummen` | jede Datei unter `server/assets/vendor/` (heute 6) mit Herkunftskopf, SHA-256 ohne den Kopf gleich der Kopfzeile und gleich der Tabelle in `Lizenzen.md` 3; seit KA-01 dazu 351 Dateien: jede Zeile der zwei Listen unter `server/vendor/` (keine Datei daneben), `Parsedown.php`, die Gradle-Wrapper-JAR; 0 Befunde; Selbstprobe 14 von 14 (die Falle aus F-R17-50 und die Datei ohne Kopf aus F-R17-51 rot, die getauschte JAR aus F-KA-26 rot) |
 | `tools/quelltext/` `dokumente` | jeder Pfad in `docs/`, `README.md`, `CLAUDE.md` und jeder `LIESMICH.md` trifft den Baum oder steht mit Klasse und Grund in `dokumente-ausnahmen.md`; jede Zahl an einem Verzeichnis ist eine, die `ls` dort liefert; keine Kopfzeile „Stand:"; die Gliederung von `Technik.md` fortlaufend; im Code (`server/`, `tools/`, `android/`, `watch/`, `.github/`, ohne die zwei Fassungsgeschichten) nennt jeder Abschnittsverweis ein Dokument, das es gibt, und eine Nummer, die dort als Überschrift steht; 0 Befunde, 0 ungenutzte Ausnahmen; Selbstprobe 14 von 14 (falscher Pfad, ungenutzte Ausnahme, falsche Zahl in Text und Baum, Stand-Zeile, Doppel- und Fehlnummer, Code-Verweis auf fehlenden Abschnitt — auch über einen Zeilenumbruch — und auf fehlendes Dokument rot) |
 | `tools/quelltext/` `pysyntax`, `handbuch` | 0 Syntaxfehler und 0 Warnungen (ungültige Escape-Folge, seit R4-07) bei mindestens einer Datei; beide Dokumente rendern, gültiges UTF-8, 0 Bilder aus fremder Quelle |
 | `tools/referenzdatensatz/fixture/` `abgleich.py` | Fixture und Referenz gleich (Diensttage, Einsätze, Segmente samt Papierkorb, Schnitte, Löschvermerke, je Aufzeichnung `n`, Stufe 3 und dort `n_original`), `umriss.json` gehört zur eingecheckten `.edbak` (SHA-256), mit `--tief` auch aus der `.edbak` nachgerechnet; Selbstprobe 8 von 8 (seit Schritt 24, RD-05) |

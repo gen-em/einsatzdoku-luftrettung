@@ -16,11 +16,18 @@ eines Kontos waere ein zweiter Weg, den niemand pflegt.
 Aufruf:
     python3 kreislauf.py --art edbak
     python3 kreislauf.py --art csv
-    ... [--basis …] [--konto …] [--frisch] [--behalten] [--jobs-token …]
+    ... [--basis …] [--konto …] [--frisch] [--behalten] [--jobs-token-aus VAR]
 
---jobs-token braucht, wer gegen eine FERNE Installation misst: Die Jobs
+--jobs-token-aus braucht, wer gegen eine FERNE Installation misst: Die Jobs
 werden dann ueber `jobs.php`, `aktion=pause`, angehalten statt ueber die
 Kommandozeile. Ohne den Schalter bleibt es beim lokalen Weg.
+
+GEHEIMNISSE STEHEN NIE AUF DER BEFEHLSZEILE (KA-01, F-KA-37): Die Kette
+reicht Kettentoken, Passwort und Zweitfaktor des Pruefkontos ueber
+Umgebungsvariablen herein, und die Schalter `--jobs-token-aus`,
+`--admin-passwort-aus` und `--admin-totp-aus` nennen nur deren NAMEN. Die
+Befehlszeile sieht jeder Prozess desselben Laeufers. `--admin-passwort` und
+`--admin-totp` bleiben fuer die Sandbox, deren Werte kein Geheimnis sind.
 
 --frisch loescht ein bereits vorhandenes Umlaufkonto vorher ueber den
 Adminbereich. Ohne diesen Schalter bricht der Lauf ab, wenn das Konto schon
@@ -80,6 +87,21 @@ PLAYWRIGHT = (os.environ.get("PLAYWRIGHT_MODUL")
 
 def melde(t: str) -> None:
     print(t, flush=True)
+
+
+def aus_umgebung(variable: str, schalter: str) -> str:
+    """Den Wert der Umgebungsvariablen, die ein `--…-aus`-Schalter nennt.
+
+    Leer oder nicht gesetzt ist ein Bedienfehler (Rückgabewert 2), keine
+    stille Vorgabe: Wer den Schalter gibt, meint ein Geheimnis, und ein
+    fehlendes Geheimnis soll laut scheitern (KA-01, F-KA-37).
+    """
+    wert = os.environ.get(variable, "")
+    if not wert.strip():
+        print(f"{schalter} {variable}: die Umgebungsvariable ist leer oder nicht gesetzt.",
+              file=sys.stderr)
+        raise SystemExit(2)
+    return wert
 
 
 def lauf(befehl: list[str], **kw) -> subprocess.CompletedProcess:
@@ -289,8 +311,11 @@ def jobs_pause(sekunden: int, basis: str = "", token: str = "") -> None:
     """
     if token:
         tor = WURZEL.parents[1] / "tools" / "kette" / "tor.py"
+        # Das Token geht über die Umgebung, nicht über die Befehlszeile
+        # (KA-01, F-KA-37) — `tor.py` liest es aus `JOBS_TOKEN`.
         e = lauf([sys.executable, str(tor), "pause", "--basis", basis,
-                  "--token", token, "--sekunden", str(sekunden)])
+                  "--sekunden", str(sekunden)],
+                 env={**os.environ, "JOBS_TOKEN": token})
         melde("  " + e.stdout.strip()[:300])
         return
 
@@ -347,6 +372,12 @@ def main() -> int:
                    help="Geheimnis des Zweitfaktors des Admin-Kontos (Base32). "
                         "Ohne den Schalter oder leer: NADOKU_TOTP, sonst das "
                         "der Sandbox.")
+    p.add_argument("--admin-passwort-aus", default="", metavar="VAR",
+                   help="Passwort des Admin-Kontos aus dieser Umgebungsvariablen "
+                        "(die Kette; geht vor --admin-passwort)")
+    p.add_argument("--admin-totp-aus", default="", metavar="VAR",
+                   help="Geheimnis des Zweitfaktors aus dieser Umgebungsvariablen "
+                        "(die Kette; geht vor --admin-totp)")
     p.add_argument("--ausnahmen", default=None)
     p.add_argument("--frisch", action="store_true",
                    help="vorhandenes Umlaufkonto vorher löschen")
@@ -357,12 +388,23 @@ def main() -> int:
     # schickte den nächsten Kreislauf gegen die LOKALE Installation über HTTP,
     # mit einem Token, das einer anderen gehört. Der Schalter wird jetzt
     # ausdrücklich gegeben oder gar nicht; die Kette gibt ihn (17.09.2026).
-    p.add_argument("--jobs-token", default="",
-                   help="Kettentoken der Installation (seit Web 23.1.0; davor das "
-                        "Job-Token); nötig, wenn --basis NICHT "
-                        "auf diesem Rechner liegt (sonst läuft die Job-Pause "
-                        "über die Kommandozeile).")
+    #
+    # SEIT KA-01 NENNT DER SCHALTER DIE VARIABLE, NICHT DEN WERT (F-KA-37). Die
+    # Regel darüber gilt weiter: Ohne den Schalter liest das Werkzeug KEIN
+    # Token, auch wenn `JOBS_TOKEN` gesetzt ist. Bis KA-01 hieß er
+    # `--jobs-token` und trug das Token auf die Befehlszeile.
+    p.add_argument("--jobs-token-aus", default="", metavar="VAR",
+                   help="Name der Umgebungsvariablen mit dem Kettentoken der "
+                        "Installation; nötig, wenn --basis NICHT auf diesem "
+                        "Rechner liegt (sonst läuft die Job-Pause über die "
+                        "Kommandozeile).")
     a = p.parse_args()
+    a.jobs_token = (aus_umgebung(a.jobs_token_aus, "--jobs-token-aus")
+                    if a.jobs_token_aus else "")
+    if a.admin_passwort_aus:
+        a.admin_passwort = aus_umgebung(a.admin_passwort_aus, "--admin-passwort-aus")
+    if a.admin_totp_aus:
+        a.admin_totp = aus_umgebung(a.admin_totp_aus, "--admin-totp-aus")
     a.konto = a.konto or umlauf_konto(a.art)
     a.ausnahmen = a.ausnahmen or str(HIER / "ausnahmen" / f"{a.art}_umlauf.json")
     # LEER HEISST „KEIN SCHALTER". Die Kette reicht `"$STAGING_TOTP"` in
@@ -390,7 +432,7 @@ def main() -> int:
     # unten trotzdem ausdrücklich aufgehoben, damit ein abgebrochener Lauf die
     # Installation nicht bis zum Ablauf lahmlegt.
     #
-    # ÜBER WELCHEN ZUGANG, entscheidet `--jobs-token`:
+    # ÜBER WELCHEN ZUGANG, entscheidet `--jobs-token-aus`:
     # mit Token über `jobs.php` (`aktion=pause`), ohne Token über die
     # Kommandozeile. Der zweite Weg setzt eine Installation auf DIESER
     # Rechner voraus — gegen ein fernes Staging scheitert er.

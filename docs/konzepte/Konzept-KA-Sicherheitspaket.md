@@ -11,11 +11,11 @@ steht da, die Nummer setzt die Umsetzung.
 
 | | |
 |---|---|
-| Stand | **Konzept, zur Freigabe** (10.11.2026) |
-| In Arbeit | kein Paket |
-| Erledigt | — |
-| Hakt | nichts. KA-M1 und der Tag-Teil von KA-M2 sind seit dem 10.11.2026 erledigt (Abschnitt 3) |
-| Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0 |
+| Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
+| In Arbeit | **KA-01** gebaut und geprüft, Pull Request offen — wartet auf Merge; danach KA-02 |
+| Erledigt | — (KA-01 gilt als erledigt, wenn es auf `main` ist) |
+| Hakt | nichts im Code. **Nicht örtlich belegbar:** `security: strict` (Punkt 1) — erst der erste Lauf auf `main` (Staging) und der Probelauf der BetreiberIn gegen Produktiv zeigen, ob das Zertifikat zum Namen in `FTP_SERVER` passt (KA-M2, P-KA-02) |
+| Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
 **Die Umsetzung findet in einer eigenen Sitzung statt** — ein Paket nach
 dem anderen, nach jedem Paket Statusblock, Prüfstand, Push
@@ -63,6 +63,11 @@ Safari.
 | E-KA-08 | Der Formatwechsel ist ein Paket mit **eigener Entwurfsrunde** (KA-06a) vor der ersten Zeile Code; Format und Vektoren stehen wie bei S11 in einer Referenz, an der alle Umsetzungen gemessen werden | 10.11.2026, Konzept |
 | E-KA-09 | **Nach KA-01 und KA-02 wird sofort getaggt** — beide hohen Befunde auf Produktiv, ohne auf KA-03 zu warten (Antwort auf Q-KA-05) | 10.11.2026, BetreiberIn |
 | E-KA-10 | **Die Tokens für Jobs, Kette und Health werden nur einmal gezeigt,** direkt nach dem Erzeugen, und gehasht gespeichert; ein verlorenes Token wird erneuert, nicht nachgelesen (Antwort auf Q-KA-06) | 10.11.2026, BetreiberIn |
+| E-KA-11 | **Der Rückfallstand auf Staging wird mit seinem Zeitstempel genannt, ohne Zufallsteil** (KA-01 Punkt 4). Der Job schrieb den Dateinamen bewusst neben den Tag, damit klar ist, auf welchen Stand Staging zurückgesetzt wird; die acht Hexzeichen sind aber die zweite Schranke des Ordners. Der Zeitstempel nennt den Stand eindeutig | 10.11.2026, BetreiberIn (Rückfrage vor KA-01) |
+| E-KA-12 | **Der Schlussschritt „Wenn etwas schiefging" läuft auch bei Abbruch** (`failure() \|\| cancelled()`). Ein Job, der in sein Zeitlimit läuft, gilt als abgebrochen, nicht als gescheitert — und gerade dann gehört die Ansage dazu, ob die Wartung an ist | 10.11.2026, BetreiberIn |
+| E-KA-13 | **`integritaet.yml` bekommt in F-KA-44 ebenfalls ein Zeitlimit** — dieselbe Lücke wie die übrigen Arbeitsläufe | 10.11.2026, BetreiberIn |
+| E-KA-14 | **Riegel 3 sperrt jeden Eingang im Skript, nicht nur die vom Typ `string`.** Ein `boolean` kann nichts einschleusen, aber eine Regel ohne Typ-Nachschlagen hat keine Lücke, wenn jemand den Typ eines Eingangs ändert; die vier `boolean`-Stellen kosteten je eine `env:`-Zeile | 10.11.2026, Umsetzung |
+| E-KA-15 | **Geheimnisse der Stufe-2-Werkzeuge über `--…-aus NAME`**, der Schalter nennt die Umgebungsvariable. `kreislauf.py` liest das Kettentoken bewusst **nicht** still aus `JOBS_TOKEN` (Kommentar vom 17.09.2026: ein vergessenes `export` schickte den Kreislauf sonst gegen die falsche Anlage); der Schalter bleibt deshalb ausdrücklich, nur der Wert verlässt die Befehlszeile. Die reinen Kettenwerkzeuge (`tor.py`, `zielprobe.py`, `zustand.py`, `apkablage.py`) lesen fest `JOBS_TOKEN` bzw. `FTP_PASSWORD`; `--token` und `--ftp-pass` gibt es nicht mehr | 10.11.2026, Umsetzung |
 
 ---
 
@@ -159,7 +164,7 @@ Zählweise aus `CLAUDE.md` 2 — ohne Nummer.
 
 **Ziel:** Die Auslieferung prüft ihr Gegenüber, kein Eingang wird zu Code,
 und das Protokoll nennt nichts, was eine Schranke ist.
-**Befunde:** F-KA-02, -14, -15, -24, -25, -26, -37, -39.
+**Befunde:** F-KA-02, -14, -15, -24, -25, -26, -37, -39, dazu F-KA-44 (neu, Abschnitt 10).
 
 1. `security: strict` am FTPS-Schritt in `ausliefern-lauf.yml`. **Erst
    messen, dann scharf:** ein Probelauf gegen Staging und einer gegen
@@ -191,6 +196,11 @@ und das Protokoll nennt nichts, was eine Schranke ist.
    13), wie die Umgebung und die Tag-Rulesets eingerichtet sind und woran
    man eine wirkungslose Regel erkennt („0 tags allowed“, „does not target
    any resources“) — wer die Anlage in Schritt 14 neu aufsetzt, braucht es.
+10. **Zeitlimits (F-KA-44, Auftrag der BetreiberIn vom 10.11.2026):**
+    `timeout-minutes` an jedem Job in `pruefung.yml`, Werte aus den
+    Laufzeiten der letzten grünen Läufe hergeleitet; prüfen, ob
+    `auslieferung.yml` und `ausliefern-lauf.yml` dieselbe Lücke haben, dazu
+    `integritaet.yml` (E-KA-13).
 
 **Berührt:** `.github/`, `tools/`, `.claude/` — **keine Fassung** (`CLAUDE.md`
 2, Punkt 1). **Pflege:** `CLAUDE.md` 3 (Zahl und Wortlaut zu `uses:` bleiben,
@@ -201,6 +211,21 @@ Lage; Stufe 1 auf dem PR; **nicht örtlich prüfbar:** Punkt 1 — nur ein
 echter Lauf belegt ihn (KA-M2).
 **Modell:** Opus. **Fächerung:** keine — acht kleine Änderungen, zwei davon
 in derselben Workflow-Datei.
+
+**Umgesetzt (10.11.2026)** — Einzelheiten in Abschnitt 9 und 10:
+
+| Punkt | Was gebaut ist |
+|---|---|
+| 1 | `security: strict` am FTPS-Schritt; Riegel 6 in `tools/kettenaufrufe/` |
+| 2 | Alle Eingänge in `run:` über `env:` (Zielprobe, Gesprächslauf, Schlussschritt, `zeiger`); Riegel 3 (E-KA-14) |
+| 3 | `tor.py` liest `JOBS_TOKEN`, `zielprobe.py`/`zustand.py`/`apkablage.py` lesen `FTP_PASSWORD`; `kreislauf.py`, `pruefkonto.py`, Rückwegprobe mit `--…-aus NAME` (E-KA-15); `kreislauf.py` und `aufnehmen.mjs` reichen das Token an `tor.py` über die Umgebung; Riegel 5 |
+| 4 | `fuers_protokoll()` in `tor.py`: ohne Zufallsteil, ohne `wartung.von`; `--frage komplett` gibt den Zeitstempel (E-KA-11) |
+| 5 | Deny-Liste um `create_or_update_file` und `delete_file` |
+| 6 | `bericht.py`: leerer Baum ist rot, Lage 1b |
+| 7 | `fremdsummen.py`: beide Listen unter `server/vendor/` (jede Zeile, keine Datei daneben), `Parsedown.php`, Wrapper-JAR |
+| 8 | Abbilder am Digest; Riegel 4 |
+| 9 | Runbook `docs/Technik.md` 13 („Umgebung `produktion` und Tag-Rulesets"); die zwei Einstellungen der BetreiberIn bleiben KA-M2 |
+| 10 | Zeitlimits an allen Jobs aller vier Arbeitsläufe (Abschnitt 10, F-KA-44); Schlussschritt auch bei Abbruch (E-KA-12) |
 
 ### KA-02 Notfallblatt im Browser
 
@@ -522,3 +547,73 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
   drei Auslieferungen. Schritt 13 wartet so lange. Wenn das zu lang wird,
   ist die Trennstelle zwischen KA-05 und KA-06 — KA-06 kann nach R90 nicht
   hinter v1.0, weil v1.0 das Format festschreibt.
+
+---
+
+## 9. Prüfprotokoll
+
+### KA-01 (10.11.2026)
+
+**Was nicht geprüft werden konnte — zuerst.**
+
+1. **`security: strict` gegen den Hoster** (Punkt 1). Örtlich gibt es weder
+   den FTP-Zugang noch einen Läufer; der Riegel misst die Zeile, nicht die
+   Verbindung. Belegt wird es durch den ersten Lauf auf `main` (Staging) und
+   den Probelauf der BetreiberIn gegen Produktiv (KA-M2, P-KA-02). Ein
+   Zertifikatsfehler dort ist der erwartete Befund, wenn der Name in
+   `FTP_SERVER` nicht zum Zertifikat passt.
+2. **Die geänderten Arbeitsläufe sind nicht gelaufen.** Geprüft sind YAML
+   (alle vier Dateien laden), Shell-Syntax (55 `run:`-Blöcke mit `bash -n`,
+   0 Fehler, Ausdrücke durch einen Platzhalter ersetzt) und die Aufrufe gegen
+   die Werkzeuge (Riegel `kettenaufrufe`). Dass `timeout-minutes` und die
+   `env:`-Übergaben auf GitHub tun, was sie sollen, zeigt erst Stufe 1 auf
+   dem PR und der nächste Auslieferungslauf.
+3. **Stufe 2 mit den `--…-aus`-Schaltern** (Kreislauf, Rückwegprobe gegen
+   Staging) läuft erst auf `main`. Örtlich gefahren sind die Werkzeuge mit
+   ihren Selbstproben und dem Prüfstand; der Weg „Variable der Umgebung
+   `staging` → `--admin-passwort-aus STAGING_PASS`" ist nur gelesen.
+4. **`actionlint` ist im Container nicht vorhanden** (`which actionlint`
+   leer); die Ausdruckssyntax prüft erst GitHub.
+
+**Befunde nachgelesen** gegen `3e06f50`: F-KA-02 (`ausliefern-lauf.yml`
+FTPS-Schritt ohne `security:`), -14 (Zeile 279 `ZAHL="${{ inputs… }}"`),
+-15 (Deny-Liste mit vier Einträgen), -24 (`bericht.py` `if ist and …`),
+-25 (`tor.py` druckt `zustand` ungefiltert, `komplett_lib.php` nennt den
+Namen die zweite Schranke), -26 (`fremdsummen.py` nimmt `server/vendor/`
+aus), -37 (`--ftp-pass`, `--token` in den Aufrufen), -39 (`image: mysql:8.4.0`,
+`mariadb:10.6`). Alle halten; keiner war hinfällig.
+
+**Gemessen** (jede Zahl mit ihrem Gegenstand):
+
+| Mittel | Ergebnis | Was es belegt |
+|---|---|---|
+| `kettenaufrufe --probe` | **67 von 67** (davon 27 neu: Riegel 3 sieben, 4 sieben, 5 sieben, 6 vier, je mit Gegenprobe; dazu bestehende) | jede neue Lage wird gemeldet, jede Gegenprobe nicht |
+| `kettenaufrufe` gegen diesen Stand | **0 Befunde**; 147 Aufrufe, 59 `run:`-Blöcke ohne Eingang, 2 Abbilder am Digest, 0 Geheimnisschalter, 1 FTPS-Schritt strikt | die Behebung hält in allen vier Arbeitsläufen |
+| `kettenaufrufe` (neue Fassung) gegen die Arbeitsläufe von `main` (`3e06f50`) | **32 Befunde**: 11 Eingänge im Skript, 2 Abbilder ohne Digest, 18 Geheimnisse auf der Befehlszeile, 1 FTPS ohne `strict` | die Riegel wären ohne die Behebung rot |
+| `tor.py --selbstprobe` | **43/0** (vorher 36; neu: Token nur aus der Umgebung, `--token` scheitert laut, Protokoll ohne Zufallsteil und ohne `wartung.von`, Name ohne Zufallsteil nicht unverändert) | F-KA-25, -37 |
+| `zielprobe.py --selbstprobe` | **95/0** (neu: ohne `FTP_PASSWORD` → 2 mit Namen der Variablen; `--ftp-pass` scheitert laut) | F-KA-37 |
+| `zustand.py`, `apkablage.py --selbstprobe` | **28/0**, **25/0** | unverändert grün nach dem Umbau |
+| `bericht.py lesen --selbstprobe` | **52 Lagen, 0 Fehlschläge** (neu Lage 1b: leerer Baum ist rot) | F-KA-24 |
+| `fremdsummen.py --selbstprobe` | **14/0** (neu sieben: Datei geändert, Datei neben der Liste, gelistete fehlt, Parsedown geändert, JAR getauscht, JAR fehlt, Gegenprobe) | F-KA-26 |
+| `fremdsummen.py` gegen diesen Stand | 6 + **351** Dateien (338 + 11 aus den Listen, `Parsedown.php`, JAR), 0 Befunde | die Summen stimmen heute |
+| `fremdsummen.py` mit verändertem `Crypt/AES.php` und JAR (Wegwerfbaum) | **2 Befunde**, rc 1 | der Riegel schlägt an echten Dateien an |
+| Laufzeiten für F-KA-44 | 30 Läufe `pruefung.yml` bis Lauf 500: höchstens **3,0 min** je Lauf; 50 Läufe `integritaet.yml`: höchstens **1,8 min**; Auslieferung: `ausliefern` höchstens rund 3 min (Produktion 23.6.0), `Rückfallstand` und `zeiger` je unter 15 s | Herleitung der Limits (Abschnitt 10) |
+
+Der Prüfbericht des Commits trägt den Lauf von `tools/pruefstand/pruefen.sh`.
+
+---
+
+## 10. Befunde der Umsetzung
+
+| Nr. | Befund | Wie gelöst |
+|---|---|---|
+| F-KA-44 | **Kein Job der vier Arbeitsläufe hatte ein Zeitlimit außer fünf in `auslieferung.yml`.** Am 10.11.2026 hing Lauf 499 im ersten Versuch 45 Minuten im Schritt „PHP-Syntax über server/ und tools/", endete ohne abrufbares Protokoll als fehlgeschlagen und war im zweiten Versuch nach zwei Minuten grün — am Commit hatte sich nichts geändert (gemeldet von der BetreiberIn). Ohne Limit gilt die Vorgabe von GitHub, sechs Stunden. Dieselbe Lücke hatten `ausliefern` (`ausliefern-lauf.yml`), `Rückfallstand`, `zeiger` und `wache` | `timeout-minutes` an jedem Job: `Schon gemessen?` 5, `Stufe 1` 15, `Schema` 10 (gemessen höchstens 3,0 min je ganzer Lauf, rund 40 s je Datenbank); `wache` 15 (höchstens 1,8 min); `zeiger` 10 (rund 10 s); `ausliefern` 150 und `Rückfallstand` 120 — **über** der Grenze des Backup-Tors (2 Runden × 40 Aufrufe × bis 60 s Antwort + 20 s Pause ≈ 107 min), damit das Tor seinen Abbruch selbst meldet; darüber Luft für einen vollen Abgleich. `staging` und `produktion` rufen einen wiederverwendbaren Lauf auf und nehmen kein `timeout-minutes`; das Limit steht an dessen Job. Der Schlussschritt läuft auch bei Abbruch (E-KA-12) |
+| F-KA-45 | **`tools/kettenaufrufe/LIESMICH.md` und `tools/kette/LIESMICH.md` gingen beim Nachtragen über 40 Zeilen** (`bestand` misst die Decke) | beide neu gefasst, je 40 Zeilen; die Zahlengeschichte steht hier, nicht dort |
+| F-KA-46 | **`docs/Pruefablauf.md` 6.8 nannte die Ausnahmeliste „von acht Pfaden"** — seit Web 23.3.1 sind es sieben (`CLAUDE.md` 3) | an Ort und Stelle berichtigt |
+| F-KA-47 | **Ein Satz in `android/LIESMICH.md`, dass `fremdsummen` die Wrapper-JAR jetzt misst, hätte den Android-Bau ausgelöst** (Muster `android/**`), und das Android-SDK fehlt in dieser Arbeitsumgebung (`/opt/android-sdk` nicht vorhanden) — der Prüfstand wäre für eine Zeile Text rot | Satz zurückgenommen; **geht mit KA-04 hinein**, das `android/` ohnehin anfasst. Bis dahin sagen es `Lizenzen.md` 3a, `Technik.md` 12.14 und der Kopf von `fremdsummen.py` (`WRAPPER_SOLL`) |
+
+**Keine neue Probe, keine neue Backlog-Nummer:** KA-01 erweitert vorhandene
+Riegel (`kettenaufrufe`, Anlass Nr. 217; `fremdsummen`, F-R17-50/-51;
+`bericht.py`) um Lagen mit F-KA-Nummern. Die Spanne 560–569 bleibt für die
+Pakete ab KA-02.
+

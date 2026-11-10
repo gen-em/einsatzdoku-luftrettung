@@ -13360,6 +13360,28 @@ auf den Server gekommen ist — FTPS, SFTP, rsync über SSH und ein Upload von
 Hand sind gleichwertig. Was sie weiß, ist ihre eigene Fassung
 (`version.php`) und ob eine Migration aussteht.
 
+### 12.14 Gehärtet nach dem Audit — was die Kette seit KA-01 zusätzlich hält
+
+Das Audit KA (09.11.2026) fand an der Kette sieben Stellen, an denen sie
+weniger hielt, als sie sagte; KA-01 schließt sie. **Keine davon ändert, was
+ausgeliefert wird**, nur wie. Gemessen wird jede von einem Riegel in
+`tools/kettenaufrufe/` (Stufe 1); belegt ist der erste Punkt aber erst durch
+einen echten Lauf.
+
+| Was | Seit KA-01 | Riegel |
+|---|---|---|
+| **Zertifikat des Hosters** (F-KA-02) | Der FTPS-Schritt trägt `security: strict`. Ohne die Zeile setzt die Aktion `loose` und nimmt jedes Zertifikat an; wer sich dazwischensetzt, bekäme das FTP-Passwort. **Scheitert die Prüfung, passt der Name in `FTP_SERVER` nicht zum Zertifikat — der Name wird berichtigt, nicht der Schalter.** | 6 |
+| **Eingänge** (F-KA-14) | Kein `${{ inputs.* }}`, `github.event.*` oder `github.head_ref` im Text eines `run:`; Eingänge kommen über `env:` und werden im Skript als `"$NAME"` gelesen. Vorher wurde der freie Text der Mengenprobe vor der Shell eingesetzt. | 3 |
+| **Geheimnisse** (F-KA-37) | FTP-Passwort, Kettentoken und Prüfkonto nie auf der Befehlszeile — sie liest jeder Prozess desselben Läufers. `tor.py` liest `JOBS_TOKEN`, `zielprobe.py`, `zustand.py`, `apkablage.py` lesen `FTP_PASSWORD`; `kreislauf.py`, `pruefkonto.py` und die Rückwegprobe nehmen `--…-aus NAME` (den Namen der Variablen). | 5 |
+| **Protokoll** (F-KA-25) | `tor.py` druckt weder den Zufallsteil eines Komplett-Namens — die zweite Schranke des Ordners — noch `wartung.von`. Die Zusammenfassung des Rückfallstands nennt den Zeitstempel. Das Protokoll eines öffentlichen Repositoriums liest jeder, 90 Tage lang. | Selbstprobe `tor.py` |
+| **Abbilder** (F-KA-39) | Die Datenbank-Abbilder der Schemaprobe hängen am Digest, nicht am Tag. Wer eines hebt, tauscht Tag **und** Digest. | 4 |
+| **Zeitlimits** (F-KA-44) | Jeder Job hat `timeout-minutes`, hergeleitet aus den Laufzeiten bis zum 10.11.2026: Stufe 1 15 (gemessen höchstens 3,0 für den ganzen Lauf), Schema 10, „Schon gemessen?" 5, Wache 15, `ausliefern` 150 und `Rückfallstand` 120 (über der Grenze des Backup-Tors, rund 107 Minuten, damit das Tor „ABBRUCH" sagt und nicht das Limit), `zeiger` 10. `staging` und `produktion` rufen den Auslieferungslauf auf und können selbst kein Limit tragen; es steht an dessen Job. Anlass: Lauf 499 hing 45 Minuten in der PHP-Syntaxprüfung. Der Schlussschritt „Wenn etwas schiefging" läuft seither auch bei Abbruch. | — |
+| **Werkzeuge der Instanzen** (F-KA-15) | `create_or_update_file` und `delete_file` stehen in der Deny-Liste von `.claude/settings.json`. | — |
+
+Dazu prüft der Prüfbericht den Baum streng (leer ist rot, F-KA-24), und
+`fremdsummen` rechnet auch `server/vendor/` und die Gradle-Wrapper-JAR nach
+(F-KA-26).
+
 ## 13. Betrieb (Runbook)
 
 **Vor jeder Auslieferung: die Wegwerfliste nachziehen** (seit Web 20.22.0,
@@ -13601,6 +13623,36 @@ Web 23.1.0 gab, ist damit zu. *Was zu tun ist:*
 Geht die Mail nicht hinaus (SMTP-Zugang stand in derselben verlorenen
 `config.php`), ist es kein Anteil-Fall, sondern ein Wiederanlauf mit dem
 Wiederanlaufpaket.
+
+**Umgebung `produktion` und Tag-Rulesets — einrichten und prüfen** (seit
+dem 10.11.2026, KA-M1; aufgeschrieben mit KA-01). Wer die Anlage neu
+aufsetzt (Schritt 14), stellt diese drei Dinge her. **Der Name einer Regel ist
+nicht ihr Ziel** — beides brauchte am 10.11.2026 einen zweiten Anlauf.
+
+1. **Settings → Environments → `produktion` → Deployment branches and
+   tags:** „Selected branches and tags", dann **ein** Eintrag vom Typ
+   *Branch* (`main`) und **drei** vom Typ **Tag** (`web-v*`, `android-v*`,
+   `uhr-v*`). Der Typ wird im Dialog gewählt, nicht am Muster erkannt.
+   **Woran man eine wirkungslose Regel erkennt:** Die Zeile darüber sagt,
+   wie viele Zweige und Tags sie heute zulässt — am 10.11.2026 „1 branch and
+   21 tags allowed". Steht dort **„0 tags allowed"**, stehen die Tag-Muster
+   als Zweig-Regeln da, und kein Tag liefert mehr aus.
+2. **Required reviewers:** das Konto der BetreiberIn; „Prevent
+   self-review" **aus**, solange es eine BetreiberIn gibt — sonst gäbe niemand
+   ihren eigenen Tag frei.
+3. **Settings → Rules → Rulesets**, je eines für `web-v*`, `android-v*`,
+   `uhr-v*`: Ziel **Tag**, Muster unter „Target tags" als `refs/tags/web-v*`
+   eingetragen, Anlegen, Ändern und Löschen gesperrt, Force-Push gesperrt,
+   Bypass nur das Konto der BetreiberIn. **Woran man ein wirkungsloses
+   Ruleset erkennt:** In der Liste steht **„does not target any
+   resources"** — dann hat es einen Namen, aber kein Muster.
+
+Gegenprobe ohne Zugriff auf die Einstellungen: Die Schnittstelle
+`GET /repos/{owner}/{repo}/rulesets/{id}` nennt unter `conditions.ref_name`
+das Ziel; ein leeres `include` ist ein wirkungsloses Ruleset. Die Umgebung
+lässt sich aus der Arbeitsumgebung nicht lesen (der Proxy sperrt den Pfad).
+**Nach KA-M2 dazu:** Settings → Actions → General → „Require actions to be
+pinned to a full-length commit SHA" an.
 
 **Die Integritätswache ist rot.** *(Bis R17-19 stand hier ein Verweis auf
 den Abschnitt „Wenn sie rot wird" in `tools/integritaetswache/LIESMICH.md`,

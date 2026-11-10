@@ -512,6 +512,117 @@ def ausnahmeliste_pruefen(lauf_text: str, ist_ignoriert, getrackt: list[str]
     return ab, pfade
 
 
+# RIEGEL 3 (KA-01, F-KA-14): KEIN EINGANG WIRD ZU CODE. Ein `${{ … }}` im
+# Text eines `run:` setzt GitHub VOR der Shell ein; steht dort freier Text aus
+# einem Eingang, wird er zu Shell-Code. Gesperrt sind alle `inputs.*` —
+# strenger als nötig, denn ein `boolean` kann nichts einschleusen, aber eine
+# Regel ohne Typ-Nachschlagen hat keine Lücke, wenn jemand den Typ ändert —,
+# dazu `github.event.*` und `github.head_ref`, die aus Titel, Zweigname oder
+# Kommentar kommen können. Der Weg ist `env:`, dann `"$NAME"` im Skript.
+EINSETZUNG_RE = re.compile(r'\$\{\{([^}]*)\}\}')
+EINSETZUNG_VERBOTEN_RE = re.compile(r'\b(?:inputs\.|github\.event\.|github\.head_ref\b)')
+
+
+def einsetzungen(lauf: str, schritt: str, block: str) -> list[str]:
+    """Befunde für Riegel 3 in EINEM `run:`-Block."""
+    ab = []
+    for zeile in block.split('\n'):
+        if zeile.lstrip().startswith('#'):
+            continue
+        for m in EINSETZUNG_RE.finditer(zeile):
+            if EINSETZUNG_VERBOTEN_RE.search(m.group(1)):
+                ab.append(f'{lauf} · {schritt}: `${{{{ {m.group(1).strip()} }}}}` steht im '
+                          f'Skript — über `env:` hereinreichen (F-KA-14)')
+    return ab
+
+
+# RIEGEL 4 (KA-01, F-KA-39): JEDES ABBILD AM DIGEST. Ein Tag kann unter dem
+# Lauf ein anderes Abbild bezeichnen, wie ein Tag einer Aktion. Erlaubt ist
+# `image: name:tag@sha256:<64 hex>` und ein Ausdruck, der nur auf die Matrix
+# zeigt — deren `image:`-Zeilen misst derselbe Riegel.
+IMAGE_RE = re.compile(r'^\s*(?:-\s+)?image:\s*(\S.*?)\s*(?:#.*)?$')
+DIGEST_RE = re.compile(r'^[\w./:-]+@sha256:[0-9a-f]{64}$')
+MATRIX_RE = re.compile(r'^\$\{\{\s*matrix\.[\w.]+\s*\}\}$')
+
+
+def abbilder(texte: dict[str, str]) -> tuple[list[str], int, int]:
+    """Riegel 4. Rückgabe: (Befunde, `image:`-Zeilen, davon am Digest)."""
+    ab: list[str] = []
+    alle = digest = 0
+    for name, text in sorted(texte.items()):
+        for nr, zeile in enumerate(text.split('\n'), 1):
+            if zeile.lstrip().startswith('#'):
+                continue
+            m = IMAGE_RE.match(zeile)
+            if not m:
+                continue
+            wert = m.group(1).strip('\'"')
+            if MATRIX_RE.match(wert):
+                continue
+            alle += 1
+            if DIGEST_RE.match(wert):
+                digest += 1
+            else:
+                ab.append(f'{name}:{nr}: `image: {wert}` hängt nicht an einem '
+                          f'Digest `@sha256:…` (F-KA-39)')
+    return ab, alle, digest
+
+
+# RIEGEL 5 (KA-01, F-KA-37): KEIN GEHEIMNIS AUF DER BEFEHLSZEILE. Die
+# Befehlszeile eines Prozesses liest jeder andere Prozess desselben Läufers
+# (`/proc/<pid>/cmdline`). Gemeldet wird ein Schalter dieser Liste, dem eine
+# Variable folgt; ein fester Wert (`--passwort schemaprobe` einer
+# Wegwerf-Datenbank) ist keins. Der Weg ist die Umgebung, für die
+# Stufe-2-Werkzeuge mit `--…-aus NAME`.
+GEHEIM_SCHALTER = ('--ftp-pass', '--token', '--jobs-token', '--admin-passwort',
+                   '--admin-pw', '--admin-totp', '--passwort', '--konto-passwort')
+GEHEIM_RE = re.compile(r'(?<![\w-])(' + '|'.join(re.escape(x) for x in GEHEIM_SCHALTER)
+                       + r')(?:=|\s+)["\']?\$')
+
+
+def geheimnisse(lauf: str, schritt: str, block: str) -> list[str]:
+    """Befunde für Riegel 5 in EINEM `run:`-Block."""
+    ab = []
+    for zeile in block.split('\n'):
+        if zeile.lstrip().startswith('#'):
+            continue
+        for m in GEHEIM_RE.finditer(zeile):
+            ab.append(f'{lauf} · {schritt}: `{m.group(1)}` mit einer Variablen — ein '
+                      f'Geheimnis gehört in die Umgebung, nicht auf die Befehlszeile (F-KA-37)')
+    return ab
+
+
+# RIEGEL 6 (KA-01, F-KA-02): DIE AUSLIEFERUNG PRÜFT DAS ZERTIFIKAT. Die
+# FTPS-Aktion setzt ohne `security:` die Vorgabe `loose` und nimmt jedes
+# Zertifikat an. Gemessen wird der Schritt, der die Aktion aufruft: Zwischen
+# seiner `uses:`-Zeile und dem nächsten Schritt muss `security: strict` stehen.
+FTP_AKTION_RE = re.compile(r'uses:\s*SamKirkland/FTP-Deploy-Action@', re.I)
+SCHRITT_RE = re.compile(r'^\s*-\s+(?:name|uses|run):')
+STRIKT_RE = re.compile(r'^\s*security:\s*[\'"]?strict[\'"]?\s*(?:#.*)?$')
+
+
+def zertifikat(texte: dict[str, str]) -> tuple[list[str], int]:
+    """Riegel 6. Rückgabe: (Befunde, Zahl der FTPS-Schritte)."""
+    ab: list[str] = []
+    zahl = 0
+    for name, text in sorted(texte.items()):
+        zeilen = text.split('\n')
+        for nr, zeile in enumerate(zeilen):
+            if zeile.lstrip().startswith('#') or not FTP_AKTION_RE.search(zeile):
+                continue
+            zahl += 1
+            strikt = False
+            for folgend in zeilen[nr + 1:]:
+                if SCHRITT_RE.match(folgend):
+                    break
+                if STRIKT_RE.match(folgend):
+                    strikt = True
+            if not strikt:
+                ab.append(f'{name}:{nr + 1}: FTPS-Schritt ohne `security: strict` — die '
+                          f'Aktion nähme jedes Zertifikat an (F-KA-02)')
+    return ab, zahl
+
+
 def riegel_lauf() -> tuple[list[str], list[str]]:
     """Beide Riegel gegen dieses Repositorium. Rueckgabe: (Befunde, Zeilen)."""
     import subprocess
@@ -531,11 +642,31 @@ def riegel_lauf() -> tuple[list[str], list[str]]:
                        capture_output=True, text=True)
     getrackt = [z for z in r.stdout.split('\n') if z.strip()]
     ab2, pfade = ausnahmeliste_pruefen(lauf_text, ist_ignoriert, getrackt)
+    ab3: list[str] = []
+    ab5: list[str] = []
+    bloecke = 0
+    for p in LAEUFE:
+        for schritt, block in run_bloecke(p):
+            bloecke += 1
+            ab3 += einsetzungen(p.name, schritt, block)
+            ab5 += geheimnisse(p.name, schritt, block)
+    ab4, bilder, am_digest = abbilder(texte)
+    ab6, ftps = zertifikat(texte)
+    if ftps == 0:
+        ab6.append('Kein FTPS-Schritt gefunden — Riegel 6 misst nichts; stimmt das Muster noch?')
     zeilen = [f'  Fremd-Aktionen:     {fremd} Zeilen, davon an SHA mit Fassung: {gepinnt}',
               f'  Ausnahmeliste:      {pfade} Serverpfade (Soll: '
               f'{len(AUSNAHMEN_DATEIEN) + len(AUSNAHMEN_VERZEICHNISSE)}), '
-              f'eingecheckte config.php*: {len(getrackt)}']
-    return ab1 + ab2, zeilen
+              f'eingecheckte config.php*: {len(getrackt)}',
+              f'  Einsetzungen:       {bloecke} run-Blöcke, {len(ab3)} mit Eingang im Skript',
+              f'  Abbilder:           {bilder} image-Zeilen, davon am Digest: {am_digest}',
+              f'  Geheimnisschalter:  {len(ab5)} mit Variable auf der Befehlszeile',
+              f'  FTPS-Schritte:      {ftps}, davon ohne `security: strict`: '
+              f'{sum(1 for a in ab6 if "security" in a)}']
+    if bilder == 0:
+        ab4.append('Keine `image:`-Zeile gefunden — Riegel 4 misst nichts; '
+                   'stimmt das Muster noch (pruefung.yml, Schema)?')
+    return ab1 + ab2 + ab3 + ab4 + ab5 + ab6, zeilen
 
 
 def lauf() -> int:
@@ -742,7 +873,91 @@ def selbstprobe() -> int:
     gut += ok
     melde(f'  [{"ok " if ok else "FEHL"}] {"Die Sollliste zaehlt SIEBEN Serverpfade (CLAUDE.md 3)":<52} {pfade}')
 
-    gesamt = len(faelle) + 1 + len(riegel1) + len(riegel2) + 1
+    # RIEGEL 3 BIS 5 (KA-01). Je Riegel die Lage aus dem Audit und die
+    # Gegenprobe, die er NICHT melden darf.
+    riegel3 = [
+        ('Riegel 3: freier Text aus einem Eingang im Skript (F-KA-14)', True,
+         'ZAHL="${{ inputs.probelauf_mengenprobe }}"'),
+        ('Riegel 3: auch ein boolean-Eingang im Skript', True,
+         'if [ "${{ inputs.probelauf }}" = "true" ]; then'),
+        ('Riegel 3: `github.event.*` im Skript', True,
+         'echo "${{ github.event.pull_request.title }}"'),
+        ('Riegel 3: `github.head_ref` im Skript', True,
+         'git checkout ${{github.head_ref}}'),
+        ('GEGENPROBE: der Eingang über env, im Skript `$ZAHL`', False,
+         'ZAHL="${MENGENPROBE:-}"'),
+        ('GEGENPROBE: ein Matrix-Wert im Skript', False,
+         'echo "${{ matrix.db.klient }}"'),
+        ('GEGENPROBE: auskommentiert', False,
+         '# ZAHL="${{ inputs.probelauf_mengenprobe }}"'),
+    ]
+    for name, soll, zeile in riegel3:
+        ab = einsetzungen('probe.yml', 'Probe', zeile)
+        ok = bool(ab) == soll
+        gut += ok
+        melde(f'  [{"ok " if ok else "FEHL"}] {name:<52} '
+              f'{"gemeldet" if ab else "still"} ({len(ab)})')
+    dg = 'b' * 64
+    riegel4 = [
+        ('Riegel 4: Abbild am Tag (F-KA-39)', True, '            image: mysql:8.4.0'),
+        ('Riegel 4: Abbild am Tag, Listenform', True, '      - image: mariadb:10.6'),
+        ('Riegel 4: kurzer Digest', True, f'            image: mysql:8.4.0@sha256:{dg[:12]}'),
+        ('Riegel 4: Ausdruck, der nicht auf die Matrix zeigt', True,
+         '        image: ${{ inputs.abbild }}'),
+        ('GEGENPROBE: Abbild am Digest', False, f'            image: mysql:8.4.0@sha256:{dg}'),
+        ('GEGENPROBE: Ausdruck auf die Matrix', False, '        image: ${{ matrix.db.image }}'),
+        ('GEGENPROBE: auskommentiert', False, '        # image: mysql:8.4.0'),
+    ]
+    for name, soll, zeile in riegel4:
+        ab, _, _ = abbilder({'probe.yml': zeile})
+        ok = bool(ab) == soll
+        gut += ok
+        melde(f'  [{"ok " if ok else "FEHL"}] {name:<52} '
+              f'{"gemeldet" if ab else "still"} ({len(ab)})')
+    riegel5 = [
+        ('Riegel 5: FTP-Passwort auf der Befehlszeile (F-KA-37)', True,
+         '  --ftp-pass "$FTP_PASSWORD" \\'),
+        ('Riegel 5: Kettentoken auf der Befehlszeile', True,
+         'python3 tools/kette/tor.py backup --basis "$BASIS" --token "$JOBS_TOKEN"'),
+        ('Riegel 5: Prüfkonto-Passwort, ohne Anführungszeichen', True,
+         '  --admin-pw $STAGING_PASS --admin-totp $STAGING_TOTP'),
+        ('Riegel 5: `--jobs-token=$X`', True, '  --jobs-token=$JOBS_TOKEN'),
+        ('GEGENPROBE: der Name der Variablen (`--…-aus`)', False,
+         '  --admin-passwort-aus STAGING_PASS --jobs-token-aus JOBS_TOKEN'),
+        ('GEGENPROBE: fester Wert einer Wegwerf-Datenbank', False,
+         '  --benutzer root --passwort schemaprobe'),
+        ('GEGENPROBE: auskommentiert', False,
+         '# --ftp-pass "$FTP_PASSWORD"'),
+    ]
+    for name, soll, zeile in riegel5:
+        ab = geheimnisse('probe.yml', 'Probe', zeile)
+        ok = bool(ab) == soll
+        gut += ok
+        melde(f'  [{"ok " if ok else "FEHL"}] {name:<52} '
+              f'{"gemeldet" if ab else "still"} ({len(ab)})')
+
+    schritt = ('      - name: server/ per FTPS synchronisieren\n'
+               f'        uses: SamKirkland/FTP-Deploy-Action@{sha} # v4.4.0\n'
+               '        with:\n          protocol:   ftps\n')
+    riegel6 = [
+        ('Riegel 6: FTPS-Schritt ohne `security:` (F-KA-02)', True,
+         schritt + '          port:       21\n'),
+        ('Riegel 6: `security: loose`', True,
+         schritt + '          security:   loose\n'),
+        ('Riegel 6: `strict` erst im NÄCHSTEN Schritt', True,
+         schritt + '      - name: weiter\n        with:\n          security: strict\n'),
+        ('GEGENPROBE: `security: strict` mit Kommentar', False,
+         schritt + '          security:   strict   # F-KA-02\n          port: 21\n'),
+    ]
+    for name, soll, text in riegel6:
+        ab, _ = zertifikat({'probe.yml': text})
+        ok = bool(ab) == soll
+        gut += ok
+        melde(f'  [{"ok " if ok else "FEHL"}] {name:<52} '
+              f'{"gemeldet" if ab else "still"} ({len(ab)})')
+
+    gesamt = (len(faelle) + 1 + len(riegel1) + len(riegel2) + 1
+              + len(riegel3) + len(riegel4) + len(riegel5) + len(riegel6))
     melde()
     melde(f'  -> {gut} von {gesamt} Faellen erwartungsgemaess, {gesamt - gut} nicht.')
     return 0 if gut == gesamt else 2

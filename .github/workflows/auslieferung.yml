@@ -272,9 +272,9 @@ jobs:
                       --art "$art" --frisch \
                       --basis "$STAGING_URL" \
                       --admin-email "$STAGING_KONTO" \
-                      --admin-passwort "$STAGING_PASS" \
-                      --admin-totp "$STAGING_TOTP" \
-                      --jobs-token "$JOBS_TOKEN" \
+                      --admin-passwort-aus STAGING_PASS \
+                      --admin-totp-aus STAGING_TOTP \
+                      --jobs-token-aus JOBS_TOKEN \
                 || { echo "::error::Kreislauf $art gegen Staging in $motor gescheitert."; rot="$rot $motor"; }
             done
           done
@@ -299,7 +299,7 @@ jobs:
           for motor in chromium firefox webkit; do
             echo "--- Rückwegprobe · $motor ---"
             MOTOR=$motor node tools/proben/rueckweg/probe.mjs --basis "$STAGING_URL" --admin "$STAGING_KONTO" \
-                 --admin-pw "$STAGING_PASS" --admin-totp "$STAGING_TOTP" \
+                 --admin-pw-aus STAGING_PASS --admin-totp-aus STAGING_TOTP \
               || { echo "::error::Rückwegprobe gegen Staging in $motor gescheitert."; rot="$rot $motor"; }
           done
           echo "**Rückwegprobe:** chromium, firefox, webkit —${rot:- alle grün}${rot:+ rot in$rot}" >> "$GITHUB_STEP_SUMMARY"
@@ -336,6 +336,10 @@ jobs:
     # auf Staging still die Rückfallstände echter Auslieferungen.
     if: ${{ startsWith(github.ref, 'refs/tags/web-v') && !inputs.probelauf }}
     runs-on: ubuntu-26.04
+    # Gemessen unter 10 s (25.10. und 01.11.2026); das Limit liegt über der
+    # Grenze des Backup-Tors (rund 107 Minuten), wie bei `ausliefern`
+    # (KA-01, F-KA-44).
+    timeout-minutes: 120
     environment: staging
     steps:
       - name: Code auschecken
@@ -356,7 +360,7 @@ jobs:
             exit 1
           fi
           python3 tools/kette/tor.py --selbstprobe
-          python3 tools/kette/tor.py backup --basis "$STAGING_URL" --token "$JOBS_TOKEN"
+          python3 tools/kette/tor.py backup --basis "$STAGING_URL"
 
       - name: Den Dateinamen neben den Tag schreiben
         env:
@@ -366,8 +370,11 @@ jobs:
           set -euo pipefail
           # Eigene Zuweisung, damit `set -e` den Rückgabewert von `tor.py`
           # trägt; sonst stünde „unbekannt“ grün neben dem Tag.
+          # Ohne Zufallsteil (KA-01, F-KA-25): Der Zeitstempel nennt den Stand
+          # eindeutig, der Zufallsteil ist die zweite Schranke des Ordners —
+          # und die Zusammenfassung liest jeder.
           datei=$(python3 tools/kette/tor.py zustand --basis "$STAGING_URL" \
-                    --token "$JOBS_TOKEN" --frage komplett)
+                    --frage komplett)
           tag="${GITHUB_REF_NAME}"
           echo "Tag: $tag · Rückfallstand auf Staging: $datei"
           {
@@ -376,7 +383,7 @@ jobs:
             echo "| | |"
             echo "|---|---|"
             echo "| Ausgeliefertes Tag | \`$tag\` |"
-            echo "| Komplett-Stand auf Staging | \`$datei\` |"
+            echo "| Komplett-Stand auf Staging | \`$datei\` (ohne Zufallsteil; unter Betrieb → Komplettsicherung der Stand mit diesem Zeitstempel) |"
             echo
             echo 'Diesen Stand braucht man, um **Staging auf den Stand des Tags'
             echo 'zurückzusetzen** — der Hinweg eines Hotfixes. Eingespielt wird er'
@@ -397,6 +404,9 @@ jobs:
     # in diese Bedingung, sonst zeigt der Zeiger auf nie Ausgeliefertes.
     if: needs.produktion.result == 'success' && !inputs.probelauf
     runs-on: ubuntu-26.04
+    # Gemessen rund 10 s (25.10. und 01.11.2026): auschecken und ein Push
+    # (KA-01, F-KA-44).
+    timeout-minutes: 10
     # Nur dieser Job schreibt ins Repositorium; deshalb keine Fremd-Aktion außer
     # `checkout`, und `produktion` mit den FTPS-Geheimnissen bleibt bei `read`.
     permissions:
@@ -411,10 +421,11 @@ jobs:
       - name: Zeiger `produktion` auf diesen Stand setzen
         env:
           ZIEL: ${{ github.sha }}
+          PROBELAUF: ${{ inputs.probelauf }}
         run: |
           # Zweiter Riegel neben dem `if` des Jobs: Wer die Bedingung erweitert
           # und diesen vergisst, bekommt Rot statt eines falschen Zeigers.
-          if [ "${{ inputs.probelauf }}" = "true" ]; then
+          if [ "$PROBELAUF" = "true" ]; then
             echo "::error::Der Zeiger wird im PROBELAUF NICHT bewegt — es ist nichts ausgeliefert worden. Dass dieser Schritt überhaupt läuft, heißt: die Bedingung des Jobs ist kaputt."
             exit 1
           fi
@@ -632,7 +643,7 @@ jobs:
             fi
             python3 tools/kette/apkablage.py --art "$art" --datei "$datei" \
                 --ftp-server "$FTP_SERVER" --ftp-konto "$FTP_USERNAME" \
-                --ftp-pass "$FTP_PASSWORD" --ftp-pfad "$FTP_ZIELPFAD" \
+                --ftp-pfad "$FTP_ZIELPFAD" \
                 --zusammenfassung "$GITHUB_STEP_SUMMARY" $schalter
             zahl=$((zahl + 1))
           done
