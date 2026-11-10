@@ -52,8 +52,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 550 bis 559 | `claude/of-oberflachenrunde-umsetzung-8riu6b` (R91, Nachprüfung OF auf Staging; 540 bis 549 trägt `claude/lucid-knuth-2yu16r`, ungemergt) | 09.11.2026 |
-| ab 560 | frei — höchste reservierte Nummer 559; frei blieben 531 bis 539 aus der Spanne von 27 (PR #159), 525 bis 529 aus der Spanne von 26 (PR #156), 511 bis 519 aus der Spanne von 24 und BR7 (PR #152 bis #154), 501 bis 509 aus der von 23 (PR #150, #151), 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
+| 550 bis 559 | `claude/of-oberflachenrunde-umsetzung-8riu6b` (R91, Nachprüfung OF auf Staging) | 09.11.2026 |
+| ab 560 | frei — höchste reservierte Nummer 559; frei blieben 543 bis 549 aus der Spanne der Nachprüfung MA (PR #158, aufgegangen in PR #164), 531 bis 539 aus der Spanne von 27 (PR #159), 525 bis 529 aus der Spanne von 26 (PR #156), 511 bis 519 aus der Spanne von 24 und BR7 (PR #152 bis #154), 501 bis 509 aus der von 23 (PR #150, #151), 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
 
 ---
 
@@ -730,3 +730,54 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      umbenennen, Aufrufer und `vollstaendigkeit-streichliste.md` nachziehen.
      *Abnahme:* `vollstaendigkeit.py` keine Befunde, `grep -rn "orange"`
      findet in Klassennamen nur noch Töne der Plakette und Kennzahl.
+
+<!-- -->
+
+540. **Druckblätter und Druck nehmen im Dunkeln Farben des Bildschirms mit.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 08.11.2026
+     *Aufgenommen 08.11.2026 bei der Nachprüfung auf Staging (P-MA-07,
+     Chromium, Gerät dunkel).* Notfallblatt und Codeblatt zeigen das Papier
+     hell (`--papier-*`), aber Titel und „Zur Startseite" in den Rollen des
+     dunklen Modus (Blau 100/300 auf Schnee, kaum lesbar), und die Meldung
+     „Dieses Blatt lässt sich nicht nachträglich drucken" steht als dunkle
+     Fläche (Orange 800) auf dem Papier. Im Druck der Tagesübersicht stellt
+     der `@media print`-Block nur Flächen, Schrift und Linien zurück; die
+     Statusflächen (`--genem-status-*`), Auswahl und Aktion bleiben dunkel —
+     die Meldung „Staging" druckte als braune Fläche. *Weg:* auf dem Blatt
+     und im Druck alle Rollen auf hell stellen, die dort vorkommen (Status,
+     Auswahl, Aktion, Titel, Link), nicht nur die drei Gruppen. *Abnahme:*
+     beide Blätter und die Druckvorschau einer Tagesübersicht bei dunklem
+     Gerät — keine Fläche dunkler als Rauch, Titel in Dunkelblau.
+     *Gegengelesen 10.11.2026 am Code von Web 24.10.1:* Der `@media
+     print`-Block stellt die Statusflächen weiter nicht zurück; die Blätter
+     im Browser sind seither nicht neu geprüft. Das Notfallblatt baut
+     Schritt 28 (KA-02) neu — dort mitnehmen.
+
+<!-- -->
+
+541. **Zwei Plaketten tragen den falschen Ton: Konto-Backup „aktuell" blau, „räumt dort auf" orange.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 08.11.2026
+     *Aufgenommen 08.11.2026 bei der Nachprüfung auf Staging (P-MA-14).*
+     Seit E-MA-08 heißt Grün „Zustand", Blau „Eigenschaft". Der Stand eines
+     Konto-Backups ist ein Zustand: Die Statusseite zeigt „aktuell" grün,
+     NutzerInnen-Liste und Kontoseite zeigen dasselbe Wort blau, weil
+     `edbak_stand_plakette()` noch `blau` liefert. Umgekehrt steht an einem
+     Backup-Ziel „räumt dort auf" orange, obwohl es eine Eigenschaft der
+     Regel ist und keine Aufmerksamkeit verlangt (Ziele-Liste,
+     `admin_sicherungsziele.php`). *Weg:* `aktuell` → `gruen`, „räumt dort
+     auf" → `blau`; nach weiteren Aufrufern von `ui_plakette()` mit
+     Zustandswörtern in `blau` suchen. *Abnahme:* dieselbe Plakette trägt
+     auf jeder Seite denselben Ton; Liste, Kontoseite, Statusseite gleich.
+
+<!-- -->
+
+542. **Orange Plaketten auf der Statusseite tragen kein Warnsymbol.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 08.11.2026
+     *Aufgenommen 08.11.2026 bei der Nachprüfung auf Staging (P-MA-03).*
+     Die Marke verlangt: Warnungen immer mit Symbol. Auf Betrieb → Status
+     steht „4 offen" (Konto-Backups) als orange Plakette ohne Symbol; die
+     Meldung darüber trägt eines. Gezählt am 08.11.2026 über alle Plaketten
+     der Seite: 1 orange, 2 rot, keine mit Symbol. *Weg:* `ui_plakette()`
+     setzt bei `ton` `orange` das Symbol `warnung` und bei `rot` ein
+     Fehlersymbol von selbst, statt dass jeder Aufrufer daran denkt
+     (Design.md, „Ein Zustand an der Gruppe ist eine Plakette"). Zu klären:
+     ob Extremwerte (orange, aber keine Warnung) davon ausgenommen sind.
+     *Abnahme:* auf Status, Sicherungen, Zielen und NutzerInnen jede orange
+     und rote Plakette mit Symbol.

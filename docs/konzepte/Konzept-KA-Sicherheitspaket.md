@@ -14,7 +14,7 @@ steht da, die Nummer setzt die Umsetzung.
 | Stand | **Konzept, zur Freigabe** (10.11.2026) |
 | In Arbeit | kein Paket |
 | Erledigt | — |
-| Hakt | KA-M1 ist bis auf einen Rest erledigt (Abschnitt 3): offen ist, ob die Umgebung `produktion` auf `main` und die Tag-Muster beschränkt ist — hält nichts auf |
+| Hakt | **Zwei Einstellungen in GitHub sind gesetzt, greifen aber nicht** (Abschnitt 3, Stand 10.11.2026): Die Umgebung `produktion` lässt keinen Tag mehr zu — **ein Tag würde heute nicht ausliefern** —, und die drei Tag-Rulesets zielen auf nichts. Beides ist eine Berichtigung von je einer Minute bei der BetreiberIn |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0 |
 
 **Die Umsetzung findet in einer eigenen Sitzung statt** — ein Paket nach
@@ -75,8 +75,8 @@ Gelesen über die Schnittstelle von GitHub, nur lesend.
 | Repositorium | **öffentlich**, Forks erlaubt, heute keiner — die Lauf-Protokolle liest jeder |
 | `main` | Rulesets „Main Protect" (PR-Pflicht, Pflichtprüfung „Stufe 1" strikt, kein Löschen, kein Force-Push, kein Bypass) und „Main Merge-Recht" (Schreiben nur per PR, Bypass ein Konto) |
 | Zeiger `produktion` | Ruleset „Zeiger produktion" seit 06.11.2026 — **nur gegen Löschen**; schreiben und umsetzen darf, wer Schreibrecht hat |
-| Tags | **kein Ruleset** — einen `web-v*`-Tag setzt, wer Schreibrecht hat; davor steht dann die Pflichtfreigabe |
-| Umgebung `produktion` | aus der Arbeitsumgebung nicht lesbar (der Proxy sperrt den Pfad) — **von der BetreiberIn abgelesen:** eine Pflichtprüferin (ihr Konto), „Prevent self-review“ aus. **Nicht abgelesen:** „Deployment branches and tags“ |
+| Tags | drei Rulesets seit 10.11.2026 (`web-v*`, `android-v*`, `uhr-v*`): aktiv, Regeln und Bypass richtig — aber **ohne Ziel** (`include: []`, gemessen über die Schnittstelle). Der Name eines Rulesets ist nicht sein Ziel; ohne „Add target“ gilt es für keinen Tag |
+| Umgebung `produktion` | aus der Arbeitsumgebung nicht lesbar (der Proxy sperrt den Pfad) — **von der BetreiberIn abgelesen:** eine Pflichtprüferin (ihr Konto), „Prevent self-review“ aus, Umgehen durch Administratoren aus. „Deployment branches and tags“ stand auf „No restriction“ und ist seit 10.11.2026 beschränkt — die vier Muster sind aber alle als **Zweig**-Regeln angelegt („1 branch and 0 tags allowed“): `main` passt, **kein Tag passt** |
 | Freigabe von Fork-Läufen | **von der BetreiberIn abgelesen:** „Require approval for all external contributors“ — die strengste der drei Stufen |
 | Rechte des Lauf-Tokens | abgelesen: nur lesend; Läufe dürfen keine Pull Requests anlegen oder freigeben |
 | Erlaubte Aktionen | abgelesen: alle; „Require actions to be pinned to a full-length commit SHA“ **aus** |
@@ -103,8 +103,14 @@ Die abgelesenen Zeilen stammen aus vier Bildschirmfotos der BetreiberIn vom
   KA-M2, nach einem Probelauf.
 - Das Bedrohungsmodell nannte den Zeiger „ungeschützt“, was seit dem
   06.11.2026 nur noch für das Schreiben stimmt (nachgezogen).
-- **Offen bleibt eine Einstellung:** die Beschränkung der Umgebung auf
-  Zweige und Tags (Rest von KA-M1).
+- **Die Beschränkung der Umgebung sperrt im heutigen Stand die
+  Auslieferung:** Ein Lauf auf `web-v…`, `android-v…` oder `uhr-v…` passt
+  auf keine Regel und wird von der Umgebung abgewiesen, bevor die Freigabe
+  gefragt wird. Zu berichtigen sind die drei Tag-Muster — löschen und mit
+  Ref type **Tag** neu anlegen (Rest von KA-M1).
+- **Die Tag-Rulesets schützen noch nichts.** Je Ruleset fehlt das Ziel
+  („Add target“ → „Include by pattern“). Ein Ruleset mit drei Mustern
+  genügt; die anderen beiden können weg (Tag-Teil von KA-M2).
 
 ---
 
@@ -212,6 +218,9 @@ in derselben Workflow-Datei.
    Formular mit `action` mehr vor (`tools/quelltext/`).
 6. Seitentext nach der Erneuerung: ein Satz, dass ältere Blätter über den
    Server gedruckt wurden (Vorbereitung von KA-M4).
+7. **Backlog Nr. 540 mitnehmen:** Notfall- und Codeblatt nehmen im Dunkeln
+   Farben des Bildschirms mit (Nachprüfung MA, 08.11.2026). Das Blatt wird
+   hier ohnehin neu gebaut; die Abnahme aus Nr. 540 gilt für das neue.
 
 **Berührt:** Web, Stufe **neben** (ein Weg durch die Anwendung ändert sich).
 **Pflege:** `docs/Handbuch.md` (Verschlüsselung, Notfallblatt),
@@ -469,8 +478,8 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 
 | Nr. | Was | Wann |
 |---|---|---|
-| KA-M1 | In GitHub ansehen: Umgebung `produktion` und Freigabe von Fork-Läufen — **abgelesen am 10.11.2026** (Abschnitt 3). **Rest:** in der Umgebung `produktion` den Abschnitt „Deployment branches and tags“ ansehen und auf `main` und die drei Tag-Muster beschränken | vor KA-01 |
-| KA-M2 | Probelauf der Auslieferung mit `security: strict` gegen Staging und Produktiv starten und freigeben; ein Ruleset für Tags setzen (`web-v*`, `android-v*`, `uhr-v*`); danach „Require actions to be pinned to a full-length commit SHA“ einschalten und einen Lauf abwarten; die Protokolle älterer Auslieferungsläufe löschen, soweit sie `wartung.von` nennen | in KA-01 |
+| KA-M1 | In GitHub ansehen und setzen: Umgebung `produktion` und Freigabe von Fork-Läufen — abgelesen am 10.11.2026 (Abschnitt 3). **Rest:** Die drei Tag-Muster der Umgebung sind als Zweig-Regeln angelegt; löschen und mit Ref type „Tag“ neu anlegen. **Bis dahin liefert kein Tag aus** | **vor dem nächsten Tag** |
+| KA-M2 | Tag-Ruleset: angelegt am 10.11.2026, **ohne Ziel** — in einem der drei „Add target“ → „Include by pattern“ mit `web-v*`, `android-v*`, `uhr-v*`, die anderen beiden löschen. Mit KA-01: Probelauf der Auslieferung mit `security: strict` gegen Staging und Produktiv starten und freigeben; danach „Require actions to be pinned to a full-length commit SHA“ einschalten und einen Lauf abwarten; die Protokolle älterer Auslieferungsläufe löschen, soweit sie `wartung.von` nennen | Ziel: sofort; Rest in KA-01 |
 | KA-M3 | Tag nach KA-01 und KA-02 — beide hohen Befunde auf Produktiv (E-KA-09) | nach KA-02 |
 | KA-M4 | Wiederherstellungsschlüssel erneuern lassen: eine Ankündigung an alle Konten, die ein Notfallblatt gedruckt haben können (E-KA-07) | nach KA-M3 |
 | KA-M5 | Freigaberunde zum Formatentwurf: Lage des Zählerstands, Bauart der Herkunft, Frist für Geräte ohne Schlüssel, Stichtag für Fassung 1 | nach KA-06a |

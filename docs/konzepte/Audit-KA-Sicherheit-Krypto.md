@@ -556,6 +556,6 @@ KA-01 und KA-02 schließen beide hohen Befunde und den wichtigsten mittleren.
 |---|---|---|
 | Repositorium | öffentlich, Forks erlaubt, heute keiner | die Lauf-Protokolle liest jeder — **F-KA-25 wiegt schwerer** |
 | Zeiger `produktion` | Ruleset seit 06.11.2026, nur gegen Löschen | F-KA-15 nannte ihn „ungeschützt“: Das stimmt für das Schreiben, nicht mehr für das Löschen |
-| Tags | kein Ruleset | wer Schreibrecht hat, setzt einen `web-v*`-Tag; davor steht die Pflichtfreigabe |
+| Tags | bis 10.11.2026 kein Ruleset; seither drei, aktiv, aber **ohne Ziel** — sie gelten für keinen Tag (gemessen) | wer Schreibrecht hat, setzt weiter einen `web-v*`-Tag; davor steht die Pflichtfreigabe. Zu berichtigen: P-KA-02 |
 | `main` | zwei Rulesets, PR-Pflicht, „Stufe 1“ strikt, Bypass ein Konto per PR | wie dokumentiert |
 | Umgebung `produktion`, Freigabe von Fork-Läufen | aus der Arbeitsumgebung nicht lesbar; **von der BetreiberIn abgelesen:** eine Pflichtprüferin, Selbstfreigabe erlaubt; Fork-Läufe nur nach Freigabe, für alle Externen | der Nebenbefund zu F-KA-24 (Fork-Lauf als zählender grüner Lauf) ist damit erledigt; offen bleibt die Beschränkung der Umgebung auf Zweige und Tags (P-KA-01) |

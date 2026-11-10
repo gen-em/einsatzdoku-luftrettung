@@ -8,7 +8,7 @@ Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 Uhr 4.3.3 · Android 0.22.0; auf Staging, Produktiv noch auf Web 23.8.2 · Uhr 4.3.2 · Android 0.21.0 (Tags auf `bfaca8b`).
 **Läuft:** 28 (KA) — Konzept zur Freigabe; Audit vom 09.11.2026 mit 43 Befunden, 2 hoch (R92).
 **Als Nächstes:** 28 (KA), danach 13 (P7).
-**Offene PRs:** #164 (28, Audit und Konzept KA, nur `docs/`).
+**Offene PRs:** #164 (28, Audit und Konzept KA; nimmt #158 auf, nur `docs/`).
 **Fällig bei der Betreiberin:** 44 Posten (Abschnitt 6.1). **`update.php`:** auf Staging nichts offen (Betreiberin, 07.11.2026, nach Web 23.10); auf Produktiv nach dem Tag `web-v23.11.3` fällig (Migration `2026_11_07_darstellung`).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -121,7 +121,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen, Tabellen mit Mockup (Nr. 342) | 26 | eigenes Konzept nach K1 | offen — Konzeptsitzung kann neben 24 laufen, Umsetzung nach 24 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13; die Inventur (R68) entscheidet die zwölf Werkzeug-Punkte mit `gehört zu: 14` (E-BE-04) |
-| 28 | **KA — Sicherheitspaket** | Alle 43 Befunde des Audits beheben, hoch bis Hinweis (E-KA-04): Kette (FTPS-Zertifikat), Notfallblatt im Browser, Schranken der Verwaltung, Kontobindung der Geräte, Mengen und Fremdbestandteile, Bindung und Herkunft der Chiffretexte (Formatwechsel, E-KA-05), Modell und Texte | keine | `docs/konzepte/Konzept-KA-Sicherheitspaket.md`, Befunde in `Audit-KA-Sicherheit-Krypto.md` | Konzept — zur Freigabe seit 10.11.2026, Q-KA-05 und -06 entschieden (E-KA-09, -10); Umsetzung in eigener Sitzung, sieben Pakete; Rest von KA-M1 bei der Betreiberin |
+| 28 | **KA — Sicherheitspaket** | Alle 43 Befunde des Audits beheben, hoch bis Hinweis (E-KA-04): Kette (FTPS-Zertifikat), Notfallblatt im Browser, Schranken der Verwaltung, Kontobindung der Geräte, Mengen und Fremdbestandteile, Bindung und Herkunft der Chiffretexte (Formatwechsel, E-KA-05), Modell und Texte | keine | `docs/konzepte/Konzept-KA-Sicherheitspaket.md`, Befunde in `Audit-KA-Sicherheit-Krypto.md` | Konzept — zur Freigabe seit 10.11.2026, Q-KA-05 und -06 entschieden (E-KA-09, -10); Umsetzung in eigener Sitzung, sieben Pakete; KA-M1 und KA-M2 gesetzt, aber noch ohne Wirkung |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 
 Kein offener Schritt hat einen Block: Die Zeilen nennen den Inhalt; den
@@ -165,8 +165,8 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
-| **KA-M1, Rest:** in der Umgebung `produktion` „Deployment branches and tags“ ansehen und auf `main` und die Tag-Muster beschränken; Pflichtprüferin und Freigabe von Fork-Läufen sind abgelesen (10.11.2026) | 28 (KA) | 10.11.2026 | `Pruefliste.md` 1, P-KA-01 |
-| **KA-M2 — Ruleset für Tags** (`web-v*`, `android-v*`, `uhr-v*`; heute keines), Probelauf der Auslieferung mit geprüftem FTPS-Zertifikat, danach die SHA-Pflicht für Aktionen in GitHub einschalten — fällig mit KA-01 | 28 (KA) | 10.11.2026 | `Pruefliste.md` 1, P-KA-02; Konzept KA 6 |
+| **KA-M1, Rest — vor dem nächsten Tag:** In der Umgebung `produktion` stehen `web-v*`, `android-v*`, `uhr-v*` als Zweig-Regeln („0 tags allowed“); entfernen und mit Ref type „Tag“ neu anlegen. Bis dahin weist die Umgebung jeden Tag-Lauf ab | 28 (KA) | 10.11.2026 | `Pruefliste.md` 1, P-KA-01 |
+| **KA-M2 — Tag-Ruleset:** drei angelegt, alle ohne Ziel und damit ohne Wirkung; in einem „Add target“ mit den drei Mustern, die anderen löschen. Mit KA-01: Probelauf mit geprüftem FTPS-Zertifikat, dann die SHA-Pflicht für Aktionen | 28 (KA) | 10.11.2026 | `Pruefliste.md` 1, P-KA-02; Konzept KA 6 |
 | **P-PK-37:** `STAGING_PASS` einmal falsch, einmal leer setzen — Stufe 2 rot mit Grund im ersten Messschritt; P-PK-18 (zwei Merges in einer Minute) bei Gelegenheit. P-PK-19, -21, -38 und PK-M2 sind seit Lauf 101 erledigt | PK | 29.09.2026 | `Pruefliste.md` 1, 5s |
 | **Prüfliste PK ohne Merge:** Z12 — „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" als Pflichtprüfung (P-PK-36) | PK | 23.09.2026 | `Pruefliste.md` 1 |
 | **Health-Endpunkt auf Staging** — Token unter Betrieb → Hintergrundjobs, Karte „Monitoring“ (seit Web 23.5.0), als Kopfzeile; Produktiv überwacht Uptime Kuma seit dem 02.11.2026 | 10c AP6 | 20.09.2026 | Runbook „Health-Endpunkt einrichten"; P-P5c-29 bis -31 |
@@ -207,7 +207,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste GR:** P-GR-01 bis -03 (Garmin), -04 bis -07 (Handy) auf echten Geräten gegen Staging — Abmelden, Aktivieren, Rückstand, fremdes Konto; die Tags `uhr-v4.3.2` und `android-v0.21.0` sind ohne sie gesetzt (05.11.2026) | 21 | 04.11.2026 | `Pruefliste.md` 10 |
 | **Prüfliste BR6:** P-BR6-04 (Venu 3s), -05, -06 (Telefon, Frist), nach den Tags (05.11.2026); -07 freiwillig (Safari) | 23 | 05.11.2026 | `Pruefliste.md` 9, 10 |
 | **Prüfliste OF:** Betreiberin: P-OF-35 (Mockups), -28 (zwei Abweichungen), P-NV-10 (Safari), P-OF-34 (VoiceOver), P-NV-05 (Handy), P-OF-16 (Geräte), -25 (Versand) | 27 | 09.11.2026 | `Pruefliste.md` 5 bis 10 |
-| **Prüfliste MA:** P-MA-01 (Produktiv nach dem Tag: `update.php`), P-MA-08, -11, -16 (Safari, VoiceOver/TalkBack), P-MA-12, -17 (Android 0.22.0 hell und dunkel, Garmin 4.3.3 auf dem Gerät); die Claude-Punkte prüft die Arbeitsumgebung auf Staging (R91) | 26 | 07.11.2026 | `Pruefliste.md` 7 bis 10 |
+| **Prüfliste MA:** P-MA-01 (`update.php` nach dem Tag), -08, -11, -16 (Safari, VoiceOver/TalkBack), -12, -17 (Android 0.22.0, Garmin 4.3.3 am Gerät), -09 Wartungsseite; Staging-Rest geprüft 08.11.2026 (R91, Nr. 540–542) | 26 | 07.11.2026 | `Pruefliste.md` 7 bis 10 |
 | **Prüfliste RD:** P-RD-09 (Safari: Segment mit Schnitt über Mitternacht), P-RD-10 (Produktiv nach dem Tag `web-v23.8.2`: Demo zurücksetzen, Karte öffnet, keine Gerätemeldung) | 24 | 05.11.2026 | `Pruefliste.md` 9 |
 
 ### 6.2 Vor einem bestimmten Schritt
