@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-03** — Zusammenfassung zur Bestätigung |
+| In Arbeit | **KA-03** — bestätigt 10.11.2026, im Bau. **Garmin-Anteile ausgegliedert an KG** (E-KA-21, Abschnitt 11) |
 | Erledigt | **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** der Probelauf gegen Produktiv mit `security: strict` (KA-M2, P-KA-02) — Staging ist belegt |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -73,6 +73,7 @@ Safari.
 | E-KA-18 | **Die Kontoadresse geht bei der Erstvergabe mit dem Code ans Blatt** — sie ist kein Geheimnis, und ohne Sitzung kennt das Blatt sie sonst nicht; mit Sitzung geht die aus der Sitzung vor | 10.11.2026, BetreiberIn |
 | E-KA-19 | **Nr. 540 ohne Mockup:** Blätter und Druck stellen die Rollen auf ihre hellen Werte zurück — vorhandene Token, kein neuer Farbwert, kein neuer Baustein; das Druckbild bleibt das gedachte | 10.11.2026, BetreiberIn |
 | E-KA-20 | **Der Riegel aus KA-02 Punkt 5 misst Formulare und Abrufe mit einem Druckblatt als Ziel, nicht den Feldnamen.** `code` heißt auch das Feld der Zweitfaktor-Formulare; ein Riegel über den Namen schlüge falsch an oder würde ausgenommen | 10.11.2026, BetreiberIn |
+| E-KA-21 | **Die Garmin-Anteile gehen an eine eigene Instanz, Kürzel KG** (Abschnitt 11): KA-04 Punkt 1 und 4, der Garmin-Teil von KA-06c samt der Messung für 06a, die Garmin-Kommentare aus F-KA-43 und der Garmin-Teil von KA-M6. KG zählt eigene Nummern (`KG-NN`, `F-KG-NN`, `E-KG-NN`, `P-KG-NN`), führt ein eigenes Konzept und schreibt den Rahmenplan nicht — das tut diese Instanz | 10.11.2026, BetreiberIn |
 
 ---
 
@@ -335,7 +336,7 @@ Prüfarbeit nie gefächert.
 an das es beim Aufzeichnen gekoppelt war; kein Punkt geht still verloren.
 **Befunde:** F-KA-05, -06, -07, -18, -27, -31, -32, -33.
 
-1. **Garmin-Uhr:** `Pair.start()` weist bei laufendem Dienst immer ab. Die
+1. **→ KG-01 (E-KA-21).** **Garmin-Uhr:** `Pair.start()` weist bei laufendem Dienst immer ab. Die
    Bindung an den alten Schlüssel deckt künftig auch laufende Pakete, falls
    eine Trennung auf anderem Weg entsteht (`cred` gelöscht).
 2. **Handy:** Dienstbeginn von der Wear-Uhr nur bei bestehender Kopplung —
@@ -347,7 +348,7 @@ an das es beim Aufzeichnen gekoppelt war; kein Punkt geht still verloren.
    Schlüssel kollidiert, quittiert der Server nur `spur_naechste_seq()`.
    Gegenprüfen, ob das Handy ebenso stückelt wie die Uhr (im Audit nicht
    geprüft).
-4. **Uhr:** `next_seq` höchstens `seq_from + gesendete Punkte`; die Größe
+4. **→ KG-01 (E-KA-21).** **Uhr:** `next_seq` höchstens `seq_from + gesendete Punkte`; die Größe
    eines unbestätigten Stücks merken und identisch wiederholen.
 5. **Handy:** 400, 401 und 403 nur mit dem `error`-Feld des Vertrags als
    endgültig werten, sonst „später erneut"; vor dem Räumen nach Fristablauf
@@ -471,7 +472,7 @@ nächsten Erneuern). Die drei Punkte zur Ableitung gehen hier mit und können
 brauchen keinen Formatwechsel).
 
 **KA-06c Geräte.** Geräteschlüssel, Hülle Fassung 2, Kopplung mit
-Vergleichswert — Garmin-Uhr und Handy; die Wear-Uhr bleibt ohne Schlüssel
+Vergleichswert — Garmin-Uhr (**→ KG-03, E-KA-21**) und Handy; die Wear-Uhr bleibt ohne Schlüssel
 (sie sendet nicht). **Gekoppelte Geräte haben keinen Schlüssel:** Sie
 koppeln neu oder senden bis dahin Fassung 1, die der Browser als „ohne
 Herkunftsnachweis" kennzeichnet. Die Frist dafür entscheidet KA-M5.
@@ -514,7 +515,8 @@ Verbraucher).
 1. `docs/Bedrohungsmodell.md` einmal ganz gegen den dann erreichten Stand
    lesen; die Zeilen R21 bis R27 gehen als behoben oder als benannte Grenze
    in den Bestand; die Kopfzeile „Nachgelesen gegen" hebt sich.
-2. Die fünf Kommentare aus F-KA-43 berichtigen.
+2. Die fünf Kommentare aus F-KA-43 berichtigen — die zwei in `watch/`
+   (`Huelle.mc`, `Pair.mc`) mit KG-01 (E-KA-21).
 3. `CLAUDE.md` 3 und 4, soweit die Pakete es nicht schon getan haben.
 4. Prüfdokument nach `CLAUDE.md` 7, danach Aufgehen in der Prüfliste.
 5. Abschluss nach Rahmenplan 9: Erledigt-Zeile, Reste nach 6, Backlog-
@@ -690,4 +692,36 @@ die 64 und misst die berichtigte Probe neu.
 Riegel (`kettenaufrufe`, Anlass Nr. 217; `fremdsummen`, F-R17-50/-51;
 `bericht.py`) um Lagen mit F-KA-Nummern. Die Spanne 560–569 bleibt für die
 Pakete ab KA-02.
+
+---
+
+## 11. Garmin-Teil — eigene Instanz KG (seit 10.11.2026, E-KA-21)
+
+Was die Instanz KG baut. Sie führt dazu ein eigenes Konzept
+(`docs/konzepte/Konzept-KG-Garmin-Sicherheit.md`, legt sie selbst an) mit
+Statusblock und Prüfprotokoll; **dieser Abschnitt ist nur der Auftrag**, sein
+Stand steht dort.
+
+| Paket | Inhalt | Befunde | Hängt an | Modell |
+|---|---|---|---|---|
+| KG-01 | `Pair.start()` weist bei laufendem Dienst immer ab; die Bindung an den alten Schlüssel deckt auch laufende Pakete (`cred` gelöscht); `next_seq` höchstens `seq_from + gesendete Punkte`; ein unbestätigtes Stück wird mit derselben Größe wiederholt; Kommentare `Huelle.mc` (Kurvenprüfung) und `Pair.mc` (Schulterblick) berichtigt | F-KA-05, -07 (Uhr-Seite), -18 (Uhr-Seite), -43 (zwei Stellen) | nichts — die Server-Seite von F-KA-07 (KA-04 Punkt 3) ist mit der Uhr-Deckelung verträglich | Opus |
+| KG-02 | **Messung für KA-06a:** Hält `Toybox.Cryptography` auf den Zielgeräten ein statisches P-256-Paar dauerhaft (Speicher, Neustart, Update der App)? Was kostet dort eine ECDSA-Signatur (Zeit, Speicher), und gibt es sie überhaupt? Ergebnis als Befund mit Zahlen für die Entwurfsrunde | — | nichts | Opus |
+| KG-03 | Garmin-Teil von KA-06c: Geräteschlüssel, Gerätehülle Fassung 2, Kopplung mit Vergleichswert — byte-gleich zur Referenz aus KA-06a | F-KA-04, -12, -17 (Garmin) | KA-06a fertig und KA-M5 freigegeben | **Fable** für den Krypto-Kern — vorher pausieren |
+| KG-04 | Garmin-Teil von KA-M6: Übergabe einer echten Uhr im laufenden Dienst, Kopplung mit Vergleichswert — als Prüfliste für die BetreiberIn | — | KG-01, KG-03 | — |
+
+**Regeln der Zusammenarbeit:**
+
+- KG fasst `watch/`, `tools/uhr-pruefstand/`, die Garmin-Abschnitte von
+  `docs/Handbuch.md`, `docs/Technik.md`, `docs/Geraete-Eingabe.md` und die
+  Garmin-Zeilen des Bedrohungsmodells an — **nicht** `server/`, `android/`,
+  `.github/` und nicht den Rahmenplan. Braucht KG eine Serveränderung, sagt
+  sie es der BetreiberIn; diese Instanz baut sie.
+- Eigene Backlog-Spanne, vor der ersten Nummer reserviert und gepusht
+  (E-SD-21); eigene Uhr-Fassung (`watch/source/Const.mc`), eigener Tag
+  `uhr-v*`.
+- Changelog-Einträge mit Präfix `Uhr`. Merkonflikte im Changelog, im
+  Bedrohungsmodell oder in diesem Konzept löst, wer als Zweiter mergt, nach
+  `Pruefablauf.md` 5.3.
+- Diese Instanz trägt Beginn und Ende von KG in den Rahmenplan ein, sobald
+  KG es meldet.
 
