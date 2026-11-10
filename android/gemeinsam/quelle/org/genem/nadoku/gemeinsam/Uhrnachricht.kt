@@ -88,6 +88,8 @@ object Nachrichtenformat {
          * eine Uhr, die dann nichts anzeigt, sagt genau das Richtige. Ein
          * leerer Wert wäre eine Aussage, ein fehlender ist keine. */
         if (s.ortung != null) put("ortung", s.ortung)
+        /* Ebenso: nur, wenn das Handy es sagt (seit Android 0.23.0, KA-04). */
+        if (s.gekoppelt != null) put("gekoppelt", s.gekoppelt)
         put(
             "phasen",
             JSONArray().apply {
@@ -106,6 +108,7 @@ object Nachrichtenformat {
             laufendePhase = o.optInt("phase", Phasen.FREI),
             laufendeSeit = if (o.has("seit")) o.getString("seit") else null,
             ortung = if (o.has("ortung")) o.getString("ortung") else null,
+            gekoppelt = if (o.has("gekoppelt")) o.getBoolean("gekoppelt") else null,
             phasen = buildList {
                 for (i in 0 until liste.length()) {
                     val p = liste.getJSONArray(i)
@@ -200,6 +203,17 @@ data class Standmeldung(
      * Sicherheitsaussage steht — bleibt davon unberührt.
      */
     val ortung: String? = null,
+    /**
+     * Ist das Handy mit einem Konto gekoppelt? `null`, wenn es das nicht
+     * mitteilt (eine Fassung vor Android 0.23.0).
+     *
+     * WARUM DIE UHR DAS ERFÄHRT (seit Android 0.23.0, KA-04, F-KA-06,
+     * E-KA-27). Ein ungekoppeltes Handy nimmt „Dienst beginnen" nicht mehr
+     * an: Was es dann aufzeichnete, bekäme das Konto, das als Nächstes
+     * koppelt. Die Uhr soll sagen, warum kein Dienst läuft, statt still
+     * auf „Dienst beginnen" zurückzufallen.
+     */
+    val gekoppelt: Boolean? = null,
 )
 
 /**

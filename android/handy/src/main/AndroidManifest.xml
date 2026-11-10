@@ -138,6 +138,7 @@
             android:name=".handy.HauptActivity"
             android:exported="true"
             android:launchMode="singleTask"
+            android:taskAffinity=""
             android:theme="@style/Theme.NAdoku">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

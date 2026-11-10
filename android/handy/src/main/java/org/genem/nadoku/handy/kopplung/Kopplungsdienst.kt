@@ -100,6 +100,14 @@ sealed interface Trennergebnis {
 
     /** Es gab nichts zu trennen. */
     data object NichtGekoppelt : Trennergebnis
+
+    /**
+     * **Nichts ist geschehen — ein Dienst läuft** (seit Android 0.23.0,
+     * KA-04, F-KA-06). Bis dahin sperrte das nur die Oberfläche; ein Trennen
+     * mitten in der Aufzeichnung risse den laufenden Dienst von seinem Konto
+     * ab, und was danach aufgezeichnet würde, ginge an das nächste.
+     */
+    data object DienstLaeuft : Trennergebnis
 }
 
 /**
@@ -168,6 +176,13 @@ class Kopplungsdienst(
     private val hoechstePaketId: () -> Long = { 0L },
     /** Wie viele Pakete bis zu einer Nummer im Rückstand liegen. */
     private val rueckstandBis: (Long) -> Int = { 0 },
+    /** Läuft ein Dienst? Dann wird nicht getrennt (KA-04, F-KA-06). */
+    private val dienstLaeuft: () -> Boolean = { false },
+    /**
+     * Wie viele Pakete liegen überhaupt, offene eingeschlossen — der Bestand,
+     * den eine neue Kopplung vorfindet (KA-04).
+     */
+    private val bestand: () -> Int = rueckstand,
 ) {
 
     /**
@@ -306,6 +321,7 @@ class Kopplungsdienst(
                 val meldung = meldungAus(o)
 
                 if (antwort.code == 200 && o?.optBoolean("ok") == true) {
+                    vorgefundenesBinden()
                     // Mit dem Ja kommt der Kontoschlüssel (Vertrag 1a.3a).
                     tresor.bestaetigen(kontoschluesselAus(o))
                     return Bestaetigungsergebnis.Gekoppelt
@@ -323,6 +339,36 @@ class Kopplungsdienst(
                 Bestaetigungsergebnis.Abgewiesen(art, meldung)
             }
         }
+    }
+
+    /**
+     * Was eine neue Kopplung vorfindet und keiner Bindung gehört, gehört ihr
+     * nicht (seit Android 0.23.0, KA-04, F-KA-06).
+     *
+     * WOHER SOLCHER BESTAND KOMMT. Aus einem unlesbaren Tresor (die App
+     * zeigte danach den Kopplungsbildschirm, und die nächste Kopplung nahm
+     * alles mit), aus einem Dienst, den die Wear-Uhr vor Android 0.23.0 auf
+     * einem ungekoppelten Handy begann, oder aus einer Lücke, die niemand
+     * kennt. In jedem Fall weiß das Handy nicht, wessen Einsätze das sind —
+     * und ginge der Bestand an das neue Konto, wäre er mit dessen Schlüssel
+     * verschlossen und dort lesbar.
+     *
+     * WIE. Gebunden ohne Kontoschlüssel: Das gilt bei jedem Schlüssel als
+     * [Bindungsstand.ANDERS], der Bestand geht nirgends hin und wird nach der
+     * Frist geräumt. Steht schon eine Bindung, die nicht alles deckt, wird sie
+     * auf alles erweitert — ebenfalls ohne Schlüssel. Das kann einen
+     * Rückstand desselben Kontos mitsperren; eine zweite Grenze mit einem
+     * zweiten Schlüssel hält die Bauform nicht, und die sichere Richtung ist
+     * die, in der nichts in ein fremdes Konto geht.
+     */
+    private fun vorgefundenesBinden() {
+        val b = bindung ?: return
+        val liegt = bestand()
+        if (liegt == 0) return
+        val hoechste = hoechstePaketId()
+        val alt = b.gebundenBis
+        if (alt != null && alt >= hoechste) return
+        b.binden(null, hoechste)
     }
 
     /**
@@ -372,6 +418,7 @@ class Kopplungsdienst(
      */
     fun trennen(): Trennergebnis {
         val zugang = tresor.lesen() ?: return Trennergebnis.NichtGekoppelt
+        if (dienstLaeuft()) return Trennergebnis.DienstLaeuft
 
         /* EIN RÜCKSTAND SPERRT DAS TRENNEN — außer, das Gerät ist abgemeldet.
          * Dann kann der Rückstand ohnehin nicht mehr gehen, und die Sperre
@@ -381,9 +428,9 @@ class Kopplungsdienst(
          *
          * Besteht schon eine Bindung, darf nur getrennt werden, wenn der ganze
          * Rückstand unter ihr liegt — eine zweite Grenze mit einem zweiten
-         * Schlüssel hielte die Bauform nicht. Getrennt wird ohnehin nur
-         * außerhalb eines Dienstes (die Oberfläche sperrt es), also ist
-         * alles, was liegt, abgeschlossen. */
+         * Schlüssel hielte die Bauform nicht. Getrennt wird nur außerhalb
+         * eines Dienstes (seit Android 0.23.0 hier geprüft, nicht nur in der
+         * Oberfläche), also ist alles, was liegt, abgeschlossen. */
         val offen = rueckstand()
         if (offen > 0) {
             val b = bindung

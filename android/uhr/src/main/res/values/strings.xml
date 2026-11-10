@@ -29,6 +29,7 @@
         dass die Uhr gemeldet hat, und dass noch NICHTS aufgezeichnet wird.
         Nur das Erste zu sagen waere die gefaehrlichere Haelfte.
     -->
+    <string name="handy_nicht_gekoppelt">Handy nicht gekoppelt · Dienst nicht begonnen</string>
     <string name="dienst_schwebt">wartet aufs Handy · keine Aufzeichnung</string>
 
     <!-- Was das Handy ueber seine Ortung meldet. EIN Wortlaut fuer

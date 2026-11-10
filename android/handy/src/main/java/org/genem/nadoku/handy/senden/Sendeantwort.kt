@@ -112,9 +112,26 @@ sealed interface Sendeantwort {
         const val WARTEN_HOECHSTENS_S = 6 * 3600L
 
         fun lese(code: Int, koerper: String?, retryAfterS: Long? = null): Sendeantwort {
-            if (code == 400) return Fehlerhaft
-            if (code == 401) return SchluesselAbgewiesen
-            if (code == 403) return Gesperrt(sperrgrund(alsJson(koerper)))
+            /* ENDGÜLTIG NUR MIT DEM FELD DES VERTRAGS (seit Android 0.23.0,
+             * KA-04, F-KA-18, E-KA-26). Bis dahin parkte jede 400 ein Paket
+             * für immer, und jede 401/403 startete die 30-Tage-Frist —
+             * gleich, wer sie schickte. Ein Zwischenstück (Anmeldeseite eines
+             * WLANs, ein Proxy) antwortet mit denselben Zahlen, aber ohne den
+             * Rumpf von `ingest.php`; das ist „später erneut", nichts sonst. */
+            val fehler = if (code in 400..403) alsJson(koerper)?.optString("error").orEmpty() else ""
+            if (code == 400) return when (fehler) {
+                "payload" -> Fehlerhaft
+                /* Ortsdaten im Klartext (Vertrag 5): parken, nicht verwerfen —
+                 * das Handy verschließt immer, also eine Fassungsfrage. */
+                "klartext" -> SpaeterErneut(code, WARTEN_KONTO_VOLL_S)
+                else -> SpaeterErneut(code)
+            }
+            if (code == 401) return if (fehler == "auth") SchluesselAbgewiesen else SpaeterErneut(code)
+            if (code == 403) return if (fehler == "device_disabled" || fehler == "konto") {
+                Gesperrt(sperrgrund(alsJson(koerper)))
+            } else {
+                SpaeterErneut(code)
+            }
             if (code == 413) return ZuGross
             if (code == 507) return KontoVoll
             if (code == 429) return SpaeterErneut(code, warten(retryAfterS, WARTEN_429_S))

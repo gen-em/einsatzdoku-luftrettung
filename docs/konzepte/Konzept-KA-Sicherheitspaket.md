@@ -12,8 +12,8 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-03** — gebaut (Web 24.12.0), im PR; danach KA-04 ohne die Garmin-Punkte. **Garmin-Anteile ausgegliedert an KG** (E-KA-21, Abschnitt 11) |
-| Erledigt | **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
+| In Arbeit | **KA-04** ohne die Garmin-Punkte 1 und 4 — gebaut (Web 24.12.1, Android 0.23.0), im PR; danach KA-05. **Garmin-Anteile ausgegliedert an KG** (E-KA-21, Abschnitt 11) |
+| Erledigt | **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
@@ -77,6 +77,11 @@ Safari.
 | E-KA-23 | **Die Übernahme des Kettentokens vom Job-Token fällt** (mit E-KA-16): Mit Hashes hätte sie beide Tokens dauerhaft gleich gemacht. Fehlt das Kettentoken, ist es nicht eingerichtet | 10.11.2026, Umsetzung |
 | E-KA-24 | **Die Rollentore von KA-03 stehen vor dem Formular-Token**, wie überall: Adressen der Installation (`require_betreiberin()`, 403) und der frische Code für ein Konto mit Rechten (vor `csrf_check()`, wie in `admin_user.php`). So misst die Matrix der Rollenprobe das Tor und nicht die Token-Ablehnung | 10.11.2026, Umsetzung |
 | E-KA-25 | **Punkt 10 sucht über das Cookie, nicht über die Adresse** (`zweitfaktor_geraet_fuer_adresse()`): ohne Cookie keine Abfrage, mit Cookie genau eine, gleich ob es die Adresse gibt — die Antwortzeit verrät kein Konto. Der Topf `login_ip` gilt weiter für alle | 10.11.2026, Umsetzung |
+| E-KA-26 | **Vertrag von KA-04, festgelegt vor dem Bau:** (1) `ingest.php` quittiert nach einem kollidierten Stück nur, was liegt (`spur_naechste_seq()`); (2) `pair.php` antwortet auf `status`, `bestaetigen` und `trennen` mit 403 `device_disabled` bzw. `konto` wie `ingest.php`; (3) das Handy wertet 400/401/403 nur mit dem `error`-Feld des Vertrags als endgültig, alles andere ist „später erneut"; vor dem Räumen nach Fristablauf ein Sendeversuch | 10.11.2026, BetreiberIn |
+| E-KA-27 | **Die Wear-Uhr erfährt „Handy nicht gekoppelt" über ein neues Feld `gekoppelt` der Standmeldung** und zeigt „Handy nicht gekoppelt — Dienst nicht begonnen" | 10.11.2026, BetreiberIn |
+| E-KA-28 | **Ein „Dienst beginnen" der Wear-Uhr wirkt ohne laufenden Dienst nur, wenn es höchstens 12 Stunden alt ist** — ein spät zugestelltes Ereignis derselben Schicht wirkt, eines von gestern nicht | 10.11.2026, BetreiberIn |
+| E-KA-29 | **Das Handy deckelt `next_seq` auf `seq_from` plus gesendete Punkte**, wie KG es für die Uhr tut | 10.11.2026, BetreiberIn |
+| E-KA-30 | **Ein im Web deaktiviertes Gerät trennt sich nicht mehr selbst** — sonst bliebe der Weg aus F-KA-05 offen; gelöscht wird es im Web | 10.11.2026, BetreiberIn |
 | E-KA-21 | **Die Garmin-Anteile gehen an eine eigene Instanz, Kürzel KG** (Abschnitt 11): KA-04 Punkt 1 und 4, der Garmin-Teil von KA-06c samt der Messung für 06a, die Garmin-Kommentare aus F-KA-43 und der Garmin-Teil von KA-M6. KG zählt eigene Nummern (`KG-NN`, `F-KG-NN`, `E-KG-NN`, `P-KG-NN`), führt ein eigenes Konzept und schreibt den Rahmenplan nicht — das tut diese Instanz | 10.11.2026, BetreiberIn |
 
 ---
@@ -708,6 +713,41 @@ Code).
 
 Prüfstand und Bericht: im Commit von KA-03.
 
+**Nach dem Merge (Lauf 194, 10.11.2026):** alle Jobs grün, Stufe 2
+eingeschlossen; das Backup-Tor sprach mit dem Kettentoken aus GitHub gegen
+den neuen Code — der Übergang aus Klartext (E-KA-22) hat damit auf Staging
+gehalten. **R91 auf Staging:** Betrieb → Hintergrundjobs mit dem
+BetreiberIn-Konto der Arbeitsumgebung, Chromium: drei Karten
+„eingerichtet“, kein Tokenwert auf der Seite (gezählt: vier Werte mit
+64 Hexzeichen, alle `csrf`). Kein neues Health-Token erzeugt, die
+Adressbestätigung (P-KA-07) nicht durchgespielt — sie änderte die Adresse
+des eigenen Kontos.
+
+### KA-04 (10.11.2026, ohne die Garmin-Punkte 1 und 4)
+
+**Was nicht geprüft werden konnte — zuerst.**
+
+1. **Kein echtes Gerät, kein Emulator.** Die Wear-Uhr mit „Handy nicht
+   gekoppelt", die Zustellung von `gekoppelt` über den Data Layer und
+   „Dienst beenden" auf dem Sperrbildschirm (`setAuthenticationRequired`
+   wirkt erst ab API 31, und Robolectric zeigt nur, dass die Aktion gebaut
+   wird) sind nur im Quelltext und in Robolectric belegt. Prüfliste
+   P-KA-08, -09.
+2. **Die Übergabe einer echten Uhr im laufenden Dienst** gehört zu KG (Garmin).
+3. **Der Server-Rundlauf der Android-Fälle** (`-Pnadoku.rundlauf`) lief
+   nicht; die 15 übersprungenen Fälle sind genau diese.
+
+**Gemessen** (Gegenprobe = dieselben Fälle mit zurückgenommener Behebung):
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Ingestprobe | **99 Erwartungen, 0 nicht erfüllt** — neu Teil 1a: 0:120, dann 0:300 → nichts abgelegt, `next_seq` 120; 120:180 → alle 300 Punkte liegen | **1 nicht erfüllt** (`next_seq` 300) | F-KA-07 |
+| Kopplungsprobe | **87 Erwartungen, 0 nicht erfüllt** — neu: deaktiviertes Gerät und gesperrtes Konto bekommen auf `status` und `trennen` 403, das Gerät bleibt | **4 nicht erfüllt** — die zwei neuen und zwei Folgezeilen (das deaktivierte Gerät trennte sich selbst und fehlte danach) | F-KA-27, E-KA-30 |
+| Android-Prüffälle (Robolectric), Debug | **387 Fälle, 0 Fehler, 15 übersprungen** (Rundlauf ohne Server); je Debug und Release gelaufen: 11 neue, 1 umgeschriebener | **9 von 95 rot** in Sender-, Sendeantwort-, Kopplungs- und Uhrannahmetest — genau die neuen und der umgeschriebene Fristfall | F-KA-06, -18, -32; E-KA-27 bis -29 |
+
+**Die Befunde an der heutigen Stelle:** F-KA-06 (alle drei Wege), -07, -18,
+-27, -31, -32, -33 halten. Zu Weg 2 von F-KA-06 siehe F-KA-66.
+
 ---
 
 ## 10. Befunde der Umsetzung
@@ -731,6 +771,12 @@ Prüfstand und Bericht: im Commit von KA-03.
 | F-KA-58 | **Die Zweitfaktorprobe nahm `admin_users.php` als Beispiel einer fremden Rücksprungseite** — seit Punkt 1 ist sie eine Seite der Liste (`konto_mit_rechten`), der Fall wurde rot, ohne dass etwas falsch war | Beispiel `admin_installation.php` (keine Seite der Liste) |
 | F-KA-59 | **Die Versandprobe sendete in Teil 12 und 13 an SFTP-Ziele ohne Abdruck** — genau das, was Punkt 3 verbietet; im ersten Lauf rot mit Abbruch | Teil 12 misst zuerst die Abweisung (Lauf 0), dann übernehmen beide Teile den Abdruck mit `sz_fingerabdruck_merken()` |
 | F-KA-60 | **Örtlich steht die CSP im Berichtsmodus** (`Content-Security-Policy-Report-Only`), die erste Fassung der CSP-Zeile fand keine Kopfzeile | die Zeile liest beide Namen |
+| F-KA-64 | **Der Container wurde ein drittes Mal neu gestartet** (`uptime` 1 min um 22:33), während der Aufbau der Android-Stufe und der erste Gradle-Lauf liefen; die Anlage stand nicht, der Gradle-Lauf war fort. Das SDK unter `/opt/android-sdk` überlebte | `hochfahren.sh` ohne `--neu`, Gradle neu gestartet. Dazu: `ANDROID_HOME` war in der Sitzung nicht gesetzt — der erste Lauf scheiterte an „SDK location not found"; mit `ANDROID_HOME=/opt/android-sdk` grün |
+| F-KA-65 | **Das Handy schneidet seine Spurstücke wie die Uhr wachsend** (`Sender.sendeTeilstueck()`: ab der bestätigten Marke so viele Punkte, wie gerade da sind) — KA-04 Punkt 3 fragte danach. Der Punktverlust aus F-KA-07 traf also beide | durch die Behebung im Server abgedeckt; das Handy deckelt `next_seq` zusätzlich (E-KA-29) |
+| F-KA-66 | **Das Audit sagt zu Weg 2 von F-KA-06, die App zeige bei unlesbarem Tresor „die Kopplung"** — sie zeigt den Kopplungsbildschirm (`lesen()` gibt `null`, `gekoppelt()` ist falsch). Der Befund hält trotzdem: Die nächste Kopplung nahm den Bestand mit | `vorgefundenesBinden()` beim Ja deckt diesen Weg und jeden anderen; der Satz im Audit bleibt, wie er ist (E-KA-03) |
+| F-KA-67 | **`Sendeantwort` wertete 400 `klartext` als „fehlerhaft"** — der Vertrag sagt seit Web 22.0.1 „parken, nicht verwerfen". Gefunden beim Umbau für F-KA-18 | `klartext` ist „später erneut" mit einer Stunde Wartezeit |
+| F-KA-68 | **Eine Bindung über ein offenes Paket zählte der Sender als leer** (`rueckstandBis()` zählt nur abgeschlossene) und hätte sie gelöst — das gebundene Paket ginge doch hinaus. Gefunden beim Bau von `vorgefundenesBinden()`, bevor es auftreten konnte | Sender zählt mit `Puffer.bestandBis()`; Prüffall `eineBindungDecktAuchEinOffenesPaket`. **Bleibt:** Die Frist räumt ein gebundenes offenes Paket erst, wenn sein Dienst endet |
+| F-KA-69 | **Die Uhrannahme-Prüffälle liefen gegen die echte Uhr** (`jetzt` nicht gesetzt) — mit der 12-Stunden-Grenze wären alle Ereignisse vom Juli „zu alt" gewesen; ebenso der Rundlauf in `MissionRundlaufTest` | feste Empfangszeit im Test (17:00 desselben Tages), im Rundlauf die Zeit des Falls |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
 | F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
 | F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |

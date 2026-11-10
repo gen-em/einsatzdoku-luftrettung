@@ -363,6 +363,29 @@ $i2 = anfrage($paket, $dev, $key, 'POST', 'ingest.php');
 pruefe($i2['code'] === 200 && ($i2['daten']['ok'] ?? false) === true,
        '14b ingest.php nach dem Ja -> 200', "HTTP {$i2['code']}");
 
+/* ---- Deaktiviert oder Konto gesperrt (KA-04, F-KA-27, E-KA-30) ----------
+ * Bis Web 24.12.0 bekam ein im Web deaktiviertes Geraet hier weiter den
+ * Kontoschluessel und konnte sich selbst trennen. Jetzt dieselben 403 wie
+ * beim Senden; das Geraet bleibt stehen. */
+$pdo->prepare('UPDATE devices SET active = 0 WHERE device_id = ?')->execute([$dev]);
+$d1 = anfrage(['aktion' => 'status'], $dev, $key);
+$d2 = anfrage(['aktion' => 'trennen'], $dev, $key);
+pruefe($d1['code'] === 403 && ($d1['daten']['error'] ?? '') === 'device_disabled'
+       && !array_key_exists('kontoschluessel', $d1['daten'] ?? [])
+       && $d2['code'] === 403 && geraet($pdo, $dev) !== null,
+       'KA4 deaktiviertes Geraet: status und trennen -> 403 device_disabled, Geraet bleibt',
+       "status {$d1['code']}, trennen {$d2['code']}");
+$pdo->prepare('UPDATE devices SET active = 1 WHERE device_id = ?')->execute([$dev]);
+$pdo->prepare("UPDATE users SET status = 'gesperrt' WHERE id = ?")->execute([$uid]);
+$d3 = anfrage(['aktion' => 'status'], $dev, $key);
+$d4 = anfrage(['aktion' => 'trennen'], $dev, $key);
+$pdo->prepare("UPDATE users SET status = 'aktiv' WHERE id = ?")->execute([$uid]);
+pruefe($d3['code'] === 403 && ($d3['daten']['error'] ?? '') === 'konto'
+       && ($d3['daten']['grund'] ?? '') === 'gesperrt'
+       && $d4['code'] === 403 && geraet($pdo, $dev) !== null,
+       'KA4 gesperrtes Konto: status und trennen -> 403 konto/gesperrt, Geraet bleibt',
+       "status {$d3['code']}, trennen {$d4['code']}");
+
 /* Vor dem Trennen zwei Fehlversuche setzen: Der Topf `pair` gehoert nicht
  * uns allein — jobs.php zaehlt darin mit. Ein gelungenes
  * `trennen` darf ihn deshalb NICHT leeren. */

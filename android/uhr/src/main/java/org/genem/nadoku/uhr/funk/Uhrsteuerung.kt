@@ -109,6 +109,7 @@ class Uhrsteuerung(
             laufendeSeit = s.laufendeSeit,
             phasen = s.phasen,
             ortung = s.ortung,
+            handyGekoppelt = s.gekoppelt,
             ansicht = if (zustand.ansicht == Ansicht.START || zustand.ansicht == Ansicht.LAUFEND) {
                 if (s.dienstLaeuft) Ansicht.LAUFEND else Ansicht.START
             } else {

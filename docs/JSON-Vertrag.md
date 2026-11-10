@@ -221,6 +221,8 @@ Fehler:
 | Code | Rumpf | Bedeutung / Verhalten des Geräts |
 |---|---|---|
 | 401 | `{"error":"auth"}` | Kennung unbekannt **oder** Schlüssel falsch. Für das Gerät dasselbe wie 410: von vorn beginnen |
+| 403 | `{"error":"device_disabled"}` | **seit Web 24.12.1** (KA-04, F-KA-27): Das gekoppelte Gerät ist im Web deaktiviert — kein Kontoschlüssel. Wie bei `ingest.php` (5): anhalten, nichts verwerfen; der Weg heraus ist das Web. Gilt für `status`, `bestaetigen` und `trennen` im Geräte-Zweig |
+| 403 | `{"error":"konto","grund":…}` | **seit Web 24.12.1**: Das Konto des Geräts ist nicht aktiv (`gesperrt`, `wartet`, `unbestaetigt`) — dieselbe Antwort wie bei `ingest.php` (5), dieselben drei Anliegen |
 | 410 | `{"error":"abgelaufen"}` | die Sitzung ist verfallen. Code und Zugangsdaten wegwerfen, von vorn beginnen |
 | 429 | `{"error":"zu_viele_versuche","meldung":"…"}` | Ratenschutz — gilt für alle vier Anliegen |
 
@@ -462,6 +464,7 @@ Die Uhr gibt ihre Kopplung zurück. POST an **denselben** Endpunkt, diesmal
 |---|---|
 | `200 {"ok":true}` | Das Gerät ist gelöscht |
 | `401 {"error":"auth"}` | Kennung oder Schlüssel falsch — wie in Abschnitt 1 |
+| `403 {"error":"device_disabled"}` oder `403 {"error":"konto","grund":…}` | **seit Web 24.12.1** (KA-04, F-KA-27, E-KA-30): Ein im Web deaktiviertes Gerät oder eines, dessen Konto nicht aktiv ist, **trennt sich nicht selbst** — sonst koppelte es danach an ein anderes Konto. Gelöscht wird es im Web. Die Uhr trennt sich dann lokal wie ohne Antwort (unten) |
 | `429 {"error":"zu_viele_versuche","meldung":"…"}` | Ratenschutz, gilt für **alle vier** Anliegen von `pair.php` (1a) |
 
 **Ein `trennen` mit noch schwebenden Zugangsdaten** — aus einer Kopplung, die
@@ -803,7 +806,20 @@ Erfolg (`200`):
   > hat (er stünde sonst dem Aufräumen der Uhr für immer im Weg), und Punkte zu
   > einer Spur, die der Server nach sechs Monaten ausgedünnt hat (S2, E-S2-08).
   > Für die Uhr ändert sich nichts: Sie leert ihren Puffer wie bisher.
-  > `next_seq` ist mindestens `seq_from` + Zahl der gesendeten Punkte.
+  > `next_seq` ist mindestens `seq_from` + Zahl der gesendeten Punkte —
+  > **mit einer Ausnahme seit Web 24.12.1** (KA-04, F-KA-07): Kollidiert das
+  > gesendete Stück mit einem schon abgelegten, das an derselben Stelle
+  > beginnt (eine Wiederholung mit anderer Größe, etwa weil die Antwort auf
+  > den ersten Versuch verlorenging und inzwischen mehr Punkte da sind), wird
+  > nichts abgelegt, und `next_seq` nennt nur das Ende dessen, was wirklich
+  > liegt. Das Gerät sendet ab dort nach. Bis dahin quittierte der Server die
+  > ganze gesendete Menge, und die Punkte zwischen beiden Enden gingen
+  > verloren.
+  >
+  > **Ein Gerät übernimmt `next_seq` höchstens bis `seq_from` + gesendete
+  > Punkte** (seit Android 0.23.0, E-KA-29; die Uhr mit KG): Eine
+  > größere Marke wäre eine Quittung für Punkte, die der Server nie gesehen
+  > hat.
 
 Zusätzlich können auftreten:
 
@@ -860,6 +876,15 @@ sagt, dass eine ganze Liste übergangen wurde und der Serverstand unverändert
 blieb.
 
 Fehler:
+
+> **Endgültig ist eine Antwort nur mit ihrem `error`-Feld** (seit Android
+> 0.23.0, KA-04, F-KA-18, E-KA-26). 400, 401 und 403 schickt auch ein
+> Zwischenstück — die Anmeldeseite eines WLANs, ein Proxy —, und zwar ohne
+> diesen Rumpf. Ein Client wertet deshalb nur `payload`, `klartext`, `auth`,
+> `device_disabled` und `konto` wie unten beschrieben; dieselbe Zahl ohne
+> das passende Feld heißt „später unverändert erneut". Vor dem Räumen nach
+> der 30-Tage-Frist geht noch ein Sendeversuch hinaus. Die Uhr zieht
+> mit KG nach.
 
 | Code | Body | Bedeutung / Verhalten der Uhr |
 |---|---|---|

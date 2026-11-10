@@ -226,6 +226,7 @@ class MissionRundlaufTest {
         val k = klammer()
         val annahme = org.genem.nadoku.handy.uhr.Uhrannahme(
             puffer, k, modus = { Modus.MIT_PHASENKNOEPFEN },
+            jetzt = { uhrzeit },   // die Zeit des Falls, nicht die echte (12-h-Grenze, KA-04)
         )
         var nr = 0L
         fun vonDerUhr(art: org.genem.nadoku.gemeinsam.Ereignisart, phase: Int? = null, ref: String? = null, nummer: Long? = null) =

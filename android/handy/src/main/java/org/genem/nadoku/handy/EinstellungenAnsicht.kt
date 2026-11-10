@@ -109,6 +109,13 @@ fun EinstellungenAnsicht(
             }
 
             Karte {
+                if (trennmeldung is Trennergebnis.DienstLaeuft) {
+                    Meldungsblock(
+                        titel = stringResource(R.string.trennen),
+                        hinweis = stringResource(R.string.trennen_erst_dienst_beenden),
+                        warnend = true,
+                    )
+                }
                 if (trennmeldung is Trennergebnis.Rueckstand) {
                     Meldungsblock(
                         titel = androidx.compose.ui.res.pluralStringResource(

@@ -1041,6 +1041,7 @@ for ($anlauf = 1; ; $anlauf++) {
         $storedBytes = 0;
         $verworfen = 0;
         $gesperrt = 0;
+        $kollidiert = false;   // KA-04: das Stueck lag schon (unten)
         /* ---- Ersetzfenster: auch keine Punkte mehr ---------
          *
          * ANDERS ALS BEI `uhr_gesperrt`. Dort werden Punkte weiter angehaengt,
@@ -1085,6 +1086,12 @@ for ($anlauf = 1; ; $anlauf++) {
                 $neuAbgelegt = spur2_stueck_schreiben($pdo, $ownerType, $ownerId, $stueck['seq_from'],
                                                       $stueck['punkte'], $stueck['ts_von'],
                                                       $stueck['ts_bis'], $stueck['huelle']);
+                /* NICHTS ABGELEGT HEISST: An dieser Stelle liegt schon ein
+                 * Stueck — eine Wiederholung, oft mit ANDERER Groesse, weil die
+                 * Antwort auf den ersten Versuch verlorenging und das Geraet
+                 * inzwischen mehr Punkte hat (KA-04, F-KA-07). Dann quittiert
+                 * der Server nur, was liegt (unten). */
+                $kollidiert = $neuAbgelegt === 0;
                 $stored += $neuAbgelegt * $stueck['punkte'];
                 $storedBytes += $neuAbgelegt * strlen($stueck['huelle']);
             }
@@ -1135,6 +1142,16 @@ for ($anlauf = 1; ; $anlauf++) {
          * Punkte, die er nie gesehen hat. */
         $nextSeq = max(spur_naechste_seq($pdo, $ownerType, $ownerId),
                        $seqFrom + $nGesendet);
+        /* AUSNAHME: DAS STUECK KOLLIDIERTE (seit Web 24.12.1, KA-04, F-KA-07).
+         * Die Uhr sendet 0:120, der Server legt ab, die Antwort geht verloren;
+         * der naechste Versuch bringt 0:300. Der Insert kollidiert, nichts wird
+         * abgelegt — und mit der Untergrenze darueber quittierte der Server
+         * 300: Die Punkte 120 bis 299 lagen nirgends, und bei einem
+         * abgeschlossenen Einsatz loeschte das Geraet sie. Jetzt nennt die
+         * Marke nur, was liegt, und das Geraet sendet ab dort nach. */
+        if ($kollidiert) {
+            $nextSeq = spur_naechste_seq($pdo, $ownerType, $ownerId);
+        }
 
         $bestaetigt = $pdo->commit();
         /* Angenommen: Das Demo-Konto hat sich geaendert. */

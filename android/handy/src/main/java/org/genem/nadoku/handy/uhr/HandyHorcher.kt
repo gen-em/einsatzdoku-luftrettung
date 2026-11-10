@@ -39,6 +39,7 @@ class HandyHorcher : WearableListenerService() {
             app.klammer,
             modus = { app.einstellungen.letzterModus },
             ortung = { app.ortung?.stand?.code },
+            gekoppelt = { app.tresor.gekoppelt() },
         )
 
         val weg = WearNachrichtenweg(this)

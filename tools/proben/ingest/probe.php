@@ -305,6 +305,23 @@ pruefe(($c['daten']['stored_points'] ?? -1) === 0 && ($c['daten']['next_seq'] ??
        . ', next_seq ' . ($c['daten']['next_seq'] ?? '?'));
 pruefe(zeilen($pdo, $mid) === 200, 'Es stehen genau 200 Punkte in zwei Stuecken da', (string)zeilen($pdo, $mid));
 
+/* ---- Teil 1a — Wiederholung mit anderer Groesse (KA-04, F-KA-07) ---------
+ * Die Antwort auf 0:120 geht verloren, der naechste Versuch bringt 0:300.
+ * Bis Web 24.12.0 quittierte der Server 300 und legte nichts ab — die
+ * Punkte 120 bis 299 lagen nirgends. Jetzt nennt next_seq, was liegt. */
+echo "\n  Teil 1a — Wiederholung mit anderer Groesse quittiert nur, was liegt\n";
+$g1 = senden(paket('probe-1a', 0, 120));
+$gid = (int)($g1['daten']['id'] ?? 0);
+$g2 = senden(paket('probe-1a', 0, 300));
+pruefe(($g2['daten']['stored_points'] ?? -1) === 0 && ($g2['daten']['next_seq'] ?? -1) === 120,
+       'Dasselbe seq_from mit 300 statt 120 Punkten: nichts abgelegt, next_seq 120 (F-KA-07)',
+       'stored ' . ($g2['daten']['stored_points'] ?? '?') . ', next_seq ' . ($g2['daten']['next_seq'] ?? '?'));
+$g3 = senden(paket('probe-1a', 120, 180, true));
+pruefe(($g3['daten']['stored_points'] ?? -1) === 180 && ($g3['daten']['next_seq'] ?? -1) === 300
+       && zeilen($pdo, $gid) === 300,
+       'Das Geraet sendet ab 120 nach: alle 300 Punkte liegen',
+       'next_seq ' . ($g3['daten']['next_seq'] ?? '?') . ', Punkte ' . zeilen($pdo, $gid));
+
 /* ---- Teil 2 — Die Ankunftszeit ------------------------------------------ */
 
 echo "\n  Teil 2 — Die Ankunftszeit wird gefuehrt (Grundlage von E-S2-06)\n";

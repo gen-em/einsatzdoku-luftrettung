@@ -61,7 +61,11 @@ class UhrannahmeTest {
             ausduenner = Ausduenner(),
             jetzt = { uhrzeit },
         )
-        annahme = Uhrannahme(puffer, klammer, modus = { Modus.MIT_PHASENKNOEPFEN })
+        /* EINE FESTE EMPFANGSZEIT (seit KA-04): Ohne sie galt die echte Uhr,
+         * und mit der 12-Stunden-Grenze ohne laufenden Dienst (E-KA-28) wäre
+         * jedes Ereignis dieser Datei „zu alt". 17:00 liegt hinter allen, die
+         * hier vorkommen, und höchstens 12 Stunden nach dem ersten. */
+        annahme = Uhrannahme(puffer, klammer, modus = { Modus.MIT_PHASENKNOEPFEN }, jetzt = { EMPFANG })
     }
 
     @After fun abbauen() {
@@ -341,6 +345,33 @@ class UhrannahmeTest {
         assertTrue("kein Einsatz aus einer Zeit vor dem Dienst", einsaetze().isEmpty())
     }
 
+    // ---- Kopplung und Alter (KA-04) -----------------------------------------
+
+    /**
+     * **Ohne Kopplung kein Dienst von der Uhr** (F-KA-06, E-KA-27):
+     * quittiert, nicht gewirkt, und die Standmeldung sagt warum.
+     */
+    @Test fun ohneKopplungBeginntDieUhrKeinenDienst() {
+        val a = Uhrannahme(puffer, klammer, gekoppelt = { false }, jetzt = { EMPFANG })
+        val q = a.uebernimm(meldung(Ereignisart.DIENST_BEGINNEN, "2026-07-16T05:00:00Z"))
+        assertEquals("quittiert", 1L, q.bisNr)
+        assertFalse("kein Dienst", klammer.laeuft())
+        assertEquals(false, a.stand().gekoppelt)
+        assertEquals(true, annahme.stand().gekoppelt)
+    }
+
+    /**
+     * **Ohne laufenden Dienst höchstens 12 Stunden alt** (F-KA-32, E-KA-28):
+     * ein „Dienst beginnen" von gestern startet nichts mehr.
+     */
+    @Test fun einAlterDienststartOhneDienstWirktNicht() {
+        val empfangen = Instant.parse("2026-07-16T18:00:01Z")
+        annahme.uebernimm(meldung(Ereignisart.DIENST_BEGINNEN, "2026-07-16T06:00:00Z"), empfangen)
+        assertFalse("12 h und eine Sekunde: nicht gewirkt", klammer.laeuft())
+        annahme.uebernimm(meldung(Ereignisart.DIENST_BEGINNEN, "2026-07-16T06:00:02Z"), empfangen)
+        assertTrue("knapp unter 12 h: gewirkt", klammer.laeuft())
+    }
+
     /** Und ein Dienstende vor dem Dienstbeginn beendet nichts. */
     @Test fun einDienstendeVorDemBeginnBeendetNichts() {
         annahme.uebernimm(meldung(Ereignisart.DIENST_BEGINNEN, "2026-07-16T05:00:00Z"))
@@ -352,6 +383,7 @@ class UhrannahmeTest {
         puffer.warteschlange().filter { it.art == Paketzeile.ART_EINSATZ }
 
     private companion object {
+        val EMPFANG: Instant = Instant.parse("2026-07-16T17:00:00Z")
         val VERBUNDEN = setOf("knoten-uhr", "knoten-zweite-uhr")
         const val DATEI = "pruef_uhrannahme.db"
         const val UHR = "u-1234512345"

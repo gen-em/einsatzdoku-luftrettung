@@ -652,6 +652,27 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
         readableDatabase.rawQuery("SELECT COALESCE(MAX(id), 0) FROM paket", null)
             .use { if (it.moveToFirst()) it.getLong(0) else 0L }
 
+    /**
+     * Der ganze Bestand bis zu dieser Nummer: jedes Paket, das noch nicht
+     * vollständig bestätigt ist — **offene eingeschlossen** (seit Android
+     * 0.23.0, KA-04).
+     *
+     * WARUM NICHT [rueckstandBis]. Jener zählt nur abgeschlossene Pakete. Eine
+     * Bindung, die ein offenes Paket deckt (vorgefundener Bestand bei einer
+     * neuen Kopplung), zählte dort 0 — der Sendelauf hielte sie für leer,
+     * löste sie, und das offene Paket ginge doch an das neue Konto.
+     */
+    fun bestandBis(bisId: Long): Int =
+        readableDatabase.rawQuery(
+            "SELECT COUNT(*) FROM paket p WHERE p.id <= ? AND p.fehlerhaft = 0 AND (" +
+                "p.final = 0 OR p.metadaten_bestaetigt = 0 OR " +
+                "p.bestaetigt_seq < (SELECT COUNT(*) FROM punkt WHERE paket_id = p.id))",
+            arrayOf(bisId.toString()),
+        ).use { if (it.moveToFirst()) it.getInt(0) else 0 }
+
+    /** [bestandBis] über alle Pakete — was eine neue Kopplung vorfindet. */
+    fun bestand(): Int = bestandBis(Long.MAX_VALUE)
+
     /** Wie [rueckstand], aber nur Pakete bis zu dieser Nummer. */
     fun rueckstandBis(bisId: Long): Int =
         readableDatabase.rawQuery(

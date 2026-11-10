@@ -10711,8 +10711,9 @@ denselben, sonst verlangt Android eine Neuinstallation.
 
 `MessageClient` des Wear Data Layer, drei Pfade: `/nadoku/ereignis`
 (Uhr → Handy), `/nadoku/quittung` und `/nadoku/stand` (Handy → Uhr). Die
-Standmeldung trägt seit Android 0.8.0 auch den Ortungszustand des Handys;
-fehlt das Feld — eine ältere Handy-Fassung —, zeigt die Uhr dazu nichts an,
+Standmeldung trägt seit Android 0.8.0 auch den Ortungszustand des Handys
+und seit 0.23.0 den Kopplungszustand (`gekoppelt`, KA-04, E-KA-27); fehlt
+ein Feld — eine ältere Handy-Fassung —, zeigt die Uhr dazu nichts an,
 statt etwas zu behaupten. Die
 Umsetzung steckt in **einer** Datei (`WearNachrichtenweg.kt`) hinter der
 Schnittstelle `Nachrichtenweg`; alles darüber kennt nur die Schnittstelle.
@@ -10758,9 +10759,20 @@ zweite ist die App selbst: `HandyHorcher` fragt die verbundenen Knoten ab
 — sonst weder Wirkung noch Quittung; eine echte Uhr liefert nach, sobald sie
 verbunden ist. Ist die Liste nicht lesbar, gilt der Absender als fremd (das
 kostet Zeit, keine Daten). Dazu die **Zeit der Uhr**: höchstens fünf Minuten
-in der Zukunft und höchstens fünf Minuten vor dem laufenden Dienst; außerhalb
-wird quittiert, aber nicht gewirkt — dieselbe Regel wie für eine Phase ohne
-Dienst. Die fünf Minuten sind gewählt, nicht gemessen.
+in der Zukunft und höchstens fünf Minuten vor dem laufenden Dienst, **ohne
+laufenden Dienst höchstens zwölf Stunden alt** (seit Android 0.23.0, KA-04,
+F-KA-32, E-KA-28; bis dahin gab es dort keine untere Grenze, und ein nie
+zugestelltes „Dienst beginnen" konnte Tage später eine Aufzeichnung
+starten); außerhalb wird quittiert, aber nicht gewirkt — dieselbe Regel wie
+für eine Phase ohne Dienst. Die fünf Minuten und die zwölf Stunden sind
+gewählt, nicht gemessen.
+
+**Kein Dienst von der Uhr auf einem ungekoppelten Handy** (seit Android
+0.23.0, KA-04, F-KA-06). `Uhrannahme` fragt `tresor.gekoppelt()`; ohne
+Kopplung wird „Dienst beginnen" quittiert, nicht gewirkt, und die
+Standmeldung trägt `gekoppelt: false` — die Uhr zeigt „Handy nicht
+gekoppelt · Dienst nicht begonnen". Bis dahin zeichnete das Handy auf und
+sandte nichts, und wer als Nächstes koppelte, bekam die Daten.
 
 ### 6.3 Ortungswächter und Nachsenden
 
@@ -11018,9 +11030,33 @@ wieder). Vor dem ersten Stück prüft `Sender` die Bindung: derselbe Schlüssel
 `kp_ablegen()` ersetzt keines); ein anderer, oder die alte Kopplung kannte
 keinen → Pakete bis zur Grenze bleiben liegen, `Sendebericht.fremderRueckstand`
 zählt sie, alles darüber geht an das neue Konto. Verworfen wird nur auf
-Rückfrage (`Puffer.rueckstandVerwerfen()`). Getrennt wird ohnehin nur
-außerhalb eines Dienstes (`EinstellungenAnsicht`), also deckt die Bindung den
-ganzen Puffer.
+Rückfrage (`Puffer.rueckstandVerwerfen()`). Getrennt wird nur außerhalb
+eines Dienstes — seit Android 0.23.0 prüft das `trennen()` selbst
+(`Trennergebnis.DienstLaeuft`, KA-04, F-KA-06), bis dahin nur
+`EinstellungenAnsicht` —, also deckt die Bindung den ganzen Puffer.
+
+**Eine neue Kopplung bindet vorgefundenen Bestand als fremd** (seit Android
+0.23.0, KA-04, F-KA-06). Nach dem Ja (`Kopplungsdienst.bestaetigen()`) wird
+jeder noch nicht bestätigte Bestand (`Puffer.bestand()`, offene Pakete
+eingeschlossen), den keine Bindung deckt, **ohne Kontoschlüssel** gebunden
+— er gilt damit bei jedem Konto als `ANDERS`. Er kommt aus einem unlesbaren
+Tresor (die App zeigte danach den Kopplungsbildschirm, die nächste Kopplung
+nahm alles mit) oder aus einem Dienst, den die Wear-Uhr vor 0.23.0 auf
+einem ungekoppelten Handy begann. Deckt eine bestehende Bindung nicht alles,
+wird sie ohne Schlüssel auf alles erweitert; das kann einen Rückstand
+desselben Kontos mitsperren, und das ist die sichere Richtung. Der
+Sendelauf zählt Gebundenes seither mit `Puffer.bestandBis()` statt
+`rueckstandBis()` — sonst zählte ein gebundenes offenes Paket 0, die
+Bindung fiele, und es ginge doch hinaus. **Grenze:** Die Frist räumt nur
+abgeschlossene Pakete; ein gebundenes offenes Paket bleibt liegen, bis sein
+Dienst endet, geht aber nie hinaus.
+
+**Endgültig nur mit dem Feld des Vertrags** (seit Android 0.23.0, KA-04,
+F-KA-18, E-KA-26). `Sendeantwort.lese()` wertet 400 nur mit `payload` als
+fehlerhaft, `klartext` als „parken" (eine Stunde warten), 401 nur mit `auth`
+und 403 nur mit `device_disabled` oder `konto` als Abmeldung; dieselbe Zahl
+ohne das Feld ist „später erneut". `next_seq` übernimmt der Sender höchstens
+bis `seq_from` plus gesendete Punkte (E-KA-29).
 
 **Die Frist nach der Abmeldung** (seit Android 0.21.0, Nr. 471; dieselbe
 Regel wie Uhr 4.1.0, `Uploader.abmeldeFristPruefen`). Der Vermerk trägt den Zeitpunkt der **ersten**
@@ -11029,7 +11065,10 @@ Regel wie Uhr 4.1.0, `Uploader.abmeldeFristPruefen`). Der Vermerk trägt den Zei
 abgeschlossenen Pakete samt Punkten, Phasen und leeren Dienstzeilen und
 vergisst die Abmeldung; das offene Paket eines laufenden Dienstes bleibt.
 Die Bindung trägt ihre eigene Frist (`gebunden_frist`, beim Binden aus der
-Abmeldung übernommen), weil das Trennen die Abmeldung vergisst. Gerufen wird
+Abmeldung übernommen), weil das Trennen die Abmeldung vergisst. **Ist die
+Frist abgelaufen und liegt eine Kopplung vor, geht vorher ein Sendelauf
+hinaus** (seit Android 0.23.0, KA-04): Kommt ein Paket an, ist die Abmeldung
+widerlegt und die Räumung danach findet nichts. Sonst gerufen wird
 die Räumung am Anfang jedes Sendelaufs (`Sender.sendeAlles()`, sie zählt in
 `Sendebericht.geraeumt`) und in `NAdokuApp.onCreate()` — ein abgemeldetes
 Handy sendet womöglich nie wieder. Ein Vermerk aus 0.20.0 ohne Zeitpunkt
