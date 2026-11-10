@@ -659,6 +659,8 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
          nachvollziehbare. */ ?>
 <script src="<?= asset('assets/schluessel.js') ?>"></script>
 <script src="<?= asset('assets/rueckfrage.js') ?>"></script>
+<?php /* Das Notfallblatt der Rückfrage: Übergabe von Fenster zu Fenster (KA-02). */ ?>
+<script src="<?= asset('assets/blatt-uebergabe.js') ?>"></script>
 <?php endif; ?>
 <?php /* Die eine Vorschlagsliste. Sie steht an den
          Besatzungsfeldern des Diensttags statt der nativen <datalist>, die auf

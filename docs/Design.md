@@ -622,9 +622,9 @@ auseinanderlaufen kann.
 
 | Token | Wert | benutzt | |
 |---|---|--:|---|
-| `--abstand-1` | `4px` | 89 |  |
+| `--abstand-1` | `4px` | 90 |  |
 | `--abstand-2` | `8px` | 137 |  |
-| `--abstand-3` | `12px` | 171 |  |
+| `--abstand-3` | `12px` | 172 |  |
 | `--abstand-4` | `16px` | 77 |  |
 | `--abstand-5` | `24px` | 39 |  |
 
@@ -1041,8 +1041,9 @@ zählt nur Breiten.
 | `@media screen and (min-width:720px)` | 1 |
 | `@media (max-width:719px)` | 1 |
 | `@media (max-width:479px)` | 3 |
+| `@media screen and (max-width:479px)` | 1 |
 
-Zusammen 36 Medienblöcke über 6 verschiedene Breiten: 479 px, 719 px, 720 px, 1024 px, 1200 px, 1600 px.
+Zusammen 37 Medienblöcke über 6 verschiedene Breiten: 479 px, 719 px, 720 px, 1024 px, 1200 px, 1600 px.
 
 ### Verhalten je Baustein
 
@@ -3398,9 +3399,12 @@ steht im Markup frei und wird von `assets/zweitfaktor.js` gesperrt, bis
 „Ich habe die Codes gesichert." angehakt ist — umgekehrt wäre das Tor ohne
 Skript eine Sackgasse.
 
-**Der Druckknopf „Codeblatt drucken"** ist das vorhandene Druckformular
+**Der Druckknopf „Codeblatt drucken"** ist der vorhandene Druckknopf
 `.rf-druck` im Codeblock (wie beim Wiederherstellungsschlüssel), volle
-Breite des Kastens. Im Einrichtungstor zeigt das Mockup ihn schmal — dort
+Breite des Kastens. Seit Web 24.11.0 ist `.rf-druck` kein Formular mehr,
+sondern ein Behälter um den Knopf (KA-02); darunter steht, nur wenn der
+Browser das Druckfenster blockiert, eine `.feld-klein`-Zeile in ganzer Breite
+(`.rf-druck-hinweis`). Im Einrichtungstor zeigt das Mockup ihn schmal — dort
 stand das Formular im Mockup verschachtelt in einem anderen, und der Parser
 hat es verworfen; die Karte (b) desselben Mockups zeigt die richtige
 Darstellung (F-P5c-107).
@@ -3436,12 +3440,12 @@ Notfallblatt die Wahl des Kontos, ohne Sitzung der Standard (E-P5c-30).
 | Teil | Darstellung |
 |---|---|
 | `.blatt-kopf` | Bildmarke (11 mm hoch) + `.blatt-marke` (Kurzname der Installation, Kopfschrift `--groesse-6`) links, `.blatt-kopf-rechts` (Adresse, Konto, Druckzeit; `--groesse-2`, gedämpft) rechts; darunter `--strich-stark` in `--dunkelblau` |
-| `.blatt-umgebung` | nur mit `app.umgebung`: Rahmen `--strich-stark` in `--papier-warnung` (rot 700), Text ebenso — ohne Fläche, weil der Browser Flächen nicht druckt (E-P5c-50). Die Druckblätter benutzen nur `--papier-*` und bleiben im Dark Mode hell |
+| `.blatt-umgebung` | nur mit `app.umgebung`: Rahmen `--strich-stark` in `--papier-warnung` (rot 700), Text ebenso — ohne Fläche, weil der Browser Flächen nicht druckt (E-P5c-50). Die Druckblätter benutzen `--papier-*` und bleiben im Dark Mode hell; **seit Web 24.11.0 auch Titel, Verweis, Knopf und Meldung darauf** — `.blatt-seite` stellt jede Rolle, die der dunkle Modus umfärbt, auf ihren hellen Wert zurück, und der Druck tut dasselbe für jede Seite (Nr. 540). Bis dahin nahmen sie die dunklen Rollen mit (Blau 100/300 auf Schnee, Meldung in Orange 800) |
 | `.blatt-druck h1` / `h2` | `--groesse-titel` / `--groesse-4` |
 | `.blatt-druck .meldung` | die vorhandene Meldung, auf Papier mit Rand `--strich` in `--linie-stark` |
 | `.blatt-kachel` | Rahmen `--strich-stark` in `--dunkelblau`, Fläche `--rauch` (im Druck ohne), nicht umbrechend; Kopf mit `.blatt-kachel-name` und `.blatt-kachel-neben` |
 | `.blatt-codes` | zehn Einmalcodes in zwei Spalten, feste Schrift `--groesse-5`, Sperrung `.08em`; davor die Nummer, **davor das Kästchen** zum Abhaken (E-P5c-65) |
-| `.blatt-druck-gruppen` + `.blatt-druck-gruppe` | ein Schlüssel in **nummerierten Vierergruppen**: acht je Zeile (Schlüsselblatt, 16 Gruppen), mit `.blatt-druck-gruppen-5` fünf in einer Zeile und eine Stufe größer (Notfallblatt). Feste Schrift `--groesse-5`, Sperrung `.08em`; die Nummer (`data-nr`) steht **darüber**, `--groesse-1`, gedämpft — die Rückfrage zum Schlüsselblatt fragt „Gruppe 11". Der Name trägt `-druck-`, weil `.blatt-gruppen` schon vergeben ist (F-P5c-44) |
+| `.blatt-druck-gruppen` + `.blatt-druck-gruppe` | ein Schlüssel in **nummerierten Vierergruppen**: acht je Zeile (Schlüsselblatt, 16 Gruppen), mit `.blatt-druck-gruppen-5` fünf in einer Zeile und eine Stufe größer (Notfallblatt; am Bildschirm unter 480 px drei je Zeile mit Spaltenabstand, seit Web 24.11.0 — vorher standen sie bei 360 px ohne Abstand nebeneinander). Feste Schrift `--groesse-5`, Sperrung `.08em`; die Nummer (`data-nr`) steht **darüber**, `--groesse-1`, gedämpft — die Rückfrage zum Schlüsselblatt fragt „Gruppe 11". Der Name trägt `-druck-`, weil `.blatt-gruppen` schon vergeben ist (F-P5c-44) |
 | `.blatt-fuss` | Blattname · Installation · Webversion · Lizenz, rechts „Seite 1 von 1" |
 
 **`@page` gilt für jede gedruckte Seite** (A4, 14 mm / 18 mm): Eine

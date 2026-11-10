@@ -43,6 +43,7 @@ Wiederholung des Wegs nach einer Zeitüberschreitung (Nr. 393).
 | `tools/proben/gpx/probe.mjs` | Probe: gpxprobe | |
 | `tools/proben/huelle/probe.mjs` | Probe: huellenprobe | `--drossel` geht nur in Chromium (CDP, E-DM-05); der Prüfstand fährt ohne |
 | `tools/proben/kontopaar/probe.mjs` | Probe: kontopaarprobe | |
+| `tools/proben/notfallblatt/probe.mjs` | Probe: notfallblattprobe | |
 | `tools/proben/ortsdaten/probe.mjs` | Probe: ortsdatenprobe | |
 | `tools/proben/rueckweg/probe.mjs` | Probe: rueckwegprobe | |
 | `tools/proben/wartungslauf/probe.mjs` | Probe: wartungslaufprobe | |

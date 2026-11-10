@@ -73,6 +73,7 @@ declare -A RUF=(
   [csp-browser]="node tools/proben/csp-browser/browserprobe.mjs"
   [huelle]="bash tools/proben/huelle/probe.sh"
   [kontopaar]="node tools/proben/kontopaar/probe.mjs"
+  [notfallblatt]="node tools/proben/notfallblatt/probe.mjs"
   [ortsdaten]="node tools/proben/ortsdaten/probe.mjs"
   [wartungslauf]="bash tools/proben/wartungslauf/probe.sh"
 )

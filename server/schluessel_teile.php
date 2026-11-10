@@ -55,16 +55,13 @@ declare(strict_types=1);
            kein Zufall, sondern die Anmerkung des Mockups — wer den Schluessel
            zum zweiten Mal sieht, soll dieselbe Ansicht wiedererkennen.
 
-           DAS DRUCKFORMULAR GEHT AUF `notfallblatt.php` und traegt den Wert
-           in einem versteckten Feld. Es wird per JavaScript gefuellt und in
-           einem neuen Fenster geoeffnet — POST, weil der Schluessel nicht in
-           eine Adresszeile, einen Verlauf oder ein Zugriffsprotokoll gehoert.
-
-           `csrf_field()` FEHLT HIER ABSICHTLICH: `notfallblatt.php` prueft
-           kein Token, weil es auch ohne Sitzung erreichbar sein muss (beim
-           ersten Setzen des Passworts gibt es keine). Es schreibt nichts, es
-           liest nichts — es gibt zurueck, was ihm gesendet wurde. Ein Token
-           an einer Stelle, die nichts aendert, ist Zierat. */ ?>
+           DER DRUCKKNOPF OEFFNET DAS LEERE BLATT, kein Formular (seit Web
+           24.11.0, KA-02, F-KA-01). Bis dahin ging der Schluessel per POST an
+           `notfallblatt.php` — durch das Netz und jedes Anfrageprotokoll
+           dazwischen. Jetzt setzt `rueckfrage.js` ihn an den Knopf, und
+           `assets/blatt-uebergabe.js` reicht ihn von Fenster zu Fenster
+           (`postMessage`, gleicher Ursprung). Die Adresse kommt auf dem Blatt
+           aus der Sitzung. */ ?>
   <div class="dialog-teil" data-rf="schluessel" hidden>
     <div class="dialog-kopf">
       <h2>Dein neuer Wiederherstellungsschlüssel</h2>
@@ -82,12 +79,12 @@ declare(strict_types=1);
       </label>
     </div>
     <div class="dialog-fuss">
-      <form method="post" action="notfallblatt.php" target="_blank"
-            rel="noopener" class="rf-druck">
-        <input type="hidden" name="code" data-rf-druckwert>
+      <div class="rf-druck">
         <?= ui_knopf(['text' => 'Notfallblatt drucken', 'art' => 'primaer',
-                      'symbol' => 'drucken']) ?>
-      </form>
+                      'symbol' => 'drucken', 'typ' => 'button',
+                      'attr' => ' data-rf-druckwert data-blatt-ziel="notfallblatt.php"']) ?>
+        <p class="feld-klein rf-druck-hinweis" data-blatt-blockiert hidden>Der Browser hat das Druckfenster blockiert. Erlaube Pop-ups für diese Seite und drück noch einmal.</p>
+      </div>
       <?php /* „FERTIG" IST ERST NACH DEM HAKEN ZU HABEN. Der Dialog laesst
                sich auch nicht mit Esc schliessen, solange er hier steht —
                `rueckfrage.js` haelt beides zusammen. Das ist die eine Stelle

@@ -5,52 +5,48 @@ declare(strict_types=1);
  * DAS NOTFALLBLATT — der Wiederherstellungsschluessel auf Papier.
  *
  * ===========================================================================
- * ES SPEICHERT NICHTS, UND ES KANN AUCH NICHTS SPEICHERN
+ * DER SCHLUESSEL KOMMT NICHT HIERHER (seit Web 24.11.0, KA-02, F-KA-01)
  * ===========================================================================
  *
- * Der Schluessel kommt per POST aus dem Browser und geht in dieselbe Antwort
- * zurueck. Er wird nicht gelesen, nicht geschrieben, nicht protokolliert. Das
- * ist keine Vorsicht, sondern die einzige Bauform, die moeglich ist: **Der
- * Server kennt diesen Schluessel nicht.** Er entsteht im Browser, wird dort
- * zum Verpacken des Inhaltsschluessels benutzt und ist danach fort — was
- * beim Server ankaeme, koennte er ohnehin nicht wiederholen.
+ * Bis Web 24.10.1 kam er per POST aus dem Browser und ging in dieselbe
+ * Antwort zurueck. Gespeichert wurde nichts — aber der Schluessel lief durch
+ * das Netz und durch jedes Anfrageprotokoll dazwischen (WAF, Proxy,
+ * TLS-Inspektion, Hoster), und er oeffnet den Inhaltsschluessel ohne
+ * Passwort und ohne Server-Anteil. Der Kopf hier sagte damals „Der Server
+ * kennt diesen Schluessel nicht" — fuer die Ablage stimmte das, fuer den
+ * Transport nicht.
  *
- * DARAUS FOLGT DIE EIGENSCHAFT, DIE DAS BLATT AUSMACHT: Es laesst sich
- * **spaeter nicht erneut drucken**. Wer es verliert, erzeugt einen neuen
- * Schluessel — das alte Blatt wird damit ungueltig, und genau das steht
- * darauf.
+ * JETZT LIEFERT DIESE SEITE NUR DAS LEERE BLATT. Den Code setzt
+ * `assets/blatt-uebergabe.js` im Browser ein, per `textContent`, aus dem
+ * Fenster, das das Blatt geoeffnet hat (`postMessage`, gleicher Ursprung).
+ * Ein POST wird mit 400 abgewiesen, ohne ihn zu lesen oder mitzuschreiben —
+ * ein alter Aufrufer scheitert laut, statt den Schluessel wieder zu
+ * schicken.
+ *
+ * DARAUS FOLGT WEITER DIE EIGENSCHAFT, DIE DAS BLATT AUSMACHT: Es laesst sich
+ * **spaeter nicht erneut drucken**. Ohne das Fenster, das den Schluessel eben
+ * gezeigt hat, bleibt es leer und sagt warum.
  *
  * ===========================================================================
  * KEINE ANMELDUNG NOETIG, UND DAS IST KEIN VERSEHEN
  * ===========================================================================
  *
- * Der Schluessel wird an ZWEI Stellen gezeigt, und an einer davon gibt es
- * noch keine Sitzung:
+ * Das Blatt wird an ZWEI Stellen gedruckt, und an einer davon gibt es noch
+ * keine Sitzung:
  *
  *   `pw_handling.php`   beim ERSTEN Setzen des Passworts — da ist niemand
- *                       angemeldet, das Konto existiert gerade erst
- *   Konto-Rueckfrage    nach einer Erneuerung, angemeldet
- *
- * Ein `auth_guard.php` hier haette den ersten Fall unmoeglich gemacht — also
- * genau den, in dem das Blatt am wichtigsten ist.
- *
- * WAS STATTDESSEN SCHUETZT: Diese Seite gibt nur wieder, was ihr gesendet
- * wurde, und zwar **gepruefte Werte in festem Text**. Der Code muss dem
- * Format entsprechen (20 Zeichen aus dem Alphabet, in fuenf Vierergruppen),
- * die Adresse muss eine Adresse sein; alles andere wird ausgelassen. Es gibt
- * keinen freien Text, keinen Verweis nach draussen und kein Markup aus der
- * Eingabe. Wer sich selbst etwas schickt, sieht sein eigenes Blatt.
+ *                       angemeldet; die Kontoadresse kommt dann mit dem Code
+ *                       aus dem Ursprungsfenster (sie ist kein Geheimnis)
+ *   Konto-Rueckfrage    nach einer Erneuerung, angemeldet; die Adresse kommt
+ *                       aus der Sitzung, und die geht vor
  *
  * ===========================================================================
- * KEIN LOGO, KEIN BILD (Mockup-Anmerkung)
+ * KEIN LOGO-BILD AUS DER EINGABE, KEIN MARKUP AUS DER EINGABE
  * ===========================================================================
  *
- * „Text genuegt und druckt auf jedem Geraet." Ein Logo braucht eine Datei,
- * die Datei braucht einen Pfad, und ein Blatt, das an einem fehlenden Bild
- * haengt, ist ein Blatt mit einem leeren Kasten darauf. Die Zuordnung
- * traegt der Text: Adresse der Installation und Kontoadresse stehen oben,
- * damit das Blatt einem Konto zuzuordnen bleibt, wenn es in fuenf Jahren
- * gefunden wird.
+ * Alles, was hier aus dem Browser kommt, steht als `textContent` im Blatt und
+ * ist vorher gegen sein Format gehalten (20 Zeichen aus dem Alphabet in fuenf
+ * Vierergruppen; eine Adresse). Text, Aufbau und Logo kommen vom Server.
  */
 
 if (!is_file(__DIR__ . '/config.php')) { header('Location: install.php'); exit; }
@@ -65,40 +61,21 @@ header('Pragma: no-cache');
 header('Referrer-Policy: no-referrer');
 header('X-Robots-Tag: noindex, nofollow, noarchive');
 
-/* ---- Was gesendet wurde, und ob es brauchbar ist ------------------------ */
-
-/**
- * Der Wiederherstellungscode, oder `null`.
+/* ---- Nichts annehmen -----------------------------------------------------
  *
- * DAS ALPHABET IST DAS AUS `crypto.js` (`RC_CHARS`) — ohne 0, 1, I, L, O und
- * U, weil die auf Papier mit O/0, 1/l und V/U verwechselt werden. Wer hier
- * grosszuegiger praefte als der Erzeuger, druckte ein Blatt mit einem Code,
- * den die Wiederherstellung spaeter ablehnt.
- *
- * FUENF VIERERGRUPPEN, 20 Zeichen. Das Mockup zeichnet sechzehn Gruppen zu
- * 64 Zeichen — das ist das Format des SCHLUESSELBLATTS, aus dem die
- * Vorlage stammt, und nicht das des Wiederherstellungscodes. Gemessen an
- * `newRecoveryCode()`: 20 Zeichen, Bindestrich nach je vier.
- */
-function nb_code(string $roh): ?string
-{
-    $c = strtoupper(trim($roh));
-    return preg_match('/^[ABCDEFGHJKMNPQRSTVWXYZ23456789]{4}(-[ABCDEFGHJKMNPQRSTVWXYZ23456789]{4}){4}$/', $c)
-        ? $c : null;
+ * EIN POST WIRD ABGEWIESEN, NICHT GELESEN (KA-02). Kein Feld wird ausgewertet
+ * und nichts protokolliert — auch nicht, dass einer kam. */
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+    http_response_code(400);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "Dieses Blatt nimmt keine Werte an.\n";
+    exit;
 }
 
-$code = nb_code(post_text('code'));
-
-/* DIE KONTOADRESSE: aus der SITZUNG, wenn es eine gibt, sonst aus dem POST.
- *
- * Die Reihenfolge ist wichtig. Wer angemeldet ist, bekommt seine eigene
- * Adresse aufs Blatt — unabhaengig davon, was im Formular stand. Nur der
- * Erstvergabe-Fall (noch keine Sitzung) nimmt den gesendeten Wert, und der
- * muss dann eine Adresse sein. */
+/* DIE KONTOADRESSE aus der SITZUNG, wenn es eine gibt. Ohne Sitzung (Erst-
+ * vergabe) setzt sie das Skript aus dem Ursprungsfenster ein. */
 $konto = '';
-/* Siehe `doku_seite.php` — Art `lesend`, nur mit Cookie.
- * Der Erstvergabe-Fall (noch keine Sitzung) bleibt genau der
- * Fall, in dem hier nichts startet und der gesendete Wert gilt. */
+/* Siehe `doku_seite.php` — Art `lesend`, nur mit Cookie. */
 sitzung_starten('lesend');
 $angemeldet = !empty($_SESSION['user_id']);
 if ($angemeldet) {
@@ -107,10 +84,6 @@ if ($angemeldet) {
         $st->execute([(int)$_SESSION['user_id']]);
         $konto = (string)($st->fetchColumn() ?: '');
     } catch (Throwable) { /* ohne Datenbank eben ohne Adresse */ }
-}
-if ($konto === '') {
-    $roh = trim(post_text('konto'));
-    $konto = filter_var($roh, FILTER_VALIDATE_EMAIL) ? $roh : '';
 }
 
 /* `app_url()` steht in `instanz_lib.php` — nicht in `session_lib.php`,
@@ -153,39 +126,39 @@ kopfzeilen_seite();
 <body class="blatt-seite">
 <?php /* DER BAUSTEIN IST `.blatt-druck` — wie Code- und Schlüsselblatt:
          fünf nummerierte Gruppen in einer Kachel und genau eine A4-Seite. */ ?>
-<main class="blatt-druck">
-<header class="blatt-kopf"><img src="<?= $h(logo_src()) ?>" alt="" width="70" height="44"><span class="blatt-marke"><?= $h(instanz_kurz()) ?></span><span class="blatt-kopf-rechts"><?= $h($adresse) ?><?php
-  if ($konto !== ''): ?><br>Konto <strong><?= $h($konto) ?></strong><?php endif; ?><br>gedruckt am <?= $h($jetzt) ?></span></header>
+<main class="blatt-druck" data-blatt-empfang="notfallblatt">
+<header class="blatt-kopf"><img src="<?= $h(logo_src()) ?>" alt="" width="70" height="44"><span class="blatt-marke"><?= $h(instanz_kurz()) ?></span><span class="blatt-kopf-rechts"><?= $h($adresse) ?><span data-blatt-kontozeile<?= $konto === '' ? ' hidden' : '' ?>><br>Konto <strong data-blatt-konto><?= $h($konto) ?></strong></span><br>gedruckt am <?= $h($jetzt) ?></span></header>
 <?php if ($umg !== null): ?>
 <p class="blatt-umgebung"><strong><?= $h($umg['name']) ?></strong> — Testdaten, kein Echtbetrieb. Dieses Blatt gilt nur für diese Anlage.</p>
 <?php endif; ?>
 <h1>Notfallblatt</h1>
-<?php if ($code === null): ?>
 <?php /* OHNE CODE KEIN BLATT — und der Grund steht da, statt einer leeren
          Seite. Hierher kommt, wer die Adresse aus dem Verlauf aufruft: Das
          Blatt entsteht nur in dem Augenblick, in dem der Schluessel gezeigt
-         wird, denn danach kennt ihn niemand mehr — auch der Server nicht.
+         wird, denn danach kennt ihn niemand mehr. Ohne JavaScript ebenso.
 
          „EINSTELLUNGEN → PROFIL", NICHT „→ KONTO": Einen Reiter „Konto"
          gibt es nicht. */ ?>
+<div data-blatt-ohne>
 <?= ui_meldung_markup('warn', 'Der Wiederherstellungsschlüssel entsteht in deinem Browser und '
       . 'wird nirgends gespeichert — auch nicht bei uns. Brauchst du ein neues Blatt, erzeuge unter '
       . 'Einstellungen → Profil einen neuen Schlüssel; das alte Blatt wird damit ungültig.',
       'Dieses Blatt lässt sich nicht nachträglich drucken.') ?>
-<?php else: ?>
+</div>
+<div data-blatt-mit hidden>
 <?= ui_meldung_markup('warn', 'Bewahre es dort auf, wo du es in fünf Jahren noch findest und '
       . 'niemand sonst: Dokumentenordner zu Hause, Bankschließfach, Passwortmanager.',
       'Dieses Blatt öffnet deine Patientendaten.') ?>
 <section class="blatt-kachel"><div class="blatt-kachel-kopf"><span class="blatt-kachel-name">Wiederherstellungsschlüssel</span><span class="blatt-kachel-neben">20 Zeichen · Leerzeichen, Bindestriche und Groß/Klein sind egal</span></div>
-<div class="blatt-druck-gruppen blatt-druck-gruppen-5"><?php foreach (explode('-', $code) as $nr => $g): ?><span class="blatt-druck-gruppe" data-nr="<?= $nr + 1 ?>"><?= $h($g) ?></span><?php endforeach; ?></div>
-<p>Der Schlüssel entsteht in deinem Browser und wird nirgends gespeichert — dieses Blatt lässt sich nicht nachdrucken.</p></section>
+<div class="blatt-druck-gruppen blatt-druck-gruppen-5"><?php for ($nr = 1; $nr <= 5; $nr++): ?><span class="blatt-druck-gruppe" data-nr="<?= $nr ?>" data-blatt-gruppe></span><?php endfor; ?></div>
+<p>Der Schlüssel entsteht in deinem Browser und hat ihn nie verlassen — auch nicht für dieses Blatt. Es lässt sich nicht nachdrucken.</p></section>
 <h2>Was dieses Blatt kann</h2>
 <p>Deine Patientendaten verschlüsselt der Browser mit einem Schlüssel aus deinem Passwort; die BetreiberIn hat ihn nicht. Vergisst du das Passwort, ist dieses Blatt der <strong>einzige</strong> Weg zurück. Ohne Blatt und ohne Passwort bleiben Zeiten, Orte und Rettungsmittel — die Patientendaten sind weg.</p>
 <h2>So benutzt du es</h2>
 <ol><li>Anmeldeseite → „Passwort vergessen?" → Adresse eintragen.</li><li>Den Link aus der Mail öffnen und den Schlüssel von diesem Blatt eintippen.</li><li>Neues Passwort setzen. Du bekommst einen <strong>neuen</strong> Schlüssel und ein neues Blatt — dieses ist dann ungültig.</li></ol>
 <h2>Wann es ungültig wird</h2>
 <p>Sobald du unter Einstellungen → Profil den Schlüssel erneuerst, oder nach einer Wiederherstellung. Mehr im Handbuch, Kapitel „Verschlüsselung der Patientendaten": <?= $h($ohneSchema !== '' ? $ohneSchema : '…') ?>/hilfe.php#5-verschluesselung-der-patientendaten-pflicht</p>
-<?php endif; ?>
+</div>
 <footer class="blatt-fuss"><span>Notfallblatt · <?= $h(instanz_kurz()) ?> · Web <?= $h(WEB_VERSION) ?> · freie Software (AGPL v3)</span><span>Seite 1 von 1</span></footer>
 <?php /* NUR AM BILDSCHIRM: Druckknopf und Rückweg — derselbe Knopf und
          dasselbe Skript wie bei Schlüssel- und Codeblatt. KEIN DRUCKKNOPF OHNE
@@ -196,12 +169,11 @@ kopfzeilen_seite();
          des Passworts ist er es nicht — dann führt der Knopf zur Anmeldung,
          und das ist genau der nächste Schritt: Blatt drucken, dann anmelden. */ ?>
 <p class="nur-bildschirm">
-  <?php if ($code !== null): ?>
-  <button type="button" class="knopf knopf-primaer" data-drucken hidden><span>Drucken</span></button>
-  <?php endif; ?>
+  <span data-blatt-mit hidden><button type="button" class="knopf knopf-primaer" data-drucken hidden><span>Drucken</span></button></span>
   <a class="knopf knopf-leise" href="<?= $angemeldet ? 'index.php' : 'login.php' ?>"><span><?= $angemeldet ? 'Zur Startseite' : 'Zur Anmeldung' ?></span></a>
 </p>
 </main>
 <script src="<?= $h(asset('assets/blatt-drucken.js')) ?>"></script>
+<script src="<?= $h(asset('assets/blatt-uebergabe.js')) ?>"></script>
 </body>
 </html>

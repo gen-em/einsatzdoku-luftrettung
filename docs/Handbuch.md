@@ -2661,7 +2661,11 @@ Schlüsselblatt der BetreiberIn und das Codeblatt des Zweitfaktors (3.1f).
 
 **Dieses Blatt lässt sich später nicht erneut drucken.** Der Schlüssel entsteht
 in deinem Browser und wird nirgends gespeichert — auch nicht bei der BetreiberIn.
-Es gibt ihn nur in dem Moment, in dem er angezeigt wird. Wer sein Blatt
+Seit Web 24.11.0 verlässt er den Browser auch zum Drucken nicht: Das Blatt öffnet
+sich in einem neuen Fenster und bekommt den Schlüssel von der Seite, die ihn
+gerade zeigt. Blockiert dein Browser das Fenster, steht das unter dem Knopf —
+erlaube Pop-ups für diese Seite und drück noch einmal. Es gibt den Schlüssel
+nur in dem Moment, in dem er angezeigt wird. Wer sein Blatt
 verliert, erzeugt einen **neuen** Schlüssel (siehe unten); das alte Blatt wird
 damit ungültig.
 

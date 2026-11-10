@@ -2052,6 +2052,8 @@ ui_seite_start(['titel' => 'Einstellungen',
                                'einzug' => '    ']); ?>
     <script src="<?= asset('assets/schluessel.js') ?>"></script>
     <script src="<?= asset('assets/rueckfrage.js') ?>"></script>
+    <?php /* Notfall- und Codeblatt: Übergabe von Fenster zu Fenster (KA-02). */ ?>
+    <script src="<?= asset('assets/blatt-uebergabe.js') ?>"></script>
     <?php if ($rwZ['stand'] === 'da'): ?>
     <script src="<?= asset('assets/rueckweg.js') ?>"></script>
     <?php endif; ?>
