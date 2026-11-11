@@ -14,6 +14,18 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.14.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — der Browser kann das neue, gebundene Format lesen.** Bisher ging
+  ein verschlüsselter Block auch dann auf, wenn er am falschen Einsatz hing
+  oder ein alter Stand zurückgelegt war, und Gerätedaten bewiesen nicht,
+  von welchem Gerät sie kamen. Das neue Format bindet Zweck, Datensatz,
+  Zähler und Absender, und jeder Angriff scheitert mit einem benannten
+  Grund. Geschrieben wird es noch nicht: Erst müssen Server, Geräte und der
+  Umzug des Bestands es auch können.
+
 ## [Web 24.13.1] — unveröffentlicht
 
 ### Behoben

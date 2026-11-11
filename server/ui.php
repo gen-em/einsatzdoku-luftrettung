@@ -3767,7 +3767,9 @@ function ui_tabellen_bootstrap(): void
  * dauerhaft, weil `loeseVormerkung()` das Vormerkfach danach verwirft. Die
  * Lehre von damals kostet hier drei Zeilen Markup.
  *
- * $o: skripte  Liste der Verweise. Vorgabe: crypto.js, keyguard.js, unlock.js.
+ * $o: skripte  Liste der Verweise. Vorgabe: crypto.js, keyguard.js, unlock.js;
+ *              hinter `crypto.js` kommen inhalt2.js, huelle2.js und
+ *              standbuch.js von selbst dazu.
  *              Ein leeres Feld gibt keinen Verweis aus (fuer Seiten, die ihre
  *              Verweise aus anderem Grund selbst setzen muessen).
  *     guete    true  -> zusaetzlich pwquality.js (Passwortguete)
@@ -3800,6 +3802,20 @@ function ui_krypto_bootstrap(array $o = []): void
     $ein = (string)($o['einzug'] ?? '');
     $skripte = $o['skripte'] ?? ['assets/crypto.js', 'assets/keyguard.js', 'assets/unlock.js'];
     if (!empty($o['guete'])) { $skripte[] = 'assets/pwquality.js'; }
+
+    /* DER KERN DES NEUEN FORMATS GEHT MIT `crypto.js`, wo immer es steht
+     * (KA-06b, Web 24.14.0): `inhalt2.js` (`edk2:`), `huelle2.js`
+     * (Gerätehülle Fassung 2) und `standbuch.js` (Zählerstand). Ohne
+     * `inhalt2.js` wirft `EdCrypto.huelleOeffnen()` bei einer Hülle im neuen
+     * Format. Eingefügt wird hier und nicht in jeder Liste von Hand, weil zwei
+     * Reiter von `einstellungen.php` eine eigene Liste übergeben — eine
+     * Liste, die die Zeile vergisst, läse das neue Format nicht. */
+    $kryptoAn = array_search('assets/crypto.js', $skripte, true);
+    if ($kryptoAn !== false) {
+        $kern = array_values(array_diff(
+            ['assets/inhalt2.js', 'assets/huelle2.js', 'assets/standbuch.js'], $skripte));
+        array_splice($skripte, (int)$kryptoAn + 1, 0, $kern);
+    }
 
     /* DER STAND DES PAARS FÜR DEN RÜCKWEG: 'da', 'fehlt', 'spalten' oder
      * 'demo'. Nur bei 'fehlt' legt

@@ -1080,6 +1080,7 @@ ui_seite_start(['titel' => 'Anmelden', 'klasse' => 'anmeldung-body']);
  </nav>
 </main>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<script src="<?= asset('assets/inhalt2.js') ?>"></script>
 <?php /* DER SCHLÜSSELSCHRITT. `crypto.js` und `rueckweg.js`
          STEHEN IMMER DA, und der Block darunter auch — aus demselben Grund
          wie der Block zum Vormerkfach weiter unten: Die Integritätswache

@@ -8920,4 +8920,12 @@ declare(strict_types=1);
  *   Das Vormerkfach der Anmeldung hat eine Frist von sechs Minuten und wird
  *   von der ersten angemeldeten Seite mit dem Ruestzeug aufgeloest, auch
  *   wenn ihr nichts fehlt. Korrektur; kein Formatwechsel, kein Schema. */
-const WEB_VERSION = '24.13.1';
+/* 24.14.0 — DER KERN DES NEUEN FORMATS LIEST MIT (KA-06b-1, Audit KA
+ *   F-KA-04, -12, -29, -30). Drei neue Dateien im Browser — `inhalt2.js`
+ *   (`edk2:` mit Zweck, Bezug, Zaehler und Groessenklasse), `huelle2.js`
+ *   (Geraetehuelle Fassung 2 mit Herkunft) und `standbuch.js` (Zaehlerstand)
+ *   — und die Ableitung 2 in `crypto.js`, geschrieben von einem Fable-Agenten
+ *   gegen die Referenz aus KA-06a. Gelesen werden beide Fassungen;
+ *   geschrieben wird weiter Fassung 1, bis Server, Geraete und Anhebelauf
+ *   stehen (eine Weiche, aus). Neben; kein Schema. */
+const WEB_VERSION = '24.14.0';
