@@ -25,6 +25,21 @@ Schritt 28, Paket KG-07 (Backlog Nr. 574).
   und das Loslassen ging an das Menü; im Simulator gemessen, derselbe Fehler
   wie beim Rea-Menü bis Uhr 4.4.0. Jetzt öffnet es beim Loslassen.
 
+## [Web 24.13.1] — unveröffentlicht
+
+### Behoben
+
+- **Web — die Anmeldung rechnete mit jeder Rundenzahl, die der Server
+  nannte, ab 1 000.** Wer dessen Antwort verändern konnte, bekam ein Token,
+  an dem sich das Passwort sechshundertmal billiger raten ließ. Jetzt gilt
+  310 000 als Untergrenze — der kleinste Wert, den je ein Konto oder eine
+  Sicherung trug —, und das Salz muss seine Form haben.
+- **Web — Passworthälfte und Anmelde-Token blieben nach der Anmeldung im
+  Tab liegen, wenn die erste Seite den Schlüssel nicht brauchte.** Die erste
+  angemeldete Seite löst das Fach jetzt immer auf, und nach sechs Minuten
+  verfällt es von selbst. Auf Einstellungen → Profil, das die Entsperrung
+  nicht lädt, räumt erst die Frist.
+
 ## [Uhr 4.5.1] — unveröffentlicht
 
 Schritt 28, Paket KG-06 (Backlog Nr. 573).

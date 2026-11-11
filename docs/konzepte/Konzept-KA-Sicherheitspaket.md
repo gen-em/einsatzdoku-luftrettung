@@ -12,8 +12,8 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-05** — gebaut (Web 24.13.0), im PR; danach KA-06 (Halt vor 06a: Fable). **Garmin-Anteile ausgegliedert an KG** (E-KA-21, Abschnitt 11) |
-| Erledigt | **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
+| In Arbeit | **KA-06** — **06a** (Entwurf und Referenz) läuft bei einem Fable-Agenten (E-KA-38); daneben **06b vorab** (Ableitung, F-KA-13 und -16) gebaut, Web 24.13.1, im PR (E-KA-39). **Garmin-Anteile ausgegliedert an KG** (E-KA-21, Abschnitt 11) |
+| Erledigt | **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
@@ -89,6 +89,11 @@ Safari.
 | E-KA-35 | **SheetJS 0.20.3 vom Hersteller (`cdn.sheetjs.com`)**; der Host ist dafür in die Netzfreigabe der Arbeitsumgebung aufgenommen (11.11.2026, Freigabe der BetreiberIn). **Uhr-Rundläufe und `pruefablauf.json` gehören KG** — KA fährt keine Uhr-Proben und meldet nur vorher, wenn es Geräte-Endpunkte ändert | 11.11.2026, BetreiberIn |
 | E-KA-36 | **Der Wächter in Bibliotheken und Teil-Vorlagen vergleicht `SCRIPT_FILENAME` mit `__FILE__`**, statt einer Konstante (Konzept: „Wächterkonstante"). Eine Konstante hätte jede Einstiegsseite gebraucht, und ein Wächter über `get_included_files()` hätte jedes Werkzeug getroffen, das per `php -r` eine Bibliothek zuerst einbindet; im CLI greift er nicht | 11.11.2026, Umsetzung |
 | E-KA-37 | **Auch die unversiegelte Begleitdatei `konto.json` ist unlesbar** — über Punkt 7 hinaus: Seit KA-03 entscheidet ihre Adresse über eine Freigabe, und der Rückfall war derselbe wie beim Manifest | 11.11.2026, Umsetzung |
+| E-KA-38 | **KA-06a schreibt ein Unter-Agent auf Fable**, die Hauptinstanz bleibt auf Opus und übernimmt Ergebnis, Konzept und Dokumente. Der Agent schreibt nur unter `tools/proben/huelle/`, keinen Anwendungscode und keine `docs/` | 11.11.2026, BetreiberIn |
+| E-KA-39 | **Die drei Punkte zur Ableitung ohne Formatwechsel gehen vorab** als Teil von 06b mit Opus (F-KA-13, -16; Konzept 06b: „vorab als eigenes kleines Paket"). **F-KA-29 bleibt draußen** — ein neues Anmelde-Token gehört zum Entwurf von 06a | 11.11.2026, BetreiberIn |
+| E-KA-40 | **Der Altbestand der BetreiberIn zieht still nach der Anmeldung um** (Anhebelauf wie `pat_anheben`), und **alte Sicherungen bleiben einspielbar** — der Browser hebt sie beim Einspielen (06d). Beantwortet die offene Frage aus E-KA-16; übernommen mit „alle wie vorgeschlagen" aus den Vorschlägen des Konzepts (06b, 06d) — wo die BetreiberIn es anders meinte, wird es vor 06b berichtigt | 11.11.2026, BetreiberIn |
+| E-KA-41 | **Untergrenze der Rundenzahl 310 000** — der kleinste Wert, den je ein Konto (Vorgabe der Spalte `kdf_iter`) oder eine Sicherung trug; 600 000 hätte Sicherungen von davor unlesbar gemacht. **Frist des Vormerkfachs sechs Minuten** — die fünf der halben Anmeldung (`TOTP_HALB_FRIST_S`) und eine für den Seitenwechsel. Eine Antwort des Salz-Endpunkts in falscher Form meldet die Seite als „derzeit nicht möglich" (`status`), nicht als fehlendes Web-Krypto | 11.11.2026, Umsetzung |
+| E-KA-42 | **Das Muster für `vendor/` in `pruefablauf.json` (F-KA-74) kommt mit dem nächsten Web-Paket**, sobald KG die Datei nicht mehr in Arbeit hat | 11.11.2026, BetreiberIn |
 | E-KA-21 | **Die Garmin-Anteile gehen an eine eigene Instanz, Kürzel KG** (Abschnitt 11): KA-04 Punkt 1 und 4, der Garmin-Teil von KA-06c samt der Messung für 06a, die Garmin-Kommentare aus F-KA-43 und der Garmin-Teil von KA-M6. KG zählt eigene Nummern (`KG-NN`, `F-KG-NN`, `E-KG-NN`, `P-KG-NN`), führt ein eigenes Konzept und schreibt den Rahmenplan nicht — das tut diese Instanz | 10.11.2026, BetreiberIn |
 
 ---
@@ -764,6 +769,24 @@ des eigenen Kontos.
 Fassung 3; 3 Begleitdateien, alle versiegelt. Staging und Produktiv nicht
 gezählt (E-KA-31).
 
+### KA-06b vorab — Ableitung (11.11.2026)
+
+**Was nicht geprüft werden konnte — zuerst.**
+
+1. **Einstellungen → Profil** lädt `unlock.js` nicht; landet die erste
+   Seite nach der Anmeldung dort, räumt erst die Frist (sechs Minuten). Das
+   ist eine benannte Grenze, kein Messfehler (F-KA-77).
+2. **Die Anmeldung gegen Staging** mit der neuen Untergrenze läuft erst nach
+   dem Merge (R91); örtlich melden sich Bedien-, Rollen- und Rückwegprobe an.
+
+**Gemessen** (Gegenprobe = `crypto.js`, `unlock.js`, `login.php` von `main`):
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Bedienprobe, Weg `ka06-ableitung` | 1 000 Runden und leeres Salz abgewiesen, 310 000 angenommen; Antwort des Salz-Endpunkts mit 1 000 Runden abgewiesen mit `status` „form" | alles angenommen (rot) | F-KA-13 |
+| Bedienprobe, Weg `ka06-vormerkfach` (Prüfkonto) | Fach von vor sieben Minuten und Fach ohne Zeitstempel verworfen und geräumt, frisches geliefert; nach der Startseite (RW und KP „da") leer | altes und zeitloses geliefert, nach der Startseite **belegt** (rot) | F-KA-16 |
+
+
 ### KA-04 (10.11.2026, ohne die Garmin-Punkte 1 und 4)
 
 **Was nicht geprüft werden konnte — zuerst.**
@@ -825,6 +848,7 @@ gezählt (E-KA-31).
 | F-KA-74 | **Die neue SheetJS-Datei liegt unter `vendor/` und löst heute kein Muster des Prüfstands aus** — weder `oberflaeche` (`server/assets/*.js`) noch `kreislauf-csv`. Eine künftige Fassung liefe ungeprüft durch | Kreislauf CSV von Hand in drei Engines; das Muster nachzuziehen hieße `pruefablauf.json` zu ändern — offen, Bericht an die BetreiberIn |
 | F-KA-75 | **Der Messstand lief in die neue Mengengrenze:** Er spielt 16 wachsende Bestände in ein Konto, und ab dem 16. (318 Einsätze, gesamt 5 088) antwortete `api/backup_eintraege_restore.php` mit `507 kontingent` — im ersten Prüfstand von KA-05 rot. Die Grenze tat, was sie soll; das Messkonto misst ausdrücklich den ungünstigsten Fall | `messen.py` hebt die Grenze des Messkontos nach dem Anlegen auf (1 000 000 Einsätze / MB, `grenze_heben()`); danach alle 16 Dateien eingespielt, gesamt 5 088 |
 | F-KA-76 | **Uhr-Stufe und Modul `plattform` fehlten im Container** — `uhr-krypto` (der Wächter steht auch in `geraetehuelle_lib.php`) war rot, `schemaprobe` (der Anker in `migration_lib.php`) nicht gemessen. Für `plattform` lief der Docker-Dienst nicht | `aufbauen.sh uhr` (Connect IQ 9.2.0, 173 Geräte) und, nach `dockerd`, `aufbauen.sh plattform` (MySQL 8.0, 8.4.0, MariaDB 10.6, PHP 8.3); der Zwischenstand `539de50` trägt den roten Bericht, der nächste Commit misst die drei neu |
+| F-KA-77 | **F-KA-16 hält, aber enger, als das Audit es beschreibt:** Gemessen gegen `main` räumten die Startseite des Demo-Kontos, Suche, Zeitraum und Import das Fach schon immer — sie fragen beim Laden nach dem Inhaltsschlüssel. Stehen blieb es auf der Startseite eines Kontos ohne Bedarf (Prüfkonto) und auf Einstellungen (ohne `unlock.js`) | Auflösen in `nachDerAnmeldung()` immer; Frist für die Seiten ohne `unlock.js`; die Probe misst am Prüfkonto, weil die Demo-Startseite auf `main` grün gewesen wäre |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
 | F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
 | F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |
