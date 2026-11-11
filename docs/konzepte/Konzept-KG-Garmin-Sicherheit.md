@@ -15,8 +15,8 @@ derselbe Code und dieselbe Instanz.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/vigilant-cray-9riw34`, Backlog-Spanne 570–579 |
-| In Arbeit | **KG-04 (Teil)** — Prüfdokument `Pruefdokument-KG-Garmin-Sicherheit.md` mit 16 Handprüfpunkten für KG-01, -05, -02, -06 angelegt (11.11.2026); die Punkte zu KG-03 folgen. Fertig: KG-01, KG-05, KG-02, KG-06 (alle in PR #168, Uhr 4.5.1, noch nicht gemergt). KG-03 wartet auf KA-06a und KA-M5 (Fable) |
-| Erledigt | **KG-01** (Uhr 4.4.0, PR #168, noch nicht gemergt) |
+| In Arbeit | **KG-07** — Schnellmenü öffnet beim Loslassen (F-KG-08), doppeltes Blättern in der Probe festgehalten (F-KG-09); Uhr 4.5.2, eigener PR. KG-03 wartet auf KA-06a und KA-M5 (Fable); KG-04 wartet auf die Gerätetests |
+| Erledigt | **KG-01, KG-05, KG-02, KG-06, KG-04 (Teil: Prüfdokument)** — PR #168, gemergt 11.11.2026, Uhr 4.5.1; Tag `uhr-v4.5.1` setzt die BetreiberIn nach den Gerätetests |
 | Hakt | Antwort der KA-Instanz steht aus (E-KG-21). Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05) |
 | Gelesen gegen | Commit `0be2092` · Uhr 4.3.3; die vier Befunde von KG-01 am 10.11.2026 an der heutigen Stelle bestätigt (Abschnitt 4) |
 
@@ -38,6 +38,7 @@ BetreiberIn, die KA-Instanz baut sie.
 | KG-03 | Garmin-Teil von KA-06c: Geräteschlüssel, Gerätehülle Fassung 2, Kopplung mit Vergleichswert | F-KA-04, -12, -17 (Garmin) | KA-06a fertig, KA-M5 freigegeben | **Fable** für den Krypto-Kern — vorher anhalten | keine | Haupt (offen) |
 | KG-04 | Prüfliste für die Gerätetests: Übergabe einer echten Uhr im laufenden Dienst, Kopplung mit Vergleichswert | — | KG-01, KG-03 | — | keine | keine |
 | KG-06 | **401/403 nur mit Fehlerfeld endgültig** (Vertrag 5, E-KA-26: „Die Uhr zieht mit KG nach"): erst messen, ob Connect IQ den Rumpf einer 401/403 an die App durchreicht (Simulator, Fenix 6 Pro); dann ohne Feld = später erneut, vor dem Räumen nach Fristablauf ein Sendeversuch | F-KA-18 (Rest) | KG-02 | Opus | keine | Korrektur oder Neben |
+| KG-07 | Schnellmenü der Hauptanzeige öffnet beim Loslassen von START; doppeltes Blättern der Rea-Seite ohne Rea in der Probe `rea` festgehalten | F-KG-08, F-KG-09 | nichts | Opus | keine | Korrektur |
 | KG-05 | Umbau der Reanimation: Tastenbelegung, 10-s-Sperre, Vibrationen, Fehler kurz UP/DOWN (Abschnitt 5) | F-KG-01, F-KG-02, F-KG-03 | KG-01 (Reihenfolge, nicht Inhalt) | Opus | keine | Neben |
 
 Ein Pull Request je Paket. Nach jedem Paket: Konzept fortschreiben,
@@ -73,6 +74,7 @@ abonnieren, anhalten.
 | E-KG-22 | **Der Rundlauf hält für `--neukoppeln` und `--fremdkonto` das Senden in der Prüffassung 30 s an**, statt das Gerät zu deaktivieren (`Rundlauf.halten()`). Der Wartungsmodus taugt nicht dafür: Er sperrt auch `pair.php` | 11.11.2026, Umsetzung |
 | E-KG-23 | **KG-06 wird aufgenommen; Reihenfolge KG-02, dann KG-06.** KG-02 geht mit in PR #168 | 11.11.2026, BetreiberIn |
 | E-KG-24 | **KG-06 nach Vertrag gebaut**, weil der Simulator den Rumpf durchreicht (F-KG-15); die Fassung wird 4.5.1. Bestätigt die Fenix es nicht (P-KG-02), wird neu entschieden | 11.11.2026, BetreiberIn (Vorgehen), Umsetzung (Bau nach Messung) |
+| E-KG-25 | **Nach dem Merge von #168: erst F-KG-08, dann F-KG-09, in einem PR (KG-07).** KG-03 bleibt bis KA-06a und KA-M5 liegen | 11.11.2026, BetreiberIn |
 | E-KG-16 | **Die Probe zu KG-01 läuft ohne Server** (`tools/uhr-pruefstand/sendeweg/`): Die Prüffassung hält jede Anfrage vor dem Absenden an und spielt die Antworten selbst vor. Ein verlorenes Paket und eine falsche Quittung lassen sich mit der echten Anlage nicht gezielt erzeugen; was `ingest.php` daraus macht, misst weiter `uhr-rundlauf` | 10.11.2026, Umsetzung |
 
 ---
@@ -248,8 +250,8 @@ Rumpf nicht durch, und KG-06 muss eine andere Regel bekommen.
 | F-KG-04 | **Die App vibriert auch, wenn sie nicht im Vordergrund ist** (Countdown-Ende) | Fenix 6 Pro, BetreiberIn, 10.11.2026 | eingetragen in `docs/Geraete-Eingabe.md` 2 (10.11.2026) |
 | F-KG-05 | **Eine neue Uhr-Probe braucht zwei Dateien außerhalb der Grenzen von KG:** ihre Zeile in `tools/pruefstand/pruefablauf.json` und die daraus erzeugte Tabelle in `docs/Pruefablauf.md` 4 — ohne sie läuft die Probe nie, und `bestand` wäre rot (`Pruefablauf.md` 6.12). Berührt mit der kleinsten Änderung (ein Eintrag, ein Name im Muster `uhr`); der BetreiberIn gemeldet | 10.11.2026 | KG-01 |
 | F-KG-06 | **Handbuch 13 trug denselben falschen Satz wie `Pair.mc`** (F-KA-43): ein abgeschwatzter Code löse an der Uhr nichts aus. Wer ihn hat, trägt ihn im eigenen Konto ein, und die Uhr fragt mit dessen Adresse — das zweite Tor hält nur, wenn die Trägerin liest | Lesen, 10.11.2026 | berichtigt in KG-01 |
-| F-KG-08 | **Das Loslassen eines langen START ging an das eben geöffnete Rea-Menü und wählte dort den Eintrag unter dem Cursor** (Simulator: Amiodaron gebucht). Das Menü öffnet deshalb erst beim Loslassen, und die Seite schluckt es selbst (`langNachLoslassen()`). **Das Schnellmenü der Hauptanzeige öffnet nach demselben Muster** auf dem langen START — ob es dort einen Eintrag wählt, ist nicht gemessen; am Gerät nicht gemeldet | Probe `rea`, 11.11.2026 | Rea-Menü behoben in KG-05; Schnellmenü offen |
-| F-KG-09 | **Im Simulator blättert ein kurzer UP-Druck auf der Rea-Seite ohne Rea zwei Seiten** (Uhr 4.4.0: „REANAV 3, REANAV 2"): Behavior beim Drücken, das Loslassen blättert auf der neuen Seite noch einmal. Am Gerät nicht gemeldet; nicht behoben, weil es ohne Rea nichts bucht | Gegenprobe `rea`, 11.11.2026 | eingetragen in `Geraete-Eingabe.md` 6 |
+| F-KG-08 | **Das Loslassen eines langen START ging an das eben geöffnete Rea-Menü und wählte dort den Eintrag unter dem Cursor** (Simulator: Amiodaron gebucht). Das Menü öffnet deshalb erst beim Loslassen, und die Seite schluckt es selbst (`langNachLoslassen()`). **Das Schnellmenü der Hauptanzeige öffnet nach demselben Muster** auf dem langen START — ob es dort einen Eintrag wählt, ist nicht gemessen; am Gerät nicht gemeldet | Probe `rea`, 11.11.2026 | Rea-Menü behoben in KG-05; Schnellmenü im Simulator bestätigt (`SCHNELL-AUSWAHL` beim Loslassen) und behoben in KG-07, Uhr 4.5.2 |
+| F-KG-09 | **Im Simulator blättert ein kurzer UP-Druck auf der Rea-Seite ohne Rea zwei Seiten** (Uhr 4.4.0: „REANAV 3, REANAV 2"): Behavior beim Drücken, das Loslassen blättert auf der neuen Seite noch einmal. Am Gerät nicht gemeldet; nicht behoben, weil es ohne Rea nichts bucht | Gegenprobe `rea`, 11.11.2026 | seit Uhr 4.5.0 nicht mehr (`halteAbbrechen()`, KG-05): im Simulator eine Seite je Druck, gemessen am 11.11.2026; seit KG-07 in der Probe `rea` |
 | F-KG-10 | **KA-04 (Web 24.12.1) hat den Uhr-Rundlauf rot gemacht und der Uhr eine Sackgasse gelassen.** `pair.php` gibt einer deaktivierten Uhr keinen Schlüssel mehr (F-KA-27); der Rundlauf holte ihn genau so (`--reaktivieren`, `--neukoppeln`, `--fremdkonto`). Eine Uhr ohne Schlüssel bot nach dem Wiedereinschalten nur das Trennen an. Der Prüfstand der KA-Instanz fuhr die Uhr-Proben nicht, weil unter `watch/` nichts berührt war. Behoben in der Uhr (Nr. 572), Rundlauf angepasst; Frage an die KA-Instanz, ob das Muster `geraete` die Uhr-Proben mitnehmen soll | Prüfstand über den Merge mit KA-04, 11.11.2026 | behoben in KG-05 |
 | F-KG-11 | **Connect IQ 9.2.0 kann nicht signieren.** `Toybox.Cryptography` hat sieben Klassen (Cipher, CMAC, Hash, HMAC, Key, KeyAgreement, KeyPair) und zwei Funktionen (`createPublicKey`, `randomBytes`); Kurven SECP224R1 und SECP256R1, nur `KEY_AGREEMENT_ECDH`. Kein anderes Modul der SDK nennt ECDSA oder eine Signatur. Auf Fenix 6 Pro, FR 945 und Venu 3s fragt die Probe das Gerät selbst: `SIGNATUR nicht vorhanden` | SDK-Dokumentation `doc/Toybox/Cryptography*.html`; Krypto-Probe im Simulator, 11.11.2026 | Antwort an KA-06a |
 | F-KG-12 | **Ein dauerhaftes P-256-Paar ist möglich.** `getPrivateKey().getBytes()` liefert 32 B, der öffentliche Teil 64 B; aus den 32 B im `Application.Storage` baut `KeyPair({:privateKey})` dasselbe Paar wieder, byte-gleich über 7 Läufe, Neustarts des Simulators und einen Fassungswechsel 1 → 2 ohne Leeren des Speichers. **Grenzen:** Der Speicher liegt wie `cred` ohne Hardware-Schutz auf der Uhr (Lage H); ob ein Update aus dem Connect-IQ-Store den Speicher hält, zeigt nur eine echte Uhr (P-KG-01) | Krypto-Probe, `GERAETEPAAR`, 11.11.2026 | Antwort an KA-06a |
@@ -338,3 +340,15 @@ durchreicht (P-KG-02); der letzte Versuch nach echten 30 Tagen.
 | `sendeweg.sh fenix6pro` | 13 Prüfungen, davon 5 neu | **13 von 13 grün** |
 | `SENDEWEG_WATCH=<Uhr 4.5.0>` | dieselben 13 gegen den Stand vor KG-06 | **3 rot** (401 ohne Feld, 403 ohne Feld, Frist ohne Versuch); Gegenproben `401-auth-ist-abmeldung`, `frist-dann-geraeumt` grün |
 | Prüfstand `pruefen.sh` | Stufe und Proben nach Berührung | Bericht in der Commit-Nachricht von KG-06 |
+
+### KG-07 (11.11.2026, Uhr 4.5.2)
+
+**Nicht geprüft:** am Gerät, ob die Fenix beim Loslassen ein `onSelect`
+schickt (P-KG-13); die Venu (lang Zurück öffnet das Menü weiter sofort).
+
+| Mittel | Was es misst | Ergebnis |
+|---|---|---|
+| Messfassung aus `rea.sh`, Uhr 4.5.1 | kurz UP/DOWN auf der Rea-Seite ohne Rea; lang START auf der Hauptanzeige | je **eine** Seite (`REANAV 3`, `REANAV 4`, `REANAV 0`); Schnellmenü: `SCHNELL-AUSWAHL` beim Loslassen — F-KG-08 bestätigt |
+| `rea.sh fenix6pro` | 18 Schritte, davon 3 neu | **18 von 18 grün** |
+| `REA_WATCH=<Uhr 4.5.1>` | dieselben 18 | **1 rot** (Schnellmenü wählt beim Loslassen); gegen 4.4.0 waren die Blätterschritte rot (`REANAV 3, REANAV 2`) |
+| Prüfstand `pruefen.sh` | Stufe und Proben nach Berührung | Bericht in der Commit-Nachricht von KG-07 |

@@ -105,7 +105,13 @@ class ClockDelegate extends ActionDelegate {
         return true;
     }
 
-    // lang START: farbcodiertes Schnellmenue
+    /* lang START: farbcodiertes Schnellmenue -- ERST BEIM LOSLASSEN (seit
+     * Uhr 4.5.2, F-KG-08). Oeffnete es nach 1 s Halten, ging das Loslassen
+     * an das Menue und waehlte den ersten Eintrag ("Einsatzuebersicht"):
+     * im Simulator gemessen, dasselbe wie beim Rea-Menue bis Uhr 4.4.0.
+     * Die Seite schluckt das Loslassen jetzt selbst (Input.mc). */
+    function langNachLoslassen() as Lang.Boolean { return true; }
+
     function actSelectLong() as Lang.Boolean {
         var v = new QuickMenuView();
         WatchUi.pushView(v, new QuickMenuDelegate(v), WatchUi.SLIDE_LEFT);

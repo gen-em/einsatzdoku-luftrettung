@@ -11305,3 +11305,15 @@ zutreffen.
      ein Riegel, der alle drei hält.
      Erledigt 11.11.2026 mit Web 24.13.0 (Schritt 28, KA-05): Wächter in 62
      Dateien, Sperre in der .htaccess, 102 Anker auf \z; Riegel schranken.
+
+574. **Das Schnellmenü der Garmin-Uhr wählte beim Loslassen von START die Einsatzübersicht.** · gehört zu: 28 · Stand: erledigt · seit 11.11.2026
+     *Aufgenommen 11.11.2026 mit KG-07 (Konzept KG, F-KG-08, -09).* Die
+     Hauptanzeige öffnete das Schnellmenü nach 1 s Halten von START
+     (`ClockDelegate.actSelectLong()`); das Loslassen ging an das Menü, und
+     dessen `onSelect` wählte den ersten Eintrag — im Simulator gemessen.
+     Dazu blätterte bis Uhr 4.4.0 ein kurzer UP-Druck auf der Rea-Seite
+     ohne Rea im Simulator zwei Seiten; seit 4.5.0 nur noch eine, aber
+     ungemessen. *Weg:* `langNachLoslassen()` auch auf der Hauptanzeige;
+     beides in der Probe `rea`. *Abnahme:* Probe rot gegen Uhr 4.5.1.
+     Erledigt 11.11.2026 mit Uhr 4.5.2 (Schritt 28, KG-07): Schnellmenü
+     öffnet beim Loslassen; Probe rea, 18 Schritte.

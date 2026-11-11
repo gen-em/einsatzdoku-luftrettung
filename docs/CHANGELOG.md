@@ -14,6 +14,17 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 4.5.2] — unveröffentlicht
+
+Schritt 28, Paket KG-07 (Backlog Nr. 574).
+
+### Behoben
+
+- **Uhr — das Loslassen von START wählte im Schnellmenü der Hauptanzeige
+  gleich die Einsatzübersicht.** Das Menü öffnete nach einer Sekunde Halten,
+  und das Loslassen ging an das Menü; im Simulator gemessen, derselbe Fehler
+  wie beim Rea-Menü bis Uhr 4.4.0. Jetzt öffnet es beim Loslassen.
+
 ## [Uhr 4.5.1] — unveröffentlicht
 
 Schritt 28, Paket KG-06 (Backlog Nr. 573).
