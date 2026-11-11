@@ -563,6 +563,9 @@ Daten erst nach Server-Bestätigung.
 │   │                      Topf rt_vorschau — P5c/AP9)
 │   ├── assets/            style.css (Schriften werden lokal ausgeliefert, s. u.),
 │   │                      crypto.js (WebCrypto), unlock.js (Entsperrdialog, s. u.),
+│   │                      inhalt2.js, huelle2.js, standbuch.js (neues Format
+│   │                        `edk2:`, Gerätehülle Fassung 2, Zählerstand —
+│   │                        seit Web 24.14.0, Schreiben noch aus, 4.42),
 │   │                      zeitfeld.js (Zeiteingabe im 24-Stunden-Format, s. u.),
 │   │                      datumsfeld.js (Datumseingabe TT.MM.JJJJ, seit Web 24.4.0),
 │   │                      segment.js (abwählbare Segmentwahl, seit Web 24.3.0),
@@ -1547,6 +1550,7 @@ beide lesen und mitnehmen, und weil der Inhaltsschlüssel nie wechselt
 |---|---|---|
 | Inhaltsschlüssel | IndexedDB `nadoku-schluessel`, Fach `fach`, Eintrag `inhalt`: `{schluessel: CryptoKey (AES-GCM, extractable: false), bindungen: [Kennungen der Hüllen], zeit}` | bis Abmelden, Anmelden, Ablauf der Sitzung (`session_lib.php`) oder die erste Seite mit `keyguard.js` nach Ablauf der Frist |
 | Datenschlüssel | nirgends — nur in der Funktion, die die Hülle öffnet | bis zum Ende dieser Funktion |
+| Zählerstand (Standbuch, Gerätebuch) | IndexedDB `nadoku-stand`, je Konto, nur verschlossen (`edk2`) bis auf die Versionsnummer | übersteht das Abmelden (`clearSession()` fasst die Datenbank nicht an); **erst geschrieben, wenn die Weiche umliegt** (4.42) |
 | Hälften und Anmelde-Token (`edkvor`) | `sessionStorage` | einen Seitenwechsel nach der Anmeldung (unverändert; für das Anlegen danach trägt die Anlegemarke der Sitzung, seit Web 23.7.0) |
 
 **Für alle Tabs** (E-R17-76): Die Ablage gilt für den Ursprung. Ein neuer Tab
@@ -6683,7 +6687,7 @@ Die Bausteine im Einzelnen:
 | ZIP-Archive | `zip_lib.php` | Ab Web 20.39.0 (P5c/AP2, E-P5c-57, R83). `zip_verfuegbar()`, `zip_bauen($ziel, [Name => Pfad], $packen)` (ungepackt als Vorgabe, weil die Teile schon gzip und versiegelt sind), `zip_eintrag($pfad, $name)`, `zip_oeffnen($pfad)` (nur lesend), `zip_lesen($pfad, $fn)`, `zip_namen()`. Vorher öffneten vier Stellen selbst ein Archiv und fragten je selbst nach der Erweiterung; Registerzeile Z39. **Lädt selbst nichts.** |
 | Etwas melden, das schiefging | `systemmeldung_lib.php` (`system_melden()`, `system_rueckfall()`) | Ab Web 20.40.0 (P5c/AP3, E-P5c-58, Backlog Nr. 248). Der Reiter System statt `error_log()`: Kennung, bereinigte Meldung, Datei und Zeile; ohne Datenbank derselbe Satz mit derselben Kennung im Fehlerprotokoll des Webspace. `error_log()` bleibt an zwei Stellen (Register Z38, Decke 2). Einzelheiten 4.28. |
 | Protokoll lesen | `protokoll_lib.php` (`protokoll_liste()`, `protokoll_zahl()`, `protokoll_quellen()`) | Ab Web 20.39.0 (P5c/AP2, E-P5c-38). Je Reiter ein bis drei Quellen mit derselben Zeilenform, **je Quelle eine Abfrage, nie ein UNION** (Kollationen, 4.28). Die Seite, die Zählkarte der Statusseite und der Archivjob lesen alle darüber. |
-| Krypto-Rüstzeug der Seiten | `ui.php` (`ui_krypto_bootstrap()`) | Ab Web 7.2.0. Die Verweise auf `crypto.js`, `keyguard.js` und `unlock.js` samt `PAT_WRAP`, `KDF_SALT`, `KDF_ITER` und `KDF_ITER_ZIEL`; wahlweise `PAT_KEY_CHECK`, `CSRF` und `pwquality.js`. Vorher acht Blöcke in sieben Dateien — mit zwei Namen für dieselbe Hülle. Ein **zweiter Aufruf im selben Seitenaufbau gibt nichts aus und meldet es in den Reiter System** (`system_melden('ui', …)`): Zwei Einbindungen von `crypto.js` wären ein `SyntaxError`, der das ganze zweite Skript verwirft. |
+| Krypto-Rüstzeug der Seiten | `ui.php` (`ui_krypto_bootstrap()`) | Ab Web 7.2.0. Die Verweise auf `crypto.js`, `keyguard.js` und `unlock.js` (seit Web 24.14.0 hinter `crypto.js` von selbst `inhalt2.js`, `huelle2.js`, `standbuch.js`, auch in einer eigenen Liste) samt `PAT_WRAP`, `KDF_SALT`, `KDF_ITER` und `KDF_ITER_ZIEL`; wahlweise `PAT_KEY_CHECK`, `CSRF` und `pwquality.js`. Vorher acht Blöcke in sieben Dateien — mit zwei Namen für dieselbe Hülle. Ein **zweiter Aufruf im selben Seitenaufbau gibt nichts aus und meldet es in den Reiter System** (`system_melden('ui', …)`): Zwei Einbindungen von `crypto.js` wären ein `SyntaxError`, der das ganze zweite Skript verwirft. |
 | Meldungszeile | `ui.php` (`ui_meldung()`) | Ab Web 7.2.0. Hinweis- und Fehlerzeile über dem Inhalt, vorher 21-mal in 13 Dateien. Der Ton (`info`/`ok`) ist Parameter, weil der Bestand beide kennt: `ok` meldet einen Vollzug (Stammdaten, Nachbearbeitung). |
 | Abbruchseite | `ui.php` (`ui_abbruch()`) | Ab Web 7.2.0. Statt `exit('… nicht gefunden.')` eine richtige Seite mit Kopfleiste und Rückweg — 16 Stellen, darunter `require_admin()` und `csrf_check()` in `auth_guard.php`. Wortlaut und HTTP-Code unverändert; der API-Zweig von `require_admin()` antwortet weiter mit JSON. |
 | Knopf | `ui.php` (`ui_knopf()`), `assets/style.css` (`.knopf` mit `-primaer/-neutral/-gefahr/-leise/-symbol`) | **Seit Web 9.0.0 (P3/O1) eine Höhe: 44 px**, mobil wie am Schreibtisch, auch für Zeilenaktionen — es gibt keine Kompaktvariante, was kleiner ist, ist kein Knopf, sondern ein Link mit Symbol (E-P3-22). Vier Arten nach **Bedeutung**, nicht nach Aussehen: `primaer` (die eine Haupthandlung), `neutral` (alles Übrige, auch „Bearbeiten"), `gefahr` (Löschen), `leise` (Abbrechen, Nebenwege). Die Vorgängerfamilie `.btn-primary/-danger/-yellow/-red/-plain/-edit` ist mit O11 vollständig verschwunden; ihr letzter Rest war der Export-Knopf in `import.php`, der damit seit Web 9.0.0 ungestaltet war (F-P3-BA). **Im Aktionsblatt heißen dieselben Arten anders** (`blatt-gefahr`, `blatt-anlegen`) — `ui_zeilenaktionen()` wählt danach, wo der Knopf steht; wer das übersieht, bekommt ein „Löschen", das nicht rot ist (F-P3-AX). |
@@ -10284,6 +10288,39 @@ Druckblätter (`--papier-*`). **Drucken ist immer hell:** ein Block unter
 
 **Nach dem Deploy muss `update.php` laufen** (`users.darstellung`). Bis dahin
 gilt für jedes Konto „wie das Gerät"; Anmeldung und Profil funktionieren.
+
+### 4.42 Bindung und Herkunft — das neue Format (ab Web 24.14.0, Schritt 28, KA-06)
+
+**Warum.** Chiffretexte der Fassung 1 (`edk1:`) und Gerätehüllen der
+Fassung 1 sind vertraulich, aber an nichts gebunden: Wer die Datenbank
+beschreibt, vertauscht Patientenblöcke zwischen Einsätzen, legt alte Stände
+zurück, verschiebt Zeiten und entfernt Spurstücke; wer den öffentlichen
+Kontoschlüssel kennt, erfindet Gerätedaten (Audit KA, F-KA-04, -12;
+Bedrohungsmodell R23). Das Format, die Prüfvektoren und die Gründe, mit
+denen ein Angriff scheitert, stehen in `tools/proben/huelle/referenz.py`
+(Gerätehülle) und `referenz_inhalt.py` (`edk2:`, Standbuch, Ableitung 2)
+**und nur dort**; die Entscheidungen im Konzept KA (E-KA-43 bis -48).
+
+**Im Browser** (seit Web 24.14.0):
+
+| Datei | Hält |
+|---|---|
+| `inhalt2.js` (`EdInhalt`) | `edk2:` schreiben und lesen — AES-256-GCM mit Zusatzdaten aus Zweck und Bezug, Zähler und Größenklasse innen; die Hüllen `edka2:`; **die Weiche** `SCHREIBT_FASSUNG_2` |
+| `huelle2.js` (`EdHuelle2`) | Gerätehülle Fassung 2 öffnen (Herkunft über den Geräteschlüssel, Stückfolge, absolute Zeiten) und als Absender „Konto" schreiben; Zusage und Vergleichswert der Kopplung |
+| `standbuch.js` (`EdStandbuch`) | Zählerstand je Datensatz in 16 Blättern und das Gerätebuch, Ablage in IndexedDB `nadoku-stand`, Abschrift auf dem Server über einen austauschbaren Transport; `zurueckschreiben()` nach einem zurückgesetzten Server |
+| `crypto.js` | Ableitung 2 (ein PBKDF2-Block, Hälfte und Token per HKDF) ab 1 200 000 Runden (`ABLEITUNG2_AB`); `huelleOeffnen()` für `edka2:` |
+
+**Die Weiche steht aus.** Gelesen werden beide Fassungen; geschrieben wird
+weiter Fassung 1, bis Server (Standbuch-Endpunkt, Formprüfung), Geräte und
+Anhebelauf stehen (KA-06b-2 bis 06e). Sie ist eine Konstante im Skript und
+kein Wert vom Server, sonst hielte sie, wer den Server beschreibt. Der
+Rückweg bleibt frei von Server und Anteil: `edka2:` für die
+Wiederherstellungshülle wird abgewiesen.
+
+**Was noch nicht da ist:** der Endpunkt für die Blätter (KA-06b-2, mit
+Migration), die Umstellung der Verbraucher (KA-06b-3), der
+Anhebelauf (KA-06b-4), die Kopplung mit Vergleichswert an den Geräten
+(KA-06c) und die Formprüfung am Server (KA-06d).
 
 ## 5. Uhr-App (Monkey C) — Modulstruktur
 

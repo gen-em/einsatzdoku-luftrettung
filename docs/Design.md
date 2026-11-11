@@ -1319,7 +1319,7 @@ für eine Rückfrage — nicht für ein neues Element.
 | `ui_geocoder_hinweis()` | `.geocoder-hinweis` | **keine** | 3531 |
 | `ui_ortsfeld()` | `.ortsfeld-zeile` | ja | 3560 |
 | `ui_tabellen_bootstrap()` | `.tabellen-bootstrap` | **keine** | 3704 |
-| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3783 |
+| `ui_krypto_bootstrap()` | — | Hüllenfunktion, kein eigenes Element | 3785 |
 
 55 Funktionen mit Markup in `server/ui.php`, davon 4 Hüllenfunktionen ohne eigenes Element.
 **Ohne Regel im Stylesheet:** `ui_logo_masse()`, `ui_datenschutz_hinweis()`, `ui_diagramm_skala()`, `ui_datum_eingabe()`, `ui_csrf_bootstrap()`, `ui_geocoder_bootstrap()`, `ui_geocoder_hinweis()`, `ui_tabellen_bootstrap()` — jede davon ist zu prüfen: entweder ein Behälter, der zu Recht keine Gestaltung braucht, oder eine Lücke.

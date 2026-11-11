@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 244 | 11.11.2026 | 28 | KA-06a erledigt (PR #172, Referenz); KA-06b-1 im PR (Web 24.14.0), Rest von 06b in drei Teilen (E-KA-51). Kopf: Stand `b24cf2a`.
 | 243 | 11.11.2026 | 28 | KA-06b vorab erledigt (PR #171, Web 24.13.1); KA-M5 freigegeben, KA-06a im PR. Statuszelle von 28 unter ihre Decke gekürzt. Kopf: Stand `80e55f8`.
 | 242 | 11.11.2026 | 28 | KA-05 erledigt (PR #170, Web 24.13.0); KG-Teil mit PR #168 gemergt (Uhr 4.5.1), KG läuft seit 10.11.2026 weiter; KA-06b vorab im PR #171. Kopf: Stand `a41d4f5`.
 | 241 | 11.11.2026 | 28 | KA-04 erledigt (PR #169, Web 24.12.1, Android 0.23.0); KA-05 im PR (Web 24.13.0), KG-01 als PR #168. Kopf: Stand `ae2790e`.

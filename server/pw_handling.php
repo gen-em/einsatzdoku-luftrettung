@@ -484,6 +484,7 @@ ui_seite_start([
 
 <?php if ($row && !$done): ?>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<script src="<?= asset('assets/inhalt2.js') ?>"></script>
 <?php /* Passwortguete: der Baustein mit Staerkeanzeige, statt die
          Mindestlaenge nur als HTML-Attribut und im Skript zu fuehren. */ ?>
 <script src="<?= asset('assets/pwquality.js') ?>"></script>

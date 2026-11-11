@@ -12,15 +12,30 @@
  * Dazu, ohne Abnahme, die Zeiten für Verschließen und Öffnen eines
  * Spurstücks zu 200 und 500 Punkten in beiden Innenformen (Median aus 9).
  *
+ * FASSUNG 2 (Nr. 563, KA-06b). Danach dieselbe Seite gegen `vektoren-2.json`
+ * und `vektoren-inhalt.json`: `edk2:`, Schlüsselhüllen, Standbuch,
+ * Gerätebuch, Ableitung 2, Gerätehülle Fassung 2 mit ihren Leseregeln und
+ * der Vergleichswert der Kopplung — die Prüfungen stehen in
+ * `pruefungen2.js` daneben. Sie laufen ZWEIMAL: mit der Weiche, wie sie
+ * ausgeliefert wird (aus — jeder Schreibweg muss Fassung 1 ergeben), und in
+ * einer zweiten Seite mit umgelegter Weiche (die Konstante
+ * `SCHREIBT_FASSUNG_2` in `inhalt2.js` wird beim Laden ersetzt; findet die
+ * Probe sie nicht genau einmal mit dem Wert `false`, ist sie rot).
+ *
+ * `--bestand <Ordner>` nimmt die Skripte aus einem anderen Ordner als
+ * `server/assets/` — für die Gegenprobe gegen einen älteren Stand. Was dort
+ * fehlt, fehlt der Seite; die Prüfungen dazu sind dann einzeln rot.
+ *
  * WARUM EINE ERFUNDENE HTTPS-ADRESSE. WebCrypto gibt es nur in einem sicheren
  * Kontext; `about:blank` und `data:` sind es nicht in jeder Engine. Die Seite
  * wird deshalb unter `https://huelle.invalid/` aus der Probe selbst
  * beantwortet — keine Anlage, kein Netz.
  *
  * Aufruf:  node tools/proben/huelle/probe.mjs [--motor chromium|firefox|webkit] [--drossel N]
+ *                                             [--bestand <Ordner>]
  * Rückgabe: 0 alles gleich · 1 Abweichung · 2 nicht gelaufen
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -36,7 +51,16 @@ const motor = motorWahl(process.argv);
 const di = process.argv.indexOf('--drossel');
 const drossel = di >= 0 ? Number(process.argv[di + 1]) : 1;
 const vektoren = JSON.parse(readFileSync(path.join(HIER, 'vektoren.json'), 'utf-8'));
-const quelle = readFileSync(path.join(HIER, '../../../server/assets/crypto.js'), 'utf-8');
+const bi = process.argv.indexOf('--bestand');
+const BESTAND = bi >= 0 ? path.resolve(process.argv[bi + 1]) : path.join(HIER, '../../../server/assets');
+const quelle = readFileSync(path.join(BESTAND, 'crypto.js'), 'utf-8');
+const vektoren2 = JSON.parse(readFileSync(path.join(HIER, 'vektoren-2.json'), 'utf-8'));
+const vektorenInhalt = JSON.parse(readFileSync(path.join(HIER, 'vektoren-inhalt.json'), 'utf-8'));
+const pruefungen2 = readFileSync(path.join(HIER, 'pruefungen2.js'), 'utf-8');
+/* Die Dateien der Fassung 2, in der Reihenfolge, in der die Anwendung sie
+ * einbindet. Eine, die im Bestand fehlt, wird nicht geladen. */
+const NEU = ['inhalt2.js', 'huelle2.js', 'standbuch.js'];
+const WEICHE = /const SCHREIBT_FASSUNG_2 = false;/g;
 
 let browser;
 try { browser = await starten(pw, motor); }
@@ -52,6 +76,30 @@ if (drossel > 1) {
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: drossel });
 }
 await seite.addScriptTag({ content: quelle });
+
+/* Fassung 2 lädt eine eigene Funktion, weil sie zwei Seiten braucht. */
+const fehlend = NEU.filter((n) => !existsSync(path.join(BESTAND, n)));
+async function fassung2(weicheAn) {
+  const s = await kontext.newPage();
+  await s.goto('https://huelle.invalid/');
+  const fehler = [];
+  s.on('pageerror', (e) => fehler.push(String(e.message).split('\n')[0]));
+  await s.addScriptTag({ content: quelle });
+  for (const n of NEU) {
+    if (fehlend.includes(n)) { continue; }
+    let text = readFileSync(path.join(BESTAND, n), 'utf-8');
+    if (n === 'inhalt2.js') {
+      const treffer = (text.match(WEICHE) || []).length;
+      if (treffer !== 1) { return { zeilen: [`  FEHL  Weiche: „const SCHREIBT_FASSUNG_2 = false;“ steht ${treffer}-mal in inhalt2.js, erwartet einmal`], schlecht: 1, fehler }; }
+      if (weicheAn) { text = text.replace(WEICHE, 'const SCHREIBT_FASSUNG_2 = true;'); }
+    }
+    await s.addScriptTag({ content: text });
+  }
+  await s.addScriptTag({ content: pruefungen2 });
+  const erg = await s.evaluate(([v2, vi, an]) => window.hpFassung2(v2, vi, an), [vektoren2, vektorenInhalt, weicheAn]);
+  await s.close();
+  return Object.assign(erg, { fehler });
+}
 
 const ergebnis = await seite.evaluate(async (v) => {
   const hex = (h) => new Uint8Array((h.match(/../g) || []).map((x) => parseInt(x, 16)));
@@ -135,13 +183,26 @@ const ergebnis = await seite.evaluate(async (v) => {
   return { zeilen, schlecht, zeiten };
 }, vektoren);
 
+const aus = await fassung2(false);
+const an = await fassung2(true);
 await browser.close();
-console.log(`Hüllenprobe in ${motor}${drossel > 1 ? `, Drossel ${drossel}×` : ''}`);
+console.log(`Hüllenprobe in ${motor}${drossel > 1 ? `, Drossel ${drossel}×` : ''}`
+  + (bi >= 0 ? ` — Bestand ${BESTAND}` : ''));
 console.log(ergebnis.zeilen.join('\n'));
 for (const [k, z] of Object.entries(ergebnis.zeiten)) {
   console.log(`  Zeit  ${k}: innen ${z.innen_byte} B, Hülle ${z.huelle_byte} B, `
     + `verschließen ${z.verschliessen_ms} ms, öffnen ${z.oeffnen_ms} ms`);
 }
 const n = ergebnis.zeilen.length;
-console.log(`${n} Prüfungen, ${ergebnis.schlecht} Abweichungen`);
-process.exit(ergebnis.schlecht ? 1 : 0);
+console.log(`Fassung 1: ${n} Prüfungen, ${ergebnis.schlecht} Abweichungen`);
+for (const f of fehlend) { console.log(`  fehlt im Bestand: ${f}`); }
+for (const [name, e] of [['Weiche aus (wie ausgeliefert)', aus], ['Weiche an', an]]) {
+  console.log(`Fassung 2, ${name}`);
+  console.log(e.zeilen.join('\n'));
+  for (const f of new Set(e.fehler)) { console.log(`  Seitenfehler: ${f}`); }
+  console.log(`Fassung 2, ${name}: ${e.zeilen.length} Prüfungen, ${e.schlecht} Abweichungen`);
+}
+const gesamt = n + aus.zeilen.length + an.zeilen.length;
+const rot = ergebnis.schlecht + aus.schlecht + an.schlecht;
+console.log(`${gesamt} Prüfungen, ${rot} Abweichungen`);
+process.exit(rot ? 1 : 0);

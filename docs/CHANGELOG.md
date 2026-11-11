@@ -33,6 +33,18 @@ Schritt 28, Pakete KG-07 (Backlog Nr. 574) und KG-03a.
   und das Loslassen ging an das Menü; im Simulator gemessen, derselbe Fehler
   wie beim Rea-Menü bis Uhr 4.4.0. Jetzt öffnet es beim Loslassen.
 
+## [Web 24.14.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — der Browser kann das neue, gebundene Format lesen.** Bisher ging
+  ein verschlüsselter Block auch dann auf, wenn er am falschen Einsatz hing
+  oder ein alter Stand zurückgelegt war, und Gerätedaten bewiesen nicht,
+  von welchem Gerät sie kamen. Das neue Format bindet Zweck, Datensatz,
+  Zähler und Absender, und jeder Angriff scheitert mit einem benannten
+  Grund. Geschrieben wird es noch nicht: Erst müssen Server, Geräte und der
+  Umzug des Bestands es auch können.
+
 ## [Web 24.13.1] — unveröffentlicht
 
 ### Behoben

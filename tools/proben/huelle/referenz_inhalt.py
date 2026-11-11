@@ -138,6 +138,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import re
 import pathlib
 import struct
 import sys
@@ -269,6 +270,11 @@ def huelle_oeffnen(schluessel: bytes, text: str, art: str) -> str:
         if art == "rc":
             raise InhaltFehler("kennung")
         kennung, _, rest = text[len(HUELLE_KENNUNG):].partition(":")
+        # Die Kennung des Anteils hat eine Form (acht Hexzeichen, wie im
+        # Browser). Eine leere öffnete sonst als Hülle OHNE Anteil — der
+        # Browser weist sie ab, die Referenz tat es bis KA-06b-1 nicht.
+        if not re.fullmatch(r"[0-9a-f]{8}", kennung):
+            raise InhaltFehler("kennung")
         text = KENNUNG + rest
     return oeffnen(schluessel, text, "wrap", art + (":" + kennung if kennung else ""))[0].decode()
 
@@ -347,8 +353,15 @@ def geraetebuch_oeffnen(schluessel: bytes, text: str, anker: int | None = None) 
         raise InhaltFehler("buch-zurueckgelegt")
     try:
         d = json.loads(klar.decode("utf-8"))
-        return {g["sid"]: {"spk": base64.b64decode(g["spk"]), "bis": g.get("bis")}
-                for g in d["geraete"]}, version
+        buch = {}
+        for g in d["geraete"]:
+            # SID und SPK in ihrer Form, wie im Browser (`standbuch.js`):
+            # 16 Hexzeichen, ein öffentlicher P-256-Schlüssel mit 65 Byte.
+            spk = base64.b64decode(g["spk"], validate=True)
+            if not re.fullmatch(r"[0-9a-f]{16}", g["sid"]) or len(spk) != 65 or spk[0] != 4:
+                raise InhaltFehler("innen")
+            buch[g["sid"]] = {"spk": spk, "bis": g.get("bis")}
+        return buch, version
     except (ValueError, KeyError, TypeError) as f:
         raise InhaltFehler("innen") from f
 
@@ -649,6 +662,23 @@ def selbstprobe() -> int:
         faelle.append(("Fehler: Hülle des ausgetragenen Handys geht auf", False))
     except R.HuelleFehler as f_:
         faelle.append(("Fehler: Hülle des ausgetragenen Handys geht auf", str(f_) == "absender-gesperrt"))
+    # Drei Fälle aus der Gegenlesung des Browserkerns (KA-06b-1): Wo der
+    # Browser strenger war, war die Referenz falsch.
+    def grund(fn):
+        try:
+            fn(); return None
+        except (InhaltFehler, R.HuelleFehler) as x:
+            return str(x)
+        except Exception as x:          # ungefangen = kein benannter Grund
+            return "ungefangen:" + type(x).__name__
+    leer = huelle_bauen(ck, "ab" * 32, "pw", "0011aabb").replace("edka2:0011aabb:", "edka2::")
+    faelle.append(("Fehler: Hülle mit leerer Anteil-Kennung geht auf (Grund kennung)",
+                   grund(lambda: huelle_oeffnen(ck, leer, "pw")) == "kennung"))
+    krumm = geraetebuch_bauen(ck, 1, [{"sid": "00" * 8, "spk": base64.b64encode(b"\x04" + b"\x01" * 10).decode()}])
+    faelle.append(("Fehler: Gerätebuch mit kurzem SPK geht auf (Grund innen)",
+                   grund(lambda: geraetebuch_oeffnen(ck, krumm)) == "innen"))
+    faelle.append(("Fehler: kaputtes gepacktes Stück ohne benannten Grund (Grund innen)",
+                   grund(lambda: R.gepackt_lesen(b"kein zlib", 1, 0)) == "innen"))
     gleich = {len(verschliessen(ck, "pat", "r", b"x" * n)) for n in (0, 2, 100, 400, 504)}
     faelle.append(("Gegenprobe: 0 bis 504 Byte Nutzlast ergeben dieselbe Länge", len(gleich) == 1))
     schlecht = 0

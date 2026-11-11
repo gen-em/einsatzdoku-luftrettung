@@ -354,9 +354,14 @@ def innen_gepackt(punkte: list[tuple[float, float, float | None, int]], ts_von: 
 
 def gepackt_lesen(innen: bytes, n: int, ts_von: int) -> list[tuple[float, float, float | None, int]]:
     """Die Gegenrichtung zu `innen_gepackt()`: n Punkte (Breite, Länge, Höhe, Zeit)."""
-    roh = zlib.decompress(innen)
+    # Ein kaputtes gepacktes Stück scheitert mit benanntem Grund (`innen`),
+    # wie im Browser — bis KA-06b-1 kam hier `zlib.error` ungefangen durch.
+    try:
+        roh = zlib.decompress(innen)
+    except zlib.error as f:
+        raise HuelleFehler("innen") from f
     if len(roh) != 16 * n:
-        raise ValueError(f"gepackte Innenform: {len(roh)} Byte für {n} Punkte")
+        raise HuelleFehler("innen")
     werte = struct.unpack(">%di" % (4 * n), roh)
     spalten = []
     for k in range(4):

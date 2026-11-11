@@ -130,6 +130,7 @@ function session_beenden(string $grund = 'abgemeldet'): never
 </main>
 <?php ui_fuss_seite(['dunkel' => true]); ?>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<script src="<?= asset('assets/inhalt2.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
 // Die Schluessel raeumen — seit R17-25 den Inhaltsschluessel in IndexedDB.
 // Das Loeschen dort ist ein Vorgang, den der Seitenwechsel gleich danach

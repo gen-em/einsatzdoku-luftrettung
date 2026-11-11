@@ -12,8 +12,8 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-06** — **06a** (Entwurf und Referenz) fertig, KA-M5 freigegeben (E-KA-43 bis -48), im PR; **06b Krypto-Kern** bei einem Fable-Agenten (E-KA-49), PHP, Migration und Oberfläche danach mit Opus. **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-01, -02, -05, -06 mit PR #168 gemergt (Uhr 4.5.1), KG-03 wartet auf diese Referenz |
-| Erledigt | **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
+| In Arbeit | **KA-06b-1** (Kern einbinden, Web 24.14.0) im PR; danach 06b-2 Server für das Standbuch (Migration), 06b-3 Verbraucher, 06b-4 Anhebelauf (E-KA-51). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-01, -02, -05, -06 mit PR #168 gemergt (Uhr 4.5.1), KG-03 wartet auf diese Referenz |
+| Erledigt | **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
@@ -101,6 +101,9 @@ Safari.
 | E-KA-47 | **Rundenzahl 1 200 000 mit Ableitung 2 (Q-KA-11, F-KA-29):** ein PBKDF2-Block, Hälfte und Token per HKDF; Umstellung still beim Anmelden, während der Umstellung rechnet die Anmeldung beide Listenwerte | 11.11.2026, BetreiberIn (KA-M5) |
 | E-KA-48 | **Die Entwurfsentscheidungen V-KA-01 bis -13 gelten** (Prüfprotokoll, KA-06a), darunter zwei Abweichungen von der Skizze: Verkettung der Stückfolge über die Deckung statt über einen Hash, keine Kontokennung in den Zusatzdaten | 11.11.2026, BetreiberIn (KA-M5, „alles wie vorgeschlagen") |
 | E-KA-49 | **Den Krypto-Kern von 06b schreibt wieder ein Fable-Agent**, in eigener Arbeitskopie; Server-Endpunkte, Migration, Anhebelauf und Oberfläche baut die Hauptinstanz mit Opus. Eine Weiche hält das Schreiben im neuen Format aus, bis alle Leser es können | 11.11.2026, BetreiberIn |
+| E-KA-50 | **Nach einem zurückgesetzten Server schreibt der Browser seinen Stand zurück** (`EdStandbuch.zurueckschreiben()`) — nur über einen eigenen Knopf mit Rückfrage der BetreiberIn, dazu ein Satz im Runbook. Ohne ihn wäre nach jeder eingespielten Sicherung jedes Blatt dauerhaft „zurückgelegt". Der Knopf ist ein neuer Bedienweg und braucht Mockup und Freigabe | 11.11.2026, BetreiberIn |
+| E-KA-51 | **06b in vier Teilen, je ein PR:** 06b-1 Kern einbinden (Weiche aus), 06b-2 Server für das Standbuch (Tabelle, `api/standbuch.php`, Datensatz und Blatt in einer Transaktion, 409; Migration, `update.php`), 06b-3 Verbraucher umstellen und Ableitung 2 am Server, 06b-4 Anhebelauf. **Die Weiche wird erst umgelegt, wenn auch 06c und 06d stehen** — als Hauptstufe Web 25.0.0 | 11.11.2026, BetreiberIn |
+| E-KA-52 | **Entscheidungen des Krypto-Kerns** (Fable-Agent, E-KA-49): (1) die Fassung der Ableitung folgt aus der Rundenzahl — ab 1 200 000 Fassung 2 (`ABLEITUNG2_AB`), keine eigene Spalte; (2) die Weiche ist eine Konstante im Skript, kein Wert vom Server; (3) das Buch vergisst nichts — beim Übernehmen eines neueren Blatts gilt je Feld der höhere Wert (strenger als die Referenz); (4) 409 heißt neu aufsetzen, vier Versuche, dann `konflikt`; (5) die Ablage hält den Stand verschlossen, eigene Datenbank `nadoku-stand`; (6) neuer Grund `blatt-version`; (7) `abgleichen()` liefert Befunde statt zu werfen; (8) `EdCrypto.decrypt()` weist `edk2:` mit Grund `gebunden` ab; (9) Formprüfungen strenger als die Referenz — wo die Referenz lockerer war, ist sie mit 06b-1 nachgezogen (F-KA-90) | 11.11.2026, Umsetzung |
 | E-KA-21 | **Die Garmin-Anteile gehen an eine eigene Instanz, Kürzel KG** (Abschnitt 11): KA-04 Punkt 1 und 4, der Garmin-Teil von KA-06c samt der Messung für 06a, die Garmin-Kommentare aus F-KA-43 und der Garmin-Teil von KA-M6. KG zählt eigene Nummern (`KG-NN`, `F-KG-NN`, `E-KG-NN`, `P-KG-NN`), führt ein eigenes Konzept und schreibt den Rahmenplan nicht — das tut diese Instanz | 10.11.2026, BetreiberIn |
 
 ---
@@ -781,6 +784,39 @@ des eigenen Kontos.
 Fassung 3; 3 Begleitdateien, alle versiegelt. Staging und Produktiv nicht
 gezählt (E-KA-31).
 
+### KA-06b-1 Kern einbinden (11.11.2026)
+
+**Was nicht geprüft werden konnte — zuerst.**
+
+1. **Kein Verbraucher benutzt den Kern**, und die Weiche steht aus: Was
+   gemessen ist, ist die Bibliothek gegen die Referenz, nicht ein Weg der
+   Anwendung. Die stille Umstellung auf Ableitung 2 (`unlock.js`,
+   `formatHeben`) ist nur auf Syntax geprüft; sie braucht 06b-3.
+2. **Der Transport der Blätter** ist nur gegen einen Server im Speicher
+   gemessen (`speicherTransport()`); `api/standbuch.php` gibt es erst mit 06b-2.
+3. **Zeiten:** Dauer der Ableitung 2 bei 1 200 000 Runden und Größe eines
+   Blatts bei 5 000 Einsätzen sind nicht gemessen.
+4. **Die Stärke des Entwurfs** ist weiter nicht gegengelesen.
+
+**Gemessen:**
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Hüllenprobe, drei Engines (Agent; hier Chromium nachgefahren) | je **407 Prüfungen, 0 Abweichungen** (39 Fassung 1, 173 Weiche aus, 195 Weiche an) | mit `crypto.js` von `main`: 368 von 407 rot; mit altem `crypto.js` und den drei neuen Dateien: 355 rot | Kern byte-gleich zur Referenz, jede Gegenlage mit ihrem Grund |
+| Zwölf Mutanten (Agent; je eine Prüfung im Kern entfernt) | alle rot, 2 bis 96 Abweichungen | — | die Probe sieht, was sie prüfen soll |
+| Referenz-Selbstprobe | `referenz_inhalt.py` **21 Fälle, 0 Fehlschläge** (drei neu), `referenz.py` 17/0 | die drei neuen Fälle mit der Referenz von `main`: **3 rot** | F-KA-90 |
+| Vektoren nach `erzeugen` | unverändert (`git status`) | — | die Korrekturen ändern kein Format |
+
+**Prüfstand (Stufe neben, drei Engines):** 61 grün, 1 rot (`dokumente`:
+`Technik.md` nannte den Pfad des Endpunkts aus 06b-2, berichtigt), 1
+Hinweis (`erzeugen`: Zeilennummer von `ui_krypto_bootstrap()` in
+`Design.md` neu erzeugt, im Commit). Der Kopf erbt die übrigen Proben.
+
+**R91 nach PR #171 (Web 24.13.1, Staging, 11.11.2026):** Lauf 198 grün;
+Anmeldung im Browser mit eigenem BetreiberIn-Konto und Zweitfaktor gelingt,
+`edkvor` auf der ersten Seite leer, ein leeres Salz abgewiesen, 0
+Seitenfehler, im Reiter System kein Eintrag nach dem 09.11.2026.
+
 ### KA-06a Entwurf — Ergebnis (11.11.2026, Fable-Agent, E-KA-38)
 
 **Stand:** Referenz und Vektoren stehen unter `tools/proben/huelle/`
@@ -946,6 +982,13 @@ Klartextfelder (`final`, Strecke, Besatzung, Tagesnotizen, Phasenzeiten bis
 | F-KA-84 | **„Die Uhr ersetzt keine Browserhülle" ist nur eine Serverregel** (`ingest.php:749`, `uhr_gesperrt`) | Fassung 2 hält es im Standbuch |
 | F-KA-85 | **Android `minSdk = 26`**, ECDH im Keystore erst ab API 31 (`android/handy/build.gradle.kts:40`) — darunter liegt der Geräteschlüssel im vorhandenen Tresor | 06c; Bedrohungsmodell nennt es |
 | F-KA-86 | **Die Demo-Anmeldung lief örtlich in ihre Stundensperre** (20 je Stunde), weil Einzelläufe der Bedienprobe mit dem Prüfstand zusammenkamen — die Barrierefreiheitsprobe war rot, mit dem Code von `main` ebenso | Zähler `demo`/`demog` örtlich geleert, voller Lauf neu; Einzelläufe sparsam |
+| F-KA-87 | **Schneiden und Löschen treffen die Lückenregel:** `ortsdaten.js:392-395` behält beim Schneiden die Sequenznummern, ein Stück endet an jeder Lücke — unter Fassung 2 ist das `luecke`, solange kein Löschvermerk im Standbuch sie erklärt. Die Sperren liegen heute im Klartext (`m.spur_sperren`, `{von, bis}`) | 06b-3: Vermerke ins Standbuch (V-KA-06); Schneiden und Löschen nur entsperrt (E-KA-43) |
+| F-KA-88 | **Schreiben als Konto braucht den Inhaltsschlüssel:** die drei Schreibwege in `ortsdaten.js` (`:407`, `:445`, `:454`) haben heute nur den öffentlichen Kontoschlüssel | 06b-3 |
+| F-KA-89 | **JSON ist zwischen den Umsetzungen nicht byte-gleich für ganzzahlige Koordinaten:** Python schreibt `47.0`, JavaScript `47`; die Vektoren meiden solche Werte. Öffnen geht, byte-gleiches Nachbauen nicht — betrifft auch 06c und KG-03. Umgekehrt nimmt der Browser `"z": 3.0` an (nach `JSON.parse` nicht von `3` zu unterscheiden), die Referenz nicht | benannt; die Vektoren meiden ganzzahlige Koordinaten weiter, KG weiß es |
+| F-KA-90 | **Die Referenz war an drei Stellen lockerer als der Browser:** eine leere Anteil-Kennung öffnete als Hülle ohne Anteil (`referenz_inhalt.py:271`), das Gerätebuch prüfte SID und SPK nicht (`:350`), ein kaputtes gepacktes Stück warf ohne benannten Grund (`referenz.py:351`) | mit 06b-1 nachgezogen, drei neue Fälle in der Selbstprobe; die Vektoren ändern sich nicht |
+| F-KA-91 | **Das Demo-Konto stellt nie auf das neue Format um** — ohne Anteil-Kennung überspringt `unlock.js:313` die Umstellung | die Demo-Hülle kommt als `edk2:` aus der Fixture (E-KA-44, 06d) |
+| F-KA-92 | **Die Arbeitskopie des Agenten begann auf `main` statt auf dem Zweig**, und `.claude/worktrees/` stand unverfolgt im Baum — der Prüfstand hätte sie mit `git add -A` eingesammelt | Zweig im Agenten vorgespult; `.claude/worktrees/` örtlich in `.git/info/exclude` |
+| F-KA-93 | **Der Container startete mitten in der Arbeit neu** (11.11.2026, `uptime` 2 min); die Anlage lief mit `hochfahren.sh` wieder an | wie F-KA-71 |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
 | F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
 | F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |
