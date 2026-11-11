@@ -68,7 +68,7 @@ $anHex = (string)konfig('kdf_anteil', '');
 $anAlt = (string)konfig('kdf_anteil_alt', '');
 
 $eintraege = [];
-if (preg_match('/^[0-9a-f]{64}$/i', $skHex)) {
+if (preg_match('/^[0-9a-f]{64}\z/i', $skHex)) {
     $eintraege[] = ['name' => 'Serverschlüssel',
                     'eintrag' => 'server_key',
                     'hex' => $skHex,
@@ -88,7 +88,7 @@ if (preg_match('/^[0-9a-f]{64}$/i', $skHex)) {
  * (`server_key_alt` = `server_key`, ein Wechsel, der zwischen seinen beiden
  * Schritten abbrach) ist keiner und bekommt keine zweite Kachel mit derselben
  * Kennung. */
-if (preg_match('/^[0-9a-f]{64}$/i', $skAlt) && strcasecmp($skAlt, $skHex) !== 0) {
+if (preg_match('/^[0-9a-f]{64}\z/i', $skAlt) && strcasecmp($skAlt, $skHex) !== 0) {
     require_once __DIR__ . '/schluesselwechsel_lib.php';
     $swBeginn = sw_zeit((string)(sw_zustand()['begonnen'] ?? ''));
     $eintraege[] = ['name' => 'Serverschlüssel (bisheriger)',
@@ -99,7 +99,7 @@ if (preg_match('/^[0-9a-f]{64}$/i', $skAlt) && strcasecmp($skAlt, $skHex) !== 0)
                             . ' versiegelt wurde — auch die Kopien auf dem Backup-Ziel, für immer. '
                             . 'Dieses Blatt nach dem Wechsel NICHT vernichten.'];
 }
-if (preg_match('/^[0-9a-f]{64}$/i', $anHex)) {
+if (preg_match('/^[0-9a-f]{64}\z/i', $anHex)) {
     $eintraege[] = ['name' => 'Server-Anteil',
                     'eintrag' => 'kdf_anteil',
                     'hex' => $anHex,
@@ -107,7 +107,7 @@ if (preg_match('/^[0-9a-f]{64}$/i', $anHex)) {
                             . 'jede NutzerIn ihr Passwort über den '
                             . 'Wiederherstellungsschlüssel neu. Kein Datenverlust.'];
 }
-if (preg_match('/^[0-9a-f]{64}$/i', $anAlt) && strcasecmp($anAlt, $anHex) !== 0) {
+if (preg_match('/^[0-9a-f]{64}\z/i', $anAlt) && strcasecmp($anAlt, $anHex) !== 0) {
     $eintraege[] = ['name' => 'Server-Anteil (bisheriger)',
                     'eintrag' => 'kdf_anteil_alt',
                     'hex' => $anAlt,

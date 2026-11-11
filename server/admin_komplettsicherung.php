@@ -68,8 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST'
         $error = 'Dieser Stand ist mit einem anderen Serverschlüssel versiegelt — weder dem '
                . 'heutigen noch dem bisherigen. Er öffnet nur mit dem Wert vom Blatt, das damals '
                . 'galt. Es wurde nichts heruntergeladen.';
-    } elseif ($art === 'pw' && strlen($pw) < 8) {
-        $error = 'Die Passphrase muss mindestens 8 Zeichen haben. '
+    } elseif ($art === 'pw' && mb_strlen($pw) < PW_MIN_LAENGE) {
+        /* Die Mindestlänge eines Kontopassworts (seit Web 24.13.0, E-KA-33). */
+        $error = 'Die Passphrase muss mindestens ' . PW_MIN_LAENGE . ' Zeichen haben. '
                . 'Es wurde nichts heruntergeladen.';
     } else {
         /* KEINE ZEITSCHRANKE FÜR DIE ÜBERTRAGUNG, und das ist die eine
@@ -493,7 +494,7 @@ ui_seite_start(['titel' => 'Komplett-Backup']);
             <?php ui_feld(['name' => 'passphrase', 'id' => 'f-passphrase-' . $id,
                            'label' => 'Mit Passphrase herunterladen',
                            'art' => 'password', 'wert' => '',
-                           'klein' => 'Mindestens 8 Zeichen, zum Weitergeben — sie wird '
+                           'klein' => 'Mindestens ' . PW_MIN_LAENGE . ' Zeichen, zum Weitergeben — sie wird '
                                     . 'nirgends gespeichert.']); ?>
           </div>
           <?php /* DER KNOPF STEHT NEBEN DER REIHE UND NICHT DARIN.

@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * NACHWEISDATEIEN — wer eine Datei im Anwendungsverzeichnis nennen oder
  * anlegen kann, hat Zugriff auf den Webspace.
@@ -42,13 +43,13 @@ const NACHWEIS_KENNUNG_RE = '[0-9a-f]{32}';
 /** Ist das ein Praefix, wie die drei Seiten es benutzen (`install-nachweis-`)? */
 function nachweis_muster_gueltig(string $muster): bool
 {
-    return preg_match('/^[a-z][a-z-]*-$/', $muster) === 1;
+    return preg_match('/^[a-z][a-z-]*-\z/', $muster) === 1;
 }
 
 /** Ist das eine Kennung, wie diese Bibliothek sie wuerfelt? */
 function nachweis_kennung_gueltig(string $kennung): bool
 {
-    return preg_match('/^' . NACHWEIS_KENNUNG_RE . '$/', $kennung) === 1;
+    return preg_match('/^' . NACHWEIS_KENNUNG_RE . '\z/', $kennung) === 1;
 }
 
 /**

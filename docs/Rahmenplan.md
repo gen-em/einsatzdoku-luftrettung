@@ -1,14 +1,14 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 240 (10.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 241 (11.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `bd03302`, PR #167, gemessen 10.11.2026): Web 24.12.0 ·
-Uhr 4.3.3 · Android 0.22.0; auf Staging; Produktiv Web 24.11.0 (Tag `web-v24.11.0`, Lauf 193), Uhr 4.3.2 · Android 0.21.0.
-**Läuft:** 28 (KA) — Umsetzung; KA-01 bis KA-03 erledigt, KA-04 (Geräte, Web 24.12.1, Android 0.23.0) im PR; Garmin-Teil bei KG (R92).
+**Stand `origin/main`** (Commit `ae2790e`, PR #169, gemessen 11.11.2026): Web 24.12.1 ·
+Uhr 4.3.3 · Android 0.23.0; auf Staging; Produktiv Web 24.11.0 (Tag `web-v24.11.0`, Lauf 193), Uhr 4.3.2 · Android 0.21.0.
+**Läuft:** 28 (KA) — Umsetzung; KA-01 bis KA-04 erledigt, KA-05 (Mengen, Schreibwege, Fremdbestandteile, Web 24.13.0) im PR; Garmin-Teil bei KG (PR #168) (R92).
 **Als Nächstes:** 28 (KA), danach 13 (P7).
-**Offene PRs:** KA-04 (28, Kontobindung der Geräte, Web 24.12.1, Android 0.23.0; kein Schema).
+**Offene PRs:** KA-05 (28, Web 24.13.0; kein Schema) · KG-01 (#168, Uhr 4.4.0).
 **Fällig bei der Betreiberin:** 44 Posten (Abschnitt 6.1). **`update.php`:** auf Staging nichts offen (Betreiberin, 07.11.2026, nach Web 23.10); auf Produktiv seit dem Tag `web-v24.11.0` fällig, falls noch nicht aufgerufen (Migration `2026_11_07_darstellung`).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -121,7 +121,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen, Tabellen mit Mockup (Nr. 342) | 26 | eigenes Konzept nach K1 | offen — Konzeptsitzung kann neben 24 laufen, Umsetzung nach 24 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13; die Inventur (R68) entscheidet die zwölf Werkzeug-Punkte mit `gehört zu: 14` (E-BE-04) |
-| 28 | **KA — Sicherheitspaket** | Alle 43 Befunde des Audits beheben, hoch bis Hinweis (E-KA-04): Kette (FTPS-Zertifikat), Notfallblatt im Browser, Schranken der Verwaltung, Kontobindung der Geräte, Mengen und Fremdbestandteile, Bindung und Herkunft der Chiffretexte (Formatwechsel, E-KA-05), Modell und Texte | keine | `docs/konzepte/Konzept-KA-Sicherheitspaket.md`, Befunde in `Audit-KA-Sicherheit-Krypto.md` | Umsetzung seit 10.11.2026 (Spanne 560–569), ein PR je Paket; KA-01 (PR #165), KA-02 (PR #166, Tag `web-v24.11.0`) und KA-03 (PR #167) erledigt, KA-04 im PR. KA-M1 erledigt, von KA-M2 bleibt die SHA-Pflicht |
+| 28 | **KA — Sicherheitspaket** | Alle 43 Befunde des Audits beheben, hoch bis Hinweis (E-KA-04): Kette (FTPS-Zertifikat), Notfallblatt im Browser, Schranken der Verwaltung, Kontobindung der Geräte, Mengen und Fremdbestandteile, Bindung und Herkunft der Chiffretexte (Formatwechsel, E-KA-05), Modell und Texte | keine | `docs/konzepte/Konzept-KA-Sicherheitspaket.md`, Befunde in `Audit-KA-Sicherheit-Krypto.md` | Umsetzung seit 10.11.2026 (Spanne 560–569), ein PR je Paket; KA-01 (PR #165), KA-02 (PR #166, Tag `web-v24.11.0`) und KA-03 (PR #167) und KA-04 (PR #169) erledigt, KA-05 im PR. KA-M1 erledigt, von KA-M2 bleibt die SHA-Pflicht |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 
 Kein offener Schritt hat einen Block: Die Zeilen nennen den Inhalt; den

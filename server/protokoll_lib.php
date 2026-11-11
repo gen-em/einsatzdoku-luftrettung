@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * DAS BETRIEBSPROTOKOLL — der Schreibweg.
  *
@@ -623,7 +624,7 @@ function protokoll_arten_des_reiters(string $reiter): array
 /** Eine achtstellige Fehlerkennung (`fehler_kennung()`)? */
 function protokoll_ist_kennung(string $q): bool
 {
-    return (bool)preg_match('/^[0-9a-f]{8}$/i', trim($q));
+    return (bool)preg_match('/^[0-9a-f]{8}\z/i', trim($q));
 }
 
 /**

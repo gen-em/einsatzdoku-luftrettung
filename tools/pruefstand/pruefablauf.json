@@ -44,6 +44,11 @@
       "braucht": "nichts",
       "bemerkung": "KA-02, Anlass Nr. 560 (F-KA-01, -36). Kein Formular und kein Abruf schickt an notfallblatt.php oder codeblatt.php, beide Blaetter lesen keinen Anfragewert und weisen einen POST mit 400 ab. Bis Web 24.10.1 ging der Wiederherstellungsschluessel zum Drucken per POST an den Server."
     },
+    "schranken": {
+      "aufruf": "bash tools/quelltext/pruefen.sh schranken",
+      "braucht": "nichts",
+      "bemerkung": "KA-05, Anlass Nr. 562 (F-KA-23, -34, -38). Jede *_lib/_teile/_dialog.php traegt den Waechter (404 bei direktem Aufruf), kein preg_match mit ^...$ ohne D, die .htaccess sperrt Teile und migrations/. Bis Web 24.12.1 liessen sich Bibliotheken direkt aufrufen, migrations/*.sql lagen offen, und $ liess einen angehaengten Zeilenumbruch an jeder Kennungspruefung vorbei."
+    },
     "dokumente": {
       "aufruf": "bash tools/quelltext/pruefen.sh dokumente",
       "braucht": "nichts",
@@ -438,6 +443,7 @@
       "kennzeichnung",
       "fremdsummen",
       "druckblatt",
+      "schranken",
       "dokumente",
       "bestand",
       "syntax-py",

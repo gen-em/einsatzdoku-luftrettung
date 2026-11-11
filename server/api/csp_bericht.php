@@ -68,6 +68,9 @@ if (!is_array($d)) { csp_ende(); }
  *
  * @return list<array{0:string,1:string,2:string}> Richtlinie, Quelle, Seite
  */
+/** Höchstens so viele Einträge je Bericht (E-KA-34); der Rest wird verworfen. */
+const CSP_BERICHT_MAX = 20;
+
 function csp_auslesen(array $d): array
 {
     $aus = [];
@@ -79,8 +82,12 @@ function csp_auslesen(array $d): array
                   (string)($r['document-uri'] ?? '')];
         return $aus;
     }
-    /* Format 2: Reporting-API, eine Liste */
+    /* Format 2: Reporting-API, eine Liste — HÖCHSTENS CSP_BERICHT_MAX
+     * Einträge (seit Web 24.13.0, KA-05, F-KA-40, E-KA-34). Bis dahin
+     * schrieb eine Anfrage so viele Zeilen ins Protokoll, wie in 8 KiB
+     * passen; der Topf `csp` zählt Anfragen, nicht Einträge. */
     foreach ($d as $e) {
+        if (count($aus) >= CSP_BERICHT_MAX) { break; }
         if (!is_array($e) || ($e['type'] ?? '') !== 'csp-violation') { continue; }
         $b = is_array($e['body'] ?? null) ? $e['body'] : [];
         $aus[] = [(string)($b['effectiveDirective'] ?? ''),

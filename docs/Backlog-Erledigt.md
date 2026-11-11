@@ -11231,3 +11231,16 @@ zutreffen.
      findet, und ein Riegel gegen jedes Formular an ein Druckblatt.
      Erledigt 10.11.2026 mit Web 24.11.0 (Schritt 28, KA-02): Übergabe von
      Fenster zu Fenster; Notfallblattprobe und Riegel druckblatt.
+
+562. **Bibliotheken ließen sich direkt aufrufen, Migrationen lagen offen, `$` ließ einen Zeilenumbruch durch.** · gehört zu: 28 · Stand: erledigt · seit 11.11.2026
+     *Aufgenommen 11.11.2026 als Anlass des Riegels `schranken` von KA-05
+     (Audit KA, F-KA-23, -34, -38).* Jede `*_lib.php`, `*_teile.php` und
+     `*_dialog.php` war ohne Anmeldung abrufbar — `blatt_dialog.php` schrieb
+     dabei je Abruf eine Systemmeldung —, `migrations/*.sql` lag offen, und
+     102 Prüfungen mit `^…$` ohne `D` ließen einen angehängten
+     Zeilenumbruch durch (eine GPX-Datei ließ sich so zweimal einspielen).
+     *Weg:* Wächter in jeder dieser Dateien (404 bei direktem Aufruf, auch
+     ohne Apache), Sperre in der `.htaccess`, `\z` statt `$`. *Abnahme:*
+     ein Riegel, der alle drei hält.
+     Erledigt 11.11.2026 mit Web 24.13.0 (Schritt 28, KA-05): Wächter in 62
+     Dateien, Sperre in der .htaccess, 102 Anker auf \z; Riegel schranken.

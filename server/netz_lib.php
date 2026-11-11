@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /* Der eine Leser fuer config.php. Laedt seinerseits nichts —
  * diese Datei darf `db.php` nicht erreichen. */
 require_once __DIR__ . '/konfig_lib.php';

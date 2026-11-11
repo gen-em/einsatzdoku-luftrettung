@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * DER RÜCKWEG BEIM ZWEITFAKTOR ÜBER DEN WIEDERHERSTELLUNGSSCHLÜSSEL
  *
@@ -369,7 +370,7 @@ function rw_rueckweg_pruefen(array &$halb, string $signaturB64): array
      * POST dorthin „abgelaufen", und die Seite böte an, es noch einmal zu
      * versuchen (gefunden mit der Rückwegprobe). */
     if (!rw_angeboten($kontoId)) { return ['ok' => false, 'grund' => 'nicht_angeboten']; }
-    if (!preg_match('/^[0-9a-f]{64}$/', $herausforderung) || $bis < time()) {
+    if (!preg_match('/^[0-9a-f]{64}\z/', $herausforderung) || $bis < time()) {
         return ['ok' => false, 'grund' => 'abgelaufen'];
     }
 

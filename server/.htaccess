@@ -19,7 +19,18 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 # NACH dem HTTPS-Zwang, nicht davor: Ein Aufruf ueber HTTP soll zuerst auf
 # HTTPS umgeleitet werden und dort die 403 bekommen -- sonst antwortet der
 # unverschluesselte Kanal mit einer Auskunft.
-RewriteRule ^(apk|demo)(/|$) - [F,L]
+#
+# SEIT WEB 24.13.0 AUCH `migrations/` (KA-05, F-KA-38): Die SQL-Dateien
+# beschreiben das Schema und sind nur fuer `update.php` da.
+RewriteRule ^(apk|demo|migrations)(/|$) - [F,L]
+
+# KEIN `Options -Indexes` HIER (KA-05, F-KA-38, F-KA-70): Erlaubt ein Hoster
+# `AllowOverride Options` nicht, antwortet JEDE Seite mit 500 — gemessen am
+# 11.11.2026 mit Apache 2.4.58. Ob Produktiv und Staging es erlauben, ist
+# nicht gemessen. Die Verzeichnisse mit Schutzwuerdigem sperren eigene Regeln
+# (darueber, darunter und `sicherungen/.htaccess`); ein Listing zeigt sonst
+# nur oeffentliche Dateinamen. Das Listing schaltet die BetreiberIn beim
+# Hoster ab (Pruefliste P-KA-10).
 
 # PUNKTDATEIEN NIEMALS AUSLIEFERN -- MIT GENAU EINER AUSNAHME.
 #
@@ -71,6 +82,15 @@ RewriteRule "(^|/)\.(?!well-known/)" - [F,L]
 # kaeme sonst durch, ebenso die Sicherung `#config.php#` von Emacs;
 # `.#config.php` faengt schon die Punktregel oben.
 <FilesMatch "^(?i:#?config\.php.*|config\.example\.php|schema\.sql|db\.php|smtp\.php|auth_guard\.php|install\.lock)$">
+  Require all denied
+</FilesMatch>
+
+# BIBLIOTHEKEN UND TEIL-VORLAGEN (seit Web 24.13.0, KA-05, F-KA-23). Sie
+# werden nur eingebunden; direkt aufgerufen lief bis dahin ihr Kopf ohne
+# Anmeldung, und `blatt_dialog.php` schrieb je Abruf eine Systemmeldung.
+# ZWEITE Schranke: Die erste steht in jeder dieser Dateien selbst (Wächter
+# auf `SCRIPT_FILENAME`, 404) und hält auch ohne Apache.
+<FilesMatch "_(lib|teile|dialog)\.php$">
   Require all denied
 </FilesMatch>
 

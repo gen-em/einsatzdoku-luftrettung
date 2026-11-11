@@ -15,6 +15,11 @@ require_once __DIR__ . '/../backup_lib.php';
 
 api_methode();
 csrf_check();   // Feld ODER Kopfzeile X-CSRF
+/* DIE MENGENGRENZE (seit Web 24.13.0, KA-05, F-KA-10): ein anlegender Weg. */
+require_once __DIR__ . '/../konten_einstellungen_lib.php';
+if (($voll = konto_anlegen_pruefen($userId)) !== null) {
+    json_out(['error' => 'kontingent', 'grund' => $voll], 507);
+}
 
 $data = api_rumpf();
 if (($data['format'] ?? '') !== 'einsatzdoku-backup') {
@@ -96,6 +101,7 @@ try {
     $karte = $stats['spur_karte'] ?? null;
     $tage  = $stats['day_map'] ?? null;
     unset($stats['spur_karte'], $stats['day_map']);
+    konto_mengen_verwerfen($userId);
     $antwort = ['ok' => true, 'stats' => $stats];
     if ($karte !== null) { $antwort['spur_karte'] = $karte ?: new stdClass(); }
     /* DIE ZUORDNUNG DER DIENSTTAGE. Der Kopf einer Fassung-4-Datei

@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * MIGRATIONEN — Katalog, Vorschau und Lauf.
  *
@@ -40,7 +41,7 @@ function _geraete_mit_datumsname(PDO $pdo): array
 {
     $ids = [];
     foreach ($pdo->query('SELECT id, label FROM devices')->fetchAll() as $z) {
-        if (preg_match('/^Uhr \(gekoppelt \d{2}\.\d{2}\.\d{4}\)$/', (string)$z['label'])) {
+        if (preg_match('/^Uhr \(gekoppelt \d{2}\.\d{2}\.\d{4}\)\z/', (string)$z['label'])) {
             $ids[] = (int)$z['id'];
         }
     }

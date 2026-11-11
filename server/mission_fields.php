@@ -486,7 +486,7 @@ return [
         'children' => [
             'bw_unit' => [
                 'label' => 'Bereitschaft', 'type' => 'select',
-                'options_src' => 'bw_units',
+                'options_src' => 'bw_units', 'max' => 120,   // VARCHAR(120); freie Werte der Stammdaten
             ],
             'bw_info' => [
                 'label' => 'Namen / Infos', 'type' => 'text', 'max' => 190,

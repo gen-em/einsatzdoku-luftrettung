@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * Impressum und Datenschutzerklärung — Ablage und Darstellung.
  *
@@ -251,7 +252,7 @@ function rt_pruefen(string $text, ?string $stand): ?string
              . 'ohne dass es jemandem auffällt.';
     }
     if ($stand !== null && $stand !== ''
-        && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $stand)) {
+        && !preg_match('/^\d{4}-\d{2}-\d{2}\z/', $stand)) {
         return 'Das Standdatum ist kein gültiges Datum.';
     }
     return null;
@@ -292,10 +293,10 @@ function rt_ziel_erlaubt(string $ziel): bool
     $z = trim($ziel);
     if ($z === '') { return false; }
     return (bool)(
-        preg_match('~^https?://[^\s"<>]+$~', $z)                 // ins Netz
-        || preg_match('~^mailto:[^\s"<>]+$~', $z)                 // fürs Impressum unverzichtbar
-        || preg_match('~^[A-Za-z0-9_.-]+\.php(\?[^\s"<>]*)?$~', $z)  // eigene Seite
-        || preg_match('~^#[A-Za-z0-9_-]+$~', $z)                  // Anker
+        preg_match('~^https?://[^\s"<>]+\z~', $z)                 // ins Netz
+        || preg_match('~^mailto:[^\s"<>]+\z~', $z)                 // fürs Impressum unverzichtbar
+        || preg_match('~^[A-Za-z0-9_.-]+\.php(\?[^\s"<>]*)?\z~', $z)  // eigene Seite
+        || preg_match('~^#[A-Za-z0-9_-]+\z~', $z)                  // Anker
     );
 }
 
@@ -394,7 +395,7 @@ function rt_html(string $markdown): string
         /* Überschriften. `####` und tiefer sind KEINE Überschrift: Die Seite
          * hat ihr <h1> aus der Titelzeile, und unter <h3> wird die Gliederung
          * ohnehin unlesbar. Sie bleiben Text. */
-        if (preg_match('/^(#{1,3})\s+(.+)$/', $roh, $m)) {
+        if (preg_match('/^(#{1,3})\s+(.+)\z/', $roh, $m)) {
             $absatzSchliessen(); $listeSchliessen();
             $stufe = strlen($m[1]) === 3 ? 'h3' : 'h2';
             $aus[] = '<' . $stufe . '>' . rt_inline(trim($m[2])) . '</' . $stufe . '>';
@@ -402,7 +403,7 @@ function rt_html(string $markdown): string
         }
 
         // Aufzählung
-        if (preg_match('/^[-*]\s+(.+)$/', $roh, $m)) {
+        if (preg_match('/^[-*]\s+(.+)\z/', $roh, $m)) {
             $absatzSchliessen();
             if ($liste !== 'ul') { $listeSchliessen(); $aus[] = '<ul>'; $liste = 'ul'; }
             $aus[] = '<li>' . rt_inline(trim($m[1])) . '</li>';
@@ -410,7 +411,7 @@ function rt_html(string $markdown): string
         }
 
         // Nummerierung
-        if (preg_match('/^\d{1,3}\.\s+(.+)$/', $roh, $m)) {
+        if (preg_match('/^\d{1,3}\.\s+(.+)\z/', $roh, $m)) {
             $absatzSchliessen();
             if ($liste !== 'ol') { $listeSchliessen(); $aus[] = '<ol>'; $liste = 'ol'; }
             $aus[] = '<li>' . rt_inline(trim($m[1])) . '</li>';

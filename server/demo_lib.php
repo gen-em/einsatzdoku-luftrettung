@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/backup_lib.php';
 /* Fuer den Huellen-Riegel in `demo_fixture_laden()`. Die Datei liegt
@@ -677,7 +678,7 @@ function demo_inhaltsschluessel(array $konto): string
     $haelfte = substr(hash_pbkdf2('sha256', DEMO_PASSWORT, (string)hex2bin((string)$konto['kdf_salt']),
                                   (int)$konto['kdf_iter'], 64, true), 0, 32);
     $ckHex = demo_edk1_oeffnen($haelfte, (string)$konto['pat_wrap_pw']);
-    if ($ckHex === null || !preg_match('/^[0-9a-f]{64}$/', $ckHex)) {
+    if ($ckHex === null || !preg_match('/^[0-9a-f]{64}\z/', $ckHex)) {
         throw new RuntimeException('Das Demo-Passwort öffnet die Schlüsselhülle der Fixture '
             . 'nicht. Passwort im Handbuch, DEMO_PASSWORT und Fixture gehören zusammen.');
     }

@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * Diensttage: anlegen, zuordnen, einfrieren, auflisten.
  *
@@ -114,7 +115,7 @@ function dt_lesbar(array $tag, bool $mitZeit = false): string
 /** 'YYYY-MM-DD' -> 'TT.MM.JJJJ'; unveraendert, wenn das Muster nicht passt. */
 function dt_datum_lesbar(string $tag): string
 {
-    return preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $tag, $t)
+    return preg_match('/^(\d{4})-(\d{2})-(\d{2})\z/', $tag, $t)
         ? "$t[3].$t[2].$t[1]" : $tag;
 }
 

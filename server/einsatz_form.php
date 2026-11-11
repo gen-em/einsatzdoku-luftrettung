@@ -175,6 +175,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      * das Muster allein liess den 30. Februar durch, und die Phasenzeiten
      * eines ganzen Einsatzes lagen danach am 2. Maerz. */
     if (pruef_kalendertag($day, 'Datum') === null) { $error = 'Ungültiges Datum.'; }
+    /* DIE MENGENGRENZE (seit Web 24.13.0, KA-05, F-KA-10) — nur beim
+     * Anlegen; Bearbeiten bleibt frei. Hier vorn, damit sie keine andere
+     * Meldung verdeckt und nichts davor geprüft wird, was ohnehin nicht
+     * gespeichert würde. */
+    if (!$editing && !$error) {
+        require_once __DIR__ . '/konten_einstellungen_lib.php';
+        $error = konto_anlegen_pruefen($userId);
+    }
 
     // Phasenzeilen einsammeln. Vor der Mitternachts-Logik wird nach
     // Phasennummer aufsteigend sortiert (stabil: Index als Tie-Breaker bei
@@ -219,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * fuehrende Null erst beim Verlassen des Feldes), und als Text
              * stuende sie hinter „07:00". Der Tageswechsel griffe dann
              * ausgerechnet in dem Fall nicht, fuer den er da ist. */
-            if (!preg_match('/^(\d{1,2}):(\d{2})$/', trim($hhmm), $t)) { return null; }
+            if (!preg_match('/^(\d{1,2}):(\d{2})\z/', trim($hhmm), $t)) { return null; }
             return (int)$t[1] * 60 + (int)$t[2];
         };
         $erst = $eingesammelt ? $minuten($eingesammelt[0]['time']) : null;
@@ -303,7 +311,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
          * Aufbau der Seite (`$neuRef` unten): Die Huelle ist an sie gebunden,
          *und der Browser verschliesst, bevor es die Zeile gibt. */
         $neuRefPost = post_text('client_ref');
-        if (!$editing && !$error && !preg_match('/^man-[0-9a-f]{16}$/', $neuRefPost)) {
+        if (!$editing && !$error && !preg_match('/^man-[0-9a-f]{16}\z/', $neuRefPost)) {
             $error = 'Die Kennung des neuen Einsatzes fehlt. Bitte die Seite neu laden.';
         }
 
@@ -575,6 +583,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($name !== '' && !in_array($name, $sauber, true)) { $sauber[] = $name; }
             }
             einsatz_rettungsmittel_ersetzen(db(), $id, $sauber);
+            if (!$editing) { konto_mengen_verwerfen($userId); }
 
             header('Location: einsatz.php?id=' . $id . ($editing ? '' : '&nachtrag=1'));
             exit;
@@ -618,7 +627,7 @@ if ($ortHuellePost !== '') {
    gewuerfelt, nach einem Fehler die schon benutzte — die Huelle ist an sie
    gebunden. */
 $neuRef = $editing ? (string)$mission['client_ref']
-    : (preg_match('/^man-[0-9a-f]{16}$/', post_text('client_ref'))
+    : (preg_match('/^man-[0-9a-f]{16}\z/', post_text('client_ref'))
         ? post_text('client_ref') : 'man-' . bin2hex(random_bytes(8)));
 
 /* Auswahl der Ereignisarten: RESUS_LABELS ohne 'beginn'. Der Beginn ist kein

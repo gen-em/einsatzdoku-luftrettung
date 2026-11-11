@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 require_once __DIR__ . '/db.php';
 
 /**
@@ -576,7 +577,7 @@ function rate_liste(string $schluessel, array $vorgabe): array
             $gut = true;
             $vorher = 0;
             foreach ($teile as $t) {
-                if (!preg_match('/^[0-9]+$/', $t)) { $gut = false; break; }
+                if (!preg_match('/^[0-9]+\z/', $t)) { $gut = false; break; }
                 $n = (int)$t;
                 if ($n <= 0 || $n <= $vorher) { $gut = false; break; }
                 $zahlen[] = $n;
@@ -623,7 +624,7 @@ function rate_grenze(string $topf): ?array
     if ($topf === 'login' || $topf === 'login_ip') {
         $k = $topf === 'login' ? RATE_K_LOGIN : RATE_K_LOGIN_IP;
         $roh = function_exists('app_state_lesen') ? app_state_lesen($k) : null;
-        if (is_string($roh) && preg_match('/^[0-9]+$/', trim($roh))) {
+        if (is_string($roh) && preg_match('/^[0-9]+\z/', trim($roh))) {
             $n = (int)trim($roh);
             if ($n >= 3 && $n <= 10000) { $g['max'] = $n; }
         }

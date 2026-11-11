@@ -1249,5 +1249,102 @@ pruef($r['code'] === 200 && $adr() === 'rollenprobe-bestaetigt@probe.pruefung',
 $pdo->prepare('UPDATE users SET email = ?, email_neu = NULL, email_neu_token_hash = NULL, email_neu_bis = NULL
                 WHERE id = ?')->execute([$vor, $neuId]);
 
+/* ---- Die Mengengrenze an den Web-Wegen (KA-05) -----------------------------
+ *
+ * Das Konto `user` der Probe bekommt die Grenze 1 Einsatz und einen Einsatz:
+ * Es ist voll. Jeder der sechs anlegenden Wege antwortet dann 507
+ * `kontingent` (das Formular zeigt den Satz) — und mit gelöster Grenze
+ * dieselbe Anfrage etwas ANDERES (ihre eigene Ablehnung des Probenrumpfs oder
+ * Erfolg). Ohne die Behebung kämen alle sechs ohne 507 durch. Bearbeiten
+ * bleibt frei: dasselbe Formular für den vorhandenen Einsatz kommt nicht an
+ * der Grenze an. Danach steht alles, wie es war. */
+echo "\nMengengrenze an den Web-Wegen (KA-05, F-KA-10)\n";
+if (isset($konten['user'])) {
+    require_once $srv . '/konten_einstellungen_lib.php';
+    $u = $konten['user'];
+    $uidG = (int)$u['id'];
+    $pdo->prepare('INSERT INTO days (user_id, day) VALUES (?, ?)')->execute([$uidG, '2026-07-16']);
+    $tagG = (int)$pdo->lastInsertId();
+    $pdo->prepare("INSERT INTO missions (user_id, client_ref, day_id, started_at) VALUES (?, 'man-0000000000000001', ?, '2026-07-16 06:00:00')")
+        ->execute([$uidG, $tagG]);
+    $einsG = (int)$pdo->lastInsertId();
+    $wege = [
+        'import_commit'        => ['api/import_commit.php', ['action' => 'commit']],
+        'gpx_import'           => ['api/gpx_import.php', ['ziel' => 'ruhe']],
+        'backup_restore'       => ['api/backup_restore.php', ['format' => 'x']],
+        'backup_eintraege'     => ['api/backup_eintraege_restore.php', ['eintraege' => []]],
+        'backup_spuren'        => ['api/backup_spuren_restore.php', ['spuren' => []]],
+    ];
+    $grenze = static function (?int $n) use ($pdo, $uidG): void {
+        $pdo->prepare('UPDATE users SET grenze_einsaetze = ? WHERE id = ?')->execute([$n, $uidG]);
+        konto_mengen_verwerfen($uidG);
+    };
+    $formular = static fn (array $mehr = []): array => hole('einsatz_form.php?d=' . $tagG, $u['sid'],
+        ['csrf' => $u['csrf'], 'day_id' => (string)$tagG, 'client_ref' => 'man-0000000000000002'] + $mehr);
+    try {
+        $grenze(1);
+        foreach ($wege as $name => [$pfad, $rumpf]) {
+            $r = hole($pfad, $u['sid'], $rumpf, $u['csrf']);
+            $j = json_decode($r['rumpf'], true) ?: [];
+            pruef($r['code'] === 507 && ($j['error'] ?? '') === 'kontingent'
+                  && str_contains((string)($j['grund'] ?? ''), 'Das Konto ist voll'),
+                  "$name: volles Konto → 507 kontingent", 'HTTP ' . $r['code'] . ', ' . ($j['error'] ?? '—'));
+        }
+        $f = $formular();
+        $zahlG = (int)$pdo->query('SELECT COUNT(*) FROM missions WHERE user_id = ' . $uidG)->fetchColumn();
+        pruef($f['code'] === 200 && str_contains(html_entity_decode($f['rumpf']), 'Das Konto ist voll') && $zahlG === 1,
+              'einsatz_form.php (neu): volles Konto → der Satz, nichts angelegt', 'HTTP ' . $f['code'] . ", Einsätze $zahlG");
+        $e = hole('einsatz_form.php?id=' . $einsG, $u['sid'], ['csrf' => $u['csrf']]);
+        pruef(!str_contains(html_entity_decode($e['rumpf']), 'Das Konto ist voll'),
+              'einsatz_form.php (bearbeiten): die Grenze greift nicht', 'HTTP ' . $e['code']);
+
+        $grenze(null);
+        $andere = 0;
+        foreach ($wege as $name => [$pfad, $rumpf]) {
+            $r = hole($pfad, $u['sid'], $rumpf, $u['csrf']);
+            if ($r['code'] !== 507) { $andere++; }
+        }
+        $f2 = $formular();
+        pruef($andere === count($wege) && !str_contains(html_entity_decode($f2['rumpf']), 'Das Konto ist voll'),
+              'GEGENLAGE: dieselben Anfragen ohne Grenze kommen nicht an der Grenze an',
+              "$andere von " . count($wege) . ' ohne 507');
+        /* REGEX-ANKER (F-KA-34): `$` ohne `D` passte auch vor einem
+         * angehängten Zeilenumbruch — ein Jahr „2026\n" galt als gültig. */
+        $j1 = hole('api/range.php?y=2026', $u['sid']);
+        $j2 = hole('api/range.php?y=' . rawurlencode("2026\n"), $u['sid']);
+        pruef($j1['code'] === 200 && $j2['code'] === 400,
+              'api/range.php: „2026" gilt, „2026" mit Zeilenumbruch nicht (\\z statt $, F-KA-34)',
+              'HTTP ' . $j1['code'] . ' / ' . $j2['code']);
+        pruef(konto_grenzen($demoZiel)['einsaetze'] === KONTEN_DEMO_GRENZE_EINSAETZE
+              && konto_grenzen($demoZiel)['mb'] === KONTEN_DEMO_GRENZE_MB,
+              'Demo-Konto: feste Grenze 500 Einsätze / 50 MB (E-KA-32)',
+              konto_grenzen($demoZiel)['einsaetze'] . ' / ' . konto_grenzen($demoZiel)['mb']);
+    } finally {
+        $grenze(null);
+        $pdo->prepare('DELETE FROM missions WHERE user_id = ?')->execute([$uidG]);
+        $pdo->prepare('DELETE FROM days WHERE user_id = ?')->execute([$uidG]);
+        konto_mengen_verwerfen($uidG);
+    }
+}
+
+/* ---- Der CSP-Bericht trägt höchstens 20 Einträge (KA-05, E-KA-34) ---------- */
+echo "\nCSP-Bericht gedeckelt (KA-05, F-KA-40)\n";
+$pdo->exec("DELETE FROM rate_limits WHERE topf = 'csp'");
+$liste = [];
+for ($i = 0; $i < 30; $i++) {
+    $liste[] = ['type' => 'csp-violation', 'url' => 'https://x/seite.php',
+                'body' => ['effectiveDirective' => 'rollenprobe-' . $i, 'blockedURL' => 'https://rollenprobe.invalid/' . $i,
+                           'documentURL' => 'https://x/seite.php']];
+}
+$ch = curl_init("$basis/api/csp_bericht.php");
+curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true, CURLOPT_PROXY => '',
+    CURLOPT_HTTPHEADER => ['Content-Type: application/reports+json'], CURLOPT_POSTFIELDS => json_encode($liste)]);
+curl_exec($ch);
+curl_close($ch);
+$zeilenCsp = (int)$pdo->query("SELECT COUNT(*) FROM csp_berichte WHERE richtlinie LIKE 'rollenprobe-%'")->fetchColumn();
+pruef($zeilenCsp === 20, 'Ein Bericht mit 30 Einträgen schreibt 20 Zeilen', "$zeilenCsp Zeilen");
+$pdo->exec("DELETE FROM csp_berichte WHERE richtlinie LIKE 'rollenprobe-%'");
+$pdo->exec("DELETE FROM rate_limits WHERE topf = 'csp'");
+
 echo "\n-> $n Erwartungen, $offen nicht erfüllt\n";
 exit($offen === 0 ? 0 : 1);

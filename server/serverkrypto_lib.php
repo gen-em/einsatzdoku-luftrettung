@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /* WRAP_PW_RE und WRAP_RC_RE — die beiden Hüllen-Ausdrücke der gemeinsamen
  * Prüfschicht (CLAUDE.md 4). Sie stehen dort und nicht hier, weil sie zu den
  * Formaten der Anwendung gehören; gebraucht werden sie in
@@ -128,7 +129,7 @@ function serverschluessel(bool $frisch = false): ?string
     if ($frisch) { $roh = false; }
     if ($roh !== false) { return $roh; }
     $hex = (string)konfig('server_key', '');
-    if (!preg_match('/^[0-9a-fA-F]{64}$/', $hex)) { return $roh = null; }
+    if (!preg_match('/^[0-9a-fA-F]{64}\z/', $hex)) { return $roh = null; }
     $bin = hex2bin(strtolower($hex));
     return $roh = ($bin === false ? null : $bin);
 }
@@ -166,7 +167,7 @@ function serverschluessel_da(): bool
  */
 function schluessel_kennung(?string $hex): ?string
 {
-    if ($hex === null || !preg_match('/^[0-9a-fA-F]{64}$/', $hex)) { return null; }
+    if ($hex === null || !preg_match('/^[0-9a-fA-F]{64}\z/', $hex)) { return null; }
     return substr(hash('sha256', strtolower($hex)), 0, 8);
 }
 
@@ -192,7 +193,7 @@ function serverschluessel_alt(bool $frisch = false): ?string
     if ($frisch) { $roh = false; }
     if ($roh !== false) { return $roh; }
     $hex = (string)konfig('server_key_alt', '');
-    if (!preg_match('/^[0-9a-fA-F]{64}$/', $hex)) { return $roh = null; }
+    if (!preg_match('/^[0-9a-fA-F]{64}\z/', $hex)) { return $roh = null; }
     $bin = hex2bin(strtolower($hex));
     return $roh = ($bin === false ? null : $bin);
 }
@@ -233,7 +234,7 @@ function schluessel_gruppen(?string $hex): string
 function schluessel_eingabe_normalisieren(string $roh): ?string
 {
     $h = strtolower(preg_replace('/[\s\-]+/', '', $roh) ?? '');
-    return preg_match('/^[0-9a-f]{64}$/', $h) ? $h : null;
+    return preg_match('/^[0-9a-f]{64}\z/', $h) ? $h : null;
 }
 
 /**
@@ -354,7 +355,7 @@ function kdf_anteil(bool $frisch = false): ?string
     if ($frisch) { $roh = false; }
     if ($roh !== false) { return $roh; }
     $hex = (string)konfig('kdf_anteil', '');
-    if (!preg_match('/^[0-9a-fA-F]{64}$/', $hex)) { return $roh = null; }
+    if (!preg_match('/^[0-9a-fA-F]{64}\z/', $hex)) { return $roh = null; }
     $bin = hex2bin(strtolower($hex));
     return $roh = ($bin === false ? null : $bin);
 }
@@ -374,7 +375,7 @@ function kdf_anteil_alt(bool $frisch = false): ?string
     if ($frisch) { $roh = false; }
     if ($roh !== false) { return $roh; }
     $hex = (string)konfig('kdf_anteil_alt', '');
-    if (!preg_match('/^[0-9a-fA-F]{64}$/', $hex)) { return $roh = null; }
+    if (!preg_match('/^[0-9a-fA-F]{64}\z/', $hex)) { return $roh = null; }
     $bin = hex2bin(strtolower($hex));
     return $roh = ($bin === false ? null : $bin);
 }
@@ -761,7 +762,7 @@ function anmeldehash_pruefen(int $userId, string $token, string $hash): string
     if (!str_starts_with($hash, PFEFFER_PRAEFIX)) {
         return password_verify($token, $hash) ? 'ok' : 'falsch';
     }
-    if (!preg_match('/^pf1:([0-9a-f]{8}):(.+)$/s', $hash, $m)) { return 'falsch'; }
+    if (!preg_match('/^pf1:([0-9a-f]{8}):(.+)\z/s', $hash, $m)) { return 'falsch'; }
     $roh = pfeffer_anteil_roh($m[1]);
     if ($roh === null) { return 'anteil_fehlt'; }
     $gepfeffert = hash_hmac('sha256', $token, pfeffer_schluessel($userId, $roh));
@@ -780,7 +781,7 @@ function anmeldehash_pruefen(int $userId, string $token, string $hash): string
 function anmeldehash_veraltet(string $hash, bool $istDemo = false): bool
 {
     $soll = $istDemo ? null : anteil_ausgeliefert();
-    $hat  = preg_match('/^pf1:([0-9a-f]{8}):(.+)$/s', $hash, $m) ? $m[1] : null;
+    $hat  = preg_match('/^pf1:([0-9a-f]{8}):(.+)\z/s', $hash, $m) ? $m[1] : null;
     if ($soll !== null && $hat !== $soll) { return true; }
     return password_needs_rehash($hat !== null ? $m[2] : $hash, PASSWORD_DEFAULT);
 }
@@ -1012,7 +1013,7 @@ function config_eintrag_schreiben(string $schluessel, ?string $hex,
     if (!in_array($schluessel, CONFIG_SCHREIBBAR, true)) {
         return [false, 'Dieser Eintrag darf nicht geschrieben werden.'];
     }
-    if ($hex !== null && !preg_match('/^[0-9a-fA-F]{64}$/', $hex)) {
+    if ($hex !== null && !preg_match('/^[0-9a-fA-F]{64}\z/', $hex)) {
         return [false, 'Der Wert sind nicht 64 Hexzeichen. Es wurde nichts geändert.'];
     }
     $hex = $hex === null ? null : strtolower($hex);
@@ -1037,7 +1038,7 @@ function config_eintrag_schreiben(string $schluessel, ?string $hex,
     $vorhanden = preg_match($zeilenMuster, $inhalt) === 1;
     $inDatei   = config_eintrag_in_datei($inhalt, $schluessel);
     $gueltig   = $inDatei !== null
-              || preg_match('/^[0-9a-fA-F]{64}$/', (string)konfig($schluessel, '')) === 1;
+              || preg_match('/^[0-9a-fA-F]{64}\z/', (string)konfig($schluessel, '')) === 1;
     if ($erwartet !== null && $inDatei !== strtolower($erwartet)) {
         return [false, 'In config.php steht für ' . $schluessel . ' inzwischen ein anderer '
             . 'Wert als beim Beginn dieses Schritts — jemand hat dazwischen geschrieben. '

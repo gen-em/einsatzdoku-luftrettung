@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Quelltextprüfungen — ein Läufer für die siebzehn Prüfungen, die nur Quelltext
+# Quelltextprüfungen — ein Läufer für die achtzehn Prüfungen, die nur Quelltext
 # lesen und im Tor laufen. `handbuch` braucht dazu
 # `cmark-gfm` (Ausbaustufe web); fehlt es, endet sie mit rc 2, nicht grün.
 #
@@ -10,7 +10,7 @@
 #
 # Namen:   installweiche sitzungshaertung csp jobregister migrationsregister
 #          behandler linkprobe vollstaendigkeit textprobe bestand pysyntax
-#          handbuch anker kennzeichnung fremdsummen dokumente druckblatt
+#          handbuch anker kennzeichnung fremdsummen dokumente druckblatt schranken
 #
 # Frueher waren das acht Ordner mit acht Anleitungen und acht
 # Aufrufkonventionen; die Messungen darunter sind beim Umzug unverändert
@@ -22,19 +22,19 @@ cd "$WURZEL" || exit 1
 
 NAMEN=(installweiche sitzungshaertung csp jobregister migrationsregister
        behandler linkprobe vollstaendigkeit textprobe bestand pysyntax handbuch anker
-       kennzeichnung fremdsummen dokumente druckblatt)
-# Die fünfzehn mit eingebauter Selbstprobe. `linkprobe`
+       kennzeichnung fremdsummen dokumente druckblatt schranken)
+# Die sechzehn mit eingebauter Selbstprobe. `linkprobe`
 # und `vollstaendigkeit` haben keine und hatten vor dem Umzug auch keine — das
 # ist kein Rückschritt, sondern ein Rest, den ein gemeinsamer
 # Rahmen erst noch einlöst. `textprobe` hatte eine, hinter `--probe`, und sie
 # lief lange nirgends — `bestand` (Regel `selbst`) hält die Liste deshalb
 # gegen den Code.
 SELBST=(installweiche sitzungshaertung csp jobregister migrationsregister behandler
-        textprobe bestand pysyntax handbuch anker kennzeichnung fremdsummen dokumente druckblatt)
+        textprobe bestand pysyntax handbuch anker kennzeichnung fremdsummen dokumente druckblatt schranken)
 
 starter() {   # starter <name> — womit die Datei gefahren wird
     case "$1" in
-        linkprobe|vollstaendigkeit|textprobe|bestand|pysyntax|handbuch|fremdsummen|dokumente|druckblatt)
+        linkprobe|vollstaendigkeit|textprobe|bestand|pysyntax|handbuch|fremdsummen|dokumente|druckblatt|schranken)
                                               echo "python3 tools/quelltext/$1.py" ;;
         *)                                    echo "php tools/quelltext/$1.php" ;;
     esac

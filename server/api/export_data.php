@@ -134,10 +134,10 @@ function export_meta(array $b, int $userId): never
     $to   = $b['to'] ?? null;
     $from = ($from === null || $from === '') ? null : (string)$from;
     $to   = ($to   === null || $to   === '') ? null : (string)$to;
-    if ($from !== null && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $from)) {
+    if ($from !== null && !preg_match('/^\d{4}-\d{2}-\d{2}\z/', $from)) {
         json_out(['error' => 'zeitraum', 'meldung' => 'Ungültiges Von-Datum.'], 400);
     }
-    if ($to !== null && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) {
+    if ($to !== null && !preg_match('/^\d{4}-\d{2}-\d{2}\z/', $to)) {
         json_out(['error' => 'zeitraum', 'meldung' => 'Ungültiges Bis-Datum.'], 400);
     }
     /* Ein halber Zeitraum ist keine Angabe.

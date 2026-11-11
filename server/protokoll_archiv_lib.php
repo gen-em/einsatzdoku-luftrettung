@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * DAS ARCHIV DES PROTOKOLLS — versiegelt, wöchentlich, ein Jahr
  * ===========================================================================
@@ -173,7 +174,7 @@ function protokoll_archiv_name(string $vonUtc, string $kennung): string
 
 function protokoll_archiv_name_gueltig(string $name): bool
 {
-    return (bool)preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z_[0-9a-f]{8}\.zip$/', $name);
+    return (bool)preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z_[0-9a-f]{8}\.zip\z/', $name);
 }
 
 /** Die Kennung aus dem Namen. */
@@ -565,7 +566,7 @@ function protokoll_archiv_entsiegeln(string $name, string $arbeit): array
  */
 function protokoll_archiv_ausliefern(string $name): string
 {
-    $arbeit = sys_get_temp_dir() . '/protokollarchiv-' . bin2hex(random_bytes(6));
+    $arbeit = protokoll_archiv_arbeit_neu();
     [$fehler, $ausgabe] = protokoll_archiv_entsiegeln($name, $arbeit);
     if ($fehler !== null) { protokoll_archiv_arbeit_weg($arbeit); return $fehler; }
     $zip = $arbeit . '/aus.zip';
@@ -579,6 +580,25 @@ function protokoll_archiv_ausliefern(string $name): string
     readfile($zip);
     protokoll_archiv_arbeit_weg($arbeit);
     exit;
+}
+
+/**
+ * Ein eigener Arbeitsordner für das Entsiegeln — NICHT im gemeinsamen
+ * Temp-Verzeichnis (seit Web 24.13.0, KA-05, F-KA-40). Dort lag das
+ * Protokoll während des Downloads unversiegelt, lesbar für jeden Prozess
+ * desselben Webspace. Jetzt unter der Ablage des Archivs, Rechte 0700, mit
+ * Punktnamen (die Punktregel der `.htaccess` sperrt ihn zusätzlich); Reste
+ * eines abgebrochenen Downloads, älter als eine Stunde, räumt der nächste.
+ */
+function protokoll_archiv_arbeit_neu(): string
+{
+    $wurzel = protokoll_archiv_wurzel();
+    foreach (glob($wurzel . '/.arbeit-*', GLOB_ONLYDIR) ?: [] as $alt) {
+        if ((int)@filemtime($alt) < time() - 3600) { protokoll_archiv_arbeit_weg($alt); }
+    }
+    $arbeit = $wurzel . '/.arbeit-' . bin2hex(random_bytes(8));
+    @mkdir($arbeit, 0700, true);
+    return $arbeit;
 }
 
 function protokoll_archiv_arbeit_weg(string $arbeit): void
