@@ -15,7 +15,7 @@ derselbe Code und dieselbe Instanz.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/vigilant-cray-9riw34`, Backlog-Spanne 570–579 |
-| In Arbeit | **KG-05** — fertig, Uhr 4.5.0, im selben Pull Request #168 wie KG-01 (E-KG-20); `main` mit KA-04 aufgenommen, Sackgasse nach F-KA-27 behoben (F-KG-10). Wartet auf Merge und Tag `uhr-v4.5.0`. Danach KG-02 |
+| In Arbeit | **KG-02** — Messung fertig (Abschnitt 5a), geht mit in PR #168 (E-KG-23); danach KG-06. Davor: **KG-05** — fertig, Uhr 4.5.0, im selben Pull Request #168 wie KG-01 (E-KG-20); `main` mit KA-04 aufgenommen, Sackgasse nach F-KA-27 behoben (F-KG-10). Wartet auf Merge und Tag `uhr-v4.5.0`. Danach KG-02 |
 | Erledigt | **KG-01** (Uhr 4.4.0, PR #168, noch nicht gemergt) |
 | Hakt | Antwort der KA-Instanz steht aus (E-KG-21). Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05) |
 | Gelesen gegen | Commit `0be2092` · Uhr 4.3.3; die vier Befunde von KG-01 am 10.11.2026 an der heutigen Stelle bestätigt (Abschnitt 4) |
@@ -37,6 +37,7 @@ BetreiberIn, die KA-Instanz baut sie.
 | KG-02 | Messung für KA-06a: hält `Toybox.Cryptography` ein statisches P-256-Paar dauerhaft (Neustart, App-Update)? Gibt es ECDSA, was kostet es an Zeit und Speicher? Ergebnis als Befund mit Zahlen | — | nichts | Opus | keine | keine (Messung) |
 | KG-03 | Garmin-Teil von KA-06c: Geräteschlüssel, Gerätehülle Fassung 2, Kopplung mit Vergleichswert | F-KA-04, -12, -17 (Garmin) | KA-06a fertig, KA-M5 freigegeben | **Fable** für den Krypto-Kern — vorher anhalten | keine | Haupt (offen) |
 | KG-04 | Prüfliste für die Gerätetests: Übergabe einer echten Uhr im laufenden Dienst, Kopplung mit Vergleichswert | — | KG-01, KG-03 | — | keine | keine |
+| KG-06 | **401/403 nur mit Fehlerfeld endgültig** (Vertrag 5, E-KA-26: „Die Uhr zieht mit KG nach"): erst messen, ob Connect IQ den Rumpf einer 401/403 an die App durchreicht (Simulator, Fenix 6 Pro); dann ohne Feld = später erneut, vor dem Räumen nach Fristablauf ein Sendeversuch | F-KA-18 (Rest) | KG-02 | Opus | keine | Korrektur oder Neben |
 | KG-05 | Umbau der Reanimation: Tastenbelegung, 10-s-Sperre, Vibrationen, Fehler kurz UP/DOWN (Abschnitt 5) | F-KG-01, F-KG-02, F-KG-03 | KG-01 (Reihenfolge, nicht Inhalt) | Opus | keine | Neben |
 
 Ein Pull Request je Paket. Nach jedem Paket: Konzept fortschreiben,
@@ -70,6 +71,7 @@ abonnieren, anhalten.
 | E-KG-20 | **KG-05 kommt in denselben Pull Request wie KG-01** (#168), statt auf dessen Merge zu warten — ein eigener PR vom selben Zweig wäre nicht möglich gewesen | 11.11.2026, BetreiberIn |
 | E-KG-21 | **Die Sackgasse nach F-KA-27 wird in KG-05 behoben, die Fassung bleibt 4.5.0** (noch nicht ausgeliefert). Die Abstimmung mit der KA-Instanz über weitere Server-Änderungen, die die Uhr treffen, läuft (Nachricht 11.11.2026) | 11.11.2026, BetreiberIn |
 | E-KG-22 | **Der Rundlauf hält für `--neukoppeln` und `--fremdkonto` das Senden in der Prüffassung 30 s an**, statt das Gerät zu deaktivieren (`Rundlauf.halten()`). Der Wartungsmodus taugt nicht dafür: Er sperrt auch `pair.php` | 11.11.2026, Umsetzung |
+| E-KG-23 | **KG-06 wird aufgenommen; Reihenfolge KG-02, dann KG-06.** KG-02 geht mit in PR #168 | 11.11.2026, BetreiberIn |
 | E-KG-16 | **Die Probe zu KG-01 läuft ohne Server** (`tools/uhr-pruefstand/sendeweg/`): Die Prüffassung hält jede Anfrage vor dem Absenden an und spielt die Antworten selbst vor. Ein verlorenes Paket und eine falsche Quittung lassen sich mit der echten Anlage nicht gezielt erzeugen; was `ingest.php` daraus macht, misst weiter `uhr-rundlauf` | 10.11.2026, Umsetzung |
 
 ---
@@ -187,6 +189,32 @@ Action und lang Zurück öffnen das Menü.
 
 ---
 
+## 5a. KG-02 — Messung für KA-06a (11.11.2026)
+
+**Frage der Entwurfsrunde:** Hält die Garmin-Uhr ein statisches P-256-Paar
+dauerhaft, gibt es ECDSA, und was kostet es?
+
+**Antwort, mit Zahlen in F-KG-11 bis -14:**
+
+1. **Keine Signatur.** Connect IQ 9.2.0 bietet nur ECDH. Ein Herkunftsnachweis
+   durch Signatur ist auf der Garmin nicht zu bauen.
+2. **Ein dauerhaftes Paar geht.** 32 B privat im Speicher, byte-gleich
+   wiederhergestellt; Kosten im Simulator 1 ms.
+3. **Ersatz, der sich anbietet:** statisch-statisches ECDH zwischen
+   Geräteschlüssel und Kontoschlüssel, darüber ein HMAC. Prüfen kann es der
+   Browser des Kontos — dort, wo die Daten ohnehin geöffnet werden. Der Server
+   kann es nicht, und es beweist nichts gegenüber Dritten.
+4. **Offen am Gerät:** Speicher über ein Store-Update (P-KG-01), Zeiten auf
+   der Uhr.
+
+**Gerätetest P-KG-01 (für KG-04):** Krypto-Probe auf der Fenix 6 Pro zweimal
+starten (`GERAETEPAAR erzeugt`, dann `gleich, Lauf 2`); `FASSUNG` auf 2, neu
+bauen, `.prg` ersetzen, ohne die App zu löschen, starten → erwartet `gleich,
+Lauf 3, erzeugt in Fassung 1, jetzt 2`. Scheitern: `erzeugt` statt `gleich`
+(der Speicher ging mit dem Update verloren) oder `ANDERS`.
+
+---
+
 ## 6. Befunde der Umsetzung
 
 | Nr. | Befund | Beleg | Stand |
@@ -200,6 +228,10 @@ Action und lang Zurück öffnen das Menü.
 | F-KG-08 | **Das Loslassen eines langen START ging an das eben geöffnete Rea-Menü und wählte dort den Eintrag unter dem Cursor** (Simulator: Amiodaron gebucht). Das Menü öffnet deshalb erst beim Loslassen, und die Seite schluckt es selbst (`langNachLoslassen()`). **Das Schnellmenü der Hauptanzeige öffnet nach demselben Muster** auf dem langen START — ob es dort einen Eintrag wählt, ist nicht gemessen; am Gerät nicht gemeldet | Probe `rea`, 11.11.2026 | Rea-Menü behoben in KG-05; Schnellmenü offen |
 | F-KG-09 | **Im Simulator blättert ein kurzer UP-Druck auf der Rea-Seite ohne Rea zwei Seiten** (Uhr 4.4.0: „REANAV 3, REANAV 2"): Behavior beim Drücken, das Loslassen blättert auf der neuen Seite noch einmal. Am Gerät nicht gemeldet; nicht behoben, weil es ohne Rea nichts bucht | Gegenprobe `rea`, 11.11.2026 | eingetragen in `Geraete-Eingabe.md` 6 |
 | F-KG-10 | **KA-04 (Web 24.12.1) hat den Uhr-Rundlauf rot gemacht und der Uhr eine Sackgasse gelassen.** `pair.php` gibt einer deaktivierten Uhr keinen Schlüssel mehr (F-KA-27); der Rundlauf holte ihn genau so (`--reaktivieren`, `--neukoppeln`, `--fremdkonto`). Eine Uhr ohne Schlüssel bot nach dem Wiedereinschalten nur das Trennen an. Der Prüfstand der KA-Instanz fuhr die Uhr-Proben nicht, weil unter `watch/` nichts berührt war. Behoben in der Uhr (Nr. 572), Rundlauf angepasst; Frage an die KA-Instanz, ob das Muster `geraete` die Uhr-Proben mitnehmen soll | Prüfstand über den Merge mit KA-04, 11.11.2026 | behoben in KG-05 |
+| F-KG-11 | **Connect IQ 9.2.0 kann nicht signieren.** `Toybox.Cryptography` hat sieben Klassen (Cipher, CMAC, Hash, HMAC, Key, KeyAgreement, KeyPair) und zwei Funktionen (`createPublicKey`, `randomBytes`); Kurven SECP224R1 und SECP256R1, nur `KEY_AGREEMENT_ECDH`. Kein anderes Modul der SDK nennt ECDSA oder eine Signatur. Auf Fenix 6 Pro, FR 945 und Venu 3s fragt die Probe das Gerät selbst: `SIGNATUR nicht vorhanden` | SDK-Dokumentation `doc/Toybox/Cryptography*.html`; Krypto-Probe im Simulator, 11.11.2026 | Antwort an KA-06a |
+| F-KG-12 | **Ein dauerhaftes P-256-Paar ist möglich.** `getPrivateKey().getBytes()` liefert 32 B, der öffentliche Teil 64 B; aus den 32 B im `Application.Storage` baut `KeyPair({:privateKey})` dasselbe Paar wieder, byte-gleich über 7 Läufe, Neustarts des Simulators und einen Fassungswechsel 1 → 2 ohne Leeren des Speichers. **Grenzen:** Der Speicher liegt wie `cred` ohne Hardware-Schutz auf der Uhr (Lage H); ob ein Update aus dem Connect-IQ-Store den Speicher hält, zeigt nur eine echte Uhr (P-KG-01) | Krypto-Probe, `GERAETEPAAR`, 11.11.2026 | Antwort an KA-06a |
+| F-KG-13 | **Was ein Herkunftsnachweis ohne Signatur kostet:** statisch-statisches ECDH (Geräteschlüssel gegen Kontoschlüssel) plus HMAC-SHA256 über 7000 B (500 Punkte) — im Simulator ECDH 1 bis 3 ms, HMAC höchstens 1 ms, +7 kB. Auf der echten Fenix 6 Pro kostete ein Schlüsselpaar 54 bis 73 ms und das Verschließen eines Stücks rund 141 ms (S11, E-S11-31); ein ECDH mehr je Stück liegt in derselben Größenordnung. **Was das leistet:** Den Tag prüft, wer den privaten Teil des Kontopaars hat — der Browser des Kontos, nicht der Server und nicht Dritte. Ein Nachweis gegenüber dem Server bleibt der Geräteschlüssel (`cred`) | Krypto-Probe, `T-STATISCH`, 11.11.2026 | Antwort an KA-06a |
+| F-KG-14 | **Im Simulator weist die Uhr einen Punkt neben der Kurve ab** (`KURVE abgewiesen`, alle drei Geräte). Auf einer echten Uhr ist das weiter nicht gemessen (F-S11-85); der Kommentar in `Huelle.schluesselSetzen()` bleibt richtig | Krypto-Probe, 11.11.2026 | Hinweis |
 | F-KG-07 | **Alle Fälle der Probe in einem Aufruf lösen den Watchdog aus** (mehrere Verschließungen am Stück, `Code Executed Too Long` in `Huelle.umgedreht()`). Die Probe läuft deshalb je Fall in einem eigenen Takt. Die App selbst verschließt je Antwort ein Stück und ist davon nicht betroffen — auf einer echten Uhr gemessen ist das aber nicht | Simulator fenix6pro, 10.11.2026 | Probe angepasst |
 
 **Gerätebeobachtungen stehen in `docs/Geraete-Eingabe.md` 2 und 6**, nicht
@@ -257,3 +289,16 @@ ob 2-s-Pulse gehalten werden; keine Venu (die Probe drückt UP/DOWN).
 
 **Nicht geprüft:** auf einer echten Uhr das Wiedereinschalten einer Uhr ohne
 Schlüssel.
+
+### KG-02 (11.11.2026, Messung, keine Fassung)
+
+**Nicht geprüft:** keine echte Uhr — weder Zeiten noch ob der Speicher ein
+Update aus dem Connect-IQ-Store übersteht (P-KG-01). Der Simulator legt den
+Speicher je App ab, nicht je Gerät: Die Läufe auf FR 945 und Venu 3s bauten
+das Paar wieder, das der Lauf auf der Fenix 6 Pro erzeugt hatte.
+
+| Mittel | Was es misst | Ergebnis |
+|---|---|---|
+| SDK-Dokumentation `Toybox/Cryptography*.html` | Klassen, Funktionen, Konstanten des Moduls | 7 Klassen, 2 Funktionen, keine Signatur |
+| `pruefstand.sh kryptoprobe fenix6pro` (2×), mit `FASSUNG` 2 (1×), `fr945` (2×), `venu3s` (2×) | Vektoren, `SIGNATUR`, `GERAETEPAAR`, `T-STATISCH` | je `ERGEBNIS 7 gut, 0 Fehler`; `SIGNATUR nicht vorhanden` 7 von 7; `GERAETEPAAR erzeugt` einmal, danach `gleich` in Lauf 2 bis 7, auch über Fassung 1 → 2 |
+| Prüfstand `pruefen.sh` | Stufe und Proben nach Berührung | Bericht in der Commit-Nachricht von KG-02 |

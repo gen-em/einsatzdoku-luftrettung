@@ -19,9 +19,19 @@
 //   T-<form>-<n>  Spurstueck zu n Punkten in der Innenform binaer/json:
 //           Bauen und Verschliessen in ms, Groesse, Speicher (Zuwachs in kB
 //           gegen den Stand vor dem Schritt, solange alles lebt)
+//   SIGNATUR  kennt das Geraet eine Signatur (ECDSA o. ae.)? (KG-02)
+//   GERAETEPAAR  ein dauerhaftes Paar: beim ersten Lauf erzeugt, privater
+//           Teil im Application.Storage; bei jedem weiteren Lauf daraus neu
+//           gebaut — ist der oeffentliche Teil derselbe, auch ueber eine neue
+//           FASSUNG der Probe (App-Update) hinweg? Zeit und Speicher. (KG-02)
+//   T-STATISCH  ECDH mit dem dauerhaften Paar gegen den Empfaenger plus
+//           HMAC-SHA256 ueber 7000 B (500 Punkte binaer): was ein Nachweis
+//           der Herkunft ohne Signatur kostet (KG-02)
 //   ERGEBNIS  N gut, M Fehler — am Ende und zusaetzlich als erste Zeile
 //   Die T-Zeilen stehen je Angabe in einer eigenen Zeile (rundes Display).
 import Toybox.Application;
+import Toybox.Application.Storage;
+import Toybox.Cryptography;
 import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Math;
@@ -39,6 +49,10 @@ class KryptoApp extends Application.AppBase {
 }
 
 module Probe {
+
+    // Fassung dieser Probe. Wer ein App-Update nachstellt, hebt sie und baut
+    // neu, OHNE den Speicher zu leeren (LIESMICH, KG-02).
+    const FASSUNG = 1;
 
     var zeilen as Array<String> = [];
     var oben as Number = 0;
@@ -183,10 +197,81 @@ module Probe {
                 was = "abgewiesen";
             }
             melde("KURVE " + was);
+        } else if (n == 14) {
+            var welche = "";
+            if (Toybox.Cryptography has :Signature)   { welche += " Signature"; }
+            if (Toybox.Cryptography has :Sign)        { welche += " Sign"; }
+            if (Toybox.Cryptography has :Ecdsa)       { welche += " Ecdsa"; }
+            if (Toybox.Cryptography has :ECDSA)       { welche += " ECDSA"; }
+            if (Toybox.Cryptography has :Signer)      { welche += " Signer"; }
+            if (Toybox.Cryptography has :KEY_PAIR_ELLIPTIC_CURVE_ED25519) { welche += " Ed25519"; }
+            melde("SIGNATUR " + (welche.length() > 0 ? "vorhanden:" + welche : "nicht vorhanden"));
+        } else if (n == 15) {
+            geraetepaar();
+        } else if (n == 16) {
+            statisch();
         } else {
             return false;
         }
         return true;
+    }
+
+    // Das dauerhafte Paar (KG-02). Meldungen, kein Urteil: Ein erster Lauf
+    // erzeugt, ein zweiter vergleicht.
+    function geraetepaar() as Void {
+        var vor = System.getSystemStats().usedMemory;
+        var t0 = System.getTimer();
+        var priv = Storage.getValue("kg_priv");
+        var pub = Storage.getValue("kg_pub");
+        if (!(priv instanceof ByteArray) || !(pub instanceof ByteArray)) {
+            var p = Krypto.paar(null);
+            var pb = p.getPrivateKey().getBytes();
+            var ob = p.getPublicKey().getBytes();
+            if (pb == null) { melde("GERAETEPAAR privater Teil nicht lesbar (getBytes null)"); return; }
+            Storage.setValue("kg_priv", pb as ByteArray);
+            Storage.setValue("kg_pub", ob as ByteArray);
+            Storage.setValue("kg_fassung", FASSUNG);
+            Storage.setValue("kg_laeufe", 1);
+            melde("GERAETEPAAR erzeugt, Fassung " + FASSUNG);
+            melde("privat " + (pb as ByteArray).size() + " B, oeff. " + (ob as ByteArray).size() + " B");
+            melde("T-ERZEUGEN " + (System.getTimer() - t0) + " ms");
+            return;
+        }
+        var q = new Cryptography.KeyPair({
+            :algorithm => Cryptography.KEY_PAIR_ELLIPTIC_CURVE_SECP256R1,
+            :privateKey => priv as ByteArray});
+        var neu = q.getPublicKey().getBytes() as ByteArray;
+        var t1 = System.getTimer();
+        var laeufe = Storage.getValue("kg_laeufe");
+        var l = (laeufe instanceof Number) ? (laeufe as Number) + 1 : 1;
+        Storage.setValue("kg_laeufe", l);
+        var gleich = Krypto.gleich(neu, pub as ByteArray);
+        melde("GERAETEPAAR " + (gleich ? "gleich" : "ANDERS") + ", Lauf " + l);
+        melde("erzeugt in Fassung " + Storage.getValue("kg_fassung") + ", jetzt " + FASSUNG);
+        melde("T-WIEDERHERST. " + (t1 - t0) + " ms");
+        melde("Speicher +" + ((System.getSystemStats().usedMemory - vor) / 1024) + " kB");
+    }
+
+    // Statisch-statische Einigung plus HMAC ueber ein Spurstueck (KG-02).
+    function statisch() as Void {
+        var priv = Storage.getValue("kg_priv");
+        if (!(priv instanceof ByteArray)) { melde("T-STATISCH ohne Paar"); return; }
+        var vor = System.getSystemStats().usedMemory;
+        var t0 = System.getTimer();
+        var q = new Cryptography.KeyPair({
+            :algorithm => Cryptography.KEY_PAIR_ELLIPTIC_CURVE_SECP256R1,
+            :privateKey => priv as ByteArray});
+        var z = Krypto.ecdh(q, Vektoren.EMPF_PUB);
+        var t1 = System.getTimer();
+        var daten = new [7000]b;
+        for (var i = 0; i < 7000; i++) { daten[i] = i & 0xff; }
+        var t2 = System.getTimer();
+        var tag = Krypto.hmac(z, daten);
+        var t3 = System.getTimer();
+        melde("T-STATISCH");
+        melde("ECDH " + (t1 - t0) + " ms");
+        melde("HMAC 7000 B " + (t3 - t2) + " ms");
+        melde("Tag " + tag.size() + " B +" + ((System.getSystemStats().usedMemory - vor) / 1024) + " kB");
     }
 
     // Ein Spurstueck bauen und verschliessen, mit Zeit und Speicher.

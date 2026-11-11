@@ -923,10 +923,13 @@ Daten erst nach Server-Bestätigung.
 │   │                      verworfen" — und `eingabe-probe/` zum Ausmessen des
 │   │                      Eingabeverhaltens neuer Zielgeräte (Abschnitt 5.2).
 │   │                      Dazu `krypto-probe/` (S11-02, die Gerätehülle auf
-│   │                      der Uhr) und seit S11-08 `rundlauf/`: eine
+│   │                      der Uhr; seit KG-02 auch Signatur, dauerhaftes
+│   │                      Paar und ECDH plus HMAC) und seit S11-08 `rundlauf/`: eine
 │   │                      Prüffassung koppelt im Simulator an die örtliche
 │   │                      Anlage, sendet verschlossen, und `pruefen.php`
-│   │                      öffnet Wert für Wert (Abschnitt 5.6)
+│   │                      öffnet Wert für Wert (Abschnitt 5.6); seit KG-01
+│   │                      und KG-05 `sendeweg/` und `rea/` (Simulator, ohne
+│   │                      Server)
 │   └── zaehlung/          hält fest, dass jede Sache ihre EINE Stelle behält
 │                          (Schritt 15, R83, E-ZE-24): je Muster eine
 │                          Registerzeile mit einer Decke, gemessen mit dem
