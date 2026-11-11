@@ -761,3 +761,19 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      ob Extremwerte (orange, aber keine Warnung) davon ausgenommen sind.
      *Abnahme:* auf Status, Sicherungen, Zielen und NutzerInnen jede orange
      und rote Plakette mit Symbol.
+
+<!-- -->
+
+563. **Chiffretexte und Gerätedaten sind an nichts gebunden — Formatwechsel KA-06.** · gehört zu: 28 · Stand: teilweise · seit 11.11.2026
+     *Aufgenommen 11.11.2026 als Anlass der Referenz `tools/proben/huelle/referenz_inhalt.py`.*
+     Wer die Datenbank beschreibt, vertauscht Patientenblöcke zwischen
+     Einsätzen, legt alte Stände zurück, verschiebt Zeiten und entfernt
+     Spurstücke; wer den öffentlichen Kontoschlüssel kennt, erfindet
+     Gerätedaten (Audit KA, F-KA-04, -12; Bedrohungsmodell R23). *Weg:*
+     `edk2:` mit Zweck, Bezug, Zähler und Größenklasse, Gerätehülle
+     Fassung 2 mit Herkunft über den Geräteschlüssel, Standbuch im Browser
+     mit Abschrift auf dem Server (Konzept KA, E-KA-43 bis -48). *Stand:*
+     Referenz und Vektoren stehen (KA-06a); Browser, Server, Geräte und
+     Altformat folgen in 06b bis 06e. *Abnahme:* die Hüllenprobe gegen die
+     Referenz in allen vier Umsetzungen byte-gleich, je Angriff eine Probe,
+     die ihn ausführt und den Grund des Browsers misst.

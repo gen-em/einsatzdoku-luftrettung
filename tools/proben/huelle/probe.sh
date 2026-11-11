@@ -6,5 +6,7 @@ set -uo pipefail
 HIER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 python3 "$HIER/referenz.py" --selbstprobe || exit $?
 python3 "$HIER/referenz.py" pruefen || exit $?
+python3 "$HIER/referenz_inhalt.py" --selbstprobe || exit $?
+python3 "$HIER/referenz_inhalt.py" pruefen || exit $?
 php "$HIER/probe_server.php" || exit $?
 node "$HIER/probe.mjs" "$@"
