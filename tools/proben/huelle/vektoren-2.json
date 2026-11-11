@@ -1,0 +1,1382 @@
+{
+  "format": "nadoku-huelle-2",
+  "hinweis": "Erzeugt von tools/proben/huelle/referenz.py — nicht von Hand ändern.",
+  "konto": {
+    "privat_hex": "c198b466783194c6745ac43d980f1440e03b220fa43c78b5b0f383ed7d885334",
+    "oeffentlich_hex": "0482a159c5275ab66f5e8040402858faa31bd98b6023c73fdd3efea64955ac34e07736aaa8b3e1179e92b7b8e3a5c63098c44813f834d231eff9a6e899ce0595e5",
+    "sid_hex": "5a659059d82d8b35"
+  },
+  "geraete": {
+    "uhr": {
+      "privat_hex": "2bc4eb5f0fb735c3652968087dc5a297443dc49c5625cd294b02d7fa9235c0d7",
+      "oeffentlich_hex": "048993dd1e4c02f98d7bd665f217c2b1e3a536f92a9de0254a16218e9b0e8f96c556aa5f59dd96a133dce13f79f2016bff28cdf2b3cc6f35db8ca44d0cd024d3b0",
+      "sid_hex": "a499c9fb45a4f71c"
+    },
+    "handy": {
+      "privat_hex": "f0558b4733fadafb35d45c09637e83e0e30b0f8a47d6e710dc6437d25ef20397",
+      "oeffentlich_hex": "04f4c503aaab88afc805c8ad85a530e6a308c71f8aef7415c9170bede5ee058ebcc9056a4f6e305c9b02d065c05616b5ccf37d0be8eaf346088a97984845804a39",
+      "sid_hex": "5eb5678b49bd5225"
+    },
+    "fremd": {
+      "privat_hex": "1c68ea948ba6d89c664432900827aae4e7747a138e786dee22a35a7664e3d9ec",
+      "oeffentlich_hex": "04b660d2b5d5395e0dce2e0ba81a17de7ad5744fec7dbcc3caa41d48605c4bf5dc3c929b060d561bd8df93540ae6a8fd54cbf4163eb59c1679f141152e6223dce4",
+      "sid_hex": "c7d790293f2bb888"
+    }
+  },
+  "buecher": {
+    "standard": {
+      "a499c9fb45a4f71c": {
+        "spk_hex": "048993dd1e4c02f98d7bd665f217c2b1e3a536f92a9de0254a16218e9b0e8f96c556aa5f59dd96a133dce13f79f2016bff28cdf2b3cc6f35db8ca44d0cd024d3b0",
+        "bis": null
+      },
+      "5eb5678b49bd5225": {
+        "spk_hex": "04f4c503aaab88afc805c8ad85a530e6a308c71f8aef7415c9170bede5ee058ebcc9056a4f6e305c9b02d065c05616b5ccf37d0be8eaf346088a97984845804a39",
+        "bis": null
+      }
+    },
+    "uhr-ausgetragen": {
+      "a499c9fb45a4f71c": {
+        "spk_hex": "048993dd1e4c02f98d7bd665f217c2b1e3a536f92a9de0254a16218e9b0e8f96c556aa5f59dd96a133dce13f79f2016bff28cdf2b3cc6f35db8ca44d0cd024d3b0",
+        "bis": 1784277075
+      },
+      "5eb5678b49bd5225": {
+        "spk_hex": "04f4c503aaab88afc805c8ad85a530e6a308c71f8aef7415c9170bede5ee058ebcc9056a4f6e305c9b02d065c05616b5ccf37d0be8eaf346088a97984845804a39",
+        "bis": null
+      }
+    }
+  },
+  "faelle": [
+    {
+      "name": "kurz",
+      "absender": "uhr",
+      "art": "einsatz",
+      "client_ref": "w-20261111-0001",
+      "platz": "",
+      "klartext_hex": "6e61646f6b75",
+      "fluechtig_privat_hex": "e4399ca53729872de8135b81385215a19f12a2adb4666948bb0b60a593ba5aa2",
+      "iv_hex": "27f584430d56b736186cfe14f74d7284",
+      "sid_hex": "a499c9fb45a4f71c",
+      "epk_hex": "043db44fec1f50229ab3fc7e8b1ed8c410e0eee7293e96cf18b290a9bb3799812cfabd08ff121b9dd897e86733de2d20feda7295e4c24a6949f632b8c51b553381",
+      "z_e_hex": "d94b762daade3877a3b36f33d12618746fd1de88d19a0e840643c11f77bc5e17",
+      "z_s_hex": "af99e296e391a650db36666fcbd043e7e92640ef06c895100662bb1881f07f9f",
+      "k_enc_hex": "42aa1bb23a7d9bdfd39e3d20b7dabe0d98c9ce7148bab8b2c6507d933e9eb8a4",
+      "k_mac_hex": "21f7b76f646801a389f95d08ac8aedabdedb8879fcffa334f1d02663ec8d3d17",
+      "bindung_hex": "000765696e7361747a000f772d32303236313131312d303030310000",
+      "ct_hex": "dff3fb8d1b7386b714b5e0e4dbb02095",
+      "tag_hex": "438659fac769d711b36f689f18ca35a34d4970690764a181d1e50f901e2e3240",
+      "huelle_b64": "AqSZyftFpPccBD20T+wfUCKas/x+ix7YxBDg7ucpPpbPGLKQqbs3mYEs+r0I/xIbndiX6Gcz3i0g/tpyleTCSmlJ9jK4xRtVM4En9YRDDVa3Nhhs/hT3TXKE3/P7jRtzhrcUteDk27AglUOGWfrHadcRs29onxjKNaNNSXBpB2ShgdHlD5AeLjJA"
+    },
+    {
+      "name": "leer",
+      "absender": "handy",
+      "art": "einsatz",
+      "client_ref": "w-20261111-0001",
+      "platz": "",
+      "klartext_hex": "",
+      "fluechtig_privat_hex": "724d2c55fa0ea9503f8fcde7b32e03242a1f3cd34eee7a25bf81dfbe4b985d7e",
+      "iv_hex": "3947006d6f0fc38fe2b8ec21647947c7",
+      "sid_hex": "5eb5678b49bd5225",
+      "epk_hex": "04440a4bece5a4d4dc8abba03c7dd0f58273dbd17614e81301e2f7a3dbb45182ec2965e3a3a151979fc25ec06ef0b9ef9c51d10cbd4f7c3dcbca4dd6193dc44ff5",
+      "z_e_hex": "225387992e6f5deae00ac2662fcdc9488623dc0f0fba35d684eb2864edc8d6d1",
+      "z_s_hex": "02935aee6741c6a7f43cc60f99f60958da6870057755060715062940455b9ebe",
+      "k_enc_hex": "22e9537131e489ed81a1c2131d5c16eeb2c20602c33f5f93d74c611e76d359c1",
+      "k_mac_hex": "0a1c3ea29816e7a0bd66fec6ccdcad2b5a0f99d7efa8261139ca15d73233d75b",
+      "bindung_hex": "000765696e7361747a000f772d32303236313131312d303030310000",
+      "ct_hex": "edd31118614865d4bf3e36a9620552ce",
+      "tag_hex": "340416a0f0072fc206d848b1b8eecbf00757296690cdf5105818348826920a26",
+      "huelle_b64": "Al61Z4tJvVIlBEQKS+zlpNTcirugPH3Q9YJz29F2FOgTAeL3o9u0UYLsKWXjo6FRl5/CXsBu8LnvnFHRDL1PfD3Lyk3WGT3ET/U5RwBtbw/Dj+K47CFkeUfH7dMRGGFIZdS/PjapYgVSzjQEFqDwBy/CBthIsbjuy/AHVylmkM31EFgYNIgmkgom"
+    },
+    {
+      "name": "spur-3",
+      "absender": "uhr",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "120:3",
+      "klartext_hex": "000000006a59eaa1000000001c7819e8062eaff802a8000000001c782604062ec25402a9000000051c783220062ed4b002aa0000000a",
+      "fluechtig_privat_hex": "eb4fc8308d67126d78e3a6921d13d9e0f8bc77f8e4d8d3140126de8992cecb93",
+      "iv_hex": "f37a3658a7a184a7a12ff7e9302a360c",
+      "sid_hex": "a499c9fb45a4f71c",
+      "epk_hex": "04447d611f669ccf5fd085bccf175c47e3ec25180544aaa9d147a3975166ea5d375fe75e07efc5574326b3a019905fb2af9bd22ed2cba77f07df1bdc3468c7d0f2",
+      "z_e_hex": "59cd8885389f89676ff2b83b077d2edd6af3d2b6070abd07f85902469ea94ab6",
+      "z_s_hex": "af99e296e391a650db36666fcbd043e7e92640ef06c895100662bb1881f07f9f",
+      "k_enc_hex": "23471421941d43000f2f42ef99cfe17e6947bb2741786d3a23d1fd1b6497eede",
+      "k_mac_hex": "02a7bfc291797d4dd97676e1bc71643be19286ead1fefe7ae46c9688c34ea813",
+      "bindung_hex": "000473707572000f772d32303236313131312d3030303200053132303a33",
+      "ct_hex": "0c503ccb900d64e17a7406c812486a0f99ddbafcb75e551d15efb1397fbd2cc5afcf79a6da7a9f6ba7c6c51022e93c258cacee553a5cf2d2f34076fcf9c37325",
+      "tag_hex": "d677e1175303f7137078b2b6f48b62943af3bacd2550a89d3ee97f603082ddd3",
+      "huelle_b64": "AqSZyftFpPccBER9YR9mnM9f0IW8zxdcR+PsJRgFRKqp0Uejl1Fm6l03X+deB+/FV0Mms6AZkF+yr5vSLtLLp38H3xvcNGjH0PLzejZYp6GEp6Ev9+kwKjYMDFA8y5ANZOF6dAbIEkhqD5nduvy3XlUdFe+xOX+9LMWvz3mm2nqfa6fGxRAi6TwljKzuVTpc8tLzQHb8+cNzJdZ34RdTA/cTcHiytvSLYpQ687rNJVConT7pf2Awgt3T"
+    },
+    {
+      "name": "spur-schluss",
+      "absender": "uhr",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "123:2",
+      "klartext_hex": "000000006a59eab0010000001c783e3c062ee70c02aa000000001c784a58062ef96802ab00000005",
+      "fluechtig_privat_hex": "e96252d7e41dadf4b42ceee4b5ace886f70f82e7045abf14ff9955bdda0e03ae",
+      "iv_hex": "d0267bda2d24a7c0ddd06f4fac3859d0",
+      "sid_hex": "a499c9fb45a4f71c",
+      "epk_hex": "0453e713084fd3f378ce6fefcef1988219753cd3b8e54ebc22d4600058d6b8e005d5f472d3fa9597fa242e31ddf978cfae2fdb3e56a04359046214466bc01995cb",
+      "z_e_hex": "74e6e708f5d434452c6cb45b02dcff5f2d153ab511837f229a5dc6c71570ebfd",
+      "z_s_hex": "af99e296e391a650db36666fcbd043e7e92640ef06c895100662bb1881f07f9f",
+      "k_enc_hex": "aedeeab9edea5565cbe1eaf4b0a1bae7d0f73eba577b9bde2c5c0ac16bf3df39",
+      "k_mac_hex": "77315d50239a6acc97fc8fcd9cd62ab8602d7885016172af3f6399919d9915e7",
+      "bindung_hex": "000473707572000f772d32303236313131312d3030303200053132333a32",
+      "ct_hex": "c190905f22708fac69272e1e00aca0f71ca06e93b322228de0103c4d50ba8e49499e79abed6d4893a7b5755e14350e2e",
+      "tag_hex": "9daee69099e6b4ecf55e2bb1f1191fb1ab20bc8dceaef900eba71eff859a1597",
+      "huelle_b64": "AqSZyftFpPccBFPnEwhP0/N4zm/vzvGYghl1PNO45U68ItRgAFjWuOAF1fRy0/qVl/okLjHd+XjPri/bPlagQ1kEYhRGa8AZlcvQJnvaLSSnwN3Qb0+sOFnQwZCQXyJwj6xpJy4eAKyg9xygbpOzIiKN4BA8TVC6jklJnnmr7W1Ik6e1dV4UNQ4una7mkJnmtOz1Xiux8RkfsasgvI3OrvkA66ce/4WaFZc="
+    },
+    {
+      "name": "ruhe-schluss-leer",
+      "absender": "handy",
+      "art": "ruhe",
+      "client_ref": "r-20261111-0007",
+      "platz": "40:0",
+      "klartext_hex": "000000006a59e84901000000",
+      "fluechtig_privat_hex": "583e82f995802a2bcab6841d03d9f7585b08f0b2969d026bd7f995df2c53ff23",
+      "iv_hex": "88aec9c899f6bab6c9bd074aa1c3bf33",
+      "sid_hex": "5eb5678b49bd5225",
+      "epk_hex": "04db8794959ab081234f7d57a5e49bee289657d2d1243355228f0885c2bfed19c39198c05aac2635ef9e77a4ef0ba363f1c22586e75ad7455191a0eb01cf11306a",
+      "z_e_hex": "d8cc06558e923ca24f6caebaac8bc87aa7da5ebab6f3cb618458999ecd9c5dc2",
+      "z_s_hex": "02935aee6741c6a7f43cc60f99f60958da6870057755060715062940455b9ebe",
+      "k_enc_hex": "038980e21877afe749ce69abda73154e0706cac6f945367a65f381551c035751",
+      "k_mac_hex": "68517c35448b7b03b38c1928cd2804f6ce8986de8f92ecb557a4ad8579997630",
+      "bindung_hex": "000472756865000f722d32303236313131312d30303037000434303a30",
+      "ct_hex": "3e437b46b5ac84f33830681ba5f01d44",
+      "tag_hex": "53f13f215535cb61408bde2a3230c3321938419dd61a953919a5ff64ea9f6ef9",
+      "huelle_b64": "Al61Z4tJvVIlBNuHlJWasIEjT31XpeSb7iiWV9LRJDNVIo8IhcK/7RnDkZjAWqwmNe+ed6TvC6Nj8cIlhuda10VRkaDrAc8RMGqIrsnImfa6tsm9B0qhw78zPkN7RrWshPM4MGgbpfAdRFPxPyFVNcthQIveKjIwwzIZOEGd1hqVORml/2Tqn275"
+    },
+    {
+      "name": "einsatz-json",
+      "absender": "handy",
+      "art": "einsatz",
+      "client_ref": "m-20261111-0004",
+      "platz": "",
+      "klartext_hex": "7b2266617373756e67223a322c227a223a332c227374617274223a313738343237373036352c227363686c757373223a747275652c2270686173656e223a5b7b227068617365223a342c2274223a313139372c226c6174223a34372e353630312c226c6f6e223a31302e373030327d2c7b227068617365223a352c2274223a313331302c226c6174223a6e756c6c2c226c6f6e223a6e756c6c7d5d2c22726561223a5b7b2274223a313434352c2265726569676e69737365223a5b7b22617274223a22616472656e616c696e222c2274223a313631377d5d7d5d7d",
+      "fluechtig_privat_hex": "d7563a492777660ed732c65e0e693eaf261cfe4438e4f6ad620c5a4c1d108e07",
+      "iv_hex": "2b31127dcbc8a52405fb977e47d5d152",
+      "sid_hex": "5eb5678b49bd5225",
+      "epk_hex": "04f0f06aadf8d98d62a28260ecbde5ee9b6a9ea6aaf499a7aa257b42411f6f62a761a13904a154c89636a34bd304033330aa8b307ab34dee477aef014862d85b06",
+      "z_e_hex": "49a4551a21800eceeb114f2c6fe513dd24d07189f635808f99ba8d3ddee0d67d",
+      "z_s_hex": "02935aee6741c6a7f43cc60f99f60958da6870057755060715062940455b9ebe",
+      "k_enc_hex": "db92400f3d7372bc0e6a168715589ad85a0acb128c0598ddf2492c7108199a11",
+      "k_mac_hex": "a55918d912929e54232e0755bf4f00967f6ff797ddd06952473077cfecf7a0c3",
+      "bindung_hex": "000765696e7361747a000f6d2d32303236313131312d303030340000",
+      "ct_hex": "9de5d499eb5aa0368ce833d956e829a7ad301ff17c30e52a6dcce5a5761fd50775d0ca2a52f23282f2f73a6f83780233bf902493480d42d15cdef1e2a9b8947877f44f52559d77678d951089e99c0cc05d41b162e4898565bc3db591a162e837d1660aaf43b4f0243e5c31090325ddf7e0b2fb824bd81d76efe2602e657a7fe384cf281ad1298a9c39ca1f368b0bd738cad645d45ec9b4115351abcd892be82d8527d99b333a095f9fd712cf2494297bd34e8c43a6d7a8f77bc15ab3c88257c06cbe376eb1b14158476ec459352cee24a36c4232a721cb6881ed271cfa51097c",
+      "tag_hex": "fd65bf9323b01c5a850ed8d1ada38b7c71a526a03b5444ca502568567bd9fd11",
+      "huelle_b64": "Al61Z4tJvVIlBPDwaq342Y1iooJg7L3l7ptqnqaq9JmnqiV7QkEfb2KnYaE5BKFUyJY2o0vTBAMzMKqLMHqzTe5Heu8BSGLYWwYrMRJ9y8ilJAX7l35H1dFSneXUmetaoDaM6DPZVugpp60wH/F8MOUqbczlpXYf1Qd10MoqUvIygvL3Om+DeAIzv5Akk0gNQtFc3vHiqbiUeHf0T1JVnXdnjZUQiemcDMBdQbFi5ImFZbw9tZGhYug30WYKr0O08CQ+XDEJAyXd9+Cy+4JL2B127+JgLmV6f+OEzyga0SmKnDnKHzaLC9c4ytZF1F7JtBFTUavNiSvoLYUn2ZszOglfn9cSzySUKXvTToxDpteo93vBWrPIglfAbL43brGxQVhHbsRZNSzuJKNsQjKnIctoge0nHPpRCXz9Zb+TI7AcWoUO2NGto4t8caUmoDtURMpQJWhWe9n9EQ=="
+    },
+    {
+      "name": "konto-einsatz",
+      "absender": "konto",
+      "art": "einsatz",
+      "client_ref": "man-0123456789abcdef",
+      "platz": "",
+      "klartext_hex": "7b2266617373756e67223a322c227a223a342c227374617274223a313738343237373036352c227363686c757373223a747275652c2270686173656e223a5b7b227068617365223a342c2274223a313139372c226c6174223a34372e353630312c226c6f6e223a31302e373030327d2c7b227068617365223a352c2274223a313331302c226c6174223a6e756c6c2c226c6f6e223a6e756c6c7d5d2c22726561223a5b7b2274223a313434352c2265726569676e69737365223a5b7b22617274223a22616472656e616c696e222c2274223a313631377d5d7d5d2c226865726b756e6674223a7b22766f6e223a5b2261343939633966623435613466373163225d2c2275656265726e6f6d6d656e223a313738343336333436357d7d",
+      "fluechtig_privat_hex": "3909badce87dd57fd32d850c40625e4c2a9205b33abdddbd611d49db9778538c",
+      "iv_hex": "7fbeea85fb4bc5cd4e1930e1c0e0023a",
+      "sid_hex": "5a659059d82d8b35",
+      "epk_hex": "046783d9cee2ab05a5945c7fc71a8dd83ad0145a50f4915ae07b2abfb8bd77a64abeb02c2d7aa5d56154d7fa061bb69d982d8b0d23ee6fc26943b2f1735f6e9b77",
+      "z_e_hex": "0e8c338b52d9456498293a3ddb3a4a40172f1d1d471fc2177d2ee2dcd20719e1",
+      "z_s_hex": "26492869dca05f2f03b92db72b8d9efd30a883781f1ae98721083cba8b63bdf7",
+      "k_enc_hex": "1a7bf35f9e7d548670d62f98e8c361ac00a7bf1b5a0d406c7ac52d351d6e2adf",
+      "k_mac_hex": "b430bcb89100d35e37b1d27cbdd0827067ea2da6e7c853a9ce7753cce6bb4113",
+      "bindung_hex": "000765696e7361747a00146d616e2d303132333435363738396162636465660000",
+      "ct_hex": "99468a76de3c347d74b4492b6d6b643f5179f642777e8b4a42655557dea8d8d043ea851bc977ac1e15b90d87d534112abaf0f756194564a27cd73438752021808e6b12b1da5fa2830e28cde4e284992919fa9185d4159090c0d0fba7daed4270618c03291d4aa3d4d615b1c0c45ec40a31bd445b6d6b815ce5592db280d50e00cd34f479d30d04e019dab1ce93aa0ed7330c0b9308bbc64928aefdeda8e61e068d407cea88ddbf0c069d05e47d0d1be4185d19e503c9b5c2780a64bee13aa6b77876e06731f18ba4214ca1a78a85fcd915190d473df949748d749d31c410d4c57b0a78431efe045b46959adaaabd6c8bb671a447cfc41b6aa7e6493b5b8217db849b83fe8a3a5f87ec46be619b9251f54f0ca258a7a561935d47a7fbe925a852",
+      "tag_hex": "e1a740b7ed65cf0d81f997eb953545f7b026d202458dde397ca6aa9fc4e263ee",
+      "huelle_b64": "AlplkFnYLYs1BGeD2c7iqwWllFx/xxqN2DrQFFpQ9JFa4Hsqv7i9d6ZKvrAsLXql1WFU1/oGG7admC2LDSPub8JpQ7Lxc19um3d/vuqF+0vFzU4ZMOHA4AI6mUaKdt48NH10tEkrbWtkP1F59kJ3fotKQmVVV96o2NBD6oUbyXesHhW5DYfVNBEquvD3VhlFZKJ81zQ4dSAhgI5rErHaX6KDDijN5OKEmSkZ+pGF1BWQkMDQ+6fa7UJwYYwDKR1Ko9TWFbHAxF7ECjG9RFtta4Fc5VktsoDVDgDNNPR50w0E4Bnasc6Tqg7XMwwLkwi7xkkorv3tqOYeBo1AfOqI3b8MBp0F5H0NG+QYXRnlA8m1wngKZL7hOqa3eHbgZzHxi6QhTKGnioX82RUZDUc9+Ul0jXSdMcQQ1MV7CnhDHv4EW0aVmtqqvWyLtnGkR8/EG2qn5kk7W4IX24Sbg/6KOl+H7Ea+YZuSUfVPDKJYp6Vhk11Hp/vpJahS4adAt+1lzw2B+ZfrlTVF97Am0gJFjd45fKaqn8TiY+4="
+    },
+    {
+      "name": "umlaut-ref",
+      "absender": "uhr",
+      "art": "einsatz",
+      "client_ref": "Prüf-ß-€",
+      "platz": "",
+      "klartext_hex": "7b2266617373756e67223a322c227a223a312c227374617274223a313738343237373036352c227363686c757373223a66616c73652c2270686173656e223a5b7b227068617365223a322c2274223a302c226c6174223a34372e372c226c6f6e223a31302e337d5d2c22726561223a5b5d7d",
+      "fluechtig_privat_hex": "bb04758fcebd08c4c2fee1073d600b0ea87ff28b2622c35a77e31175fbf2ac55",
+      "iv_hex": "a5859d0c8ba26d35c140ce7d9a6a1e81",
+      "sid_hex": "a499c9fb45a4f71c",
+      "epk_hex": "049bf05c053f43d99943a324d0aeef0477a0a643b3547b4a1dbad1c147b1552fa6e812090be98fbc6047855711a9d7c1f9a1b6ee00e19650271d3de0bbb3de320a",
+      "z_e_hex": "3e5ccfba3fec1fdaa213bdce3a0736d7f49d3cc0b936a49df087f402ecee014f",
+      "z_s_hex": "af99e296e391a650db36666fcbd043e7e92640ef06c895100662bb1881f07f9f",
+      "k_enc_hex": "7963b1c70524877abc3bc5b1873c890e93eb5e6217d3095fa7b60ac5864ed319",
+      "k_mac_hex": "b120c994cbb597eb7d93777266f22f37e5b4726c2c1a13f28d8f89095ebe83ec",
+      "bindung_hex": "000765696e7361747a000c5072c3bc662dc39f2de282ac0000",
+      "ct_hex": "cc0b37bbcb64ce2449aaa7b50886fc35060a4c38c2efcb76b894a4cc17dad805814a2d04d583a8e1a00bca314a26bda97366e1877bdbf294a26393f77c1cc8924e64d2535019be18f70eaa0c869ad70f1b8116cc8c7d7b133ee058d8bb2ca5988ac91b42eb4d8b882e1c42bd492e2accde3df95d3ecd52bf1c62e5b8052327b7",
+      "tag_hex": "7161b8de6ac9345af4f16ac56cee25bfc862f5e412fb1d5a6beaad57dc882079",
+      "huelle_b64": "AqSZyftFpPccBJvwXAU/Q9mZQ6Mk0K7vBHegpkOzVHtKHbrRwUexVS+m6BIJC+mPvGBHhVcRqdfB+aG27gDhllAnHT3gu7PeMgqlhZ0Mi6JtNcFAzn2aah6BzAs3u8tkziRJqqe1CIb8NQYKTDjC78t2uJSkzBfa2AWBSi0E1YOo4aALyjFKJr2pc2bhh3vb8pSiY5P3fBzIkk5k0lNQGb4Y9w6qDIaa1w8bgRbMjH17Ez7gWNi7LKWYiskbQutNi4guHEK9SS4qzN49+V0+zVK/HGLluAUjJ7dxYbjeask0WvTxasVs7iW/yGL15BL7HVpr6q1X3IggeQ=="
+    }
+  ],
+  "gepackt": [
+    {
+      "name": "gepackt-stufe-2",
+      "absender": "konto",
+      "art": "ruhe",
+      "client_ref": "r-20261105-0024",
+      "stufe": 2,
+      "seq_from": 40,
+      "n_original": 5,
+      "ts_von": 1784278065,
+      "platz": "40:5:2:5",
+      "punkte": [
+        [
+          40,
+          47.7261,
+          10.3159,
+          674.0,
+          1784278065
+        ],
+        [
+          41,
+          47.7264,
+          10.3155,
+          null,
+          1784278125
+        ],
+        [
+          42,
+          47.7268,
+          10.315,
+          681.0,
+          1784278185
+        ],
+        [
+          43,
+          47.7271,
+          10.3143,
+          -12.0,
+          1784278245
+        ],
+        [
+          44,
+          47.7275,
+          10.3139,
+          690.0,
+          1784278305
+        ]
+      ],
+      "kopf_hex": "000000006a59ec3101010000a499c9fb45a4f71c",
+      "roh_hex": "1c726cc800000bb800000fa000000bb800000fa0062614d8fffff060ffffec78ffffe4a8fffff060000002a2ffff7d5e000082a9fffffd4b000002be000000000000003c0000003c0000003c0000003c",
+      "fluechtig_privat_hex": "2bdbf8c9fa2ce1ee13b05d55a306d7126a54baae5d5ebc14e886d2ff9ea0e33d",
+      "iv_hex": "0d0c7730dc2c9fad17a2e62673c3f27a",
+      "huelle_b64": "AlplkFnYLYs1BJ+lHCaFwM6rWaMvGcJ/6qQUqM+Wq7OMxGHitcdeEuNJzKSe1tszzhIRvTPAXYl9OK7P7dAiGDHsc0U9YM77+GgNDHcw3CyfrRei5iZzw/J6Rzx0x3h9CIlsPzWh/iK7Q25KhDihyY83p6jHcmMx3jIPPSb5EiivzotwlacIybuxHy2Rgsg+2vk/jhOHJTmNpzdfUK32iWClqXWejS+IH4DvP4LkDLz+zupDUhnmpC2nJ49kDqMEh4H75k1vW7lIBIFZ4k34GXWMqjk83uJtF4Y="
+    },
+    {
+      "name": "gepackt-stufe-3",
+      "absender": "konto",
+      "art": "spur",
+      "client_ref": "m-20261105-0024",
+      "stufe": 3,
+      "seq_from": 0,
+      "n_original": 120,
+      "ts_von": 1784279065,
+      "platz": "0:3:3:120",
+      "punkte": [
+        [
+          0,
+          47.5591,
+          10.217,
+          812.0,
+          1784279065
+        ],
+        [
+          1,
+          47.5644,
+          10.2311,
+          1405.0,
+          1784279158
+        ],
+        [
+          2,
+          47.6123,
+          10.2899,
+          930.0,
+          1784279355
+        ]
+      ],
+      "kopf_hex": "000000006a59f01905010000a499c9fb45a4f71c000000006a5b39c9",
+      "roh_hex": "1c58f1580000cf0800074f180616fd90000226c80008f8e00000032c00000251fffffe25000000000000005d000000c5",
+      "fluechtig_privat_hex": "adfc3327a6d13f48ae2c8adec8e4d13c1cfbcc907ae68d0b26db13fabb7d31af",
+      "iv_hex": "9f296ba5dcb2d5cdb5f1a065886ee4b7",
+      "huelle_b64": "AlplkFnYLYs1BIG1oXao0g0qsXSHHZxBu9ihbfguDTihQ7Jg/kT78RgVTKHBBiLF9oh6FR5JkoYzi5KM+Munq9rZ7FkC3xQH7NKfKWul3LLVzbXxoGWIbuS37PuMWCmsXS2g3kZ20NWS4f/tjeUHvVOb3WeB5033TkjZJuybM4G/vRR6DF5Qdhah326mL9lmzUlcVmW/gdJiLvKmpPYKbmpr7Myw34YTjXafOI58wPQvMn/XyzWUJuP7IKhONpnfW/LlEHXOpynBsQ=="
+    }
+  ],
+  "stoerungen": [
+    {
+      "name": "tag-gekippt",
+      "grund": "pruefwert",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "120:3",
+      "verlangt2": false,
+      "huelle_b64": "AqSZyftFpPccBER9YR9mnM9f0IW8zxdcR+PsJRgFRKqp0Uejl1Fm6l03X+deB+/FV0Mms6AZkF+yr5vSLtLLp38H3xvcNGjH0PLzejZYp6GEp6Ev9+kwKjYMDFA8y5ANZOF6dAbIEkhqD5nduvy3XlUdFe+xOX+9LMWvz3mm2nqfa6fGxRAi6TwljKzuVTpc8tLzQHb8+cNzJdZ34RdTA/cTcHiytvSLYpQ687rNJVConT7pf2Awgt3S"
+    },
+    {
+      "name": "ct-gekippt",
+      "grund": "pruefwert",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "120:3",
+      "verlangt2": false,
+      "huelle_b64": "AqSZyftFpPccBER9YR9mnM9f0IW8zxdcR+PsJRgFRKqp0Uejl1Fm6l03X+deB+/FV0Mms6AZkF+yr5vSLtLLp38H3xvcNGjH0PLzejZYp6GEp6Ev9+kwKjYMDVA8y5ANZOF6dAbIEkhqD5nduvy3XlUdFe+xOX+9LMWvz3mm2nqfa6fGxRAi6TwljKzuVTpc8tLzQHb8+cNzJdZ34RdTA/cTcHiytvSLYpQ687rNJVConT7pf2Awgt3T"
+    },
+    {
+      "name": "iv-gekippt",
+      "grund": "pruefwert",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "120:3",
+      "verlangt2": false,
+      "huelle_b64": "AqSZyftFpPccBER9YR9mnM9f0IW8zxdcR+PsJRgFRKqp0Uejl1Fm6l03X+deB+/FV0Mms6AZkF+yr5vSLtLLp38H3xvcNGjH0PLyejZYp6GEp6Ev9+kwKjYMDFA8y5ANZOF6dAbIEkhqD5nduvy3XlUdFe+xOX+9LMWvz3mm2nqfa6fGxRAi6TwljKzuVTpc8tLzQHb8+cNzJdZ34RdTA/cTcHiytvSLYpQ687rNJVConT7pf2Awgt3T"
+    },
+    {
+      "name": "epk-gekippt",
+      "grund": "schluessel",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "120:3",
+      "verlangt2": false,
+      "huelle_b64": "AqSZyftFpPccBUR9YR9mnM9f0IW8zxdcR+PsJRgFRKqp0Uejl1Fm6l03X+deB+/FV0Mms6AZkF+yr5vSLtLLp38H3xvcNGjH0PLzejZYp6GEp6Ev9+kwKjYMDFA8y5ANZOF6dAbIEkhqD5nduvy3XlUdFe+xOX+9LMWvz3mm2nqfa6fGxRAi6TwljKzuVTpc8tLzQHb8+cNzJdZ34RdTA/cTcHiytvSLYpQ687rNJVConT7pf2Awgt3T"
+    },
+    {
+      "name": "sid-gekippt",
+      "grund": "absender",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "120:3",
+      "verlangt2": false,
+      "huelle_b64": "AqWZyftFpPccBER9YR9mnM9f0IW8zxdcR+PsJRgFRKqp0Uejl1Fm6l03X+deB+/FV0Mms6AZkF+yr5vSLtLLp38H3xvcNGjH0PLzejZYp6GEp6Ev9+kwKjYMDFA8y5ANZOF6dAbIEkhqD5nduvy3XlUdFe+xOX+9LMWvz3mm2nqfa6fGxRAi6TwljKzuVTpc8tLzQHb8+cNzJdZ34RdTA/cTcHiytvSLYpQ687rNJVConT7pf2Awgt3T"
+    },
+    {
+      "name": "sid-des-handys",
+      "grund": "pruefwert",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "120:3",
+      "verlangt2": false,
+      "huelle_b64": "Al61Z4tJvVIlBER9YR9mnM9f0IW8zxdcR+PsJRgFRKqp0Uejl1Fm6l03X+deB+/FV0Mms6AZkF+yr5vSLtLLp38H3xvcNGjH0PLzejZYp6GEp6Ev9+kwKjYMDFA8y5ANZOF6dAbIEkhqD5nduvy3XlUdFe+xOX+9LMWvz3mm2nqfa6fGxRAi6TwljKzuVTpc8tLzQHb8+cNzJdZ34RdTA/cTcHiytvSLYpQ687rNJVConT7pf2Awgt3T"
+    },
+    {
+      "name": "andere-ref",
+      "grund": "pruefwert",
+      "art": "spur",
+      "client_ref": "w-20261111-0003",
+      "platz": "120:3",
+      "verlangt2": false,
+      "huelle_b64": "AqSZyftFpPccBER9YR9mnM9f0IW8zxdcR+PsJRgFRKqp0Uejl1Fm6l03X+deB+/FV0Mms6AZkF+yr5vSLtLLp38H3xvcNGjH0PLzejZYp6GEp6Ev9+kwKjYMDFA8y5ANZOF6dAbIEkhqD5nduvy3XlUdFe+xOX+9LMWvz3mm2nqfa6fGxRAi6TwljKzuVTpc8tLzQHb8+cNzJdZ34RdTA/cTcHiytvSLYpQ687rNJVConT7pf2Awgt3T"
+    },
+    {
+      "name": "anderer-platz",
+      "grund": "pruefwert",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "121:3",
+      "verlangt2": false,
+      "huelle_b64": "AqSZyftFpPccBER9YR9mnM9f0IW8zxdcR+PsJRgFRKqp0Uejl1Fm6l03X+deB+/FV0Mms6AZkF+yr5vSLtLLp38H3xvcNGjH0PLzejZYp6GEp6Ev9+kwKjYMDFA8y5ANZOF6dAbIEkhqD5nduvy3XlUdFe+xOX+9LMWvz3mm2nqfa6fGxRAi6TwljKzuVTpc8tLzQHb8+cNzJdZ34RdTA/cTcHiytvSLYpQ687rNJVConT7pf2Awgt3T"
+    },
+    {
+      "name": "andere-art",
+      "grund": "pruefwert",
+      "art": "ruhe",
+      "client_ref": "w-20261111-0002",
+      "platz": "120:3",
+      "verlangt2": false,
+      "huelle_b64": "AqSZyftFpPccBER9YR9mnM9f0IW8zxdcR+PsJRgFRKqp0Uejl1Fm6l03X+deB+/FV0Mms6AZkF+yr5vSLtLLp38H3xvcNGjH0PLzejZYp6GEp6Ev9+kwKjYMDFA8y5ANZOF6dAbIEkhqD5nduvy3XlUdFe+xOX+9LMWvz3mm2nqfa6fGxRAi6TwljKzuVTpc8tLzQHb8+cNzJdZ34RdTA/cTcHiytvSLYpQ687rNJVConT7pf2Awgt3T"
+    },
+    {
+      "name": "fassung-3",
+      "grund": "fassung",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "120:3",
+      "verlangt2": false,
+      "huelle_b64": "A6SZyftFpPccBER9YR9mnM9f0IW8zxdcR+PsJRgFRKqp0Uejl1Fm6l03X+deB+/FV0Mms6AZkF+yr5vSLtLLp38H3xvcNGjH0PLzejZYp6GEp6Ev9+kwKjYMDFA8y5ANZOF6dAbIEkhqD5nduvy3XlUdFe+xOX+9LMWvz3mm2nqfa6fGxRAi6TwljKzuVTpc8tLzQHb8+cNzJdZ34RdTA/cTcHiytvSLYpQ687rNJVConT7pf2Awgt3T"
+    },
+    {
+      "name": "gekuerzt",
+      "grund": "laenge",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "120:3",
+      "verlangt2": false,
+      "huelle_b64": "AqSZyftFpPccBER9YR9mnM9f0IW8zxdcR+PsJRgFRKqp0Uejl1Fm6l03X+deB+/FV0Mms6AZkF+yr5vSLtLLp38H3xvcNGjH0PLzejZYp6GEp6Ev9+kwKjYMDFA8y5ANZOF6dAbIEkhqD5nduvy3XlUdFe+xOX+9LMWvz3mm2nqfa6fGxRAi6TwljKzuVTpc8tLzQHb8+cNzJdZ34RdTA/cTcHiytvSLYpQ687rNJVConT7pf2Awgt0="
+    },
+    {
+      "name": "fremdes-geraet",
+      "grund": "absender",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "120:3",
+      "verlangt2": false,
+      "huelle_b64": "AsfXkCk/K7iIBDRfXRu3rEWmyfRwFvIDzTYkf0F3phSsTL++873B3U182kiBLHLbMaQV4B3TbUBntWRmbzqGdQvx/dYy7OcphAeQnwUcOdQfSdy+MxPxkGd0BARMs7Rd0o8gmyBNizJQ8xk+/63V2ReEWTqbe5LLkG+fCg/fO7/ZdiH8YJtbX9lwAiGpBHQuHUS+fnZVN6h+Q1yNsKzaRVrkXsS6lhgxOUNYsRWyA9YwkJ+pRylvp7Zi"
+    },
+    {
+      "name": "ohne-geraeteschluessel",
+      "grund": "pruefwert",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "120:3",
+      "verlangt2": false,
+      "huelle_b64": "AqSZyftFpPccBE1J4VY8PZQSYism6SBjCS3WHRHl2LluJsNqlUucltmsMll62HuL7D4yXhCZfnYHJUnMmA81aTxtfmcu33LRJeej4RaZ/B0fS/tpO/sSNRTWb4Tl3dwBVTN0sEbSNuhTIsS6VlGAy/GsoIyNFVbNNzfuARCzAh44PT7/HP8xUP7gm3nDVuNQt0xRJFu3V3UHWyQZBFvlCbHVg5yN8eFtX9W2gdoO5h54+D9j7n9qc0Q2"
+    },
+    {
+      "name": "fassung-1-wo-2-verlangt",
+      "grund": "ohne-herkunft",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "platz": "120:3",
+      "verlangt2": true,
+      "huelle_b64": "AQTHc+GLOteQCsp2gNPzV8syEqgR5Smy4ndZarIp5AjPEVm01ajCDuYOib3dI7xXBVEdnlMysCizRIvfKOXFGY44I2xrFIQPvhGjd7soXfnxcieHSF8sfCvWuX+FzxASNA3cdx7E/fNQmYdMmtfGvdrwLG+OeGu9IICSNpSZZIuj+/1S72PeCJtOEDFU+W99V2bKhFN/M8aXsbABKSCBsj7b"
+    }
+  ],
+  "folgen": [
+    {
+      "name": "ganz",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AqSZyftFpPccBPT8MTwKSIjcIUFH4jevSqTkcMWyRL++3grgIB72TXUvfhy+741+UAEbMWSN5FZohn02CrqsAUP9obXw4myUXjOL9t7N0SAeXERE1zC0BGuuZbbUNtQPTI74aoIuhEavuy3KhO+NX0e5LI9QWBmdAmNiUo4GLSyvnECyzCw9DxJDQ7z779UcGLGMrloVPkHUbBb8lTbJFpfeJ+y370eE2FSl8dHziBj+cU8e+ZFOY/li"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "erwartet": {
+        "punkte": 8,
+        "erste_zeit": 1784277065,
+        "letzte_zeit": 1784277100,
+        "herkunft": [
+          "a499c9fb45a4f71c"
+        ],
+        "schluss": true,
+        "fassung1": false
+      }
+    },
+    {
+      "name": "ungeordnet-und-doppelt",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        },
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AqSZyftFpPccBPT8MTwKSIjcIUFH4jevSqTkcMWyRL++3grgIB72TXUvfhy+741+UAEbMWSN5FZohn02CrqsAUP9obXw4myUXjOL9t7N0SAeXERE1zC0BGuuZbbUNtQPTI74aoIuhEavuy3KhO+NX0e5LI9QWBmdAmNiUo4GLSyvnECyzCw9DxJDQ7z779UcGLGMrloVPkHUbBb8lTbJFpfeJ+y370eE2FSl8dHziBj+cU8e+ZFOY/li"
+        },
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "erwartet": {
+        "punkte": 8,
+        "erste_zeit": 1784277065,
+        "letzte_zeit": 1784277100,
+        "herkunft": [
+          "a499c9fb45a4f71c"
+        ],
+        "schluss": true,
+        "fassung1": false
+      }
+    },
+    {
+      "name": "laeuft-noch",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AqSZyftFpPccBPT8MTwKSIjcIUFH4jevSqTkcMWyRL++3grgIB72TXUvfhy+741+UAEbMWSN5FZohn02CrqsAUP9obXw4myUXjOL9t7N0SAeXERE1zC0BGuuZbbUNtQPTI74aoIuhEavuy3KhO+NX0e5LI9QWBmdAmNiUo4GLSyvnECyzCw9DxJDQ7z779UcGLGMrloVPkHUbBb8lTbJFpfeJ+y370eE2FSl8dHziBj+cU8e+ZFOY/li"
+        }
+      ],
+      "abgeschlossen": false,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "erwartet": {
+        "punkte": 6,
+        "erste_zeit": 1784277065,
+        "letzte_zeit": 1784277090,
+        "herkunft": [
+          "a499c9fb45a4f71c"
+        ],
+        "schluss": false,
+        "fassung1": false
+      }
+    },
+    {
+      "name": "stueck-entfernt",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "grund": "luecke"
+    },
+    {
+      "name": "anfang-entfernt",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AqSZyftFpPccBPT8MTwKSIjcIUFH4jevSqTkcMWyRL++3grgIB72TXUvfhy+741+UAEbMWSN5FZohn02CrqsAUP9obXw4myUXjOL9t7N0SAeXERE1zC0BGuuZbbUNtQPTI74aoIuhEavuy3KhO+NX0e5LI9QWBmdAmNiUo4GLSyvnECyzCw9DxJDQ7z779UcGLGMrloVPkHUbBb8lTbJFpfeJ+y370eE2FSl8dHziBj+cU8e+ZFOY/li"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "grund": "luecke"
+    },
+    {
+      "name": "schluss-entfernt",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AqSZyftFpPccBPT8MTwKSIjcIUFH4jevSqTkcMWyRL++3grgIB72TXUvfhy+741+UAEbMWSN5FZohn02CrqsAUP9obXw4myUXjOL9t7N0SAeXERE1zC0BGuuZbbUNtQPTI74aoIuhEavuy3KhO+NX0e5LI9QWBmdAmNiUo4GLSyvnECyzCw9DxJDQ7z779UcGLGMrloVPkHUbBb8lTbJFpfeJ+y370eE2FSl8dHziBj+cU8e+ZFOY/li"
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "grund": "ohne-schluss"
+    },
+    {
+      "name": "zeit-verschoben",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784280665,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784280680,
+          "huelle_b64": "AqSZyftFpPccBPT8MTwKSIjcIUFH4jevSqTkcMWyRL++3grgIB72TXUvfhy+741+UAEbMWSN5FZohn02CrqsAUP9obXw4myUXjOL9t7N0SAeXERE1zC0BGuuZbbUNtQPTI74aoIuhEavuy3KhO+NX0e5LI9QWBmdAmNiUo4GLSyvnECyzCw9DxJDQ7z779UcGLGMrloVPkHUbBb8lTbJFpfeJ+y370eE2FSl8dHziBj+cU8e+ZFOY/li"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784280695,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "grund": "zeit"
+    },
+    {
+      "name": "ein-stueck-verschoben",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277140,
+          "huelle_b64": "AqSZyftFpPccBPT8MTwKSIjcIUFH4jevSqTkcMWyRL++3grgIB72TXUvfhy+741+UAEbMWSN5FZohn02CrqsAUP9obXw4myUXjOL9t7N0SAeXERE1zC0BGuuZbbUNtQPTI74aoIuhEavuy3KhO+NX0e5LI9QWBmdAmNiUo4GLSyvnECyzCw9DxJDQ7z779UcGLGMrloVPkHUbBb8lTbJFpfeJ+y370eE2FSl8dHziBj+cU8e+ZFOY/li"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "grund": "zeit"
+    },
+    {
+      "name": "umdatiert-belegt",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784363465,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784363480,
+          "huelle_b64": "AqSZyftFpPccBPT8MTwKSIjcIUFH4jevSqTkcMWyRL++3grgIB72TXUvfhy+741+UAEbMWSN5FZohn02CrqsAUP9obXw4myUXjOL9t7N0SAeXERE1zC0BGuuZbbUNtQPTI74aoIuhEavuy3KhO+NX0e5LI9QWBmdAmNiUo4GLSyvnECyzCw9DxJDQ7z779UcGLGMrloVPkHUbBb8lTbJFpfeJ+y370eE2FSl8dHziBj+cU8e+ZFOY/li"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784363495,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 86400,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "erwartet": {
+        "punkte": 8,
+        "erste_zeit": 1784363465,
+        "letzte_zeit": 1784363500,
+        "herkunft": [
+          "a499c9fb45a4f71c"
+        ],
+        "schluss": true,
+        "fassung1": false
+      }
+    },
+    {
+      "name": "luecke-mit-loeschvermerk",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [
+        [
+          1784277080,
+          1784277090
+        ]
+      ],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "erwartet": {
+        "punkte": 5,
+        "erste_zeit": 1784277065,
+        "letzte_zeit": 1784277100,
+        "herkunft": [
+          "a499c9fb45a4f71c"
+        ],
+        "schluss": true,
+        "fassung1": false
+      }
+    },
+    {
+      "name": "ende-mit-loeschvermerk",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AqSZyftFpPccBPT8MTwKSIjcIUFH4jevSqTkcMWyRL++3grgIB72TXUvfhy+741+UAEbMWSN5FZohn02CrqsAUP9obXw4myUXjOL9t7N0SAeXERE1zC0BGuuZbbUNtQPTI74aoIuhEavuy3KhO+NX0e5LI9QWBmdAmNiUo4GLSyvnECyzCw9DxJDQ7z779UcGLGMrloVPkHUbBb8lTbJFpfeJ+y370eE2FSl8dHziBj+cU8e+ZFOY/li"
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [
+        [
+          1784277095,
+          1784277665
+        ]
+      ],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "erwartet": {
+        "punkte": 6,
+        "erste_zeit": 1784277065,
+        "letzte_zeit": 1784277090,
+        "herkunft": [
+          "a499c9fb45a4f71c"
+        ],
+        "schluss": false,
+        "fassung1": false
+      }
+    },
+    {
+      "name": "vertauscht",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AqSZyftFpPccBFddxWFyylFKCpnJaAJDYqGDPlMwzUow26pSEeFbTGmbLVITmEkGUksoTZhdNIYr/KGfF/FV/e5i9MvHphuZZLA351WRLIgdHI76kGmHKTFXIa97ra75hrX0bYC3rhMBcF4nelCwY2xPHAbWEc/8JHJuD5qX/SJbV+ytX+kCIOHXmDBMyLbqgWbgx4iRi0XHG6JLOthCgTCFgvvGaFjNb8ErhxxI567XZ13XrTd+aHog"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "grund": "pruefwert"
+    },
+    {
+      "name": "fremdes-geraet",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AsfXkCk/K7iIBMwO6X6BGuDRWcVgCgCiJkJlWwj1XVemrCpw1UuWeKnax9K7uWj77GaxTu0ljHWnNQ3fSUPk0qKW7z/oDogfSl4SkaNqmNLpeoNcZD8TUi6hxq6MLCHrsi/1ogAHehgbdoAuNfY9Pb0TDnn5qwPy5tnz5/HK/5FmOT54D6i2Tweu9f1wZoS1S/7VlY/KnQ7KkvVMOpMHHpwp4G6S0SHZK1TliCFhN8fymLbAQP6JIi4a"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "grund": "absender"
+    },
+    {
+      "name": "ohne-geraeteschluessel",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AqSZyftFpPccBHvnVJ8P7IEgggBsZr0QC009WjunhRTnc1ir9zdbq+MCkp3S4uAOiD2VJhdwVQ0dNEG/LPPmCwPMPsjnO1UWXR8F2FZLG7JgTT+O0Pnu3XTmQDXCf39b14wESgLcXucWdPRGK6o2Jf+E2YGwuQgmXqXh07J+EvYZ0uKmb0p6KfOCM5U/OzbhUp3FicmAyF02Y0BfKzNpVPskl7Nce04QTiTRNx867PBx3zrz9Os8Ajw7"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "grund": "pruefwert"
+    },
+    {
+      "name": "geraet-ausgetragen",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AqSZyftFpPccBPT8MTwKSIjcIUFH4jevSqTkcMWyRL++3grgIB72TXUvfhy+741+UAEbMWSN5FZohn02CrqsAUP9obXw4myUXjOL9t7N0SAeXERE1zC0BGuuZbbUNtQPTI74aoIuhEavuy3KhO+NX0e5LI9QWBmdAmNiUo4GLSyvnECyzCw9DxJDQ7z779UcGLGMrloVPkHUbBb8lTbJFpfeJ+y370eE2FSl8dHziBj+cU8e+ZFOY/li"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "uhr-ausgetragen",
+      "verlangt2": false,
+      "grund": "absender-gesperrt"
+    },
+    {
+      "name": "geraet-gibt-sich-als-konto",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AqSZyftFpPccBDVK3tDiRJEzj5NIjziY1j5dDlDxHlx8GSPxfWsqGFF+8hLOFH9iaqyZDYLTJE0YP5+pauzKakfr0LN7DLMIsWd/TalYuRKYP7kBDAn4OdUloy+yRF1GIa2nRn2bmvtCGCzFMQfcUeqpKuZv7DbR/MdigoWzEgbd9NpdZrlx8tKFLHwAMFP9ZyZpSRdiZTYWE+WAn9nEzjkTGC0madXdERxsqksTjUpo/gnJiMYnD25M"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "grund": "innen"
+    },
+    {
+      "name": "fassung-1-geduldet",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AQRcfikhWDADbn/9+iQvuQcyxWkwIg0imTM7yTOBFq47BwzCdx1rXdYrJznanCCWsNGFFZb1Biy5x4lRakGdH7t4N2AVrWoCobgtYep3bNJ0DauMPWm3fmQ5VJVlfmR57hnAyP4ulfnxiOUBKd6Ql04SMcp3mh5BkqktM8pR8qxGIFbTA2mPMlJX2NUaceOtuh+3nVei43aze99k4cqQ4K7K"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AQQizJwIOLAPoVMDpbdGIFSqrbJewz4/vi/iFkcaMznsf2edEfgYhy3iqSUeJxi6cYGQWDZdQdBpynOlqmsmKZ37RjycD58HuNJh5YscPMbjsUAxt7jPTqFf7QtE1nj0psQ1c4xwsvV3dYaYD/vbmW88pNDM84wZTSdlcF64GvlsmrpYGR6kHbmWUeNa0kWjaA7pba+2InuvJIYpe39EL1W3"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AQQrW7P4+fAx8UbDnQU+GG1Y5AZ0lXG8qFYS2Jqt8P6PBYfVnjrUo8ncxUq9p/LlVIrun0STjLWpqkGI9ZFNYGBDG8pA40vO1RdX9yxXv/fpz7dBxxAMXV56boZoRfbOTtemZiPkx83lvgzbJK7McM3x9Jc7CHSUfIOzhjIUdc20sOMtIXzMIQBbgX+dRC9qjRw="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "erwartet": {
+        "punkte": 8,
+        "erste_zeit": 1784277065,
+        "letzte_zeit": 1784277100,
+        "herkunft": [
+          "fassung-1"
+        ],
+        "schluss": false,
+        "fassung1": true
+      }
+    },
+    {
+      "name": "fassung-1-wo-2-verlangt",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AQRcfikhWDADbn/9+iQvuQcyxWkwIg0imTM7yTOBFq47BwzCdx1rXdYrJznanCCWsNGFFZb1Biy5x4lRakGdH7t4N2AVrWoCobgtYep3bNJ0DauMPWm3fmQ5VJVlfmR57hnAyP4ulfnxiOUBKd6Ql04SMcp3mh5BkqktM8pR8qxGIFbTA2mPMlJX2NUaceOtuh+3nVei43aze99k4cqQ4K7K"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AQQizJwIOLAPoVMDpbdGIFSqrbJewz4/vi/iFkcaMznsf2edEfgYhy3iqSUeJxi6cYGQWDZdQdBpynOlqmsmKZ37RjycD58HuNJh5YscPMbjsUAxt7jPTqFf7QtE1nj0psQ1c4xwsvV3dYaYD/vbmW88pNDM84wZTSdlcF64GvlsmrpYGR6kHbmWUeNa0kWjaA7pba+2InuvJIYpe39EL1W3"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AQQrW7P4+fAx8UbDnQU+GG1Y5AZ0lXG8qFYS2Jqt8P6PBYfVnjrUo8ncxUq9p/LlVIrun0STjLWpqkGI9ZFNYGBDG8pA40vO1RdX9yxXv/fpz7dBxxAMXV56boZoRfbOTtemZiPkx83lvgzbJK7McM3x9Jc7CHSUfIOzhjIUdc20sOMtIXzMIQBbgX+dRC9qjRw="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": true,
+      "grund": "ohne-herkunft"
+    },
+    {
+      "name": "gepackt-vom-konto",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 8,
+          "stufe": 2,
+          "n_original": 8,
+          "ts_von": 1784277065,
+          "huelle_b64": "AlplkFnYLYs1BDmn7/WhX+/9oJPqz+2WknMNnLiDTVQU0lI71qB4bY1GLw9ptmmUaO4/fowN2vGE6csoNdzWR7ycLRv+ry5qeVpKaeuhsm0PFmUPG+n/Qw6eSNsGL5kabDci+tzwp/7nfgMdibnB+R+q5+9K0Wkb1iNVVTyjoFfmAhc4nQ4d6L/Y66UEhB1CxW5c2U142njtglgSp8vJIDOwYIX99MC/0y2GCVkvr6dUrBgEDg9vmL4z"
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": [
+        8,
+        2
+      ],
+      "buch": "standard",
+      "verlangt2": false,
+      "erwartet": {
+        "punkte": 8,
+        "erste_zeit": 1784277065,
+        "letzte_zeit": 1784277100,
+        "herkunft": [
+          "konto"
+        ],
+        "schluss": true,
+        "fassung1": false
+      }
+    },
+    {
+      "name": "zurueckgelegt-auf-geraetestuecke",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AqSZyftFpPccBPT8MTwKSIjcIUFH4jevSqTkcMWyRL++3grgIB72TXUvfhy+741+UAEbMWSN5FZohn02CrqsAUP9obXw4myUXjOL9t7N0SAeXERE1zC0BGuuZbbUNtQPTI74aoIuhEavuy3KhO+NX0e5LI9QWBmdAmNiUo4GLSyvnECyzCw9DxJDQ7z779UcGLGMrloVPkHUbBb8lTbJFpfeJ+y370eE2FSl8dHziBj+cU8e+ZFOY/li"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [],
+      "stand": [
+        8,
+        2
+      ],
+      "buch": "standard",
+      "verlangt2": false,
+      "grund": "zurueckgelegt"
+    },
+    {
+      "name": "zurueckgelegt-kuerzer",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AqSZyftFpPccBPT8MTwKSIjcIUFH4jevSqTkcMWyRL++3grgIB72TXUvfhy+741+UAEbMWSN5FZohn02CrqsAUP9obXw4myUXjOL9t7N0SAeXERE1zC0BGuuZbbUNtQPTI74aoIuhEavuy3KhO+NX0e5LI9QWBmdAmNiUo4GLSyvnECyzCw9DxJDQ7z779UcGLGMrloVPkHUbBb8lTbJFpfeJ+y370eE2FSl8dHziBj+cU8e+ZFOY/li"
+        }
+      ],
+      "abgeschlossen": false,
+      "versatz": 0,
+      "sperren": [],
+      "stand": [
+        8,
+        1
+      ],
+      "buch": "standard",
+      "verlangt2": false,
+      "grund": "zurueckgelegt"
+    }
+  ],
+  "einsaetze": [
+    {
+      "name": "ganz",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": null,
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBPDwaq342Y1iooJg7L3l7ptqnqaq9JmnqiV7QkEfb2KnYaE5BKFUyJY2o0vTBAMzMKqLMHqzTe5Heu8BSGLYWwYrMRJ9y8ilJAX7l35H1dFSneXUmetaoDaM6DPZVugpp60wH/F8MOUqbczlpXYf1Qd10MoqUvIygvL3Om+DeAIzv5Akk0gNQtFc3vHiqbiUeHf0T1JVnXdnjZUQiemcDMBdQbFi5ImFZbw9tZGhYug30WYKr0O08CQ+XDEJAyXd9+Cy+4JL2B127+JgLmV6f+OEzyga0SmKnDnKHzaLC9c4ytZF1F7JtBFTUavNiSvoLYUn2ZszOglfn9cSzySUKXvTToxDpteo93vBWrPIglfAbL43brGxQVhHbsRZNSzuJKNsQjKnIctoge0nHPpRCXz9Zb+TI7AcWoUO2NGto4t8caUmoDtURMpQJWhWe9n9EQ==",
+      "erwartet": {
+        "z": 3,
+        "absender": "5eb5678b49bd5225"
+      }
+    },
+    {
+      "name": "stand-gleich",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": {
+        "o": 3
+      },
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBPDwaq342Y1iooJg7L3l7ptqnqaq9JmnqiV7QkEfb2KnYaE5BKFUyJY2o0vTBAMzMKqLMHqzTe5Heu8BSGLYWwYrMRJ9y8ilJAX7l35H1dFSneXUmetaoDaM6DPZVugpp60wH/F8MOUqbczlpXYf1Qd10MoqUvIygvL3Om+DeAIzv5Akk0gNQtFc3vHiqbiUeHf0T1JVnXdnjZUQiemcDMBdQbFi5ImFZbw9tZGhYug30WYKr0O08CQ+XDEJAyXd9+Cy+4JL2B127+JgLmV6f+OEzyga0SmKnDnKHzaLC9c4ytZF1F7JtBFTUavNiSvoLYUn2ZszOglfn9cSzySUKXvTToxDpteo93vBWrPIglfAbL43brGxQVhHbsRZNSzuJKNsQjKnIctoge0nHPpRCXz9Zb+TI7AcWoUO2NGto4t8caUmoDtURMpQJWhWe9n9EQ==",
+      "erwartet": {
+        "z": 3,
+        "absender": "5eb5678b49bd5225"
+      }
+    },
+    {
+      "name": "zurueckgelegt",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": {
+        "o": 3
+      },
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBLO6ZuS49NqQrYf5TflHQ3NMPMvIHEBTGK+bfb6YAGKtbl3R5HQnZMqAG2gGX8L0qCifd5GdA9uUn0htHEdGWkxuXGHSkk0JCCozAmlK0C/FZlfAXRPYh8BV/wH3gYa2kgLDtX+Ldwmex3vMO9kEqI5kCHJN1sllECOaRBKfQ1QAh2UENec92BiY2vlsoAlR3O4rz3OGYaKqNaA5CBmS+YyZtwXVFeXTQ95ba/ncSoloXYgwRVdx/gwDXqgnYXdWDshH88k2KSHKpf7EZmEo/jsu02f8sxonQf5JsLjgzqVXZwvdrbJ4qo4JpPjHC8hxtw==",
+      "grund": "zurueckgelegt"
+    },
+    {
+      "name": "beginn-verschoben",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784363465,
+      "versatz": 0,
+      "stand": null,
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBPDwaq342Y1iooJg7L3l7ptqnqaq9JmnqiV7QkEfb2KnYaE5BKFUyJY2o0vTBAMzMKqLMHqzTe5Heu8BSGLYWwYrMRJ9y8ilJAX7l35H1dFSneXUmetaoDaM6DPZVugpp60wH/F8MOUqbczlpXYf1Qd10MoqUvIygvL3Om+DeAIzv5Akk0gNQtFc3vHiqbiUeHf0T1JVnXdnjZUQiemcDMBdQbFi5ImFZbw9tZGhYug30WYKr0O08CQ+XDEJAyXd9+Cy+4JL2B127+JgLmV6f+OEzyga0SmKnDnKHzaLC9c4ytZF1F7JtBFTUavNiSvoLYUn2ZszOglfn9cSzySUKXvTToxDpteo93vBWrPIglfAbL43brGxQVhHbsRZNSzuJKNsQjKnIctoge0nHPpRCXz9Zb+TI7AcWoUO2NGto4t8caUmoDtURMpQJWhWe9n9EQ==",
+      "grund": "zeit"
+    },
+    {
+      "name": "umdatiert-belegt",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784363465,
+      "versatz": 86400,
+      "stand": null,
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBPDwaq342Y1iooJg7L3l7ptqnqaq9JmnqiV7QkEfb2KnYaE5BKFUyJY2o0vTBAMzMKqLMHqzTe5Heu8BSGLYWwYrMRJ9y8ilJAX7l35H1dFSneXUmetaoDaM6DPZVugpp60wH/F8MOUqbczlpXYf1Qd10MoqUvIygvL3Om+DeAIzv5Akk0gNQtFc3vHiqbiUeHf0T1JVnXdnjZUQiemcDMBdQbFi5ImFZbw9tZGhYug30WYKr0O08CQ+XDEJAyXd9+Cy+4JL2B127+JgLmV6f+OEzyga0SmKnDnKHzaLC9c4ytZF1F7JtBFTUavNiSvoLYUn2ZszOglfn9cSzySUKXvTToxDpteo93vBWrPIglfAbL43brGxQVhHbsRZNSzuJKNsQjKnIctoge0nHPpRCXz9Zb+TI7AcWoUO2NGto4t8caUmoDtURMpQJWhWe9n9EQ==",
+      "erwartet": {
+        "z": 3,
+        "absender": "5eb5678b49bd5225"
+      }
+    },
+    {
+      "name": "vertauscht",
+      "client_ref": "m-20261111-0005",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": null,
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBPDwaq342Y1iooJg7L3l7ptqnqaq9JmnqiV7QkEfb2KnYaE5BKFUyJY2o0vTBAMzMKqLMHqzTe5Heu8BSGLYWwYrMRJ9y8ilJAX7l35H1dFSneXUmetaoDaM6DPZVugpp60wH/F8MOUqbczlpXYf1Qd10MoqUvIygvL3Om+DeAIzv5Akk0gNQtFc3vHiqbiUeHf0T1JVnXdnjZUQiemcDMBdQbFi5ImFZbw9tZGhYug30WYKr0O08CQ+XDEJAyXd9+Cy+4JL2B127+JgLmV6f+OEzyga0SmKnDnKHzaLC9c4ytZF1F7JtBFTUavNiSvoLYUn2ZszOglfn9cSzySUKXvTToxDpteo93vBWrPIglfAbL43brGxQVhHbsRZNSzuJKNsQjKnIctoge0nHPpRCXz9Zb+TI7AcWoUO2NGto4t8caUmoDtURMpQJWhWe9n9EQ==",
+      "grund": "pruefwert"
+    },
+    {
+      "name": "geraet-nach-konto",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": {
+        "o": 4,
+        "k": 1
+      },
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBJ8vFIv6x8Ug0Amv6KzLi3RQC1iCy1ArnjOyVFgUoqyFfib0r/Zo5OBQQxrIUaqmUknikiF/MVFGXp1kZXbbTMOEMBJlCbn41e/gUEllKhimtT70Kv86VaBOKBdWBpycGixlyP98kMCM5rNSctz/nn0jav7x2nE00llFmgBhZZvmc7adGgECbgSTyk2rzDdpoCnpfss/k5BJqPB3S38hOfZfjEydjztNUKkmUfivrHk6Kz0e4GO0xIKswny2rnE64NJlNnkhpXvIvEisArFAD8i2hrka16WkOkklajIt2KxONIbCQNNeW2d5ydaztnM30E3d2ioj5knlnMFaT15QZv6EtTmajZzL6EOsdDD/ABVJ4YJHkInzcmyuxgHZMzN7wTjMWLQGAMfvKXICz54OGr+PHjD6dn3cH/E//h/bT0y3abYsKgFANoK51gsZpbfnRg==",
+      "grund": "zurueckgelegt"
+    },
+    {
+      "name": "fassung-1-nach-abnahme",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": {
+        "o": 3
+      },
+      "buch": "standard",
+      "huelle_b64": "AQQa3bI9h7bmvHr9xzoS8I/dLr9RhxRk8o4uthxUN0Ugl+w6cG3AtyMDeKkGGOVnPQpkBg0TA/YXc+Wc8NEvEWMOMEb0ZboCMYMzQRjV3XPX3O3Gv8qrnIX0N+L5MZjTN6DbDtEs4ygZqB/aklSsH6gFHNndNEXMX975PRHLODYefnAvGnydPRdeyMYN7DyY7pgmA5Ylg34ZWmKThFmekCsyMqdx42lf3iFpqsIS4MgGHyW1SiHaQjW2N+D9HYyJC9s8IZk+aEVU+VFafzKP+C6xWtvjIkcMHi8/g03yagz+wTsBGuX3bBceQ9gRl4kJgHieYS4Qm/7v3qpoOoLHUMqvC3u9/BzPCqYpDQ/VLAmv3YSwtARt93lvogxlAgVdSeKq1lBrTLqYcq4BCY4V1SEj",
+      "grund": "zurueckgelegt"
+    },
+    {
+      "name": "fassung-1-geduldet",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": null,
+      "buch": "standard",
+      "huelle_b64": "AQQa3bI9h7bmvHr9xzoS8I/dLr9RhxRk8o4uthxUN0Ugl+w6cG3AtyMDeKkGGOVnPQpkBg0TA/YXc+Wc8NEvEWMOMEb0ZboCMYMzQRjV3XPX3O3Gv8qrnIX0N+L5MZjTN6DbDtEs4ygZqB/aklSsH6gFHNndNEXMX975PRHLODYefnAvGnydPRdeyMYN7DyY7pgmA5Ylg34ZWmKThFmekCsyMqdx42lf3iFpqsIS4MgGHyW1SiHaQjW2N+D9HYyJC9s8IZk+aEVU+VFafzKP+C6xWtvjIkcMHi8/g03yagz+wTsBGuX3bBceQ9gRl4kJgHieYS4Qm/7v3qpoOoLHUMqvC3u9/BzPCqYpDQ/VLAmv3YSwtARt93lvogxlAgVdSeKq1lBrTLqYcq4BCY4V1SEj",
+      "erwartet": {
+        "z": null,
+        "absender": null
+      }
+    },
+    {
+      "name": "fremdes-geraet",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": null,
+      "buch": "standard",
+      "huelle_b64": "AsfXkCk/K7iIBAYRB/BD/i4xLs8t6iocuhT98xWcgsl+oqt5SJ9AFvrpiS7pQLUgkxyznr4q7CE5Gsnr/DHmFSP66Cs/W0Qqg8rl3SAN07eKwyVvK8Lv+fqTnS1JrQ3/4Kyu5zaDG+6y2G3ThqnAtovemfOQajIvIptj51d0W6NAM9L9PtC05YQVPQq5eeAKkIVkhccxXfPQAYTfLUSY7hAggyAKDYn6ZWsTCuX3OKs/kYyEuMhvBXDUbFEKWb6xcJNwuQbex7nt2MwYd5/K13AUhqYI3kC2XGKjMXiy9cMB8hdzHrls4gXq/qaq6ISyerixKLUocoahFcSDh0kbB3X0QETQyuZWqMudkLcpZ9Iisalw1R1Mm8J/pmDX4JVIQ+1I3lHgPGweNPVbYH2nQ6pz87hYgcNyiALyDphggtrkDcLtLwUbHdwsY8KUi02qoPdhAbFjKSh5wQ==",
+      "grund": "absender"
+    },
+    {
+      "name": "geraet-ausgetragen",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277125,
+      "versatz": 0,
+      "stand": null,
+      "buch": "uhr-ausgetragen",
+      "huelle_b64": "AqSZyftFpPccBMNaVMagiXSwHq+ExYP9ytJ3AF50G9yaE4E7O+0IpDNzqsIULyVI7RWlvcf+NYyBpZrWpCKUiNdpgfGnzchrvG65WpfrsGWvketVWui3gbPGvyvDVxN9/rLMUicnsA5zgARyOZPZTVc3wsoQcLSEiUKb0NvhvOLUGyeafmWgMiDRsvpzwYuGIGYWtkVXdnabz8x0r/JNqCVlBRd0YqVHrr96oqgZmJ1SnBj3t2oH1ifn9yRAqmFWbfK138WpV1sTHwyT4aTauEfWgmMR+z0qmFTMgggAFuLBLJNLUkHWI81dF44mTph5ovqHqjaeDVMmRWbJQ8kSkmgjDKlYA5mMnvLgQ7g68IbBaWFiafMqg3ezijrkltgAf3EL5yLE6K7iaUHODnztts6cPWfU9cWt8Acrp4QWCeyBTx889tGrwo2fAmr3lEszJjmFOUYlRv1HDQ==",
+      "grund": "absender-gesperrt"
+    }
+  ],
+  "kopplung": {
+    "konto_hex": "0482a159c5275ab66f5e8040402858faa31bd98b6023c73fdd3efea64955ac34e07736aaa8b3e1179e92b7b8e3a5c63098c44813f834d231eff9a6e899ce0595e5",
+    "spk_hex": "048993dd1e4c02f98d7bd665f217c2b1e3a536f92a9de0254a16218e9b0e8f96c556aa5f59dd96a133dce13f79f2016bff28cdf2b3cc6f35db8ca44d0cd024d3b0",
+    "n_g_hex": "9e7802a1f107c4cb9016689042162afd",
+    "n_b_hex": "a5fbc6370fa74725c1c3db9031fc3f90",
+    "zusage_hex": "2de27937867d0a20879819aa63d8ec0b7d3c8ebe22c9d5246ae0d9e83d54e67e",
+    "wert": "500518",
+    "gegenlagen": [
+      {
+        "name": "zusage-passt-nicht",
+        "grund": "zusage",
+        "konto_hex": "0482a159c5275ab66f5e8040402858faa31bd98b6023c73fdd3efea64955ac34e07736aaa8b3e1179e92b7b8e3a5c63098c44813f834d231eff9a6e899ce0595e5",
+        "spk_hex": "048993dd1e4c02f98d7bd665f217c2b1e3a536f92a9de0254a16218e9b0e8f96c556aa5f59dd96a133dce13f79f2016bff28cdf2b3cc6f35db8ca44d0cd024d3b0",
+        "n_g_hex": "a5fbc6370fa74725c1c3db9031fc3f90",
+        "n_b_hex": "a5fbc6370fa74725c1c3db9031fc3f90",
+        "zusage_hex": "2de27937867d0a20879819aa63d8ec0b7d3c8ebe22c9d5246ae0d9e83d54e67e"
+      },
+      {
+        "name": "geraeteschluessel-getauscht",
+        "grund": "zusage",
+        "konto_hex": "0482a159c5275ab66f5e8040402858faa31bd98b6023c73fdd3efea64955ac34e07736aaa8b3e1179e92b7b8e3a5c63098c44813f834d231eff9a6e899ce0595e5",
+        "spk_hex": "04b660d2b5d5395e0dce2e0ba81a17de7ad5744fec7dbcc3caa41d48605c4bf5dc3c929b060d561bd8df93540ae6a8fd54cbf4163eb59c1679f141152e6223dce4",
+        "n_g_hex": "9e7802a1f107c4cb9016689042162afd",
+        "n_b_hex": "a5fbc6370fa74725c1c3db9031fc3f90",
+        "zusage_hex": "2de27937867d0a20879819aa63d8ec0b7d3c8ebe22c9d5246ae0d9e83d54e67e"
+      },
+      {
+        "name": "kontoschluessel-getauscht",
+        "anderer_wert": "621483",
+        "konto_hex": "04b660d2b5d5395e0dce2e0ba81a17de7ad5744fec7dbcc3caa41d48605c4bf5dc3c929b060d561bd8df93540ae6a8fd54cbf4163eb59c1679f141152e6223dce4",
+        "spk_hex": "048993dd1e4c02f98d7bd665f217c2b1e3a536f92a9de0254a16218e9b0e8f96c556aa5f59dd96a133dce13f79f2016bff28cdf2b3cc6f35db8ca44d0cd024d3b0",
+        "n_g_hex": "9e7802a1f107c4cb9016689042162afd",
+        "n_b_hex": "a5fbc6370fa74725c1c3db9031fc3f90"
+      },
+      {
+        "name": "geraet-mit-eigener-zusage-getauscht",
+        "anderer_wert": "956837",
+        "konto_hex": "0482a159c5275ab66f5e8040402858faa31bd98b6023c73fdd3efea64955ac34e07736aaa8b3e1179e92b7b8e3a5c63098c44813f834d231eff9a6e899ce0595e5",
+        "spk_hex": "04b660d2b5d5395e0dce2e0ba81a17de7ad5744fec7dbcc3caa41d48605c4bf5dc3c929b060d561bd8df93540ae6a8fd54cbf4163eb59c1679f141152e6223dce4",
+        "n_g_hex": "9e7802a1f107c4cb9016689042162afd",
+        "n_b_hex": "a5fbc6370fa74725c1c3db9031fc3f90"
+      }
+    ]
+  }
+}

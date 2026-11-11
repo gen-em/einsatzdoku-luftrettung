@@ -12,8 +12,8 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-06** — **06a** (Entwurf und Referenz) läuft bei einem Fable-Agenten (E-KA-38); daneben **06b vorab** (Ableitung, F-KA-13 und -16) gebaut, Web 24.13.1, im PR (E-KA-39). **Garmin-Anteile ausgegliedert an KG** (E-KA-21, Abschnitt 11) |
-| Erledigt | **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
+| In Arbeit | **KA-06** — **06a** (Entwurf und Referenz) fertig, KA-M5 freigegeben (E-KA-43 bis -48), im PR; **06b Krypto-Kern** bei einem Fable-Agenten (E-KA-49), PHP, Migration und Oberfläche danach mit Opus. **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-01, -02, -05, -06 mit PR #168 gemergt (Uhr 4.5.1), KG-03 wartet auf diese Referenz |
+| Erledigt | **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
@@ -94,6 +94,13 @@ Safari.
 | E-KA-40 | **Der Altbestand der BetreiberIn zieht still nach der Anmeldung um** (Anhebelauf wie `pat_anheben`), und **alte Sicherungen bleiben einspielbar** — der Browser hebt sie beim Einspielen (06d). Beantwortet die offene Frage aus E-KA-16; übernommen mit „alle wie vorgeschlagen" aus den Vorschlägen des Konzepts (06b, 06d) — wo die BetreiberIn es anders meinte, wird es vor 06b berichtigt | 11.11.2026, BetreiberIn |
 | E-KA-41 | **Untergrenze der Rundenzahl 310 000** — der kleinste Wert, den je ein Konto (Vorgabe der Spalte `kdf_iter`) oder eine Sicherung trug; 600 000 hätte Sicherungen von davor unlesbar gemacht. **Frist des Vormerkfachs sechs Minuten** — die fünf der halben Anmeldung (`TOTP_HALB_FRIST_S`) und eine für den Seitenwechsel. Eine Antwort des Salz-Endpunkts in falscher Form meldet die Seite als „derzeit nicht möglich" (`status`), nicht als fehlendes Web-Krypto | 11.11.2026, Umsetzung |
 | E-KA-42 | **Das Muster für `vendor/` in `pruefablauf.json` (F-KA-74) kommt mit dem nächsten Web-Paket**, sobald KG die Datei nicht mehr in Arbeit hat | 11.11.2026, BetreiberIn |
+| E-KA-43 | **Zählerstand (Q-KA-07):** im Browser (IndexedDB, je Konto), dazu eine verschlossene Abschrift in 16 Blättern auf dem Server (`edk2`, Zweck `stand`); das Blatt folgt aus dem Hash der `client_ref`. Preis: Migration (`update.php`), ein 409-Weg, Umdatieren, Schneiden und Löschen nur entsperrt | 11.11.2026, BetreiberIn (KA-M5) |
+| E-KA-44 | **Herkunft (Q-KA-08):** authentifizierte Hülle mit zwei ECDH, Kopplung mit Zusage und sechsstelligem Vergleichswert; **die Webseite verlangt einen eigenen Klick „Wert stimmt"**; der Demo-Bestand bekommt ein **Demo-Gerät** mit festem Schlüssel in der Fixture. Die neuen Anzeigen an Gerät und Webseite brauchen Mockup und Freigabe (`CLAUDE.md` 5) | 11.11.2026, BetreiberIn (KA-M5) |
+| E-KA-45 | **Geräte ohne Schlüssel (Q-KA-09):** kein Nachreichen über `status`, sondern neu koppeln; bis dahin Fassung 1, im Browser „ohne Herkunftsnachweis", höchstens 30 Tage nach Auslieferung der Gerätefassungen | 11.11.2026, BetreiberIn (KA-M5) |
+| E-KA-46 | **Stichtag Fassung 1 (Q-KA-10):** Der Server weist Gerätehüllen der Fassung 1 am Ende der Frist aus E-KA-45 mit 400 ab; der Browser liest Fassung 1 und `edk1`, bis der Anhebelauf jedes Blatt geschlossen hat — danach ist Altformat ein Befund | 11.11.2026, BetreiberIn (KA-M5) |
+| E-KA-47 | **Rundenzahl 1 200 000 mit Ableitung 2 (Q-KA-11, F-KA-29):** ein PBKDF2-Block, Hälfte und Token per HKDF; Umstellung still beim Anmelden, während der Umstellung rechnet die Anmeldung beide Listenwerte | 11.11.2026, BetreiberIn (KA-M5) |
+| E-KA-48 | **Die Entwurfsentscheidungen V-KA-01 bis -13 gelten** (Prüfprotokoll, KA-06a), darunter zwei Abweichungen von der Skizze: Verkettung der Stückfolge über die Deckung statt über einen Hash, keine Kontokennung in den Zusatzdaten | 11.11.2026, BetreiberIn (KA-M5, „alles wie vorgeschlagen") |
+| E-KA-49 | **Den Krypto-Kern von 06b schreibt wieder ein Fable-Agent**, in eigener Arbeitskopie; Server-Endpunkte, Migration, Anhebelauf und Oberfläche baut die Hauptinstanz mit Opus. Eine Weiche hält das Schreiben im neuen Format aus, bis alle Leser es können | 11.11.2026, BetreiberIn |
 | E-KA-21 | **Die Garmin-Anteile gehen an eine eigene Instanz, Kürzel KG** (Abschnitt 11): KA-04 Punkt 1 und 4, der Garmin-Teil von KA-06c samt der Messung für 06a, die Garmin-Kommentare aus F-KA-43 und der Garmin-Teil von KA-M6. KG zählt eigene Nummern (`KG-NN`, `F-KG-NN`, `E-KG-NN`, `P-KG-NN`), führt ein eigenes Konzept und schreibt den Rahmenplan nicht — das tut diese Instanz | 10.11.2026, BetreiberIn |
 
 ---
@@ -558,7 +565,7 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 | KA-M2 | Tag-Rulesets — **erledigt 10.11.2026**, gemessen. **Mit KA-01:** Probelauf der Auslieferung mit `security: strict` gegen Staging und Produktiv starten und freigeben; danach „Require actions to be pinned to a full-length commit SHA“ einschalten und einen Lauf abwarten; die Protokolle älterer Auslieferungsläufe löschen, soweit sie `wartung.von` nennen | in KA-01 |
 | KA-M3 | Tag nach KA-01 und KA-02 — beide hohen Befunde auf Produktiv (E-KA-09) | nach KA-02 |
 | KA-M4 | Wiederherstellungsschlüssel erneuern — seit E-KA-16 nur der eigene der BetreiberIn (es gibt keine weiteren Konten); unter Einstellungen → Profil, danach das alte Blatt vernichten (E-KA-07) | nach KA-M3 |
-| KA-M5 | Freigaberunde zum Formatentwurf: Lage des Zählerstands, Bauart der Herkunft, Frist für Geräte ohne Schlüssel, Stichtag für Fassung 1 | nach KA-06a |
+| KA-M5 | Freigaberunde zum Formatentwurf: Lage des Zählerstands, Bauart der Herkunft, Frist für Geräte ohne Schlüssel, Stichtag für Fassung 1 | **erledigt 11.11.2026** (E-KA-43 bis -48) |
 | KA-M6 | Gerätetests: Kopplung mit Vergleichswert, Übergabe im laufenden Dienst, Sperrbildschirm | nach KA-04 und nach KA-06c |
 
 ---
@@ -573,6 +580,11 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 | Q-KA-04 | Wie geht der Bericht in die Steuerung ein? | Sofortpunkt mit Konzept (E-KA-06) |
 | Q-KA-05 | Soll nach KA-01 und KA-02 sofort getaggt werden, oder erst mit KA-03? | sofort (E-KA-09) |
 | Q-KA-06 | Dürfen Token für Jobs, Kette und Health nach KA-03 nicht mehr nachlesbar sein (einmalige Anzeige)? Das ändert den Betrieb | ja (E-KA-10) |
+| Q-KA-07 | KA-M5: Wo liegt der Zählerstand gegen das Zurücklegen? | Browser plus Abschrift in 16 Blättern (E-KA-43) |
+| Q-KA-08 | KA-M5: Bauart der Herkunft; eigener Klick „Wert stimmt"; Demo-Bestand? | wie vorgeschlagen, mit Klick und Demo-Gerät (E-KA-44) |
+| Q-KA-09 | KA-M5: Frist für Geräte ohne Schlüssel? | neu koppeln, höchstens 30 Tage (E-KA-45) |
+| Q-KA-10 | KA-M5: Stichtag für Fassung 1? | Ende der Frist (E-KA-46) |
+| Q-KA-11 | KA-M5: Rundenzahl mit Ableitung 2? | 1 200 000 (E-KA-47) |
 
 ---
 
@@ -769,6 +781,82 @@ des eigenen Kontos.
 Fassung 3; 3 Begleitdateien, alle versiegelt. Staging und Produktiv nicht
 gezählt (E-KA-31).
 
+### KA-06a Entwurf — Ergebnis (11.11.2026, Fable-Agent, E-KA-38)
+
+**Stand:** Referenz und Vektoren stehen unter `tools/proben/huelle/`
+(`referenz.py` beide Fassungen der Gerätehülle, `referenz_inhalt.py` neu für
+`edk2:`, Standbuch, Gerätebuch, Ableitung 2; `vektoren-2.json`,
+`vektoren-inhalt.json`). Fassung 1 ist byte-gleich geblieben. **Die
+Entwurfsentscheidungen unten sind mit KA-M5 freigegeben** (11.11.2026,
+E-KA-48); sie behalten ihre Nummern V-KA-01 bis -13, damit Referenz und
+Konzept sich aufeinander beziehen können.
+
+**Format in kurz.**
+- Gerätehülle Fassung 2: `0x02 ‖ SID(8) ‖ EPK(65) ‖ IV(16) ‖ CT ‖ TAG(32)`,
+  AES-256-CBC + HMAC-SHA256; Schlüssel aus `HKDF(Z_e ‖ Z_s, salt = EPK,
+  info = "nadoku-huelle-2" ‖ Konto-pub ‖ SPK)` — Z_e flüchtig, Z_s statisch
+  (Geräteschlüssel) gegen den Kontoschlüssel. SID = erste 8 Byte von
+  `SHA-256("nadoku-absender-1" ‖ SPK)`. Kleinste Hülle 138 Byte.
+- Spurstück innen mit 12 Byte Kopf (absolutes `ts_von`, Merker
+  SCHLUSS/LUECKE/UEBERNOMMEN); Einsatzhülle innen JSON mit Zähler `z` und
+  absolutem `start`.
+- `edk2:`: AES-256-GCM, Zusatzdaten `"edk2" ‖ Zweck ‖ Bezug`, innen Zähler,
+  Länge, Nutzlast, aufgefüllt auf Größenklassen (128 … 4096, dann Vielfache;
+  `pat` mindestens 512).
+- Kopplung: Zusage des Geräts vor dem Offenlegen, Vergleichswert sechs
+  Ziffern.
+- Ableitung 2: PBKDF2 ein Block (32 Byte), Hälfte und Token per HKDF.
+
+**Entwurfsentscheidungen (V-KA-01 bis V-KA-13, freigegeben mit E-KA-48):**
+
+| Nr. | Vorschlag | Grund |
+|---|---|---|
+| V-KA-01 | Herkunft über zwei ECDH (flüchtig und statisch) statt Signatur | Die Garmin kann nicht signieren (F-KG-11); dieselben Bausteine wie heute; Vorwärtsgeheimnis bleibt |
+| V-KA-02 | Z_s darf auf dem Gerät liegen | fest je Gerät und Konto; eine Hülle kostet dann so viel wie heute |
+| V-KA-03 | Der Browser verschließt als Absender „Konto" | Formular, Wartung, Schnitt und Import brauchen keinen eigenen Schlüssel |
+| V-KA-04 | **Abweichung von der Skizze:** Die Stückfolge wird über die Deckung verkettet (lückenlos ab 0, SCHLUSS am Ende, leeres Schlussstück), nicht über einen Hash | Die Uhr verschließt je Sendeversuch neu und schneidet anders zu (F-KA-80) |
+| V-KA-05 | Absolute Zeit in der Hülle; Umdatierung als belegter Versatz im Standbuch | sonst ginge das Umdatieren eines Diensttags nicht mehr (F-KA-78) |
+| V-KA-06 | Löschvermerke belegt im Standbuch | sonst ist „Stück entfernt" nicht von einem Schnitt zu unterscheiden (F-KA-79) |
+| V-KA-07 | **Abweichung von der Skizze:** keine Kontokennung in den Zusatzdaten | Jedes Konto hat seinen Inhaltsschlüssel; die Nummer vergibt der Server und bände an die Installation |
+| V-KA-08 | Der Rückweg bleibt frei von Server und Anteil (`kp`, `rw`, `wrap`/`rc`) | Zusage aus `CLAUDE.md` 4 |
+| V-KA-09 | Der Zähler steht im Chiffretext; ein Zähler über dem Stand ist kein Fehler | ein verlorener Schreibvorgang sperrt nichts aus |
+| V-KA-10 | Ein Abstieg auf Fassung 1 bzw. `edk1` ist ein Befund (`zurueckgelegt`, nach dem Anhebelauf `altformat`) | sonst wäre das Zurücklegen über das Altformat offen |
+| V-KA-11 | Vergleichswert sechs Ziffern **mit Zusage** | ohne Zusage rechnet ein Angreifer ein passendes Paar in Millisekunden aus |
+| V-KA-12 | Ableitung 2 wechselt zusammen mit der Rundenzahl (1 200 000) | bei gleicher Rundenzahl wäre die neue Wurzel die alte Hälfte |
+| V-KA-13 | Ein Gerät darf sich nicht als Konto ausgeben (Herkunftsliste, LUECKE, UEBERNOMMEN nur vom Konto) | sonst überschriebe ein Gerät die Abnahme |
+
+**Fragen an KA-M5** stehen in Abschnitt 7 als Q-KA-07 bis Q-KA-11, beantwortet mit E-KA-43 bis -47.
+
+**Gemessen** (Agent; danach der Prüfstand dieses Pakets im Commit):
+
+| Mittel | Ergebnis |
+|---|---|
+| `referenz.py --selbstprobe` | 17 Fälle, 0 Fehlschläge (vorher 5) |
+| `referenz.py pruefen` | Fassung 1: 6 geöffnet, 8 Störungen, 0 Abweichungen · Fassung 2: 23 geöffnet, 38 Gegenlagen, 0 Abweichungen |
+| `referenz_inhalt.py --selbstprobe` / `pruefen` | 18/0 · 23 geöffnet, 28 Gegenlagen, 0 Abweichungen |
+| Hüllenprobe Chromium | Server 18, Browser 39 Prüfungen, 0 Abweichungen (Fassung 1) |
+| Gegenrechnung WebCrypto in Node (Wegwerfskript) | 72 Prüfungen, 0 Abweichungen |
+| `sha256sum` vor/nach `erzeugen` | `vektoren.json`, `HuelleVektor.mc`, `Vektoren.mc` unverändert |
+
+Die fünf verlangten Angriffe scheitern je mit Grund: vertauschen →
+`pruefwert`; zurücklegen → `zurueckgelegt`; Zeit verschieben → `zeit`;
+Stück entfernen → `luecke` / `ohne-schluss`; Hülle ohne Geräteschlüssel →
+`absender`, `pruefwert`, `ohne-herkunft`.
+
+**Nicht gemessen:** keine Umsetzung außer der Referenz (Browser, PHP,
+Android, Garmin prüfen weiter Fassung 1); Kosten auf Uhr und Handy
+gerechnet, nicht gemessen; Größenklassen nicht gegen echte Längen
+gehalten; **die Sicherheit des Entwurfs ist nicht gegengelesen** — die
+Vektoren belegen das Format, nicht seine Stärke.
+
+**Grenzen:** Die Herkunft beweist nur dem Browser des Kontos etwas, nicht
+Dritten und nicht dem Server; wer den privaten Kontoschlüssel hat (auch ein
+Skript in der Seite, Lage D), baut jede Gerätehülle selbst; eine gefundene
+Uhr fälscht, bis sie ausgetragen ist. Der Server kann weiter löschen,
+vorenthalten und einem neuen Browser einen alten, stimmigen Stand zeigen;
+Klartextfelder (`final`, Strecke, Besatzung, Tagesnotizen, Phasenzeiten bis
+06b) bleiben fälschbar. Hüllen der Fassung 1 bekommen nie eine Herkunft.
+
 ### KA-06b vorab — Ableitung (11.11.2026)
 
 **Was nicht geprüft werden konnte — zuerst.**
@@ -849,6 +937,15 @@ gezählt (E-KA-31).
 | F-KA-75 | **Der Messstand lief in die neue Mengengrenze:** Er spielt 16 wachsende Bestände in ein Konto, und ab dem 16. (318 Einsätze, gesamt 5 088) antwortete `api/backup_eintraege_restore.php` mit `507 kontingent` — im ersten Prüfstand von KA-05 rot. Die Grenze tat, was sie soll; das Messkonto misst ausdrücklich den ungünstigsten Fall | `messen.py` hebt die Grenze des Messkontos nach dem Anlegen auf (1 000 000 Einsätze / MB, `grenze_heben()`); danach alle 16 Dateien eingespielt, gesamt 5 088 |
 | F-KA-76 | **Uhr-Stufe und Modul `plattform` fehlten im Container** — `uhr-krypto` (der Wächter steht auch in `geraetehuelle_lib.php`) war rot, `schemaprobe` (der Anker in `migration_lib.php`) nicht gemessen. Für `plattform` lief der Docker-Dienst nicht | `aufbauen.sh uhr` (Connect IQ 9.2.0, 173 Geräte) und, nach `dockerd`, `aufbauen.sh plattform` (MySQL 8.0, 8.4.0, MariaDB 10.6, PHP 8.3); der Zwischenstand `539de50` trägt den roten Bericht, der nächste Commit misst die drei neu |
 | F-KA-77 | **F-KA-16 hält, aber enger, als das Audit es beschreibt:** Gemessen gegen `main` räumten die Startseite des Demo-Kontos, Suche, Zeitraum und Import das Fach schon immer — sie fragen beim Laden nach dem Inhaltsschlüssel. Stehen blieb es auf der Startseite eines Kontos ohne Bedarf (Prüfkonto) und auf Einstellungen (ohne `unlock.js`) | Auflösen in `nachDerAnmeldung()` immer; Frist für die Seiten ohne `unlock.js`; die Probe misst am Prüfkonto, weil die Demo-Startseite auf `main` grün gewesen wäre |
+| F-KA-78 | **Absolute Zeiten stoßen auf die Umdatierung** (Entwurf 06a): `tageszuordnung_lib.php:270`, `:290` verschieben `ts_von` über `spur_zeit_verschieben()` (`spur_lib.php:590`); das Konzept nannte die Umdatierung nicht | V-KA-05: Versatz belegt im Standbuch |
+| F-KA-79 | **Löschvermerke liegen im Klartext und fehlten in F-KA-12:** Wer `track_cuts` beschreibt, blendet Punkte aus, ohne eine Hülle zu berühren (`assets/ortsdaten.js:74`); der Server verwirft Stücke in einem Schnitt (`ingest.php:1293`) — rechtmäßige Lücken gibt es | V-KA-06: Vermerke belegt im Standbuch |
+| F-KA-80 | **Die Garmin-Uhr verschließt je Sendeversuch neu** (`watch/source/Uploader.mc:433-453`); eine Kette über den Prüfwert des Vorgängers risse im Regelbetrieb | V-KA-04: Verkettung über die Deckung |
+| F-KA-81 | **Phasenzeiten und -nummern sind Klartext, und der Browser fällt still auf die Reihenfolge zurück** (`assets/ortsdaten.js:179`) | 06b meldet eine Abweichung gegen die Hülle als `zeit` |
+| F-KA-82 | **Der Server verschließt selbst:** Demo-Bestand (`demo_lib.php:699-706`, `edk1`) und `gh_einsatz_verschliessen()`, `gh_stuecke_bauen()` (`geraetehuelle_lib.php:147`, `:177`) — `edk2` bekommt eine zweite Umsetzung in PHP | E-KA-44 (Demo-Gerät); 06d |
+| F-KA-83 | **Die Formprüfung ist auf Fassung 1 verdrahtet:** `validate_lib.php:805-809`, `GH_MIN_BYTE = 130` (`:265`), `punkte ≥ 1` (`:830`, `:857`) | 06d: Kopf 90, Minimum 138, Schlussstück mit 0 Punkten |
+| F-KA-84 | **„Die Uhr ersetzt keine Browserhülle" ist nur eine Serverregel** (`ingest.php:749`, `uhr_gesperrt`) | Fassung 2 hält es im Standbuch |
+| F-KA-85 | **Android `minSdk = 26`**, ECDH im Keystore erst ab API 31 (`android/handy/build.gradle.kts:40`) — darunter liegt der Geräteschlüssel im vorhandenen Tresor | 06c; Bedrohungsmodell nennt es |
+| F-KA-86 | **Die Demo-Anmeldung lief örtlich in ihre Stundensperre** (20 je Stunde), weil Einzelläufe der Bedienprobe mit dem Prüfstand zusammenkamen — die Barrierefreiheitsprobe war rot, mit dem Code von `main` ebenso | Zähler `demo`/`demog` örtlich geleert, voller Lauf neu; Einzelläufe sparsam |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
 | F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
 | F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |
