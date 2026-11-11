@@ -15,7 +15,7 @@ derselbe Code und dieselbe Instanz.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/vigilant-cray-9riw34`, Backlog-Spanne 570–579 |
-| In Arbeit | **KG-07** — Schnellmenü öffnet beim Loslassen (F-KG-08), doppeltes Blättern in der Probe festgehalten (F-KG-09); Uhr 4.5.2, eigener PR. KG-03 wartet auf KA-06a und KA-M5 (Fable); KG-04 wartet auf die Gerätetests |
+| In Arbeit | **KG-03a** — fertig (Kern der Fassung 2, Abschnitt 5c), mit KG-07 in PR #173, Uhr 4.5.2. Danach **KG-03b** — wartet auf die Server-Seite KA-06d und auf die offenen Punkte F-KG-16 |
 | Erledigt | **KG-01, KG-05, KG-02, KG-06, KG-04 (Teil: Prüfdokument)** — PR #168, gemergt 11.11.2026, Uhr 4.5.1; Tag `uhr-v4.5.1` setzt die BetreiberIn nach den Gerätetests |
 | Hakt | Antwort der KA-Instanz steht aus (E-KG-21). Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05) |
 | Gelesen gegen | Commit `0be2092` · Uhr 4.3.3; die vier Befunde von KG-01 am 10.11.2026 an der heutigen Stelle bestätigt (Abschnitt 4) |
@@ -36,6 +36,8 @@ BetreiberIn, die KA-Instanz baut sie.
 | KG-01 | Kontobindung und Sendeweg (Abschnitt 4) | F-KA-05, -07 (Uhr), -18 (Uhr), -43 (Huelle.mc, Pair.mc) | nichts | Opus | keine | Neben |
 | KG-02 | Messung für KA-06a: hält `Toybox.Cryptography` ein statisches P-256-Paar dauerhaft (Neustart, App-Update)? Gibt es ECDSA, was kostet es an Zeit und Speicher? Ergebnis als Befund mit Zahlen | — | nichts | Opus | keine | keine (Messung) |
 | KG-03 | Garmin-Teil von KA-06c: Geräteschlüssel, Gerätehülle Fassung 2, Kopplung mit Vergleichswert | F-KA-04, -12, -17 (Garmin) | KA-06a fertig, KA-M5 freigegeben | **Fable** für den Krypto-Kern — vorher anhalten | keine | Haupt (offen) |
+| KG-03a | Krypto-Kern: Gerätepaar, SID, Z_s, Hülle Fassung 2 (Spurstück mit Kopf, Einsatzhülle mit Zähler), Zusage und Vergleichswert der Kopplung — byte-gleich zur Referenz aus KA-06a; Erzeuger der `.mc`-Fälle in `referenz.py`; Krypto-Probe. **Kein Einbau** in Senden und Kopplung | F-KA-04, -12, -17 (Garmin, Kern) | KA-06a, KA-M5 (beide erledigt) | **Fable-Agent** (E-KG-26) | keine | keine (die App ändert sich nicht) |
+| KG-03b | Einbau: Gerätepaar bei der Kopplung, Zusage und Vergleichswert im Kopplungsablauf, Senden in Fassung 2 | F-KA-04, -12, -17 (Garmin) | KG-03a; **Server-Seite KA-06d** (Annahme Fassung 2, Kopplung mit Zusage) | Opus | keine | Haupt |
 | KG-04 | Prüfliste für die Gerätetests: Übergabe einer echten Uhr im laufenden Dienst, Kopplung mit Vergleichswert | — | KG-01, KG-03 | — | keine | keine |
 | KG-06 | **401/403 nur mit Fehlerfeld endgültig** (Vertrag 5, E-KA-26: „Die Uhr zieht mit KG nach"): erst messen, ob Connect IQ den Rumpf einer 401/403 an die App durchreicht (Simulator, Fenix 6 Pro); dann ohne Feld = später erneut, vor dem Räumen nach Fristablauf ein Sendeversuch | F-KA-18 (Rest) | KG-02 | Opus | keine | Korrektur oder Neben |
 | KG-07 | Schnellmenü der Hauptanzeige öffnet beim Loslassen von START; doppeltes Blättern der Rea-Seite ohne Rea in der Probe `rea` festgehalten | F-KG-08, F-KG-09 | nichts | Opus | keine | Korrektur |
@@ -75,6 +77,8 @@ abonnieren, anhalten.
 | E-KG-23 | **KG-06 wird aufgenommen; Reihenfolge KG-02, dann KG-06.** KG-02 geht mit in PR #168 | 11.11.2026, BetreiberIn |
 | E-KG-24 | **KG-06 nach Vertrag gebaut**, weil der Simulator den Rumpf durchreicht (F-KG-15); die Fassung wird 4.5.1. Bestätigt die Fenix es nicht (P-KG-02), wird neu entschieden | 11.11.2026, BetreiberIn (Vorgehen), Umsetzung (Bau nach Messung) |
 | E-KG-25 | **Nach dem Merge von #168: erst F-KG-08, dann F-KG-09, in einem PR (KG-07).** KG-03 bleibt bis KA-06a und KA-M5 liegen | 11.11.2026, BetreiberIn |
+| E-KG-26 | **Der Krypto-Kern von KG-03 geht an einen Fable-Agenten**, die Hauptinstanz bleibt auf Opus und übernimmt Ergebnis, Prüfstand, Konzept und Dokumente (wie E-KA-38) | 11.11.2026, BetreiberIn |
+| E-KG-27 | **KG-03 wird geteilt:** 03a (Kern, jetzt) und 03b (Einbau, nach KA-06d). Der Server nimmt Fassung 2 und die Kopplung mit Zusage noch nicht an; eine Uhr, die schon Fassung 2 sendete, bekäme heute 400 | 11.11.2026, Umsetzung (der BetreiberIn gemeldet) |
 | E-KG-16 | **Die Probe zu KG-01 läuft ohne Server** (`tools/uhr-pruefstand/sendeweg/`): Die Prüffassung hält jede Anfrage vor dem Absenden an und spielt die Antworten selbst vor. Ein verlorenes Paket und eine falsche Quittung lassen sich mit der echten Anlage nicht gezielt erzeugen; was `ingest.php` daraus macht, misst weiter `uhr-rundlauf` | 10.11.2026, Umsetzung |
 
 ---
@@ -238,6 +242,33 @@ deaktivieren, Sync-Seite öffnen → erwartet „Gerät im Web deaktiviert" (der
 Rumpf kam an). Scheitern: „Upload 403" — dann reicht die echte Uhr den
 Rumpf nicht durch, und KG-06 muss eine andere Regel bekommen.
 
+## 5c. KG-03a — Krypto-Kern der Fassung 2 (11.11.2026, Fable-Agent)
+
+**Gebaut** (vom Fable-Agenten, E-KG-26; nachgemessen und eingepflegt von der
+Hauptinstanz): `watch/source/Huelle2.mc` mit Gerätepaar, SID, Z_s,
+Spurstück mit Kopf und Schlussstück, Einsatzhülle mit Zähler, Zusage,
+Vergleichswert und Ablauf der Kopplung (`kopplungBeginnen`,
+`-Abschliessen`, `-Uebernehmen`, `-Verwerfen`); `Huelle.mc` gibt drei
+Bausteine ab, statt dass Fassung 2 sie kopiert; `referenz.py` erzeugt
+`Vektoren2.mc` und `HuelleVektor2.mc` und gleicht sie in `pruefen` ab; die
+Krypto-Probe übersetzt den Kern der App mit und prüft ihn (23 Urteile);
+`extern.py` öffnet mit der Referenz, was die Uhr mit Zufall verschlossen hat.
+**Nicht eingebaut** in Senden und Kopplung (E-KG-27).
+
+**Entscheidungen des Agenten (übernommen):** `Huelle.bereit()` prüft
+Fassung 2 nicht mit — ein Fehlschlag dort dürfte das Senden der Fassung 1
+nicht sperren, und zwei Schlüsselpaare mehr im selben Aufruf sind die Last,
+die den Watchdog auslöst; `Huelle2.bereit()` liegt getrennt bereit. Z_s wird
+im Speicher abgelegt (`gzs`, mit Kennung des Kontoschlüssels). N_g und das
+Paar einer laufenden Kopplung liegen nur im Arbeitsspeicher.
+
+**Was KG-03b vom Server braucht** (Referenz, Kopf „DER VERGLEICHSWERT DER
+KOPPLUNG"): `start` nimmt SPK und Zusage; der Browser holt beide, bevor er
+N_b schickt; `status` liefert K und N_b, danach legt das Gerät N_g offen;
+der Browser prüft die Zusage und rechnet den Wert. Offen: F-KG-16. Die
+Anzeige des Wertes auf der Uhr ist eine neue Darstellung und braucht eine
+Freigabe mit Mockup (`CLAUDE.md` 5).
+
 ---
 
 ## 6. Befunde der Umsetzung
@@ -258,6 +289,8 @@ Rumpf nicht durch, und KG-06 muss eine andere Regel bekommen.
 | F-KG-13 | **Was ein Herkunftsnachweis ohne Signatur kostet:** statisch-statisches ECDH (Geräteschlüssel gegen Kontoschlüssel) plus HMAC-SHA256 über 7000 B (500 Punkte) — im Simulator ECDH 1 bis 3 ms, HMAC höchstens 1 ms, +7 kB. Auf der echten Fenix 6 Pro kostete ein Schlüsselpaar 54 bis 73 ms und das Verschließen eines Stücks rund 141 ms (S11, E-S11-31); ein ECDH mehr je Stück liegt in derselben Größenordnung. **Was das leistet:** Den Tag prüft, wer den privaten Teil des Kontopaars hat — der Browser des Kontos, nicht der Server und nicht Dritte. Ein Nachweis gegenüber dem Server bleibt der Geräteschlüssel (`cred`) | Krypto-Probe, `T-STATISCH`, 11.11.2026 | Antwort an KA-06a |
 | F-KG-14 | **Im Simulator weist die Uhr einen Punkt neben der Kurve ab** (`KURVE abgewiesen`, alle drei Geräte). Auf einer echten Uhr ist das weiter nicht gemessen (F-S11-85); der Kommentar in `Huelle.schluesselSetzen()` bleibt richtig | Krypto-Probe, 11.11.2026 | Hinweis |
 | F-KG-15 | **Im Simulator reicht Connect IQ den Rumpf einer 401 und 403 durch:** `upload 401 {error=>auth}` (Rundlauf `--neukoppeln`), `status 403 {error=>device_disabled}` (`--reaktivieren`), gemessen mit `RUNDLAUF_ANTWORTEN=1`. Der Kommentar in `Uploader._sperrgrund()` („geräteabhängig") ist damit für den Simulator beantwortet, für die echte Uhr nicht (P-KG-02) | Rundlauf, 11.11.2026 | Grundlage von KG-06 |
+| F-KG-16 | **Die Referenz lässt für KG-03b vier Punkte offen** (gemeldet an die KA-Instanz): (1) ob das Gerät nach dem Offenlegen von N_g ein zweites, anderes Paar (K, N_b) annehmen darf — die Uhr legt sich beim ersten fest; (2) `ts_von` des leeren Schlussstücks; (3) der Zähler `z` „je Absender" gegen das Standbuch je Einsatz — die Uhr führt einen Zähler für alle Einsätze (`gz`), der das Trennen überdauert; (4) Feldnamen, Kodierung und der Weg für N_g in `pair.php`. Dazu ein Kommentar mit falschem Datum (`T0` ist der 17.07., nicht der 16.07.2026) | Fable-Agent KG-03a, 11.11.2026 | an KA-06d |
+| F-KG-17 | **Der Kern wird ausgeliefert, bevor er gebraucht wird:** +6,6 kB Kompilat (fenix6pro 86 268 → 92 924 B, fenix5 82 380 → 89 020 B), davon 2,7 kB Selbsttest und Vektor. Der Laufzeitspeicher der 128-kB-Geräte ist nicht gemessen | Fable-Agent, `bauen -r` | hingenommen bis KG-03b |
 | F-KG-07 | **Alle Fälle der Probe in einem Aufruf lösen den Watchdog aus** (mehrere Verschließungen am Stück, `Code Executed Too Long` in `Huelle.umgedreht()`). Die Probe läuft deshalb je Fall in einem eigenen Takt. Die App selbst verschließt je Antwort ein Stück und ist davon nicht betroffen — auf einer echten Uhr gemessen ist das aber nicht | Simulator fenix6pro, 10.11.2026 | Probe angepasst |
 
 **Gerätebeobachtungen stehen in `docs/Geraete-Eingabe.md` 2 und 6**, nicht
@@ -351,4 +384,19 @@ schickt (P-KG-13); die Venu (lang Zurück öffnet das Menü weiter sofort).
 | Messfassung aus `rea.sh`, Uhr 4.5.1 | kurz UP/DOWN auf der Rea-Seite ohne Rea; lang START auf der Hauptanzeige | je **eine** Seite (`REANAV 3`, `REANAV 4`, `REANAV 0`); Schnellmenü: `SCHNELL-AUSWAHL` beim Loslassen — F-KG-08 bestätigt |
 | `rea.sh fenix6pro` | 18 Schritte, davon 3 neu | **18 von 18 grün** |
 | `REA_WATCH=<Uhr 4.5.1>` | dieselben 18 | **1 rot** (Schnellmenü wählt beim Loslassen); gegen 4.4.0 waren die Blätterschritte rot (`REANAV 3, REANAV 2`) |
-| Prüfstand `pruefen.sh` | Stufe und Proben nach Berührung | Bericht in der Commit-Nachricht von KG-07 |
+| Prüfstand `pruefen.sh` über den Merge mit KA-06b vorab | Stufe und Proben nach Berührung | 33 grün, 0 rot, **1 Hinweis** `steuerung`: Rahmenplan Zeile 124, Fahrplan-Zelle „Status“ 295 statt höchstens 240 Zeichen — aus `main`, Bereich der KA-Instanz, ihr gemeldet und in PR #172 behoben (196 Zeichen) |
+
+### KG-03a (11.11.2026, keine eigene Fassung — liegt mit KG-07 in Uhr 4.5.2)
+
+**Nicht geprüft:** echte Uhr (Zeiten, Speicher, ob `getBytes()` dort 32 B
+liefert, P-KG-01); Laufzeitspeicher der 128-kB-Geräte; die Kopplung gegen
+einen Server (gibt es noch nicht).
+
+| Mittel | Was es misst | Ergebnis |
+|---|---|---|
+| `sha256sum` / `git diff origin/main` | die fünf Vektordateien der Fassungen 1 und 2 | 5 von 5 unverändert (Agent und Hauptinstanz) |
+| `referenz.py --selbstprobe` / `pruefen` | Referenz, Abgleich der erzeugten `.mc` | 17/0 · Fassung 1: 6 geöffnet, 8 Störungen, 0 Abweichungen · Fassung 2: 23 geöffnet, 38 Gegenlagen, 0 Abweichungen; ohne die neuen `.mc` rot (Agent) |
+| `kryptoprobe` (Agent) | 23 Urteile je Gerät | fenix6pro, fr945, venu3s je **23 gut, 0 Fehler** |
+| `extern.py` (Agent) | Zufallshüllen und Kopplungen der Uhr, mit der Referenz geöffnet | 18 geprüft, 0 Fehler; Gegenlagen rot |
+| `kryptoreihe` (Agent) | Probe für alle Geräte übersetzt | 99/0 |
+| Prüfstand `pruefen.sh` | Stufe und Proben nach Berührung, darunter `uhr-krypto` und `uhr-rundlauf` (öffnet die Fassung 1 aus dem umgebauten `Huelle.mc` auf dem Server) | Bericht in der Commit-Nachricht von KG-03a |
