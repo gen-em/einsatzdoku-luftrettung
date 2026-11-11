@@ -1156,4 +1156,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- dest_lon, site_ele_m) stehen oben schon nicht mehr.
   ('2026_10_19_klartext_weg', 'skipped'),
   -- users.darstellung steht oben schon im Schema.
-  ('2026_11_07_darstellung', 'skipped');
+  ('2026_11_07_darstellung', 'skipped'),
+  -- stand_blaetter steht oben schon im Schema.
+  ('2026_11_11_standbuch', 'skipped');

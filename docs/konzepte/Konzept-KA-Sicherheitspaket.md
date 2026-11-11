@@ -805,6 +805,14 @@ gezählt (E-KA-31).
 | Bedienprobe, Weg `ka06b2-standbuch` (Prüfkonto, über `EdStandbuch.apiTransport()`) | 16 Blätter und Buch in Form; Blatt abgelegt und Zeichen für Zeichen zurück; veraltete Version → Konflikt mit dem Blatt des Servers, ebenso beim Buch; 400 `text`, `version`, `wer` | ohne Endpunkt (Stand von `main`): Abbruch, rot; Versionsregel mit `version >= ?` statt `= ?`: kein Konflikt, rot | Schnittstelle zwischen Browser und Server, Versionsregel, Form |
 | Bedienprobe, Weg `ka06b2-fremdkonto` | das Demo-Konto sieht das Blatt des Prüfkontos nicht | ohne Endpunkt: rot | Bindung an das Konto der Sitzung |
 | Migration örtlich | `2026_11_11_standbuch` „Erfolgreich angewendet", Tabelle wie in `schema.sql` | — | Migration und Schema gleich |
+| Schemaprobe, Modul `plattform` | MariaDB 10.6, MySQL 8.0, MySQL 8.4.0 je **52 Prüfungen, 0 Fehlschläge** | — | die Migration läuft auf allen Zielfassungen |
+| Migrationsregister | 76 Kennungen im Katalog, 76 in der Vorabliste | Zwischenstand: 75 (rot, F-KA-96) | eine neue Installation trägt die Migration als erledigt ein |
+
+**Prüfstand (Stufe neben, drei Engines):** Zwischenstand 61 grün, 3 rot —
+`migrationsregister` (F-KA-96), `schemaprobe` (Plattform-Container nach
+einem Neustart nicht gestartet, F-KA-95), `rueckwegprobe` in WebKit
+(Zeitgrenze beim Seitenwechsel, einzeln danach 23/0, F-KA-94). Der Kopf
+misst die drei neu und erbt den Rest.
 
 ### KA-06b-1 Kern einbinden (11.11.2026)
 
@@ -1011,6 +1019,9 @@ Klartextfelder (`final`, Strecke, Besatzung, Tagesnotizen, Phasenzeiten bis
 | F-KA-91 | **Das Demo-Konto stellt nie auf das neue Format um** — ohne Anteil-Kennung überspringt `unlock.js:313` die Umstellung | die Demo-Hülle kommt als `edk2:` aus der Fixture (E-KA-44, 06d) |
 | F-KA-92 | **Die Arbeitskopie des Agenten begann auf `main` statt auf dem Zweig**, und `.claude/worktrees/` stand unverfolgt im Baum — der Prüfstand hätte sie mit `git add -A` eingesammelt | Zweig im Agenten vorgespult; `.claude/worktrees/` örtlich in `.git/info/exclude` |
 | F-KA-93 | **Der Container startete mitten in der Arbeit neu** (11.11.2026, `uptime` 2 min); die Anlage lief mit `hochfahren.sh` wieder an | wie F-KA-71 |
+| F-KA-94 | **Die Rückwegprobe lief in WebKit einmal in die Zeitgrenze eines Seitenwechsels** (90 s, Prüfstand von 06b-2) — der Paketcode berührt keinen Browserweg; einzeln danach 23 ok, 0 fehlen | im Kopf neu gemessen; beobachten |
+| F-KA-95 | **Nach dem Neustart des Containers liefen die Plattform-Container nicht** — die Schemaprobe fand MariaDB 10.6 und beide MySQL nicht | `plattform.sh alles` nach jedem Neustart; `hochfahren.sh` startet sie nicht mit |
+| F-KA-96 | **Die neue Migration fehlte in der Vorabliste von `schema.sql`** — eine Neuinstallation hätte sie als offen gemeldet | Zeile ergänzt; das Migrationsregister hat es gefunden |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
 | F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
 | F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |
