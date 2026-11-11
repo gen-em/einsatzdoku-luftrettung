@@ -29,12 +29,35 @@ const EdCrypto = (() => {
    * vom Server (users.kdf_iter). */
   const te = new TextEncoder(), td = new TextDecoder();
 
+  /* DIE UNTERGRENZE IST DER KLEINSTE WERT, DEN JE EIN KONTO ODER EINE
+   * SICHERUNG TRUG: 310 000 (der Vorgabewert der Spalte `kdf_iter`,
+   * migration_lib.php). Bis Web 24.13.0 stand hier 1 000. Die Rundenzahl
+   * kommt vom Server (`auth_salt.php`), und wer dessen Antwort verändern
+   * kann, ohne die Skripte zu tauschen, bekam damit ein Anmelde-Token, an
+   * dem sich das Passwort sechshundertmal billiger raten ließ (F-KA-13).
+   * Eine ältere Sicherung mit 310 000 Runden geht weiter auf; eine mit
+   * weniger hat es nie gegeben. */
+  const RUNDEN_MIN = 310000;
+
   /** Rundenzahl pruefen. Wirft statt zu raten — siehe deriveKeys. */
   function pruefeRunden(iter, wofuer) {
-    if (!Number.isInteger(iter) || iter < 1000 || iter > 10000000) {
+    if (!Number.isInteger(iter) || iter < RUNDEN_MIN || iter > 10000000) {
       throw new Error('Rundenzahl fehlt oder ist unbrauchbar (' + wofuer + '): ' + iter);
     }
     return iter;
+  }
+
+  /* Das Salz eines Kontos hat eine Form: 16 Zufallsbytes als 32 Zeichen
+   * Hex, klein geschrieben (`randomHex(16)`, Prüfung in pw_handling.php;
+   * das Pseudo-Salz für unbekannte Adressen hat dieselbe Form,
+   * auth_salt.php). `fromHex()` verzeiht alles — aus einem leeren oder
+   * kaputten Salz würde still ein Schlüssel aus wenigen oder null Bytes
+   * Salz. Deshalb vorher prüfen (F-KA-13). */
+  function pruefeSalz(saltHex, wofuer) {
+    if (typeof saltHex !== 'string' || !/^[0-9a-f]{32}$/.test(saltHex)) {
+      throw new Error('Salz fehlt oder hat nicht die erwartete Form (' + wofuer + ')');
+    }
+    return saltHex;
   }
 
   /* ---- Helfer: hex / base64 ------------------------------------------- */
@@ -78,6 +101,7 @@ const EdCrypto = (() => {
    * keiner ist, wird beim naechsten Mal wieder als einer benutzt. */
   async function deriveKeys(password, saltHex, iter) {
     pruefeRunden(iter, 'deriveKeys');
+    pruefeSalz(saltHex, 'deriveKeys');
     const base = await crypto.subtle.importKey(
       'raw', te.encode(password), 'PBKDF2', false, ['deriveBits']);
     const bits = await crypto.subtle.deriveBits(
@@ -121,7 +145,25 @@ const EdCrypto = (() => {
       throw f;
     }
     const d = await r.json();
-    const runden = Array.isArray(d.iter) && d.iter.length ? d.iter : [310000];
+    /* Keine Ersatzliste: Fehlt die Rundenzahl, ist die Antwort kaputt, und
+     * ein geratener Wert wäre genau der leise Fehler, den `pruefeRunden()`
+     * verhindern soll. Jede genannte Zahl geht durch `deriveKeys()` und
+     * damit durch die Untergrenze. */
+    /* Eine Antwort in falscher Form ist ein Fehler des Endpunkts, kein
+     * fehlendes Web-Krypto: `status` sorgt dafür, dass die Seite „derzeit
+     * nicht möglich" sagt statt „Browser unterstützt die Verschlüsselung
+     * nicht". */
+    try {
+      if (!Array.isArray(d.iter) || !d.iter.length) {
+        throw new Error('auth_salt ohne Rundenzahl');
+      }
+      d.iter.forEach(it => pruefeRunden(it, 'auth_salt'));
+      pruefeSalz(d.salt, 'auth_salt');
+    } catch (e) {
+      e.status = 'form';
+      throw e;
+    }
+    const runden = d.iter;
     const tokens = {}, haelften = {};
     for (const it of runden) {
       const k = await deriveKeys(passwort, d.salt, it);
@@ -668,22 +710,56 @@ const EdCrypto = (() => {
    * Rundenzahlen. Der Grund: Ob die Hülle dieses Kontos den Anteil
    * braucht, weiß erst die angemeldete Seite — `login.php` kennt weder
    * `KDF_ITER` noch `PAT_WRAP`. Das Fach ist damit einen Seitenwechsel lang
-   * belegt statt gar nicht; geräumt wird es unverändert von der ersten Seite,
-   * die den Inhaltsschlüssel braucht (unlock.js), beim Abmelden und bei jedem
-   * Anmeldeversuch.
+   * belegt statt gar nicht; geräumt wird es von der ersten
+   * angemeldeten Seite mit dem Rüstzeug (`nachDerAnmeldung()` in unlock.js),
+   * beim Abmelden, bei jedem Anmeldeversuch und nach Ablauf seiner Frist
+   * (unten).
    */
   const S_VOR = 'edkvor';
 
+  /* DAS FACH HAT EINE FRIST: sechs Minuten ab dem Ablegen (F-KA-16). Bis
+   * Web 24.13.0 lag es, bis eine Seite es räumte — und ein Tab, der an der
+   * Code-Abfrage stehen blieb, behielt Hälfte und Token, solange er offen
+   * war. Sechs Minuten sind die fünf der halben Anmeldung
+   * (`TOTP_HALB_FRIST_S` in totp_lib.php) und eine für den Seitenwechsel; wer
+   * danach noch keine angemeldete Seite erreicht hat, kann sich ohnehin
+   * nicht mehr anmelden. Ein Fach ohne Zeitstempel (ältere Form) oder mit
+   * einem aus der Zukunft gilt als abgelaufen. */
+  const VOR_FRIST_MS = 6 * 60 * 1000;
+
   function merkeAbleitungen(haelften, tokens) {
-    sessionStorage.setItem(S_VOR, JSON.stringify({ hf: haelften, tk: tokens }));
+    sessionStorage.setItem(S_VOR, JSON.stringify({ hf: haelften, tk: tokens, t: Date.now() }));
+    vormerkAblauf(VOR_FRIST_MS);
   }
   function holeAbleitungen() {
     try {
       const o = JSON.parse(sessionStorage.getItem(S_VOR) || 'null');
-      return (o && o.hf && o.tk) ? o : null;
+      if (!o) { return null; }
+      const alter = Date.now() - (Number.isFinite(o.t) ? o.t : -Infinity);
+      if (!o.hf || !o.tk || !(alter >= -60000 && alter <= VOR_FRIST_MS)) {
+        vergissAbleitungen();
+        return null;
+      }
+      return o;
     } catch (e) { return null; }
   }
-  const vergissAbleitungen = () => sessionStorage.removeItem(S_VOR);
+  const vergissAbleitungen = () => {
+    try { sessionStorage.removeItem(S_VOR); } catch (e) { /* kein Speicher */ }
+  };
+
+  /* Räumt das Fach zum Ende der Frist auch in einem Tab, der so lange
+   * stehen bleibt — die Prüfung in `holeAbleitungen()` allein liefe erst,
+   * wenn jemand fragt. Beim Laden jeder Seite mit diesem Skript: ein
+   * abgelaufenes Fach sofort weg, ein gültiges zu seinem Ende. */
+  let vormerkUhr = null;
+  function vormerkAblauf(ms) {
+    if (vormerkUhr) { clearTimeout(vormerkUhr); }
+    vormerkUhr = setTimeout(() => { vormerkUhr = null; holeAbleitungen(); }, ms + 1000);
+  }
+  try {
+    const da = holeAbleitungen();
+    if (da) { vormerkAblauf(VOR_FRIST_MS - (Date.now() - da.t)); }
+  } catch (e) { /* kein Speicher */ }
 
   /* DAS VORMERKFACH DES PASSWORTWECHSELS GEHOERT MIT GERAEUMT.
    *

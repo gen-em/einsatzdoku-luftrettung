@@ -1221,8 +1221,8 @@ document.getElementById('loginform').addEventListener('submit', async ev => {
      *
      * WAS DAS KOSTET: Das Fach liegt jetzt nach jeder Anmeldung einen
      * Seitenwechsel lang im sessionStorage statt gar nicht. Geräumt wird es
-     * unverändert von der ersten Seite, die den Inhaltsschlüssel braucht
-     * (unlock.js), beim Abmelden und bei jedem Anmeldeversuch.
+     * von der ersten angemeldeten Seite (unlock.js), beim Abmelden, bei
+     * jedem Anmeldeversuch und nach sechs Minuten von selbst (F-KA-16).
      *
      * Die Ablage im Vormerkfach ist dasselbe Verfahren, das der
      * Passwortwechsel seit Web 4.5.0 benutzt (M2-07): Der neue Stand liegt
