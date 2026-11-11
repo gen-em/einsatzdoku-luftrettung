@@ -116,9 +116,13 @@ Abschnitt 2.2 gibt es erst im laufenden Dienst.
 > mehr angemeldet")* heißt: Der Server kennt diese Uhr nicht mehr — sie wurde
 > in den Einstellungen gelöscht. Die Uhr hört dann auf zu
 > senden und **behält alles — 30 Tage lang**, gezählt ab der ersten
-> Abmeldung. Danach verwirft sie alle ungesendeten Pakete: Eine Uhr, die
-> niemand mehr koppelt, soll Spur, Phasen und Reanimation nicht unbegrenzt
-> tragen. Das Datum in der Zeile ist der letzte Tag. Der Weg zurück ist eine
+> Abmeldung. Danach versucht sie es noch einmal; weist der Server sie
+> wieder ab, verwirft sie alle ungesendeten Pakete: Eine Uhr, die niemand
+> mehr koppelt, soll Spur, Phasen und Reanimation nicht unbegrenzt tragen.
+> Das Datum in der Zeile ist der letzte Tag. *(Seit Uhr 4.5.1 gilt als
+> Abmeldung nur die Antwort des Servers selbst — eine Anmeldeseite im WLAN
+> oder ein Proxy, die dieselbe Fehlerzahl schicken, halten die Uhr nicht
+> mehr an; und vor dem Verwerfen geht der letzte Versuch hinaus.)* Der Weg zurück ist eine
 > neue Kopplung (*lang START*), **auch wenn noch Pakete offen sind** *(seit
 > Uhr 4.3.0; davor verweigerte die Uhr sie mit „Erst 2 Pakete senden", und
 > es blieb nur die Frist)*. Die Uhr fragt dann „Trennen? 2 Pakete bleiben und

@@ -15,7 +15,7 @@ derselbe Code und dieselbe Instanz.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/vigilant-cray-9riw34`, Backlog-Spanne 570–579 |
-| In Arbeit | **KG-02** — Messung fertig (Abschnitt 5a), geht mit in PR #168 (E-KG-23); danach KG-06. Davor: **KG-05** — fertig, Uhr 4.5.0, im selben Pull Request #168 wie KG-01 (E-KG-20); `main` mit KA-04 aufgenommen, Sackgasse nach F-KA-27 behoben (F-KG-10). Wartet auf Merge und Tag `uhr-v4.5.0`. Danach KG-02 |
+| In Arbeit | **KG-06** — fertig, Uhr 4.5.1, geht mit in PR #168. Fertig vorher: KG-01, KG-05, KG-02 (alle in PR #168, noch nicht gemergt). Als Nächstes: KG-03 wartet auf KA-06a und KA-M5 (Fable), KG-04 sammelt die Gerätetests |
 | Erledigt | **KG-01** (Uhr 4.4.0, PR #168, noch nicht gemergt) |
 | Hakt | Antwort der KA-Instanz steht aus (E-KG-21). Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05) |
 | Gelesen gegen | Commit `0be2092` · Uhr 4.3.3; die vier Befunde von KG-01 am 10.11.2026 an der heutigen Stelle bestätigt (Abschnitt 4) |
@@ -72,6 +72,7 @@ abonnieren, anhalten.
 | E-KG-21 | **Die Sackgasse nach F-KA-27 wird in KG-05 behoben, die Fassung bleibt 4.5.0** (noch nicht ausgeliefert). Die Abstimmung mit der KA-Instanz über weitere Server-Änderungen, die die Uhr treffen, läuft (Nachricht 11.11.2026) | 11.11.2026, BetreiberIn |
 | E-KG-22 | **Der Rundlauf hält für `--neukoppeln` und `--fremdkonto` das Senden in der Prüffassung 30 s an**, statt das Gerät zu deaktivieren (`Rundlauf.halten()`). Der Wartungsmodus taugt nicht dafür: Er sperrt auch `pair.php` | 11.11.2026, Umsetzung |
 | E-KG-23 | **KG-06 wird aufgenommen; Reihenfolge KG-02, dann KG-06.** KG-02 geht mit in PR #168 | 11.11.2026, BetreiberIn |
+| E-KG-24 | **KG-06 nach Vertrag gebaut**, weil der Simulator den Rumpf durchreicht (F-KG-15); die Fassung wird 4.5.1. Bestätigt die Fenix es nicht (P-KG-02), wird neu entschieden | 11.11.2026, BetreiberIn (Vorgehen), Umsetzung (Bau nach Messung) |
 | E-KG-16 | **Die Probe zu KG-01 läuft ohne Server** (`tools/uhr-pruefstand/sendeweg/`): Die Prüffassung hält jede Anfrage vor dem Absenden an und spielt die Antworten selbst vor. Ein verlorenes Paket und eine falsche Quittung lassen sich mit der echten Anlage nicht gezielt erzeugen; was `ingest.php` daraus macht, misst weiter `uhr-rundlauf` | 10.11.2026, Umsetzung |
 
 ---
@@ -213,6 +214,28 @@ bauen, `.prg` ersetzen, ohne die App zu löschen, starten → erwartet `gleich,
 Lauf 3, erzeugt in Fassung 1, jetzt 2`. Scheitern: `erzeugt` statt `gleich`
 (der Speicher ging mit dem Update verloren) oder `ANDERS`.
 
+## 5b. KG-06 — 401/403 nur mit Fehlerfeld (11.11.2026, Uhr 4.5.1)
+
+1. **Gemessen (F-KG-15):** Der Rumpf kommt im Simulator an.
+2. **Gebaut:** `Uploader.vertragsAbweisung()` — 401 nur mit `auth`, 403
+   nur mit `device_disabled` oder `konto`; sonst Störung („Upload 401",
+   später erneut). Dieselbe Regel in `Pair.onSchluessel()`.
+   `abmeldeFristPruefen()`: Nach Ablauf geht zuerst ein Versuch hinaus,
+   auch gegen die Marke; geräumt wird erst nach einer weiteren Abweisung
+   mit Feld (`Storage 'abgem_versucht'`) oder sofort, wenn die Uhr ohne
+   Zugangsdaten oder Schlüssel gar nicht senden kann. Eine 200 löscht beide
+   Vermerke.
+3. **Was das kostet:** Ohne Telefon bleibt der Puffer über die 30 Tage
+   hinaus liegen, bis die Uhr den Server wieder erreicht
+   (Bedrohungsmodell, Lage H). Das ist die Vorgabe des Vertrags.
+4. **Außerhalb der Grenzen berührt:** ein Satz in `docs/JSON-Vertrag.md` 5
+   („Die Uhr zieht mit KG nach" → „seit Uhr 4.5.1").
+
+**Gerätetest P-KG-02 (für KG-04):** Fenix 6 Pro gekoppelt, Gerät im Web
+deaktivieren, Sync-Seite öffnen → erwartet „Gerät im Web deaktiviert" (der
+Rumpf kam an). Scheitern: „Upload 403" — dann reicht die echte Uhr den
+Rumpf nicht durch, und KG-06 muss eine andere Regel bekommen.
+
 ---
 
 ## 6. Befunde der Umsetzung
@@ -232,6 +255,7 @@ Lauf 3, erzeugt in Fassung 1, jetzt 2`. Scheitern: `erzeugt` statt `gleich`
 | F-KG-12 | **Ein dauerhaftes P-256-Paar ist möglich.** `getPrivateKey().getBytes()` liefert 32 B, der öffentliche Teil 64 B; aus den 32 B im `Application.Storage` baut `KeyPair({:privateKey})` dasselbe Paar wieder, byte-gleich über 7 Läufe, Neustarts des Simulators und einen Fassungswechsel 1 → 2 ohne Leeren des Speichers. **Grenzen:** Der Speicher liegt wie `cred` ohne Hardware-Schutz auf der Uhr (Lage H); ob ein Update aus dem Connect-IQ-Store den Speicher hält, zeigt nur eine echte Uhr (P-KG-01) | Krypto-Probe, `GERAETEPAAR`, 11.11.2026 | Antwort an KA-06a |
 | F-KG-13 | **Was ein Herkunftsnachweis ohne Signatur kostet:** statisch-statisches ECDH (Geräteschlüssel gegen Kontoschlüssel) plus HMAC-SHA256 über 7000 B (500 Punkte) — im Simulator ECDH 1 bis 3 ms, HMAC höchstens 1 ms, +7 kB. Auf der echten Fenix 6 Pro kostete ein Schlüsselpaar 54 bis 73 ms und das Verschließen eines Stücks rund 141 ms (S11, E-S11-31); ein ECDH mehr je Stück liegt in derselben Größenordnung. **Was das leistet:** Den Tag prüft, wer den privaten Teil des Kontopaars hat — der Browser des Kontos, nicht der Server und nicht Dritte. Ein Nachweis gegenüber dem Server bleibt der Geräteschlüssel (`cred`) | Krypto-Probe, `T-STATISCH`, 11.11.2026 | Antwort an KA-06a |
 | F-KG-14 | **Im Simulator weist die Uhr einen Punkt neben der Kurve ab** (`KURVE abgewiesen`, alle drei Geräte). Auf einer echten Uhr ist das weiter nicht gemessen (F-S11-85); der Kommentar in `Huelle.schluesselSetzen()` bleibt richtig | Krypto-Probe, 11.11.2026 | Hinweis |
+| F-KG-15 | **Im Simulator reicht Connect IQ den Rumpf einer 401 und 403 durch:** `upload 401 {error=>auth}` (Rundlauf `--neukoppeln`), `status 403 {error=>device_disabled}` (`--reaktivieren`), gemessen mit `RUNDLAUF_ANTWORTEN=1`. Der Kommentar in `Uploader._sperrgrund()` („geräteabhängig") ist damit für den Simulator beantwortet, für die echte Uhr nicht (P-KG-02) | Rundlauf, 11.11.2026 | Grundlage von KG-06 |
 | F-KG-07 | **Alle Fälle der Probe in einem Aufruf lösen den Watchdog aus** (mehrere Verschließungen am Stück, `Code Executed Too Long` in `Huelle.umgedreht()`). Die Probe läuft deshalb je Fall in einem eigenen Takt. Die App selbst verschließt je Antwort ein Stück und ist davon nicht betroffen — auf einer echten Uhr gemessen ist das aber nicht | Simulator fenix6pro, 10.11.2026 | Probe angepasst |
 
 **Gerätebeobachtungen stehen in `docs/Geraete-Eingabe.md` 2 und 6**, nicht
@@ -302,3 +326,15 @@ das Paar wieder, das der Lauf auf der Fenix 6 Pro erzeugt hatte.
 | SDK-Dokumentation `Toybox/Cryptography*.html` | Klassen, Funktionen, Konstanten des Moduls | 7 Klassen, 2 Funktionen, keine Signatur |
 | `pruefstand.sh kryptoprobe fenix6pro` (2×), mit `FASSUNG` 2 (1×), `fr945` (2×), `venu3s` (2×) | Vektoren, `SIGNATUR`, `GERAETEPAAR`, `T-STATISCH` | je `ERGEBNIS 7 gut, 0 Fehler`; `SIGNATUR nicht vorhanden` 7 von 7; `GERAETEPAAR erzeugt` einmal, danach `gleich` in Lauf 2 bis 7, auch über Fassung 1 → 2 |
 | Prüfstand `pruefen.sh` | Stufe und Proben nach Berührung | Bericht in der Commit-Nachricht von KG-02 |
+
+### KG-06 (11.11.2026, Uhr 4.5.1)
+
+**Nicht geprüft:** ob die echte Fenix 6 Pro den Rumpf einer 401/403
+durchreicht (P-KG-02); der letzte Versuch nach echten 30 Tagen.
+
+| Mittel | Was es misst | Ergebnis |
+|---|---|---|
+| `RUNDLAUF_ANTWORTEN=1 rundlauf.sh --reaktivieren` / `--neukoppeln` | Code und Rumpf jeder Antwort in der Konsole | 403 `{error=>device_disabled}`, 401 `{error=>auth}` (2×); beide Läufe grün |
+| `sendeweg.sh fenix6pro` | 13 Prüfungen, davon 5 neu | **13 von 13 grün** |
+| `SENDEWEG_WATCH=<Uhr 4.5.0>` | dieselben 13 gegen den Stand vor KG-06 | **3 rot** (401 ohne Feld, 403 ohne Feld, Frist ohne Versuch); Gegenproben `401-auth-ist-abmeldung`, `frist-dann-geraeumt` grün |
+| Prüfstand `pruefen.sh` | Stufe und Proben nach Berührung | Bericht in der Commit-Nachricht von KG-06 |

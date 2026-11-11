@@ -411,9 +411,10 @@ module Pair {
             status = "Erst im Web anmelden";
             statusHint = null;
             statusKind = :error;
-        } else if (code == 401 || code == 403) {
+        } else if ((code == 401 || code == 403) && Uploader.vertragsAbweisung(code, data)) {
             /* Das Geraet gibt es nicht mehr oder es ist gesperrt — derselbe
-             * Zustand wie beim Upload, derselbe Weg. */
+             * Zustand wie beim Upload, derselbe Weg. Ohne Fehlerfeld ist es
+             * eine Stoerung wie jede andere (seit Uhr 4.5.1, KG-06). */
             Uploader.abweisungMerken(code, data);
             status = null;
             statusHint = null;

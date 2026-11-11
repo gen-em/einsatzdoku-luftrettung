@@ -13,7 +13,7 @@ letzten Arten — eine abgemeldete Uhr kam nicht mehr ans Senden.
 bash tools/uhr-pruefstand/rundlauf/rundlauf.sh [ART] [geraet]   # Vorgabe fenix6pro
 ```
 
-ART: `--nachholen`, `--schrumpfen`, `--reaktivieren`, `--neukoppeln`, `--fremdkonto`; im Prüfstand (`uhr-rundlauf`) alle fünf.
+ART: `--nachholen`, `--schrumpfen`, `--reaktivieren`, `--neukoppeln`, `--fremdkonto`; im Prüfstand (`uhr-rundlauf`) alle fünf. `RUNDLAUF_ANTWORTEN=1` schreibt jede Antwort samt Rumpf in die Konsole (`RL-ANTWORT`, KG-06).
 
 ## Was es misst
 

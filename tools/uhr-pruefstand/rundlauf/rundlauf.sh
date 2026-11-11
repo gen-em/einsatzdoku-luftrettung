@@ -146,6 +146,15 @@ if [ "$SCHRUMPFEN" = 1 ]; then
         || fehler "Haken in Uploader.mc nicht eingesetzt (zwei erwartet)"
     grep -q 'const SCHRUMPFEN = true;' "$APP/source/Rundlauf.mc" || fehler "Schalter in Rundlauf.mc nicht gesetzt"
 fi
+# RUNDLAUF_ANTWORTEN=1 (KG-06): jede Antwort an Upload und Schluesselholen
+# mit Code und Rumpf in die Konsole ("RL-ANTWORT …") — misst, ob Connect IQ
+# den Rumpf einer 401/403 an die App durchreicht.
+if [ "${RUNDLAUF_ANTWORTEN:-0}" = 1 ]; then
+    sed -i 's|^        var ctx = _inflight;$|&\n        Toybox.System.println("RL-ANTWORT upload " + code.toString() + " " + (data == null ? "null" : data.toString()));|' "$APP/source/Uploader.mc"
+    sed -i 's|^        _holtSchluessel = false;$|&\n        Toybox.System.println("RL-ANTWORT status " + code.toString() + " " + (data == null ? "null" : data.toString()));|' "$APP/source/Pair.mc"
+    [ "$(grep -c 'RL-ANTWORT' "$APP/source/Uploader.mc" "$APP/source/Pair.mc" | awk -F: '{s+=$2} END {print s}')" = 2 ] \
+        || fehler "Haken RL-ANTWORT nicht eingesetzt (zwei erwartet)"
+fi
 # Ausgabe erst sammeln: `| grep -q` schloesse die Pipe beim ersten Treffer,
 # und unter pipefail zaehlte das als Scheitern des Uebersetzens.
 BAU=$(bash "$P" bauen "$GERAET" "$APP/monkey.jungle" 2>&1) || true

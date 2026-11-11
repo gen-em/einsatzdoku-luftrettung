@@ -14,6 +14,19 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 4.5.1] — unveröffentlicht
+
+Schritt 28, Paket KG-06 (Backlog Nr. 573).
+
+### Behoben
+
+- **Uhr — eine Fehlerzahl ohne Antwort des Servers hielt die Uhr an.** Eine
+  401 oder 403 schickt auch die Anmeldeseite eines WLANs oder ein Proxy; die
+  Uhr hielt das für eine Abmeldung, hörte auf zu senden und begann die
+  30-Tage-Frist. Jetzt zählt nur die Antwort mit dem Fehlerfeld des
+  Servers, alles andere ist eine Störung und wird später wiederholt. Und
+  bevor die Frist die Pakete verwirft, versucht die Uhr es noch einmal.
+
 ## [Uhr 4.5.0] — unveröffentlicht
 
 Schritt 28, Paket KG-05 (Backlog Nr. 571).

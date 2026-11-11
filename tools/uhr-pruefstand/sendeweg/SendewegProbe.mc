@@ -7,7 +7,9 @@
 // diese Datei selbst vor.
 //
 // Anlass: Nr. 570 — Kopplung im Dienst, ungebundene laufende Pakete,
-// ungedeckeltes next_seq, wachsendes Wiederholungsstueck (KG-01).
+// ungedeckeltes next_seq, wachsendes Wiederholungsstueck (KG-01); Nr. 573 —
+// 401/403 ohne Fehlerfeld galten als Abmeldung, und die Frist raeumte ohne
+// letzten Versuch (KG-06).
 //
 // Je Fall eine Zeile "SENDEWEG ok|FEHL <fall> <was>", am Ende
 // "SENDEWEG ENDE <faelle> <fehlschlaege>". Jeder Fall beginnt mit leerem
@@ -66,6 +68,8 @@ module SendewegProbe {
         Uploader.gesperrt = null;
         Uploader.lastError = null;
         Uploader._busy = false;
+        Uploader._einmalTrotz = false;
+        Uploader._nichtVor = null;
         Pair.status = null;
         Pair.statusHint = null;
         seq = -1; n = -1; abgefangen = 0;
@@ -112,6 +116,11 @@ module SendewegProbe {
         else if (_schritt == 7) { _fall5b(); }
         else if (_schritt == 8) { _fall6(a); }
         else if (_schritt == 9) { _fall7(a); }
+        else if (_schritt == 10) { _fall8(a); }
+        else if (_schritt == 11) { _fall9(a); }
+        else if (_schritt == 12) { _fall10(a); }
+        else if (_schritt == 13) { _fall11a(a); }
+        else if (_schritt == 14) { _fall11b(); }
         else {
             (_t as Timer.Timer).stop();
             System.println("SENDEWEG ENDE " + _faelle.toString() + " " + _fehl.toString());
@@ -205,6 +214,65 @@ module SendewegProbe {
         _melde(ack instanceof Lang.Number && (ack as Lang.Number) <= 200, "next-seq-gedeckelt",
                "gesendet 200, quittiert " + (ack == null ? "nichts" : ack.toString()));
 
+    }
+
+    // 8. 401 ohne Fehlerfeld (ein Zwischenstueck): keine Abmeldung.
+    function _fall8(a as Lang.String) as Void {
+        _leer();
+        _koppeln(a);
+        _stueckAblegen("m-sw-401", 0);
+        Model.pendingMissions.add(_einsatz("m-sw-401"));
+        Uploader._send({ "kind" => "mission", "data" => Model.pendingMissions[0] });
+        Uploader.onResponse(401, null);
+        _melde(!Uploader.abgemeldet && Storage.getValue("abgem_seit") == null,
+               "401-ohne-feld-keine-abmeldung", "abgemeldet=" + Uploader.abgemeldet.toString());
+    }
+
+    // 9. 403 mit fremdem Rumpf (Proxy-Seite): keine Sperre.
+    function _fall9(a as Lang.String) as Void {
+        _leer();
+        _koppeln(a);
+        _stueckAblegen("m-sw-403", 0);
+        Model.pendingMissions.add(_einsatz("m-sw-403"));
+        Uploader._send({ "kind" => "mission", "data" => Model.pendingMissions[0] });
+        Uploader.onResponse(403, "<html>Forbidden</html>");
+        _melde(Uploader.gesperrt == null && Storage.getValue("abgem_seit") == null,
+               "403-ohne-feld-keine-sperre", "gesperrt=" + (Uploader.gesperrt == null ? "nein" : Uploader.gesperrt));
+    }
+
+    // 10. Gegenprobe: 401 mit `auth` ist eine Abmeldung.
+    function _fall10(a as Lang.String) as Void {
+        _leer();
+        _koppeln(a);
+        _stueckAblegen("m-sw-auth", 0);
+        Model.pendingMissions.add(_einsatz("m-sw-auth"));
+        Uploader._send({ "kind" => "mission", "data" => Model.pendingMissions[0] });
+        Uploader.onResponse(401, { "error" => "auth" });
+        _melde(Uploader.abgemeldet, "401-auth-ist-abmeldung", "abgemeldet=" + Uploader.abgemeldet.toString());
+    }
+
+    // 11a. Frist abgelaufen: erst ein Versuch, nichts geraeumt.
+    function _fall11a(a as Lang.String) as Void {
+        _leer();
+        _koppeln(a);
+        _stueckAblegen("m-sw-frist", 0);
+        var m = _einsatz("m-sw-frist");
+        m["final"] = true;
+        Model.pendingMissions.add(m);
+        Uploader.abgemeldet = true;
+        Storage.setValue("abgem_seit", Util.epochNow() - Const.PARK_FRIST_S - 100);
+        Uploader.syncAll();
+        _melde(Model.pendingMissions.size() == 1 && abgefangen > 0, "frist-erst-versuch",
+               "liste=" + Model.pendingMissions.size().toString() + " versuche=" + abgefangen.toString());
+    }
+
+    // 11b. ... wieder abgewiesen (mit Feld): der naechste Lauf raeumt.
+    function _fall11b() as Void {
+        Uploader.onResponse(401, { "error" => "auth" });
+        Uploader._busy = false;
+        Uploader.syncAll();
+        _melde(Model.pendingMissions.size() == 0, "frist-dann-geraeumt",
+               "liste=" + Model.pendingMissions.size().toString());
     }
 
     function _fall7(a as Lang.String) as Void {

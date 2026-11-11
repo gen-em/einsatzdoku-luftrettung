@@ -164,7 +164,12 @@ module Uploader {
 
     function abmeldungVergessen() as Void {
         Storage.deleteValue(ABLAGE_ABGEMELDET);
+        Storage.deleteValue(ABLAGE_LETZTER_VERSUCH);
     }
+
+    /* Der letzte Versuch nach Ablauf der Frist hat eine Antwort mit
+     * Fehlerfeld bekommen (seit Uhr 4.5.1, KG-06). */
+    const ABLAGE_LETZTER_VERSUCH = "abgem_versucht";
 
     /* Bis wann darf die Uhr die Pakete noch halten? null = keine Frist laeuft.
      * Fuer die Sync-Seite. */
@@ -174,9 +179,23 @@ module Uploader {
         return (v as Lang.Number) + Const.PARK_FRIST_S;
     }
 
+    /* VOR DEM RAEUMEN NOCH EIN VERSUCH (seit Uhr 4.5.1, KG-06; JSON-Vertrag
+     * 5, E-KA-26). Bis Uhr 4.5.0 raeumte der erste Sendelauf nach der Frist
+     * sofort -- auch dann, wenn das Geraet im Web laengst wieder aktiv war
+     * und die Uhr es nur nicht erfahren hatte. Jetzt geht zuerst ein
+     * Versuch hinaus, auch gegen die Marke (`_einmalTrotz`). Kommt 200,
+     * ist die Frist vergessen; kommt wieder 401/403 MIT Fehlerfeld, raeumt
+     * der naechste Lauf. Ohne Antwort (kein Telefon) bleibt alles liegen.
+     * Ohne Zugangsdaten oder Schluessel kann kein Versuch hinaus; dann wird
+     * geraeumt wie bisher. */
     function abmeldeFristPruefen() as Void {
         var bis = abmeldeFristBis();
         if (bis == null || Util.epochNow() <= bis) { return; }
+        var kannSenden = hasCredentials() && Huelle.hatSchluessel();
+        if (kannSenden && !true.equals(Storage.getValue(ABLAGE_LETZTER_VERSUCH))) {
+            _einmalTrotz = true;
+            return;
+        }
         var refs = [] as Lang.Array<Lang.String>;
         for (var i = 0; i < Model.pendingMissions.size(); i++) {
             refs.add(Model.pendingMissions[i]["ref"] as Lang.String);
@@ -712,7 +731,7 @@ module Uploader {
                 if (weg) { Model.save(); }
             }
             _next();   // weitere offene Chunks/Jobs
-        } else if (code == 401 || code == 403) {
+        } else if ((code == 401 || code == 403) && vertragsAbweisung(code, data)) {
             /* DAS GERAET IST ABGEMELDET ODER GESPERRT, NICHT DAS PAKET
              * ABGEWIESEN.
              *
@@ -725,6 +744,10 @@ module Uploader {
              * Fiele das in denselben Zweig wie eine Stoerung, wuerde es
              * endlos wiederholt. */
             abweisungMerken(code, data);
+            var bis = abmeldeFristBis();
+            if (bis != null && Util.epochNow() > bis) {
+                Storage.setValue(ABLAGE_LETZTER_VERSUCH, true);   // der letzte Versuch ist gemacht
+            }
             lastError = null;
             _busy = false;
         } else if (code == 400 && _dauerhaftAbgewiesen(data)) {
@@ -758,6 +781,25 @@ module Uploader {
             lastError = "Upload " + code.toString();
             _busy = false;   // spaeter erneut (naechster syncAll-Ausloeser)
         }
+    }
+
+    /* IST DAS EINE ABWEISUNG NACH VERTRAG? (seit Uhr 4.5.1, KG-06)
+     *
+     * 401 und 403 schickt auch ein Zwischenstueck -- die Anmeldeseite eines
+     * WLANs, ein Proxy --, und zwar ohne den Rumpf des Servers. Bis Uhr
+     * 4.5.0 hielt die Uhr jede solche Zahl fuer eine Abmeldung, hielt an und
+     * begann die 30-Tage-Frist. Endgueltig ist jetzt nur, was das Feld
+     * `error` des Vertrags traegt: 401 `auth`, 403 `device_disabled` oder
+     * `konto` (JSON-Vertrag 5, E-KA-26). Dieselbe Zahl ohne Feld ist eine
+     * Stoerung: spaeter unveraendert erneut. Im Simulator reicht Connect IQ
+     * den Rumpf beider Codes durch (Rundlauf, 11.11.2026); auf einer echten
+     * Uhr ist es nicht gemessen. */
+    function vertragsAbweisung(code as Lang.Number, data as Lang.Object or Null) as Lang.Boolean {
+        if (!(data instanceof Lang.Dictionary)) { return false; }
+        var e = data["error"];
+        if (code == 401) { return "auth".equals(e); }
+        if (code == 403) { return "device_disabled".equals(e) || "konto".equals(e); }
+        return false;
     }
 
     /* 401 oder 403 merken -- vom Upload und vom Nachholen des Schluessels

@@ -11278,3 +11278,17 @@ zutreffen.
      Erledigt 11.11.2026 mit Uhr 4.5.0 (Schritt 28, KG-05): Schlüssel auch
      bei 403, beim Öffnen der Sync-Seite zuerst; Rundlauf hält das Senden
      statt zu deaktivieren.
+
+573. **Die Garmin-Uhr hielt jede 401/403 für eine Abmeldung und räumte nach der Frist ohne letzten Versuch.** · gehört zu: 28 · Stand: erledigt · seit 11.11.2026
+     *Aufgenommen 11.11.2026 als Anlass der Fälle 8 bis 11 der Probe
+     `sendeweg` von KG-06 (Audit KA, F-KA-18; JSON-Vertrag 5, E-KA-26).*
+     `Uploader.onResponse()` und `Pair.onSchluessel()` werteten 401 und 403
+     ohne Blick auf den Rumpf; die Anmeldeseite eines WLANs genügte, und
+     die 30-Tage-Frist begann. `abmeldeFristPruefen()` verwarf nach Ablauf
+     sofort. Gemessen: Im Simulator reicht Connect IQ den Rumpf beider Codes
+     durch (`{error=>auth}`, `{error=>device_disabled}`). *Weg:* nur mit
+     Fehlerfeld endgültig, vor dem Räumen ein Versuch. *Abnahme:* Probe rot
+     gegen Uhr 4.5.0; Gerätetest, ob die Fenix den Rumpf durchreicht.
+     Erledigt 11.11.2026 mit Uhr 4.5.1 (Schritt 28, KG-06):
+     vertragsAbweisung(), letzter Versuch vor dem Räumen; Probe sendeweg, 13
+     Prüfungen.

@@ -316,7 +316,7 @@
     "uhr-sendeweg": {
       "aufruf": "bash tools/uhr-pruefstand/sendeweg/sendeweg.sh fenix6pro",
       "braucht": "uhr",
-      "bemerkung": "Konzept KG (KG-01, Nr. 570). Eine Prueffassung haelt jede Anfrage vor dem Absenden an und spielt die Antworten des Servers selbst vor, ohne Server: Kopplung im Dienst, Bindung des laufenden Einsatzes, gleiche Stueckgroesse nach verlorener Antwort, Deckel fuer next_seq. 8 Pruefungen, rund 1 min."
+      "bemerkung": "Konzept KG (KG-01, Nr. 570). Eine Prueffassung haelt jede Anfrage vor dem Absenden an und spielt die Antworten des Servers selbst vor, ohne Server: Kopplung im Dienst, Bindung des laufenden Einsatzes, gleiche Stueckgroesse nach verlorener Antwort, Deckel fuer next_seq; seit KG-06 (Nr. 573) 401/403 nur mit Fehlerfeld und der letzte Versuch vor dem Raeumen. 13 Pruefungen, rund 1 min."
     },
     "uhr-syncseite": {
       "aufruf": "bash tools/uhr-pruefstand/syncseite/syncseite.sh",
