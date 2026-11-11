@@ -308,6 +308,7 @@ ui_kopf(['menue' => false]);
   </main>
 </div>
 <script src="<?= asset('assets/crypto.js') ?>"></script>
+<script src="<?= asset('assets/inhalt2.js') ?>"></script>
 <?php /* DASSELBE VERFAHREN WIE DIE ANMELDUNG. Das Passwort
          verlaesst den Browser nicht: Salz holen, je Rundenzahl das Token
          ableiten, nur die Token schicken. Anders als die Anmeldung legt diese
