@@ -1,16 +1,24 @@
 // NAdoku — Oberflaeche 3: Reanimation (Anforderungen 1.4)
 //
-// Tasten: kurz UP/DOWN Navigation
-//         kurz START  ohne laufende Rea: Rea beginnen
-//                     mit laufender Rea: Untermenue oeffnen
-//         lang START  mit laufender Rea: 2:00-Countdown neu starten
-//                     ohne laufende Rea: ohne Funktion
-//         lang UP Adrenalin | lang DOWN Rhythmuskontrolle
-//         BACK verlaesst die Oberflaeche
-// Der haeufigste Griff unter Reanimationsbedingungen ist das Dokumentieren
-// eines Ereignisses — deshalb liegt das Untermenue auf dem kurzen Druck.
-// Auf Geraeten ohne UP/DOWN sind Adrenalin und Rhythmuskontrolle nur ueber
-// das Untermenue erreichbar (docs/Geraete-Eingabe.md).
+// Tasten (seit Uhr 4.5.0, Konzept KG, E-KG-03 bis -10):
+//   ohne Rea      kurz START  Rea beginnen
+//                 kurz UP/DOWN Navigation, BACK Hauptanzeige
+//   Rea laeuft    kurz START  Rhythmuskontrolle + Countdown neu
+//                 lang START  Untermenue
+//                 UP          Adrenalin (kurz oder lang, gleich)
+//                 DOWN        Defibrillation + Countdown neu (kurz oder lang)
+//                 BACK        Hauptanzeige — die einzige Taste, die die
+//                             Seite verlaesst; UP/DOWN und Wischen blaettern
+//                             nicht
+//   Rea pausiert  kurz START  Uebersicht (fortsetzen oder beenden)
+//                 lang START  Untermenue; UP/DOWN ohne Wirkung; BACK wie oben
+// Die haeufigste Handlung, die Rhythmuskontrolle alle zwei Minuten, liegt auf
+// dem einfachsten Druck. UP und DOWN buchen beim Loslassen oder nach 1 s
+// Halten, nicht beim Druecken: Die Tastensperre der Uhr beginnt mit UP, und
+// sie soll kein Adrenalin buchen (Input.mc). Auf Geraeten ohne UP/DOWN sind
+// Adrenalin und Defibrillation nur ueber das Untermenue erreichbar
+// (docs/Geraete-Eingabe.md). Jede Buchung laeuft ueber Cpr.buchen() und
+// damit durch die 10-s-Sperre.
 //
 // Aufbau der Seite: oberes und unteres Feld je 25 % der Displayhoehe, das
 // mittlere 50 %. Jedes Feld traegt seinen Inhalt vertikal zentriert.
@@ -133,31 +141,56 @@ class CprDelegate extends ActionDelegate {
     // true: lange UP/DOWN-Druecke selbst verarbeiten (Adrenalin, Rhythmus)
     function initialize() { ActionDelegate.initialize(true); }
 
-    function actPagePrev() as Lang.Boolean { Nav.go(-1); return true; }
-    function actPageNext() as Lang.Boolean { Nav.go(1); return true; }
-
-    function actSelectShort() as Lang.Boolean {
-        if (Cpr.active) { _pushMenu(); }          // Ereignis dokumentieren
-        else            { Cpr.start(); }          // Reanimation beginnen
+    /* BLAETTERN NUR OHNE REA (E-KG-09). Waehrend einer laufenden oder
+     * pausierten Rea verlaesst nur BACK die Seite; UP/DOWN buchen, und das
+     * Wischen eines Touchgeraets blaettert ebenfalls nicht. */
+    function actPagePrev() as Lang.Boolean {
+        if (Cpr.active) { return true; }
+        halteAbbrechen();
+        Nav.go(-1);
+        return true;
+    }
+    function actPageNext() as Lang.Boolean {
+        if (Cpr.active) { return true; }
+        halteAbbrechen();
+        Nav.go(1);
         return true;
     }
 
+    function actUpKurz() as Lang.Boolean {
+        if (Cpr.active) { return actMarkA(); }
+        return actPagePrev();
+    }
+    function actDownKurz() as Lang.Boolean {
+        if (Cpr.active) { return actMarkB(); }
+        return actPageNext();
+    }
+
+    function actSelectShort() as Lang.Boolean {
+        if (!Cpr.active)     { Cpr.start(); }                        // Rea beginnen
+        else if (Cpr.paused) { CprMenuDelegate.pushResusOverview(); } // fortsetzen oder beenden
+        else                 { Cpr.buchen(Const.R_RHYTHMUS); }       // + Countdown neu
+        return true;
+    }
+
+    function langNachLoslassen() as Lang.Boolean { return true; }   // s. Input.mc
+
     function actSelectLong() as Lang.Boolean {
-        if (Cpr.active && !Cpr.paused) { Cpr.restartCycle(); }   // sonst ohne Funktion
+        if (Cpr.active) { _pushMenu(); }      // ohne Rea ohne Funktion
         return true;
     }
 
     function actMarkA() as Lang.Boolean {
-        if (Cpr.active && !Cpr.paused) { Cpr.markAdrenalin(); }
+        if (Cpr.active && !Cpr.paused) { Cpr.buchen(Const.R_ADRENALIN); }
         return true;
     }
 
     function actMarkB() as Lang.Boolean {
-        if (Cpr.active && !Cpr.paused) { Cpr.markRhythmus(); }
+        if (Cpr.active && !Cpr.paused) { Cpr.buchen(Const.R_DEFI); }   // + Countdown neu
         return true;
     }
 
-    function actBack() as Lang.Boolean { Nav.goTo(:clock); return true; }
+    function actBack() as Lang.Boolean { halteAbbrechen(); Nav.goTo(:clock); return true; }
 
     function _pushMenu() as Void {
         var v = new CprMenuView();
@@ -172,13 +205,12 @@ class CprDelegate extends ActionDelegate {
 class CprMenuView extends WatchUi.View {
 
     // [Label, Farbe, ID] — Reihenfolge und Farben wie im Rea-Protokoll.
-    // Das Menue oeffnet auf "Timer neu starten". Ein Schritt nach OBEN landet
-    // per Umlauf auf "Übersicht", zwei Schritte auf "Rea BEENDEN".
-    // "Timer neu starten" ist weiss (reiner Timer-Befehl), "Übersicht" blau —
-    // sonst waeren die beiden Nicht-Ereignisse an der Umlaufgrenze nicht
-    // auseinanderzuhalten. Die Farben bleiben den Ereignissen vorbehalten.
+    // Das Menue oeffnet auf "Amiodaron" (E-KG-18): Rhythmuskontrolle,
+    // Defibrillation und Adrenalin liegen auf Tasten, gesucht wird hier vor
+    // allem das Uebrige. "Timer neu starten" ist seit Uhr 4.5.0 fort
+    // (E-KG-07); "Übersicht" ist blau, "Rea BEENDEN" rot — die Farben der
+    // uebrigen bleiben den Ereignissen vorbehalten.
     static const ITEMS = [
-        ["Timer neu starten", 0xFFFFFF, :restart],           // weiss
         ["Rhythmuskontrolle", 0xFFFF00, Const.R_RHYTHMUS],   // gelb
         ["Defibrillation",    0xFFAA00, Const.R_DEFI],       // bernstein
         ["Adrenalin",         0xFF55AA, Const.R_ADRENALIN],  // pink
@@ -192,7 +224,8 @@ class CprMenuView extends WatchUi.View {
         ["Übersicht",         Ui.BLAU,  :overview]           // Markenblau
     ];
 
-    var index as Lang.Number = 0;
+    const START_INDEX = 3;                     // "Amiodaron"
+    var index as Lang.Number = START_INDEX;
 
     function initialize() { View.initialize(); }
 
@@ -267,9 +300,7 @@ class CprMenuDelegate extends TastenDelegate {
         if (Input.beruehrungVerwerfen()) { return true; }
         var id = CprMenuView.ITEMS[_v.index][2];
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
-        if (id == :restart) {
-            if (Cpr.active && !Cpr.paused) { Cpr.restartCycle(); }
-        } else if (id == :overview) {
+        if (id == :overview) {
             pushResusOverview();
         } else if (id == :stopRec) {
             // Kein Bestaetigungsdialog mehr: anhalten und die Uebersicht
@@ -277,14 +308,11 @@ class CprMenuDelegate extends TastenDelegate {
             // mit den dokumentierten Zeiten vor Augen.
             Cpr.pause();
             pushResusOverview();
-        } else if (Const.R_RHYTHMUS.equals(id)) {
-            Cpr.markRhythmus();                           // inkl. Countdown-Reset
-        } else if (Const.R_DEFI.equals(id)) {
-            Cpr.markDefi();                               // inkl. Countdown-Reset
-        } else if (Const.R_ADRENALIN.equals(id)) {
-            Cpr.markAdrenalin();
         } else {
-            Cpr.markEvent(id as Lang.String);
+            // Derselbe Weg wie die Tasten: Sperre, Countdown-Neustart bei
+            // Rhythmuskontrolle und Defibrillation, Vibration. In der Pause
+            // bucht er nichts.
+            Cpr.buchen(id as Lang.String);
         }
         return true;
     }

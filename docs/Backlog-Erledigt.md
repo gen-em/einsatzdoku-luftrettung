@@ -11249,3 +11249,17 @@ zutreffen.
      Erledigt 10.11.2026 mit Uhr 4.4.0 (Schritt 28, KG-01): Kopplungssperre
      im Dienst, Bindung und Prüfung der laufenden Pakete, Deckel für
      next_seq, identische Wiederholung; Probe sendeweg.
+
+571. **Die Reanimation der Garmin-Uhr verlangte zu viele Griffe und bestätigte Buchungen nicht spürbar.** · gehört zu: 28 · Stand: erledigt · seit 11.11.2026
+     *Aufgenommen 11.11.2026 als Anlass der Probe `rea` von KG-05 (Wunsch
+     der BetreiberIn, Fenix 6 Pro).* Die Rhythmuskontrolle lag auf lang
+     DOWN, das Menü auf kurz START, ein Countdown-Neustart ohne Eintrag auf
+     lang START. Kurz UP/DOWN blätterte auch während einer Rea, und die
+     verlassene Seite buchte danach Adrenalin oder Rhythmuskontrolle
+     (`ActionDelegate`, Halte-Uhr). Der Doppelpuls des Countdown-Neustarts
+     brach die Bestätigung ab; vor dem Zyklusende gab es keine Erinnerung.
+     *Weg:* Belegung nach E-KG-03 bis -10, 10-s-Sperre, Muster in einem
+     Aufruf, Erinnerungen bei 0:30 und 0:10. *Abnahme:* Simulatorprobe, rot
+     gegen Uhr 4.4.0; Gerätetest auf der Fenix 6 Pro.
+     Erledigt 11.11.2026 mit Uhr 4.5.0 (Schritt 28, KG-05): Belegung,
+     Sperre, Muster und Erinnerungen; Menü öffnet beim Loslassen; Probe rea.

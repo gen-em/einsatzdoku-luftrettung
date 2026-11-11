@@ -10243,11 +10243,12 @@ gilt für jedes Konto „wie das Gerät"; Anmeldung und Profil funktionieren.
 | `NAdokuApp.mc` | Einstieg; Restore-Kette bei Neustart (Model → Track → Cpr → Sync). Hieß bis Uhr 2.0.0 `HemsApp.mc` |
 | `Model.mc` | Dienst-Klammer, Phasenlogik, Einsatz-/Segment-Lebenszyklus, Rea-Sitzungen, Persistenz (`state`) |
 | `Track.mc` | GPS (15 m/10 s/1 s-Ausdünnung), Distanz/Anstieg, Anzeige-Polylinie (Cap 1000, Dichte-Halbierung), **Flash-Chunks à 200 Punkte**; `restore()` lädt Teil-Chunks zurück in den Puffer (verlustfrei) |
-| `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart); drei Zustände: aus / laufend / pausiert |
+| `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart); drei Zustände: aus / laufend / pausiert. **Seit Uhr 4.5.0** (KG-05): `buchen()` ist der eine Weg für Tasten und Menü — 10-s-Sperre je Ereignisart (`SPERRE_MS`, nur im Speicher), Countdown-Neustart bei Rhythmuskontrolle und Defibrillation, Vibration; `restartCycle()` vibriert nicht mehr selbst; Erinnerungen bei 0:30 und 0:10 im Tick, nach einem Neustart nicht nachgeholt |
 | `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.4. **Seit Uhr 4.0.0** sendet er nur verschlossen (`track` mit `huelle`, `ort_huelle`, Phasen ohne Koordinate, keine `resus_sessions`) und ohne Kontoschlüssel oder bei gescheitertem Selbsttest gar nicht; die Marke `bad_<ref>` trägt den Zeitpunkt, `parkFristPruefen()` räumt nach `PARK_FRIST_S` = 30 Tagen (E-S11-11). **Seit Uhr 4.1.0** (R17-21): die Frist auch für „abgemeldet" (`Storage 'abgem_seit'`, Zeitpunkt der ersten 401/403; `abmeldeFristPruefen()` vor jedem Sendelauf verwirft danach alle wartenden Pakete, E-R17-22); das bestätigte Paket geht über seine Referenz aus der Liste, nicht über einen Listenplatz (F-R17-52); `http://` wird zu `https://` (F-R17-11); Zugangsdaten nur aus `Storage 'cred'` — der Alt-Weg über die App-Einstellungen ist fort (E-R17-21). **Seit Uhr 4.2.0** (Konzept GR): 401 → `abgemeldet`, 403 → `gesperrt` mit Grund aus dem Körper (`abweisungMerken()`, auch aus `Pair.onSchluessel`), beide halten an (`angehalten()`); `syncAllEinmalTrotz()` versucht es einmal trotz der Marke — beim Erscheinen der Sync-Seite und beim Dienstende, nicht im Zwei-Sekunden-Takt; 429/503/507 setzen `_nichtVor` (feste Zeiten `Const.WARTEN_*`, weil Connect IQ keine Kopfzeilen liefert), und vor ihm sendet kein Anlass. **Seit Uhr 4.3.0**: `bindungPruefen()` vor jedem Sendelauf löst eine Bindung an denselben Schlüssel und verwirft nach Ablauf der Frist; `_findJob()` überspringt gebundene Pakete eines anderen Kontos (`istFremd()`), `fremdeZahl()` und `fremdeVerwerfen()` dienen der Sync-Seite. **Seit Uhr 4.4.0** (KG-01, Nr. 570): `_findJob()` prüft auch den laufenden Einsatz und das laufende Ruhestück auf `istFremd()`; `binden()` nimmt sie mit (`laufendeRefs()`), `fremdeVerwerfen()` verwirft sie nie und lässt ihre Bindung stehen; `onResponse()` quittiert höchstens `seq_from` plus die gesendeten Punkte und nichts ohne `next_seq` (F-KA-18); ein unquittiertes Stück steht mit Anfang und Größe in `Storage 'stk_<ref>'` und wird identisch wiederholt (F-KA-07). Probe: `tools/uhr-pruefstand/sendeweg/` |
 | `Huelle.mc` | **Seit Uhr 4.0.0** (S11-08): die Gerätehülle (Format: Kopf von `tools/proben/huelle/referenz.py`) — Bausteine aus der Krypto-Probe, `spurstueck()` (14 Byte je Punkt), `einsatz()` (JSON, Zeiten seit Beginn), Kontoschlüssel in `Storage 'kschl'`, Selbsttest `bereit()` gegen `HuelleVektor.mc` (erzeugt, Fall „kurz"): misst die Byteordnung des ECDH-Geheimnisses und das ganze Prüfwort, Ergebnis je Fassung und Firmware in `Storage 'kpruef'` (E-S11-30, -78) — **seit Uhr 4.1.0 nur `be` oder `le`**: „kaputt" gilt bis zum nächsten Start und wird dann neu gemessen, `pruefungVergessen()` beim Trennen (F-R17-53) |
-| `Input.mc` | Eingabemodell: `ActionDelegate` übersetzt Tasten, Wischgesten und Langdrücke einmal zentral in Aktionen (s. Abschnitt 5.1); `TastenDelegate` ist die Basis der selbst gezeichneten Menüs und Warteseiten; `beruehrungVerwerfen()` setzt den Schalter `touchEnabled` um (seit Uhr 4.1.0, F-R17-68) |
+| `Input.mc` | Eingabemodell: `ActionDelegate` übersetzt Tasten, Wischgesten und Langdrücke einmal zentral in Aktionen (s. Abschnitt 5.1); `TastenDelegate` ist die Basis der selbst gezeichneten Menüs und Warteseiten; `beruehrungVerwerfen()` setzt den Schalter `touchEnabled` um (seit Uhr 4.1.0, F-R17-68). **Seit Uhr 4.5.0**: `actUpKurz()`/`actDownKurz()` für den kurzen, selbst verfolgten UP/DOWN-Druck (Vorgabe: blättern), `halteAbbrechen()` vor jedem Seitenwechsel, `langNachLoslassen()` — ein langer START wirkt erst beim Loslassen, damit das Loslassen nicht an ein eben geöffnetes Menü geht |
 | `DeviceProfile.mc` | je Profil eine eigene Fassung in `source-tasten5/` bzw. `source-tasten3/`; liefert `HAS_UP_DOWN` und die Bedienhinweise |
+| `Util.mc` | Zeit, Formate, Vibration; **seit Uhr 4.5.0** die Muster der Reanimation `reaKurz(n)`/`reaLang(n)` (100 %, je eines in einem Aufruf, E-KG-11 bis -13) |
 | `Ui.mc` | Geometrie relativ zur Displayhöhe (`s()` liefert bei 260 exakt den Ausgangswert), Markenfarben, Rea-Marker |
 | `Nav.mc` | Pager: Uhr → Tempo → Statistik → Sync → Rea |
 | `StartView.mc` | Startbildschirm „Dienst beginnen"; Hinweise zu Server-Adresse und Kopplung |
@@ -10304,16 +10305,20 @@ dieser Abschnitt beschreibt, was die App daraus macht.
 
 | Eingabe | Hauptseiten | Reanimationsseite | Listen und Menüs |
 |---|---|---|---|
-| kurz UP | Seite zurück | Seite zurück | Eintrag hoch |
-| kurz DOWN | Seite vor | Seite vor | Eintrag runter |
-| kurz START | — | Rea beginnen bzw. Untermenü | Eintrag wählen |
-| lang START | Schnellmenü; Sync-Seite: Kopplung | Countdown neu starten | — |
+| kurz UP | Seite zurück | ohne Rea Seite zurück; mit Rea Adrenalin | Eintrag hoch |
+| kurz DOWN | Seite vor | ohne Rea Seite vor; mit Rea Defibrillation + Countdown neu | Eintrag runter |
+| kurz START | — | Rea beginnen; mit Rea Rhythmuskontrolle + Countdown neu; pausiert Übersicht | Eintrag wählen |
+| lang START | Schnellmenü; Sync-Seite: Kopplung | mit Rea Untermenü, öffnet beim Loslassen | — |
 | lang UP | — | Adrenalin | — |
-| lang DOWN | — | Rhythmuskontrolle | — |
-| BACK | App verlassen (Abfrage) | zurück zur Uhrseite | Liste schließen |
+| lang DOWN | — | Defibrillation + Countdown neu | — |
+| BACK | App verlassen (Abfrage) | zurück zur Uhrseite — während einer Rea der einzige Weg von der Seite | Liste schließen |
 | START + beliebige Taste | Tastensperre, wirkungslos | Tastensperre, wirkungslos | — |
 
-LIGHT wird auf beiden Geräten nicht zugestellt und ist unbelegt.
+LIGHT wird auf beiden Geräten nicht zugestellt und ist unbelegt. Die
+Reanimationsseite gilt so seit Uhr 4.5.0 (KG-05); bis Uhr 4.4.0 öffnete kurz
+START das Untermenü, lang START startete den Countdown neu, lang DOWN war die
+Rhythmuskontrolle, und UP/DOWN blätterten auch während einer Rea. Während
+einer Rea blättert auch das Wischen der Venu dort nicht.
 
 **Profil B — drei Tasten, Touch** (`venu3s`)
 
@@ -10336,9 +10341,10 @@ Ersatz für fehlende Tasten:
 - **UP/DOWN** werden durch Wischen ersetzt. Das System leitet Wischgesten
   selbst in `onNextPage`/`onPreviousPage` um; eigener Wisch-Code ist weder
   nötig noch möglich (das Roh-Ereignis wird gar nicht erst zugestellt).
-- **Lang UP und lang DOWN** haben auf der Venu keine Entsprechung. Adrenalin
-  und Rhythmuskontrolle sind dort nur über das Rea-Untermenü erreichbar —
-  ein Bedienschritt mehr.
+- **UP und DOWN der Reanimationsseite** haben auf der Venu keine
+  Entsprechung. Adrenalin und Defibrillation sind dort nur über das
+  Rea-Untermenü erreichbar — ein Bedienschritt mehr (E-KG-08); die
+  Rhythmuskontrolle liegt wie überall auf kurz Action.
 - **Der lange Druck liegt bewusst doppelt**, auf Action *und* Zurück. Grund:
   Das Handbuch der Venu 3 nennt ein Steuerungsmenü nach zwei Sekunden Halten
   der Action-Taste. Im Simulator trat es nicht auf, auf echter Hardware ist es

@@ -15,8 +15,8 @@ derselbe Code und dieselbe Instanz.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/vigilant-cray-9riw34`, Backlog-Spanne 570–579 |
-| In Arbeit | **KG-01** — fertig, Uhr 4.4.0, Pull Request offen; wartet auf Merge und Tag `uhr-v4.4.0`. Danach KG-02 |
-| Erledigt | — |
+| In Arbeit | **KG-05** — fertig, Uhr 4.5.0, im selben Pull Request #168 wie KG-01 (E-KG-20); wartet auf Merge und Tag `uhr-v4.5.0`. Danach KG-02 |
+| Erledigt | **KG-01** (Uhr 4.4.0, PR #168, noch nicht gemergt) |
 | Hakt | nichts. Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05) |
 | Gelesen gegen | Commit `0be2092` · Uhr 4.3.3; die vier Befunde von KG-01 am 10.11.2026 an der heutigen Stelle bestätigt (Abschnitt 4) |
 
@@ -64,6 +64,10 @@ abonnieren, anhalten.
 | E-KG-13 | **Alle Vibrationen im Rea-Modus mit 100 % Stärke** | 10.11.2026, BetreiberIn |
 | E-KG-14 | **Ein Druck, den die 10-s-Sperre abweist, gibt kein Zeichen** (Antwort auf Q-KG-01). Ein zweites kurzes Muster neben „1 kurz" wäre unter Stress und mit Handschuh kaum zu unterscheiden | 10.11.2026, BetreiberIn |
 | E-KG-15 | **KG-01 hebt die Uhr auf 4.4.0** (Nebenstufe, wie im Auftrag), obwohl es Behebungen sind: Das Koppeln im Dienst ist ein veränderter Bedienweg | 10.11.2026, BetreiberIn (Auftrag) |
+| E-KG-17 | **UP und DOWN buchen beim Loslassen oder nach 1 s Halten, nicht beim Drücken.** Für die Bedienung gleich (jede Druckdauer bucht, E-KG-05); beim Drücken buchte die Tastensperre der Uhr, die mit UP beginnt, jedes Mal ein Adrenalin. Abweichung vom zuerst Gesagten („beim Drücken"), der BetreiberIn gemeldet | 11.11.2026, Umsetzung |
+| E-KG-18 | **Das Rea-Menü öffnet auf Amiodaron** — Rhythmuskontrolle, Defibrillation und Adrenalin liegen auf Tasten | 11.11.2026, BetreiberIn |
+| E-KG-19 | **In der Pause:** kurz START öffnet die Übersicht (fortsetzen oder beenden), UP und DOWN buchen nichts, lang START öffnet das Menü | 11.11.2026, BetreiberIn |
+| E-KG-20 | **KG-05 kommt in denselben Pull Request wie KG-01** (#168), statt auf dessen Merge zu warten — ein eigener PR vom selben Zweig wäre nicht möglich gewesen | 11.11.2026, BetreiberIn |
 | E-KG-16 | **Die Probe zu KG-01 läuft ohne Server** (`tools/uhr-pruefstand/sendeweg/`): Die Prüffassung hält jede Anfrage vor dem Absenden an und spielt die Antworten selbst vor. Ein verlorenes Paket und eine falsche Quittung lassen sich mit der echten Anlage nicht gezielt erzeugen; was `ingest.php` daraus macht, misst weiter `uhr-rundlauf` | 10.11.2026, Umsetzung |
 
 ---
@@ -132,7 +136,7 @@ Intubation, Sonographie, ROSC, Tod, Rea BEENDEN (Pause → Übersicht),
 Zyklusende 3 × 0,3 s (90 %) und 2 s später 2 × 0,3 s (75 %) in einem
 zweiten Aufruf.
 
-### 5.2 Danach
+### 5.2 Danach (gebaut 11.11.2026, Uhr 4.5.0)
 
 | Bedienung (Rea läuft) | Wirkung | Vibration |
 |---|---|---|
@@ -145,10 +149,39 @@ zweiten Aufruf.
 | Menü: Rea BEENDEN / Übersicht | wie heute | keine |
 | 0:30 / 0:10 / 0:00 | Erinnerung | 1 / 2 / 3 × 2 s |
 
-Ohne Rea: kurz START beginnt (2 kurz), UP/DOWN blättern. Alle
+Ohne Rea: kurz START beginnt (2 kurz), UP/DOWN blättern. Pausiert
+(E-KG-19): kurz START Übersicht, lang START Menü, UP/DOWN nichts. Alle
 Vibrationen 100 %. Die 10-s-Sperre gilt je Ereignis über alle Wege.
 Die Schnittstelle zum Server ändert sich nicht: dieselben Ereignistypen,
 Pause und Ende werden weiterhin nicht übertragen.
+
+### 5.3 Wie gebaut
+
+- `Cpr.buchen(type)`: der eine Weg für Tasten und Menü — Sperre je Art
+  (`SPERRE_MS` 10 000, `System.getTimer()`, nur im Speicher), Neustart bei
+  Rhythmuskontrolle und Defibrillation, Muster. `start()` setzt die Sperre
+  der Rhythmuskontrolle gleich mit. `restartCycle()` vibriert nicht mehr.
+  Erinnerungen im Tick; `restore()` holt keine verpasste nach.
+- `Util.reaKurz(n)`, `Util.reaLang(n)`: 0,2 s/0,2 s und 2 s/0,6 s, 100 %,
+  ein Aufruf. `Model.resusEvent()` vibriert nicht mehr selbst.
+- `ActionDelegate`: `actUpKurz()`/`actDownKurz()` (Vorgabe blättern),
+  `halteAbbrechen()`, `langNachLoslassen()`. Die übrigen Seiten verhalten
+  sich wie vorher.
+- `CprDelegate`: Belegung nach 5.2; `actPagePrev/Next` (Behaviors, auch
+  Wischen) blättern nur ohne Rea. `CprMenuView`: ohne „Timer neu starten",
+  `START_INDEX` 3.
+- Dokumente: Handbuch 2.0 und 2.3, Technik.md 5.1 und Dateitabelle,
+  Geräte-Eingabe 2 und 6, Changelog, Backlog Nr. 571 (angelegt und erledigt).
+  F-KG-03 ist mit dem neuen Abschnitt 2.3 erledigt (Ring in der Pause blau,
+  keine fünf Pulse mehr).
+
+**Gerätetests (für KG-04):** Fenix 6 Pro — (1) kurz UP/DOWN während einer
+Rea: kein Seitenwechsel, genau ein Eintrag (F-KG-01); (2) Rhythmuskontrolle
+und Defibrillation: zwei kurze Pulse spürbar; (3) 2-s-Pulse nicht gekürzt,
+1/2/3 unterscheidbar; (4) Erinnerungen bei 0:30/0:10/0:00 auch bei App im
+Hintergrund; (5) lang START öffnet das Menü auf Amiodaron, ohne etwas zu
+buchen; (6) Tastensperre während einer Rea bucht nichts; (7) Venu: lang
+Action und lang Zurück öffnen das Menü.
 
 ---
 
@@ -162,6 +195,8 @@ Pause und Ende werden weiterhin nicht übertragen.
 | F-KG-04 | **Die App vibriert auch, wenn sie nicht im Vordergrund ist** (Countdown-Ende) | Fenix 6 Pro, BetreiberIn, 10.11.2026 | eingetragen in `docs/Geraete-Eingabe.md` 2 (10.11.2026) |
 | F-KG-05 | **Eine neue Uhr-Probe braucht zwei Dateien außerhalb der Grenzen von KG:** ihre Zeile in `tools/pruefstand/pruefablauf.json` und die daraus erzeugte Tabelle in `docs/Pruefablauf.md` 4 — ohne sie läuft die Probe nie, und `bestand` wäre rot (`Pruefablauf.md` 6.12). Berührt mit der kleinsten Änderung (ein Eintrag, ein Name im Muster `uhr`); der BetreiberIn gemeldet | 10.11.2026 | KG-01 |
 | F-KG-06 | **Handbuch 13 trug denselben falschen Satz wie `Pair.mc`** (F-KA-43): ein abgeschwatzter Code löse an der Uhr nichts aus. Wer ihn hat, trägt ihn im eigenen Konto ein, und die Uhr fragt mit dessen Adresse — das zweite Tor hält nur, wenn die Trägerin liest | Lesen, 10.11.2026 | berichtigt in KG-01 |
+| F-KG-08 | **Das Loslassen eines langen START ging an das eben geöffnete Rea-Menü und wählte dort den Eintrag unter dem Cursor** (Simulator: Amiodaron gebucht). Das Menü öffnet deshalb erst beim Loslassen, und die Seite schluckt es selbst (`langNachLoslassen()`). **Das Schnellmenü der Hauptanzeige öffnet nach demselben Muster** auf dem langen START — ob es dort einen Eintrag wählt, ist nicht gemessen; am Gerät nicht gemeldet | Probe `rea`, 11.11.2026 | Rea-Menü behoben in KG-05; Schnellmenü offen |
+| F-KG-09 | **Im Simulator blättert ein kurzer UP-Druck auf der Rea-Seite ohne Rea zwei Seiten** (Uhr 4.4.0: „REANAV 3, REANAV 2"): Behavior beim Drücken, das Loslassen blättert auf der neuen Seite noch einmal. Am Gerät nicht gemeldet; nicht behoben, weil es ohne Rea nichts bucht | Gegenprobe `rea`, 11.11.2026 | eingetragen in `Geraete-Eingabe.md` 6 |
 | F-KG-07 | **Alle Fälle der Probe in einem Aufruf lösen den Watchdog aus** (mehrere Verschließungen am Stück, `Code Executed Too Long` in `Huelle.umgedreht()`). Die Probe läuft deshalb je Fall in einem eigenen Takt. Die App selbst verschließt je Antwort ein Stück und ist davon nicht betroffen — auf einer echten Uhr gemessen ist das aber nicht | Simulator fenix6pro, 10.11.2026 | Probe angepasst |
 
 **Gerätebeobachtungen stehen in `docs/Geraete-Eingabe.md` 2 und 6**, nicht
@@ -193,3 +228,16 @@ tut, hängt an der Server-Seite von F-KA-07 (KA-04 Punkt 3, KA-Instanz).
 | `pruefen.sh bestand`, `kettenaufrufe/pruefen.py`, `pruefen.sh --selbstprobe` | Form, Einhängen, Riegel | 0 Befunde · kein Widerspruch · 15 von 15 Selbstproben |
 | `steuerung/decken.py`, `uebersicht.py`, `nummern.py` | Backlog-Form und -Nummern | 21 Decken, 0 gerissen · 0 ohne Grammatik · 0 Überschneidungen |
 | Prüfstand `pruefen.sh` (Stufe klein, schmal) | Riegel und Proben der Berührung, darunter `uhr-stufe1` (99 Geräte), `uhr-rundlauf`, `uhr-syncseite`, `uhr-sendeweg` | Bericht in der Commit-Nachricht von KG-01; ein Vorlauf über denselben Code am 10.11.2026: 32 grün, 0 rot, 0 nicht gemessen, 1 627 s |
+
+### KG-05 (11.11.2026, Uhr 4.5.0)
+
+**Nicht geprüft:** keine echte Uhr — weder F-KG-01 (im Simulator nicht
+erzeugbar, `Geraete-Eingabe.md` 6), noch wie sich die Muster anfühlen, noch
+ob 2-s-Pulse gehalten werden; keine Venu (die Probe drückt UP/DOWN).
+
+| Mittel | Was es misst | Ergebnis |
+|---|---|---|
+| `rea.sh fenix6pro` gegen den Zweig | 15 Tastenschritte, je die neuen Konsolenzeilen (Buchung, Muster mit Dauer und Stärke, Seitenwechsel, Menü) gegen das Soll | **15 von 15 grün** (dritter Lauf; die ersten beiden waren Fehler der Probe: Konsolenverzug, Erwartung der 0:30-Erinnerung) |
+| `REA_WATCH=<HEAD vor KG-05> rea.sh` (Uhr 4.4.0) | dieselben 15 gegen den alten Stand | **14 rot**, nur BACK grün |
+| `pruefen.sh bestand`, `kettenaufrufe`, `steuerung/*` | Form, Einhängen, Backlog | 0 Befunde · kein Widerspruch · 21 Decken, 0 gerissen · 0 ohne Grammatik |
+| Prüfstand `pruefen.sh` | Stufe und Proben nach Berührung | Bericht in der Commit-Nachricht von KG-05 |
