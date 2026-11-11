@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /* Der eine Leser fuer config.php. Laedt seinerseits nichts —
  * diese Datei darf `db.php` nicht erreichen. */
 require_once __DIR__ . '/konfig_lib.php';
@@ -222,7 +223,7 @@ function plattform_db_fassung(PDO $pdo): array
  */
 function plattform_db_variable(PDO $pdo, string $name): ?string
 {
-    if (!preg_match('/^[a-z_]+$/', $name)) { return null; }
+    if (!preg_match('/^[a-z_]+\z/', $name)) { return null; }
     try {
         $z = $pdo->query("SHOW VARIABLES LIKE '" . $name . "'")->fetch();
         return $z === false ? null : (string)($z['Value'] ?? $z[1] ?? '');

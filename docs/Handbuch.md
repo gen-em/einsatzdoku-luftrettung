@@ -865,7 +865,7 @@ Aufzeichnungen hat, in die andere.
 |---|---|
 | unter 80 % | nichts |
 | **ab 80 %** | einmalig eine Nachricht, dazu ein Hinweis auf dieser Seite |
-| **100 %** | Der Server nimmt keine Gerätedaten mehr an |
+| **100 %** | Der Server nimmt keine Gerätedaten mehr an — und seit Web 24.13.0 legt auch kein Import, keine GPX-Datei, keine Wiederherstellung und kein „Einsatz nachtragen" etwas Neues an |
 
 **Bei 100 % geht nichts verloren.** Uhr und Handy bekommen eine Absage,
 behalten ihre Aufzeichnungen und senden sie, sobald wieder Platz ist.
@@ -881,6 +881,11 @@ Grenze bei 250 MB reicht das; eine Abrechnung ist es nicht.
 
 **Was hilft, wenn es eng wird:** alte Diensttage löschen — oder die Verwaltung
 um eine höhere Grenze bitten. Sie kann sie **je Konto** setzen (11.1).
+
+**Das Demo-Konto hat feste Grenzen** (seit Web 24.13.0): 500 Einsätze und
+50 MB. Sein Passwort steht im Handbuch; ohne eigene Grenze konnte jeder
+Besucher die gemeinsame Datenbank füllen. Die Verwaltung kann sie nicht
+ändern.
 
 ### 3.1b Konto löschen (seit Web 20.20.0)
 
@@ -6670,7 +6675,8 @@ Backup-Ziel.
 
 - *Herunterladen* gibt die Datei **unverschlüsselt** als `.sql.gz`. Das ist
   die Fassung, die `mysql` oder phpMyAdmin einspielen kann.
-- *Versiegelt herunterladen* verlangt eine Passphrase und gibt die Datei unter
+- *Versiegelt herunterladen* verlangt eine Passphrase (seit Web 24.13.0
+  mindestens 12 Zeichen, wie ein Passwort) und gibt die Datei unter
   dieser Passphrase verschlossen heraus. Das ist die Fassung zum Weitergeben
   oder für einen USB-Stick. **Die Passphrase wird nirgends gespeichert** — wer
   sie verliert, hat die Datei verloren.

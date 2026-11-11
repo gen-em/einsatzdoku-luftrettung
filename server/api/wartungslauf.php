@@ -94,7 +94,7 @@ $pat = null;
 if (isset($b['pat'])) {
     $neu = pruef_pat_blob($b['pat']['neu'] ?? null, 'pat.neu', $pruef);
     $pruefsumme = $b['pat']['pruef'] ?? null;
-    if ($neu === null || !is_string($pruefsumme) || !preg_match('/^[0-9a-f]{64}$/', $pruefsumme)) {
+    if ($neu === null || !is_string($pruefsumme) || !preg_match('/^[0-9a-f]{64}\z/', $pruefsumme)) {
         $pruef->melde('pat', 'unvollstaendig');
     } else {
         $pat = ['neu' => $neu, 'pruef' => $pruefsumme];

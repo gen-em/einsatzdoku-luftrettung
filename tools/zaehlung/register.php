@@ -663,6 +663,19 @@ return [
  'regel' => ['art' => 'muster', 'muster' => '~createFromFormat\(\s*[\'"]!?d\.m\.Y~'],
  'start' => 0, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
+['kennung' => 'Z51', 'paket' => 'KA-05',
+ 'beschreibung' => 'Satz „Das Konto ist voll" ausserhalb konto_voll_satz()',
+ 'grund' => 'Konzept KA, F-KA-10: Die Mengengrenze hat EINE Prüfung '
+          . '(konto_anlegen_pruefen()) und EINEN Satz (konto_voll_satz()) in '
+          . 'konten_einstellungen_lib.php; ingest.php und die sechs anlegenden '
+          . 'Web-Wege rufen sie. Bis Web 24.12.1 stand der Satz in ingest.php, '
+          . 'und die Web-Wege hatten keine Prüfung. Wer ihn nachbaut, baut die '
+          . 'Prüfung meist mit nach. Start 1 (ingest.php), gezählt am 11.11.2026.',
+ 'sicht' => 'php_mit_zeichenketten', 'bereich' => 'php',
+ 'ausser' => ['server/konten_einstellungen_lib.php'],
+ 'regel' => ['art' => 'muster', 'muster' => '~Das Konto ist voll~'],
+ 'start' => 1, 'decke_jetzt' => 0, 'decke_ziel' => 0],
+
 /* ---- Spuren --------------------------------------------------------------- */
 
 ['kennung' => 'Z49', 'paket' => 'RD-04',

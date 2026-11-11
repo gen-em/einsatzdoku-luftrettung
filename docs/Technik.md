@@ -603,7 +603,7 @@ Daten erst nach Server-Bestätigung.
 │   │                       navigator.credentials, ohne Fremdbestandteil — SR-09, 4.38),
 │   │                      pow.js + pow-worker.js (die Rechenaufgabe der Registrierung:
 │   │                       Worker mit WebCrypto, gesperrter Knopf — SR-08, 4.34)
-│   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.18.5, Apache-2.0 ·
+│   │   └── vendor/        xlsx.full.min.js — SheetJS Community Edition 0.20.3, Apache-2.0 ·
 │   │                      zipjs.min.js — zip.js 2.8.34, BSD-3-Clause (ZIP + AES-256) ·
 │   │                      qrcode.js — qrcode-generator 2.0.4, MIT (nur die Modulmatrix
 │   │                       des QR-Codes; das SVG baut assets/qr.js) ·
@@ -1087,7 +1087,7 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 | `rate_limits` | Ratenschutz: Versuche je `topf` und `merkmal` (`ip:…`, `id:…` oder `alle`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. **Die Töpfe stehen in `RATE_GRENZEN` und nirgends sonst** — und hier steht ihre Zahl absichtlich **nicht** mehr: Bis Web 20.10.0 stand „alle vier“ (falsch seit sechs Töpfen), bis 20.11.0 „es sind zwölf“ (falsch mit den beiden Ingest-Töpfen). Eine Zahl in einem Fließtext altert genauso still wie eine Aufzählung. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand. Seit Web 20.10.0 dazu **`stufe`** (0 = nie gesperrt, 1–4 = Sprosse der Sperrleiter) und **`stufe_bis`** (letzter Fehlversuch + 24 h; danach gilt die Stufe als 0, auch wenn die Zeile noch dasteht) sowie ein Index auf `gesperrt_bis` |
 | `rechtstexte` | Die Rechtstexte dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, seit Web 20.19.0 auch `nutzungsbedingungen` / `avv`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
 | `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…` (seit Web 23.1.0 nur noch der Job-Lauf), seit Web 23.1.0 `kette_token` = Geheimnis der Aktionen der Auslieferungskette (nur per POST, 4.7 „Die zwei Tokens"), `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.25); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.26); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 8); seit Web 20.8.0 `instanz_name` und `instanz_kurz` = der Name dieser Installation, fehlend = „Gen-EM Einsatzdokumentation Notarzt" bzw. „Gen-EM NAdoku" (siehe 9)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
-| `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung; keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 8) |
+| `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung, seit Web 24.13.0 höchstens 20 Einträge je Bericht (`CSP_BERICHT_MAX`, KA-05); keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 8) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht der Zeitraum der Stücke (`ts_von`/`ts_bis`; bis Web 22.7.0 `track_points.ts`) — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz (seit Web 22.2.0 NULL-fähig: NULL = ein gelöschter Zeitraum, Backlog Nr. 161), `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.11 |
 | `protokoll_ereignisse` | Das **Betriebsprotokoll** (seit Web 20.16.5, P5b/AP1, V1). `reiter` = `verwaltung` / `email` / `jobs` / `sicherung` / `ziele` / `system`, dazu `art` (die maschinelle Kennung, nach der die Protokollseite filtert; Wort und Ton dazu im Katalog `PROTOKOLL_ARTEN`), `urheber_user_id` / `urheber_art`, `betroffen_user_id`, `text` und `daten` (JSON). **Betriebsereignisse, keine Datenzugriffe** — dass jemand einen Einsatz geöffnet, gelesen oder exportiert hat, steht hier nicht und soll hier nicht stehen. **Kein Fremdschlüssel auf `users`**, und das ist der wichtigste Satz dieser Zeile: Der häufigste Verwaltungseintrag ist „Konto gelöscht"; mit CASCADE löschte die Kontolöschung ihren eigenen Eintrag, mit RESTRICT verhinderte der Eintrag die Löschung. `urheber_user_id` ist **`0` und nicht NULL**, wenn kein Mensch gehandelt hat — `urheber_art` sagt, welche Art von Niemand (`cli` / `job`). **Zwei Fristen:** `verwaltung` 365 Tage (einstellbar 90–1095), alle übrigen 30 Tage fest; der Job `aufraeumen` räumt beide in einem Schritt. Die Seite Verwaltung → Protokoll (seit Web 20.39.0) liest sie zusammen mit fünf weiteren Tabellen, der Job `protokoll_archiv` archiviert sie. Siehe 4.28 |
@@ -2947,7 +2947,7 @@ zwingend: Die Dateien enthalten Name, Geburtsdatum, Diagnose, Einsatzort,
 Notizen und die übrigen geschützten Angaben aus 4.14, und diese Angaben dürfen den Rechner nur verschlüsselt verlassen. Ein
 Datei-Upload ist damit ausgeschlossen. Kette:
 
-1. `assets/vendor/xlsx.full.min.js` (SheetJS 0.18.5, Apache-2.0, lokal
+1. `assets/vendor/xlsx.full.min.js` (SheetJS 0.20.3 vom Hersteller, Apache-2.0, lokal
    vendoriert) liest xlsx/xls/csv/ods.
 2. `assets/import_profiles.js` beschreibt **deklarativ**, wo die Daten stehen
    und wie jede Quellspalte auf ein Zielfeld abgebildet wird
@@ -5231,7 +5231,9 @@ neuen Kennung über Blöcken unter dem alten wäre ein Kopf, der lügt.
   ohnehin jede Zeile dieser Datenbank sehen kann" — die Rolle war falsch, und
   die Begründung galt in der Anwendung nicht: Niemand sieht dort Hashes,
   Hüllen und `app_state`-Geheimnisse aller Konten (F-R17-08).
-- **Versiegelt herunterladen** liefert dieselbe Datei unter einer Passphrase.
+- **Versiegelt herunterladen** liefert dieselbe Datei unter einer Passphrase
+  — seit Web 24.13.0 mit mindestens `PW_MIN_LAENGE` (12) Zeichen, wie ein
+  Kontopasswort (KA-05, E-KA-33; bis dahin 8).
   Sie wird nicht doppelt verschlüsselt, sondern Block für Block *umgesiegelt*;
   der Speicherbedarf bleibt bei einem halben Megabyte, gleich wie gross die
   Datei ist. **Eine PBKDF2 je Vorgang** (Z3), nicht eine je Block.
@@ -5962,9 +5964,9 @@ Der Rückbau ist deshalb eine Eintragung und kein Notfall.
 
 **Warum das messbar ist und ein 404 nichts beweist.** `RewriteRule [F]`
 antwortet **403, ob die Datei da ist oder nicht** — mod_rewrite läuft vor der
-Dateisuche. Die Prüfung nutzt genau das: sechs Punktpfade
+Dateisuche. Die Prüfung nutzt genau das: sieben Punktpfade
 (`.ftp-deploy-sync-state.json`, beide `.deploy-state-*.json`, `.env`,
-`.git/config`, `.sitzungen/`) müssen **403** geben,
+`.git/config`, `.sitzungen/`, seit KA-05 `.zustand/`) müssen **403** geben,
 `.well-known/acme-challenge/` muss **404 und ausdrücklich nicht 403** geben,
 und keine Kopie der `config.php` darf mit 200 kommen. Der Befund, der zu
 dieser Zeile geführt hat, wurde zuerst falsch entlastet: Die Abfrage lief
@@ -5983,6 +5985,23 @@ Groß- und Kleinschreibung und samt der Emacs-Sicherung `#config.php#`
 nicht auf `.php`, läuft nicht durch PHP und käme als Text heraus. Bis dahin
 legten drei Prüfmittel ihre Sicherung genau so daneben; sie sichern
 inzwischen ins Temp-Verzeichnis, und die Zeile ist der zweite Riegel.
+
+**Seit Web 24.13.0 auch Bibliotheken, Teil-Vorlagen und Migrationen**
+(KA-05, F-KA-23, -38). Jede `*_lib.php`, `*_teile.php` und `*_dialog.php`
+beginnt mit einem Wächter — direkt aufgerufen antwortet sie 404, auf jedem
+Webserver: `if (PHP_SAPI !== 'cli' && realpath($_SERVER['SCRIPT_FILENAME']) ===
+__FILE__)`. Eine Konstante, wie das Konzept sie vorsah, hätte jede
+Einstiegsseite gebraucht; der Vergleich mit dem aufgerufenen Skript braucht
+nichts und lässt Werkzeuge, die per `php -r` einbinden, in Ruhe (E-KA-36).
+Dahinter sperrt die `.htaccess` die drei Endungen per `FilesMatch` und
+`migrations/` per `RewriteRule`. Bis dahin schrieb `blatt_dialog.php` bei
+jedem direkten Abruf eine Systemmeldung, und die SQL-Dateien lagen offen.
+**Kein `Options -Indexes`** (F-KA-70): Erlaubt ein Hoster `AllowOverride
+Options` nicht, antwortet jede Seite mit 500 — gemessen mit Apache 2.4.58;
+das Listing schaltet die BetreiberIn beim Hoster ab. Den Stand hält der
+Riegel `schranken` (Nr. 562), samt der Regel, dass kein `preg_match` mit
+`^…$` ohne `D` endet — `$` ließ einen angehängten Zeilenumbruch durch
+(F-KA-34), seit Web 24.13.0 steht dort `\z` (102 Stellen).
 
 **Was die Regel nicht tut:** eine bereits abgelegte Datei entfernen. Auf einer
 Anlage, auf die schon ausgeliefert wurde, liegt sie weiter im Webroot —
@@ -8153,7 +8172,10 @@ darüber sagt das, statt auf den Schlüssel von damals zu verweisen
 (F-SR-82).
 
 **Der Download** (nur BetreiberIn, POST mit Token) entsiegelt in einen
-Arbeitsordner unter dem temporären Verzeichnis, packt `manifest.json` und je
+eigenen Arbeitsordner unter der Ablage (`sicherungen/protokoll/.arbeit-…`,
+Rechte 0700, `protokoll_archiv_arbeit_neu()`; seit Web 24.13.0, KA-05 — bis
+dahin im gemeinsamen Temp-Verzeichnis, lesbar für jeden Prozess desselben
+Webspace; Reste älter als eine Stunde räumt der nächste Download), packt `manifest.json` und je
 Reiter eine `.jsonl` in ein gewöhnliches ZIP, liefert es aus und räumt auf.
 Er schreibt `archiv_heruntergeladen` — **vor** der Auslieferung, weil die
 Anfrage danach endet.
@@ -8501,8 +8523,9 @@ macht, und die Zeile überlebt das Konto.
 ### 4.33 Mengengrenze je Konto (ab Web 20.21.0, P5b/AP6)
 
 *E-P5b-04, -18; Backlog Nr. 37 und 48. Code: `konten_einstellungen_lib.php`
-(`konto_mengen()`, `konto_grenzen()`, `konto_fuellstand()`), `spur_bytes()` in
-`spur_lib.php`.*
+(`konto_mengen()`, `konto_grenzen()`, `konto_fuellstand()`, seit Web 24.13.0
+`konto_anlegen_pruefen()`, `konto_voll_satz()`, `konto_mengen_verwerfen()`),
+`spur_bytes()` in `spur_lib.php`.*
 
 #### Zwei Grenzen, der größere Anteil zählt
 
@@ -8511,6 +8534,12 @@ macht, und die Zeile überlebt das Konto.
 | Einsätze | `konten_grenze_einsaetze` (5000) | `users.grenze_einsaetze` |
 | Speicher | `konten_grenze_mb` (250) | `users.grenze_mb` |
 | Konto-Backups | `adminbackup_aufbewahrung` (2) | `users.backup_pakete` |
+
+**Das Demo-Konto hat feste Grenzen** (seit Web 24.13.0, KA-05, E-KA-32):
+`KONTEN_DEMO_GRENZE_EINSAETZE` = 500 und `KONTEN_DEMO_GRENZE_MB` = 50;
+`konto_grenzen()` gibt sie für `demo_ist_demo()` zurück, gleich was in der
+Zeile steht. Sein Passwort ist öffentlich — mit den Grenzen der Installation
+füllte jeder Besucher die gemeinsame Datenbank. Die Vorlage hat 111 Einsätze.
 
 **`NULL` heißt „die Vorgabe gilt"** — nicht 0 und nicht die Vorgabe als Zahl.
 Trüge die Spalte den Wert, änderte eine spätere Anhebung der Vorgabe an
@@ -8528,8 +8557,18 @@ hieße „du darfst nicht", `429` hieße „nicht so schnell" — beides wäre f
 und ließe die Uhr das Falsche tun. Bei `507` wie bei `429` behält sie ihre
 Warteschlange und sendet später.
 
-**Bearbeiten und Löschen bleiben frei.** Die Grenze steht in `ingest.php` und
-im Import, nirgends sonst. Wer sie erreicht, muss aufräumen können. Aus
+**Bearbeiten und Löschen bleiben frei.** Die Grenze steht an jedem
+**anlegenden** Weg — seit Web 24.13.0 (KA-05, F-KA-10) über die eine Prüfung
+`konto_anlegen_pruefen()`: `ingest.php`, `api/import_commit.php` (nur
+`commit`), `api/gpx_import.php`, die drei Wiederherstellungswege
+(`api/backup_restore.php`, `api/backup_eintraege_restore.php`,
+`api/backup_spuren_restore.php`) und `einsatz_form.php` beim Anlegen. Die
+JSON-Wege antworten `507 kontingent` mit dem Satz aus `konto_voll_satz()`, das
+Formular zeigt ihn; danach verwirft der Weg den Zähler
+(`konto_mengen_verwerfen()`), und der nächste Blick misst neu. Bis dahin
+stand sie nur in `ingest.php` — der Kommentar dort nannte „und im Import",
+dort stand sie nicht. Den Satz außerhalb der Bibliothek zählt Zeile Z51 des
+Registers. Wer sie erreicht, muss aufräumen können. Aus
 demselben Grund zählt, was im **Papierkorb** liegt, nicht mit — sonst ließe
 sich die Grenze durch Löschen nicht unterschreiten, und genau das schlägt die
 Meldung vor.

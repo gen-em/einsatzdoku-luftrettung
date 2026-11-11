@@ -181,7 +181,7 @@ function import_commit(array $b, int $userId): never
         }
         if (($m['dup'] ?? '') !== 'overwrite') {
             $ref = (string)($m['client_ref'] ?? '');
-            if (!preg_match('/^imp-[0-9a-f]{24}$/', $ref) || isset($refsNeu[$ref])) {
+            if (!preg_match('/^imp-[0-9a-f]{24}\z/', $ref) || isset($refsNeu[$ref])) {
                 json_out(['error' => 'eingabe', 'meldung' => 'Die Kennung eines neuen Einsatzes fehlt '
                           . 'oder ist doppelt (Zeile ' . ($i + 1) . '). Bitte die Seite neu laden. '
                           . 'Es wurde nichts übernommen.'], 400);
@@ -411,7 +411,7 @@ function import_commit(array $b, int $userId): never
         foreach ($einsaetze as $m) {
             $tag  = pruef_kalendertag($m['day'] ?? null, 'day', $pruef);
             $hhmm = (string)($m['started_local'] ?? '');
-            if ($tag === null || !preg_match('/^\d{2}:\d{2}$/', $hhmm)) {
+            if ($tag === null || !preg_match('/^\d{2}:\d{2}\z/', $hhmm)) {
                 $grund['datum']++; $uebersprungen++; continue;
             }
             /* OHNE DIENSTTAG KEIN EINSATZ. `missions.day_id` ist ein
@@ -737,6 +737,7 @@ function import_commit(array $b, int $userId): never
         }
 
         $pdo->commit();
+        konto_mengen_verwerfen($userId);
         json_out([
             'ok' => true,
             'days_inserted'         => $tageNeu,
@@ -780,6 +781,11 @@ try {
 
     $action = (string)($b['action'] ?? '');
     if ($action === 'commit') {
+        /* DIE MENGENGRENZE (seit Web 24.13.0, KA-05, F-KA-10): ein anlegender Weg. */
+        require_once __DIR__ . '/../konten_einstellungen_lib.php';
+        if (($voll = konto_anlegen_pruefen($userId)) !== null) {
+            json_out(['error' => 'kontingent', 'grund' => $voll], 507);
+        }
         import_commit($b, $userId);
     }
     if ($action !== 'check') {
@@ -790,7 +796,7 @@ try {
     $tage = [];
     foreach ((array)($b['days'] ?? []) as $d) {
         $d = (string)$d;
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) { $tage[$d] = true; }
+        if (preg_match('/^\d{4}-\d{2}-\d{2}\z/', $d)) { $tage[$d] = true; }
         if (count($tage) >= 500) { break; }
     }
     $tage = array_keys($tage);

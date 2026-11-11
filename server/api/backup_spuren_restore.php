@@ -47,6 +47,11 @@ const BACKUP_SPUREN_RESTORE_MAX = 500;
 try {
     api_methode();
     csrf_check();   // Feld ODER Kopfzeile X-CSRF
+    /* DIE MENGENGRENZE (seit Web 24.13.0, KA-05, F-KA-10): ein anlegender Weg. */
+    require_once __DIR__ . '/../konten_einstellungen_lib.php';
+    if (($voll = konto_anlegen_pruefen($userId)) !== null) {
+        json_out(['error' => 'kontingent', 'grund' => $voll], 507);
+    }
 
     $b = api_rumpf();
     if (!isset($b['spuren']) || !is_array($b['spuren'])) {
@@ -78,6 +83,7 @@ try {
     $geschrieben   = $e['geschrieben'];
     $uebersprungen = $e['uebersprungen'];
     $abgelehnt     = $e['abgelehnt'];
+    konto_mengen_verwerfen($userId);
 
     json_out(['ok' => true, 'geschrieben' => $geschrieben,
               'uebersprungen' => $uebersprungen, 'abgelehnt' => $abgelehnt]);

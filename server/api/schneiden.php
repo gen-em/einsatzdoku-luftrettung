@@ -234,7 +234,7 @@ function schnitt_ausfuehren(array $b, int $userId): never
      * `spur`); der Browser vergibt sie deshalb, bevor es die
      * Zeile gibt. `cut-` und 16 Hexziffern — dasselbe Praefix wie immer. */
     $ref = (string)($b['client_ref'] ?? '');
-    if (!preg_match('/^cut-[0-9a-f]{16}$/', $ref)) {
+    if (!preg_match('/^cut-[0-9a-f]{16}\z/', $ref)) {
         json_out(['error' => 'eingabe', 'meldung' => 'Die Kennung des neuen Einsatzes fehlt. '
                   . 'Bitte die Seite neu laden.'], 400);
     }

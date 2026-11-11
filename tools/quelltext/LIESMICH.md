@@ -1,9 +1,8 @@
 # Quelltextprüfungen
 
-**Anlass: Nr. 148, 170, 188, 205, 208, 238, 248, 283, 293, 315, 318, 560** — siebzehn Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24), je Prüfung mit Anlass in der Tabelle.
+**Anlass: Nr. 148, 170, 188, 205, 208, 238, 248, 283, 293, 315, 318, 560, 562** — achtzehn Prüfungen, die Quelltext lesen und im Tor laufen (E-PK-24), je Prüfung mit Anlass in der Tabelle.
 
 ## Aufruf
-
 `bash tools/quelltext/pruefen.sh <name> [zusatz…]` — dazu `alle` · `--selbstprobe` · `--liste`
 
 ## Was es misst
@@ -27,13 +26,14 @@
 | `fremdsummen` | die SHA-256 im Herkunftskopf jeder Datei unter `server/assets/vendor/`, nachgerechnet ohne den Kopf und gegen die Tabelle in `Lizenzen.md` 3; seit KA-01 auch jede Zeile der zwei Listen unter `server/vendor/` (keine Datei daneben), `Parsedown.php` und die Gradle-Wrapper-JAR | F-R17-50, -51, F-KA-26 |
 | `druckblatt` | kein Formular und kein Abruf schickt an `notfallblatt.php` oder `codeblatt.php`; beide lesen keinen Anfragewert und weisen einen POST mit 400 ab | Nr. 560 |
 | `dokumente` | jeder Pfad in den Dokumenten gegen den Baum (Ausnahmen mit Grund in `dokumente-ausnahmen.md`), Zahlen an Verzeichnissen gegen `ls`, keine „Stand:"-Kopfzeile, Gliederung von `Technik.md`; im Code jeder Abschnittsverweis („`Technik.md` 4.14") gegen die Überschriften | Nr. 188 |
+| `schranken` | jede `*_lib/_teile/_dialog.php` trägt den Wächter (404 bei direktem Aufruf), kein `preg_match` mit `^…$` ohne `D`, die `.htaccess` sperrt Teile und `migrations/` | Nr. 562 |
 
 ## Was es braucht
 
 `php`, `python3`, `bash`; für `handbuch` und `bestand` `cmark-gfm` (Ausbaustufe `web`) — fehlt es, ist `handbuch` rc 2 und `bestand` rot.
 ## Erwartete Zahl
 
-`alle` → **17 von 17 grün**, `--selbstprobe` → **15 von 15**; ohne Schwelle. Die Textprobe meldet nur **neue** Treffer gegen `textprobe-altbestand.json` (neu schreiben mit `--altbestand-schreiben`, nie von Hand).
+`alle` → **18 von 18 grün**, `--selbstprobe` → **16 von 16**; ohne Schwelle. Die Textprobe meldet nur **neue** Treffer gegen `textprobe-altbestand.json` (neu schreiben mit `--altbestand-schreiben`, nie von Hand).
 
 ## Was es nicht kann
 

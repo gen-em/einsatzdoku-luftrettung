@@ -101,7 +101,7 @@ $token = (string)($_SESSION['pw_token'] ?? '');
 $keinCookie = ($token === '' && $getauscht);
 
 $row = null;
-if (preg_match('/^[a-f0-9]{64}$/', $token)) {
+if (preg_match('/^[a-f0-9]{64}\z/', $token)) {
     /* `u.email`: Wer sein Passwort setzt, hat
      * nachgewiesen, dass ihm das Postfach gehoert — und soll danach nicht an
      * einer Anmeldesperre haengenbleiben. Die Adresse ist das Merkmal, unter
@@ -136,7 +136,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $neuIter = (int)($_POST['new_iter'] ?? 0);
     $chkSoll = $row['pat_key_check'] ?? null;
 
-    if (!preg_match('/^[0-9a-f]{64}$/', $neuTok) || !preg_match('/^[0-9a-f]{32}$/', $neuSalt)) {
+    if (!preg_match('/^[0-9a-f]{64}\z/', $neuTok) || !preg_match('/^[0-9a-f]{32}\z/', $neuSalt)) {
         // Kommt nur vor, wenn JavaScript fehlt oder abbricht.
         $error = 'Speichern unvollständig — bitte JavaScript aktivieren und erneut versuchen.';
     } elseif ($neuIter !== KDF_ITER_ZIEL) {
@@ -163,7 +163,7 @@ if ($row && $_SERVER['REQUEST_METHOD'] === 'POST') {
         /* Und die Wiederherstellungs-Huelle darf NIE am Anteil haengen — sie
          * ist der Rueckweg fuer genau den Fall, dass er verloren ist. */
         $error = $huellenFehler;
-    } elseif ($keyChk !== '' && !preg_match('/^[0-9a-f]{32}$/', $keyChk)) {
+    } elseif ($keyChk !== '' && !preg_match('/^[0-9a-f]{32}\z/', $keyChk)) {
         $error = 'Die Prüfsumme des Inhaltsschlüssels ist unbrauchbar. Es wurde nichts geändert.';
     } elseif (!$erstvergabe && $chkSoll !== null && $keyChk !== $chkSoll) {
         /* Beim Zuruecksetzen wird der Inhaltsschluessel aus der

@@ -29,7 +29,7 @@ require_once __DIR__ . '/konto_lib.php';
 
 $konto = (int)($_GET['konto'] ?? $_POST['konto'] ?? 0);
 $token = get_text('token', post_text('token'));
-$gueltig = $konto > 0 && preg_match('/^[0-9a-f]{64}$/', $token) === 1;
+$gueltig = $konto > 0 && preg_match('/^[0-9a-f]{64}\z/', $token) === 1;
 $ergebnis = null;
 $antwort  = '';
 

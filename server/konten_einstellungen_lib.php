@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * DIE EINSTELLUNGEN RUND UM KONTEN.
  *
@@ -90,6 +91,17 @@ const KONTEN_UNBESTAETIGT_H = 48;
 /** Mengengrenze je Konto. */
 const KONTEN_GRENZE_EINSAETZE_VORGABE = 5000;
 const KONTEN_GRENZE_MB_VORGABE        = 250;
+
+/**
+ * DIE GRENZEN DES DEMO-KONTOS — fest, eng, ohne Einstellung (seit Web 24.13.0,
+ * KA-05, F-KA-10, E-KA-32). Sein Passwort ist öffentlich, und bis dahin füllte
+ * jeder Besucher über Import und Wiederherstellung die gemeinsame Datenbank.
+ * 500 Einsätze und 50 MB lassen der Vorlage (111 Einsätze, Stand 11.11.2026)
+ * Luft für Erweiterungen. Die Verwaltung kann sie nicht ändern — die Grenzen
+ * des Demo-Kontos weist `admin_user.php` ab (R17-20).
+ */
+const KONTEN_DEMO_GRENZE_EINSAETZE = 500;
+const KONTEN_DEMO_GRENZE_MB        = 50;
 
 /** Ab diesem Anteil wird gewarnt — einmal per Mail, dauerhaft auf der Seite. */
 const KONTEN_WARNSCHWELLE = 0.8;
@@ -380,6 +392,48 @@ function konto_mengen_fortschreiben(int $userId, int $einsaetzePlus, int $bytesP
         ((int)$t[0] + $einsaetzePlus) . '|' . ((int)$t[1] + $bytesPlus) . '|' . $t[2]);
 }
 
+/**
+ * Den Zähler verwerfen — der nächste Blick misst neu.
+ *
+ * Für die Web-Wege, die anlegen (Import, GPX, Wiederherstellung, Formular):
+ * Sie sind selten, und eine Schätzung wie in `ingest.php` lohnt dort nicht.
+ */
+function konto_mengen_verwerfen(int $userId): void
+{
+    app_state_loeschen('mengen:' . $userId);
+}
+
+/**
+ * Der Satz, wenn ein Konto voll ist — einmal, für `ingest.php` und die Web-Wege.
+ * Der SATZSCHLUSSPUNKT haengt hier: `groesse_paar_text()` endet auf „ MB".
+ */
+function konto_voll_satz(array $fuell): string
+{
+    require_once __DIR__ . '/format_lib.php';
+    return 'Das Konto ist voll — ' . $fuell['einsaetze'] . ' von '
+         . $fuell['grenze_einsaetze'] . ' Einsätzen, '
+         . groesse_paar_text((int)$fuell['bytes'], (int)$fuell['grenze_bytes']) . '.';
+}
+
+/**
+ * DARF DIESES KONTO NOCH ANLEGEN? Die eine Prüfung an jedem anlegenden Weg
+ * (seit Web 24.13.0, KA-05, F-KA-10). `null` heißt ja, sonst der Satz.
+ *
+ * WARUM AN JEDEM WEG. Bis dahin stand die Grenze nur in `ingest.php`; Import,
+ * GPX, die drei Wiederherstellungswege und das Formular legten ohne sie an —
+ * jedes Konto, auch das öffentliche Demo-Konto, füllte so die gemeinsame
+ * Datenbank bis zum Kontingent des Hosters (Bedrohungsmodell G4, R26).
+ *
+ * BEARBEITEN UND LÖSCHEN BLEIBEN FREI: Wer die Grenze erreicht, muss
+ * aufräumen können. Wer das Ergebnis bekommt, antwortet `507 kontingent`
+ * (JSON-Weg) oder zeigt den Satz (Formular). Danach `konto_mengen_verwerfen()`.
+ */
+function konto_anlegen_pruefen(int $userId): ?string
+{
+    $fuell = konto_fuellstand($userId);
+    return $fuell['voll'] ? konto_voll_satz($fuell) : null;
+}
+
 /** Die Grenzen dieses Kontos — die eigene, sonst die Vorgabe der Installation. */
 function konto_grenzen(int $userId): array
 {
@@ -387,6 +441,12 @@ function konto_grenzen(int $userId): array
                            FROM users WHERE id = ?');
     $st->execute([$userId]);
     $z = $st->fetch(PDO::FETCH_ASSOC) ?: [];
+
+    require_once __DIR__ . '/demo_lib.php';
+    if (demo_ist_demo($userId)) {
+        return ['einsaetze' => KONTEN_DEMO_GRENZE_EINSAETZE, 'mb' => KONTEN_DEMO_GRENZE_MB,
+                'backup_pakete' => null, 'eigen' => true];
+    }
 
     return [
         'einsaetze'    => $z['grenze_einsaetze'] !== null

@@ -85,8 +85,32 @@ def schritt_konto(a) -> None:
     s = sitzungsmodul.Sitzung(a.basis).anmelden(*admin)
     if KONTO in s.get("admin_users.php").text:
         melde(f"  Konto {KONTO} besteht bereits.")
-        return
-    kreislauf.konto_anlegen(a.basis, admin, KONTO, KONTO_PW)
+    else:
+        kreislauf.konto_anlegen(a.basis, admin, KONTO, KONTO_PW)
+    grenze_heben()
+
+
+def grenze_heben() -> None:
+    """Die Mengengrenze des Messkontos aufheben (seit KA-05).
+
+    Der Messstand misst den UNGÜNSTIGSTEN Bestand, nicht einen typischen —
+    16 Dateien wachsen über die 5 000 Einsätze der Vorgabe hinaus. Seit
+    Web 24.13.0 achten auch die Wiederherstellungswege die Grenze (F-KA-10),
+    und die 16. Datei bekam `507 kontingent`. Das Konto bekommt deshalb eine
+    eigene, sehr hohe Grenze; gemessen wird weiter die Anlage, nicht die
+    Grenze.
+    """
+    skript = (
+        '$w = getenv("EDOKU_WURZEL"); require_once $w . "/db.php";'
+        ' require_once $w . "/konten_einstellungen_lib.php";'
+        ' $q = db()->prepare("SELECT id FROM users WHERE email = ?"); $q->execute([getenv("EDOKU_KONTO")]);'
+        ' $id = (int)$q->fetchColumn(); if (!$id) { fwrite(STDERR, "Messstandkonto fehlt\\n"); exit(1); }'
+        ' db()->prepare("UPDATE users SET grenze_einsaetze = 1000000, grenze_mb = 1000000 WHERE id = ?")->execute([$id]);'
+        ' konto_mengen_verwerfen($id);')
+    server = WERKZEUGE.parent / "server"
+    lauf(["php", "-r", skript],
+         env={**os.environ, "EDOKU_WURZEL": str(server), "EDOKU_KONTO": KONTO})
+    melde("  Mengengrenze des Messkontos aufgehoben (1 000 000 / 1 000 000 MB).")
 
 
 def schritt_bestand(a) -> None:

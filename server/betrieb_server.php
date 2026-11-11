@@ -431,7 +431,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'konte
         foreach (preg_split('/[\s,;]+/', $roh) ?: [] as $d) {
             $d = mb_strtolower(trim($d, " \t\n\r.@"));
             if ($d === '') { continue; }
-            if (!preg_match('/^[a-z0-9.-]+\.[a-z]{2,}$/', $d)) {
+            if (!preg_match('/^[a-z0-9.-]+\.[a-z]{2,}\z/', $d)) {
                 $error = 'Eigene Wegwerfdomains: „' . $d . '" ist kein Domainname. '
                        . 'Erwartet wird die reine Domain, ohne „@" und ohne „https://".';
                 break;

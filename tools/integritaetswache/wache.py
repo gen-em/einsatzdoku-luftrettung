@@ -384,7 +384,10 @@ HOLFEHLER = (OSError, ValueError, http.client.HTTPException)
 # Dateisuche. Ein 404 hiesse nur „nichts da" und bewiese nichts.
 PUNKTPFADE = ['.ftp-deploy-sync-state.json', '.deploy-state-staging.json',
               '.deploy-state-produktion.json', '.env', '.git/config',
-              '.sitzungen/']
+              '.sitzungen/', '.zustand/']
+# `.zustand/` seit KA-05 (F-KA-38): Wartungsschalter und Zähler der
+# Verbindungsgrenze liegen dort (seit Web 23.3.1); die Punktregel sperrte es
+# schon, gemessen hat es bis dahin niemand.
 # `.well-known/` MUSS offen bleiben, sonst stirbt die Zertifikatserneuerung
 # lautlos bis zum Ablauf. Erwartet ist „nicht 403" (404 auf eine leere
 # Adresse).

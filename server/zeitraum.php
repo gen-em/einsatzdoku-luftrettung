@@ -17,12 +17,12 @@ require_once __DIR__ . '/diensttag_lib.php';   // dt_art_symbole() fuer die Tabe
 
 $jahr  = get_text('y');
 $monat = get_text('m');
-if (!preg_match('/^\d{4}$/', $jahr)) { header('Location: index.php'); exit; }
+if (!preg_match('/^\d{4}\z/', $jahr)) { header('Location: index.php'); exit; }
 /* NUR 01 BIS 12 — dieselbe Pruefung wie `api/range.php`.
  * Ein ungueltiger Monat (`m=13`, 00 oder 99) gilt als keiner — die Seite
  * zeigt das Jahr. Sonst gaebe es eine Warnung im Reiter System, einen Titel
  * ohne Monat, und `mktime()` rechnete ins naechste Jahr. */
-if ($monat !== '' && !preg_match('/^(0[1-9]|1[0-2])$/', $monat)) { $monat = ''; }
+if ($monat !== '' && !preg_match('/^(0[1-9]|1[0-2])\z/', $monat)) { $monat = ''; }
 
 $MONATSNAMEN = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
     'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];

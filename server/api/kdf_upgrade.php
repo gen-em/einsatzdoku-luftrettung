@@ -126,8 +126,8 @@ $neuIter  = (int)($b['neu_iter'] ?? 0);
 $wrapPw   = isset($b['wrap_pw'])   ? (string)$b['wrap_pw']   : null;
 $keyChk   = isset($b['key_check']) ? (string)$b['key_check'] : null;
 
-if (!preg_match('/^[0-9a-f]{64}$/', $altToken)
-    || !preg_match('/^[0-9a-f]{64}$/', $neuToken)) {
+if (!preg_match('/^[0-9a-f]{64}\z/', $altToken)
+    || !preg_match('/^[0-9a-f]{64}\z/', $neuToken)) {
     json_out(['error' => 'token'], 400);
 }
 /* Nur der Zielwert. Eine frei waehlbare Rundenzahl waere ein Weg, ein Konto
@@ -174,7 +174,7 @@ $huellenwechsel = $wrapPw !== null && $neuKennung !== $altKennung;
 if ($neuIter === $kdfIter && !$huellenwechsel) {
     json_out(['error' => 'nicht_noetig'], 400);
 }
-if ($keyChk !== null && $keyChk !== '' && !preg_match('/^[0-9a-f]{32}$/', $keyChk)) {
+if ($keyChk !== null && $keyChk !== '' && !preg_match('/^[0-9a-f]{32}\z/', $keyChk)) {
     json_out(['error' => 'key_check'], 400);
 }
 

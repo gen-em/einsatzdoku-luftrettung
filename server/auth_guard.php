@@ -669,12 +669,12 @@ function zweitfaktor_frisch_verlangen(string $handlung): void
 function zweitfaktor_zurueck(string $roh): string
 {
     $seiten = array_unique(array_column(ZF_FRISCH_HANDLUNGEN, 'seite'));
-    if (!preg_match('/^([a-z_]+\.php)(\?[^#]*)?(#[a-z0-9-]+)?$/', $roh, $m)
+    if (!preg_match('/^([a-z_]+\.php)(\?[^#]*)?(#[a-z0-9-]+)?\z/', $roh, $m)
         || !in_array($m[1], $seiten, true)) {
         return 'index.php';
     }
     $abfrage = $m[2] ?? '';
-    if ($abfrage !== '' && !preg_match('/^\?[A-Za-z0-9_=&%.-]*$/', $abfrage)) { $abfrage = ''; }
+    if ($abfrage !== '' && !preg_match('/^\?[A-Za-z0-9_=&%.-]*\z/', $abfrage)) { $abfrage = ''; }
     return $m[1] . $abfrage . ($m[3] ?? '');
 }
 

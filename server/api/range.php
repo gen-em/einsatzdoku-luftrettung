@@ -22,7 +22,7 @@ api_methode('GET');
 
 $jahr  = get_text('y');
 $monat = get_text('m');
-if (!preg_match('/^\d{4}$/', $jahr)) { json_out(['error' => 'Ungültiges Jahr'], 400); }
+if (!preg_match('/^\d{4}\z/', $jahr)) { json_out(['error' => 'Ungültiges Jahr'], 400); }
 /* Der Wertebereich zaehlt, nicht nur die Ziffernzahl.
  *
  * Genuegten zwei Ziffern, kaemen "00" und "13" durch, und dann
@@ -31,7 +31,7 @@ if (!preg_match('/^\d{4}$/', $jahr)) { json_out(['error' => 'Ungültiges Jahr'],
  * kein Fehler, sondern ein FALSCHER ZEITRAUM — bei m=00 der Dezember des
  * Vorjahres. Eine Uebersicht, die stillschweigend einen anderen Monat zeigt
  * als den angefragten, ist schlimmer als eine, die sich weigert. */
-if ($monat !== '' && !preg_match('/^(0[1-9]|1[0-2])$/', $monat)) {
+if ($monat !== '' && !preg_match('/^(0[1-9]|1[0-2])\z/', $monat)) {
     json_out(['error' => 'Ungültiger Monat'], 400);
 }
 

@@ -547,8 +547,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    . 'wurde NICHT geändert.';
         } elseif (!$oldOk) {
             $error = 'Das aktuelle Passwort ist nicht korrekt.';
-        } elseif (!preg_match('/^[0-9a-f]{64}$/', $newTok)
-                  || !preg_match('/^[0-9a-f]{32}$/', $newSalt)) {
+        } elseif (!preg_match('/^[0-9a-f]{64}\z/', $newTok)
+                  || !preg_match('/^[0-9a-f]{32}\z/', $newSalt)) {
             $error = 'Passwortwechsel unvollständig (JavaScript nötig).';
         } elseif ($newIter !== KDF_ITER_ZIEL) {
             /* Nur der Zielwert. Ein Passwortwechsel baut die Ableitung
@@ -574,7 +574,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * ALTEN Anteil — unbrauchbar in dem Augenblick, in dem der alte
              * Wert aus config.php verschwindet. */
             $error = $huellenFehler . ' Das Passwort wurde NICHT geändert.';
-        } elseif ($patReady && $keyChk !== '' && !preg_match('/^[0-9a-f]{32}$/', $keyChk)) {
+        } elseif ($patReady && $keyChk !== '' && !preg_match('/^[0-9a-f]{32}\z/', $keyChk)) {
             $error = 'Die Prüfsumme des Inhaltsschlüssels ist unbrauchbar — '
                    . 'das Passwort wurde NICHT geändert.';
         } elseif ($patReady && $chkSoll !== null && $keyChk !== $chkSoll) {

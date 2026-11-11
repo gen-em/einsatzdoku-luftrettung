@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * DER ZWEITFAKTOR.
  *
@@ -98,7 +99,7 @@ function totp_code(string $geheimnis, int $zeit, int $stellen = TOTP_STELLEN): s
 function totp_code_passt(string $geheimnis, string $eingabe, int $zeit, ?int $letzter): ?int
 {
     $eingabe = preg_replace('/\s+/', '', $eingabe) ?? '';
-    if (!preg_match('/^\d{' . TOTP_STELLEN . '}$/', $eingabe)) { return null; }
+    if (!preg_match('/^\d{' . TOTP_STELLEN . '}\z/', $eingabe)) { return null; }
     $jetzt = totp_schritt($zeit);
     $treffer = null;
     for ($d = -TOTP_FENSTER; $d <= TOTP_FENSTER; $d++) {
@@ -340,8 +341,8 @@ function totp_anmeldung_pruefen(int $userId, string $eingabe, ?string $nur = nul
     $nein = ['ok' => false, 'art' => null];
     if (!totp_an($userId)) { return $nein; }
     $ziffern = preg_replace('/\s+/', '', $eingabe) ?? '';
-    if ($nur === 'app' && !preg_match('/^\d{' . TOTP_STELLEN . '}$/', $ziffern)) { return $nein; }
-    if ($nur !== 'code' && preg_match('/^\d{' . TOTP_STELLEN . '}$/', $ziffern)) {
+    if ($nur === 'app' && !preg_match('/^\d{' . TOTP_STELLEN . '}\z/', $ziffern)) { return $nein; }
+    if ($nur !== 'code' && preg_match('/^\d{' . TOTP_STELLEN . '}\z/', $ziffern)) {
         $roh = totp_geheimnis($userId);
         if ($roh === null) { return $nein + ['geheimnis_fehlt' => true]; }
         $st = db()->prepare('SELECT totp_schritt FROM users WHERE id = ?');

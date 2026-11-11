@@ -44,6 +44,11 @@ require_once __DIR__ . '/../spur_lib.php';
 try {
     api_methode();
     csrf_check();   // Feld ODER Kopfzeile X-CSRF
+    /* DIE MENGENGRENZE (seit Web 24.13.0, KA-05, F-KA-10): ein anlegender Weg. */
+    require_once __DIR__ . '/../konten_einstellungen_lib.php';
+    if (($voll = konto_anlegen_pruefen($userId)) !== null) {
+        json_out(['error' => 'kontingent', 'grund' => $voll], 507);
+    }
     $b = api_rumpf();
 
     $ziel = (string)($b['ziel'] ?? 'ruhe');
@@ -75,7 +80,7 @@ try {
 
     /* ---- Kennung und Stuecke ------------------------------------------- */
     $ref = (string)($b['client_ref'] ?? '');
-    if (!preg_match('/^imp-[0-9a-f]{24}$/', $ref)) {
+    if (!preg_match('/^imp-[0-9a-f]{24}\z/', $ref)) {
         json_out(['error' => 'eingabe', 'meldung' => 'Die Kennung der Aufzeichnung fehlt.'], 400);
     }
     $roh = $b['stuecke'] ?? null;
@@ -160,6 +165,7 @@ try {
     /* Die Hoehe des Einsatzorts entsteht im Browser. Was nicht mitkam
      * (Punkte ohne Zeit, unbrauchbare Koordinaten), nennt der Browser
      * — er hat die Datei gelesen. */
+    konto_mengen_verwerfen($userId);
     $antwort = ['ok' => true, 'art' => $typ, 'id' => $id, 'punkte' => $summe,
                 'von' => fmt_local($von), 'bis' => fmt_local($bis)];
     if (!$pruef->sauber()) { $antwort['rejected'] = $pruef->nachUrsache(); }

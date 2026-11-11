@@ -347,15 +347,10 @@ if ($kontoStatus !== 'aktiv') {
  * ausschliesslich hier und im Import. Wer sie erreicht, muss aufraeumen
  * koennen; eine Grenze, die auch das Loeschen sperrt, ist eine Falle. */
 require_once __DIR__ . '/konten_einstellungen_lib.php';
-$fuell = konto_fuellstand((int)$dev['user_id']);
-if ($fuell['voll']) {
-    json_out(['error' => 'kontingent',
-              /* Der SATZSCHLUSSPUNKT haengt beim Aufrufer: `groesse_paar_text()`
-               * endet auf „ MB", der Satz hier auf „ MB.". */
-              'grund' => 'Das Konto ist voll — ' . $fuell['einsaetze'] . ' von '
-                       . $fuell['grenze_einsaetze'] . ' Einsätzen, '
-                       . groesse_paar_text((int)$fuell['bytes'],
-                                           (int)$fuell['grenze_bytes']) . '.'], 507);
+/* Seit Web 24.13.0 dieselbe Prüfung wie an den Web-Wegen
+ * (`konto_anlegen_pruefen()`, KA-05) — die Antwort ist byteweise dieselbe. */
+if (($voll = konto_anlegen_pruefen((int)$dev['user_id'])) !== null) {
+    json_out(['error' => 'kontingent', 'grund' => $voll], 507);
 }
 
 /* Geglueckt: den Kennungstopf und den Vermerk raeumen.

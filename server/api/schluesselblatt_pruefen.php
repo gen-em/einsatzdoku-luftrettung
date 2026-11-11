@@ -86,7 +86,7 @@ function blatt_werte(): array
     foreach ([['sk', 'Serverschlüssel', 'server_key'],
               ['an', 'Server-Anteil',   'kdf_anteil']] as [$schl, $name, $k]) {
         $hex = strtolower((string)konfig($k, ''));
-        if (preg_match('/^[0-9a-f]{64}$/', $hex)) {
+        if (preg_match('/^[0-9a-f]{64}\z/', $hex)) {
             $aus[] = ['schl' => $schl, 'name' => $name, 'hex' => $hex];
         }
     }

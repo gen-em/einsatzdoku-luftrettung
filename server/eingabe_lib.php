@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * EIN FORMULARFELD ALS TEXT LESEN — die eine Stelle (Backlog Nr. 355, R83).
  * ===========================================================================
@@ -64,9 +65,9 @@ function get_text(string $schluessel, string $vorgabe = ''): string
 function datum_de_lesen(string $text): ?string
 {
     $t = trim($text);
-    if (preg_match('/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/', $t, $m)) {
+    if (preg_match('/^(\d{1,2})\.(\d{1,2})\.(\d{4})\z/', $t, $m)) {
         [$tag, $monat, $jahr] = [(int)$m[1], (int)$m[2], (int)$m[3]];
-    } elseif (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $t, $m)) {
+    } elseif (preg_match('/^(\d{4})-(\d{2})-(\d{2})\z/', $t, $m)) {
         [$jahr, $monat, $tag] = [(int)$m[1], (int)$m[2], (int)$m[3]];
     } else {
         return null;

@@ -1573,8 +1573,12 @@ F-R17-35). Bis dahin entschied das Präfix je Teil, und ein Teil, dem jemand
 das Siegel abgenommen und den Klartext hingelegt hatte, ging in einem
 Fassung-3-Paket ohne Prüfung durch — die Bindung an Server, Konto, Paket und
 Teilnamen fiel für ihn weg. Jetzt ist er unlesbar wie einer mit falschem
-Siegel, beim Einspielen wie beim Teilweg des Browsers. Ein Paket der Fassung 2
-(Manifest ohne Siegel) wird weiter gelesen.
+Siegel, beim Einspielen wie beim Teilweg des Browsers. **Ein Paket der
+Fassung 2 (Manifest ohne Siegel) ist seit Web 24.13.0 unlesbar** (KA-05,
+F-KA-40, E-KA-31), ebenso eine Begleitdatei `konto.json` ohne Siegel. Bis
+dahin wurden beide unverändert gelesen — ohne Bindung an Server, Konto und
+Namen, und die Adresse in der Begleitdatei entscheidet seit Web 24.12.0 über
+eine Freigabe.
 
 | Eintrag | Inhalt |
 |---|---|
@@ -1672,7 +1676,8 @@ das **Schlüsselpaar des Kontos** gebunden; deshalb:
   Paket nicht mehr an. Hat das Konto kein Paar, wird abgewiesen, bevor etwas
   geschrieben ist.
 
-**Eingespielt wird nur ein Paket der Fassung 2 oder 3 (ZIP)**, über
+**Eingespielt wird nur ein Paket der Fassung 3 (ZIP)** (bis Web 24.12.1 auch
+Fassung 2), über
 `edbak_paket_einspielen()` bzw. `edbak_paket_zurueckspielen()`. Ein Kern darf
 nie an `edbak_restore()` am Stück gehen: Er trägt die Punkte in eigenen
 Teilen, und das Ergebnis wäre jeder Einsatz und **keine einzige Spur** —
