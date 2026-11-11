@@ -37,8 +37,17 @@ class SyncView extends WatchUi.View {
         /* BEIM ERSCHEINEN EINMAL AUCH TROTZ ABMELDUNG -- nicht im Takt
          * darunter: Wer das Geraet im Web wieder aktiviert hat, oeffnet diese
          * Seite und sieht den Rueckstand hinausgehen, ohne die App neu zu
-         * starten. Kommt wieder 401 oder 403, bleibt alles, wie es war. */
-        if (!Uploader.allSynced()) { Uploader.syncAllEinmalTrotz(); }
+         * starten. Kommt wieder 401 oder 403, bleibt alles, wie es war.
+         *
+         * FEHLT DER SCHLUESSEL, ERST IHN (seit Uhr 4.5.0): Eine gesperrte
+         * Uhr bekommt ihn bei pair.php nicht (Web 24.12.1, F-KA-27); ohne
+         * ihn sendet sie nicht, und die Sperre bliebe stehen. Dieselbe
+         * eine Anfrage, die START halten stellt. */
+        if (Uploader.hasCredentials() && Uploader.gesperrt != null && !Huelle.hatSchluessel()) {
+            Pair.schluesselHolen();
+        } else if (!Uploader.allSynced()) {
+            Uploader.syncAllEinmalTrotz();
+        }
     }
 
     function onHide() as Void {

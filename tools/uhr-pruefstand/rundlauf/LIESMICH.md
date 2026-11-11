@@ -21,9 +21,9 @@ Ohne ART: 600 Punkte an den Rändern in zwei Stücken, drei Phasen, Reanimation,
 Ruhestück, Wert für Wert gegen die geöffneten Hüllen. `--nachholen`: ohne
 Kontoschlüssel gekoppelt, nichts gesendet, START halten holt ihn. `--schrumpfen`:
 zwei geparkte Pakete verworfen während der letzten Anfrage, kein Absturz.
-`--reaktivieren`: Gerät deaktiviert (403, nichts kommt an), aktiviert (ohne
-Anlass weiter nichts), Sync-Seite neu geöffnet (alles kommt an). `--neukoppeln`:
-deaktiviert, Schlüssel geholt, gelöscht, trotz Rückstand neu gekoppelt an
+`--reaktivieren`: Gerät deaktiviert (403, kein Schlüssel, nichts kommt an), aktiviert (ohne
+Anlass weiter nichts), Sync-Seite neu geöffnet (Schlüssel, alles kommt an). `--neukoppeln`:
+Schlüssel geholt, Senden 30 s angehalten, gelöscht, trotz Rückstand neu gekoppelt an
 dasselbe Konto — die Pakete kommen an. `--fremdkonto`: ebenso, das Konto trägt
 einen anderen gültig versiegelten Schlüssel — nichts kommt an, Verwerfen nach Rückfrage.
 

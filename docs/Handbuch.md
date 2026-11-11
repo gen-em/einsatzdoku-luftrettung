@@ -139,8 +139,11 @@ Abschnitt 2.2 gibt es erst im laufenden Dienst.
 > hilft hier nicht:** Im Web das Gerät wieder einschalten (oder das Konto
 > freigeben lassen), dann auf der Uhr die Sync-Seite **einmal verlassen und
 > wieder öffnen** — beim Öffnen versucht sie es, und der Rückstand geht
-> hinaus. *(Bis Uhr 4.1.1 musste die App dafür ganz neu gestartet werden,
-> Backlog Nr. 431.)*
+> hinaus. Fehlt ihr noch der Kontoschlüssel, holt sie ihn dabei zuerst
+> *(seit Uhr 4.5.0: Eine gesperrte Uhr bekommt ihn vom Server nicht, und
+> davor blieb sie ohne ihn stehen; START halten bot dann nur das Trennen
+> an, Backlog Nr. 572)*. *(Bis Uhr 4.1.1 musste die App dafür ganz neu
+> gestartet werden, Backlog Nr. 431.)*
 >
 > „**Konto voll**" mit „**Im Web aufräumen**" *(seit Uhr 4.2.0)* heißt: Dein
 > Konto hat seine Mengengrenze erreicht. Die Uhr behält alles und versucht es
@@ -4105,6 +4108,13 @@ ausgeschaltetem Standort begonnen — am Handgelenk kann die App niemanden
 fragen, und ein wortloses „geht nicht" hülfe nicht weiter. Stattdessen
 vibriert das Telefon, und die Uhr zeigt „keine Ortung · keine Aufzeichnung".
 
+**Ist das Telefon nicht gekoppelt, beginnt die Uhr keinen Dienst** (seit
+Android 0.23.0). Sie zeigt dann „Handy nicht gekoppelt · Dienst nicht
+begonnen" — sonst ginge, was das Telefon aufzeichnet, an das Konto, das als
+Nächstes koppelt. Ebenso startet ein „Dienst beginnen", das die Uhr nicht
+loswurde und das erst mehr als zwölf Stunden später beim Telefon ankommt,
+keinen Dienst mehr.
+
 ### 10.2a Was die App über den Akku sagt
 
 *Seit Android 0.12.0.* Die Aufzeichnung braucht durchgehend GPS und ist damit
@@ -4251,6 +4261,18 @@ gehören dem bisherigen Konto" und den Knopf **„Pakete des bisherigen Kontos
 verwerfen …"** (mit Rückfrage). Was nach der neuen Kopplung aufgezeichnet
 wird, geht ganz normal an das neue Konto. Während eines laufenden Dienstes
 lässt sich nicht trennen; erst den Dienst beenden.
+
+**Liegt beim Koppeln schon etwas auf dem Telefon, das keinem Konto gehört**
+*(seit Android 0.23.0)* — etwa weil der Speicher der Zugangsdaten nicht mehr
+lesbar war —, geht es auch an das neue Konto nicht: Das Telefon weiß nicht,
+wessen Einsätze das sind. Es erscheint wie oben als „gehören dem bisherigen
+Konto" und wird nach 30 Tagen geräumt.
+
+**Eine Antwort ohne den Text des Servers ist kein Urteil** *(seit Android
+0.23.0)*. Meldet ein WLAN mit Anmeldeseite oder ein Proxy „abgewiesen", sendet
+die App später einfach noch einmal; erst die Antwort des Servers selbst
+parkt ein Paket oder beginnt die Frist. Läuft die Frist ab, versucht die App
+vor dem Räumen noch einmal zu senden.
 
 ---
 

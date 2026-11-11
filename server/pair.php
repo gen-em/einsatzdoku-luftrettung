@@ -368,7 +368,7 @@ if ($sitzung !== null) {
  * GERAET_VERGLEICHSWERT, damit aus der Dauer nicht ablesbar ist, welche
  * Geraetekennungen es gibt — die Kennung ist die Haelfte dessen, was ein
  * Upload braucht. */
-$st = $pdo->prepare('SELECT id, user_id, api_key_hash FROM devices WHERE device_id = ?');
+$st = $pdo->prepare('SELECT id, user_id, api_key_hash, active FROM devices WHERE device_id = ?');
 $st->execute([$devId]);
 $dev = $st->fetch();
 if (!$dev) {
@@ -377,6 +377,31 @@ if (!$dev) {
 }
 if (!geraet_schluessel_gueltig($apiKey, (string)$dev['api_key_hash'])) {
     abweisen(401, 'auth');
+}
+
+/* ---- GERAET UND KONTO WIE IN ingest.php (seit Web 24.12.1, KA-04, F-KA-27)
+ *
+ * Bis dahin bekam eine im Web deaktivierte Uhr hier weiter den
+ * Kontoschluessel und konnte sich selbst trennen — und danach an ein anderes
+ * Konto koppeln, mit dem, was sie im laufenden Dienst noch aufzeichnete.
+ * Jetzt gelten dieselben zwei Pruefungen wie beim Senden, in derselben
+ * Reihenfolge: erst ausgewiesen (oben), dann Auskunft ueber das eigene
+ * Geraet und Konto. Kein Fehlversuch im Topf — ein gesperrtes Konto ist
+ * kein Angriff (Kopf von ingest.php). Geloescht wird ein solches Geraet im
+ * Web (E-KA-30). */
+if (!(int)$dev['active']) {
+    abweisen(403, 'device_disabled', false);
+}
+$kontoStatus = 'aktiv';
+try {
+    $stK = $pdo->prepare('SELECT status FROM users WHERE id = ?');
+    $stK->execute([(int)$dev['user_id']]);
+    $kontoStatus = (string)($stK->fetchColumn() ?: 'aktiv');
+} catch (PDOException $ex) {
+    /* Die Spalte fehlt (Migration steht aus) — wie in ingest.php gilt dann `aktiv`. */
+}
+if ($kontoStatus !== 'aktiv') {
+    abweisen(403, 'konto', false, ['grund' => $kontoStatus]);
 }
 
 if ($aktion === 'status') {

@@ -11263,3 +11263,18 @@ zutreffen.
      gegen Uhr 4.4.0; Gerätetest auf der Fenix 6 Pro.
      Erledigt 11.11.2026 mit Uhr 4.5.0 (Schritt 28, KG-05): Belegung,
      Sperre, Muster und Erinnerungen; Menü öffnet beim Loslassen; Probe rea.
+
+572. **Eine gesperrte Garmin-Uhr ohne Kontoschlüssel kam nach dem Wiedereinschalten nicht heraus.** · gehört zu: 28 · Stand: erledigt · seit 11.11.2026
+     *Aufgenommen 11.11.2026 beim Aufnehmen von KA-04 in KG (Uhr-Rundlauf,
+     Art `--reaktivieren`, rot).* Seit Web 24.12.1 gibt `pair.php` einer im
+     Web deaktivierten Uhr keinen Kontoschlüssel (F-KA-27). `Pair.start()`
+     holte ihn nur, wenn die Uhr nicht angehalten war, und
+     `SyncView.onShow()` versuchte ohne Schlüssel nichts — nach dem
+     Wiedereinschalten blieb nur das Trennen. Der Rundlauf beruhte darauf,
+     dass eine deaktivierte Uhr ihren Schlüssel holt. *Weg:* bei 403
+     nachfragen, beim Öffnen der Sync-Seite zuerst den Schlüssel; Rundlauf
+     ohne Deaktivieren. *Abnahme:* `--reaktivieren`, `--neukoppeln`,
+     `--fremdkonto` grün.
+     Erledigt 11.11.2026 mit Uhr 4.5.0 (Schritt 28, KG-05): Schlüssel auch
+     bei 403, beim Öffnen der Sync-Seite zuerst; Rundlauf hält das Senden
+     statt zu deaktivieren.

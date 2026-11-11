@@ -169,9 +169,30 @@ class Sender(
         /* UND DIE FRIST NACH EINER ABMELDUNG (Nr. 471): 30 Tage nach der
          * ersten 401/403 verlassen alle abgeschlossenen Pakete den Puffer,
          * wie auf der Garmin-Uhr ([Abmeldefrist]). */
-        val geraeumt = puffer.abgewieseneRaeumen(
+        val abgewiesen = puffer.abgewieseneRaeumen(
             Zeit.iso(jetzt().minus(Raeumung.FRIST_TAGE, ChronoUnit.DAYS)),
-        ).pakete + (bindung?.let { Abmeldefrist.raeumen(it, puffer, jetzt()).pakete } ?: 0)
+        ).pakete
+
+        /* VOR DEM RÄUMEN NACH FRISTABLAUF EIN SENDEVERSUCH (seit Android
+         * 0.23.0, KA-04, F-KA-18). Die Frist beginnt mit der ersten 401/403
+         * — und bis dahin auch mit einer, die ein Zwischenstück schickte.
+         * Kommt jetzt ein Paket an, ist die Abmeldung widerlegt
+         * (`abmeldungVergessen()` unten), und die Räumung danach findet
+         * nichts mehr. Nur mit Zugangsdaten: Ohne sie gibt es nichts zu
+         * versuchen, und ein ungekoppeltes Handy räumt wie bisher sofort. */
+        val b = bindung
+        val nachholen = b != null && tresor.lesen() != null &&
+            b.abmeldeFristBis?.let { !jetzt().isBefore(it) } == true
+        if (!nachholen) {
+            return sendeLauf(abgewiesen + (b?.let { Abmeldefrist.raeumen(it, puffer, jetzt()).pakete } ?: 0))
+        }
+        val bericht = sendeLauf(abgewiesen)
+        val spaeter = Abmeldefrist.raeumen(b!!, puffer, jetzt()).pakete
+        return bericht.copy(geraeumt = bericht.geraeumt + spaeter)
+    }
+
+    /** Der Sendelauf selbst — nach dem Räumen ([sendeAlles]). */
+    private fun sendeLauf(geraeumt: Int): Sendebericht {
 
         /* DIE WARTEZEIT VOR ALLEM ANDEREN, was ans Netz geht. Der Lauf meldet
          * „später erneut", damit der Nachsende-Job sich nachplant; er sendet
@@ -207,7 +228,10 @@ class Sender(
         val b = bindung
         if (b != null && b.pruefen(ksText) == Bindungsstand.ANDERS) {
             grenze = b.gebundenBis
-            fremd = grenze?.let { puffer.rueckstandBis(it) } ?: 0
+            /* `bestandBis` und nicht `rueckstandBis`: Auch ein OFFENES Paket
+             * unter der Grenze ist gebunden (KA-04) — mit `rueckstandBis` zählte
+             * es 0, und die Bindung fiele. */
+            fremd = grenze?.let { puffer.bestandBis(it) } ?: 0
             if (fremd == 0) {
                 b.loesen()              // nichts mehr gebunden — die Bindung ist leer
                 grenze = null
@@ -259,12 +283,18 @@ class Sender(
                 nichtVor = null                 // eine angenommene Anfrage hebt jede Wartezeit auf
                 wartetWegenKontoVoll = false
                 bindung?.abmeldungVergessen()   // und widerlegt die Abmeldung
-                puffer.bestaetigungMerken(paket.id, antwort.naechsteSeq)
+                /* HÖCHSTENS BIS ZUM ENDE DES GESENDETEN (seit Android 0.23.0,
+                 * KA-04, E-KA-29). Eine größere Marke quittierte Punkte, die
+                 * der Server nie gesehen hat — und ein abgeschlossenes Paket
+                 * wäre danach entsorgt. Liegt beim Server schon mehr, kostet
+                 * die Deckelung nur Wiederholungen, die er übergeht. */
+                val bestaetigt = minOf(antwort.naechsteSeq, seqVon + punkte.size)
+                puffer.bestaetigungMerken(paket.id, bestaetigt)
                 var fertig = 0
                 /* AUFRÄUMEN ERST NACH `final` UND VOLLSTÄNDIGER BESTÄTIGUNG.
                  * `next_seq` ist die erste NICHT gespeicherte Nummer — sie
                  * muss also die Punktzahl erreichen, nicht überschreiten. */
-                if (paket.final && antwort.naechsteSeq >= puffer.punktzahl(paket.id)) {
+                if (paket.final && bestaetigt >= puffer.punktzahl(paket.id)) {
                     puffer.paketEntsorgen(paket.id)
                     fertig = 1
                 }

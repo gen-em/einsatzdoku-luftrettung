@@ -10254,7 +10254,7 @@ gilt für jedes Konto „wie das Gerät"; Anmeldung und Profil funktionieren.
 | `StartView.mc` | Startbildschirm „Dienst beginnen"; Hinweise zu Server-Adresse und Kopplung |
 | `ClockView/SpeedView/StatsView/SyncView/CprView.mc` | Oberflächen + Delegates; erben von `ActionDelegate` und beschreiben nur noch die Aktionen |
 | `SyncView.mc` | Sync-Status (Backlog = nur abgeschlossene Pakete, **ohne geparkte**), App-Version, Kopplung per START-Halten, **Verwerfen abgewiesener Pakete per kurzem START**; seit Uhr 4.0.0 „Kein Schlüssel · Holen: START halten" und „Verschlüsseln geht nicht" (E-S11-76). **Seit Uhr 4.2.0 bis 4.3.1** (Konzept GR): Zeilen für „gesperrt“ (Grund, „Im Web klären“), „Konto voll“, „Server bremst bis HH:MM“, „N Pakete altes Konto“ mit kurzem START zum Verwerfen; `onShow()` ruft `syncAllEinmalTrotz()`. Der Mittelblock weicht in fünf Stufen aus, wenn der untere Block wächst (kompakte Schrift, ohne GPS-Zeile, Meldungen in `FONT_XTINY`, eine Zeile) — gemessen von `tools/uhr-pruefstand/syncseite/` |
-| `Pair.mc` | **Seit Uhr 4.3.0** (Konzept GR, E-GR-01): `start()` lässt das Trennen trotz Rückstand zu, wenn die Uhr abgemeldet oder gesperrt ist (`Uploader.angehalten()`), kein Dienst läuft und noch keine Bindung besteht; `lokalTrennen()` bindet den Rückstand dann an den bisherigen Kontoschlüssel (`Uploader.binden()`, `Storage 'rueck_bind'`: Schlüssel, Referenzen, Fristende), bevor der Schlüssel geht; `onTrennen()` nennt bei 401 keinen belegten Geräteplatz mehr. Kopplung (seit Uhr 3.0.0 umgekehrt): holt mit `start` eine Sitzung, fragt im Takt `status`, bestätigt mit `bestaetigen` — erst danach `Storage 'cred'`. Bis dahin liegen Code, Kennung und Schlüssel **nur im Arbeitsspeicher**. **Seit Uhr 4.0.0** legt `_fertig()` den `kontoschluessel` aus der Antwort ab, und `schluesselHolen()` holt ihn bei bestehender Kopplung über `status` nach (E-S11-79) — kein Trennen, weil ein Rückstand das Trennen sperrt (F-S11-80). **Seit Uhr 4.4.0** (KG-01, F-KA-05): `start()` weist im laufenden Dienst **jedes** Koppeln und Trennen ab („Erst Dienst beenden"), auch ungekoppelt und ohne Rückstand; nur `schluesselHolen()` bleibt erlaubt. `lokalTrennen()` bindet auch, wenn nur ein laufendes Paket Ungesendetes hat (`Uploader.laufendOffen()`) |
+| `Pair.mc` | **Seit Uhr 4.3.0** (Konzept GR, E-GR-01): `start()` lässt das Trennen trotz Rückstand zu, wenn die Uhr abgemeldet oder gesperrt ist (`Uploader.angehalten()`), kein Dienst läuft und noch keine Bindung besteht; `lokalTrennen()` bindet den Rückstand dann an den bisherigen Kontoschlüssel (`Uploader.binden()`, `Storage 'rueck_bind'`: Schlüssel, Referenzen, Fristende), bevor der Schlüssel geht; `onTrennen()` nennt bei 401 keinen belegten Geräteplatz mehr. Kopplung (seit Uhr 3.0.0 umgekehrt): holt mit `start` eine Sitzung, fragt im Takt `status`, bestätigt mit `bestaetigen` — erst danach `Storage 'cred'`. Bis dahin liegen Code, Kennung und Schlüssel **nur im Arbeitsspeicher**. **Seit Uhr 4.0.0** legt `_fertig()` den `kontoschluessel` aus der Antwort ab, und `schluesselHolen()` holt ihn bei bestehender Kopplung über `status` nach (E-S11-79) — kein Trennen, weil ein Rückstand das Trennen sperrt (F-S11-80). **Seit Uhr 4.4.0** (KG-01, F-KA-05): `start()` weist im laufenden Dienst **jedes** Koppeln und Trennen ab („Erst Dienst beenden"), auch ungekoppelt und ohne Rückstand; nur `schluesselHolen()` bleibt erlaubt. `lokalTrennen()` bindet auch, wenn nur ein laufendes Paket Ungesendetes hat (`Uploader.laufendOffen()`). **Seit Uhr 4.5.0** (Nr. 572): `schluesselHolen()` auch bei 403 (nur nicht bei 401), weil `pair.php` seit Web 24.12.1 einer deaktivierten Uhr keinen Schlüssel gibt (F-KA-27); eine 200 dort hebt `gesperrt`/`abgemeldet` auf, und `SyncView.onShow()` holt den fehlenden Schlüssel einer gesperrten Uhr, bevor es sendet |
 | `PairView.mc` | Die Kopplungsansicht: zeigt den Code groß, dazu Restzeit und Verbindungshinweis; BACK bricht ab. Eigene Ansicht, weil der Code Buchstaben trägt (keine Ziffernschrift), eine Restzeit läuft und BACK hier anders wirkt als auf der Sync-Seite |
 | `Const.mc` / `Util.mc` | `APP_VERSION`, Labels, Tuning-Werte; ISO-UTC, lokale Anzeige, Vibration |
 
@@ -10717,8 +10717,9 @@ denselben, sonst verlangt Android eine Neuinstallation.
 
 `MessageClient` des Wear Data Layer, drei Pfade: `/nadoku/ereignis`
 (Uhr → Handy), `/nadoku/quittung` und `/nadoku/stand` (Handy → Uhr). Die
-Standmeldung trägt seit Android 0.8.0 auch den Ortungszustand des Handys;
-fehlt das Feld — eine ältere Handy-Fassung —, zeigt die Uhr dazu nichts an,
+Standmeldung trägt seit Android 0.8.0 auch den Ortungszustand des Handys
+und seit 0.23.0 den Kopplungszustand (`gekoppelt`, KA-04, E-KA-27); fehlt
+ein Feld — eine ältere Handy-Fassung —, zeigt die Uhr dazu nichts an,
 statt etwas zu behaupten. Die
 Umsetzung steckt in **einer** Datei (`WearNachrichtenweg.kt`) hinter der
 Schnittstelle `Nachrichtenweg`; alles darüber kennt nur die Schnittstelle.
@@ -10764,9 +10765,20 @@ zweite ist die App selbst: `HandyHorcher` fragt die verbundenen Knoten ab
 — sonst weder Wirkung noch Quittung; eine echte Uhr liefert nach, sobald sie
 verbunden ist. Ist die Liste nicht lesbar, gilt der Absender als fremd (das
 kostet Zeit, keine Daten). Dazu die **Zeit der Uhr**: höchstens fünf Minuten
-in der Zukunft und höchstens fünf Minuten vor dem laufenden Dienst; außerhalb
-wird quittiert, aber nicht gewirkt — dieselbe Regel wie für eine Phase ohne
-Dienst. Die fünf Minuten sind gewählt, nicht gemessen.
+in der Zukunft und höchstens fünf Minuten vor dem laufenden Dienst, **ohne
+laufenden Dienst höchstens zwölf Stunden alt** (seit Android 0.23.0, KA-04,
+F-KA-32, E-KA-28; bis dahin gab es dort keine untere Grenze, und ein nie
+zugestelltes „Dienst beginnen" konnte Tage später eine Aufzeichnung
+starten); außerhalb wird quittiert, aber nicht gewirkt — dieselbe Regel wie
+für eine Phase ohne Dienst. Die fünf Minuten und die zwölf Stunden sind
+gewählt, nicht gemessen.
+
+**Kein Dienst von der Uhr auf einem ungekoppelten Handy** (seit Android
+0.23.0, KA-04, F-KA-06). `Uhrannahme` fragt `tresor.gekoppelt()`; ohne
+Kopplung wird „Dienst beginnen" quittiert, nicht gewirkt, und die
+Standmeldung trägt `gekoppelt: false` — die Uhr zeigt „Handy nicht
+gekoppelt · Dienst nicht begonnen". Bis dahin zeichnete das Handy auf und
+sandte nichts, und wer als Nächstes koppelte, bekam die Daten.
 
 ### 6.3 Ortungswächter und Nachsenden
 
@@ -11024,9 +11036,33 @@ wieder). Vor dem ersten Stück prüft `Sender` die Bindung: derselbe Schlüssel
 `kp_ablegen()` ersetzt keines); ein anderer, oder die alte Kopplung kannte
 keinen → Pakete bis zur Grenze bleiben liegen, `Sendebericht.fremderRueckstand`
 zählt sie, alles darüber geht an das neue Konto. Verworfen wird nur auf
-Rückfrage (`Puffer.rueckstandVerwerfen()`). Getrennt wird ohnehin nur
-außerhalb eines Dienstes (`EinstellungenAnsicht`), also deckt die Bindung den
-ganzen Puffer.
+Rückfrage (`Puffer.rueckstandVerwerfen()`). Getrennt wird nur außerhalb
+eines Dienstes — seit Android 0.23.0 prüft das `trennen()` selbst
+(`Trennergebnis.DienstLaeuft`, KA-04, F-KA-06), bis dahin nur
+`EinstellungenAnsicht` —, also deckt die Bindung den ganzen Puffer.
+
+**Eine neue Kopplung bindet vorgefundenen Bestand als fremd** (seit Android
+0.23.0, KA-04, F-KA-06). Nach dem Ja (`Kopplungsdienst.bestaetigen()`) wird
+jeder noch nicht bestätigte Bestand (`Puffer.bestand()`, offene Pakete
+eingeschlossen), den keine Bindung deckt, **ohne Kontoschlüssel** gebunden
+— er gilt damit bei jedem Konto als `ANDERS`. Er kommt aus einem unlesbaren
+Tresor (die App zeigte danach den Kopplungsbildschirm, die nächste Kopplung
+nahm alles mit) oder aus einem Dienst, den die Wear-Uhr vor 0.23.0 auf
+einem ungekoppelten Handy begann. Deckt eine bestehende Bindung nicht alles,
+wird sie ohne Schlüssel auf alles erweitert; das kann einen Rückstand
+desselben Kontos mitsperren, und das ist die sichere Richtung. Der
+Sendelauf zählt Gebundenes seither mit `Puffer.bestandBis()` statt
+`rueckstandBis()` — sonst zählte ein gebundenes offenes Paket 0, die
+Bindung fiele, und es ginge doch hinaus. **Grenze:** Die Frist räumt nur
+abgeschlossene Pakete; ein gebundenes offenes Paket bleibt liegen, bis sein
+Dienst endet, geht aber nie hinaus.
+
+**Endgültig nur mit dem Feld des Vertrags** (seit Android 0.23.0, KA-04,
+F-KA-18, E-KA-26). `Sendeantwort.lese()` wertet 400 nur mit `payload` als
+fehlerhaft, `klartext` als „parken" (eine Stunde warten), 401 nur mit `auth`
+und 403 nur mit `device_disabled` oder `konto` als Abmeldung; dieselbe Zahl
+ohne das Feld ist „später erneut". `next_seq` übernimmt der Sender höchstens
+bis `seq_from` plus gesendete Punkte (E-KA-29).
 
 **Die Frist nach der Abmeldung** (seit Android 0.21.0, Nr. 471; dieselbe
 Regel wie Uhr 4.1.0, `Uploader.abmeldeFristPruefen`). Der Vermerk trägt den Zeitpunkt der **ersten**
@@ -11035,7 +11071,10 @@ Regel wie Uhr 4.1.0, `Uploader.abmeldeFristPruefen`). Der Vermerk trägt den Zei
 abgeschlossenen Pakete samt Punkten, Phasen und leeren Dienstzeilen und
 vergisst die Abmeldung; das offene Paket eines laufenden Dienstes bleibt.
 Die Bindung trägt ihre eigene Frist (`gebunden_frist`, beim Binden aus der
-Abmeldung übernommen), weil das Trennen die Abmeldung vergisst. Gerufen wird
+Abmeldung übernommen), weil das Trennen die Abmeldung vergisst. **Ist die
+Frist abgelaufen und liegt eine Kopplung vor, geht vorher ein Sendelauf
+hinaus** (seit Android 0.23.0, KA-04): Kommt ein Paket an, ist die Abmeldung
+widerlegt und die Räumung danach findet nichts. Sonst gerufen wird
 die Räumung am Anfang jedes Sendelaufs (`Sender.sendeAlles()`, sie zählt in
 `Sendebericht.geraeumt`) und in `NAdokuApp.onCreate()` — ein abgemeldetes
 Handy sendet womöglich nie wieder. Ein Vermerk aus 0.20.0 ohne Zeitpunkt

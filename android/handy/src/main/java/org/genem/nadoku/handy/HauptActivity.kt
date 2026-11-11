@@ -122,6 +122,8 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
             bindung = app.bindung,
             hoechstePaketId = { app.puffer.hoechstePaketId() },
             rueckstandBis = { app.puffer.rueckstandBis(it) },
+            dienstLaeuft = { app.klammer.laeuft() },
+            bestand = { app.puffer.bestand() },
         )
     }
     /* `LocalResources` statt `kontext.resources`: Compose
@@ -238,7 +240,7 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
             hilfsfaden.launch {
                 val e = withContext(Dispatchers.IO) { dienst.trennen() }
                 trennmeldung = e
-                if (e !is Trennergebnis.Rueckstand) {
+                if (e !is Trennergebnis.Rueckstand && e !is Trennergebnis.DienstLaeuft) {
                     val gebunden = withContext(Dispatchers.IO) {
                         app.bindung.gebundenBis?.let { app.puffer.rueckstandBis(it) } ?: 0
                     }

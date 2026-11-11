@@ -58,6 +58,13 @@ class Uhrannahme(
      * Zustand in genau dieser Spanne ändern.
      */
     private val ortung: () -> String? = { null },
+    /**
+     * Ist das Handy gekoppelt? Ohne Kopplung beginnt die Uhr keinen Dienst
+     * (KA-04, F-KA-06): Was das Handy dann aufzeichnete, ginge an das Konto,
+     * das als Nächstes koppelt. Vorgabe `true` für die Prüffälle, die davon
+     * nicht handeln; im Betrieb `tresor.gekoppelt()`.
+     */
+    private val gekoppelt: () -> Boolean = { true },
     /** Die Uhr des Handys — einsetzbar, damit der Prüfstand die Zeit stellen kann. */
     private val jetzt: () -> Instant = Instant::now,
 ) {
@@ -104,7 +111,10 @@ class Uhrannahme(
         val zeitpunkt = Instant.ofEpochMilli(m.zeitMs)
         if (!plausibel(zeitpunkt, empfangen)) return false
         return when (m.art) {
-            Ereignisart.DIENST_BEGINNEN -> klammer.beginnen(modus(), zeitpunkt).neu
+            /* NUR GEKOPPELT (KA-04, F-KA-06): sonst quittiert, nicht gewirkt —
+             * die Standmeldung sagt der Uhr, warum (`gekoppelt`). */
+            Ereignisart.DIENST_BEGINNEN ->
+                gekoppelt() && klammer.beginnen(modus(), zeitpunkt).neu
             Ereignisart.DIENST_BEENDEN -> klammer.beenden(zeitpunkt)
             Ereignisart.EINSATZ_ABSCHLIESSEN -> klammer.einsatzAbschliessen(zeitpunkt)
             Ereignisart.PHASE -> {
@@ -143,6 +153,7 @@ class Uhrannahme(
              * Quittung bekommt — ohne dass jemand das Handy aus der Tasche
              * holen muss. */
             ortung = ortung(),
+            gekoppelt = gekoppelt(),
         )
     }
 
@@ -153,7 +164,11 @@ class Uhrannahme(
      * gleich gehen:
      *  - **nicht in der Zukunft** — die Uhr war dabei, aber nicht voraus;
      *  - **nicht vor dem laufenden Dienst** — ein Ereignis, das älter ist als
-     *    der Dienst, gehört zu keinem.
+     *    der Dienst, gehört zu keinem;
+     *  - **ohne laufenden Dienst nicht älter als [OHNE_DIENST_HOECHSTENS]**
+     *    (seit Android 0.23.0, KA-04, F-KA-32, E-KA-28): Bis dahin hatte die
+     *    Prüfung hier keine untere Grenze, und ein nie zugestelltes
+     *    „Dienst beginnen" konnte Tage später eine Aufzeichnung starten.
      *
      * Ein unplausibles Ereignis wird **nicht gewirkt, aber quittiert** —
      * dieselbe Regel wie für eine Phase ohne Dienst: Die Uhr soll es nicht
@@ -163,7 +178,8 @@ class Uhrannahme(
      */
     private fun plausibel(zeitpunkt: Instant, empfangen: Instant): Boolean {
         if (zeitpunkt.isAfter(empfangen.plus(ZEITTOLERANZ))) return false
-        val dienst = klammer.laufenderDienst() ?: return true
+        val dienst = klammer.laufenderDienst()
+            ?: return !zeitpunkt.isBefore(empfangen.minus(OHNE_DIENST_HOECHSTENS))
         return !zeitpunkt.isBefore(Instant.parse(dienst.begonnenAt).minus(ZEITTOLERANZ))
     }
 
@@ -176,6 +192,13 @@ class Uhrannahme(
          * Handgriffe an Uhr und Handy hervorbringen.
          */
         val ZEITTOLERANZ: Duration = Duration.ofMinutes(5)
+
+        /**
+         * Wie alt ein Ereignis ohne laufenden Dienst höchstens sein darf
+         * (E-KA-28): **zwölf Stunden** — ein spät zugestelltes „Dienst
+         * beginnen" derselben Schicht wirkt, eines von gestern nicht.
+         */
+        val OHNE_DIENST_HOECHSTENS: Duration = Duration.ofHours(12)
     }
 }
 

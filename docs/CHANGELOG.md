@@ -43,6 +43,11 @@ Schritt 28, Paket KG-05 (Backlog Nr. 571).
   einer Rea nicht, und jeder Wechsel bricht die Erkennung ab.
 - **Uhr — das Loslassen von START wählte im eben geöffneten Menü einen
   Eintrag.** Das Menü öffnet deshalb erst beim Loslassen.
+- **Uhr — eine im Web deaktivierte Uhr ohne Kontoschlüssel kam nach dem
+  Wiedereinschalten nicht mehr heraus** (Backlog Nr. 572). Seit Web 24.12.1
+  gibt der Server einer gesperrten Uhr keinen Schlüssel mehr, und ohne ihn
+  bot START halten nur das Trennen an. Jetzt fragt die Uhr auch im gesperrten
+  Zustand nach ihm, beim Öffnen der Sync-Seite von selbst.
 
 ## [Uhr 4.4.0] — unveröffentlicht
 
@@ -68,6 +73,21 @@ Schritt 28 (Sicherheitspaket), Paket KG-01 (Backlog Nr. 570).
   größeres, das an derselben Stelle begann; der Server legte es nicht ab und
   quittierte es trotzdem. Jetzt wiederholt sie das unquittierte Stück genau
   so, wie sie es gesendet hat.
+
+## [Web 24.12.1] — unveröffentlicht
+
+### Behoben
+
+- **Web — eine Wiederholung mit anderer Größe ließ Spurpunkte verschwinden.**
+  Ging die Antwort auf ein Spurstück verloren, schickte das Gerät beim
+  nächsten Versuch ein größeres ab derselben Stelle; der Server legte nichts
+  ab, quittierte aber alles, und das Gerät löschte die Punkte dazwischen.
+  Jetzt quittiert er nur, was wirklich liegt, und das Gerät sendet den Rest
+  nach.
+- **Web — eine im Web deaktivierte Uhr bekam bei der Kopplung weiter den
+  Kontoschlüssel und konnte sich selbst trennen.** Danach ließ sie sich an
+  ein anderes Konto koppeln. Die Kopplung prüft Gerät und Konto jetzt wie das
+  Senden.
 
 ## [Web 24.12.0] — unveröffentlicht
 
@@ -844,6 +864,33 @@ Schritt 21 (GR), Paket GR-04 — die Uhr liest die Absage des Servers genauer
   sie — die aber kam nie zustande, so dass erst ein Neustart der App half.
   Jetzt versuchen es das Öffnen der Sync-Seite und das Dienstende einmal
   trotz der Marke.
+
+## [Android 0.23.0] — unveröffentlicht
+
+Schritt 28 (KA), Paket KA-04.
+
+### Geändert
+
+- **Android — die Wear-Uhr beginnt auf einem ungekoppelten Handy keinen
+  Dienst mehr.** Was das Handy dann aufzeichnete, bekam das Konto, das als
+  Nächstes koppelte. Die Uhr sagt jetzt „Handy nicht gekoppelt · Dienst nicht
+  begonnen"; ein „Dienst beginnen", das älter als zwölf Stunden ankommt,
+  startet nichts mehr.
+- **Android — eine neue Kopplung nimmt nicht mit, was schon auf dem Handy
+  liegt.** Unbekannter Bestand, etwa nach einem unlesbaren Tresor, ging bisher
+  an das neue Konto; jetzt bleibt er liegen und wird nach der Frist geräumt.
+  Trennen im laufenden Dienst verweigert die App selbst, nicht nur die
+  Oberfläche.
+
+### Behoben
+
+- **Android — eine Antwort ohne den Rumpf des Servers galt als endgültig.**
+  Eine Anmeldeseite im WLAN oder ein Proxy mit 400, 401 oder 403 parkte
+  Pakete für immer oder startete die 30-Tage-Frist. Jetzt zählt nur das
+  Fehlerfeld des Vertrags, sonst wird später erneut gesendet; vor dem Räumen
+  nach der Frist geht noch ein Versuch hinaus.
+- **Android — „Dienst beenden" ließ sich vom Sperrbildschirm aus antippen.**
+  Die Aktion in den Warnmeldungen verlangt jetzt Entsperren (ab Android 12).
 
 ## [Android 0.22.0] — unveröffentlicht
 

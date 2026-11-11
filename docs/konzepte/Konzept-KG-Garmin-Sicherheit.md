@@ -15,9 +15,9 @@ derselbe Code und dieselbe Instanz.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/vigilant-cray-9riw34`, Backlog-Spanne 570–579 |
-| In Arbeit | **KG-05** — fertig, Uhr 4.5.0, im selben Pull Request #168 wie KG-01 (E-KG-20); wartet auf Merge und Tag `uhr-v4.5.0`. Danach KG-02 |
+| In Arbeit | **KG-05** — fertig, Uhr 4.5.0, im selben Pull Request #168 wie KG-01 (E-KG-20); `main` mit KA-04 aufgenommen, Sackgasse nach F-KA-27 behoben (F-KG-10). Wartet auf Merge und Tag `uhr-v4.5.0`. Danach KG-02 |
 | Erledigt | **KG-01** (Uhr 4.4.0, PR #168, noch nicht gemergt) |
-| Hakt | nichts. Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05) |
+| Hakt | Antwort der KA-Instanz steht aus (E-KG-21). Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05) |
 | Gelesen gegen | Commit `0be2092` · Uhr 4.3.3; die vier Befunde von KG-01 am 10.11.2026 an der heutigen Stelle bestätigt (Abschnitt 4) |
 
 **Grenzen (Auftrag):** KG fasst `watch/`, `tools/uhr-pruefstand/`, die
@@ -68,6 +68,8 @@ abonnieren, anhalten.
 | E-KG-18 | **Das Rea-Menü öffnet auf Amiodaron** — Rhythmuskontrolle, Defibrillation und Adrenalin liegen auf Tasten | 11.11.2026, BetreiberIn |
 | E-KG-19 | **In der Pause:** kurz START öffnet die Übersicht (fortsetzen oder beenden), UP und DOWN buchen nichts, lang START öffnet das Menü | 11.11.2026, BetreiberIn |
 | E-KG-20 | **KG-05 kommt in denselben Pull Request wie KG-01** (#168), statt auf dessen Merge zu warten — ein eigener PR vom selben Zweig wäre nicht möglich gewesen | 11.11.2026, BetreiberIn |
+| E-KG-21 | **Die Sackgasse nach F-KA-27 wird in KG-05 behoben, die Fassung bleibt 4.5.0** (noch nicht ausgeliefert). Die Abstimmung mit der KA-Instanz über weitere Server-Änderungen, die die Uhr treffen, läuft (Nachricht 11.11.2026) | 11.11.2026, BetreiberIn |
+| E-KG-22 | **Der Rundlauf hält für `--neukoppeln` und `--fremdkonto` das Senden in der Prüffassung 30 s an**, statt das Gerät zu deaktivieren (`Rundlauf.halten()`). Der Wartungsmodus taugt nicht dafür: Er sperrt auch `pair.php` | 11.11.2026, Umsetzung |
 | E-KG-16 | **Die Probe zu KG-01 läuft ohne Server** (`tools/uhr-pruefstand/sendeweg/`): Die Prüffassung hält jede Anfrage vor dem Absenden an und spielt die Antworten selbst vor. Ein verlorenes Paket und eine falsche Quittung lassen sich mit der echten Anlage nicht gezielt erzeugen; was `ingest.php` daraus macht, misst weiter `uhr-rundlauf` | 10.11.2026, Umsetzung |
 
 ---
@@ -197,6 +199,7 @@ Action und lang Zurück öffnen das Menü.
 | F-KG-06 | **Handbuch 13 trug denselben falschen Satz wie `Pair.mc`** (F-KA-43): ein abgeschwatzter Code löse an der Uhr nichts aus. Wer ihn hat, trägt ihn im eigenen Konto ein, und die Uhr fragt mit dessen Adresse — das zweite Tor hält nur, wenn die Trägerin liest | Lesen, 10.11.2026 | berichtigt in KG-01 |
 | F-KG-08 | **Das Loslassen eines langen START ging an das eben geöffnete Rea-Menü und wählte dort den Eintrag unter dem Cursor** (Simulator: Amiodaron gebucht). Das Menü öffnet deshalb erst beim Loslassen, und die Seite schluckt es selbst (`langNachLoslassen()`). **Das Schnellmenü der Hauptanzeige öffnet nach demselben Muster** auf dem langen START — ob es dort einen Eintrag wählt, ist nicht gemessen; am Gerät nicht gemeldet | Probe `rea`, 11.11.2026 | Rea-Menü behoben in KG-05; Schnellmenü offen |
 | F-KG-09 | **Im Simulator blättert ein kurzer UP-Druck auf der Rea-Seite ohne Rea zwei Seiten** (Uhr 4.4.0: „REANAV 3, REANAV 2"): Behavior beim Drücken, das Loslassen blättert auf der neuen Seite noch einmal. Am Gerät nicht gemeldet; nicht behoben, weil es ohne Rea nichts bucht | Gegenprobe `rea`, 11.11.2026 | eingetragen in `Geraete-Eingabe.md` 6 |
+| F-KG-10 | **KA-04 (Web 24.12.1) hat den Uhr-Rundlauf rot gemacht und der Uhr eine Sackgasse gelassen.** `pair.php` gibt einer deaktivierten Uhr keinen Schlüssel mehr (F-KA-27); der Rundlauf holte ihn genau so (`--reaktivieren`, `--neukoppeln`, `--fremdkonto`). Eine Uhr ohne Schlüssel bot nach dem Wiedereinschalten nur das Trennen an. Der Prüfstand der KA-Instanz fuhr die Uhr-Proben nicht, weil unter `watch/` nichts berührt war. Behoben in der Uhr (Nr. 572), Rundlauf angepasst; Frage an die KA-Instanz, ob das Muster `geraete` die Uhr-Proben mitnehmen soll | Prüfstand über den Merge mit KA-04, 11.11.2026 | behoben in KG-05 |
 | F-KG-07 | **Alle Fälle der Probe in einem Aufruf lösen den Watchdog aus** (mehrere Verschließungen am Stück, `Code Executed Too Long` in `Huelle.umgedreht()`). Die Probe läuft deshalb je Fall in einem eigenen Takt. Die App selbst verschließt je Antwort ein Stück und ist davon nicht betroffen — auf einer echten Uhr gemessen ist das aber nicht | Simulator fenix6pro, 10.11.2026 | Probe angepasst |
 
 **Gerätebeobachtungen stehen in `docs/Geraete-Eingabe.md` 2 und 6**, nicht
@@ -241,3 +244,16 @@ ob 2-s-Pulse gehalten werden; keine Venu (die Probe drückt UP/DOWN).
 | `REA_WATCH=<HEAD vor KG-05> rea.sh` (Uhr 4.4.0) | dieselben 15 gegen den alten Stand | **14 rot**, nur BACK grün |
 | `pruefen.sh bestand`, `kettenaufrufe`, `steuerung/*` | Form, Einhängen, Backlog | 0 Befunde · kein Widerspruch · 21 Decken, 0 gerissen · 0 ohne Grammatik |
 | Prüfstand `pruefen.sh` | Stufe und Proben nach Berührung | Bericht in der Commit-Nachricht von KG-05 |
+
+### KG-05, Nachtrag: `main` mit KA-04 aufgenommen (11.11.2026)
+
+| Mittel | Was es misst | Ergebnis |
+|---|---|---|
+| Prüfstand über den Merge, Uhr ohne Nachtrag | alle Proben der Berührung | **rot** in `uhr-rundlauf --reaktivieren`: nach dem Wiedereinschalten kommt nichts an (F-KG-10) |
+| `rundlauf.sh --reaktivieren fenix6pro`, mit Nachtrag | Deaktivieren, Wiedereinschalten, Sync-Seite neu | 2 + 12 Prüfungen, 0 Fehlschläge |
+| `rundlauf.sh --neukoppeln fenix6pro` | Halten, Löschen, Neukoppeln an dasselbe Konto | 12 Prüfungen, 0 Fehlschläge |
+| `rundlauf.sh --fremdkonto fr945` | ebenso an ein Konto mit anderem Schlüssel | 3 Prüfungen, 0 Fehlschläge |
+| Prüfstand über den Merge mit Nachtrag | alle Proben der Berührung | Bericht in der Nachricht des Merge-Commits |
+
+**Nicht geprüft:** auf einer echten Uhr das Wiedereinschalten einer Uhr ohne
+Schlüssel.

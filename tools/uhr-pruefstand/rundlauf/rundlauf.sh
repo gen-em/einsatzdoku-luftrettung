@@ -32,12 +32,13 @@
 #
 # VIERTE ART: --reaktivieren (Anlass: Nr. 431). Wie --nachholen
 # gekoppelt, ohne Schluessel, also ohne Senden. Dann wird das Geraet in der
-# Datenbank deaktiviert und der Schluessel zurueckgegeben; START halten holt
-# ihn, der erste Upload bekommt 403 `device_disabled`, die Sync-Seite sagt
-# "Gerät im Web deaktiviert" und es kommt nichts an. Das Geraet wird wieder
-# aktiviert — und es kommt WEITER nichts an, weil die Marke im Speicher liegt.
-# Erst das erneute Oeffnen der Sync-Seite versucht es einmal trotz der Marke,
-# und dann gehen die Pakete. Bis Uhr 4.1.1 halfen nur ein Neustart der App
+# Datenbank deaktiviert und der Schluessel zurueckgegeben; START halten fragt
+# nach ihm und bekommt 403 `device_disabled` (seit Web 24.12.1 gibt pair.php
+# einer deaktivierten Uhr keinen, F-KA-27), die Sync-Seite sagt "Gerät im Web
+# deaktiviert" und es kommt nichts an. Das Geraet wird wieder aktiviert — und
+# es kommt WEITER nichts an, weil die Marke im Speicher liegt. Erst das
+# erneute Oeffnen der Sync-Seite fragt einmal nach (seit Uhr 4.5.0 zuerst
+# nach dem Schluessel, dann senden), und dann gehen die Pakete. Bis Uhr 4.1.1 halfen nur ein Neustart der App
 # oder ein neues Koppeln (und das sperrte der Rueckstand).
 #
 # FUENFTE UND SECHSTE ART: --neukoppeln und --fremdkonto (Anlass: Nr. 431,
@@ -47,7 +48,9 @@
 # START halten: Die Uhr fragt, ob
 # sie trotz Rueckstand trennen darf, und bindet den Rueckstand an den
 # bisherigen Kontoschluessel. Dann koppelt sie neu. --neukoppeln: an dasselbe
-# Konto -> dieselben Pakete kommen an (pruefen.php). --fremdkonto: das
+# Konto -> dieselben Pakete kommen an (pruefen.php). Seit KG-05 holt die Uhr
+# den Schluessel bei AKTIVEM Geraet, und die Prueffassung haelt danach das
+# Senden 30 s an (Rundlauf.halten()); in der Zeit wird geloescht. --fremdkonto: das
 # Demo-Konto traegt fuer diese Kopplung einen ANDEREN (gueltig versiegelten)
 # Schluessel -> nichts kommt an, die Sync-Seite nennt die Pakete des alten
 # Kontos, kurz START verwirft sie nach Rueckfrage.
@@ -127,6 +130,12 @@ sed "s/m-rundlauf-0001/$EINSATZ/; s/r-rundlauf-0001/$RUHE/" \
 sed -i 's|<property id="serverUrl" type="string">[^<]*</property>|<property id="serverUrl" type="string">127.0.0.1:8443</property>|' \
     "$APP/resources/settings/properties.xml"
 sed -i 's|        Track.restore();|        Track.restore();\n        Rundlauf.fuellen();|' "$APP/source/NAdokuApp.mc"
+if [ "$NEUKOPPELN" = 1 ]; then
+    sed -i 's|const HALTEN = false;|const HALTEN = true; |' "$APP/source/Rundlauf.mc"
+    sed -i 's|^    function _send(job as Lang.Dictionary) as Void {$|&\n        if (Rundlauf.halten()) { _busy = false; return; }|' "$APP/source/Uploader.mc"
+    grep -q 'const HALTEN = true;' "$APP/source/Rundlauf.mc" || fehler "Schalter HALTEN nicht gesetzt"
+    grep -q 'Rundlauf.halten()' "$APP/source/Uploader.mc" || fehler "Haken halten() nicht eingesetzt"
+fi
 grep -q 'Rundlauf.fuellen' "$APP/source/NAdokuApp.mc" || fehler "Einhaengen in NAdokuApp.onStart gescheitert"
 if [ "$SCHRUMPFEN" = 1 ]; then
     sed -i 's|const SCHRUMPFEN = false;|const SCHRUMPFEN = true;|' "$APP/source/Rundlauf.mc"
@@ -182,13 +191,12 @@ if [ "$NACHHOLEN" = 1 ]; then
     if [ "$NEUKOPPELN" = 1 ]; then
         GID=$(sql "SELECT MAX(id) FROM devices WHERE user_id = $DEMO AND id > $GERAET_VOR")
         [ -n "$GID" ] && [ "$GID" != "NULL" ] || fehler "Kein neues Geraet nach dem Koppeln"
-        # ERST DEAKTIVIEREN, nicht gleich loeschen: Die Uhr soll den
-        # Schluessel holen (pair.php status fragt nicht nach `active`), aber
-        # nichts senden — der erste Upload bekommt 403. Haette sie keinen
-        # Schluessel, waere die Bindung "unbekannt" und gaelte richtig als
-        # anderes Konto; dann misst der Lauf den falschen Fall.
-        sql "UPDATE devices SET active = 0 WHERE id = $GID"
-        melde "Geraet $GID deaktiviert (Schluessel holen, nichts senden)"
+        # Die Uhr soll den Schluessel HABEN, bevor das Geraet geht — sonst
+        # waere die Bindung "unbekannt" und gaelte richtig als anderes
+        # Konto, und der Lauf maesse den falschen Fall. Bis Web 24.12.0
+        # wurde dafuer deaktiviert; seit pair.php eine deaktivierte Uhr
+        # abweist (F-KA-27), haelt die Prueffassung das Senden an.
+        melde "Geraet $GID bleibt aktiv; die Prueffassung haelt das Senden an"
     fi
     if [ "$REAKTIVIEREN" = 1 ]; then
         GID=$(sql "SELECT MAX(id) FROM devices WHERE user_id = $DEMO AND id > $GERAET_VOR")
@@ -205,9 +213,13 @@ if [ "$NACHHOLEN" = 1 ]; then
 fi
 if [ "$NEUKOPPELN" = 1 ]; then
     n_fehl=0
-    sleep 6
+    for _ in $(seq 1 20); do
+        bash "$P" konsole | grep -q 'RL-HALT' && break; sleep 1
+    done
+    bash "$P" konsole | grep -q 'RL-HALT' || fehler "Die Uhr hat keinen Schluessel geholt (kein RL-HALT in der Konsole)"
     sql "DELETE FROM devices WHERE id = $GID"
-    melde "Geraet $GID geloescht (wie im Web)"
+    melde "Geraet $GID geloescht (wie im Web) — warten, bis die Uhr sendet und 401 bekommt"
+    sleep 38
     bash "$P" abbild "$ABBILD/5-gesperrt.png" >/dev/null
     VORHER2=$(sql "SELECT COALESCE(MAX(id),0) FROM pair_sessions")
     melde "Abgemeldet mit Rueckstand — START halten, Rueckfrage bestaetigen"

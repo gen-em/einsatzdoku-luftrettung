@@ -75,18 +75,29 @@ class NachrichtenformatTest {
     }
 
     /**
-     * Die Standmeldung waechst um **einen** Schluessel, und um welchen, steht
+     * Die Standmeldung waechst um **zwei** Schluessel — `ortung` und, seit
+     * Android 0.23.0, `gekoppelt` (KA-04, E-KA-27) —, und um welche, steht
      * hier. Der Fall ist das Gegenstueck zu [keineZugangsdatenImFormat]: Dort
      * wird gezaehlt, was die Uhr sendet, hier, was sie empfaengt.
      */
-    @Test fun dieStandmeldungTraegtGenauEinenSchluesselMehr() {
+    @Test fun dieStandmeldungTraegtGenauZweiSchluesselMehr() {
         val mit = JSONObject(
-            String(Nachrichtenformat.schreibe(standmeldung(Ortungscode.OK)), Charsets.UTF_8)
+            String(
+                Nachrichtenformat.schreibe(standmeldung(Ortungscode.OK).copy(gekoppelt = true)),
+                Charsets.UTF_8,
+            )
         ).keys().asSequence().toSet()
         assertEquals(
-            setOf("dienst", "modus", "einsatz", "phase", "seit", "phasen", "ortung"),
+            setOf("dienst", "modus", "einsatz", "phase", "seit", "phasen", "ortung", "gekoppelt"),
             mit,
         )
+    }
+
+    /** `gekoppelt` übersteht den Rundlauf; fehlt es, ist es `null` (ältere Handy-Fassung). */
+    @Test fun derKopplungszustandUeberstehtDenRundlauf() {
+        val s = standmeldung(null).copy(gekoppelt = false)
+        assertEquals(false, Nachrichtenformat.liesStand(Nachrichtenformat.schreibe(s))?.gekoppelt)
+        assertEquals(null, Nachrichtenformat.liesStand(Nachrichtenformat.schreibe(standmeldung(null)))?.gekoppelt)
     }
 
     /** Jeder Code laeuft durch — auch der, den heute niemand schickt. */

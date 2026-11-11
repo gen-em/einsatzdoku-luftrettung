@@ -273,9 +273,16 @@ module Pair {
          * Sackgasse. `pair.php status` beantwortet jede gekoppelte Uhr mit
          * dem Schluessel ihres Kontos; mit den eigenen Zugangsdaten gefragt,
          * ist es DASSELBE Konto, und der Rueckstand geht dorthin, wo er
-         * hingehoert. Abgemeldet geht es nicht — dann hilft nur Neukoppeln.
-         * Das geht auch im Dienst: Es koppelt nichts neu. */
-        if (Uploader.hasCredentials() && !Uploader.angehalten() && !Huelle.hatSchluessel()) {
+         * hingehoert. Abgemeldet (401) geht es nicht — dann hilft nur
+         * Neukoppeln. Das geht auch im Dienst: Es koppelt nichts neu.
+         *
+         * GESPERRT (403) DARF ES (seit Uhr 4.5.0). Seit Web 24.12.1 gibt
+         * pair.php einer im Web deaktivierten Uhr keinen Schluessel mehr
+         * (F-KA-27). Eine Uhr, die ihn noch nicht hatte, blieb nach dem
+         * Wiedereinschalten ohne ihn — und START halten bot ihr nur das
+         * Trennen an, weil die Sperre hier "angehalten" las. Jetzt fragt
+         * sie nach; ist das Geraet weiter gesperrt, kommt wieder 403. */
+        if (Uploader.hasCredentials() && !Uploader.abgemeldet && !Huelle.hatSchluessel()) {
             schluesselHolen();
             return;
         }
@@ -385,6 +392,12 @@ module Pair {
         if (cred == null || !fuer.equals(cred["d"] as Lang.String)) { return; }
         var dict = (data instanceof Lang.Dictionary) ? data : null;
         if (code == 200 && dict != null && "gekoppelt".equals(dict["zustand"])) {
+            /* 200 HEISST: GERAET UND KONTO SIND IN ORDNUNG -- pair.php
+             * prueft seit Web 24.12.1 dasselbe wie das Senden (F-KA-27).
+             * Eine Sperre aus einer frueheren 403 ist damit ueberholt. */
+            Uploader.gesperrt = null;
+            Uploader.abgemeldet = false;
+            Uploader.abmeldungVergessen();
             if (Huelle.schluesselSetzen(dict["kontoschluessel"])) {
                 status = "Schlüssel geholt";
                 statusHint = null;

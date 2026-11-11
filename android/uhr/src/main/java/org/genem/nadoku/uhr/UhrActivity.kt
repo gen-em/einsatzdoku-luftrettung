@@ -389,6 +389,10 @@ private fun Zustandszeile(z: Uhrzustand) {
          * entfernt. */
         val anzeige = Ortungscode.anzeige(z.ortung)
         val warnung = when {
+            /* ZUERST: Ein ungekoppeltes Handy nimmt keinen Dienst an (KA-04,
+             * E-KA-27) — ohne diese Zeile fiele die Uhr still auf „Dienst
+             * beginnen" zurück, und niemand wüsste, warum. */
+            z.handyGekoppelt == false && !z.dienstLaeuft -> stringResource(R.string.handy_nicht_gekoppelt)
             z.dienstSchwebt -> stringResource(R.string.dienst_schwebt)
             anzeige == Ortungscode.Anzeige.KEINE_ORTUNG -> stringResource(R.string.ortung_keine)
             else -> null
