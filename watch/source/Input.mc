@@ -183,7 +183,8 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
      * Uhr 4.5.0): Ihr langer START oeffnet ein Menue, und das Loslassen
      * ginge sonst an das Menue und waehlte dort den Eintrag unter dem
      * Cursor (im Simulator gemessen: Amiodaron gebucht, F-KG-08). So
-     * schluckt diese Seite das Loslassen selbst. */
+     * schluckt diese Seite das Loslassen selbst. Seit Uhr 4.5.2 sagt auch
+     * die Hauptanzeige ja (Schnellmenue). */
     function langNachLoslassen() as Lang.Boolean { return false; }
 
     function actUpKurz() as Lang.Boolean      { return actPagePrev(); }

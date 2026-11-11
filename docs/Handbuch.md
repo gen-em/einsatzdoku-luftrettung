@@ -202,7 +202,10 @@ Ring die Anzeige — auf einen Blick erkennbar.
   „Einsatztag beenden".
   Drückst du während des langen START-Drucks zusätzlich eine andere Taste,
   bleibt das Menü zu — die App erkennt daran die **Tastensperre** der Uhr. So
-  kollidiert das Sperren nicht mehr mit dem Schnellmenü.
+  kollidiert das Sperren nicht mehr mit dem Schnellmenü. Das Menü erscheint,
+  wenn du START **loslässt** *(seit Uhr 4.5.2; davor öffnete es nach einer
+  Sekunde Halten, und das Loslassen wählte im Simulator gleich die
+  „Einsatzübersicht“ aus)*.
 - **BACK** fragt nach, bevor die App verlassen wird.
 
 **Tempo:** aktuelle Geschwindigkeit (km/h) groß, darunter die im Einsatz

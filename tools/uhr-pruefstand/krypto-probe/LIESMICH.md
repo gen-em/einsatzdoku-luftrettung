@@ -1,28 +1,27 @@
 # Krypto-Probe
 
-Kann eine Garmin-Uhr die Gerätehülle aus S11 bauen, und was kostet es? Eigene
-UUID, keine Berechtigungen — **kein Bestandteil der App**, nie ausgeliefert.
-**Anlass: Nr. 43** — die Uhr verschließt Spur und Einsatzhülle vor dem Upload.
+Kann die Garmin-Uhr die Gerätehülle bauen? Eigene UUID, **nie ausgeliefert**.
+**Anlass: Nr. 43, Nr. 563** — die Uhr verschließt vor dem Upload; Fassung 2.
 
 ## Aufruf
 
 ```bash
 bash tools/uhr-pruefstand/pruefstand.sh kryptoprobe [geraet…]   # Simulator
 bash tools/uhr-pruefstand/pruefstand.sh kryptoreihe auswahl.txt # Stufe I
+python3 tools/uhr-pruefstand/krypto-probe/extern.py ~/.ciq-pruefstand/krypto_<geraet>.txt
 ```
 
-Echte Uhr: in VS Code „Build for Device", `.prg` nach `GARMIN/APPS/`, starten,
-blättern. Update nachstellen: `FASSUNG` in `KryptoApp.mc` heben, neu bauen, ohne Speicher zu leeren.
+Echte Uhr: „Build for Device", `.prg` nach `GARMIN/APPS/`; Update: `FASSUNG` heben.
 
 ## Was es misst
 
-Schritte und Zeilen im Kopf von `source/KryptoApp.mc`: Schlüsselpaar, ECDH samt
-Byteordnung, HKDF, AES-256-CBC, HMAC und die ganze Hülle je gegen die Vektoren
-aus `tools/proben/huelle/` (`source/Vektoren.mc` ist erzeugt); ob es `deflate`
-gibt; Zeit für ein Schlüsselpaar; Spurstück zu 200 und 500 Punkten, binär und
-JSON, mit Speicherzuwachs; ob ein Punkt neben der Kurve abfällt (`KURVE`, F-S11-85).
-Seit KG-02: ob es eine Signatur gibt (`SIGNATUR`), ob ein dauerhaftes Paar aus dem
-Speicher gleich wiederkommt (`GERAETEPAAR`) und was ECDH plus HMAC kosten (`T-STATISCH`).
+Schritte im Kopf von `source/KryptoApp.mc`: Fassung 1 (Paar, ECDH samt
+Byteordnung, HKDF, AES, HMAC, Hülle) gegen `Vektoren.mc`; `KURVE`, `SIGNATUR`,
+`GERAETEPAAR`, `T-STATISCH` (KG-02). Seit KG-03a übersetzt sie den Kern der
+App mit (`Huelle.mc`, `Huelle2.mc`) und misst Fassung 2 byte-gleich gegen
+`Vektoren2.mc`: Kennung, Z_s, Hüllen „kurz" und „spur-3", Kopf, Zusage,
+Vergleichswert, Kopplungsablauf. Was mit Zufall entsteht, steht als
+`EXTERN`-Zeilen in der Konsole; `extern.py` öffnet es mit der Referenz.
 
 ## Was es braucht
 
@@ -30,11 +29,12 @@ Den Uhr-Prüfstand (`aufbau`); für die echte Uhr eine Arbeitsstation mit SDK.
 
 ## Erwartete Zahl
 
-`kryptoprobe` → je Gerät **ERGEBNIS 7 gut, 0 Fehler**, am Ende **3 von 3**
-(Simulator, 11.10.2026). `kryptoreihe` → **99 übersetzt, 0 fehlgeschlagen**.
+`kryptoprobe` → je Gerät **ERGEBNIS 23 gut, 0 Fehler**, **3 von 3**.
+`extern.py` → **18 Hüllen und Kopplungen, 0 Fehler**. `kryptoreihe` → **99/0**.
 
 ## Was es nicht kann
 
-Zeiten und Speicher des Simulators sind die des Rechners, nicht der Uhr —
-gültig sind nur die von der echten Uhr abgelesenen. Ob die übrigen 96
-Geräte die Krypto ausführen, zeigt Übersetzen nicht (E-S11-16).
+Zeiten und Speicher sind die des Rechners. Ob die übrigen 96 Geräte die Krypto
+ausführen, zeigt Übersetzen nicht. Die Einsatzhülle der Fassung 2 ist JSON und
+nicht byte-gleich prüfbar; `extern.py` vergleicht den Inhalt. Der Simulator
+teilt den Speicher zwischen den Geräten (der Zähler steigt über die Läufe).

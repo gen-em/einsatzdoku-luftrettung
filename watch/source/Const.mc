@@ -7,7 +7,7 @@ module Const {
      * getrennt ausgeliefert wird (CLAUDE.md 2); sie steht auf der Sync-Seite
      * und geht als "app" im geraet-Block an den Server.
      */
-    const APP_VERSION = "4.5.1";
+    const APP_VERSION = "4.5.2";
 
     /* Wie lange ein geparktes (dauerhaft abgewiesenes) Paket auf der Uhr
      * liegen bleibt, bevor ein Sendelauf es raeumt (wie auf dem Handy):

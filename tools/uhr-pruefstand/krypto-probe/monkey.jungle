@@ -1,1 +1,8 @@
 project.manifest = manifest.xml
+
+# Seit KG-03a uebersetzt die Probe den Krypto-Kern DER APP mit -- dieselben
+# Dateien, nicht eine Abschrift: Huelle.mc (Fassung 1, Bausteine), Huelle2.mc
+# (Fassung 2) und was sie brauchen (Fassung der App, Vektoren der
+# Selbsttests). Die Schritte APP-… und alle der Fassung 2 messen damit, was
+# auf die Uhr kommt. Vollstaendig zugewiesen, wie in watch/monkey.jungle.
+base.sourcePath = source;../../../watch/source/Const.mc;../../../watch/source/Huelle.mc;../../../watch/source/HuelleVektor.mc;../../../watch/source/Huelle2.mc;../../../watch/source/HuelleVektor2.mc
