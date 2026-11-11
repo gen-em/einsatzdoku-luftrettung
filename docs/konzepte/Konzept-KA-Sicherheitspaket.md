@@ -12,8 +12,8 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-06b-1** (Kern einbinden, Web 24.14.0) im PR; danach 06b-2 Server für das Standbuch (Migration), 06b-3 Verbraucher, 06b-4 Anhebelauf (E-KA-51). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-01, -02, -05, -06 mit PR #168 gemergt (Uhr 4.5.1), KG-03 wartet auf diese Referenz |
-| Erledigt | **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
+| In Arbeit | **KA-06b-2** (Server für das Standbuch, Web 24.15.0, Migration) im PR; danach 06b-3 Verbraucher, 06b-4 Anhebelauf (E-KA-51). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-01, -02, -05, -06 mit PR #168 gemergt (Uhr 4.5.1), KG-03 wartet auf diese Referenz |
+| Erledigt | **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
@@ -104,6 +104,7 @@ Safari.
 | E-KA-50 | **Nach einem zurückgesetzten Server schreibt der Browser seinen Stand zurück** (`EdStandbuch.zurueckschreiben()`) — nur über einen eigenen Knopf mit Rückfrage der BetreiberIn, dazu ein Satz im Runbook. Ohne ihn wäre nach jeder eingespielten Sicherung jedes Blatt dauerhaft „zurückgelegt". Der Knopf ist ein neuer Bedienweg und braucht Mockup und Freigabe | 11.11.2026, BetreiberIn |
 | E-KA-51 | **06b in vier Teilen, je ein PR:** 06b-1 Kern einbinden (Weiche aus), 06b-2 Server für das Standbuch (Tabelle, `api/standbuch.php`, Datensatz und Blatt in einer Transaktion, 409; Migration, `update.php`), 06b-3 Verbraucher umstellen und Ableitung 2 am Server, 06b-4 Anhebelauf. **Die Weiche wird erst umgelegt, wenn auch 06c und 06d stehen** — als Hauptstufe Web 25.0.0 | 11.11.2026, BetreiberIn |
 | E-KA-52 | **Entscheidungen des Krypto-Kerns** (Fable-Agent, E-KA-49): (1) die Fassung der Ableitung folgt aus der Rundenzahl — ab 1 200 000 Fassung 2 (`ABLEITUNG2_AB`), keine eigene Spalte; (2) die Weiche ist eine Konstante im Skript, kein Wert vom Server; (3) das Buch vergisst nichts — beim Übernehmen eines neueren Blatts gilt je Feld der höhere Wert (strenger als die Referenz); (4) 409 heißt neu aufsetzen, vier Versuche, dann `konflikt`; (5) die Ablage hält den Stand verschlossen, eigene Datenbank `nadoku-stand`; (6) neuer Grund `blatt-version`; (7) `abgleichen()` liefert Befunde statt zu werfen; (8) `EdCrypto.decrypt()` weist `edk2:` mit Grund `gebunden` ab; (9) Formprüfungen strenger als die Referenz — wo die Referenz lockerer war, ist sie mit 06b-1 nachgezogen (F-KA-90) | 11.11.2026, Umsetzung |
+| E-KA-53 | **Die Abschrift des Standbuchs liegt in einer eigenen Tabelle** (`stand_blaetter`, PK Konto und Blatt, Kaskade mit dem Konto), nicht in `users` oder `app_state`: 17 Zeilen je Konto mit eigener Version. Die Versionsregel ist **eine Anweisung je Fall** (`INSERT IGNORE` für ein neues Blatt, `UPDATE … WHERE version = ?` sonst) statt einer Transaktion mit Lesen und Schreiben. Decke 256 KB Innenlänge je Blatt. **Nicht im Konto-Backup** — ein eingespieltes Backup bekommt im Browser neue Zähler (06d); der Demo-Reset räumt die Blätter mit | 11.11.2026, Umsetzung |
 | E-KA-21 | **Die Garmin-Anteile gehen an eine eigene Instanz, Kürzel KG** (Abschnitt 11): KA-04 Punkt 1 und 4, der Garmin-Teil von KA-06c samt der Messung für 06a, die Garmin-Kommentare aus F-KA-43 und der Garmin-Teil von KA-M6. KG zählt eigene Nummern (`KG-NN`, `F-KG-NN`, `E-KG-NN`, `P-KG-NN`), führt ein eigenes Konzept und schreibt den Rahmenplan nicht — das tut diese Instanz | 10.11.2026, BetreiberIn |
 
 ---
@@ -783,6 +784,27 @@ des eigenen Kontos.
 **Fassung 2 vorher gezählt** (Konzept, Punkt 7): örtlich 6 Pakete, alle
 Fassung 3; 3 Begleitdateien, alle versiegelt. Staging und Produktiv nicht
 gezählt (E-KA-31).
+
+### KA-06b-2 Server für das Standbuch (11.11.2026)
+
+**Was nicht geprüft werden konnte — zuerst.**
+
+1. **Die Migration auf Staging und Produktiv** — `update.php` ruft die
+   BetreiberIn (P-KA-12); örtlich ist sie angewendet und steht.
+2. **Datensatz und Blatt in einer Anfrage** gibt es noch nicht; es kommt mit
+   den Verbrauchern (06b-3). Bis dahin schreibt kein Browser in die Tabelle.
+3. **Zwei Tabs gleichzeitig** sind nicht nebenläufig gemessen, sondern
+   nacheinander: der zweite mit der veralteten Version bekommt den
+   Konflikt. Dass die Anweisung atomar ist, folgt aus ihr, nicht aus einer
+   Messung.
+
+**Gemessen:**
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Bedienprobe, Weg `ka06b2-standbuch` (Prüfkonto, über `EdStandbuch.apiTransport()`) | 16 Blätter und Buch in Form; Blatt abgelegt und Zeichen für Zeichen zurück; veraltete Version → Konflikt mit dem Blatt des Servers, ebenso beim Buch; 400 `text`, `version`, `wer` | ohne Endpunkt (Stand von `main`): Abbruch, rot; Versionsregel mit `version >= ?` statt `= ?`: kein Konflikt, rot | Schnittstelle zwischen Browser und Server, Versionsregel, Form |
+| Bedienprobe, Weg `ka06b2-fremdkonto` | das Demo-Konto sieht das Blatt des Prüfkontos nicht | ohne Endpunkt: rot | Bindung an das Konto der Sitzung |
+| Migration örtlich | `2026_11_11_standbuch` „Erfolgreich angewendet", Tabelle wie in `schema.sql` | — | Migration und Schema gleich |
 
 ### KA-06b-1 Kern einbinden (11.11.2026)
 

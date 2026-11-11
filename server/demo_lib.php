@@ -658,6 +658,15 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
                    JOIN devices d ON d.id = dr.device_id
                    WHERE d.user_id = ?')->execute([$id]);
 
+    /* DIE BLAETTER DES STANDBUCHS (KA-06b-2). Sie haengen am Konto, und das
+     * Konto bleibt beim Reset stehen — ohne diese Zeile stuende nach dem
+     * Reset ein Zaehlerstand fuer Datensaetze, die es nicht mehr gibt, und
+     * die neu eingespielte Vorlage galte im Browser als zurueckgelegt.
+     * Vor `update.php` gibt es die Tabelle nicht. */
+    if (db_hat_tabelle($pdo, 'stand_blaetter')) {
+        $pdo->prepare('DELETE FROM stand_blaetter WHERE user_id = ?')->execute([$id]);
+    }
+
     foreach (['missions', 'rest_segments', 'days', 'devices', 'pair_sessions',
               'password_resets', 'crew_presets', 'bw_units', 'resources',
               'transport_dests', 'vehicles', 'user_defaults',

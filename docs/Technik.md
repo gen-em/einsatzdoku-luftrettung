@@ -193,6 +193,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       Referenz. Ein Öffnen gibt es hier mit Absicht nicht
 │   ├── kontopaar_lib.php  Das Schlüsselpaar des Kontos (S11-03): Siegel,
 │   │                       Zustand, Ablegen, SEC1 für die Kopplung (4.40)
+│   ├── standbuch_lib.php  Die Abschrift des Standbuchs (KA-06b-2): Stand,
+│   │                       Holen, Ablegen nach der Versionsregel (4.42)
 │   ├── tag_spuren.php     die Spuren eines Diensttages, einzeln oder mehrere
 │   │                       auf einmal abrufbar: Karte plus chronologische
 │   │                       Liste, Einsätze UND Ruhesegmente (4.8)
@@ -347,6 +349,8 @@ Daten erst nach Server-Bestätigung.
 │   │                       Betrieb → Hintergrundjobs (seit 23.5.0; leer = aus) als Kopfzeile
 │   │                       X-Health-Token oder `?token=`; 200/503 mit
 │   │                       acht Feldern, 403 einheitlich, Topf `health`
+│   ├── api/standbuch.php  Die Blätter des Standbuchs: stand, holen, ablegen
+│   │                       (KA-06b-2, 4.42)
 │   ├── api/kopplung_stand.php  Wartet dieses Konto noch auf ein Gerät, und
 │   │                       hat es Ja gesagt? (S5, Web 13.1.0) GET, nimmt
 │   │                       KEINE Eingabe — welche Sitzung gemeint ist, steht
@@ -1090,6 +1094,7 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 | `rate_limits` | Ratenschutz: Versuche je `topf` und `merkmal` (`ip:…`, `id:…` oder `alle`), mit Zeitfenster und Sperrfrist; liegt bewusst in der Datenbank und nicht in der Sitzung — eine Zählung, die der Aufrufer durch Wegwerfen seines Cookies zurücksetzen kann, ist keine. **Die Töpfe stehen in `RATE_GRENZEN` und nirgends sonst** — und hier steht ihre Zahl absichtlich **nicht** mehr: Bis Web 20.10.0 stand „alle vier“ (falsch seit sechs Töpfen), bis 20.11.0 „es sind zwölf“ (falsch mit den beiden Ingest-Töpfen). Eine Zahl in einem Fließtext altert genauso still wie eine Aufzählung. Bei `salt` und `reset` zählt **jede** Anfrage, nicht nur eine fehlgeschlagene: Beide Endpunkte kennen kein Scheitern, begrenzt wird die Menge (`rate_zaehlen()`). Der Job `aufraeumen` entsorgt Altbestand. Seit Web 20.10.0 dazu **`stufe`** (0 = nie gesperrt, 1–4 = Sprosse der Sperrleiter) und **`stufe_bis`** (letzter Fehlversuch + 24 h; danach gilt die Stufe als 0, auch wenn die Zeile noch dasteht) sowie ein Index auf `gesperrt_bis` |
 | `rechtstexte` | Die Rechtstexte dieser Installation (R32, seit Web 9.11.0). `schluessel` = `impressum` / `datenschutz`, seit Web 20.19.0 auch `nutzungsbedingungen` / `avv`, `inhalt` = Markdown-Quelle (`MEDIUMTEXT`; NULL oder leer = Leerzustand), `stand_am` = das im Editor **von Hand** gesetzte Standdatum (NULL = keine Standzeile). **Nicht in `app_state`:** Dessen Wert ist `VARCHAR(190)`, eine Datenschutzerklärung hat 8 000 bis 20 000 Zeichen — und ohne strict mode kürzt MySQL still |
 | `app_state` | Schlüssel/Wert (z. B. `salt_secret`, seit Web 10.1.0 `jobs_token` = Geheimnis für `jobs.php?token=…` (seit Web 23.1.0 nur noch der Job-Lauf), seit Web 23.1.0 `kette_token` = Geheimnis der Aktionen der Auslieferungskette (nur per POST, 4.7 „Die zwei Tokens"), `adminbackup_intervall`, `adminbackup_last`, seit Web 9.8.0 `adminbackup_aufbewahrung` = Zahl der Pakete je Konto, 0/fehlend = Vorgabe **2**, vorher 3; seit Web 12.0.0 `adminbackup_grenze_gb` = Speichergrenze der Ablage (fehlend = 2), `adminbackup_schwellen` = Warnschwellen in Prozent (fehlend = 70,90), `adminbackup_schwellen_gemeldet` und `adminbackup_schwellen_offen` = je Schwelle einmal melden, `adminbackup_auftrag` = Zeiger des Auftrags „Alle sichern"; seit Web 12.1.0 `versand_auto` = Versand auf die Backup-Ziele ein/aus (S2/AP7); seit Web 9.10.0 `adminbackup_mail` = Erinnerung an die Verwaltung ein/aus, `adminbackup_mail_last` = Datum der letzten Erinnerung, `logo_standard` = Logo dieser Installation (`hubschrauber` / `fahrzeug`, fehlend = Hubschrauber); seit Web 15.1.0 `speicher_db_bytes`, `speicher_dateien_bytes` und `speicher_stand` = die tägliche Messung aus `speicher_lib.php` sowie `webspace_gb` = Webspace laut Hosting als **Angabe** der BetreiberIn (fehlend = kein zweiter Bezug, siehe 4.25); seit Web 15.3.0 `smtp_last` und `smtp_last_ok` = Zeitpunkt und Erfolg des letzten Mailversands, geschrieben von `smtp_send()` (siehe 4.26); seit Web 20.5.0 `speicher_db_grenze_gb` = Kontingent der Datenbank laut Hosting; seit Web 20.6.0 `migration_tor_hash` und `migration_tor_offen` = der Zwischenspeicher des Torwächters; seit Web 20.7.0 `csp_scharf` = Content-Security-Policy scharf statt Report-Only und `hsts_tage` = Bindungsdauer von HSTS in Tagen, 0/1/7/365, fehlend = **1** (siehe 8); seit Web 20.8.0 `instanz_name` und `instanz_kurz` = der Name dieser Installation, fehlend = „Gen-EM Einsatzdokumentation Notarzt" bzw. „Gen-EM NAdoku" (siehe 9)). Die Wartungsmarken `last_cleanup` und `last_cleanup_ok` sind mit Web 10.1.0 entfallen — ihre Auskunft steht vollständiger in `jobs` |
+| `stand_blaetter` | **Seit Web 24.15.0 (KA-06b-2) die Abschrift des Standbuchs:** je Konto 16 Blätter (`wer` 0…15) und das Gerätebuch (`wer` 16), PK `(user_id, wer)`, FK auf `users` mit Kaskade. `text` ist `edk2:` unter dem Inhaltsschlüssel (Zweck `stand` bzw. `geraete`), `version` das Z im Blatt. Der Server prüft nur Form und Größenklasse (`edk2_innenlaenge()`, Decke 256 KB innen) und die Versionsregel — ersetzt wird nur, wer die liegende Version nennt und eine höhere schickt, in einer Anweisung (`standbuch_lib.php`). Nicht im Konto-Backup: Ein eingespieltes Backup bekommt im Browser neue Zähler (06d). Der Demo-Reset räumt die Blätter mit — 4.42 |
 | `csp_berichte` | Meldungen der Content-Security-Policy, **zusammengefasst**: UNIQUE über (`richtlinie`, `quelle`, `seite`), dazu `anzahl`, `erstellt`, `zuletzt`. Geschrieben von `api/csp_bericht.php` ohne Anmeldung, seit Web 24.13.0 höchstens 20 Einträge je Bericht (`CSP_BERICHT_MAX`, KA-05); keine IP, kein Konto, kein Abfrageteil der Adresse. Der Job `aufraeumen` löscht nach 30 Tagen (seit Web 20.7.0, siehe 8) |
 | `missions.letzter_punkt_am` / `rest_segments.letzter_punkt_am` | Wann zuletzt ein Punkt **eintraf** (seit Web 10.2.0, S2). Nicht der Zeitraum der Stücke (`ts_von`/`ts_bis`; bis Web 22.7.0 `track_points.ts`) — das ist die Aufzeichnungszeit. Die Karenz aus E-S2-06 braucht die Ankunftszeit: Die Uhr setzt `final` in *jedem* Teilstück, ein spät hochgeladener Puffer wäre über `MAX(ts)` gerechnet im Moment des Eintreffens schon 14 Tage still. NULL = noch nie gemessen; der Verdichtungsjob trägt es beim ersten Hinsehen nach |
 | `track_cuts` | Sperrvermerke des Schneidewerkzeugs (seit Web 12.5.0, S4/A2), eine Zeile je Schnitt: `owner_type`/`owner_id` = Quelle, `mission_id` = der herausgeschnittene Einsatz (seit Web 22.2.0 NULL-fähig: NULL = ein gelöschter Zeitraum, Backlog Nr. 161), `von_ts`/`bis_ts` = der gesperrte **Zeitraum**. `ingest.php` verwirft Punkte darin — sonst kehrte eine Nachlieferung aus dem Gerätepuffer in die Quelle zurück und der Schnitt löste sich still wieder auf. Wie `track_points` ohne FK (polymorph); die Löschwege räumen ausdrücklich mit. Siehe Abschnitt 4.11 |
@@ -10317,8 +10322,15 @@ kein Wert vom Server, sonst hielte sie, wer den Server beschreibt. Der
 Rückweg bleibt frei von Server und Anteil: `edka2:` für die
 Wiederherstellungshülle wird abgewiesen.
 
-**Was noch nicht da ist:** der Endpunkt für die Blätter (KA-06b-2, mit
-Migration), die Umstellung der Verbraucher (KA-06b-3), der
+**Auf dem Server** (seit Web 24.15.0, KA-06b-2): die Tabelle
+`stand_blaetter` und `api/standbuch.php` mit `stand`, `holen` und `ablegen`
+— 200, 409 `konflikt` samt dem Blatt des Servers, 400 `form` mit dem Feld,
+409 `migration` vor `update.php`. Die Form der Aktionen steht im Kopf von
+`assets/standbuch.js` („DIE SCHNITTSTELLE") und im Kopf des Endpunkts.
+Datensatz und Blatt in einer Anfrage zu speichern kommt mit den
+Verbrauchern (06b-3).
+
+**Was noch nicht da ist:** die Umstellung der Verbraucher (KA-06b-3), der
 Anhebelauf (KA-06b-4), die Kopplung mit Vergleichswert an den Geräten
 (KA-06c) und die Formprüfung am Server (KA-06d).
 

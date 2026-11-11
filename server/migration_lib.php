@@ -3737,6 +3737,33 @@ function migrationen_katalog(): array
                ADD COLUMN darstellung VARCHAR(10) NOT NULL DEFAULT '' AFTER logo_wahl",
         ],
     ],
+    [
+        'id'    => '2026_11_11_standbuch',
+        'web'   => '24.15',
+        'label' => 'Standbuch: Abschrift des Zaehlerstands je Konto (Schritt 28, KA-06b-2)',
+        /* DER ZAEHLERSTAND GEGEN DAS ZURUECKLEGEN liegt im Browser; damit
+         * ein zweiter Browser dasselbe weiss, liegt eine verschlossene
+         * Abschrift hier (E-KA-43). 16 Blaetter und ein Geraetebuch je
+         * Konto; der Server haelt nur die Versionsregel.
+         *
+         * NICHT ZERSTOEREND: Es kommt eine Tabelle dazu. Bis sie steht,
+         * antwortet `api/standbuch.php` mit 409 `migration`, und die Weiche
+         * des Browsers steht ohnehin noch aus. */
+        'skip'  => function (PDO $pdo): bool {
+            return db_hat_tabelle($pdo, 'stand_blaetter');
+        },
+        'sql'   => [
+            "CREATE TABLE IF NOT EXISTS stand_blaetter (
+               user_id      INT UNSIGNED NOT NULL,
+               wer          TINYINT UNSIGNED NOT NULL,
+               version      INT UNSIGNED NOT NULL,
+               text         MEDIUMTEXT NOT NULL,
+               geaendert_am DATETIME NOT NULL,
+               PRIMARY KEY (user_id, wer),
+               CONSTRAINT fk_stand_blaetter_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

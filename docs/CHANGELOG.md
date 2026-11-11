@@ -14,6 +14,18 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.15.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — der Server hält eine verschlossene Abschrift des Zählerstands.**
+  Gegen das Zurücklegen alter Blöcke führt der Browser je Datensatz einen
+  Zähler; ein zweiter Browser wüsste davon nichts, wenn der Stand nur
+  dort läge. Der Server bewahrt ihn in 16 Blättern je Konto auf, kann sie
+  nicht öffnen und ersetzt eines nur, wenn der Absender die liegende
+  Fassung kennt. Nach dem Deploy muss `update.php` laufen; benutzt wird
+  die Abschrift erst, wenn der Browser das neue Format schreibt.
+
 ## [Web 24.14.0] — unveröffentlicht
 
 ### Hinzugefügt
