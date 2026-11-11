@@ -317,7 +317,8 @@ module Model {
         var cur = sessions[sessions.size() - 1] as Lang.Dictionary;
         // [typ, isoUTC, lokaleAnzeige]
         (cur["events"] as Lang.Array).add([type, Util.isoNow(), Util.localHHMM()]);
-        Util.vibrateShort();
+        // Keine Vibration hier: Cpr.buchen() waehlt das Muster, je nachdem,
+        // ob der Countdown neu startet (seit Uhr 4.5.0, E-KG-12).
         save();
     }
 

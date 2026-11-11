@@ -77,7 +77,11 @@ module Huelle {
             roh = _ausBase64(b64 as Lang.String);
             if (roh.size() != 65 || roh[0] != 0x04) { roh = null; }
             else {
-                // Liegt er auf der Kurve? createPublicKey wirft sonst.
+                /* Nimmt die Bibliothek ihn an? Ob createPublicKey dabei
+                 * prueft, dass der Punkt auf der Kurve liegt, ist auf
+                 * keinem Geraet gemessen (F-S11-85, F-KA-43) -- diese
+                 * Zeile belegt nur Laenge, Praefix und dass nichts wirft.
+                 * Bis Uhr 4.3.3 stand hier, sie pruefe die Kurve. */
                 Cryptography.createPublicKey(
                     Cryptography.KEY_PAIR_ELLIPTIC_CURVE_SECP256R1 as Cryptography.HashAlgorithm,
                     sec1ZuGeraet(roh));

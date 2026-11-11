@@ -883,8 +883,8 @@ Fehler:
 > diesen Rumpf. Ein Client wertet deshalb nur `payload`, `klartext`, `auth`,
 > `device_disabled` und `konto` wie unten beschrieben; dieselbe Zahl ohne
 > das passende Feld heißt „später unverändert erneut". Vor dem Räumen nach
-> der 30-Tage-Frist geht noch ein Sendeversuch hinaus. Die Uhr zieht
-> mit KG nach.
+> der 30-Tage-Frist geht noch ein Sendeversuch hinaus. Die Uhr tut es
+> seit Uhr 4.5.1 (KG-06).
 
 | Code | Body | Bedeutung / Verhalten der Uhr |
 |---|---|---|

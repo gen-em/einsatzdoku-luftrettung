@@ -83,7 +83,28 @@ erfüllt `minApiLevel 3.1.0` nicht.
   Die Langdruck-Erkennung der App funktioniert.
 - Ein Halten über 3 s wird nicht abgefangen.
 - **Lang UP erzeugt zusätzlich `onMenu`.** Dafür existiert die Absicherung in
-  `CprDelegate.onMenu` — sonst würde eine Adrenalingabe doppelt gezählt.
+  `ActionDelegate.onMenu` — sonst würde eine Adrenalingabe doppelt gezählt.
+  Seit Uhr 4.5.0 hält zusätzlich die 10-s-Sperre der Reanimation.
+
+**Am Gerät beobachtet, nicht im Simulator** (BetreiberIn, 10.11.2026, Uhr
+4.3.3; Konzept KG, F-KG-01, -02, -04):
+
+- **Die App vibriert auch, wenn sie nicht im Vordergrund ist** — das
+  Countdown-Ende der Reanimation kommt an.
+- **Ein neuer Vibrationsaufruf bricht den laufenden ab.** Bei
+  Rhythmuskontrolle und Defibrillation folgt dem kurzen Puls (0,2 s) sofort
+  der Doppelpuls des Countdown-Neustarts; spürbar ist nur der Doppelpuls.
+  Wer zwei Muster hintereinander will, legt sie in **einen** Aufruf
+  (höchstens acht Abschnitte).
+- **Kurz UP/DOWN auf der Reanimationsseite bucht ein Ereignis** — UP
+  Adrenalin, DOWN Rhythmuskontrolle, etwa 1 s nach dem Seitenwechsel. Die
+  Seite wechselt beim Drücken, das Loslassen erreicht die neue Seite, und
+  der Halte-Timer der alten läuft ab. Derselbe Mechanismus wie in
+  Abschnitt 6. **Seit Uhr 4.5.0** blättert die Seite während einer Rea
+  nicht mehr, und jeder Seitenwechsel von dort bricht den Halte-Timer ab
+  (`halteAbbrechen()`); der Beleg am Gerät steht aus.
+- **Offen:** ob ein Vibrationsabschnitt von 2 s am Stück gehalten oder still
+  gekürzt wird.
 
 ## 3. Forerunner 945 — `fr945`
 
@@ -209,6 +230,17 @@ Tastenereignis und Ansichtswechsel abhängt, ist hier nicht zu belegen — weder
 sein Vorhandensein noch seine Behebung. Solche Befunde brauchen das Gerät, und
 der Prüfstand ist ausdrücklich **kein** Gegenbeweis: Dass er den Fehler nicht
 zeigt, heißt nicht, dass es ihn nicht gibt.
+
+**Im Simulator blättert ein kurzer UP-Druck auf der Reanimationsseite ohne
+Rea zwei Seiten** (Uhr 4.4.0, `xdotool keydown`/`keyup` mit 0,15 s, Probe
+`rea/`): Das Behavior beim Drücken wechselt die Seite, das Loslassen
+erreicht die neue und blättert dort noch einmal. Am Gerät nicht gemeldet und
+nicht gemessen (Konzept KG, F-KG-09).
+
+**Ein zweiter Fall derselben Art** (10.11.2026, Abschnitt 2): Kurz UP/DOWN
+auf der Reanimationsseite bucht nach dem Seitenwechsel ein Ereignis, weil
+der Halte-Timer der verlassenen Seite weiterläuft. Belegt ist er nur am
+Gerät; die Behebung ebenso.
 
 ---
 

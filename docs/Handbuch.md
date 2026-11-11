@@ -50,7 +50,7 @@ belegt — und wird deshalb zusätzlich über den Touchscreen bedient:
 | kurz UP / DOWN | nach oben / unten wischen |
 | kurz START | kurz Action (Taste oben rechts) |
 | lang START | lang Action **oder** lang Zurück |
-| lang UP / lang DOWN | nicht verfügbar — die Ereignisse liegen im Rea-Untermenü |
+| UP / DOWN auf der Reanimationsseite (Adrenalin, Defibrillation) | nicht verfügbar — die Ereignisse liegen im Rea-Untermenü |
 | BACK | kurz Zurück (Taste unten rechts) oder nach rechts wischen |
 
 Der lange Druck liegt auf der Venu bewusst doppelt: Sollte die Uhr den langen
@@ -116,9 +116,13 @@ Abschnitt 2.2 gibt es erst im laufenden Dienst.
 > mehr angemeldet")* heißt: Der Server kennt diese Uhr nicht mehr — sie wurde
 > in den Einstellungen gelöscht. Die Uhr hört dann auf zu
 > senden und **behält alles — 30 Tage lang**, gezählt ab der ersten
-> Abmeldung. Danach verwirft sie alle ungesendeten Pakete: Eine Uhr, die
-> niemand mehr koppelt, soll Spur, Phasen und Reanimation nicht unbegrenzt
-> tragen. Das Datum in der Zeile ist der letzte Tag. Der Weg zurück ist eine
+> Abmeldung. Danach versucht sie es noch einmal; weist der Server sie
+> wieder ab, verwirft sie alle ungesendeten Pakete: Eine Uhr, die niemand
+> mehr koppelt, soll Spur, Phasen und Reanimation nicht unbegrenzt tragen.
+> Das Datum in der Zeile ist der letzte Tag. *(Seit Uhr 4.5.1 gilt als
+> Abmeldung nur die Antwort des Servers selbst — eine Anmeldeseite im WLAN
+> oder ein Proxy, die dieselbe Fehlerzahl schicken, halten die Uhr nicht
+> mehr an; und vor dem Verwerfen geht der letzte Versuch hinaus.)* Der Weg zurück ist eine
 > neue Kopplung (*lang START*), **auch wenn noch Pakete offen sind** *(seit
 > Uhr 4.3.0; davor verweigerte die Uhr sie mit „Erst 2 Pakete senden", und
 > es blieb nur die Frist)*. Die Uhr fragt dann „Trennen? 2 Pakete bleiben und
@@ -127,7 +131,8 @@ Abschnitt 2.2 gibt es erst im laufenden Dienst.
 > hin — sie gehören dir und wären dort lesbar; die Sync-Seite zeigt dann „2
 > Pakete altes Konto" und **kurz START** verwirft sie nach einer Rückfrage.
 > Die Frist läuft für sie weiter. Während eines Dienstes geht das nicht
-> („Erst Dienst beenden").
+> („Erst Dienst beenden") — seit Uhr 4.4.0 gilt das für jedes Koppeln im
+> Dienst (Abschnitt 13.1).
 >
 > „**Gerät im Web deaktiviert**" mit „**Im Web klären, bis 27.10.**"
 > darunter *(seit Uhr 4.2.0; davor stand auch hier „Abgemeldet")* heißt:
@@ -138,8 +143,11 @@ Abschnitt 2.2 gibt es erst im laufenden Dienst.
 > hilft hier nicht:** Im Web das Gerät wieder einschalten (oder das Konto
 > freigeben lassen), dann auf der Uhr die Sync-Seite **einmal verlassen und
 > wieder öffnen** — beim Öffnen versucht sie es, und der Rückstand geht
-> hinaus. *(Bis Uhr 4.1.1 musste die App dafür ganz neu gestartet werden,
-> Backlog Nr. 431.)*
+> hinaus. Fehlt ihr noch der Kontoschlüssel, holt sie ihn dabei zuerst
+> *(seit Uhr 4.5.0: Eine gesperrte Uhr bekommt ihn vom Server nicht, und
+> davor blieb sie ohne ihn stehen; START halten bot dann nur das Trennen
+> an, Backlog Nr. 572)*. *(Bis Uhr 4.1.1 musste die App dafür ganz neu
+> gestartet werden, Backlog Nr. 431.)*
 >
 > „**Konto voll**" mit „**Im Web aufräumen**" *(seit Uhr 4.2.0)* heißt: Dein
 > Konto hat seine Mengengrenze erreicht. Die Uhr behält alles und versucht es
@@ -260,32 +268,55 @@ eingibst, steht in Abschnitt 10.
 
 Zwei Timer: oben im schwarzen Kopfbalken die **Gesamtdauer** seit Rea-Beginn,
 mittig groß der **2:00-Countdown** für den Zyklus, darunter ein
-Fortschrittsbalken. Bei 0:00 vibriert die Uhr fünfmal kräftig; der Countdown
-bleibt rot auf 0:00 stehen, bis er neu gestartet wird.
+Fortschrittsbalken. Bei 0:00 bleibt der Countdown rot auf 0:00 stehen, bis
+ihn eine Rhythmuskontrolle oder Defibrillation neu startet.
 
-| Taste | Wirkung |
+**Tasten** *(seit Uhr 4.5.0; davor öffnete kurz START das Menü, lang START
+startete den Countdown neu, lang DOWN war die Rhythmuskontrolle)*:
+
+| Taste | keine Rea | Rea läuft | Rea pausiert |
+|---|---|---|---|
+| kurz START | Rea **beginnen** | **Rhythmuskontrolle**, Countdown neu | Übersicht (fortsetzen oder beenden) |
+| lang START | — | **Menü** | Menü |
+| UP, kurz oder lang | Oberfläche wechseln | **Adrenalin** | — |
+| DOWN, kurz oder lang | Oberfläche wechseln | **Defibrillation**, Countdown neu | — |
+| BACK | Hauptanzeige | Hauptanzeige, die Rea läuft weiter | ebenso |
+
+**Während einer Rea verlässt nur BACK die Seite.** UP und DOWN buchen dort,
+statt zu blättern, und Wischen blättert ebenfalls nicht. Zurück kommst du von
+der Hauptanzeige mit **kurz UP**. UP und DOWN buchen beim Loslassen oder nach
+einer Sekunde Halten, nicht schon beim Drücken — so bucht die Tastensperre
+der Uhr, die mit UP beginnt, kein Adrenalin. Auf Uhren **ohne UP/DOWN**
+(Venu) gehen Adrenalin und Defibrillation nur über das Menü.
+
+**Ein Druck zu viel bucht nichts.** Dasselbe Ereignis wird innerhalb von
+**10 Sekunden** nicht noch einmal gebucht, gleich ob über Taste oder Menü —
+auch nicht in den ersten 10 Sekunden nach dem Beginn. Die Uhr zeigt und
+vibriert dann nichts. Ein **anderes** Ereignis geht sofort, etwa die
+Defibrillation drei Sekunden nach der Rhythmuskontrolle.
+
+**Vibration** *(seit Uhr 4.5.0, alle mit voller Stärke)*:
+
+| Was | Muster |
 |---|---|
-| kurz START, **keine** Rea läuft | Reanimation **beginnen** |
-| kurz START, Rea **läuft** | **Untermenü** öffnen |
-| lang START, Rea **läuft** | Countdown **neu starten** (2:00) |
-| lang START, **keine** Rea läuft | ohne Funktion |
-| lang UP | **Adrenalingabe** dokumentieren |
-| lang DOWN | **Rhythmuskontrolle** dokumentieren (setzt Countdown auf 2:00) |
-| kurz UP/DOWN | Oberfläche wechseln (Timer laufen weiter) |
-| BACK | zurück zur Hauptanzeige (Timer laufen weiter) |
+| Ereignis gebucht, Countdown läuft weiter (Adrenalin, Menüeinträge) | 1 × kurz |
+| Ereignis gebucht **und** Countdown neu (Beginn, Rhythmuskontrolle, Defibrillation, Fortsetzen) | 2 × kurz |
+| noch 0:30 | 1 × 2 s |
+| noch 0:10 | 2 × 2 s |
+| 0:00 | 3 × 2 s |
 
-Der häufigste Griff während einer laufenden Reanimation ist das Dokumentieren
-eines Ereignisses. Deshalb liegt das Untermenü auf dem **kurzen** Druck — der
-lange Druck ist dem Countdown vorbehalten.
+Kurz heißt: Gebucht. Lang heißt: Der Countdown meldet sich. Menü, Pause und
+Beenden vibrieren nicht. Die Uhr vibriert auch, wenn die App gerade nicht im
+Vordergrund ist.
 
-**Untermenü** (farbcodiert, endlos scrollbar, in derselben Darstellung wie das
-Schnellmenü der Hauptanzeige) in dieser Reihenfolge:
+**Menü** (lang START; farbcodiert, endlos scrollbar, in derselben Darstellung
+wie das Schnellmenü der Hauptanzeige). Es öffnet auf **Amiodaron** — die
+drei häufigsten Ereignisse liegen ohnehin auf Tasten:
 
 | Eintrag | Wirkung |
 |---|---|
-| Timer neu starten | setzt den Countdown auf 2:00 — **ohne** Zeitstempel |
-| Rhythmuskontrolle | Zeitstempel **und** Countdown-Neustart |
-| Defibrillation | Zeitstempel **und** Countdown-Neustart |
+| Rhythmuskontrolle | Zeitstempel **und** Countdown neu |
+| Defibrillation | Zeitstempel **und** Countdown neu |
 | Adrenalin | Zeitstempel |
 | Amiodaron | Zeitstempel |
 | Zugang | Zeitstempel |
@@ -296,8 +327,8 @@ Schnellmenü der Hauptanzeige) in dieser Reihenfolge:
 | Rea BEENDEN | hält die Reanimation an und öffnet die Übersicht (s. u.) |
 | Übersicht | zeigt alle Zeiten der laufenden Rea |
 
-Das Menü öffnet auf „Timer neu starten". Ein Schritt **nach oben** landet auf
-„Übersicht", zwei Schritte auf „Rea BEENDEN".
+*„Timer neu starten" ist mit Uhr 4.5.0 entfallen: Den Countdown startet eine
+Rhythmuskontrolle oder Defibrillation neu, nie ein Druck ohne Eintrag.*
 
 **Reanimation beenden — zweistufig.** „Rea BEENDEN" schließt die Rea nicht
 sofort, sondern **hält sie an** und öffnet die Übersicht. Ganz oben stehen dort
@@ -309,12 +340,13 @@ zwei Einträge:
 So fällt die Entscheidung mit den dokumentierten Zeiten vor Augen, und ein
 Vertippen schließt nichts mehr versehentlich. Triffst du keine Entscheidung
 und gehst mit BACK zurück, bleibt die Rea **pausiert** — alle Seiten zeigen
-das an, der rote Ring der Hauptanzeige wird gelb. Der Zustand übersteht auch
-einen Neustart der Uhr.
+das an, der rote Ring der Hauptanzeige wird blau *(bis Uhr 4.4.0 stand hier
+„gelb"; blau war er schon immer)*. In der Pause bringt dich **kurz START**
+zurück in die Übersicht. Der Zustand übersteht auch einen Neustart der Uhr.
 
-Während der Pause steht der Countdown. Die **Gesamtdauer läuft weiter**: Sie
-ist die tatsächlich verstrichene Reanimationszeit und würde sonst zu kurz
-dokumentiert.
+Während der Pause steht der Countdown, und gebucht wird nichts. Die
+**Gesamtdauer läuft weiter**: Sie ist die tatsächlich verstrichene
+Reanimationszeit und würde sonst zu kurz dokumentiert.
 
 Nach dem Beenden startet **kurz START** eine *neue* Reanimation — mehrere pro
 Einsatz sind möglich, jede bekommt im Web ihre eigene Tabelle. Bei Einsatzende
@@ -7004,7 +7036,10 @@ darunter, mit welcher Taste es einen neuen gibt.
 **Warum drei Schritte und nicht einer.** Zwischen dem Code und dem fertigen
 Gerät liegen **zwei Tore**: Die Web-Seite sieht, **wer eingibt**, und die Uhr
 sieht, **wessen Konto** es wäre. Keines allein trägt. Wer dir den Code
-abschwatzt, hat nichts — er kann an deiner Uhr nichts auslösen. Und wer dich
+abschwatzt oder ihn abliest, kann ihn in **seinem** Konto eintragen — dann
+fragt deine Uhr „Mit … koppeln?" mit **seiner** Adresse. Lies sie, bevor du
+Ja sagst; das ist das zweite Tor. *(Bis Uhr 4.3.3 stand hier, ein
+abgeschwatzter Code löse an der Uhr nichts aus.)* Und wer dich
 dazu bringt, einen **fremden** Code einzugeben, koppelt sein Gerät nicht an
 dein Konto: Das Ja fehlt ihm.
 
@@ -7038,7 +7073,15 @@ aber er beginnt mit einer Rückfrage:
    diesmal mit der Adresse der **neuen** Person in der Rückfrage. Genau dort
    fällt auf, wenn jemand den Code des falschen Kontos eingetippt hat.
 
-Zwei Dinge, die dabei bewusst so sind:
+Drei Dinge, die dabei bewusst so sind:
+
+**Im laufenden Dienst gibt es keinen neuen Code** *(seit Uhr 4.4.0)*. Die
+Uhr sagt **„Erst Dienst beenden"** — auch wenn sie gar nicht gekoppelt ist
+und auch ohne offene Pakete. Der laufende Einsatz liegt bis zum Senden
+unverschlüsselt auf der Uhr und würde mit dem Schlüssel des Kontos
+verschlossen, an das sie dann gekoppelt ist. Bis Uhr 4.3.3 ging das
+Neukoppeln im Dienst, wenn kein abgeschlossenes Paket wartete. Den
+Kontoschlüssel nachholen (gleiches Konto) geht weiter auch im Dienst.
 
 **Offene Pakete blockieren das Trennen.** Steht noch etwas zum Senden an, sagt
 die Uhr **„Erst N Pakete senden / Sonst ans neue Konto"** und trennt nicht.

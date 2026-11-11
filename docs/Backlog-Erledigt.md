@@ -11232,6 +11232,67 @@ zutreffen.
      Erledigt 10.11.2026 mit Web 24.11.0 (Schritt 28, KA-02): Übergabe von
      Fenster zu Fenster; Notfallblattprobe und Riegel druckblatt.
 
+570. **Die Garmin-Uhr band laufende Daten nicht an ihr Konto und glaubte jeder Quittung.** · gehört zu: 28 · Stand: erledigt · seit 10.11.2026
+     *Aufgenommen 10.11.2026 als Anlass der Probe `sendeweg` von KG-01
+     (Audit KA, F-KA-05, -07, -18 Uhr-Seite).* Drei Stellen im Sendeweg
+     der Garmin-App: `Pair.start()` ließ ein Neukoppeln im laufenden Dienst
+     zu, wenn kein abgeschlossenes Paket wartete, und `_findJob()` schickte
+     den laufenden Einsatz ohne Prüfung der Kontobindung — beides zusammen
+     schickte den laufenden Dienst an das neue Konto. `onResponse()` nahm
+     `next_seq` ungeprüft und löschte danach, was als quittiert galt.
+     `_send()` ließ ein unbestätigtes Spurstück bis zum nächsten Versuch
+     wachsen; der Server sah dieselbe Stelle mit anderem Inhalt. *Weg:* im
+     Dienst nie koppeln, laufende Pakete binden und prüfen, `next_seq` auf
+     `seq_from` plus gesendete Punkte deckeln, ein unquittiertes Stück
+     identisch wiederholen. *Abnahme:* eine Simulatorprobe je Stelle, rot
+     gegen Uhr 4.3.3.
+     Erledigt 10.11.2026 mit Uhr 4.4.0 (Schritt 28, KG-01): Kopplungssperre
+     im Dienst, Bindung und Prüfung der laufenden Pakete, Deckel für
+     next_seq, identische Wiederholung; Probe sendeweg.
+
+571. **Die Reanimation der Garmin-Uhr verlangte zu viele Griffe und bestätigte Buchungen nicht spürbar.** · gehört zu: 28 · Stand: erledigt · seit 11.11.2026
+     *Aufgenommen 11.11.2026 als Anlass der Probe `rea` von KG-05 (Wunsch
+     der BetreiberIn, Fenix 6 Pro).* Die Rhythmuskontrolle lag auf lang
+     DOWN, das Menü auf kurz START, ein Countdown-Neustart ohne Eintrag auf
+     lang START. Kurz UP/DOWN blätterte auch während einer Rea, und die
+     verlassene Seite buchte danach Adrenalin oder Rhythmuskontrolle
+     (`ActionDelegate`, Halte-Uhr). Der Doppelpuls des Countdown-Neustarts
+     brach die Bestätigung ab; vor dem Zyklusende gab es keine Erinnerung.
+     *Weg:* Belegung nach E-KG-03 bis -10, 10-s-Sperre, Muster in einem
+     Aufruf, Erinnerungen bei 0:30 und 0:10. *Abnahme:* Simulatorprobe, rot
+     gegen Uhr 4.4.0; Gerätetest auf der Fenix 6 Pro.
+     Erledigt 11.11.2026 mit Uhr 4.5.0 (Schritt 28, KG-05): Belegung,
+     Sperre, Muster und Erinnerungen; Menü öffnet beim Loslassen; Probe rea.
+
+572. **Eine gesperrte Garmin-Uhr ohne Kontoschlüssel kam nach dem Wiedereinschalten nicht heraus.** · gehört zu: 28 · Stand: erledigt · seit 11.11.2026
+     *Aufgenommen 11.11.2026 beim Aufnehmen von KA-04 in KG (Uhr-Rundlauf,
+     Art `--reaktivieren`, rot).* Seit Web 24.12.1 gibt `pair.php` einer im
+     Web deaktivierten Uhr keinen Kontoschlüssel (F-KA-27). `Pair.start()`
+     holte ihn nur, wenn die Uhr nicht angehalten war, und
+     `SyncView.onShow()` versuchte ohne Schlüssel nichts — nach dem
+     Wiedereinschalten blieb nur das Trennen. Der Rundlauf beruhte darauf,
+     dass eine deaktivierte Uhr ihren Schlüssel holt. *Weg:* bei 403
+     nachfragen, beim Öffnen der Sync-Seite zuerst den Schlüssel; Rundlauf
+     ohne Deaktivieren. *Abnahme:* `--reaktivieren`, `--neukoppeln`,
+     `--fremdkonto` grün.
+     Erledigt 11.11.2026 mit Uhr 4.5.0 (Schritt 28, KG-05): Schlüssel auch
+     bei 403, beim Öffnen der Sync-Seite zuerst; Rundlauf hält das Senden
+     statt zu deaktivieren.
+
+573. **Die Garmin-Uhr hielt jede 401/403 für eine Abmeldung und räumte nach der Frist ohne letzten Versuch.** · gehört zu: 28 · Stand: erledigt · seit 11.11.2026
+     *Aufgenommen 11.11.2026 als Anlass der Fälle 8 bis 11 der Probe
+     `sendeweg` von KG-06 (Audit KA, F-KA-18; JSON-Vertrag 5, E-KA-26).*
+     `Uploader.onResponse()` und `Pair.onSchluessel()` werteten 401 und 403
+     ohne Blick auf den Rumpf; die Anmeldeseite eines WLANs genügte, und
+     die 30-Tage-Frist begann. `abmeldeFristPruefen()` verwarf nach Ablauf
+     sofort. Gemessen: Im Simulator reicht Connect IQ den Rumpf beider Codes
+     durch (`{error=>auth}`, `{error=>device_disabled}`). *Weg:* nur mit
+     Fehlerfeld endgültig, vor dem Räumen ein Versuch. *Abnahme:* Probe rot
+     gegen Uhr 4.5.0; Gerätetest, ob die Fenix den Rumpf durchreicht.
+     Erledigt 11.11.2026 mit Uhr 4.5.1 (Schritt 28, KG-06):
+     vertragsAbweisung(), letzter Versuch vor dem Räumen; Probe sendeweg, 13
+     Prüfungen.
+
 562. **Bibliotheken ließen sich direkt aufrufen, Migrationen lagen offen, `$` ließ einen Zeilenumbruch durch.** · gehört zu: 28 · Stand: erledigt · seit 11.11.2026
      *Aufgenommen 11.11.2026 als Anlass des Riegels `schranken` von KA-05
      (Audit KA, F-KA-23, -34, -38).* Jede `*_lib.php`, `*_teile.php` und

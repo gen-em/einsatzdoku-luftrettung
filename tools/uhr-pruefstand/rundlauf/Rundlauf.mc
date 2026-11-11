@@ -24,6 +24,13 @@
 // Bis Uhr 4.0.0 entfernte die Antwort dann `pendingMissions[2]` und brach ab;
 // seit 4.1.0 entfernt sie ueber die Referenz. `bericht()` schreibt in die
 // Konsole des Simulators, was in der Liste und im Speicher uebrig ist.
+//
+// ART --neukoppeln / --fremdkonto (seit KG-05): `halten()` haelt das Senden
+// 30 s an, sobald die Uhr ihren Kontoschluessel hat. In dieser Zeit loescht
+// rundlauf.sh das Geraet; danach sendet die Uhr, bekommt 401 und hat einen
+// Rueckstand mit bekanntem Schluessel. Bis Web 24.12.0 holte sich dafuer
+// eine DEAKTIVIERTE Uhr den Schluessel; seit Web 24.12.1 gibt pair.php ihr
+// keinen mehr (F-KA-27).
 using Toybox.Lang;
 using Toybox.System;
 using Toybox.Application.Storage;
@@ -33,6 +40,8 @@ module Rundlauf {
     const EINSATZ = "m-rundlauf-0001";
     const RUHE = "r-rundlauf-0001";
     const SCHRUMPFEN = false;         // rundlauf.sh --schrumpfen setzt true
+    const HALTEN = false;             // rundlauf.sh --neukoppeln/--fremdkonto setzt true
+    const HALTEN_S = 30;
     const GEPARKT = ["m-rl-geparkt-1", "m-rl-geparkt-2"];
     var _ausgeloest as Lang.Boolean = false;
 
@@ -81,6 +90,19 @@ module Rundlauf {
         });
         Model.save();
         Storage.setValue("rl_gefuellt", true);
+    }
+
+    /* Haken am Anfang von Uploader._send (nur HALTEN): true = jetzt nicht
+     * senden. Die Frist beginnt beim ersten Versuch MIT Schluessel. */
+    function halten() as Lang.Boolean {
+        if (!HALTEN || !Huelle.hatSchluessel()) { return false; }
+        var bis = Storage.getValue("rl_halt_bis");
+        if (!(bis instanceof Lang.Number)) {
+            bis = Util.epochNow() + HALTEN_S;
+            Storage.setValue("rl_halt_bis", bis);
+            System.println("RL-HALT " + HALTEN_S.toString() + " s");
+        }
+        return Util.epochNow() < (bis as Lang.Number);
     }
 
     /* Haken 1, direkt nach dem Absenden (nur --schrumpfen): Ist das die

@@ -14,6 +14,79 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 4.5.1] — unveröffentlicht
+
+Schritt 28, Paket KG-06 (Backlog Nr. 573).
+
+### Behoben
+
+- **Uhr — eine Fehlerzahl ohne Antwort des Servers hielt die Uhr an.** Eine
+  401 oder 403 schickt auch die Anmeldeseite eines WLANs oder ein Proxy; die
+  Uhr hielt das für eine Abmeldung, hörte auf zu senden und begann die
+  30-Tage-Frist. Jetzt zählt nur die Antwort mit dem Fehlerfeld des
+  Servers, alles andere ist eine Störung und wird später wiederholt. Und
+  bevor die Frist die Pakete verwirft, versucht die Uhr es noch einmal.
+
+## [Uhr 4.5.0] — unveröffentlicht
+
+Schritt 28, Paket KG-05 (Backlog Nr. 571).
+
+### Geändert
+
+- **Uhr — die Reanimation ist neu belegt.** Kurz START bucht jetzt die
+  Rhythmuskontrolle und startet den Countdown neu, UP bucht Adrenalin, DOWN
+  die Defibrillation, lang START öffnet das Menü; „Timer neu starten" ohne
+  Eintrag gibt es nicht mehr. Die häufigsten Handgriffe liegen damit auf
+  einem einzigen Druck, und während einer Rea verlässt nur BACK die Seite.
+  Dasselbe Ereignis wird innerhalb von 10 Sekunden nicht noch einmal
+  gebucht, damit ein Doppeldruck keinen zweiten Eintrag schreibt.
+- **Uhr — der Countdown erinnert vor dem Ende, und jede Vibration ist
+  eindeutig.** Bei 0:30, 0:10 und 0:00 vibriert die Uhr ein-, zwei- und
+  dreimal zwei Sekunden lang, damit man es auch bei der Arbeit am Patienten
+  spürt. Eine Buchung bestätigt sie kurz, zweimal, wenn der Countdown neu
+  startet. Bisher brach der Doppelpuls des Neustarts die Bestätigung ab, und
+  man spürte nicht, ob gebucht war.
+
+### Behoben
+
+- **Uhr — ein kurzer Druck auf UP oder DOWN auf der Reanimationsseite
+  buchte ein Ereignis.** Die Seite wechselte, und eine Sekunde später stand
+  Adrenalin oder eine Rhythmuskontrolle im Protokoll, weil die verlassene
+  Seite den Druck für einen langen hielt. Jetzt blättert die Seite während
+  einer Rea nicht, und jeder Wechsel bricht die Erkennung ab.
+- **Uhr — das Loslassen von START wählte im eben geöffneten Menü einen
+  Eintrag.** Das Menü öffnet deshalb erst beim Loslassen.
+- **Uhr — eine im Web deaktivierte Uhr ohne Kontoschlüssel kam nach dem
+  Wiedereinschalten nicht mehr heraus** (Backlog Nr. 572). Seit Web 24.12.1
+  gibt der Server einer gesperrten Uhr keinen Schlüssel mehr, und ohne ihn
+  bot START halten nur das Trennen an. Jetzt fragt die Uhr auch im gesperrten
+  Zustand nach ihm, beim Öffnen der Sync-Seite von selbst.
+
+## [Uhr 4.4.0] — unveröffentlicht
+
+Schritt 28 (Sicherheitspaket), Paket KG-01 (Backlog Nr. 570).
+
+### Behoben
+
+- **Uhr — im laufenden Dienst lässt sich die Uhr nicht mehr neu koppeln.**
+  Die Sperre griff bisher nur, wenn ein abgeschlossenes Paket wartete; sonst
+  ließ sich die Uhr mitten im Dienst an ein anderes Konto koppeln, und der
+  laufende Einsatz ging verschlüsselt dorthin, wo ihn das andere Konto lesen
+  konnte. Jetzt sagt die Sync-Seite im Dienst immer „Erst Dienst beenden";
+  nur das Nachholen des Kontoschlüssels bleibt erlaubt, weil es dasselbe Konto
+  ist. Gehen die Zugangsdaten auf anderem Weg verloren, bleibt auch der
+  laufende Einsatz an das bisherige Konto gebunden.
+- **Uhr — eine Quittung des Servers löscht keine ungesendeten Punkte mehr.**
+  Die Uhr übernahm die gemeldete Zahl ungeprüft und räumte danach auf; eine
+  zu große Zahl, etwa von einer falschen Serveradresse, ließ sie Spurpunkte
+  löschen, die nie angekommen waren. Jetzt gilt höchstens, was sie selbst
+  gesendet hat.
+- **Uhr — nach einem Funkabriss gehen keine Spurpunkte mehr verloren.** Kam
+  auf ein Spurstück keine Antwort, schickte die Uhr beim nächsten Versuch ein
+  größeres, das an derselben Stelle begann; der Server legte es nicht ab und
+  quittierte es trotzdem. Jetzt wiederholt sie das unquittierte Stück genau
+  so, wie sie es gesendet hat.
+
 ## [Web 24.13.0] — unveröffentlicht
 
 ### Geändert

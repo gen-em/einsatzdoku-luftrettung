@@ -13,6 +13,8 @@
 // SELECT_LONG     lang START                        lang Action ODER lang Zurueck
 // MARK_A          lang UP                           — (nur ueber Menue)
 // MARK_B          lang DOWN                         — (nur ueber Menue)
+// UP_KURZ         kurz UP (nur Reanimationsseite)   — (Wischen ist PAGE_PREV)
+// DOWN_KURZ       kurz DOWN (nur Reanimationsseite) — (Wischen ist PAGE_NEXT)
 // BACK            BACK                              kurz Zurueck, Wischen rechts
 //
 // DIE TASTENSPERRE (zwei Tasten gleichzeitig) ist KEIN Bedienwunsch, und die
@@ -125,6 +127,7 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
     private var _fremdKey as Lang.Number or Null = null;
     private var _lastLongMs as Lang.Number = -100000;
     private var _upDown as Lang.Boolean = false;
+    private var _langOffen as Lang.Boolean = false;   // langer START, wirkt beim Loslassen
 
     // trackUpDown: Verarbeitet die Seite lange UP/DOWN-Druecke selbst
     // (nur die Reanimationsseite)? Dann laufen auch die kurzen Druecke ueber
@@ -170,6 +173,37 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
     function actSelectLong() as Lang.Boolean  { return true; }
     function actMarkA() as Lang.Boolean       { return true; }
     function actMarkB() as Lang.Boolean       { return true; }
+    /* Kurzer UP/DOWN-Druck, den diese Seite selbst verfolgt (nur die
+     * Reanimationsseite). Vorgabe: blaettern wie das Behavior. Die
+     * Reanimationsseite bucht damit waehrend einer Rea (seit Uhr 4.5.0,
+     * E-KG-05) -- getrennt vom Behavior, das bei derselben Taste auch kommt
+     * und dort nur blaettern darf. */
+    /* Soll ein langer START erst beim LOSLASSEN wirken? Vorgabe nein: Die
+     * Seite wirkt, sobald 1 s um ist. Die Reanimationsseite sagt ja (seit
+     * Uhr 4.5.0): Ihr langer START oeffnet ein Menue, und das Loslassen
+     * ginge sonst an das Menue und waehlte dort den Eintrag unter dem
+     * Cursor (im Simulator gemessen: Amiodaron gebucht, F-KG-08). So
+     * schluckt diese Seite das Loslassen selbst. */
+    function langNachLoslassen() as Lang.Boolean { return false; }
+
+    function actUpKurz() as Lang.Boolean      { return actPagePrev(); }
+    function actDownKurz() as Lang.Boolean    { return actPageNext(); }
+
+    /* DIE HALTE-UHR ABBRECHEN -- vor jedem Seitenwechsel aus dieser Seite.
+     *
+     * Wechselt die Seite, waehrend eine Taste unten ist, bekommt die NEUE
+     * Seite das Loslassen; diese hier erfaehrt nie davon, und ihre Halte-Uhr
+     * laeuft ab, als sei es ein langer Druck. Auf der Reanimationsseite
+     * buchte so jeder kurze UP/DOWN-Druck etwa 1 s nach dem Wechsel
+     * Adrenalin bzw. Rhythmuskontrolle (Fenix 6 Pro, 10.11.2026, F-KG-01;
+     * im Simulator nicht nachstellbar, Geraete-Eingabe.md 6). */
+    function halteAbbrechen() as Void {
+        if (_timer != null) { _timer.stop(); }
+        _heldKey = null;
+        _longFired = false;
+        _combo = false;
+        _langOffen = false;
+    }
     function actBack() as Lang.Boolean        { return true; }
 
     // ---- Roh-Eingaben ------------------------------------------------------
@@ -219,6 +253,7 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
         _lastLongMs = System.getTimer();
         if (_heldKey == WatchUi.KEY_UP)        { actMarkA(); }
         else if (_heldKey == WatchUi.KEY_DOWN) { actMarkB(); }
+        else if (langNachLoslassen())          { _langOffen = true; }
         else                                   { actSelectLong(); }
         WatchUi.requestUpdate();
     }
@@ -237,9 +272,13 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
         if (_timer != null) { _timer.stop(); }
         _heldKey = null;
         if (_combo) { _combo = false; return true; }          // Tastensperre
-        if (_longFired) { _longFired = false; return true; }  // lang: erledigt
-        if (k == WatchUi.KEY_UP)   { return actPagePrev(); }
-        if (k == WatchUi.KEY_DOWN) { return actPageNext(); }
+        if (_longFired) {                                     // lang: erledigt
+            _longFired = false;
+            if (_langOffen && k == WatchUi.KEY_ENTER) { _langOffen = false; return actSelectLong(); }
+            return true;
+        }
+        if (k == WatchUi.KEY_UP)   { return actUpKurz(); }
+        if (k == WatchUi.KEY_DOWN) { return actDownKurz(); }
         return actSelectShort();
     }
 

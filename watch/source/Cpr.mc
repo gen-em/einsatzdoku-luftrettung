@@ -1,7 +1,9 @@
 // NAdoku — Reanimationslogik, app-weit (laeuft beim Navigieren weiter).
-// Grosser Timer: 2:00-Countdown, vibriert bei 0:00 und BLEIBT stehen.
-// Neustart: lang START oder Menuepunkt "Timer neu starten" — und automatisch
-// bei Rhythmuskontrolle (lang DOWN bzw. Menue) und Defibrillation (Menue).
+// Grosser Timer: 2:00-Countdown; er erinnert bei 0:30 und 0:10, vibriert
+// bei 0:00 und BLEIBT dort stehen. Neu startet ihn eine Rhythmuskontrolle
+// (kurz START), eine Defibrillation (DOWN oder Menue) und das Fortsetzen
+// nach einer Pause — einen Neustart ohne Eintrag gibt es seit Uhr 4.5.0
+// nicht mehr (E-KG-07).
 //
 // Drei Zustaende:
 //   active=false            keine Reanimation
@@ -12,8 +14,13 @@
 // Gesamtdauer laeuft waehrend der Pause WEITER — sie ist die tatsaechlich
 // verstrichene Reanimationszeit und darf nicht zu kurz dokumentiert werden.
 // Die Pause ist ein reiner Bedienzustand und wird nicht uebertragen.
+//
+// VIBRATION (E-KG-11 bis -13): kurz bestaetigt eine Buchung — einmal ohne,
+// zweimal mit Neustart des Countdowns; lang gehoert dem Countdown. Die
+// Muster stehen in Util.reaKurz/reaLang, je eines in einem Aufruf.
 using Toybox.Timer;
 using Toybox.Lang;
+using Toybox.System;
 using Toybox.WatchUi;
 using Toybox.Application.Storage;
 
@@ -26,6 +33,10 @@ class CprCb {
 
 module Cpr {
 
+    const SPERRE_MS = 10000;                  // E-KG-06
+    const ERINNERUNG_1_S = 30;                // E-KG-11
+    const ERINNERUNG_2_S = 10;
+
     var active as Lang.Boolean = false;
     var paused as Lang.Boolean = false;       // angehalten, Entscheidung offen
     var startEpoch as Lang.Number = 0;        // Reanimationsbeginn
@@ -33,15 +44,26 @@ module Cpr {
     var _timer as Timer.Timer or Null = null;
     var _cb as CprCb or Null = null;
     var _alarmFired as Lang.Boolean = false;
-    var _vibeMore as Lang.Number = 0;          // Zyklusende-Vibration Teil 2
+    var _erinnert1 as Lang.Boolean = false;   // 0:30 schon gemeldet
+    var _erinnert2 as Lang.Boolean = false;   // 0:10 schon gemeldet
+    // Zuletzt gebucht, je Ereignisart (System.getTimer(), ms). Nur im
+    // Speicher: Nach einem Neustart der App beginnt die Sperre neu, und das
+    // ist hinzunehmen — sie faengt Doppeldruecke ab, keine Neustarts.
+    var _zuletzt as Lang.Dictionary = {};
 
     function start() as Void {
-        if (active) { restartCycle(); return; }  // Sicherheitsnetz (regulaer oeffnet kurz START dann das Menue)
+        if (active) { return; }               // kurz START bucht dann die Rhythmuskontrolle
         active = true;
         paused = false;
         startEpoch = Util.epochNow();
+        _zuletzt = {};
         Model.resusStart();                      // legt eine NEUE Sitzung an
-        restartCycle();                          // vibriert 2x (Startbestaetigung)
+        restartCycle();
+        /* AUCH UNMITTELBAR NACH DEM BEGINN GILT DIE SPERRE (E-KG-06): Ein
+         * zweiter Druck auf START in den naechsten 10 s ist der Doppeldruck,
+         * keine Rhythmuskontrolle. */
+        _zuletzt[Const.R_RHYTHMUS] = System.getTimer();
+        Util.reaKurz(2);                         // Countdown laeuft
         _startTimer();
         _persist();
     }
@@ -53,7 +75,6 @@ module Cpr {
         if (!active || paused) { return; }
         paused = true;
         cycleEndEpoch = 0;                     // Countdown steht
-        _vibeMore = 0;
         _persist();
         WatchUi.requestUpdate();
     }
@@ -62,7 +83,8 @@ module Cpr {
     function resume() as Void {
         if (!active || !paused) { return; }
         paused = false;
-        restartCycle();                        // vibriert 2x (Bestaetigung)
+        restartCycle();
+        Util.reaKurz(2);                       // Countdown laeuft neu
         WatchUi.requestUpdate();
     }
 
@@ -97,6 +119,7 @@ module Cpr {
     // Nach App-/Uhren-Neustart: laufende Rea nahtlos wiederaufnehmen.
     // Der Countdown laeuft anhand der Epochen korrekt weiter; ist sein Ende
     // waehrend des Neustarts verstrichen, steht er wie vorgesehen auf 0:00.
+    // Eine Erinnerung, deren Zeitpunkt im Neustart lag, kommt nicht nach.
     function restore() as Void {
         var s = Storage.getValue("cpr");
         if (s instanceof Lang.Dictionary && true.equals(s["a"])) {
@@ -108,19 +131,22 @@ module Cpr {
                 cycleEndEpoch = 0;               // Ende verpasst -> steht bei 0:00
                 _alarmFired = true;              // nicht nachtraeglich vibrieren
             }
+            var r = cycleRemainingS();
+            _erinnert1 = cycleEndEpoch == 0 || r <= ERINNERUNG_1_S;
+            _erinnert2 = cycleEndEpoch == 0 || r <= ERINNERUNG_2_S;
             _startTimer();
         }
     }
 
+    /* Den Countdown neu ansetzen — OHNE Vibration: Wer ihn neu startet,
+     * bestaetigt mit seinem eigenen Muster (start, resume, buchen). */
     function restartCycle() as Void {
-        if (active && paused) { return; }      // pausiert: Countdown bleibt stehen
+        if (!active || paused) { return; }     // pausiert: Countdown bleibt stehen
         cycleEndEpoch = Util.epochNow() + Const.CPR_CYCLE_S;
         _alarmFired = false;
-        _vibeMore = 0;
-        if (active) {
-            Util.vibrateTwice();               // Bestaetigung: 2:00 laeuft neu
-            _persist();
-        }
+        _erinnert1 = false;
+        _erinnert2 = false;
+        _persist();
     }
 
     function stop() as Void {                  // bei Dienstende
@@ -135,15 +161,24 @@ module Cpr {
         if (Toybox.Attention has :backlight) {
             try { Toybox.Attention.backlight(true); } catch (ex) { }
         }
-        if (_vibeMore > 0) {
-            _vibeMore -= 1;
-            if (_vibeMore == 0) { Util.vibrateTwice(); }   // Pulse 4+5
-        }
-        if (cycleEndEpoch > 0 && Util.epochNow() >= cycleEndEpoch && !_alarmFired) {
-            _alarmFired = true;
-            cycleEndEpoch = 0;                 // steht bei 0:00 bis Neustart
-            Util.vibrateCycleEnd();            // Pulse 1-3 (Teil 2 im naechsten Tick)
-            _vibeMore = 2;
+        if (cycleEndEpoch > 0) {
+            var r = cycleEndEpoch - Util.epochNow();
+            if (r <= 0) {
+                if (!_alarmFired) {
+                    _alarmFired = true;
+                    _erinnert1 = true;
+                    _erinnert2 = true;
+                    cycleEndEpoch = 0;         // steht bei 0:00 bis Neustart
+                    Util.reaLang(3);
+                }
+            } else if (r <= ERINNERUNG_2_S && !_erinnert2) {
+                _erinnert2 = true;
+                _erinnert1 = true;
+                Util.reaLang(2);
+            } else if (r <= ERINNERUNG_1_S && !_erinnert1) {
+                _erinnert1 = true;
+                Util.reaLang(1);
+            }
         }
         WatchUi.requestUpdate();               // Timeranzeige aktualisieren
     }
@@ -160,17 +195,29 @@ module Cpr {
         return r > 0 ? r : 0;
     }
 
-    function markAdrenalin() as Void { Model.resusEvent(Const.R_ADRENALIN); }
-
-    function markRhythmus() as Void {
-        Model.resusEvent(Const.R_RHYTHMUS);
-        restartCycle();                        // fachliche Kopplung (Anf. 1.4)
+    /* EIN EREIGNIS BUCHEN — der eine Weg fuer Tasten und Menue.
+     *
+     * Nur bei laufender Rea; in der Pause steht der Countdown, und gebucht
+     * wird nichts. DIE SPERRE (E-KG-06): Dieselbe Art innerhalb von 10 s
+     * wird nicht noch einmal gebucht, gleich ueber welchen Weg; eine andere
+     * Art geht sofort. Ein abgewiesener Druck gibt kein Zeichen (E-KG-14).
+     * Gibt zurueck, ob gebucht wurde. */
+    function buchen(type as Lang.String) as Lang.Boolean {
+        if (!active || paused) { return false; }
+        var jetzt = System.getTimer();
+        var vorher = _zuletzt[type];
+        if (vorher instanceof Lang.Number && jetzt - (vorher as Lang.Number) < SPERRE_MS) {
+            return false;
+        }
+        _zuletzt[type] = jetzt;
+        Model.resusEvent(type);
+        if (Const.R_RHYTHMUS.equals(type) || Const.R_DEFI.equals(type)) {
+            restartCycle();                    // fachliche Kopplung (Anf. 1.4)
+            Util.reaKurz(2);
+        } else {
+            Util.reaKurz(1);
+        }
+        WatchUi.requestUpdate();
+        return true;
     }
-
-    function markDefi() as Void {
-        Model.resusEvent(Const.R_DEFI);
-        restartCycle();                        // Defi setzt den Zyklus neu an
-    }
-
-    function markEvent(type as Lang.String) as Void { Model.resusEvent(type); }
 }
