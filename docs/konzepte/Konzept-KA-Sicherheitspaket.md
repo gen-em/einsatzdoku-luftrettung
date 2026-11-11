@@ -807,6 +807,11 @@ gezählt (E-KA-31).
 | Referenz-Selbstprobe | `referenz_inhalt.py` **21 Fälle, 0 Fehlschläge** (drei neu), `referenz.py` 17/0 | die drei neuen Fälle mit der Referenz von `main`: **3 rot** | F-KA-90 |
 | Vektoren nach `erzeugen` | unverändert (`git status`) | — | die Korrekturen ändern kein Format |
 
+**Prüfstand (Stufe neben, drei Engines):** 61 grün, 1 rot (`dokumente`:
+`Technik.md` nannte den Pfad des Endpunkts aus 06b-2, berichtigt), 1
+Hinweis (`erzeugen`: Zeilennummer von `ui_krypto_bootstrap()` in
+`Design.md` neu erzeugt, im Commit). Der Kopf erbt die übrigen Proben.
+
 **R91 nach PR #171 (Web 24.13.1, Staging, 11.11.2026):** Lauf 198 grün;
 Anmeldung im Browser mit eigenem BetreiberIn-Konto und Zweitfaktor gelingt,
 `edkvor` auf der ersten Seite leer, ein leeres Salz abgewiesen, 0

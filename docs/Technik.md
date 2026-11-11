@@ -10317,8 +10317,8 @@ kein Wert vom Server, sonst hielte sie, wer den Server beschreibt. Der
 Rückweg bleibt frei von Server und Anteil: `edka2:` für die
 Wiederherstellungshülle wird abgewiesen.
 
-**Was noch nicht da ist:** der Endpunkt für die Blätter (`api/standbuch.php`,
-KA-06b-2, mit Migration), die Umstellung der Verbraucher (KA-06b-3), der
+**Was noch nicht da ist:** der Endpunkt für die Blätter (KA-06b-2, mit
+Migration), die Umstellung der Verbraucher (KA-06b-3), der
 Anhebelauf (KA-06b-4), die Kopplung mit Vergleichswert an den Geräten
 (KA-06c) und die Formprüfung am Server (KA-06d).
 
