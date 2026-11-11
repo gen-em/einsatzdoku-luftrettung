@@ -50,6 +50,12 @@ data class Uhrzustand(
      */
     val ortung: String? = null,
 
+    /**
+     * Ist das Handy gekoppelt? `null` heisst wie bei [ortung] „das Handy sagt
+     * nichts dazu". `false` heisst: Es nimmt keinen Dienst an (KA-04).
+     */
+    val handyGekoppelt: Boolean? = null,
+
     /** Die Anzeige ist gesperrt. */
     val gesperrt: Boolean = false,
 

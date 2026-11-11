@@ -411,7 +411,69 @@ class SenderTest {
         assertNotNull("Der laufende Dienst bleibt", puffer.paket(offen))
         /* Die Räumung vergisst die Abmeldung; das offene Paket bekommt danach
          * wieder 401, und eine NEUE Frist beginnt — über das, was jetzt liegt. */
-        assertEquals("Neue Frist ab der 401 nach der Räumung", uhrzeit, b.abgemeldetSeit)
+        /* SEIT ANDROID 0.23.0 (KA-04) geht VOR der Räumung ein Sendeversuch
+         * hinaus; seine 401 fällt noch in die alte Frist, und die Räumung
+         * vergisst die Abmeldung danach. Die neue Frist beginnt mit der
+         * nächsten 401. Bis dahin hieß es hier: „Neue Frist ab der 401 nach
+         * der Räumung" — die Reihenfolge war umgekehrt. */
+        assertNull("Nach der Räumung keine Abmeldung", b.abgemeldetSeit)
+        senderMit(b).sendeAlles()
+        assertEquals("Die nächste 401 beginnt die neue Frist", uhrzeit, b.abgemeldetSeit)
+    }
+
+    /**
+     * **Vor dem Räumen ein Sendeversuch** (KA-04, F-KA-18): Antwortet der
+     * Server am Tag 30 wieder, war die Abmeldung keine — gesendet statt
+     * geräumt.
+     */
+    @Test fun vorDemRaeumenGehtEinSendeversuchHinaus() {
+        val t0 = Instant.parse("2026-07-16T08:00:00Z")
+        uhrzeit = t0
+        val alt = abgeschlossenesSegment("af-9-a")
+        val b = bindung()
+        server.status = 403
+        server.antwortkoerper = """{"error":"device_disabled"}"""
+        senderMit(b).sendeAlles()
+        assertEquals(t0, b.abgemeldetSeit)
+
+        uhrzeit = t0.plus(30, ChronoUnit.DAYS)
+        antworteVollstaendig()
+        val bericht = senderMit(b).sendeAlles()
+        assertEquals("Gesendet, nicht geräumt", 0, bericht.geraeumt)
+        assertEquals(1, bericht.fertigePakete)
+        assertNull("Die Abmeldung ist widerlegt", b.abgemeldetSeit)
+        assertNull("Das Paket ist als gesendet entsorgt", puffer.paket(alt))
+    }
+
+    /** Eine Bindung deckt auch ein **offenes** Paket (KA-04) — es geht nicht hinaus. */
+    @Test fun eineBindungDecktAuchEinOffenesPaket() {
+        antworteVollstaendig()
+        val offen = offenesSegment("ob-1-o")
+        puffer.punktAnhaengen(offen, Stroeme.erzeuge(Stroeme.REISEFLUG).first())
+        val b = bindung()
+        b.binden(null, offen)
+        senderMit(b).sendeAlles()
+        assertTrue("Nichts an den Server", server.anfragen.isEmpty())
+        assertEquals("Die Bindung bleibt", offen, b.gebundenBis)
+    }
+
+    /**
+     * **`next_seq` höchstens bis zum Ende des Gesendeten** (KA-04, E-KA-29).
+     * Ein Server, der mehr quittiert, als ankam, ließ das Handy die übrigen
+     * Punkte eines Pakets nie senden.
+     */
+    @Test fun eineZuGrosseMarkeWirdGedeckelt() {
+        server.status = 200
+        server.antwortAus = { koerper ->
+            val t = org.json.JSONObject(koerper).getJSONObject("track")
+            val bis = t.getLong("seq_from") + t.getInt("punkte") + 10_000
+            """{"ok":true,"id":1,"stored_points":${t.getInt("punkte")},"next_seq":$bis}"""
+        }
+        val id = einSegmentMitPunkten(600)
+        val n = puffer.punktzahl(id).toInt()
+        val bericht = sender().sendeAlles()
+        assertEquals("Alle Punkte gingen hinaus", n, bericht.gesendetePunkte)
+        assertEquals("in zwei Teilstücken", 2, bericht.anfragen)
     }
 
     /** Eine Annahme hebt die Abmeldung auf; die nächste 401 beginnt eine neue Frist. */

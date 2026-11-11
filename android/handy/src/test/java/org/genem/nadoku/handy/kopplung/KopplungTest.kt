@@ -356,6 +356,19 @@ class KopplungTest {
         assertEquals("und nichts geräumt (Nr. 114)", 0, geraeumt)
     }
 
+    /** Im laufenden Dienst trennt der Dienst selbst nicht (KA-04, F-KA-06). */
+    @Test fun trennenImDienstTutNichts() {
+        tresor.speichern(Zugangsdaten("dev-1", "k1"))
+        val d = Kopplungsdienst(
+            HttpNetzweg(), tresor, server.basis,
+            raeumen = { geraeumt += 1 }, dienstLaeuft = { true },
+        )
+        assertTrue(d.trennen() is Trennergebnis.DienstLaeuft)
+        assertNotNull("Die Kopplung bleibt", tresor.lesen())
+        assertTrue("Nichts an den Server", server.anfragen.isEmpty())
+        assertEquals("Nichts geräumt", 0, geraeumt)
+    }
+
     // ---- Abgemeldet mit Rückstand: trennen und binden ------------------------
 
     private fun bindung(): Rueckstandsbindung {
@@ -425,6 +438,40 @@ class KopplungTest {
         assertTrue(dienstMit(b, bis = 2).trennen() is Trennergebnis.Rueckstand)
         assertEquals("Die alte Bindung bleibt", 5L, b.gebundenBis)
         assertNotNull(tresor.lesen())
+    }
+
+    /**
+     * Eine neue Kopplung bindet vorgefundenen Bestand als fremd (KA-04,
+     * F-KA-06): Er geht an kein Konto — auch nicht an das neue.
+     */
+    @Test fun neueKopplungBindetVorgefundenenBestand() {
+        val b = bindung()
+        val d = Kopplungsdienst(
+            HttpNetzweg(), tresor, server.basis, bindung = b,
+            hoechstePaketId = { 17L }, bestand = { 2 },
+        )
+        sitzungsantwort()
+        d.starten(geraet)
+        server.status = 200
+        server.antwortkoerper = """{"ok":true}"""
+        assertTrue(d.bestaetigen(ja = true) is Bestaetigungsergebnis.Gekoppelt)
+        assertEquals(17L, b.gebundenBis)
+        assertEquals("Ohne Schlüssel: jedes Konto ist anders", Bindungsstand.ANDERS, b.stand("SCHLUESSEL-NEU"))
+    }
+
+    /** Ohne Bestand bindet eine neue Kopplung nichts. */
+    @Test fun neueKopplungOhneBestandBindetNichts() {
+        val b = bindung()
+        val d = Kopplungsdienst(
+            HttpNetzweg(), tresor, server.basis, bindung = b,
+            hoechstePaketId = { 17L }, bestand = { 0 },
+        )
+        sitzungsantwort()
+        d.starten(geraet)
+        server.status = 200
+        server.antwortkoerper = """{"ok":true}"""
+        d.bestaetigen(ja = true)
+        assertNull(b.gebundenBis)
     }
 
     /** GLEICH löst die Bindung beim Prüfen; ANDERS lässt sie stehen. */

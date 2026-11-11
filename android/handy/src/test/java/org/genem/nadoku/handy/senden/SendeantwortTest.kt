@@ -63,8 +63,27 @@ class SendeantwortTest {
             Sendeantwort.lese(403, """{"error":"konto","grund":"wartet"}"""))
         assertEquals(Sendeantwort.Gesperrt(Sperrgrund.KONTO_UNBESTAETIGT),
             Sendeantwort.lese(403, """{"error":"konto","grund":"unbestaetigt"}"""))
-        assertEquals(Sendeantwort.Gesperrt(Sperrgrund.UNBEKANNT), Sendeantwort.lese(403, null))
-        assertEquals(Sendeantwort.Gesperrt(Sperrgrund.UNBEKANNT), Sendeantwort.lese(403, "<html>"))
+        assertEquals("konto mit unbekanntem Grund bleibt eine Sperre",
+            Sendeantwort.Gesperrt(Sperrgrund.UNBEKANNT), Sendeantwort.lese(403, """{"error":"konto","grund":"neu"}"""))
+    }
+
+    /**
+     * **Ohne das Feld des Vertrags ist nichts endgültig** (seit Android
+     * 0.23.0, KA-04, F-KA-18). Bis dahin galt ein 403 ohne Rumpf als Sperre
+     * (Beginn der 30-Tage-Frist), jede 400 als „fehlerhaft". Dieselben Zahlen
+     * schickt auch ein Zwischenstück.
+     */
+    @Test fun ohneVertragsfeldIstNichtsEndgueltig() {
+        assertEquals(Sendeantwort.SpaeterErneut(403), Sendeantwort.lese(403, null))
+        assertEquals(Sendeantwort.SpaeterErneut(403), Sendeantwort.lese(403, "<html>"))
+        assertEquals(Sendeantwort.SpaeterErneut(403), Sendeantwort.lese(403, """{"error":"forbidden"}"""))
+        assertEquals(Sendeantwort.SpaeterErneut(401), Sendeantwort.lese(401, null))
+        assertEquals(Sendeantwort.SpaeterErneut(401), Sendeantwort.lese(401, "<html>Anmeldung im WLAN</html>"))
+        assertEquals(Sendeantwort.SpaeterErneut(400), Sendeantwort.lese(400, null))
+        assertEquals(Sendeantwort.SpaeterErneut(400), Sendeantwort.lese(400, "Bad Request"))
+        assertEquals("klartext: parken, nicht verwerfen (Vertrag 5)",
+            Sendeantwort.SpaeterErneut(400, Sendeantwort.WARTEN_KONTO_VOLL_S),
+            Sendeantwort.lese(400, """{"error":"klartext","grund":"track.points"}"""))
     }
 
     /** **Wartezeiten**: Kopfzeile vor Vorgabe, gedeckelt. */

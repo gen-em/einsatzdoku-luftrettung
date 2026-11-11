@@ -540,17 +540,7 @@ class AufzeichnungsDienst : LifecycleService() {
             .setCategory(NotificationCompat.CATEGORY_ERROR)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
-        if (stufe.bietetDienstende) {
-            bau.addAction(
-                0,
-                getString(R.string.dienst_beenden),
-                PendingIntent.getService(
-                    this, 2,
-                    Intent(this, AufzeichnungsDienst::class.java).setAction(BEENDEN),
-                    PendingIntent.FLAG_IMMUTABLE,
-                ),
-            )
-        }
+        if (stufe.bietetDienstende) bau.addAction(dienstEndeAktion(2))
 
         (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
             .notify(AKKUWARNUNG_ID, bau.build())
@@ -611,19 +601,29 @@ class AufzeichnungsDienst : LifecycleService() {
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .addAction(
-                0,
-                getString(R.string.dienst_beenden),
-                PendingIntent.getService(
-                    this, 3,
-                    Intent(this, AufzeichnungsDienst::class.java).setAction(BEENDEN),
-                    PendingIntent.FLAG_IMMUTABLE,
-                ),
-            )
+            .addAction(dienstEndeAktion(3))
         (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
             .notify(DAUERWARNUNG_ID, bau.build())
         Log.w(MARKE, "Dienst laeuft seit $stunden h — erinnert.")
     }
+
+    /**
+     * „Dienst beenden" in einer Warnmeldung — **nur entsperrt** (seit
+     * Android 0.23.0, KA-04, F-KA-31). Bis dahin ließ sich der Dienst vom
+     * Sperrbildschirm aus beenden, von jedem, der das Handy in der Hand hat.
+     * `setAuthenticationRequired` wirkt ab API 31; darunter tut die
+     * Kompatibilitätsschicht nichts, und es bleibt beim alten Verhalten.
+     */
+    private fun dienstEndeAktion(anfrage: Int): NotificationCompat.Action =
+        NotificationCompat.Action.Builder(
+            0,
+            getString(R.string.dienst_beenden),
+            PendingIntent.getService(
+                this, anfrage,
+                Intent(this, AufzeichnungsDienst::class.java).setAction(BEENDEN),
+                PendingIntent.FLAG_IMMUTABLE,
+            ),
+        ).setAuthenticationRequired(true).build()
 
     private fun dauererinnerungLoeschen() {
         dauererinnerungSteht = false
@@ -706,6 +706,7 @@ class AufzeichnungsDienst : LifecycleService() {
                 app.klammer,
                 modus = { app.einstellungen.letzterModus },
                 ortung = { app.ortung?.stand?.code },
+                gekoppelt = { app.tresor.gekoppelt() },
             ).stand()
             val weg: Nachrichtenweg = WearNachrichtenweg(kontext)
             val zugestellt = weg.sende(

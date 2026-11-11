@@ -8894,4 +8894,12 @@ declare(strict_types=1);
  *   Frist ab und liefert kein `pat_key_check`; ein gemerktes Geraet geht an
  *   der Kontosperre vorbei. Neben (ein Weg durch die Verwaltung aendert
  *   sich); kein Schema, kein `update.php`. */
-const WEB_VERSION = '24.12.0';
+/* 24.12.1 — WAS EIN GERAET SCHICKT, LANDET DORT, WO ES HINGEHOERT (KA-04,
+ *   Audit KA F-KA-07, -27). `ingest.php` quittiert nach einem kollidierten
+ *   Spurstueck nur, was liegt: Eine Wiederholung mit anderer Groesse — die
+ *   Antwort auf den ersten Versuch ging verloren — liess bis dahin die Punkte
+ *   zwischen beiden Enden verschwinden. `pair.php` prueft auf `status`,
+ *   `bestaetigen` und `trennen` Geraet und Konto wie `ingest.php`: Eine im
+ *   Web deaktivierte Uhr bekommt keinen Kontoschluessel mehr und trennt sich
+ *   nicht selbst. Korrektur; kein Schema. */
+const WEB_VERSION = '24.12.1';

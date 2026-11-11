@@ -216,6 +216,16 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand Android 0.23.0 (Schritt 28, KA-04: Kontobindung und Sendeweg),
+`./gradlew build` im Prüfstand, 10.11.2026 — `BUILD SUCCESSFUL in 6m 19s`:**
+Lint **0** Fehler (Handy 6 Warnungen, alle Fassungshinweise aus
+`libs.versions.toml`: 3 × `NewerVersionAvailable`, 2 × `GradleDependency`,
+1 × `AndroidGradlePluginVersion`; Uhr keine), Prüffälle je Bauart Handy
+**312** (neu in `KopplungTest`, `SenderTest`, `SendeantwortTest`,
+`UhrannahmeTest`), davon 15 ohne Installation übersprungen, Uhr **75**,
+**0** Fehlschläge. APK unsigniert, Release: Handy **9 263 294 B**, Uhr
+**22 800 026 B**. Kein Emulatorlauf (Prüfliste P-KA-08, -09).
+
 **Stand Android 0.21.0 (Schritt 23, BR6-07: Frist für den Klartextpuffer
 nach der Abmeldung, Nr. 471), `./gradlew build` im Container, 04.11.2026 —
 `BUILD SUCCESSFUL in 3m 50s`:** Lint **0** Fehler (Handy 5 Warnungen, alle
@@ -889,6 +899,9 @@ SHA-256  7a9ce74cff467ca1bf60a4fcd9f05185acceda4d0f382434d393e17864262c5d
 Sie ist **byteweise** die JAR, die in der geprüften Verteilung liegt
 (`lib/plugins/gradle-wrapper-main-9.7.1.jar`, Eintrag `gradle-wrapper.jar`) —
 nachgerechnet am 24.09.2026. Bis 0.15.1: `7d3a4ac4…` aus Gradle 8.14.3.
+**Seit KA-01 misst sie `tools/quelltext/fremdsummen.py` in Stufe 1**
+(`WRAPPER_SOLL`, F-KA-26): Eine andere JAR ist rot. Wer Gradle hebt, trägt
+die neue Summe dort und hier ein.
 
 **R8 bleibt aus** (`isMinifyEnabled = false` in beiden Modulen; AN-5 nennt
 es mit). Die Begründung steht dort, wo die Ausnahmen hingehörten, wenn es je
