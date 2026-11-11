@@ -17,6 +17,17 @@
  *    Wiederherstellungsschlüssel. Die zweite Hülle hängt NICHT am Anteil —
  *    sie ist der Rückweg, wenn er verloren geht.
  *  - Passwort ändern = CK neu verpacken; die Daten bleiben unangetastet.
+ *
+ * SEIT KA-06b (Fassung 2, Nr. 563) steht das GEBUNDENE Format in eigenen
+ * Dateien, damit diese hier lesbar bleibt:
+ *   inhalt2.js    `edk2:` — Chiffretexte mit Zweck, Bezug, Zähler und Polster,
+ *                 die Schlüsselhüllen `edka2:`, und DIE WEICHE, die das
+ *                 Schreiben der Fassung 2 einschaltet (`EdInhalt.schreibt2()`)
+ *   standbuch.js  der Zählerstand gegen das Zurücklegen, das Gerätebuch
+ *   huelle2.js    die Gerätehülle Fassung 2 (Herkunft), die Leseregeln, der
+ *                 Vergleichswert der Kopplung
+ * Hier bleiben: die Ableitung aus dem Passwort (beide Fassungen), Fassung 1
+ * von Chiffretext, Hülle und Gerätehülle, die Ablage, der Backup-Container.
  */
 'use strict';
 const EdCrypto = (() => {
@@ -99,14 +110,63 @@ const EdCrypto = (() => {
    * Datenschluessel; sie ist eine von zwei Zutaten — die andere ist der
    * Server-Anteil. Ein Feld, das nach dem Datenschluessel benannt ist und
    * keiner ist, wird beim naechsten Mal wieder als einer benutzt. */
+  /* ZWEI FASSUNGEN DER ABLEITUNG, UND DIE RUNDENZAHL SAGT, WELCHE (F-KA-29).
+   *
+   * Fassung 1 zieht 64 Byte aus PBKDF2 — das sind ZWEI Blöcke, jeder mit der
+   * vollen Rundenzahl. Die Hälfte ist der erste, das Token der zweite. Wer
+   * nur das Token angreift (ein Datenbankabzug, ein mitgelesener
+   * Anmeldeversuch), rechnet EINEN Block: Die Nutzerin wartet doppelt so
+   * lange, wie der Angreifer je Versuch zahlt.
+   *
+   * Fassung 2 rechnet einen Block (die Wurzel) und trennt Hälfte und Token
+   * erst danach per HKDF — bei gleicher Wartezeit die doppelte Rundenzahl:
+   *
+   *     Wurzel = PBKDF2-HMAC-SHA256(Passwort, Salz, Runden, 32 Byte)
+   *     Hälfte = HKDF-SHA256(Wurzel, salt leer, "nadoku-ableitung-2|haelfte")
+   *     Token  = HKDF-SHA256(Wurzel, salt leer, "nadoku-ableitung-2|token")
+   *
+   * Format und Vektoren: `tools/proben/huelle/referenz_inhalt.py`.
+   *
+   * WARUM DIE FASSUNG AN DER RUNDENZAHL HÄNGT UND NICHT AN EINEM EIGENEN
+   * FELD. Die Wurzel der Fassung 2 ist bei GLEICHER Rundenzahl byte-gleich
+   * die Hälfte der Fassung 1. Dürften beide Fassungen dieselbe Zahl tragen,
+   * könnte, wer die Antwort des Servers verändert, den Browser ein Token
+   * schicken lassen, das aus der Hälfte einer Fassung-1-Anmeldung abgeleitet
+   * ist. Mit einer festen Grenze gibt es dieses Paar nicht: unter
+   * ABLEITUNG2_AB immer Fassung 1, ab dort immer Fassung 2. Ein zweites
+   * Feld, das der Server liefert, wäre ein zweiter Wert, der mit dem ersten
+   * auseinanderlaufen kann — und das Vormerkfach, `unlock.js` und jede
+   * Passwortseite führen die Ableitungen ohnehin nach Rundenzahl.
+   *
+   * DER PREIS: Fassung 1 kann nie über 1 199 999 Runden steigen. Das soll
+   * sie auch nicht — wer anhebt, hebt auf Fassung 2. */
+  const ABLEITUNG2_AB = 1200000;
+  const ABLEITUNG2_INFO = 'nadoku-ableitung-2|';
+
+  /** Welche Fassung der Ableitung zu dieser Rundenzahl gehört: 1 oder 2. */
+  function ableitungFassung(iter) {
+    return pruefeRunden(iter, 'ableitungFassung') >= ABLEITUNG2_AB ? 2 : 1;
+  }
+
   async function deriveKeys(password, saltHex, iter) {
     pruefeRunden(iter, 'deriveKeys');
     pruefeSalz(saltHex, 'deriveKeys');
+    const fassung = ableitungFassung(iter);
     const base = await crypto.subtle.importKey(
       'raw', te.encode(password), 'PBKDF2', false, ['deriveBits']);
     const bits = await crypto.subtle.deriveBits(
       { name: 'PBKDF2', hash: 'SHA-256', salt: fromHex(saltHex), iterations: iter },
-      base, 512);
+      base, fassung === 2 ? 256 : 512);
+    if (fassung === 2) {
+      /* Die Wurzel verlässt diese Funktion nicht. `salt` leer heißt nach
+       * RFC 5869 ein Salz aus Nullbytes — dasselbe wie `salt=None` in der
+       * Referenz. */
+      const wurzel = await crypto.subtle.importKey('raw', bits, 'HKDF', false, ['deriveBits']);
+      const teil = async was => toHex(await crypto.subtle.deriveBits(
+        { name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(0),
+          info: te.encode(ABLEITUNG2_INFO + was) }, wurzel, 256));
+      return { haelfteHex: await teil('haelfte'), authToken: await teil('token') };
+    }
     const all = new Uint8Array(bits);
     return {
       haelfteHex: toHex(all.slice(0, 32)),     // bleibt lokal, geht in den dk
@@ -203,10 +263,16 @@ const EdCrypto = (() => {
   const HUELLE_PRAEFIX = 'edka1:';
   const HKDF_INFO = 'edka1|dk';
 
-  /** Die Anteil-Kennung im Praefix einer Huelle — oder null (Altfassung). */
+  /** Die Anteil-Kennung im Praefix einer Huelle — oder null (ohne Anteil).
+   *  Beide Fassungen: `edka1:<k>:` und, gebunden, `edka2:<k>:` (inhalt2.js). */
   function huelleKennung(huelle) {
-    const m = /^edka1:([0-9a-f]{8}):/.exec(String(huelle == null ? '' : huelle));
+    const m = /^edka[12]:([0-9a-f]{8}):/.exec(String(huelle == null ? '' : huelle));
     return m ? m[1] : null;
+  }
+
+  /** Ist das eine Hülle der Fassung 2 (`edk2:` oder `edka2:`)? */
+  function huelleGebunden(huelle) {
+    return /^edka?2:/.test(String(huelle == null ? '' : huelle));
   }
 
   /**
@@ -355,6 +421,17 @@ const EdCrypto = (() => {
     const doppelpunkt = text.indexOf(':');
     if (doppelpunkt >= 0) {
       const kennung = text.slice(0, doppelpunkt + 1);
+      if (kennung === 'edk2:' || kennung === 'edka2:') {
+        /* Fassung 2 ist an Zweck und Bezug GEBUNDEN, und beides kennt diese
+         * Funktion nicht. Sie rät nicht: Wer hier ankommt, ist ein
+         * Verbraucher, der noch nicht über `EdInhalt.lesen()` (inhalt2.js)
+         * liest — das soll beim Entwickeln auffallen und nicht wie ein
+         * falscher Schlüssel aussehen. */
+        const f = new Error('Dieser Datensatz ist gebunden verschlüsselt (' + kennung
+                          + ') und lässt sich an dieser Stelle noch nicht öffnen.');
+        f.grund = 'gebunden';
+        throw f;
+      }
       if (kennung !== CHIFFRE_PRAEFIX) {
         /* Eine Kennung, die diese Fassung nicht kennt. Die Meldung sagt das
          * auch — sonst sucht jemand den Fehler beim Schlüssel und findet ihn
@@ -390,6 +467,17 @@ const EdCrypto = (() => {
   /** Eine Huelle oeffnen — beide Fassungen und der Bestand ohne Praefix. */
   async function huelleOeffnen(dkHex, huelle) {
     const text = String(huelle == null ? '' : huelle);
+    /* FASSUNG 2 (`edk2:`, `edka2:<k>:`) öffnet inhalt2.js — dort ist die
+     * Anteil-Kennung Teil der Zusatzdaten, und eine umetikettierte Hülle
+     * bricht am Prüfwert. Diese Funktion öffnet NUR die Hülle unter dem
+     * Datenschlüssel (Art „pw"); die Wiederherstellungshülle geht über
+     * `EdInhalt.huelleOeffnen(rk, wrap, 'rc')`. */
+    if (huelleGebunden(text)) {
+      if (typeof EdInhalt === 'undefined') {
+        throw new Error('Diese Schlüsselhülle ist gebunden (Fassung 2); inhalt2.js ist nicht geladen.');
+      }
+      return EdInhalt.huelleOeffnen(dkHex, text, 'pw');
+    }
     /* Die Kennung wird hier nur ABGESCHNITTEN. Welcher Schluessel zu ihr
      * gehoert, hat `datenschluessel()` eine Ebene darueber entschieden. */
     return decrypt(dkHex, text.startsWith(HUELLE_PRAEFIX)
@@ -406,6 +494,11 @@ const EdCrypto = (() => {
    * er stellt nur nicht um.
    */
   async function huelleBauen(dkHex, ckHex, kennung) {
+    /* DIE WEICHE (inhalt2.js, `SCHREIBT_FASSUNG_2`): Steht sie an, entsteht
+     * die gebundene Hülle `edka2:<k>:` bzw. `edk2:` — sonst wie bisher. */
+    if (typeof EdInhalt !== 'undefined' && EdInhalt.schreibt2()) {
+      return EdInhalt.huelleBauen(dkHex, ckHex, 'pw', kennung || null);
+    }
     const roh = await encrypt(dkHex, ckHex);        // liefert `edk1:` + base64
     if (!kennung) { return roh; }
     return HUELLE_PRAEFIX + kennung + ':' + roh.slice(CHIFFRE_PRAEFIX.length);
@@ -1223,10 +1316,11 @@ const EdCrypto = (() => {
     } catch (e) { return null; }
   }
 
-  return { deriveKeys, anmeldeTokens, encrypt, decrypt, randomHex,
+  return { deriveKeys, ableitungFassung, ABLEITUNG2_AB,
+           anmeldeTokens, encrypt, decrypt, randomHex,
            /* Server-Anteil und Hüllen */
            datenschluessel, datenschluesselZu,
-           huelleOeffnen, huelleBauen, huelleKennung,
+           huelleOeffnen, huelleBauen, huelleKennung, huelleGebunden,
            HUELLE_PRAEFIX,
            newRecoveryCode, recoveryKeyHex,
            pruefeRecoveryCode, recoveryCodeMeldung, RC_CHARS, RC_LEN,
@@ -1243,5 +1337,10 @@ const EdCrypto = (() => {
            /* Gerätehülle */
            geraetehuelleVerschliessen, geraetehuelleOeffnen, geraetehuelleBindung,
            geraetehuelleAbleiten: ghAbleiten,
-           spkiZuSec1 };
+           spkiZuSec1,
+           /* Werkzeug für inhalt2.js, standbuch.js und huelle2.js — dieselben
+            * Helfer, nicht drei Abschriften: das Schlüsselfach (`aesKey`), Hex
+            * und Base64, und die Bausteine der Gerätehülle. */
+           teile: { aesSchluessel: aesKey, toHex, fromHex, toB64: toB64Gross, fromB64,
+                    ghFehler, ghVerbinde, ghOeffentlich, ghHmac } };
 })();

@@ -18,9 +18,10 @@ python3 tools/proben/huelle/referenz_inhalt.py erzeugen   # ebenso, für edk2
 Vergleichswert der Kopplung) → `vektoren-2.json`. `referenz_inhalt.py`: `edk2:`,
 Standbuch, Gerätebuch, Ableitung → `vektoren-inhalt.json`. Jede Gegenlage
 (vertauscht, zurückgelegt, Zeit verschoben, Stück entfernt, ohne Geräteschlüssel)
-scheitert mit benanntem Grund. `probe_server.php` (`geraetehuelle_lib.php`) und
-`probe.mjs` (`crypto.js`) halten Fassung 1 byte-gleich dagegen. Die Uhr:
-`pruefstand.sh kryptoprobe`. `geraet.php`, `*_cli.php`: Gerätehilfe der Proben.
+scheitert mit benanntem Grund. `probe_server.php` hält Fassung 1 dagegen, `probe.mjs`
+beide: Fassung 2 mit `pruefungen2.js` (`inhalt2.js`, `huelle2.js`, `standbuch.js`), einmal
+mit der Weiche wie ausgeliefert, einmal umgelegt; `--bestand <Ordner>` misst einen älteren
+Stand. Die Uhr: `pruefstand.sh kryptoprobe`. `geraet.php`, `*_cli.php`: Gerätehilfe.
 
 ## Was es braucht
 
@@ -32,9 +33,8 @@ Python mit `cryptography`, Node mit Playwright und einen Browser aus
 `referenz.py`: Selbstprobe **17 Fälle, 0 Fehlschläge** · Fassung 1 **6 geöffnet,
 8 Störungen** · Fassung 2 **23 geöffnet, 38 Gegenlagen**, je 0 Abweichungen.
 `referenz_inhalt.py`: **18 Fälle, 0 Fehlschläge** · **23 geöffnet, 28 Gegenlagen**.
-Server **18 Prüfungen** · Browser **39 Prüfungen**, 0 Abweichungen (11.11.2026).
+Server **18** · Browser **407 Prüfungen** (39 + 173 Weiche aus + 195 an), 0 Abweichungen (11.11.2026).
 
 ## Was es nicht kann
 
-Fassung 2 und `edk2:` haben bis KA-06b/c **nur diese eine Umsetzung** — die
-Vektoren belegen das Format, keine zweite Rechnung und nicht die Sicherheit des Entwurfs.
+Fassung 2: Referenz und Browser, Geräte und PHP folgen. Die Vektoren belegen das Format, nicht den Entwurf.

@@ -276,14 +276,24 @@ const EdUnlock = (() => {
      * die Prüfsumme gleich, und deshalb bleiben alle verschlüsselten Angaben
      * unangetastet.
      *
-     * ZWEI ANLÄSSE, EIN AUFRUF:
+     * DREI ANLÄSSE, EIN AUFRUF:
      *
      *   RUNDENZAHL  Das Konto rechnet unter dem Zielwert. Dann ändert sich
      *               die Hälfte — und mit ihr Token und Datenschlüssel.
+     *               DARIN STECKT DIE FASSUNG DER ABLEITUNG (F-KA-29): Welche
+     *               gilt, sagt die Rundenzahl (`EdCrypto.ableitungFassung()`),
+     *               und `anmeldeTokens()` hat für jede Zahl der Liste schon
+     *               in der richtigen gerechnet. Der Wechsel auf Ableitung 2
+     *               ist hier deshalb nichts Eigenes — er ist eine Anhebung
+     *               auf eine Zahl ab 1 200 000.
      *   HÜLLE       Die Hülle trägt nicht die aktuelle Anteil-Kennung: keine
      *               (Altbestand) oder die eines vorherigen Anteils
      *               (Rotation). Dann bleibt die Hälfte, und nur der
      *               Datenschlüssel wechselt.
+     *   FORMAT      Die Weiche steht an (`EdInhalt.schreibt2()`, inhalt2.js),
+     *               und die Hülle ist noch Fassung 1. Dann bleibt der
+     *               Datenschlüssel, und nur die Hülle wird gebunden neu
+     *               gebaut (`edka2:`) — `huelleBauen()` tut das von selbst.
      *
      * Stehen beide an, erledigt ein einziger Aufruf sie zusammen. Steht
      * keiner an, ist hier nichts zu tun — das ist der Regelfall ab dem
@@ -298,8 +308,10 @@ const EdUnlock = (() => {
      * hin. Das deckt drei Lagen mit derselben Zeile ab: `fehlt` (es gibt
      * keinen), `abweichend` (es wird keiner herausgegeben) und `demo` (das
      * Demo-Konto bleibt auf `edk1:`). */
+    const formatHeben = typeof EdInhalt !== 'undefined' && EdInhalt.schreibt2()
+                        && !EdCrypto.huelleGebunden(wrap);
     const huelleUmstellen = !!(wrap && kennung
-                               && EdCrypto.huelleKennung(wrap) !== kennung);
+                               && (EdCrypto.huelleKennung(wrap) !== kennung || formatHeben));
     const neuIter = rundenAnheben ? ziel : kdfIter;
 
     if ((rundenAnheben || huelleUmstellen) && vor.tk[String(kdfIter)]
