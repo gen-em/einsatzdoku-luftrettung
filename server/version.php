@@ -8913,4 +8913,11 @@ declare(strict_types=1);
  *   unversiegelte Begleitdatei sind unlesbar; Passphrase 12 Zeichen,
  *   Protokollarchiv im eigenen Ordner, CSP-Bericht höchstens 20 Einträge.
  *   Neben; kein Schema. */
-const WEB_VERSION = '24.13.0';
+/* 24.13.1 — DIE ABLEITUNG NIMMT NICHT MEHR JEDE ANTWORT (KA-06, vorab,
+ *   Audit KA F-KA-13, -16). Die Rundenzahl kommt vom Server, und der Browser
+ *   nahm alles ab 1 000; jetzt ab 310 000, dem kleinsten Wert, den je ein
+ *   Konto oder eine Sicherung trug, und das Salz muss 32 Zeichen Hex sein.
+ *   Das Vormerkfach der Anmeldung hat eine Frist von sechs Minuten und wird
+ *   von der ersten angemeldeten Seite mit dem Ruestzeug aufgeloest, auch
+ *   wenn ihr nichts fehlt. Korrektur; kein Formatwechsel, kein Schema. */
+const WEB_VERSION = '24.13.1';

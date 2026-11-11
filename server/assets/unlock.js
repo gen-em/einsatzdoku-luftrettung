@@ -551,7 +551,8 @@ const EdUnlock = (() => {
    * `suche.php` legte es an. Genau die Konten der BetreiberInnen haben oft
    * keine Einsätze, und für sie ist der Rückweg gedacht.
    *
-   * Deshalb löst diese Stelle das Fach selbst auf, wenn ein Paar fehlt:
+   * Deshalb löst diese Stelle das Fach selbst auf (seit Web 24.13.1 immer,
+   * nicht nur, wenn ein Paar fehlt — F-KA-16):
    * nach dem Laden der Seite (die Konstanten stehen HINTER diesem Skript),
    * STILL — ohne Entsperrdialog; fehlt der Schlüssel, geschieht nichts. Sie
    * geht durch dasselbe `vormerkLauf` wie `ensureContentKey()`: Fragt die
@@ -563,14 +564,23 @@ const EdUnlock = (() => {
     /* AUCH FÜR DAS SCHLÜSSELPAAR DES KONTOS: Fehlt es, braucht
      * es dasselbe Token aus dem Vormerkfach wie der Rückweg. */
     const kpFehlt = typeof KP_STAND !== 'undefined' && KP_STAND === 'fehlt';
-    if ((typeof RW_STAND === 'undefined' || RW_STAND !== 'fehlt') && !kpFehlt) { return; }
+    const rwFehlt = typeof RW_STAND !== 'undefined' && RW_STAND === 'fehlt';
     if (typeof PAT_WRAP === 'undefined' || !PAT_WRAP || typeof KDF_ITER === 'undefined') { return; }
     if (vormerkLauf) { return; }
     /* KEIN VORMERKFACH MEHR, ABER EINE MARKE (Nr. 392): die zweite Seite nach
      * einer Anmeldung, auf der die erste das Fach schon geräumt hat. Der
      * Inhaltsschlüssel liegt dann in der Ablage; `contentKey()` liest ihn
-     * still, ohne Dialog. Fehlt er, geschieht nichts. */
+     * still, ohne Dialog. Fehlt er, geschieht nichts.
+     *
+     * LIEGT DAS FACH DA, WIRD ES AUFGELÖST — auch wenn Rückweg und Paar
+     * vorhanden sind (F-KA-16). Bis Web 24.13.0 kehrte diese Stelle dann
+     * zurück, und eine erste Seite, die den Inhaltsschlüssel nicht braucht,
+     * ließ PBKDF2-Hälfte und Token im `sessionStorage` des Tabs stehen, bis
+     * irgendwann eine andere ihn brauchte. Aufgelöst heißt: Der
+     * Inhaltsschlüssel geht in die Ablage, wie er es auf der nächsten
+     * Seite ohnehin täte, und das Fach ist leer. */
     if (!EdCrypto.holeAbleitungen()) {
+      if (!rwFehlt && !kpFehlt) { return; }
       if (!markeGilt('kontopaar') && !markeGilt('rueckweg')) { return; }
       try {
         const ck = await EdKeyGuard.contentKey(PAT_WRAP);

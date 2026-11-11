@@ -1130,7 +1130,8 @@ Phasen/Rea werden je Upload **vollständig ersetzt** (kein Delta). Die Uhr darf
 lokal erst löschen, wenn `final` bestätigt und `next_seq` = Punktzahl.
 
 **Ende-zu-Ende-Verschlüsselung (Pflicht):** Beim Login leitet der Browser per
-PBKDF2-SHA256 (Rundenzahl je Konto, `users.kdf_iter`) aus Passwort + `kdf_salt` zwei Werte ab: ein
+PBKDF2-SHA256 (Rundenzahl je Konto, `users.kdf_iter`; der Browser nimmt seit Web 24.13.1
+keine unter 310 000 und nur ein Salz aus 32 Zeichen Hex, F-KA-13) aus Passwort + `kdf_salt` zwei Werte ab: ein
 Auth-Token (ersetzt das Passwort gegenüber dem Server, wird dort gehasht
 gespeichert) und eine **Hälfte**, aus der der Datenschlüssel entsteht (bleibt
 im Browser — seit Web 23.4.0 nur bis zum Entsperren; danach liegt allein der
@@ -1241,6 +1242,12 @@ die alte Hülle bleibt gültig. **`login.php` setzt den Datenschlüssel seit
 Web 20.0.0 nie mehr selbst:** Ob die Hülle den Anteil braucht, steht in ihrem
 Präfix, und das kennt erst die angemeldete Seite. Das Vormerkfach liegt
 deshalb nach jeder Anmeldung einen Seitenwechsel lang im `sessionStorage`.
+**Seit Web 24.13.1 mit Frist** (F-KA-16): Es trägt einen Zeitstempel und
+verfällt nach sechs Minuten (die fünf der halben Anmeldung und eine für den
+Seitenwechsel), auch in einem Tab, der so lange stehen bleibt; die erste
+angemeldete Seite mit `unlock.js` löst es auf, auch wenn dem Konto weder
+Rückweg noch Kontopaar fehlt. Einstellungen → Profil lädt `unlock.js` nicht —
+dort räumt erst die Frist.
 
 *Ausgeliefert wird nur an die angemeldete Sitzung* und nur der eigene Anteil:
 `auth_guard.php` stellt `$kontoAnteile`, `$anteilKennung` und `$anteilStand`
