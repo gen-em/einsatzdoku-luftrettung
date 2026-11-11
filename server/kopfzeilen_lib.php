@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * SICHERHEITSKOPFZEILEN AN EINER STELLE.
  *
@@ -404,7 +405,7 @@ function kopf_melde_url(): string
 {
     if (!kopf_https()) { return ''; }
     $host = (string)($_SERVER['HTTP_HOST'] ?? '');
-    if ($host === '' || !preg_match('/^[A-Za-z0-9._\-]+(:[0-9]{1,5})?$/', $host)) {
+    if ($host === '' || !preg_match('/^[A-Za-z0-9._\-]+(:[0-9]{1,5})?\z/', $host)) {
         return '';
     }
     $pfad = str_replace('\\', '/', dirname((string)($_SERVER['SCRIPT_NAME'] ?? '/')));

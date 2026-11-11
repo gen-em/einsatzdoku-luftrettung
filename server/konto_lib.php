@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * DER LEBENSZYKLUS EINES KONTOS.
  *
@@ -553,7 +554,7 @@ function adresse_unbestaetigt(int $userId): ?array
 {
     $w = app_state_mehrere(['adresse_offen:' . $userId, 'adresse_alt:' . $userId]);
     $offen = (string)($w['adresse_offen:' . $userId] ?? '');
-    if (!preg_match('/^(\d+)\|([0-9a-f]{64})$/', $offen, $m)) { return null; }
+    if (!preg_match('/^(\d+)\|([0-9a-f]{64})\z/', $offen, $m)) { return null; }
     if ((int)$m[1] <= time()) {
         app_state_loeschen('adresse_offen:' . $userId, 'adresse_alt:' . $userId);
         return null;

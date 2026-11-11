@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * Abgeleitete Sichten auf den zentralen Feldkatalog (mission_fields.php).
  *
@@ -68,7 +69,7 @@ function mf_tagesspalten(): array
                  * aus einer Eingabe — die Pruefung faengt darum keinen
                  * Angriff ab, sondern einen Tippfehler, der sonst als
                  * SQL-Fehler ohne erkennbaren Bezug auftauchen wuerde. */
-                if (!preg_match('/^[a-z][a-z0-9_]*$/', (string)$col)) {
+                if (!preg_match('/^[a-z][a-z0-9_]*\z/', (string)$col)) {
                     throw new RuntimeException(
                         "mission_fields.php: '$col' hat 'day_col', ist aber kein "
                         . 'zulaessiger Spaltenname ([a-z][a-z0-9_]*).');
@@ -231,7 +232,7 @@ function mf_ort_spalten(array $f): array
     foreach (['lat' => 'lat_col', 'lon' => 'lon_col'] as $k => $schluessel) {
         $col = (string)($f[$schluessel] ?? '');
         if ($col === '') { continue; }
-        if (!preg_match('/^[a-z][a-z0-9_]*$/', $col)) {
+        if (!preg_match('/^[a-z][a-z0-9_]*\z/', $col)) {
             throw new RuntimeException(
                 "mission_fields.php: '$col' ist kein zulaessiger Spaltenname "
                 . '([a-z][a-z0-9_]*).');

@@ -213,13 +213,13 @@ function pow_aufgabe_neu(): string
  */
 function pow_ok(string $aufgabe, string $loesung): bool
 {
-    if (!preg_match('/^[0-9a-f]{64}$/', $aufgabe)) { return false; }
+    if (!preg_match('/^[0-9a-f]{64}\z/', $aufgabe)) { return false; }
     $liste = (array)($_SESSION['pow'] ?? []);
     $bis = $liste[$aufgabe] ?? null;
     unset($liste[$aufgabe]);
     $_SESSION['pow'] = $liste;
     if (!is_int($bis) || $bis < time()) { return false; }
-    if (!preg_match('/^[0-9]{1,12}$/', $loesung)) { return false; }
+    if (!preg_match('/^[0-9]{1,12}\z/', $loesung)) { return false; }
 
     $h = hash('sha256', $aufgabe . $loesung, true);
     $voll = intdiv(POW_BITS, 8);

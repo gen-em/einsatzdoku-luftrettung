@@ -206,7 +206,7 @@ function notweg_wert_passt(string $eingabe): bool
         $soll = null;
     }
     $ist = schluessel_eingabe_normalisieren($eingabe) ?? '';
-    $gueltig = $soll !== null && preg_match('/^[0-9a-f]{64}$/', $soll) === 1;
+    $gueltig = $soll !== null && preg_match('/^[0-9a-f]{64}\z/', $soll) === 1;
     $vergleich = hash_equals($gueltig ? $soll : bin2hex(random_bytes(32)), $ist);
     return $gueltig && $vergleich;
 }

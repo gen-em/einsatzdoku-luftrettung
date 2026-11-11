@@ -98,7 +98,14 @@ const EdHtml = (() => {
   };
 
   function meldung(ton, text, o) {
-    const opt = o || {};
+    /* NUR EIGENE EIGENSCHAFTEN (seit Web 24.13.0, KA-05, F-KA-11). `knopf`
+     * und `roh` setzen Markup unmaskiert ein; stünden sie geerbt am
+     * Prototyp aller Objekte — der Weg, den eine Lücke beim Lesen einer
+     * fremden Datei öffnet —, liefe jede Meldung der Seite durch sie. */
+    const eigen = function (k) {
+      return o && Object.prototype.hasOwnProperty.call(o, k) ? o[k] : undefined;
+    };
+    const opt = { roh: eigen('roh'), auftakt: eigen('auftakt'), knopf: eigen('knopf') };
     if (!Object.prototype.hasOwnProperty.call(MELDUNG_SYMBOLE, ton)) {
       throw new Error('Unbekannter Meldungston \u201e' + ton + '\u201c. Erlaubt: '
         + Object.keys(MELDUNG_SYMBOLE).join(', ') + '.');

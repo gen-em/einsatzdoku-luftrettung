@@ -8902,4 +8902,15 @@ declare(strict_types=1);
  *   `bestaetigen` und `trennen` Geraet und Konto wie `ingest.php`: Eine im
  *   Web deaktivierte Uhr bekommt keinen Kontoschluessel mehr und trennt sich
  *   nicht selbst. Korrektur; kein Schema. */
-const WEB_VERSION = '24.12.1';
+/* 24.13.0 — MENGEN, SCHREIBWEGE, FREMDBESTANDTEILE (KA-05, Audit KA
+ *   F-KA-10, -11, -22, -23, -34, -38, -40). Die Mengengrenze steht an jedem
+ *   anlegenden Weg (`konto_anlegen_pruefen()`), das Demo-Konto hat feste
+ *   500 Einsätze / 50 MB. SheetJS 0.20.3 vom Hersteller; `EdHtml.meldung()`
+ *   liest nur eigene Optionen. Die Wiederherstellung prüft Katalogspalten über
+ *   `pruef_katalogfeld()` und nimmt `notes` nicht mehr an. Bibliotheken und
+ *   Teil-Vorlagen tragen einen Wächter (404), die `.htaccess` sperrt sie und
+ *   `migrations/`; 102 Anker sind `\z`. Fassung 2 der Konto-Backups und eine
+ *   unversiegelte Begleitdatei sind unlesbar; Passphrase 12 Zeichen,
+ *   Protokollarchiv im eigenen Ordner, CSP-Bericht höchstens 20 Einträge.
+ *   Neben; kein Schema. */
+const WEB_VERSION = '24.13.0';

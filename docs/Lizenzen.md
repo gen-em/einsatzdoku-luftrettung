@@ -67,7 +67,7 @@ Alle unter `server/assets/vendor/`.
 | Bibliothek | Version | Lizenz | Datei | wofür |
 |---|---|---|---|---|
 | **Leaflet** | 1.9.4 | BSD-2-Clause | `vendor/leaflet/leaflet.js`, `leaflet.css`, `images/` | Die Karten auf Tagesübersicht, Einsatzansicht, Zeitraum und in der Ortswahl |
-| **SheetJS Community Edition** (`xlsx`) | 0.18.5 | Apache-2.0 | `vendor/xlsx.full.min.js` | Excel-Export und -Import; läuft **im Browser**, die Datei entsteht dort |
+| **SheetJS Community Edition** (`xlsx`) | 0.20.3 | Apache-2.0 | `vendor/xlsx.full.min.js` | Excel-Export und -Import; läuft **im Browser**, die Datei entsteht dort |
 | **zip.js** | 2.8.34 | BSD-3-Clause | `vendor/zipjs.min.js` | Das verschlüsselte Archiv des Exports |
 | **qrcode-generator** (Kazuhiko Arase) | 2.0.4 | MIT | `vendor/qrcode.js` | Der QR-Code beim Einrichten des Zweitfaktors (seit Web 20.42.0, E-P5c-41). Gebraucht wird **nur die Modulmatrix**; das SVG baut `assets/qr.js` selbst, mit Klassen und Token |
 | **Open Location Code** (Google) | Commit `2afe39f` (13.06.2025), Paketfassung 20250411.0.0 | Apache-2.0 | `vendor/openlocationcode.js` | Plus Codes in der Ortseingabe (`assets/locparse.js`, Einsatzformular und Standorte). Reine Rechnung, ohne DOM und ohne Netz. *Bis Web 23.5.0 lag sie als `assets/openlocationcode.js` ohne Herkunftskopf und fehlte in dieser Tabelle (F-R17-51)* |
@@ -77,15 +77,21 @@ Alle unter `server/assets/vendor/`.
 | Datei | SHA-256 |
 |---|---|
 | `leaflet.js` | `db49d009c841f5ca34a888c96511ae936fd9f5533e90d8b2c4d57596f4e5641a` |
-| `xlsx.full.min.js` | `c9506197caf809a075b6dee1da0d36fb19da7158ffe8a88e7b0c96c5d8623c99` |
+| `xlsx.full.min.js` | `cc015130aa8521e7f088f88898eba949ccdcbfb38df0bd129b44b7273c3a6f41` |
 | `zipjs.min.js` | `52351e49074131fca386e6b13913e1c0bad5e66af7a2b87a815c0d0ca8714982` |
 | `qrcode.js` | `79ec86f82856005b1c887905cfccfcfbec3821ca61c7fd5a952faa5f778f791c` (ohne den Herkunftskopf) |
 | `leaflet.css` | `337bfca5cabd03b39815b2700febe2b3b7edf55921c59cd49f88ecb328212303` (abgelegt mit LF; das npm-Original mit CRLF hat `a7837102…`, F-R17-50) |
 | `openlocationcode.js` | `271165812e3007d71b025b518cb2c0424a2646cb94cb5751521f3313d4b1e505` |
 
-Leaflet, SheetJS, zip.js und qrcode-generator sind über das npm-Paketarchiv
+Leaflet, zip.js und qrcode-generator sind über das npm-Paketarchiv
 bezogen (`npm pack <paket>@<version>`), Open Location Code aus dem
-GitHub-Repositorium von Google (auf npm gibt es diesen Stand nicht). Alle sind
+GitHub-Repositorium von Google (auf npm gibt es diesen Stand nicht).
+**SheetJS kommt seit Web 24.13.0 vom Hersteller**
+(`https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js`, KA-05,
+F-KA-11): Das npm-Archiv führt nach 0.18.5 keine Fassung mehr, und 0.18.5
+hatte zwei bekannte Lücken beim Lesen fremder Dateien (CVE-2023-30533,
+CVE-2024-22363). Bezogen wird zur Bauzeit, nicht zur Laufzeit — die Seite
+lädt die Datei weiter aus `vendor/`. Alle sind
 unverändert übernommen und tragen oben einen Herkunftskopf; **jede Prüfsumme
 gilt für die Datei ohne diesen Kopf, so wie sie hier liegt.** Seit Web 23.5.0
 rechnet `tools/quelltext/fremdsummen.py` sie in Stufe 1 nach — Kopf gegen

@@ -482,7 +482,7 @@ function local_to_utc(string $day, string $hhmm, int $addDays = 0): ?string {
     // passt auf \d{2}:\d{2}, und DateTime rechnet daraus klaglos den naechsten
     // Tag 00:00. Eine Falscheingabe waere so als stiller Datumssprung
     // durchgerutscht statt als Fehler aufzufallen.
-    if (!preg_match('/^(\d{2}):(\d{2})$/', $hhmm, $t)) return null;
+    if (!preg_match('/^(\d{2}):(\d{2})\z/', $hhmm, $t)) return null;
     if ((int)$t[1] > 23 || (int)$t[2] > 59) return null;
     $dt = DateTime::createFromFormat('Y-m-d H:i', "$day $hhmm",
         new DateTimeZone((string)konfig('app.timezone')));
@@ -1457,7 +1457,7 @@ function anmelde_tokens_lesen(string $roh): array
     if (!is_array($j)) { return $aus; }
     foreach ($j as $runde => $tk) {
         $r = (int)$runde;
-        if ($r > 0 && is_string($tk) && preg_match('/^[0-9a-f]{64}$/', $tk)) {
+        if ($r > 0 && is_string($tk) && preg_match('/^[0-9a-f]{64}\z/', $tk)) {
             $aus[$r] = $tk;
         }
     }

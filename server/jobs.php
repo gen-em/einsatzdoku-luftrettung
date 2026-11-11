@@ -350,7 +350,7 @@ if ($aktion === 'pause') {
      *
      * `^\d+$` laesst nur Ziffern zu: kein Vorzeichen, kein Punkt, kein `1e3`,
      * kein fuehrendes Leerzeichen. Danach ist `(int)` verlustfrei. */
-    if (!preg_match('/^\d+$/', (string)$roh)) {
+    if (!preg_match('/^\d+\z/', (string)$roh)) {
         kette_antwort(['ok' => false, 'aktion' => 'pause', 'error' => 'sekunden',
                        'meldung' => 'Parameter `sekunden` ist keine ganze Zahl >= 0. '
                                   . 'Erlaubt sind nur Ziffern — `-0.5` oder `1e3` '

@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * Die APK-Dateien der Android-Apps.
  *
@@ -45,7 +46,7 @@ function apk_liste(): array
 
     $aus = [];
     foreach ((array)scandir($ordner) as $name) {
-        if (!is_string($name) || !preg_match('/^[A-Za-z0-9._-]+\.apk$/', $name)) { continue; }
+        if (!is_string($name) || !preg_match('/^[A-Za-z0-9._-]+\.apk\z/', $name)) { continue; }
         $pfad = $ordner . '/' . $name;
         if (!is_file($pfad)) { continue; }
         $aus[] = [
@@ -83,8 +84,8 @@ function apk_liste(): array
  */
 function apk_geraet(string $datei): ?string
 {
-    if (preg_match('/^nadoku-uhr-\d+\.\d+\.\d+\.apk$/', $datei)) { return 'uhr'; }
-    if (preg_match('/^nadoku-\d+\.\d+\.\d+\.apk$/', $datei)) { return 'handy'; }
+    if (preg_match('/^nadoku-uhr-\d+\.\d+\.\d+\.apk\z/', $datei)) { return 'uhr'; }
+    if (preg_match('/^nadoku-\d+\.\d+\.\d+\.apk\z/', $datei)) { return 'handy'; }
     return null;
 }
 

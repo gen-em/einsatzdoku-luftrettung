@@ -14,6 +14,43 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.13.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — jeder Weg, der Einsätze anlegt, achtet die Mengengrenze.** Bisher
+  stand sie nur beim Senden der Geräte; Import, GPX, die Wiederherstellung und
+  das Formular legten ohne sie an, und jedes Konto konnte die gemeinsame
+  Datenbank füllen. Das Demo-Konto, dessen Passwort öffentlich ist, hat jetzt
+  feste 500 Einsätze und 50 MB. Bearbeiten und Löschen bleiben frei.
+- **Web — Konto-Backups der Fassung 2 lassen sich nicht mehr öffnen.** Ein
+  unversiegeltes Paket — oder eine unversiegelte Begleitdatei, deren Adresse
+  seit Web 24.12.0 über eine Freigabe entscheidet — trug keine Bindung an
+  Server und Konto. Fassung 3 gibt es seit Web 20.2.0; ein älteres Paket ist
+  nur noch als „Backup ohne Konto" denkbar und dann unlesbar.
+- **Web — die Passphrase des Komplett-Downloads braucht zwölf Zeichen**, wie
+  ein Kontopasswort; bisher genügten acht für den ganzen Stand.
+
+### Behoben
+
+- **Web — die Bibliothek für Excel-Dateien hatte zwei bekannte Lücken beim
+  Lesen fremder Dateien.** Sie kommt jetzt in Fassung 0.20.3 vom Hersteller,
+  weil das npm-Archiv keine neuere führt; die Meldungen der Seite übernehmen
+  zudem keine Eigenschaften mehr, die eine solche Lücke unterschieben könnte.
+- **Web — die Wiederherstellung schrieb Zusatzfelder ungeprüft und nahm
+  Notizen im Klartext an.** Sie prüft sie jetzt wie jeder andere Schreibweg;
+  eine Sicherung aus der Zeit vor Web 19 verliert dabei ihre Notizen.
+- **Web — Bibliotheken, Teil-Vorlagen und Migrationsdateien waren direkt
+  abrufbar.** Eine davon schrieb bei jedem Abruf eine Systemmeldung. Jetzt
+  antworten sie mit 404, auch ohne die Sperre des Webservers.
+- **Web — eine Prüfung mit `$` ließ einen angehängten Zeilenumbruch durch**,
+  und dieselbe GPX-Datei ließ sich so zweimal einspielen. Alle Prüfungen
+  dieser Art enden jetzt fest.
+- **Web — ein CSP-Bericht konnte beliebig viele Zeilen schreiben, und das
+  Protokollarchiv lag beim Download offen im gemeinsamen Temp-Verzeichnis.**
+  Ein Bericht trägt jetzt höchstens 20 Einträge, das Archiv wird in einem
+  eigenen Ordner entsiegelt.
+
 ## [Web 24.12.1] — unveröffentlicht
 
 ### Behoben

@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * Admin-Backups: Ablage im Dateisystem, Übersicht, Rückspielung.
  *
@@ -128,11 +129,14 @@ function edbak_teil_siegeln(string $klartext, string $kennung,
 }
 
 /**
- * Einen rohen ZIP-Eintrag lesen — Fassung 2 wie Fassung 3.
+ * Einen rohen ZIP-Eintrag lesen — nur Fassung 3.
  *
- * DAS PRÄFIX ENTSCHEIDET, nicht eine Fassungsnummer von außen. Ein Eintrag
- * ohne `edsk1:` ist Fassung 2 und kommt unverändert zurück; das ist der Weg,
- * auf dem vorhandene Pakete weiter lesbar bleiben. Ein Eintrag MIT Präfix,
+ * UNVERSIEGELT IST UNLESBAR (seit Web 24.13.0, KA-05, F-KA-40, E-KA-31).
+ * Bis dahin kam ein Eintrag ohne `edsk1:` als Fassung 2 unverändert zurück —
+ * und ein unversiegeltes Manifest machte ein ganzes Paket unversiegelt
+ * lesbar: Wer in die Ablage schreiben konnte, legte ein Paket ohne jede
+ * Bindung an Server, Konto und Namen hin. Fassung 3 gibt es seit Web 20.2.0.
+ * Ein Eintrag MIT Präfix,
  * der sich nicht öffnen lässt, gibt `null` — und das heisst genau eines:
  * Dieser Teil gehört nicht zu diesem Server, diesem Konto, diesem Paket oder
  * diesem Namen. Welches davon, unterscheidet die Funktion bewusst nicht
@@ -149,10 +153,9 @@ function edbak_teil_siegeln(string $klartext, string $kennung,
  * wird ohne Pflicht gelesen — an ihm entscheidet sich die Fassung.
  */
 function edbak_teil_oeffnen(string $roh, string $kennung,
-                            string $paket, string $teil,
-                            bool $siegelPflicht = false): ?string
+                            string $paket, string $teil): ?string
 {
-    if (!sk_versiegelt($roh)) { return $siegelPflicht ? null : $roh; }   // Fassung 2
+    if (!sk_versiegelt($roh)) { return null; }   // Fassung 2: nicht mehr lesbar
     $gz = sk_oeffnen($roh, edbak_teil_zweck($kennung, $paket, $teil));
     if ($gz === null) { return null; }
     $klar = @gzdecode($gz);
@@ -323,7 +326,7 @@ function edbak_ablage_bereit(): array
 /** Kennungen bestehen ausschliesslich aus 16 Hexziffern — alles andere ist kein Ordner von uns. */
 function edbak_kennung_gueltig(?string $k): bool
 {
-    return is_string($k) && preg_match('/^[a-f0-9]{16}$/', $k) === 1;
+    return is_string($k) && preg_match('/^[a-f0-9]{16}\z/', $k) === 1;
 }
 
 function edbak_ordner(string $kennung): string
@@ -356,7 +359,7 @@ function edbak_handgriff(string $kennung): string
 /** Rückweg: Handgriff -> Kennung, durch Vergleich über die vorhandenen Ordner. */
 function edbak_kennung_aus_handgriff(string $handgriff): ?string
 {
-    if (!preg_match('/^[a-f0-9]{16}$/', $handgriff)) { return null; }
+    if (!preg_match('/^[a-f0-9]{16}\z/', $handgriff)) { return null; }
     $wurzel = edbak_wurzel();
     if (!is_dir($wurzel)) { return null; }
     foreach (scandir($wurzel) ?: [] as $n) {
@@ -391,7 +394,7 @@ function edbak_paketname(): string
 /** Beide Fassungen — Fassung 1 wird noch gelesen, aber nicht mehr geschrieben. */
 function edbak_paketname_gueltig(string $name): bool
 {
-    return preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z_[a-f0-9]{8}\.(json|zip)$/', $name) === 1;
+    return preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z_[a-f0-9]{8}\.(json|zip)\z/', $name) === 1;
 }
 
 /** Paketfassung am Namen: 2 = mehrteiliges ZIP, 1 = einteiliges JSON, 0 = keins. */
@@ -423,16 +426,16 @@ function edbak_begleit_lesen(string $kennung): array
     if (!is_file($pfad)) { return $vorgabe; }
     $roh = @file_get_contents($pfad);
     if ($roh === false) { return $vorgabe; }
-    /* VERSIEGELT. Das Präfix entscheidet: Eine
-     * Datei ohne `edsk1:` ist die alte, unversiegelte Fassung und wird
-     * unverändert gelesen — sie versiegelt sich beim nächsten Schreiben von
-     * selbst. Lässt sich eine versiegelte nicht öffnen, fällt sie in
-     * `lesbar => false`, und das ist die richtige Schublade: Sie IST dann
-     * nicht lesbar, und die Übersicht sagt es mit einer orangen Plakette. */
-    if (sk_versiegelt($roh)) {
-        $roh = sk_oeffnen($roh, edbak_begleit_zweck($kennung));
-        if ($roh === null) { return $vorgabe; }
-    }
+    /* NUR VERSIEGELT (seit Web 24.13.0, KA-05, F-KA-40). Bis dahin wurde
+     * eine Datei ohne `edsk1:` als alte Fassung unverändert gelesen — und
+     * seit KA-03 entscheidet die Adresse darin über eine Freigabe: Wer in die
+     * Ablage schreiben konnte, setzte sie. Unversiegelt oder nicht zu öffnen
+     * heisst jetzt `lesbar => false`, und die Übersicht sagt es mit einer
+     * orangen Plakette. Jede Begleitdatei ist seit Web 20.2.0 versiegelt; das
+     * nächste Schreiben versiegelt sie ohnehin. */
+    if (!sk_versiegelt($roh)) { return $vorgabe; }
+    $roh = sk_oeffnen($roh, edbak_begleit_zweck($kennung));
+    if ($roh === null) { return $vorgabe; }
     $d = json_decode($roh, true);
     if (!is_array($d)) { return $vorgabe; }
     return array_merge($vorgabe, $d, ['lesbar' => true, 'account_key' => $kennung]);
@@ -2366,14 +2369,12 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
     if ($zip === null) {
         return [false, 'Das Backup liess sich nicht öffnen.', null];
     }
-    /* JEDER TEIL GEHT DURCH DAS SIEGEL. `edbak_teil_oeffnen()`
-     * lässt einen unversiegelten Eintrag unverändert durch — so bleibt ein
-     * Fassung-2-Paket lesbar, ohne dass hier eine Fassungsweiche steht. */
-    $siegelPflicht = false;          // gesetzt, sobald das Manifest gelesen ist
-    $lies = static function (string $name) use ($zip, $kennung, $datei, &$siegelPflicht): ?array {
+    /* JEDER TEIL GEHT DURCH DAS SIEGEL; ein unversiegelter ist seit
+     * Web 24.13.0 unlesbar (`edbak_teil_oeffnen()`, KA-05). */
+    $lies = static function (string $name) use ($zip, $kennung, $datei): ?array {
         $roh = $zip->getFromName($name);
         if ($roh === false) { return null; }
-        $klar = edbak_teil_oeffnen($roh, $kennung, $datei, $name, $siegelPflicht);
+        $klar = edbak_teil_oeffnen($roh, $kennung, $datei, $name);
         if ($klar === null) { return null; }
         $d = json_decode($klar, true);
         return is_array($d) ? $d : null;
@@ -2399,7 +2400,6 @@ function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId)
         $zip->close();
         return [false, 'Dem Backup fehlt ein lesbares Manifest.', null];
     }
-    $siegelPflicht = sk_versiegelt($mRoh);          // Fassung 3: jeder Teil
     /* VOLLSTAENDIGKEIT VOR DEM ERSTEN SCHREIBEN. Ein fehlendes Teil soll
      * auffallen, solange das Zielkonto noch unberuehrt ist — nicht auf halber
      * Strecke, wenn schon die Haelfte drinsteht. */
@@ -2584,9 +2584,8 @@ function edbak_paket_teil_lesen(string $kennung, string $datei, string $teil): ?
     if (!in_array($teil, $erlaubt, true)) { $zip->close(); return null; }
     $roh = $zip->getFromName($teil);
     $zip->close();
-    $siegelPflicht = sk_versiegelt((string)$mRoh);  // Fassung 3: jeder Teil
     if ($roh === false) { return null; }
-    return edbak_teil_oeffnen($roh, $kennung, $datei, $teil, $siegelPflicht);
+    return edbak_teil_oeffnen($roh, $kennung, $datei, $teil);
 }
 
 /* ---- Der Auftrag „Alle sichern" ------------------------

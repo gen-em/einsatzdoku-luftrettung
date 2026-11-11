@@ -12,8 +12,8 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-04** ohne die Garmin-Punkte 1 und 4 — gebaut (Web 24.12.1, Android 0.23.0), im PR; danach KA-05. **Garmin-Anteile ausgegliedert an KG** (E-KA-21, Abschnitt 11) |
-| Erledigt | **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
+| In Arbeit | **KA-05** — gebaut (Web 24.13.0), im PR; danach KA-06 (Halt vor 06a: Fable). **Garmin-Anteile ausgegliedert an KG** (E-KA-21, Abschnitt 11) |
+| Erledigt | **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
@@ -82,6 +82,13 @@ Safari.
 | E-KA-28 | **Ein „Dienst beginnen" der Wear-Uhr wirkt ohne laufenden Dienst nur, wenn es höchstens 12 Stunden alt ist** — ein spät zugestelltes Ereignis derselben Schicht wirkt, eines von gestern nicht | 10.11.2026, BetreiberIn |
 | E-KA-29 | **Das Handy deckelt `next_seq` auf `seq_from` plus gesendete Punkte**, wie KG es für die Uhr tut | 10.11.2026, BetreiberIn |
 | E-KA-30 | **Ein im Web deaktiviertes Gerät trennt sich nicht mehr selbst** — sonst bliebe der Weg aus F-KA-05 offen; gelöscht wird es im Web | 10.11.2026, BetreiberIn |
+| E-KA-31 | **Fassung 2 wird abgeschaltet, ohne Produktiv vorher zu zählen** (E-KA-16). Örtlich 0 von 6 Paketen in Fassung 2; Fassung 3 gibt es seit Web 20.2.0, je Konto bleiben zwei Pakete — ein Fassung-2-Paket kann es nur noch als „Backup ohne Konto" von davor geben. Der CHANGELOG sagt es | 11.11.2026, BetreiberIn |
+| E-KA-32 | **Grenze des Demo-Kontos: 500 Einsätze und 50 MB GPS-Daten** — Puffer für spätere Erweiterungen der Vorlage (Vorschlag war 200 / 20) | 11.11.2026, BetreiberIn |
+| E-KA-33 | **Die Passphrase des Komplett-Downloads braucht `PW_MIN_LAENGE` Zeichen** (12), wie ein Kontopasswort | 11.11.2026, BetreiberIn |
+| E-KA-34 | **Ein CSP-Bericht trägt höchstens 20 Einträge**, der Rest wird verworfen | 11.11.2026, BetreiberIn |
+| E-KA-35 | **SheetJS 0.20.3 vom Hersteller (`cdn.sheetjs.com`)**; der Host ist dafür in die Netzfreigabe der Arbeitsumgebung aufgenommen (11.11.2026, Freigabe der BetreiberIn). **Uhr-Rundläufe und `pruefablauf.json` gehören KG** — KA fährt keine Uhr-Proben und meldet nur vorher, wenn es Geräte-Endpunkte ändert | 11.11.2026, BetreiberIn |
+| E-KA-36 | **Der Wächter in Bibliotheken und Teil-Vorlagen vergleicht `SCRIPT_FILENAME` mit `__FILE__`**, statt einer Konstante (Konzept: „Wächterkonstante"). Eine Konstante hätte jede Einstiegsseite gebraucht, und ein Wächter über `get_included_files()` hätte jedes Werkzeug getroffen, das per `php -r` eine Bibliothek zuerst einbindet; im CLI greift er nicht | 11.11.2026, Umsetzung |
+| E-KA-37 | **Auch die unversiegelte Begleitdatei `konto.json` ist unlesbar** — über Punkt 7 hinaus: Seit KA-03 entscheidet ihre Adresse über eine Freigabe, und der Rückfall war derselbe wie beim Manifest | 11.11.2026, Umsetzung |
 | E-KA-21 | **Die Garmin-Anteile gehen an eine eigene Instanz, Kürzel KG** (Abschnitt 11): KA-04 Punkt 1 und 4, der Garmin-Teil von KA-06c samt der Messung für 06a, die Garmin-Kommentare aus F-KA-43 und der Garmin-Teil von KA-M6. KG zählt eigene Nummern (`KG-NN`, `F-KG-NN`, `E-KG-NN`, `P-KG-NN`), führt ein eigenes Konzept und schreibt den Rahmenplan nicht — das tut diese Instanz | 10.11.2026, BetreiberIn |
 
 ---
@@ -723,6 +730,40 @@ BetreiberIn-Konto der Arbeitsumgebung, Chromium: drei Karten
 Adressbestätigung (P-KA-07) nicht durchgespielt — sie änderte die Adresse
 des eigenen Kontos.
 
+### KA-05 (11.11.2026)
+
+**Was nicht geprüft werden konnte — zuerst.**
+
+1. **Die `.htaccess` auf den echten Hostern.** Gemessen ist sie mit einem
+   Apache 2.4.58 im Container (`AllowOverride All`, HTTPS); ob Produktiv
+   (Plesk) und Staging (lima-city) sie genauso lesen, zeigt erst die
+   Anlage (Stufe 2, R91, P-KA-11). `Options -Indexes` ist deshalb nicht
+   drin (F-KA-70).
+2. **Die Lücken in SheetJS 0.18.5 selbst** sind nicht nachgestellt (Konzept:
+   „nicht nachgestellt wird die Lücke selbst"); belegt ist die neue Fassung
+   und das gehärtete Gadget.
+3. **Gegenproben durch Abbruch statt Zeile:** Wiederherstellung Teil 17
+   (alter Code bricht mit Datenbankfehler ab) und der Arbeitsordner des
+   Protokollarchivs (Funktion fehlt auf `main`).
+
+**Gemessen** (Gegenprobe = mit dem Stand von `main` für die betroffene Datei):
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Rollenprobe | **645 Erwartungen, 0 nicht erfüllt** — neu: sechs anlegende Wege bei vollem Konto 507/Satz, Bearbeiten frei, Gegenlage ohne Grenze 5 von 5 ohne 507, Demo 500/50; `api/range.php` mit Zeilenumbruch 400; CSP-Bericht 30 → 20 Zeilen | CSP: 30 Zeilen (rot); Mengenteil: Abbruch (neue Funktion fehlt) | F-KA-10, -34, -40 |
+| Wiederherstellungsprobe | **149 Erwartungen, 0 nicht erfüllt** — neu Teil 17 (Katalogspalten, `notes`) und 18 (Fassung 2, Begleitdatei, Passphrase, Arbeitsordner) | Teil 17 Abbruch (Datenbankfehler), Teil 18 (1)(2)(3) rot | F-KA-22, -40 |
+| Bedienprobe, Weg `ka05-fremdbestandteile` | SheetJS 0.20.3 geladen, geerbtes `knopf`/`roh` wirkt nicht, eigenes `knopf` wirkt | dasselbe mit `html.js` von `main` (Node): geerbtes `knopf` und `roh` WIRKEN | F-KA-11 |
+| Kreislauf CSV, drei Engines | je **0 unerklärte, 1 324 erwartete Abweichungen** | — | SheetJS 0.20.3 liest und schreibt wie 0.18.5 |
+| Riegel `schranken` (Nr. 562) | Selbstprobe **8/0**; 164 Dateien, **0 Befunde** | gegen `server/` von `main` **166 Befunde** (102 Anker, 62 Wächter, 2 `.htaccess`) | F-KA-23, -34, -38 |
+| Apache 2.4.58 im Container, HTTPS | `migrations/*.sql`, `jobs_lib.php`, `blatt_dialog.php`, `schluessel_teile.php` 403; `.well-known/` 404, `login.php` und `assets/` erreichbar | mit `.htaccess` von `main`: SQL 200, `jobs_lib.php` 200, `blatt_dialog.php` 200 | F-KA-23, -38 |
+| eingebauter PHP-Server, ohne `.htaccess` | Wächter: `jobs_lib.php`, `blatt_dialog.php`, `schluessel_teile.php`, `konto_lib.php` 404 | alter `blatt_dialog.php` 500 (Systemmeldung), alter `jobs_lib.php` 200 | F-KA-23 |
+| Zählung | **51 Zeilen, 0 über der Decke** — neu Z51 (Satz „Das Konto ist voll") | Start 1 (`ingest.php`) | eine Stelle |
+| Ingest-, Kopplungs-, Jobs-, Wartungs-, Wache-Selbstprobe | 99/0, 87/0, 42/0, 83/0, 55/0 | — | nach dem Anker-Umbau nichts gebrochen |
+
+**Fassung 2 vorher gezählt** (Konzept, Punkt 7): örtlich 6 Pakete, alle
+Fassung 3; 3 Begleitdateien, alle versiegelt. Staging und Produktiv nicht
+gezählt (E-KA-31).
+
 ### KA-04 (10.11.2026, ohne die Garmin-Punkte 1 und 4)
 
 **Was nicht geprüft werden konnte — zuerst.**
@@ -777,6 +818,13 @@ des eigenen Kontos.
 | F-KA-67 | **`Sendeantwort` wertete 400 `klartext` als „fehlerhaft"** — der Vertrag sagt seit Web 22.0.1 „parken, nicht verwerfen". Gefunden beim Umbau für F-KA-18 | `klartext` ist „später erneut" mit einer Stunde Wartezeit |
 | F-KA-68 | **Eine Bindung über ein offenes Paket zählte der Sender als leer** (`rueckstandBis()` zählt nur abgeschlossene) und hätte sie gelöst — das gebundene Paket ginge doch hinaus. Gefunden beim Bau von `vorgefundenesBinden()`, bevor es auftreten konnte | Sender zählt mit `Puffer.bestandBis()`; Prüffall `eineBindungDecktAuchEinOffenesPaket`. **Bleibt:** Die Frist räumt ein gebundenes offenes Paket erst, wenn sein Dienst endet |
 | F-KA-69 | **Die Uhrannahme-Prüffälle liefen gegen die echte Uhr** (`jetzt` nicht gesetzt) — mit der 12-Stunden-Grenze wären alle Ereignisse vom Juli „zu alt" gewesen; ebenso der Rundlauf in `MissionRundlaufTest` | feste Empfangszeit im Test (17:00 desselben Tages), im Rundlauf die Zeit des Falls |
+| F-KA-70 | **`Options -Indexes` in der `.htaccess` legt eine Anlage lahm**, wenn der Hoster `AllowOverride Options` nicht erlaubt: gemessen mit Apache 2.4.58, `AllowOverride FileInfo AuthConfig Limit` — 500 auf jeder Seite, `login.php` eingeschlossen. Ob Produktiv und Staging es erlauben, ist nicht gemessen | Zeile nicht aufgenommen, Begründung in der `.htaccess`; das Listing schaltet die BetreiberIn beim Hoster ab (P-KA-10) |
+| F-KA-71 | **Der Arbeitsprozess der Sitzung startete neu, die Datenbank stand nicht mehr** (11.11.2026, `uptime` 11 min); die Anlage lief ohne `--neu` wieder an | wie F-KA-48 |
+| F-KA-72 | **Die erste Gegenprobe des Wächters am eingebauten PHP-Server zeigte auch mit dem alten `blatt_dialog.php` 404** — der Server hatte den Stand noch zwischengespeichert. Ein zweiter Abruf mit Kopfzeilen zeigte 500 und den Fehlerbildschirm | Gegenprobe mit `-D -` wiederholt; erst dann gezählt |
+| F-KA-73 | **Zwei Zeilen der neuen Proben waren falsch, nicht der Code:** `?? 'x'` machte aus dem erwarteten `NULL` ein `'x'`, und das Label „nichts angelegt" stand ohne Zählung da | `array_key_exists()`; die Zahl der Einsätze wird gezählt |
+| F-KA-74 | **Die neue SheetJS-Datei liegt unter `vendor/` und löst heute kein Muster des Prüfstands aus** — weder `oberflaeche` (`server/assets/*.js`) noch `kreislauf-csv`. Eine künftige Fassung liefe ungeprüft durch | Kreislauf CSV von Hand in drei Engines; das Muster nachzuziehen hieße `pruefablauf.json` zu ändern — offen, Bericht an die BetreiberIn |
+| F-KA-75 | **Der Messstand lief in die neue Mengengrenze:** Er spielt 16 wachsende Bestände in ein Konto, und ab dem 16. (318 Einsätze, gesamt 5 088) antwortete `api/backup_eintraege_restore.php` mit `507 kontingent` — im ersten Prüfstand von KA-05 rot. Die Grenze tat, was sie soll; das Messkonto misst ausdrücklich den ungünstigsten Fall | `messen.py` hebt die Grenze des Messkontos nach dem Anlegen auf (1 000 000 Einsätze / MB, `grenze_heben()`); danach alle 16 Dateien eingespielt, gesamt 5 088 |
+| F-KA-76 | **Uhr-Stufe und Modul `plattform` fehlten im Container** — `uhr-krypto` (der Wächter steht auch in `geraetehuelle_lib.php`) war rot, `schemaprobe` (der Anker in `migration_lib.php`) nicht gemessen. Für `plattform` lief der Docker-Dienst nicht | `aufbauen.sh uhr` (Connect IQ 9.2.0, 173 Geräte) und, nach `dockerd`, `aufbauen.sh plattform` (MySQL 8.0, 8.4.0, MariaDB 10.6, PHP 8.3); der Zwischenstand `539de50` trägt den roten Bericht, der nächste Commit misst die drei neu |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
 | F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
 | F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |

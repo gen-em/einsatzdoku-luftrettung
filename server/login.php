@@ -693,7 +693,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
          * schickt es noch, und die Anmeldung soll daran nicht scheitern.
          */
         $tokenNach = anmelde_tokens_lesen(post_text('tokens'));
-        if (isset($_POST['token']) && preg_match('/^[0-9a-f]{64}$/', post_text('token'))) {
+        if (isset($_POST['token']) && preg_match('/^[0-9a-f]{64}\z/', post_text('token'))) {
             /* Altes Feld: es galt immer die frueher fest verdrahtete Zahl.
              * Gemessen am 03.11.2026 (BR5-04): Kein Werkzeug im
              * Repositorium schickt es mehr; es bleibt fuer einen Reiter, der

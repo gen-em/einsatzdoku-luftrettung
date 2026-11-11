@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 require_once __DIR__ . '/serverkrypto_lib.php';
 
 /**
@@ -203,7 +204,7 @@ function sz_name_gueltig(string $name): bool
 {
     if ($name === '' || strlen($name) > 190) { return false; }
     if (str_contains($name, '..') || str_contains($name, '\\')) { return false; }
-    return (bool)preg_match('/^[A-Za-z0-9._-]+$/', $name);
+    return (bool)preg_match('/^[A-Za-z0-9._-]+\z/', $name);
 }
 
 /**
@@ -698,7 +699,7 @@ function sz_pruefen_eingabe(array $e): array
     }
     $host = trim((string)($e['host'] ?? ''));
     if ($host === '' || mb_strlen($host) > 190
-        || !preg_match('/^[A-Za-z0-9._:\[\]-]+$/', $host)) {
+        || !preg_match('/^[A-Za-z0-9._:\[\]-]+\z/', $host)) {
         $f[] = 'Der Rechnername fehlt oder enthält Zeichen, die dort nicht '
              . 'hingehören (erlaubt: Buchstaben, Ziffern, Punkt, Bindestrich, '
              . 'Doppelpunkt für IPv6).';

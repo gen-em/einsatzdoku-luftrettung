@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * Komplett-Backup der Installation.
  *
@@ -175,7 +176,7 @@ function komp_dateiname(): string
 /** Passt der Name zum Muster? Schuetzt jeden Pfad, der aus einer Eingabe kommt. */
 function komp_name_gueltig(string $name): bool
 {
-    return (bool)preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z_[0-9a-f]{8}\.edk$/', $name);
+    return (bool)preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}Z_[0-9a-f]{8}\.edk\z/', $name);
 }
 
 /** Der Zeitpunkt aus dem Namen als ISO-8601. `null`, wenn der Name nicht passt. */
@@ -252,7 +253,7 @@ function komp_loeschen(string $datei): bool
 /** Einen Bauordner samt Inhalt entfernen. */
 function komp_bau_weg(string $bau): bool
 {
-    if (!preg_match('/^' . preg_quote(KOMP_BAU_PRAEFIX, '/') . '[0-9a-f]{8}$/', $bau)) {
+    if (!preg_match('/^' . preg_quote(KOMP_BAU_PRAEFIX, '/') . '[0-9a-f]{8}\z/', $bau)) {
         return false;
     }
     $pfad = komp_wurzel() . '/' . $bau;
@@ -363,7 +364,7 @@ function komp_tabellen(PDO $pdo): array
 /** Die Werte einer ENUM-Deklaration: `enum('a','b')` -> ['a','b']. */
 function komp_enum_werte(string $columnType): array
 {
-    if (!preg_match("/^enum\\((.*)\\)$/is", trim($columnType), $t)) { return []; }
+    if (!preg_match("/^enum\\((.*)\\)\\z/is", trim($columnType), $t)) { return []; }
     $werte = [];
     if (preg_match_all("/'((?:[^']|'')*)'/", $t[1], $tr)) {
         foreach ($tr[1] as $w) { $werte[] = str_replace("''", "'", $w); }
@@ -459,7 +460,7 @@ function komp_wert(mixed $v, bool $binaer, bool $zahl): string
          * Binaerspalte wird deshalb zur leeren Zeichenkette. */
         return $s === '' ? "''" : '0x' . bin2hex($s);
     }
-    if ($zahl && preg_match('/^-?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?$/', $s)) {
+    if ($zahl && preg_match('/^-?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?\z/', $s)) {
         return $s;
     }
     return komp_quote($s);
@@ -1711,8 +1712,10 @@ function komp_ausgeben_klar(string $datei, callable $hinaus): int
 function komp_ausgeben_passphrase(string $datei, string $passwort, callable $hinaus): int
 {
     if (!komp_name_gueltig($datei)) { throw new RuntimeException('Unbekanntes Backup.'); }
-    if (strlen($passwort) < 8) {
-        throw new RuntimeException('Die Passphrase muss mindestens 8 Zeichen haben.');
+    /* DIE MINDESTLÄNGE EINES KONTOPASSWORTS (seit Web 24.13.0, KA-05,
+     * F-KA-40, E-KA-33; bis dahin 8). Sie verschließt den ganzen Stand. */
+    if (mb_strlen($passwort) < PW_MIN_LAENGE) {
+        throw new RuntimeException('Die Passphrase muss mindestens ' . PW_MIN_LAENGE . ' Zeichen haben.');
     }
     if (serverschluessel() === null) {
         throw new RuntimeException('Ohne Serverschlüssel lässt sich das Backup nicht öffnen.');

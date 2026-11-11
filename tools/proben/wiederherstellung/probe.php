@@ -2068,5 +2068,81 @@ try {
     $weg($uid16);
 }
 
+echo "\n  Teil 17 — Katalogspalten durch die Pruefschicht, keine Notiz im Klartext (KA-05, F-KA-22)\n";
+/* Bis Web 24.12.1 schrieb die Wiederherstellung Katalogspalten aus der Datei
+ * ungeprueft und nahm `notes` als Klartextspalte an. Jetzt laufen sie durch
+ * `pruef_katalogfeld()`: ein Wert ausserhalb der Liste wird NULL, ein
+ * Haken 0/1, ein zu langer Text gekuerzt — und `notes` bleibt leer. */
+$uid17 = $konto('probe-katalog-ka05@example.invalid');
+try {
+    $tag17 = ['id' => 991, 'day' => '2026-07-11', 'kind' => 'air',
+              'vehicle_name' => 'Probe 17', 'base_name' => 'Probenstation'];
+    $restore($uid17, ['version' => 12, 'days' => [$tag17], 'rest_segments' => [],
+        'missions' => [['client_ref' => 'k17-m1', 'day_id' => 991,
+                        'started_at' => '2026-07-11 06:00:00', 'ended_at' => '2026-07-11 07:00:00',
+                        'transport_mode' => 'rakete', 'winch' => 'ja', 'winch_cycles' => '99',
+                        'bw_info' => str_repeat('x', 300), 'other_ema' => ['liste'],
+                        'notes' => 'Notiz im Klartext']]]);
+    $z17 = $pdo->query("SELECT transport_mode, winch, winch_cycles, CHAR_LENGTH(bw_info) AS bw, other_ema, notes
+                          FROM missions WHERE user_id = $uid17")->fetch(PDO::FETCH_ASSOC) ?: [];
+    $sag('(1) Auswahl ausserhalb der Liste → NULL (transport_mode, winch_cycles)',
+         array_key_exists('transport_mode', $z17) && $z17['transport_mode'] === null && $z17['winch_cycles'] === null,
+         json_encode($z17, JSON_UNESCAPED_UNICODE));
+    $sag('(2) Haken 0/1, Text auf 190 gekuerzt, eine Liste als Text verworfen',
+         (int)($z17['winch'] ?? -1) === 1 && (int)($z17['bw'] ?? 0) === 190
+           && array_key_exists('other_ema', $z17) && $z17['other_ema'] === null,
+         'winch ' . ($z17['winch'] ?? '—') . ', bw_info ' . ($z17['bw'] ?? '—') . ' Zeichen');
+    $sag('(3) Keine Notiz im Klartext (notes NULL)', array_key_exists('notes', $z17) && $z17['notes'] === null,
+         $z17 ? var_export($z17['notes'], true) : '(keine Zeile)');
+} finally {
+    $weg($uid17);
+}
+
+echo "\n  Teil 18 — Fassung 2 ist unlesbar (KA-05, F-KA-40, E-KA-31)\n";
+/* Bis Web 24.12.1 las `edbak_teil_oeffnen()` einen Eintrag ohne `edsk1:` als
+ * Fassung 2 unveraendert, und ein unversiegeltes Manifest machte das ganze
+ * Paket lesbar; ebenso las `edbak_begleit_lesen()` eine unversiegelte
+ * `konto.json`. Beides ist jetzt `null` bzw. `lesbar => false`. */
+$kenn18 = bin2hex(random_bytes(8));
+$ord18 = edbak_ordner($kenn18);
+@mkdir($ord18, 0700, true);
+try {
+    $datei18 = '2026-07-11T06-00-00Z_' . bin2hex(random_bytes(4)) . '.zip';
+    $z18 = new ZipArchive();
+    $z18->open($ord18 . '/' . $datei18, ZipArchive::CREATE);
+    $z18->addFromString('manifest.json', json_encode(['format' => 'einsatzdoku-adminsicherung',
+                                                       'version' => 2, 'teile' => []]));
+    $z18->close();
+    file_put_contents($ord18 . '/konto.json', json_encode(['email' => 'fremd@example.invalid']));
+    $sag('(1) Ein Paket mit unversiegeltem Manifest ist unlesbar',
+         edbak_paket_kopf_lesen($kenn18, $datei18) === null, 'Kopf ' . var_export(edbak_paket_kopf_lesen($kenn18, $datei18) !== null, true));
+    $b18 = edbak_begleit_lesen($kenn18);
+    $sag('(2) Eine unversiegelte konto.json ist nicht lesbar und nennt keine Adresse',
+         $b18['lesbar'] === false && $b18['email'] === null,
+         'lesbar ' . var_export($b18['lesbar'], true) . ', email ' . var_export($b18['email'], true));
+} finally {
+    foreach (glob($ord18 . '/*') ?: [] as $f) { @unlink($f); }
+    @rmdir($ord18);
+}
+/* (3) Die Passphrase des Komplett-Downloads braucht PW_MIN_LAENGE Zeichen
+ * (E-KA-33, bis dahin 8). Geprüft vor allem anderen — der Name muss nur
+ * die Form haben. */
+require_once $server . '/komplett_lib.php';
+$grund18 = '';
+try {
+    komp_ausgeben_passphrase('2026-07-11T06-00-00Z_0000abcd.edk', str_repeat('x', PW_MIN_LAENGE - 1),
+                             static function (string $s): void {});
+} catch (Throwable $ex) { $grund18 = $ex->getMessage(); }
+$sag('(3) Passphrase mit ' . (PW_MIN_LAENGE - 1) . ' Zeichen abgewiesen (Mindestlänge ' . PW_MIN_LAENGE . ')',
+     str_contains($grund18, 'mindestens ' . PW_MIN_LAENGE . ' Zeichen'), $grund18 !== '' ? $grund18 : 'nicht abgewiesen');
+/* (4) Das Protokollarchiv entsiegelt nicht im gemeinsamen Temp-Verzeichnis. */
+require_once $server . '/protokoll_archiv_lib.php';
+$arb18 = protokoll_archiv_arbeit_neu();
+$sag('(4) Arbeitsordner des Protokollarchivs unter der Ablage, Rechte 0700, nicht im Temp-Verzeichnis',
+     str_starts_with($arb18, protokoll_archiv_wurzel() . '/.arbeit-') && is_dir($arb18)
+       && (fileperms($arb18) & 0777) === 0700 && !str_starts_with($arb18, sys_get_temp_dir()),
+     $arb18 . ' ' . decoct(fileperms($arb18) & 0777));
+protokoll_archiv_arbeit_weg($arb18);
+
 printf("\n  -> %d Erwartungen, %d nicht erfuellt\n", $gesamt, $fehler);
 exit($fehler === 0 ? 0 : 1);

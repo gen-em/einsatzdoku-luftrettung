@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 require_once __DIR__ . '/db.php';
 
 /**
@@ -383,6 +384,29 @@ function pruef_zahl($wert, int $min, int $max, string $feld = 'Zahl', ?Prueflist
     return $n;
 }
 
+/**
+ * Ein Wert für eine Spalte aus dem Feldkatalog (`mission_fields.php`).
+ *
+ * SEIT WEB 24.13.0 (KA-05, F-KA-22) die eine Prüfung für Wege, die
+ * Katalogspalten aus einer Datei übernehmen — bis dahin schrieb die
+ * Wiederherstellung sie ungeprüft. Der Typ des Katalogs entscheidet:
+ * Haken → 0/1, Auswahl mit Werteliste → ein Wert der Liste oder NULL,
+ * alles andere → Text, gekürzt auf `max` (Vorgabe 190). Ein Wert außerhalb
+ * der Liste wird gemeldet und NULL, statt die Zeile scheitern zu lassen.
+ */
+function pruef_katalogfeld(array $f, $wert, string $feld, ?Pruefliste $p = null)
+{
+    $typ = $f['type'] ?? 'text';
+    if ($typ === 'checkbox') { return pruef_flag($wert); }
+    if ($typ === 'select' && isset($f['options'])) {
+        if ($wert === null || $wert === '') { return null; }
+        if (is_scalar($wert) && array_key_exists((string)$wert, $f['options'])) { return (string)$wert; }
+        $p?->melde($feld, 'kein Wert der Liste');
+        return null;
+    }
+    return pruef_text($wert, (int)($f['max'] ?? 190), $feld, $p);
+}
+
 /** Ja/Nein-Marker. Kennt keinen Fehlerfall — alles, was nicht leer ist, gilt. */
 function pruef_flag($wert): int
 {
@@ -409,7 +433,7 @@ function pruef_kalendertag($wert, string $feld = 'Datum', ?Pruefliste $p = null)
 {
     if ($wert === null || $wert === '') { return null; }
     $s = trim((string)$wert);
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $s)) {
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}\z/', $s)) {
         $p?->melde($feld, 'kein Datum im Format JJJJ-MM-TT');
         return null;
     }
@@ -450,7 +474,7 @@ function pruef_utc($wert, string $feld = 'Zeitpunkt', ?Pruefliste $p = null): ?s
         $p?->melde($feld, 'kein Zeitstempel');
         return null;
     }
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?Z$/', $wert)) {
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?Z\z/', $wert)) {
         $p?->melde($feld, 'kein UTC-Zeitstempel (JJJJ-MM-TTThh:mm[:ss]Z)');
         return null;
     }
@@ -486,7 +510,7 @@ function pruef_utc_oder_sql($wert, string $feld = 'Zeitpunkt', ?Pruefliste $p = 
     // Uhr-Format: an das Z erkennbar
     if (str_ends_with($s, 'Z')) { return pruef_utc($s, $feld, $p); }
 
-    if (!preg_match('/^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})(:(\d{2}))?$/', $s, $t)) {
+    if (!preg_match('/^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})(:(\d{2}))?\z/', $s, $t)) {
         $p?->melde($feld, 'kein Zeitstempel (JJJJ-MM-TT hh:mm[:ss])');
         return null;
     }
@@ -607,7 +631,7 @@ function pruef_ortszeit_zu_utc($tag, $hhmm, int $addDays = 0,
     if ($tagOk === null) { return null; }
     if ($hhmm === null || $hhmm === '') { return null; }
     $s = trim((string)$hhmm);
-    if (!preg_match('/^(\d{2}):(\d{2})$/', $s, $t)) {
+    if (!preg_match('/^(\d{2}):(\d{2})\z/', $s, $t)) {
         $p?->melde($feld, 'keine Uhrzeit im Format hh:mm');
         return null;
     }
@@ -771,7 +795,7 @@ function pruef_pat_blob($wert, string $feld = 'Patientenblock', ?Pruefliste $p =
 function pruef_huelle($wert, int $maxByte, string $feld = 'Huelle', ?Pruefliste $p = null): ?string
 {
     if ($wert === null) { return null; }
-    if (!is_string($wert) || !preg_match('#^[A-Za-z0-9+/]+={0,2}$#', $wert)) {
+    if (!is_string($wert) || !preg_match('#^[A-Za-z0-9+/]+={0,2}\z#', $wert)) {
         $p?->melde($feld, 'kein Base64');
         return null;
     }

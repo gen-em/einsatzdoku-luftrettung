@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
  * Backup: Serialisierung und Wiederherstellung aller Daten einer NutzerIn.
  * Format-Doku: docs/Backup-Format.md
@@ -1803,34 +1804,32 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
          * der Datei, Zeitpunkt und Bindung an den Tag aus diesem Lauf). Sie
          * stehen deshalb unten ausdruecklich im INSERT. */
         $extraCols = [];
-        $collectCols = function (array $fs) use (&$collectCols, &$extraCols) {
+        /* JE SPALTE IHR KATALOGEINTRAG (seit Web 24.13.0, KA-05, F-KA-22):
+         * Beim Schreiben läuft jeder Wert durch `pruef_katalogfeld()` bzw.
+         * die Koordinatenprüfung — dieselbe Prüfschicht wie jeder andere
+         * Schreibweg. Bis dahin standen die Werte ungeprüft in der Zeile. */
+        $katalogFeld = [];
+        $ortArt = [];
+        $collectCols = function (array $fs) use (&$collectCols, &$extraCols, &$katalogFeld, &$ortArt) {
             foreach ($fs as $col => $f) {
-                if (mf_ist_spalte($f)) { $extraCols[] = $col; }
-                foreach (mf_ort_spalten($f) as $ortCol) { $extraCols[] = $ortCol; }
+                if (mf_ist_spalte($f)) { $extraCols[] = $col; $katalogFeld[$col] = $f; }
+                foreach (mf_ort_spalten($f) as $art => $ortCol) { $extraCols[] = $ortCol; $ortArt[$ortCol] = $art; }
                 if (!empty($f['children'])) { $collectCols($f['children']); }
             }
         };
         $collectCols($FIELDS);
         // Alt-Backups: loc_* wird ignoriert
-        /* `notes` STEHT HIER, obwohl es kein Katalogfeld mit
-         * Spalte mehr ist (mf_ist_spalte() sagt nein) — und genau deshalb
-         * muss es von Hand dazu.
-         *
-         * Eine Sicherungsdatei mit Nutzlast 10 oder aelter traegt die Notiz im
-         * KLARTEXT in dieser Spalte. Faellt sie hier aus der Liste, wird sie
-         * beim Einspielen stillschweigend verworfen: kein Fehler, keine
-         * Meldung, eine Notiz weniger. Sie wird deshalb weiter geschrieben —
-         * und der Anhebelauf holt sie beim naechsten Entsperren
-         * in den Blob. Eine Datei mit Nutzlast 11 oder neuer traegt an dieser
-         * Stelle NULL und den Text im `pat`-Block; dann schreibt diese Spalte
-         * NULL, was richtig ist.
-         *
-         * Wenn die Spalte entfernt wird, faellt dieser Eintrag mit ihr —
-         * und mit ihm die Faehigkeit, eine 10er-Datei vollstaendig
-         * einzuspielen. Das gehoert dann ausdruecklich entschieden. */
+        /* `notes` STEHT NICHT MEHR HIER (seit Web 24.13.0, KA-05, F-KA-22,
+         * E-KA-16). Bis dahin wurde die Spalte weiter geschrieben, damit eine
+         * Sicherungsdatei mit Nutzlast 10 oder älter ihre Notiz im KLARTEXT
+         * behielt — eine Notiz des Einsatzes ist eine verschlüsselte Angabe
+         * (CLAUDE.md 4), und ein Weg, der sie im Klartext annimmt, war das
+         * Loch neben dem Formular und dem Import. Eine Datei ab Nutzlast 11
+         * trägt den Text im `pat`-Block. Wer eine 10er-Datei einspielt,
+         * verliert ihre Notizen; das ist entschieden. */
         /* `transport_dest` gibt es als Spalte nicht; das Transportziel kommt
          * im `pat_blob`. */
-        $extraCols = array_merge($extraCols, ['start_src', 'pat_blob', 'notes', 'created_at']);
+        $extraCols = array_merge($extraCols, ['start_src', 'pat_blob', 'created_at']);
 
         foreach (($data['missions'] ?? []) as $m) {
             if (!is_array($m)) { $stats['missions_skipped']++; $grund['aufbau']++; continue; }
@@ -2047,11 +2046,23 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                     $cols[] = $c; $vals[] = $wert;
                     continue;
                 }
-                // Der Patientenblock bekommt dieselbe Grenze wie ueberall
-                // sonst; alles andere wird auf seine Spaltenlaenge gestutzt.
-                $wert = $c === 'pat_blob'
-                    ? pruef_pat_blob($m[$c], 'pat_blob', $pruef)
-                    : $m[$c];
+                /* Der Patientenblock bekommt dieselbe Grenze wie überall
+                 * sonst; Katalogspalten, Koordinaten und `start_src` laufen
+                 * durch die Prüfschicht (KA-05, F-KA-22) — bis dahin stand
+                 * hier ein „gestutzt", und gestutzt wurde nichts. */
+                if ($c === 'pat_blob') {
+                    $wert = pruef_pat_blob($m[$c], 'pat_blob', $pruef);
+                } elseif (isset($katalogFeld[$c])) {
+                    $wert = pruef_katalogfeld($katalogFeld[$c], $m[$c], $c, $pruef);
+                } elseif (isset($ortArt[$c])) {
+                    $wert = $ortArt[$c] === 'lat' ? pruef_breite($m[$c], $c, $pruef)
+                                                  : pruef_laenge($m[$c], $c, $pruef);
+                } elseif ($c === 'start_src') {
+                    $wert = in_array($m[$c], ['base', 'prev_site', 'prev_dest', 'manual'], true)
+                        ? $m[$c] : null;
+                } else {
+                    continue;   // keine Spalte, die hier eine Prüfung hat — nicht schreiben
+                }
                 $cols[] = $c; $vals[] = $wert;
             }
             /* In Backticks ueber `mf_liste_sql()`: In

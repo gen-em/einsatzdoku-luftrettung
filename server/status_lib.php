@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/migration_lib.php';
 require_once __DIR__ . '/jobs_lib.php';
@@ -1172,7 +1173,7 @@ function status_konfig_zeilen(): array
      * hineinschreibt, sieht hier die Teile davor und danach nicht. */
     $dsn  = (string)(konfig('db.dsn') ?? '');
     $dsnTeile = [];
-    if (preg_match('/^([a-z]+):(.*)$/i', $dsn, $m)) {
+    if (preg_match('/^([a-z]+):(.*)\z/i', $dsn, $m)) {
         $dsnTeile[] = $m[1];
         foreach (explode(';', $m[2]) as $teil) {
             [$k, $v] = array_pad(explode('=', $teil, 2), 2, '');

@@ -52,6 +52,11 @@ if (array_key_exists('schnitte_offen', $b)) {
 if (!isset($b['eintraege']) || !is_array($b['eintraege'])) {
     json_out(['error' => 'payload'], 400);
 }
+/* DIE MENGENGRENZE (seit Web 24.13.0, KA-05, F-KA-10): ein anlegender Weg. */
+require_once __DIR__ . '/../konten_einstellungen_lib.php';
+if (($voll = konto_anlegen_pruefen($userId)) !== null) {
+    json_out(['error' => 'kontingent', 'grund' => $voll], 507);
+}
 
 $eintraege = $b['eintraege'];
 /* Die Fassung steht im Kopf der Datei und wird hier mitgeschickt: Den
@@ -72,6 +77,7 @@ try {
     $karte = $stats['spur_karte'] ?? null;
     $offen = $stats['schnitte_offen'] ?? [];
     unset($stats['spur_karte'], $stats['day_map'], $stats['schnitte_offen']);
+    konto_mengen_verwerfen($userId);
     json_out(['ok' => true, 'stats' => $stats,
               'spur_karte' => $karte ?: new stdClass(),
               'schnitte_offen' => $offen]);

@@ -339,7 +339,7 @@ function ui_symbolvorrat_inhalt(): array
     $vorrat = [];
     foreach (glob(__DIR__ . '/assets/images/symbole/*.svg') ?: [] as $datei) {
         $name = basename($datei, '.svg');
-        if (!preg_match('/^[a-z0-9-]+$/', $name)) { continue; }
+        if (!preg_match('/^[a-z0-9-]+\z/', $name)) { continue; }
         $text = (string)@file_get_contents($datei);
         if (preg_match('~<g id="i">(.*?)</g>\s*</svg>~s', $text, $m)) {
             $vorrat[$name] = trim($m[1]);
@@ -1567,7 +1567,7 @@ function ui_ankuendigung(): bool
 
     $auftakt = '';
     $text = $a['text'];
-    if (preg_match('/^(.{12,}?[.!?])\s+(?=\p{Lu})(.+)$/su', $text, $m)) {
+    if (preg_match('/^(.{12,}?[.!?])\s+(?=\p{Lu})(.+)\z/su', $text, $m)) {
         $auftakt = $m[1];
         $text = $m[2];
     }

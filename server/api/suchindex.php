@@ -138,7 +138,7 @@ try {
         // laufen (beide Werte stammen aus derselben Umrechnung).
         $hhmm = fmt_local($m['started_at']);
         $startMin = null;
-        if (preg_match('/^(\d{2}):(\d{2})$/', $hhmm, $t)) {
+        if (preg_match('/^(\d{2}):(\d{2})\z/', $hhmm, $t)) {
             $startMin = (int)$t[1] * 60 + (int)$t[2];
         }
 
