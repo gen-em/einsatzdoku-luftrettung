@@ -15,7 +15,7 @@ derselbe Code und dieselbe Instanz.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/vigilant-cray-9riw34`, Backlog-Spanne 570–579 |
-| In Arbeit | **KG-06** — fertig, Uhr 4.5.1, geht mit in PR #168. Fertig vorher: KG-01, KG-05, KG-02 (alle in PR #168, noch nicht gemergt). Als Nächstes: KG-03 wartet auf KA-06a und KA-M5 (Fable), KG-04 sammelt die Gerätetests |
+| In Arbeit | **KG-04 (Teil)** — Prüfdokument `Pruefdokument-KG-Garmin-Sicherheit.md` mit 16 Handprüfpunkten für KG-01, -05, -02, -06 angelegt (11.11.2026); die Punkte zu KG-03 folgen. Fertig: KG-01, KG-05, KG-02, KG-06 (alle in PR #168, Uhr 4.5.1, noch nicht gemergt). KG-03 wartet auf KA-06a und KA-M5 (Fable) |
 | Erledigt | **KG-01** (Uhr 4.4.0, PR #168, noch nicht gemergt) |
 | Hakt | Antwort der KA-Instanz steht aus (E-KG-21). Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05) |
 | Gelesen gegen | Commit `0be2092` · Uhr 4.3.3; die vier Befunde von KG-01 am 10.11.2026 an der heutigen Stelle bestätigt (Abschnitt 4) |
@@ -180,7 +180,7 @@ Pause und Ende werden weiterhin nicht übertragen.
   F-KG-03 ist mit dem neuen Abschnitt 2.3 erledigt (Ring in der Pause blau,
   keine fünf Pulse mehr).
 
-**Gerätetests (für KG-04):** Fenix 6 Pro — (1) kurz UP/DOWN während einer
+**Gerätetests (im Prüfdokument P-KG-03 bis -14):** Fenix 6 Pro — (1) kurz UP/DOWN während einer
 Rea: kein Seitenwechsel, genau ein Eintrag (F-KG-01); (2) Rhythmuskontrolle
 und Defibrillation: zwei kurze Pulse spürbar; (3) 2-s-Pulse nicht gekürzt,
 1/2/3 unterscheidbar; (4) Erinnerungen bei 0:30/0:10/0:00 auch bei App im
@@ -208,7 +208,7 @@ dauerhaft, gibt es ECDSA, und was kostet es?
 4. **Offen am Gerät:** Speicher über ein Store-Update (P-KG-01), Zeiten auf
    der Uhr.
 
-**Gerätetest P-KG-01 (für KG-04):** Krypto-Probe auf der Fenix 6 Pro zweimal
+**Gerätetest P-KG-01 (im Prüfdokument P-KG-16):** Krypto-Probe auf der Fenix 6 Pro zweimal
 starten (`GERAETEPAAR erzeugt`, dann `gleich, Lauf 2`); `FASSUNG` auf 2, neu
 bauen, `.prg` ersetzen, ohne die App zu löschen, starten → erwartet `gleich,
 Lauf 3, erzeugt in Fassung 1, jetzt 2`. Scheitern: `erzeugt` statt `gleich`
@@ -231,7 +231,7 @@ Lauf 3, erzeugt in Fassung 1, jetzt 2`. Scheitern: `erzeugt` statt `gleich`
 4. **Außerhalb der Grenzen berührt:** ein Satz in `docs/JSON-Vertrag.md` 5
    („Die Uhr zieht mit KG nach" → „seit Uhr 4.5.1").
 
-**Gerätetest P-KG-02 (für KG-04):** Fenix 6 Pro gekoppelt, Gerät im Web
+**Gerätetest P-KG-02 (im Prüfdokument P-KG-15):** Fenix 6 Pro gekoppelt, Gerät im Web
 deaktivieren, Sync-Seite öffnen → erwartet „Gerät im Web deaktiviert" (der
 Rumpf kam an). Scheitern: „Upload 403" — dann reicht die echte Uhr den
 Rumpf nicht durch, und KG-06 muss eine andere Regel bekommen.
