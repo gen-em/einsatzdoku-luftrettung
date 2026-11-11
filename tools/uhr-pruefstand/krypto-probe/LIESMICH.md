@@ -1,8 +1,7 @@
 # Krypto-Probe
 
-Kann eine Garmin-Uhr die Gerätehülle aus S11 bauen, und was kostet es?
-Wegwerfprojekt mit eigener UUID und ohne Berechtigungen — **kein Bestandteil
-der App**, nie ausgeliefert.
+Kann eine Garmin-Uhr die Gerätehülle aus S11 bauen, und was kostet es? Eigene
+UUID, keine Berechtigungen — **kein Bestandteil der App**, nie ausgeliefert.
 **Anlass: Nr. 43** — die Uhr verschließt Spur und Einsatzhülle vor dem Upload.
 
 ## Aufruf
@@ -12,9 +11,8 @@ bash tools/uhr-pruefstand/pruefstand.sh kryptoprobe [geraet…]   # Simulator
 bash tools/uhr-pruefstand/pruefstand.sh kryptoreihe auswahl.txt # Stufe I
 ```
 
-Auf der echten Uhr: in VS Code mit diesem Ordner als Wurzel bauen
-(„Build for Device"), die `.prg` nach `GARMIN/APPS/` kopieren, starten,
-mit Hoch/Runter blättern.
+Echte Uhr: in VS Code „Build for Device", `.prg` nach `GARMIN/APPS/`, starten,
+blättern. Update nachstellen: `FASSUNG` in `KryptoApp.mc` heben, neu bauen, ohne Speicher zu leeren.
 
 ## Was es misst
 
@@ -23,6 +21,8 @@ Byteordnung, HKDF, AES-256-CBC, HMAC und die ganze Hülle je gegen die Vektoren
 aus `tools/proben/huelle/` (`source/Vektoren.mc` ist erzeugt); ob es `deflate`
 gibt; Zeit für ein Schlüsselpaar; Spurstück zu 200 und 500 Punkten, binär und
 JSON, mit Speicherzuwachs; ob ein Punkt neben der Kurve abfällt (`KURVE`, F-S11-85).
+Seit KG-02: ob es eine Signatur gibt (`SIGNATUR`), ob ein dauerhaftes Paar aus dem
+Speicher gleich wiederkommt (`GERAETEPAAR`) und was ECDH plus HMAC kosten (`T-STATISCH`).
 
 ## Was es braucht
 

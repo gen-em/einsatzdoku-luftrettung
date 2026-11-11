@@ -136,7 +136,7 @@ module Util {
         return g.hour.format("%02d") + ":" + g.min.format("%02d");
     }
 
-    // Zwei kurze Vibrationen (Rea-Beginn)
+    // Zwei kurze Vibrationen (Dienstbeginn)
     function vibrateTwice() as Void {
         _vibe([
             new Attention.VibeProfile(75, 300),
@@ -152,14 +152,39 @@ module Util {
         }
     }
 
-    // Zyklusende Teil 1: drei kraeftige Pulse (5 Profile — unter dem Limit).
-    // Cpr.tick() haengt einen Tick spaeter zwei weitere an (insgesamt 5).
-    function vibrateCycleEnd() as Void {
-        _vibe([
-            new Attention.VibeProfile(90, 300), new Attention.VibeProfile(0, 200),
-            new Attention.VibeProfile(90, 300), new Attention.VibeProfile(0, 200),
-            new Attention.VibeProfile(90, 300)
-        ]);
+    /* DIE MUSTER DER REANIMATION (E-KG-11 bis -13, seit Uhr 4.5.0).
+     *
+     * Eine Regel statt einer Tabelle: KURZ (0,2 s) bestaetigt eine Buchung --
+     * einmal ohne, zweimal mit Neustart des Countdowns. LANG (2 s) gehoert
+     * allein dem Countdown: 0:30 einmal, 0:10 zweimal, 0:00 dreimal. Alles
+     * mit 100 %.
+     *
+     * JEDES MUSTER IN EINEM AUFRUF. Ein neuer Aufruf bricht den laufenden ab
+     * (am Geraet beobachtet, Geraete-Eingabe.md 2): Bis Uhr 4.4.0 folgte der
+     * Bestaetigung einer Rhythmuskontrolle sofort der Doppelpuls des
+     * Countdown-Neustarts, und gespuert wurde nur dieser. Drei lange Pulse
+     * mit zwei Pausen sind fuenf Abschnitte, unter der Grenze von acht. */
+    const REA_STAERKE = 100;
+    const REA_KURZ_MS = 200;
+    const REA_KURZ_PAUSE_MS = 200;
+    const REA_LANG_MS = 2000;
+    const REA_LANG_PAUSE_MS = 600;
+
+    function reaKurz(anzahl as Lang.Number) as Void {
+        _vibe(_pulse(anzahl, REA_KURZ_MS, REA_KURZ_PAUSE_MS));
+    }
+
+    function reaLang(anzahl as Lang.Number) as Void {
+        _vibe(_pulse(anzahl, REA_LANG_MS, REA_LANG_PAUSE_MS));
+    }
+
+    function _pulse(anzahl as Lang.Number, an as Lang.Number, aus as Lang.Number) as Lang.Array {
+        var p = [];
+        for (var i = 0; i < anzahl; i++) {
+            if (i > 0) { p.add(new Attention.VibeProfile(0, aus)); }
+            p.add(new Attention.VibeProfile(REA_STAERKE, an));
+        }
+        return p;
     }
 
     // Kraeftiger Bestaetigungs-Puls (Phase/Ereignis dokumentiert)
