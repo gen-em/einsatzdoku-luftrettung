@@ -868,6 +868,20 @@ CREATE TABLE track_stuecke (
   KEY stufe_ende (stufe, ts_bis)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Die Abschrift des Standbuchs (KA-06b-2, Technik 4.42): je Konto 16
+-- Blaetter und das Geraetebuch, verschlossen unter dem Inhaltsschluessel.
+-- Der Server kann sie nicht oeffnen; er haelt nur die Versionsregel
+-- (`standbuch_lib.php`). Faellt mit dem Konto.
+CREATE TABLE stand_blaetter (
+  user_id      INT UNSIGNED NOT NULL,
+  wer          TINYINT UNSIGNED NOT NULL,         -- 0..15 Blatt, 16 Geraetebuch
+  version      INT UNSIGNED NOT NULL,             -- das Z im Blatt; nur steigend
+  text         MEDIUMTEXT NOT NULL,               -- edk2:, Zweck stand bzw. geraete
+  geaendert_am DATETIME NOT NULL,
+  PRIMARY KEY (user_id, wer),
+  CONSTRAINT fk_stand_blaetter_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Zustand der Hintergrundjobs (jobs.php). Eine Zeile je Job.
 --
 -- Mehr als ein Zeitstempel: Sobald Arbeit in HAEPPCHEN anfaellt, braucht
@@ -1142,4 +1156,6 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- dest_lon, site_ele_m) stehen oben schon nicht mehr.
   ('2026_10_19_klartext_weg', 'skipped'),
   -- users.darstellung steht oben schon im Schema.
-  ('2026_11_07_darstellung', 'skipped');
+  ('2026_11_07_darstellung', 'skipped'),
+  -- stand_blaetter steht oben schon im Schema.
+  ('2026_11_11_standbuch', 'skipped');

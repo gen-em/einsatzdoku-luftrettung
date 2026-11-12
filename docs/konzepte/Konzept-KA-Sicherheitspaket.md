@@ -12,8 +12,8 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-06b-1** (Kern einbinden, Web 24.14.0) im PR; danach 06b-2 Server für das Standbuch (Migration), 06b-3 Verbraucher, 06b-4 Anhebelauf (E-KA-51). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-01, -02, -05, -06 mit PR #168 gemergt (Uhr 4.5.1), KG-03 wartet auf diese Referenz |
-| Erledigt | **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
+| In Arbeit | **KA-06b-2** (Server für das Standbuch, Web 24.15.0, Migration) im PR; danach 06b-3 Verbraucher, 06b-4 Anhebelauf (E-KA-51). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-01, -02, -05, -06 mit PR #168 gemergt (Uhr 4.5.1), KG-03 wartet auf diese Referenz |
+| Erledigt | **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
@@ -104,6 +104,7 @@ Safari.
 | E-KA-50 | **Nach einem zurückgesetzten Server schreibt der Browser seinen Stand zurück** (`EdStandbuch.zurueckschreiben()`) — nur über einen eigenen Knopf mit Rückfrage der BetreiberIn, dazu ein Satz im Runbook. Ohne ihn wäre nach jeder eingespielten Sicherung jedes Blatt dauerhaft „zurückgelegt". Der Knopf ist ein neuer Bedienweg und braucht Mockup und Freigabe | 11.11.2026, BetreiberIn |
 | E-KA-51 | **06b in vier Teilen, je ein PR:** 06b-1 Kern einbinden (Weiche aus), 06b-2 Server für das Standbuch (Tabelle, `api/standbuch.php`, Datensatz und Blatt in einer Transaktion, 409; Migration, `update.php`), 06b-3 Verbraucher umstellen und Ableitung 2 am Server, 06b-4 Anhebelauf. **Die Weiche wird erst umgelegt, wenn auch 06c und 06d stehen** — als Hauptstufe Web 25.0.0 | 11.11.2026, BetreiberIn |
 | E-KA-52 | **Entscheidungen des Krypto-Kerns** (Fable-Agent, E-KA-49): (1) die Fassung der Ableitung folgt aus der Rundenzahl — ab 1 200 000 Fassung 2 (`ABLEITUNG2_AB`), keine eigene Spalte; (2) die Weiche ist eine Konstante im Skript, kein Wert vom Server; (3) das Buch vergisst nichts — beim Übernehmen eines neueren Blatts gilt je Feld der höhere Wert (strenger als die Referenz); (4) 409 heißt neu aufsetzen, vier Versuche, dann `konflikt`; (5) die Ablage hält den Stand verschlossen, eigene Datenbank `nadoku-stand`; (6) neuer Grund `blatt-version`; (7) `abgleichen()` liefert Befunde statt zu werfen; (8) `EdCrypto.decrypt()` weist `edk2:` mit Grund `gebunden` ab; (9) Formprüfungen strenger als die Referenz — wo die Referenz lockerer war, ist sie mit 06b-1 nachgezogen (F-KA-90) | 11.11.2026, Umsetzung |
+| E-KA-53 | **Die Abschrift des Standbuchs liegt in einer eigenen Tabelle** (`stand_blaetter`, PK Konto und Blatt, Kaskade mit dem Konto), nicht in `users` oder `app_state`: 17 Zeilen je Konto mit eigener Version. Die Versionsregel ist **eine Anweisung je Fall** (`INSERT IGNORE` für ein neues Blatt, `UPDATE … WHERE version = ?` sonst) statt einer Transaktion mit Lesen und Schreiben. Decke 256 KB Innenlänge je Blatt. **Nicht im Konto-Backup** — ein eingespieltes Backup bekommt im Browser neue Zähler (06d); der Demo-Reset räumt die Blätter mit | 11.11.2026, Umsetzung |
 | E-KA-21 | **Die Garmin-Anteile gehen an eine eigene Instanz, Kürzel KG** (Abschnitt 11): KA-04 Punkt 1 und 4, der Garmin-Teil von KA-06c samt der Messung für 06a, die Garmin-Kommentare aus F-KA-43 und der Garmin-Teil von KA-M6. KG zählt eigene Nummern (`KG-NN`, `F-KG-NN`, `E-KG-NN`, `P-KG-NN`), führt ein eigenes Konzept und schreibt den Rahmenplan nicht — das tut diese Instanz | 10.11.2026, BetreiberIn |
 
 ---
@@ -784,6 +785,39 @@ des eigenen Kontos.
 Fassung 3; 3 Begleitdateien, alle versiegelt. Staging und Produktiv nicht
 gezählt (E-KA-31).
 
+### KA-06b-2 Server für das Standbuch (11.11.2026)
+
+**Was nicht geprüft werden konnte — zuerst.**
+
+1. **Die Migration auf Staging und Produktiv** — `update.php` ruft die
+   BetreiberIn (P-KA-12); örtlich ist sie angewendet und steht.
+2. **Datensatz und Blatt in einer Anfrage** gibt es noch nicht; es kommt mit
+   den Verbrauchern (06b-3). Bis dahin schreibt kein Browser in die Tabelle.
+3. **Zwei Tabs gleichzeitig** sind nicht nebenläufig gemessen, sondern
+   nacheinander: der zweite mit der veralteten Version bekommt den
+   Konflikt. Dass die Anweisung atomar ist, folgt aus ihr, nicht aus einer
+   Messung.
+
+**Gemessen:**
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Bedienprobe, Weg `ka06b2-standbuch` (Prüfkonto, über `EdStandbuch.apiTransport()`) | 16 Blätter und Buch in Form; Blatt abgelegt und Zeichen für Zeichen zurück; veraltete Version → Konflikt mit dem Blatt des Servers, ebenso beim Buch; 400 `text`, `version`, `wer` | ohne Endpunkt (Stand von `main`): Abbruch, rot; Versionsregel mit `version >= ?` statt `= ?`: kein Konflikt, rot | Schnittstelle zwischen Browser und Server, Versionsregel, Form |
+| Bedienprobe, Weg `ka06b2-fremdkonto` | das Demo-Konto sieht das Blatt des Prüfkontos nicht | ohne Endpunkt: rot | Bindung an das Konto der Sitzung |
+| Migration örtlich | `2026_11_11_standbuch` „Erfolgreich angewendet", Tabelle wie in `schema.sql` | — | Migration und Schema gleich |
+| Schemaprobe, Modul `plattform` | MariaDB 10.6, MySQL 8.0, MySQL 8.4.0 je **52 Prüfungen, 0 Fehlschläge** | — | die Migration läuft auf allen Zielfassungen |
+| Migrationsregister | 76 Kennungen im Katalog, 76 in der Vorabliste | Zwischenstand: 75 (rot, F-KA-96) | eine neue Installation trägt die Migration als erledigt ein |
+
+**Prüfstand (Stufe neben, drei Engines):** Zwischenstand 61 grün, 3 rot —
+`migrationsregister` (F-KA-96), `schemaprobe` (Plattform-Container nach
+einem Neustart nicht gestartet, F-KA-95), `rueckwegprobe` in WebKit
+(Zeitgrenze beim Seitenwechsel, einzeln danach 23/0, F-KA-94). Zweiter
+Zwischenstand nach Vorabliste und Plattform: 63 grün, 1 rot — wieder die
+Rückwegprobe in WebKit, an anderer Stelle. Der Kopf misst sie neu und erbt
+den Rest.
+
+**R91 nach PR #174 (Web 24.14.0, Staging, 12.11.2026 02:10 UTC):** Lauf grün; Fassung 24.14.0; inhalt2.js, huelle2.js, standbuch.js je 200; Anmeldung im Browser mit eigenem Konto und Zweitfaktor; EdInhalt, EdHuelle2, EdStandbuch definiert; edkvor leer; 0 Seitenfehler; Reiter System ohne Eintrag nach dem 09.11.2026.
+
 ### KA-06b-1 Kern einbinden (11.11.2026)
 
 **Was nicht geprüft werden konnte — zuerst.**
@@ -989,6 +1023,9 @@ Klartextfelder (`final`, Strecke, Besatzung, Tagesnotizen, Phasenzeiten bis
 | F-KA-91 | **Das Demo-Konto stellt nie auf das neue Format um** — ohne Anteil-Kennung überspringt `unlock.js:313` die Umstellung | die Demo-Hülle kommt als `edk2:` aus der Fixture (E-KA-44, 06d) |
 | F-KA-92 | **Die Arbeitskopie des Agenten begann auf `main` statt auf dem Zweig**, und `.claude/worktrees/` stand unverfolgt im Baum — der Prüfstand hätte sie mit `git add -A` eingesammelt | Zweig im Agenten vorgespult; `.claude/worktrees/` örtlich in `.git/info/exclude` |
 | F-KA-93 | **Der Container startete mitten in der Arbeit neu** (11.11.2026, `uptime` 2 min); die Anlage lief mit `hochfahren.sh` wieder an | wie F-KA-71 |
+| F-KA-94 | **Die Rückwegprobe lief in WebKit zweimal in die Zeitgrenze eines Seitenwechsels** (90 s), in beiden vollen Läufen von 06b-2 und an verschiedenen Stellen (nach dem Tor der BetreiberIn, beim ersten Anmelden); im vollen Lauf von 06b-1 war sie grün. Einzeln dreimal **23 ok, 0 fehlen**. Der Paketcode berührt keinen Browserweg, die Ratenzähler waren leer | im Kopf allein neu gemessen; als Backlog-Punkt beobachten, wenn es wiederkommt |
+| F-KA-95 | **Nach dem Neustart des Containers liefen die Plattform-Container nicht** — die Schemaprobe fand MariaDB 10.6 und beide MySQL nicht | `plattform.sh alles` nach jedem Neustart; `hochfahren.sh` startet sie nicht mit |
+| F-KA-96 | **Die neue Migration fehlte in der Vorabliste von `schema.sql`** — eine Neuinstallation hätte sie als offen gemeldet | Zeile ergänzt; das Migrationsregister hat es gefunden |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
 | F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
 | F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |

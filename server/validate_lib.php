@@ -162,6 +162,36 @@ const WRAP_RC_RE = '#^' . CHIFFRE_PRAEFIX_RE . '[A-Za-z0-9+/=]{20,4000}$#';
 const WRAP_RE    = WRAP_PW_RE;
 
 /**
+ * Die Form eines Chiffretexts der Fassung 2 (`edk2:`, KA-06, Technik 4.42).
+ *
+ * Der Server kann ihn nicht öffnen und prüft deshalb, was er sieht: die
+ * Kennung, strenges Base64 (mit Füllzeichen, ohne Leerraum) und die Länge —
+ * 12 Byte Nonce, eine GRÖSSENKLASSE, 16 Byte Prüfwert. Die Klassen sind
+ * 128, 256 … 4096 Byte, danach Vielfache von 4096
+ * (`tools/proben/huelle/referenz_inhalt.py`, `KLASSEN`). Eine Länge
+ * außerhalb verrät, dass jemand anderes als der Browser geschrieben hat,
+ * und ein ungepolsterter Block zeigte wieder, wie viel darin steht (F-KA-30).
+ *
+ * `$max_innen` deckelt die Innenlänge — sie ist die eine Zahl, mit der ein
+ * Konto die Datenbank füllen könnte. Liefert die Innenlänge oder null.
+ */
+function edk2_innenlaenge(string $text, int $max_innen): ?int
+{
+    if (strncmp($text, 'edk2:', 5) !== 0) { return null; }
+    $b64 = substr($text, 5);
+    if ($b64 === '' || strlen($b64) % 4 !== 0
+        || !preg_match('#^[A-Za-z0-9+/]+={0,2}\z#', $b64) || false) {
+        return null;
+    }
+    $roh = base64_decode($b64, true);
+    if ($roh === false) { return null; }
+    $innen = strlen($roh) - 28;
+    $klasse = in_array($innen, [128, 256, 512, 1024, 2048, 4096], true)
+           || ($innen > 4096 && $innen % 4096 === 0);
+    return ($klasse && $innen <= $max_innen) ? $innen : null;
+}
+
+/**
  * Das Schlüsselpaar des Rückwegs.
  *
  * `RW_OEFFENTLICH_RE`: der öffentliche Teil als SPKI in Base64 — für P-256

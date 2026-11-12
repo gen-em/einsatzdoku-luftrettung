@@ -8928,4 +8928,11 @@ declare(strict_types=1);
  *   gegen die Referenz aus KA-06a. Gelesen werden beide Fassungen;
  *   geschrieben wird weiter Fassung 1, bis Server, Geraete und Anhebelauf
  *   stehen (eine Weiche, aus). Neben; kein Schema. */
-const WEB_VERSION = '24.14.0';
+/* 24.15.0 — DER SERVER HAELT DIE ABSCHRIFT DES STANDBUCHS (KA-06b-2).
+ *   Neue Tabelle `stand_blaetter` und `api/standbuch.php`: je Konto 16
+ *   Blaetter und das Geraetebuch, verschlossen unter dem Inhaltsschluessel.
+ *   Der Server prueft Form und Groessenklasse und die Versionsregel in einer
+ *   Anweisung; oeffnen kann er nichts. Noch schreibt kein Browser hinein —
+ *   die Weiche steht aus. NEBENNUMMER MIT MIGRATION: `2026_11_11_standbuch`
+ *   legt die Tabelle an; nach dem Deploy `update.php`. */
+const WEB_VERSION = '24.15.0';
