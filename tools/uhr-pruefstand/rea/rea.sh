@@ -2,7 +2,7 @@
 # Probe der Reanimation auf der Garmin-Uhr — Tasten, Sperre, Menue, Pause,
 # Vibrationen und Erinnerungen des Countdowns.
 #
-# Anlass: Nr. 571 — bis Uhr 4.4.0 lag die Rhythmuskontrolle auf lang DOWN,
+# Anlass: Nr. 571, Nr. 574 — bis Uhr 4.4.0 lag die Rhythmuskontrolle auf lang DOWN,
 # die Bestaetigung einer Buchung ging im Doppelpuls des Countdown-Neustarts
 # unter, und vor dem Ende des Zyklus gab es keine Erinnerung.
 #
@@ -49,9 +49,12 @@ sed -i 's|^        index = (index + delta + PAGES.size()) % PAGES.size();$|&\n  
 sed -i 's|^        if (index < 0) { index = 0; }$|&\n        ReaProbe.seite(index.toString());|' "$S/Nav.mc"
 sed -i 's|^        var v = new CprMenuView();$|&\n        ReaProbe.menue(CprMenuView.ITEMS[v.index][0] as Lang.String);|' "$S/CprView.mc"
 sed -i 's|^        var v = new ResusOverviewView();$|&\n        ReaProbe.uebersicht();|' "$S/CprView.mc"
+# Schnellmenue der Hauptanzeige (KG-07): Oeffnen und jede Auswahl darin.
+sed -i 's|^        var v = new QuickMenuView();$|&\n        ReaProbe.menue("SCHNELLMENUE");|' "$S/ClockView.mc"
+sed -i 's|^    function onSelect() as Lang.Boolean {                 // START$|&\n        ReaProbe.menue("SCHNELL-AUSWAHL");|' "$S/ClockView.mc"
 sed -i 's|        return \[new StartView(), new StartDelegate()\];|        Nav.index = 4;\n        return [new CprView(), new CprDelegate()];|' "$S/NAdokuApp.mc"
 sed -i 's|^    const CPR_CYCLE_S = 120;|    const CPR_CYCLE_S = 40; |' "$S/Const.mc"
-for muster in 'ReaProbe.vib' 'ReaProbe.profil(' 'ReaProbe.ereignis' 'ReaProbe.menue' 'ReaProbe.uebersicht' 'new CprView(), new CprDelegate()' 'CPR_CYCLE_S = 40;'; do
+for muster in 'SCHNELLMENUE' 'SCHNELL-AUSWAHL' 'ReaProbe.vib' 'ReaProbe.profil(' 'ReaProbe.ereignis' 'ReaProbe.menue' 'ReaProbe.uebersicht' 'new CprView(), new CprDelegate()' 'CPR_CYCLE_S = 40;'; do
     grep -rqF "$muster" "$S" || fehler "Einhaengen gescheitert: $muster"
 done
 [ "$(grep -c 'ReaProbe.seite' "$S/Nav.mc")" = 2 ] || fehler "Einhaengen gescheitert: ReaProbe.seite (zweimal erwartet)"
@@ -118,6 +121,11 @@ L1="REAVIB 2000 @100"
 L2="REAVIB 2000,600,2000 @100"
 L3="REAVIB 2000,600,2000,600,2000 @100"
 
+# Ohne Rea blaettert die Seite, und zwar genau eine Seite (F-KG-09: in
+# Uhr 4.4.0 im Simulator zwei).
+kurz Up;     schritt "ohne Rea: kurz UP blaettert eine Seite" kurz "REANAV 3"
+kurz Down;   schritt "ohne Rea: kurz DOWN zurueck, eine Seite" kurz "REANAV 4"
+
 # Tasten
 kurz Return; schritt "kurz START ohne Rea beginnt" kurz "$K2"
 kurz Return; schritt "kurz START gleich danach: Sperre" kurz ""
@@ -148,9 +156,12 @@ kurz Up;     schritt "pausiert: UP bucht nichts, blaettert nicht" kurz ""
 kurz Return; schritt "pausiert: kurz START oeffnet die Uebersicht" kurz "REAUEBERSICHT"
 kurz Escape
 kurz Escape; schritt "BACK: Hauptanzeige" kurz "REANAV 0"
+# Schnellmenue der Hauptanzeige (F-KG-08): oeffnet beim Loslassen, waehlt nichts.
+lang Return; schritt "Hauptanzeige: lang START oeffnet das Schnellmenue, waehlt nichts" kurz "REAMENU SCHNELLMENUE"
+kurz Escape
 bash "$P" beenden >/dev/null 2>&1 || true
 
-SOLL=15
+SOLL=18
 [ "$pruef" = "$SOLL" ] || { echo "  FEHL  $pruef Pruefungen statt $SOLL"; fehl=$((fehl+1)); }
 echo "Reanimation: $pruef Pruefungen, $fehl Fehlschlaege ($GERAET)"
 [ "$fehl" = 0 ]

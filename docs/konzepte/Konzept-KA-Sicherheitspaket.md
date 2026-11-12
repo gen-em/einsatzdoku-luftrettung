@@ -816,6 +816,8 @@ Zwischenstand nach Vorabliste und Plattform: 63 grün, 1 rot — wieder die
 Rückwegprobe in WebKit, an anderer Stelle. Der Kopf misst sie neu und erbt
 den Rest.
 
+**R91 nach PR #174 (Web 24.14.0, Staging, 12.11.2026 02:10 UTC):** Lauf grün; Fassung 24.14.0; inhalt2.js, huelle2.js, standbuch.js je 200; Anmeldung im Browser mit eigenem Konto und Zweitfaktor; EdInhalt, EdHuelle2, EdStandbuch definiert; edkvor leer; 0 Seitenfehler; Reiter System ohne Eintrag nach dem 09.11.2026.
+
 ### KA-06b-1 Kern einbinden (11.11.2026)
 
 **Was nicht geprüft werden konnte — zuerst.**

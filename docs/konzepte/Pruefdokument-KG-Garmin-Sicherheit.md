@@ -1,12 +1,12 @@
 # Prüfdokument KG — Garmin-Teil des Sicherheitspakets
 
 Teil von KG-04, angelegt am 11.11.2026 für KG-01, KG-05, KG-02 und KG-06
-(Uhr 4.5.1, PR #168). Was maschinell gemessen wurde, steht mit Mittel und
+(Uhr 4.5.1, PR #168) und seit KG-07 für Uhr 4.5.2. Was maschinell gemessen wurde, steht mit Mittel und
 Zahl im Prüfprotokoll von `Konzept-KG-Garmin-Sicherheit.md` und im
 Prüfbericht der Commits. Die Punkte zu KG-03 (Geräteschlüssel, Kopplung mit
 Vergleichswert) kommen dazu, wenn KG-03 gebaut ist.
 
-**Gerät:** Fenix 6 Pro mit Uhr 4.5.1, gekoppelt an das eigene Konto, Telefon
+**Gerät:** Fenix 6 Pro mit Uhr 4.5.2, gekoppelt an das eigene Konto, Telefon
 in Reichweite. Punkt 14 braucht die Venu 3s, Punkt 16 VS Code mit SDK.
 
 ---
@@ -64,7 +64,7 @@ in Reichweite. Punkt 14 braucht die Venu 3s, Punkt 16 VS Code mit SDK.
 | **P-KG-10** | Im Menü „Rea BEENDEN“, dann mit BACK zurück. Dann UP, DOWN, kurz START | Pause: UP und DOWN buchen nichts, kurz START öffnet die Übersicht mit „Rea fortsetzen“ / „Rea beenden“; „Rea fortsetzen“ gibt 2 kurze Pulse | UP/DOWN buchen oder blättern; kurz START bucht eine Rhythmuskontrolle |
 | **P-KG-11** | Rea läuft: **BACK**, auf der Hauptanzeige **kurz UP** | BACK führt zur Hauptanzeige, kurz UP zurück auf die Rea-Seite | kurz UP landet woanders |
 | **P-KG-12** | Rea läuft: die Uhr wie gewohnt **sperren** (Tastensperre) und wieder entsperren | Kein Eintrag, keine Vibration | ein Adrenalin oder eine Defibrillation steht in der Übersicht |
-| **P-KG-13** | Hauptanzeige ohne Rea: **lang START** halten und loslassen (Schnellmenü) | Das Schnellmenü steht offen, nichts ist ausgewählt oder ausgeführt | beim Loslassen wird ein Eintrag ausgeführt (F-KG-08, für das Schnellmenü nicht gemessen) |
+| **P-KG-13** | Hauptanzeige ohne Rea: **lang START** halten und loslassen (Schnellmenü) | Das Schnellmenü steht offen, nichts ist ausgewählt oder ausgeführt | beim Loslassen wird ein Eintrag ausgeführt, etwa die Einsatzübersicht (F-KG-08: im Simulator so bis Uhr 4.5.1, behoben in 4.5.2) |
 | **P-KG-14** | **Venu 3s**, Rea läuft: lang Action halten und loslassen; dann lang Zurück; dann nach oben und unten wischen | Beide langen Drücke öffnen das Menü; Wischen blättert nicht | ein Systemmenü statt des App-Menüs; Wischen verlässt die Seite |
 | **P-KG-15** | Im Web das Gerät **deaktivieren**, auf der Uhr die Sync-Seite öffnen und kurz warten. Danach wieder aktivieren, Sync-Seite verlassen und neu öffnen | Erst „Gerät im Web deaktiviert“, danach geht der Rückstand hinaus | „Upload 403“ statt „Gerät im Web deaktiviert“: Die Uhr bekommt den Rumpf nicht, KG-06 braucht eine andere Regel (P-KG-02) |
 | **P-KG-16** | Krypto-Probe aus `tools/uhr-pruefstand/krypto-probe/` per VS Code „Build for Device“ auf die Fenix; zweimal starten. Dann `FASSUNG` auf 2, neu bauen, `.prg` ersetzen, **ohne die App zu löschen**, starten | Lauf 1 `GERAETEPAAR erzeugt`, Lauf 2 `gleich, Lauf 2`, nach dem Ersetzen `gleich, Lauf 3`, „erzeugt in Fassung 1, jetzt 2“. Dazu die Zeilen `T-PAAR`, `T-STATISCH` notieren | `erzeugt` statt `gleich` nach dem Ersetzen (Speicher ging verloren), `ANDERS`, oder ein Absturz (P-KG-01) |

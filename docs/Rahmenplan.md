@@ -4,8 +4,8 @@
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `cc1924a`, PR #174, gemessen 11.11.2026): Web 24.14.0 ·
-Uhr 4.5.1 · Android 0.23.0; auf Staging; Produktiv Web 24.11.0 (Tag `web-v24.11.0`, Lauf 193), Uhr 4.3.2 · Android 0.21.0.
+**Stand `origin/main`** (Commit `a23bd39`, PR #173, gemessen 12.11.2026): Web 24.14.0 ·
+Uhr 4.5.2 · Android 0.23.0; auf Staging; Produktiv Web 24.11.0 (Tag `web-v24.11.0`, Lauf 193), Uhr 4.3.2 · Android 0.21.0.
 **Läuft:** 28 (KA) — Umsetzung; KA-01 bis KA-05, KA-06a, 06b vorab und 06b-1 erledigt, KA-06b-2 (Server für das Standbuch, Web 24.15.0, Migration) im PR, dann 06b-3 und -4 (E-KA-51); Garmin-Teil bei KG seit 10.11.2026 (KG-01, -02, -05, -06 mit PR #168, Uhr 4.5.1; offen KG-03, Rest KG-04) (R92).
 **Als Nächstes:** 28 (KA), danach 13 (P7).
 **Offene PRs:** KA-06b-2 (28, Web 24.15.0; **Migration** `2026_11_11_standbuch`).

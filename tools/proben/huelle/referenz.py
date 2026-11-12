@@ -175,8 +175,9 @@ muss er sich festlegen, bevor er die Zufallszahl der Gegenseite kennt, und
 trifft je Versuch mit eins zu einer Million — sichtbar als falscher Wert.
 
 AUFRUF
-    python3 referenz.py erzeugen     # vektoren.json, vektoren-2.json, Vektoren.mc, HuelleVektor.mc
-    python3 referenz.py pruefen      # beide Vektordateien gegen diese Umsetzung
+    python3 referenz.py erzeugen     # vektoren.json, vektoren-2.json und die vier .mc-Dateien der Uhr
+                                     # (Vektoren.mc, HuelleVektor.mc, Vektoren2.mc, HuelleVektor2.mc)
+    python3 referenz.py pruefen      # beide Vektordateien gegen diese Umsetzung, die .mc-Dateien dagegen
     python3 referenz.py --selbstprobe
 """
 from __future__ import annotations
@@ -203,6 +204,11 @@ UHR_VEKTOREN = WURZEL / "tools" / "uhr-pruefstand" / "krypto-probe" / "source" /
 # Der Selbsttest der Uhr-App: EIN Fall, mit dem die App
 # beim ersten Senden ihre Byteordnung und die ganze Kette prüft.
 APP_VEKTOR = WURZEL / "watch" / "source" / "HuelleVektor.mc"
+# Dasselbe für Fassung 2 (KG-03a): die Fälle der Probe-App und der eine Fall
+# des Selbsttests `Huelle2.bereit()`. Eigene Dateien — die der Fassung 1
+# bleiben byte-gleich.
+UHR_VEKTOREN2 = UHR_VEKTOREN.with_name("Vektoren2.mc")
+APP_VEKTOR2 = APP_VEKTOR.with_name("HuelleVektor2.mc")
 
 FASSUNG = 1
 INFO = b"nadoku-huelle-1"
@@ -1222,6 +1228,82 @@ def app_vektor(v: dict) -> str:
         "}", ""])
 
 
+UHR_FAELLE2 = ("kurz", "spur-3")
+
+
+def uhr_vektoren2(v2: dict) -> str:
+    """Fassung 2 als Monkey-C-Quelltext für die Probe-App (KG-03a): die Fälle
+    „kurz" und „spur-3" — beide von der Uhr verschlossen — mit der ganzen
+    Hülle, dazu Kennung und Z_s der Uhr und die Kopplung. Alles aus
+    `vektoren-2.json`, nichts neu gerechnet."""
+    faelle = [f for f in v2["faelle"] if f["name"] in UHR_FAELLE2]
+    if [f["name"] for f in faelle] != list(UHR_FAELLE2) or any(f["absender"] != "uhr" for f in faelle):
+        raise ValueError("Vektoren2.mc: die Fälle der Uhr fehlen oder haben einen anderen Absender")
+    if len({f["z_s_hex"] for f in faelle}) != 1:
+        raise ValueError("Vektoren2.mc: Z_s ist je Paar fest und muss in beiden Fällen gleich sein")
+    uhr, k = v2["geraete"]["uhr"], v2["kopplung"]
+    if k["konto_hex"] != v2["konto"]["oeffentlich_hex"] or k["spk_hex"] != uhr["oeffentlich_hex"]:
+        raise ValueError("Vektoren2.mc: die Kopplung nennt andere Schlüssel als Konto und Uhr")
+    spur = faelle[1]
+    zeilen = ["// ERZEUGT von tools/proben/huelle/referenz.py erzeugen — nicht von Hand ändern.",
+              "// Anlass: entfällt — Erzeuger (E-BR-05)",
+              "// Fassung 2 der Gerätehülle (KG-03a): Fälle aus tools/proben/huelle/vektoren-2.json.",
+              "import Toybox.Lang;", "", "module Vektoren2 {",
+              f"    const KONTO = {mc_bytes(v2['konto']['oeffentlich_hex'])};",
+              f"    const GERAET_D = {mc_bytes(uhr['privat_hex'])};",
+              f"    const SPK = {mc_bytes(uhr['oeffentlich_hex'])};",
+              f"    const SID = {mc_bytes(uhr['sid_hex'])};",
+              f"    const Z_S = {mc_bytes(faelle[0]['z_s_hex'])};",
+              # Womit die Probe die Innenform von „spur-3" nachbaut: die Nummer
+              # des ersten Punkts (aus dem Platz) und ts_von (aus dem Kopf).
+              f"    const SPUR_VON = {int(spur['platz'].split(':')[0])};",
+              f"    const SPUR_TS = {int(spur['klartext_hex'][:16], 16)};",
+              f"    const N_G = {mc_bytes(k['n_g_hex'])};",
+              f"    const N_B = {mc_bytes(k['n_b_hex'])};",
+              f"    const ZUSAGE = {mc_bytes(k['zusage_hex'])};",
+              f"    const WERT = \"{k['wert']}\";",
+              "    const FAELLE = ["]
+    for f in faelle:
+        zeilen += ["        {",
+                   f"            :name => \"{f['name']}\",",
+                   f"            :klar => {mc_bytes(f['klartext_hex'])},",
+                   f"            :bindung => {mc_bytes(f['bindung_hex'])},",
+                   f"            :fluechtig => {mc_bytes(f['fluechtig_privat_hex'])},",
+                   f"            :iv => {mc_bytes(f['iv_hex'])},",
+                   f"            :huelle => {mc_bytes(base64.b64decode(f['huelle_b64']).hex())}",
+                   "        },"]
+    zeilen += ["    ];", "}", ""]
+    return "\n".join(zeilen)
+
+
+def app_vektor2(v: dict, v2: dict) -> str:
+    """Der Fall „kurz" der Fassung 2 für den Selbsttest `Huelle2.bereit()`.
+    Kontoschlüssel und Klartext sind dieselben wie in Fassung 1 und stehen
+    schon in `HuelleVektor.mc` — die App trägt sie nicht zweimal."""
+    f = next(f for f in v2["faelle"] if f["name"] == "kurz")
+    f1 = next(f for f in v["faelle"] if f["name"] == "kurz")
+    if (v2["konto"]["oeffentlich_hex"] != v["empfaenger"]["oeffentlich_hex"]
+            or f["klartext_hex"] != f1["klartext_hex"] or f["absender"] != "uhr"):
+        raise ValueError("HuelleVektor2.mc: Konto, Klartext oder Absender passen nicht zu HuelleVektor.mc")
+    return "\n".join([
+        "// ERZEUGT von tools/proben/huelle/referenz.py erzeugen — nicht von Hand ändern.",
+        "// Anlass: entfällt — Erzeuger (E-BR-05)",
+        "// Der Selbsttest der Gerätehülle, Fassung 2 (KG-03a): Fall „kurz“ aus",
+        "// tools/proben/huelle/vektoren-2.json. Kontoschlüssel und Klartext: HuelleVektor.mc.",
+        "import Toybox.Lang;", "", "module HuelleVektor2 {",
+        f"    const D_GERAET = {mc_bytes(v2['geraete']['uhr']['privat_hex'])};",
+        f"    const BINDUNG = {mc_bytes(f['bindung_hex'])};",
+        f"    const D = {mc_bytes(f['fluechtig_privat_hex'])};",
+        f"    const IV = {mc_bytes(f['iv_hex'])};",
+        f"    const SID = {mc_bytes(f['sid_hex'])};",
+        f"    const TAG = {mc_bytes(f['tag_hex'])};",
+        "}", ""])
+
+
+def uhr_dateien2(v: dict, v2: dict) -> list[tuple[pathlib.Path, str]]:
+    return [(UHR_VEKTOREN2, uhr_vektoren2(v2)), (APP_VEKTOR2, app_vektor2(v, v2))]
+
+
 def pruefen(v: dict) -> list[str]:
     """Jeden Fall neu rechnen, jede Hülle öffnen, jede Störung scheitern sehen."""
     fehler = []
@@ -1318,11 +1400,15 @@ def main() -> int:
         APP_VEKTOR.write_text(app_vektor(v), "utf-8")
         print(f"{len(v['faelle'])} Fälle, {len(v['stoerungen'])} Störungen → {VEKTOREN.name}, "
               f"{UHR_VEKTOREN.relative_to(WURZEL)}, {APP_VEKTOR.relative_to(WURZEL)}")
-        # Fassung 2 geht NUR nach JSON: Die Quelltexte der Uhr (Vektoren.mc,
-        # HuelleVektor.mc) tragen weiter Fassung 1, bis KG-03 sie erweitert.
+        # Fassung 2: Die Quelltexte der Uhr für Fassung 1 (Vektoren.mc,
+        # HuelleVektor.mc) bleiben, wie sie sind; Fassung 2 bekommt seit
+        # KG-03a eigene Dateien daneben.
         v2 = vektoren2_bauen()
         VEKTOREN2.write_text(json.dumps(v2, ensure_ascii=False, indent=2) + "\n", "utf-8")
-        print(f"{zahlen2(v2)} → {VEKTOREN2.name}")
+        for pfad, text in uhr_dateien2(v, v2):
+            pfad.write_text(text, "utf-8")
+        print(f"{zahlen2(v2)} → {VEKTOREN2.name}, "
+              f"{UHR_VEKTOREN2.relative_to(WURZEL)}, {APP_VEKTOR2.relative_to(WURZEL)}")
         return 0
     if arg == "pruefen":
         if not VEKTOREN.exists():
@@ -1342,6 +1428,10 @@ def main() -> int:
             print("vektoren-2.json fehlt"); return 2
         v2 = json.loads(VEKTOREN2.read_text("utf-8"))
         fehler2 = pruefen2(v2)
+        if not fehler and not fehler2:
+            for pfad, text in uhr_dateien2(v, v2):
+                if not pfad.exists() or pfad.read_text("utf-8") != text:
+                    fehler2.append(f"{pfad.relative_to(WURZEL)} weicht ab — neu erzeugen")
         for f in fehler2:
             print("  FEHL  " + f)
         print(f"{zahlen2(v2)}, {len(fehler2)} Abweichungen")

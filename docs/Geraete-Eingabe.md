@@ -235,7 +235,15 @@ zeigt, heißt nicht, dass es ihn nicht gibt.
 Rea zwei Seiten** (Uhr 4.4.0, `xdotool keydown`/`keyup` mit 0,15 s, Probe
 `rea/`): Das Behavior beim Drücken wechselt die Seite, das Loslassen
 erreicht die neue und blättert dort noch einmal. Am Gerät nicht gemeldet und
-nicht gemessen (Konzept KG, F-KG-09).
+nicht gemessen (Konzept KG, F-KG-09). **Seit Uhr 4.5.0 nur noch eine Seite**:
+Der Seitenwechsel bricht die Halte-Erkennung der Seite ab
+(`halteAbbrechen()`); die Probe `rea/` misst es seit KG-07 mit.
+
+**Ein langer START, der ein Menü öffnet, wirkt erst beim Loslassen** (seit
+Uhr 4.5.0 auf der Reanimationsseite, seit 4.5.2 auf der Hauptanzeige,
+`langNachLoslassen()`): Öffnete das Menü nach 1 s Halten, ging im Simulator
+das Loslassen an das Menü und wählte den Eintrag unter dem Cursor (F-KG-08).
+Am Gerät nicht gemessen (Prüfdokument KG, P-KG-09 und -13).
 
 **Ein zweiter Fall derselben Art** (10.11.2026, Abschnitt 2): Kurz UP/DOWN
 auf der Reanimationsseite bucht nach dem Seitenwechsel ein Ereignis, weil

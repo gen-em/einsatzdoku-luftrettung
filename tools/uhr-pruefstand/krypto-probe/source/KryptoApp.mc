@@ -27,6 +27,28 @@
 //   T-STATISCH  ECDH mit dem dauerhaften Paar gegen den Empfaenger plus
 //           HMAC-SHA256 ueber 7000 B (500 Punkte binaer): was ein Nachweis
 //           der Herkunft ohne Signatur kostet (KG-02)
+//
+//   AB HIER DER KRYPTO-KERN DER APP (KG-03a): watch/source/Huelle.mc und
+//   Huelle2.mc, mit uebersetzt (monkey.jungle) — nicht Krypto.mc daneben.
+//   APP-BEREIT  der Selbsttest der App fuer Fassung 1, Huelle.bereit()
+//   APP-HUELLE  Fassung 1 aus Huelle.mc je Fall byte-gleich
+//   APP-INNEN   die Innenform der Punkte aus Huelle.mc gegen den Vektor
+//   SID     Kennung des Absenders aus seinem Schluessel
+//   ZS      das statische Geheimnis Z_s und der oeffentliche Teil des
+//           Geraetepaars aus festem d
+//   HUELLE2 die ganze Huelle der Fassung 2 je Fall byte-gleich
+//   INNEN2  Kopf (12 Byte) und Punkte des Spurstuecks gegen den Vektor
+//   ZUSAGE, WERT  die Kopplung: Zusage des Geraets und Vergleichswert
+//   APP-BEREIT2  der Selbsttest der Fassung 2, Huelle2.bereit()
+//   KOPPLUNG  der Ablauf auf der Uhr: neues Paar, Zusage, Offenlegen erst
+//           mit Kontoschluessel und N_b, die erste Antwort gilt, Ablegen
+//           und Wiederlesen aus dem Storage
+//   GERAETEHUELLE, EINSATZ2, NEUSTART  mit dem abgelegten Paar und Zufall
+//           verschliessen: Form, Kennung, Z_s aus dem Speicher und nach
+//           einem nachgestellten Neustart aus dem Storage
+//   T-FASSUNG  500 Punkte in Fassung 1 und 2: Zeit und Speicher; Z_s neu
+//   Zeilen, die mit EXTERN beginnen, stehen NUR auf der Konsole: Huellen
+//   mit Zufall, die die Referenz ausserhalb der Uhr oeffnet (LIESMICH).
 //   ERGEBNIS  N gut, M Fehler — am Ende und zusaetzlich als erste Zeile
 //   Die T-Zeilen stehen je Angabe in einer eigenen Zeile (rundes Display).
 import Toybox.Application;
@@ -210,10 +232,197 @@ module Probe {
             geraetepaar();
         } else if (n == 16) {
             statisch();
+        } else if (n == 17) {
+            var ok = Huelle.bereit();
+            urteil("APP-BEREIT", ok && Krypto.zOrdnung.equals(Huelle._ordnung),
+                   "(" + Huelle._ordnung + ")");
+        } else if (n == 18 || n == 19) {
+            var g = fall(n == 18 ? "kurz" : "spur-binaer-3");
+            var h = Huelle.verschliessenRoh(g[:klar] as ByteArray, Vektoren.EMPF_PUB,
+                                            g[:bindung] as ByteArray, g[:fluechtig] as ByteArray,
+                                            g[:iv] as ByteArray);
+            var soll = [1]b;
+            soll.addAll(g[:epk] as ByteArray);
+            soll.addAll(g[:iv] as ByteArray);
+            soll.addAll(g[:ct] as ByteArray);
+            soll.addAll(g[:tag] as ByteArray);
+            urteil("APP-HUELLE " + g[:name], Krypto.gleich(h, soll), "(" + h.size() + " B)");
+        } else if (n == 20) {
+            var innen = Huelle.punkteInnen(punkte(0, 3, 1700000000), 0);
+            urteil("APP-INNEN", Krypto.gleich(innen[0] as ByteArray, fall("spur-binaer-3")[:klar] as ByteArray)
+                                && innen[1] == 1700000000 && innen[2] == 1700000010, "");
+        } else if (n == 21) {
+            urteil("SID", Krypto.gleich(Huelle2.sidVon(Vektoren2.SPK), Vektoren2.SID), "");
+        } else if (n == 22) {
+            var p = Huelle.paar(Vektoren2.GERAET_D);
+            var spk = Huelle.geraetZuSec1(p.getPublicKey().getBytes() as ByteArray);
+            urteil("ZS", Krypto.gleich(spk, Vektoren2.SPK)
+                         && Krypto.gleich(Huelle.ecdh(p, Vektoren2.KONTO), Vektoren2.Z_S), "");
+        } else if (n == 23 || n == 24) {
+            var g = Vektoren2.FAELLE[n - 23] as Dictionary;
+            var h = Huelle2.verschliessenRoh(g[:klar] as ByteArray, Vektoren2.KONTO, Vektoren2.SPK,
+                                             Vektoren2.Z_S, g[:bindung] as ByteArray,
+                                             g[:fluechtig] as ByteArray, g[:iv] as ByteArray);
+            urteil("HUELLE2 " + g[:name], Krypto.gleich(h, g[:huelle] as ByteArray), "(" + h.size() + " B)");
+        } else if (n == 25) {
+            var innen = Huelle2.spurInnen(punkte(Vektoren2.SPUR_VON, 3, Vektoren2.SPUR_TS), false);
+            urteil("INNEN2", Krypto.gleich(innen[0] as ByteArray,
+                                           (Vektoren2.FAELLE[1] as Dictionary)[:klar] as ByteArray), "");
+        } else if (n == 26) {
+            urteil("ZUSAGE", Krypto.gleich(Huelle2.zusage(Vektoren2.N_G, Vektoren2.SPK), Vektoren2.ZUSAGE), "");
+        } else if (n == 27) {
+            var w = Huelle2.wert(Vektoren2.KONTO, Vektoren2.SPK, Vektoren2.N_G, Vektoren2.N_B);
+            urteil("WERT", w.equals(Vektoren2.WERT), w);
+        } else if (n == 28) {
+            Huelle2.pruefungVergessen();        // messen, nicht den Vermerk lesen
+            urteil("APP-BEREIT2", Huelle2.bereit(), "");
+        } else if (n == 29) {
+            kopplung();
+        } else if (n == 30) {
+            geraetehuelle();
+        } else if (n == 31) {
+            einsatz2();
+        } else if (n == 32) {
+            neustart();
+        } else if (n == 33 || n == 34) {
+            fassungen(n == 34);
+        } else if (n == 35) {
+            zsNeu();
         } else {
             return false;
         }
         return true;
+    }
+
+    // Die Beispielspur der Referenz (beispielpunkte), Punkte von … von+n-1,
+    // flach wie Track.readPoints(): Breite, Laenge, Hoehe, Zeit. In Double,
+    // damit dieselben Zahlen entstehen wie in referenz.py.
+    function punkte(von as Number, n as Number, ts as Number) as Array {
+        var a = [];
+        for (var i = 0; i < n; i++) {
+            var k = von + i;
+            a.add(47.7261d + k * 0.00031d);
+            a.add(10.3159d + k * 0.00047d);
+            a.add(674.0d + (k % 37) * 0.7d);
+            a.add(ts + i * 5);
+        }
+        return a;
+    }
+
+    // Der Ablauf der Kopplung auf der Uhr (KG-03a), mit Zufall. Was die
+    // Rechnung selbst betrifft, steht in ZUSAGE und WERT gegen den Vektor;
+    // hier geht es um die Reihenfolge und das Ablegen.
+    function kopplung() as Void {
+        var ok = Huelle2.kopplungAbschliessen(Vektoren2.KONTO, Vektoren2.N_B) == null;   // laeuft keine
+        var b = Huelle2.kopplungBeginnen();
+        if (b == null) { urteil("KOPPLUNG", false, "kein dauerhaftes Paar"); return; }
+        var spk = b[:spk] as ByteArray;
+        ok = ok && spk.size() == 65 && (b[:zusage] as ByteArray).size() == 32;
+        ok = ok && Huelle2.kopplungAbschliessen(Vektoren2.KONTO, Vektoren2.N_G.slice(0, 15)) == null;
+        var a = Huelle2.kopplungAbschliessen(Vektoren2.KONTO, Vektoren2.N_B);
+        if (a == null) { urteil("KOPPLUNG", false, "kein Abschluss"); return; }
+        var nG = a[:ng] as ByteArray;
+        var w = a[:wert] as String;
+        ok = ok && nG.size() == 16 && w.length() == 6;
+        ok = ok && Krypto.gleich(Huelle2.zusage(nG, spk), b[:zusage] as ByteArray);
+        // Dieselben Werte noch einmal: dieselbe Antwort. Andere: keine.
+        var a2 = Huelle2.kopplungAbschliessen(Vektoren2.KONTO, Vektoren2.N_B);
+        ok = ok && a2 != null && w.equals((a2 as Dictionary)[:wert] as String);
+        ok = ok && Huelle2.kopplungAbschliessen(Vektoren2.KONTO, Vektoren2.N_G) == null;
+        ok = ok && Huelle2.kopplungAbschliessen(Vektoren2.SPK, Vektoren2.N_B) == null;
+        ok = ok && Huelle2.kopplungUebernehmen() && Huelle2.hatPaar();
+        ok = ok && !Huelle2.kopplungUebernehmen();                     // nur einmal
+        Huelle2._spk = null;                                           // aus dem Storage lesen
+        var s = Huelle2.spk();
+        ok = ok && s != null && Krypto.gleich(s as ByteArray, spk);
+        urteil("KOPPLUNG", ok, w);
+        System.println("EXTERN kopplung " + Krypto.hex(spk) + " " + Krypto.hex(nG) + " "
+                       + Krypto.hex(b[:zusage] as ByteArray) + " " + w);
+    }
+
+    // Mit dem abgelegten Paar verschliessen, wie es der Sendeweg tun wird.
+    function geraetehuelle() as Void {
+        Huelle.schluesselSetzen(Huelle.base64(Vektoren2.KONTO));
+        var sid = Huelle2.sid() as ByteArray;
+        var t0 = System.getTimer();
+        var a = Huelle2.spurstueck("spur", "probe-spur", 7, punkte(7, 5, 1784277100), false);
+        var t1 = System.getTimer();
+        var b = Huelle2.spurstueck("spur", "probe-spur", 12, punkte(12, 2, 1784277125), true);
+        var t2 = System.getTimer();
+        var c = Huelle2.schlussstueck("ruhe", "probe-ruhe", 40, 1784277065);
+        var ha = Huelle._ausBase64(a["huelle"] as String);
+        var hc = Huelle._ausBase64(c["huelle"] as String);
+        // 1 + 8 + 65 + 16, Chiffretext (12 + 5·14 = 82 -> 96; 12 -> 16), 32
+        var ok = ha.size() == 90 + 96 + 32 && hc.size() == 90 + 16 + 32
+                 && ha[0] == 2 && Krypto.gleich(ha.slice(1, 9), sid)
+                 && a["ts_von"] == 1784277100 && a["ts_bis"] == 1784277120 && c["punkte"] == 0
+                 && !(a["huelle"] as String).equals(b["huelle"] as String);
+        urteil("GERAETEHUELLE", ok, "(" + ha.size() + " B)");
+        melde("erste " + (t1 - t0) + " ms, zweite " + (t2 - t1) + " ms");
+        var spk = Krypto.hex(Huelle2.spk() as ByteArray);
+        System.println("EXTERN spur " + spk + " probe-spur 7:5 1784277100 " + a["huelle"]);
+        System.println("EXTERN spur " + spk + " probe-spur 12:2 1784277125 " + b["huelle"]);
+        System.println("EXTERN ruhe " + spk + " probe-ruhe 40:0 1784277065 " + c["huelle"]);
+    }
+
+    // Die Einsatzhuelle: derselbe Inhalt wie PHASEN2 und REA2 der Referenz.
+    function einsatz2() as Void {
+        var d = { "startedAt" => "2026-07-17T08:31:05Z",
+                  "phases" => [[4, "2026-07-17T08:51:02Z", 47.5601d, 10.7002d],
+                               [5, "2026-07-17T08:52:55Z", null, null]],
+                  "resus" => [{ "start" => "2026-07-17T08:55:10Z",
+                                "events" => [["adrenalin", "2026-07-17T08:58:02Z"]] }] };
+        var z1 = Huelle2.zaehlerNaechster();
+        var z2 = Huelle2.zaehlerNaechster();
+        var innen = Huelle2.einsatzInnen(d, z2, true);
+        var h = Huelle2.einsatz("probe-einsatz", d, z2, true);
+        var kopf = "{\"fassung\":2,\"z\":" + z2 + ",\"start\":1784277065,\"schluss\":true,\"phasen\":[";
+        urteil("EINSATZ2", z2 == z1 + 1 && innen.find(kopf) == 0, "z " + z2);
+        System.println("EXTERN einsatz " + Krypto.hex(Huelle2.spk() as ByteArray) + " probe-einsatz "
+                       + z2 + " 1784277065 " + h);
+    }
+
+    // Ein Neustart, nachgestellt: Was im Speicher lag, ist fort; Paar und Z_s
+    // kommen aus dem Storage. Die Huelle muss ausserhalb aufgehen (EXTERN).
+    function neustart() as Void {
+        var vorher = Huelle2.statisch(Vektoren2.KONTO);
+        Huelle2._spk = null;
+        Huelle2._zs = null;
+        Huelle2._zsKonto = null;
+        var t0 = System.getTimer();
+        var a = Huelle2.spurstueck("spur", "probe-spur", 14, punkte(14, 3, 1784277135), true);
+        var t1 = System.getTimer();
+        var nachher = Huelle2.statisch(Vektoren2.KONTO);
+        urteil("NEUSTART", vorher != null && nachher != null
+                           && Krypto.gleich(vorher as ByteArray, nachher as ByteArray), "(" + (t1 - t0) + " ms)");
+        System.println("EXTERN spur " + Krypto.hex(Huelle2.spk() as ByteArray)
+                       + " probe-spur 14:3 1784277135 " + a["huelle"]);
+    }
+
+    // 500 Punkte durch den Weg der App, Fassung 1 oder 2. Z_s liegt bereit.
+    function fassungen(zwei as Boolean) as Void {
+        var flat = punkte(0, 500, 1784277065);
+        var vor = System.getSystemStats().usedMemory;
+        var t0 = System.getTimer();
+        var a = zwei ? Huelle2.spurstueck("spur", "probe-spur", 0, flat, false)
+                     : Huelle.spurstueck("spur", "probe-spur", 0, flat);
+        var t1 = System.getTimer();
+        melde("T-FASSUNG " + (zwei ? "2" : "1") + ", 500 Punkte");
+        melde((t1 - t0) + " ms, " + (a["huelle"] as String).length() + " Z.");
+        melde("Speicher +" + ((System.getSystemStats().usedMemory - vor) / 1024) + " kB");
+    }
+
+    // Z_s neu rechnen (Paar aus dem Storage bauen, ECDH, ablegen) — was der
+    // erste Sendelauf nach einer Kopplung einmal kostet. Danach aufraeumen:
+    // Der naechste Lauf soll wieder ein neues Paar erzeugen.
+    function zsNeu() as Void {
+        Storage.deleteValue(Huelle2.ABLAGE_ZS);
+        Huelle2._zs = null;
+        var t0 = System.getTimer();
+        Huelle2.statisch(Vektoren2.KONTO);
+        melde("T-ZS " + (System.getTimer() - t0) + " ms");
+        Huelle2.paarLoeschen();
+        Huelle.schluesselLoeschen();
     }
 
     // Das dauerhafte Paar (KG-02). Meldungen, kein Urteil: Ein erster Lauf

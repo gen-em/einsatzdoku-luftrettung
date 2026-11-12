@@ -26,6 +26,25 @@ frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
   Fassung kennt. Nach dem Deploy muss `update.php` laufen; benutzt wird
   die Abschrift erst, wenn der Browser das neue Format schreibt.
 
+## [Uhr 4.5.2] — unveröffentlicht
+
+Schritt 28, Pakete KG-07 (Backlog Nr. 574) und KG-03a.
+
+### Geändert
+
+- **Uhr — die App trägt den Kern der neuen Gerätehülle mit, nutzt ihn aber
+  noch nicht.** Fassung 2 belegt, von welchem Gerät eine Hülle stammt, und
+  macht ein fehlendes Stück sichtbar; die Uhr rechnet sie byte-gleich zur
+  Referenz. Gesendet wird weiter Fassung 1, bis der Server Fassung 2
+  annimmt; die App wird dadurch rund 6,6 kB größer.
+
+### Behoben
+
+- **Uhr — das Loslassen von START wählte im Schnellmenü der Hauptanzeige
+  gleich die Einsatzübersicht.** Das Menü öffnete nach einer Sekunde Halten,
+  und das Loslassen ging an das Menü; im Simulator gemessen, derselbe Fehler
+  wie beim Rea-Menü bis Uhr 4.4.0. Jetzt öffnet es beim Loslassen.
+
 ## [Web 24.14.0] — unveröffentlicht
 
 ### Hinzugefügt

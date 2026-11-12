@@ -316,7 +316,7 @@
     "uhr-rea": {
       "aufruf": "bash tools/uhr-pruefstand/rea/rea.sh fenix6pro",
       "braucht": "uhr",
-      "bemerkung": "Konzept KG (KG-05, Nr. 571). Eine Prueffassung startet auf der Reanimationsseite mit 40-s-Countdown und schreibt jede Vibration, jede Buchung, jeden Seitenwechsel in die Konsole; 15 Tastenschritte mit getrenntem keydown/keyup gegen das Soll: Belegung, 10-s-Sperre, Menue, Erinnerungen 0:30/0:10/0:00, Pause. Rund 4 min."
+      "bemerkung": "Konzept KG (KG-05, Nr. 571). Eine Prueffassung startet auf der Reanimationsseite mit 40-s-Countdown und schreibt jede Vibration, jede Buchung, jeden Seitenwechsel in die Konsole; 15 Tastenschritte mit getrenntem keydown/keyup gegen das Soll: Belegung, 10-s-Sperre, Menue, Erinnerungen 0:30/0:10/0:00, Pause; seit KG-07 (Nr. 574) ohne Rea genau eine Seite je Druck und das Schnellmenue der Hauptanzeige ohne Auswahl beim Loslassen. 18 Schritte, rund 4 min."
     },
     "uhr-sendeweg": {
       "aufruf": "bash tools/uhr-pruefstand/sendeweg/sendeweg.sh fenix6pro",

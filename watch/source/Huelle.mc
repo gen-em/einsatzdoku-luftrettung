@@ -318,20 +318,26 @@ module Huelle {
         var z = ecdh(p, empfPub);
         var info = text(INFO);
         info.addAll(empfPub);
-        var okm = hkdf(z, epk, info);
-        var kEnc = okm.slice(0, 32);
-        var kMac = okm.slice(32, 64);
+        var kopf = [1]b;
+        kopf.addAll(epk);
+        kopf.addAll(iv);
+        return fertigen(kopf, hkdf(z, epk, info), iv, klar, bind);
+    }
+
+    /* Der Schluss jeder Huelle, gleich in Fassung 1 und 2 (Huelle2.mc):
+     * `kopf` ist alles vor dem Chiffretext (Kennbyte bis IV), `okm` sind
+     * die 64 Byte aus HKDF -- vorn der Schluessel fuer AES-256-CBC, hinten
+     * der fuer das Pruefwort ueber Kopf, Chiffretext und Bindung. `kopf`
+     * wird dabei zur Huelle verlaengert. */
+    function fertigen(kopf as Lang.ByteArray, okm as Lang.ByteArray, iv as Lang.ByteArray,
+                      klar as Lang.ByteArray, bind as Lang.ByteArray) as Lang.ByteArray {
         var c = new Cryptography.Cipher({:algorithm => Cryptography.CIPHER_AES256,
-            :mode => Cryptography.MODE_CBC, :key => kEnc, :iv => iv});
-        var ct = c.encrypt(gepolstert(klar));
-        var aus = [1]b;
-        aus.addAll(epk);
-        aus.addAll(iv);
-        aus.addAll(ct);
-        var mac = aus.slice(0, null);
+            :mode => Cryptography.MODE_CBC, :key => okm.slice(0, 32), :iv => iv});
+        kopf.addAll(c.encrypt(gepolstert(klar)));
+        var mac = kopf.slice(0, null);
         mac.addAll(bind);
-        aus.addAll(hmac(kMac, mac));
-        return aus;
+        kopf.addAll(hmac(okm.slice(32, 64), mac));
+        return kopf;
     }
 
     function verschliessen(klar as Lang.ByteArray, art as Lang.String, ref as Lang.String,
@@ -356,6 +362,17 @@ module Huelle {
     function spurstueck(art as Lang.String, ref as Lang.String, seqFrom as Lang.Number,
                         flat as Lang.Array) as Lang.Dictionary {
         var n = flat.size() / 4;
+        var p = punkteInnen(flat, 0);
+        var platz = seqFrom.toString() + ":" + n.toString();
+        return { "seq_from" => seqFrom, "punkte" => n, "ts_von" => p[1], "ts_bis" => p[2],
+                 "huelle" => verschliessen(p[0] as Lang.ByteArray, art, ref, platz) };
+    }
+
+    /* Die Punkte in der Innenform, mit `kopf` freien Bytes davor (Fassung 1:
+     * keine; Fassung 2 schreibt dorthin ihren Kopf, Huelle2.mc). Gibt
+     * [innen, ts_von, ts_bis] zurueck; `flat` darf nicht leer sein. */
+    function punkteInnen(flat as Lang.Array, kopf as Lang.Number) as Lang.Array {
+        var n = flat.size() / 4;
         var von = flat[3] as Lang.Number;
         var bis = von;
         for (var i = 1; i < n; i++) {
@@ -363,10 +380,10 @@ module Huelle {
             if (t < von) { von = t; }
             if (t > bis) { bis = t; }
         }
-        var innen = new [n * 14]b;
+        var innen = new [kopf + n * 14]b;
         var be = {:endianness => Lang.ENDIAN_BIG};
         for (var i = 0; i < n; i++) {
-            var o = i * 14;
+            var o = kopf + i * 14;
             var ele = flat[i * 4 + 2];
             var h = HOEHE_UNBEKANNT;
             if (ele != null) {
@@ -383,9 +400,7 @@ module Huelle {
             be[:offset] = o + 10;
             innen.encodeNumber((flat[i * 4 + 3] as Lang.Number) - von, Lang.NUMBER_FORMAT_UINT32, be);
         }
-        var platz = seqFrom.toString() + ":" + n.toString();
-        return { "seq_from" => seqFrom, "punkte" => n, "ts_von" => von, "ts_bis" => bis,
-                 "huelle" => verschliessen(innen, art, ref, platz) };
+        return [innen, von, bis];
     }
 
     /* "2026-07-16T08:31:05Z" -> Unix-Sekunden. Gregorian.moment rechnet in
@@ -414,7 +429,14 @@ module Huelle {
      * Phasenliste ersetzt (Vertrag 3.1), die Uhr schickt beide zusammen. */
     function einsatz(ref as Lang.String, d as Lang.Dictionary) as Lang.String {
         var beginn = _sekunden(d["startedAt"] as Lang.String);
-        var s = "{\"fassung\":1,\"phasen\":[";
+        return verschliessen(text("{\"fassung\":1," + einsatzRumpf(d, beginn)), "einsatz", ref, "");
+    }
+
+    /* Phasen und Reanimation als JSON, vom Schluessel "phasen" bis zur
+     * schliessenden Klammer des Ganzen -- der Teil, der in Fassung 1 und 2
+     * gleich ist. `beginn`: started_at in Unix-Sekunden. */
+    function einsatzRumpf(d as Lang.Dictionary, beginn as Lang.Number) as Lang.String {
+        var s = "\"phasen\":[";
         var raw = d["phases"] as Lang.Array<Lang.Array>;
         for (var i = 0; i < raw.size(); i++) {
             var p = raw[i];
@@ -441,7 +463,6 @@ module Huelle {
                 s += "]}";
             }
         }
-        s += "]}";
-        return verschliessen(text(s), "einsatz", ref, "");
+        return s + "]}";
     }
 }
