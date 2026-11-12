@@ -220,11 +220,37 @@ def konto_loeschen(basis: str, admin: AdminZugang, konto: str,
     return True
 
 
+# Die reservierten Endungen aus RFC 2606 und 6761 — dieselben wie
+# `MAIL_RESERVIERTE_DOMAINS` in server/mail_lib.php. An sie verschickt die
+# Anlage nichts (Nr. 450).
+RESERVIERTE_ENDUNGEN = ("invalid", "test", "example", "localhost")
+
+
+def pruefkonto_reserviert(konto: str) -> None:
+    """Ein Pruefkonto liegt unter einer reservierten Domain — sonst Abbruch.
+
+    WARUM (Konzept KA, KA-06b-3): Ein Handlauf gegen Staging mit
+    `UMLAUF_KONTO=umlauf-edbak@gen-em.org` legte Konten unter einer echten
+    Domain an. Jede Einladung ging an den Mailserver, kam mit 550 zurueck und
+    stand danach wochenlang als „2 unzustellbar" auf der Statusseite. Unter
+    `.invalid` reiht die Anlage gar nicht erst ein. Eine Zeile hier haelt
+    jeden Anlegeweg der Pruefwerkzeuge, weil sie alle hierher fuehren
+    (`konto_anlegen()`, `pruefkonto.py`, der Messstand).
+    """
+    domain = konto.rpartition("@")[2].rstrip(".").lower()
+    if "@" not in konto or domain.rpartition(".")[2] not in RESERVIERTE_ENDUNGEN:
+        raise RuntimeError(
+            f"Pruefkonto '{konto}' liegt nicht unter einer reservierten Domain "
+            f"(.invalid, .test, .example, .localhost) — die Einladung ginge an "
+            f"einen echten Mailserver. Anlass: Nr. 450, KA-06b-3.")
+
+
 def konto_einladen(basis: str, admin: AdminZugang, konto: str, rolle: str = "user") -> str:
     """Konto ueber den Einladungsweg anlegen; gibt den Link zum Passwortsetzen.
 
     Eigene Funktion seit KA-02: Die Notfallblattprobe setzt das Passwort
     selbst im Browser, damit sie die Erstvergabe mitschneiden kann."""
+    pruefkonto_reserviert(konto)
     s = sitzungsmodul.Sitzung(basis).anmelden(*admin)
     s.csrf_auffrischen("admin_users.php")
     antwort = s.post("admin_users.php", {"csrf": s.csrf, "action": "user_add",
@@ -415,6 +441,7 @@ def main() -> int:
     if a.admin_totp_aus:
         a.admin_totp = aus_umgebung(a.admin_totp_aus, "--admin-totp-aus")
     a.konto = a.konto or umlauf_konto(a.art)
+    pruefkonto_reserviert(a.konto)          # vor jedem Zugriff auf die Anlage
     a.ausnahmen = a.ausnahmen or str(HIER / "ausnahmen" / f"{a.art}_umlauf.json")
     # LEER HEISST „KEIN SCHALTER". Die Kette reicht `"$STAGING_TOTP"` in
     # Anfuehrungszeichen durch; fehlt das Secret, kommt eine leere
