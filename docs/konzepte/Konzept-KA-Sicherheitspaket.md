@@ -811,8 +811,10 @@ gezählt (E-KA-31).
 **Prüfstand (Stufe neben, drei Engines):** Zwischenstand 61 grün, 3 rot —
 `migrationsregister` (F-KA-96), `schemaprobe` (Plattform-Container nach
 einem Neustart nicht gestartet, F-KA-95), `rueckwegprobe` in WebKit
-(Zeitgrenze beim Seitenwechsel, einzeln danach 23/0, F-KA-94). Der Kopf
-misst die drei neu und erbt den Rest.
+(Zeitgrenze beim Seitenwechsel, einzeln danach 23/0, F-KA-94). Zweiter
+Zwischenstand nach Vorabliste und Plattform: 63 grün, 1 rot — wieder die
+Rückwegprobe in WebKit, an anderer Stelle. Der Kopf misst sie neu und erbt
+den Rest.
 
 ### KA-06b-1 Kern einbinden (11.11.2026)
 
@@ -1019,7 +1021,7 @@ Klartextfelder (`final`, Strecke, Besatzung, Tagesnotizen, Phasenzeiten bis
 | F-KA-91 | **Das Demo-Konto stellt nie auf das neue Format um** — ohne Anteil-Kennung überspringt `unlock.js:313` die Umstellung | die Demo-Hülle kommt als `edk2:` aus der Fixture (E-KA-44, 06d) |
 | F-KA-92 | **Die Arbeitskopie des Agenten begann auf `main` statt auf dem Zweig**, und `.claude/worktrees/` stand unverfolgt im Baum — der Prüfstand hätte sie mit `git add -A` eingesammelt | Zweig im Agenten vorgespult; `.claude/worktrees/` örtlich in `.git/info/exclude` |
 | F-KA-93 | **Der Container startete mitten in der Arbeit neu** (11.11.2026, `uptime` 2 min); die Anlage lief mit `hochfahren.sh` wieder an | wie F-KA-71 |
-| F-KA-94 | **Die Rückwegprobe lief in WebKit einmal in die Zeitgrenze eines Seitenwechsels** (90 s, Prüfstand von 06b-2) — der Paketcode berührt keinen Browserweg; einzeln danach 23 ok, 0 fehlen | im Kopf neu gemessen; beobachten |
+| F-KA-94 | **Die Rückwegprobe lief in WebKit zweimal in die Zeitgrenze eines Seitenwechsels** (90 s), in beiden vollen Läufen von 06b-2 und an verschiedenen Stellen (nach dem Tor der BetreiberIn, beim ersten Anmelden); im vollen Lauf von 06b-1 war sie grün. Einzeln dreimal **23 ok, 0 fehlen**. Der Paketcode berührt keinen Browserweg, die Ratenzähler waren leer | im Kopf allein neu gemessen; als Backlog-Punkt beobachten, wenn es wiederkommt |
 | F-KA-95 | **Nach dem Neustart des Containers liefen die Plattform-Container nicht** — die Schemaprobe fand MariaDB 10.6 und beide MySQL nicht | `plattform.sh alles` nach jedem Neustart; `hochfahren.sh` startet sie nicht mit |
 | F-KA-96 | **Die neue Migration fehlte in der Vorabliste von `schema.sql`** — eine Neuinstallation hätte sie als offen gemeldet | Zeile ergänzt; das Migrationsregister hat es gefunden |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
