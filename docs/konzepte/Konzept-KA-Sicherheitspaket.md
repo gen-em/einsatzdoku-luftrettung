@@ -548,7 +548,9 @@ und die Webseite läuft. Beantwortet F-KG-16.
    `n_b`. Das Gerät legt sich auf das erste Paar fest; ein anderes in einer
    späteren Antwort bricht ab (F-KG-16 (1): **nein**, kein zweites Paar).
 4. **Neu: `offenlegen`** mit Kopfzeilen, `{"aktion":"offenlegen","n_g":"<Base64, 16 Byte>"}`
-   → `200 {"ok":true}`. Nur im Zustand `beansprucht`, nur einmal; N_g muss
+   → `200 {"ok":true}`. Nur im Zustand `beansprucht`. **Wiederholbar:**
+   dasselbe N_g noch einmal → wieder `200` (die Antwort kann über Bluetooth
+   verloren gehen); ein anderes → `409 {"error":"n_g"}`. N_g muss
    zur Zusage passen — **das prüft der Server nicht**, das prüft der Browser.
    Danach rechnet das Gerät den Wert und zeigt ihn mit der maskierten Adresse.
 5. **Webseite, „Vergleichswert prüfen"**: Die Karte fragt nach, bis N_g da
@@ -558,15 +560,23 @@ und die Webseite läuft. Beantwortet F-KG-16.
    ins Gerätebuch (`sid`, `spk`, `geraet`, `seit`) und meldet dem Server
    `wert_ok` — in einer Anfrage, Gerätebuch und Vermerk in einer
    Transaktion (Feld `blaetter` wie in 06b-3). **„Wert ist anders"** oder
-   eine Zusage, die nicht passt, verwirft die Sitzung und meldet es im
-   Reiter System (`kopplung`, ohne Werte).
+   eine Zusage, die nicht passt, markiert die Sitzung als abgelehnt (sie
+   bleibt bis zum Ende der Frist stehen, damit das Gerät den Grund
+   erfährt) und meldet es im Reiter System (`kopplung`, ohne Werte).
 6. **`bestaetigen` (Ja)** schließt erst ab, wenn `wert_ok` vorliegt; sonst
-   `202 {"wartet":"browser"}`, und das Gerät fragt mit `status` nach, bis
-   `gekoppelt` kommt. Umgekehrt schließt `wert_ok` ab, wenn das Ja schon
+   `202 {"wartet":"browser"}`, und das Gerät fragt mit `status` nach.
+   **Die Zustände von `status` nach dem Offenlegen** (Rückmeldung KG):
+   (a) Ja da, Wert noch nicht bestätigt →
+   `{"zustand":"beansprucht","wartet":"browser", …}`; (b) im Web abgelehnt →
+   `{"zustand":"abgelehnt","grund":"wert"|"zusage"}` — das Gerät zeigt „Im
+   Web abgelehnt" und legt kein Paar ab; (c) abgeschlossen →
+   `{"zustand":"gekoppelt","kontoschluessel":…,"huelle":2}`. Umgekehrt schließt `wert_ok` ab, wenn das Ja schon
    da ist. Wer zuletzt kommt, legt das Gerät an. `devices` bekommt `spk`
    (Migration); `status` und `bestaetigen` sagen nach dem Abschluss
    `"huelle": 2` — fehlt das Feld (alter Server), sendet das Gerät
-   Fassung 1.
+   Fassung 1. **Auch `status` eines schon gekoppelten Geräts trägt es**,
+   sobald am Gerät ein `spk` steht — so lernt eine Uhr, deren Merker
+   verloren ging, ihn über denselben Weg wieder wie den Kontoschlüssel.
 7. **Der Zähler `z` (F-KG-16 (3), Q-KA-13).** Die Referenz verlangt
    `z ≥ o` je Einsatz, nicht `o + 1`; ein Zähler für alle Einsätze, der das
    Trennen überdauert (`gz` der Uhr), erfüllt das. **Vorschlag für den
