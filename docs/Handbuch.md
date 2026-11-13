@@ -91,6 +91,16 @@ Kalendertag sind damit möglich und vorgesehen — etwa ein Hubschrauberdienst a
 Tag und ein NEF-Nachtdienst am Abend. Beide erscheinen im Web als getrennte
 Zeilen, unterschieden durch die Uhrzeit des Dienstbeginns.
 
+**Ohne Kopplung beginnt kein Dienst** *(seit Uhr 4.6.0)*. Steht unter der
+Frage rot „Nicht gekoppelt" oder „Server fehlt", vibriert die Uhr bei START
+nur kurz und bleibt auf dem Startbildschirm. Erst koppeln (Sync-Seite, eine
+Seite nach unten) — im Dienst ist das Koppeln gesperrt, und was bis dahin
+aufgezeichnet wäre, gehörte keinem Konto. Eine Uhr, die gekoppelt, aber im
+Web gesperrt ist oder noch keinen Schlüssel hat, beginnt dagegen: Ihre Daten
+bleiben auf der Uhr und gehen später an dasselbe Konto. *(Bis Uhr 4.5.2 begann
+der Dienst trotz der roten Zeile; das Telefon tut es seit Android 0.23.0 nicht
+mehr, Abschnitt 10.)*
+
 Wurde die App während **eines** Dienstes versehentlich mehrfach gestartet, sind
 daraus mehrere Diensttage geworden. Im Web lassen sie sich wieder
 zusammenführen (Abschnitt 4.5a).
@@ -202,10 +212,11 @@ Ring die Anzeige — auf einen Blick erkennbar.
   „Einsatztag beenden".
   Drückst du während des langen START-Drucks zusätzlich eine andere Taste,
   bleibt das Menü zu — die App erkennt daran die **Tastensperre** der Uhr. So
-  kollidiert das Sperren nicht mehr mit dem Schnellmenü. Das Menü erscheint,
-  wenn du START **loslässt** *(seit Uhr 4.5.2; davor öffnete es nach einer
-  Sekunde Halten, und das Loslassen wählte im Simulator gleich die
-  „Einsatzübersicht“ aus)*.
+  kollidiert das Sperren nicht mehr mit dem Schnellmenü. Das Menü erscheint
+  nach **einer Sekunde Halten**, noch während du START drückst; das
+  Loslassen wählt darin nichts aus. Erst ein neuer Druck auf START wählt
+  *(seit Uhr 4.6.0; in 4.5.2 erschien es erst beim Loslassen, davor wählte
+  das Loslassen im Simulator gleich die „Einsatzübersicht“ aus)*.
 - **BACK** fragt nach, bevor die App verlassen wird.
 
 **Tempo:** aktuelle Geschwindigkeit (km/h) groß, darunter die im Einsatz
@@ -280,7 +291,7 @@ startete den Countdown neu, lang DOWN war die Rhythmuskontrolle)*:
 | Taste | keine Rea | Rea läuft | Rea pausiert |
 |---|---|---|---|
 | kurz START | Rea **beginnen** | **Rhythmuskontrolle**, Countdown neu | Übersicht (fortsetzen oder beenden) |
-| lang START | — | **Menü** | Menü |
+| lang START | — | **Menü**, nach einer Sekunde Halten | Menü |
 | UP, kurz oder lang | Oberfläche wechseln | **Adrenalin** | — |
 | DOWN, kurz oder lang | Oberfläche wechseln | **Defibrillation**, Countdown neu | — |
 | BACK | Hauptanzeige | Hauptanzeige, die Rea läuft weiter | ebenso |
@@ -293,8 +304,9 @@ der Uhr, die mit UP beginnt, kein Adrenalin. Auf Uhren **ohne UP/DOWN**
 (Venu) gehen Adrenalin und Defibrillation nur über das Menü.
 
 **Ein Druck zu viel bucht nichts.** Dasselbe Ereignis wird innerhalb von
-**10 Sekunden** nicht noch einmal gebucht, gleich ob über Taste oder Menü —
-auch nicht in den ersten 10 Sekunden nach dem Beginn. Die Uhr zeigt und
+**5 Sekunden** nicht noch einmal gebucht, gleich ob über Taste oder Menü —
+auch nicht in den ersten 5 Sekunden nach dem Beginn *(seit Uhr 4.6.0; bis
+4.5.2 waren es 10 Sekunden)*. Die Uhr zeigt und
 vibriert dann nichts. Ein **anderes** Ereignis geht sofort, etwa die
 Defibrillation drei Sekunden nach der Rhythmuskontrolle.
 
@@ -7067,12 +7079,16 @@ Die Uhr trennt sich **zuerst ausdrücklich**, bevor sie neu koppelt. Der Weg
 dorthin ist derselbe wie beim ersten Mal (Sync-Seite, Auswahltaste halten),
 aber er beginnt mit einer Rückfrage:
 
-1. **„Kopplung trennen und neu koppeln?"** — Nein lässt alles, wie es ist.
-2. Bei Ja meldet die Uhr kurz **„Trenne…"** und holt danach **von selbst einen
-   neuen Code**. Das Gerät verschwindet aus der Geräteliste im Web und gibt
-   seinen Platz frei; die bisherige Kontoinhaberin bekommt eine E-Mail darüber.
-   **Bereits hochgeladene Einsätze bleiben vollständig erhalten.**
-3. Danach wie oben: den Code im Web eingeben und an der Uhr mit Ja bestätigen —
+1. **„Kopplung trennen?"** — Nein lässt alles, wie es ist.
+2. Bei Ja meldet die Uhr kurz **„Trenne…"**, dann **„Getrennt"**. Das Gerät
+   verschwindet aus der Geräteliste im Web und gibt seinen Platz frei; die
+   bisherige Kontoinhaberin bekommt eine E-Mail darüber. **Bereits
+   hochgeladene Einsätze bleiben vollständig erhalten.** Die Uhr ist jetzt
+   ohne Kopplung — so lässt sie sich auch einfach abgeben oder vom Konto
+   lösen *(seit Uhr 4.6.0; bis 4.5.2 holte sie nach dem Ja sofort einen
+   neuen Code)*.
+3. Zum Neukoppeln die Auswahltaste **noch einmal halten**, dann wie oben: den
+   Code im Web eingeben und an der Uhr mit Ja bestätigen —
    diesmal mit der Adresse der **neuen** Person in der Rückfrage. Genau dort
    fällt auf, wenn jemand den Code des falschen Kontos eingetippt hat.
 
@@ -7096,8 +7112,8 @@ und die Pakete bleiben gebunden an das bisherige Konto — sie gehen nur
 dorthin, nie an die neue Person (Abschnitt 1, „Steht dort etwas in Rot?").
 
 **Ohne Verbindung trennt die Uhr trotzdem** und merkt sich, dass der Server es
-nicht mitbekommen hat: Unter dem **„Gekoppelt"** der nächsten Kopplung steht
-dann **„Altes Gerät im Web löschen"**. Sonst bliebe eine Uhr ohne Telefon in
+nicht mitbekommen hat: Unter dem **„Getrennt"** steht dann **„Altes Gerät im
+Web löschen"**. Sonst bliebe eine Uhr ohne Telefon in
 Reichweite dauerhaft an ein Konto gebunden, das sie nicht mehr benutzen soll —
 und der alte Eintrag belegte weiter einen der fünf Plätze. Er ist im Web mit
 einem Klick zu entfernen.

@@ -14,6 +14,32 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 4.6.0] — unveröffentlicht
+
+Schritt 28, Paket KG-08 (Backlog Nr. 575, Nr. 576).
+
+### Geändert
+
+- **Uhr — ohne Kopplung beginnt kein Dienst mehr.** Bisher stand
+  „Nicht gekoppelt" rot auf dem Startbildschirm, und START begann trotzdem;
+  was die Uhr dann aufzeichnete, gehörte keinem Konto, und im Dienst ist das
+  Koppeln gesperrt. Jetzt vibriert sie nur kurz, wie das Telefon seit
+  Android 0.23.0. Eine gekoppelte, aber gesperrte Uhr beginnt weiter, weil
+  ihre Daten an dasselbe Konto gehen.
+- **Uhr — Trennen holt keinen neuen Code mehr.** Die Rückfrage hieß
+  „Kopplung trennen und neu koppeln?", und nach dem Ja begann sofort eine
+  neue Kopplung; wer die Uhr nur abgeben wollte, musste den Code wegdrücken
+  und wusste nicht, ob sie nun getrennt war. Jetzt heißt sie „Kopplung
+  trennen?", und die Uhr bleibt danach getrennt, bis die Taste noch einmal
+  gehalten wird.
+- **Uhr — die Menüs öffnen schon beim Halten von START, und die Sperre der
+  Reanimation dauert 5 statt 10 Sekunden.** Seit 4.5.2 erschien das Menü
+  erst beim Loslassen, damit das Loslassen darin nichts auswählt; an der
+  echten Uhr wirkte das wie ein verschluckter Druck. Jetzt öffnet es nach
+  einer Sekunde, und das Menü verwirft das Loslassen selbst. Die kürzere
+  Sperre hat die Betreiberin nach den Gerätetests festgelegt; den
+  versehentlichen Doppeldruck fangen auch 5 Sekunden ab.
+
 ## [Web 24.17.0] — unveröffentlicht
 
 ### Hinzugefügt

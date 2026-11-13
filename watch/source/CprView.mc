@@ -18,7 +18,7 @@
 // sie soll kein Adrenalin buchen (Input.mc). Auf Geraeten ohne UP/DOWN sind
 // Adrenalin und Defibrillation nur ueber das Untermenue erreichbar
 // (docs/Geraete-Eingabe.md). Jede Buchung laeuft ueber Cpr.buchen() und
-// damit durch die 10-s-Sperre.
+// damit durch die 5-s-Sperre (bis Uhr 4.5.2: 10 s).
 //
 // Aufbau der Seite: oberes und unteres Feld je 25 % der Displayhoehe, das
 // mittlere 50 %. Jedes Feld traegt seinen Inhalt vertikal zentriert.
@@ -173,8 +173,7 @@ class CprDelegate extends ActionDelegate {
         return true;
     }
 
-    function langNachLoslassen() as Lang.Boolean { return true; }   // s. Input.mc
-
+    // Menue schon waehrend des Haltens (seit Uhr 4.6.0), s. ClockDelegate
     function actSelectLong() as Lang.Boolean {
         if (Cpr.active) { _pushMenu(); }      // ohne Rea ohne Funktion
         return true;
@@ -193,8 +192,12 @@ class CprDelegate extends ActionDelegate {
     function actBack() as Lang.Boolean { halteAbbrechen(); Nav.goTo(:clock); return true; }
 
     function _pushMenu() as Void {
+        var gehalten = startUnten();
+        halteAbbrechen();
         var v = new CprMenuView();
-        WatchUi.pushView(v, new CprMenuDelegate(v), WatchUi.SLIDE_LEFT);
+        var d = new CprMenuDelegate(v);
+        if (gehalten) { d.startGehalten(); }
+        WatchUi.pushView(v, d, WatchUi.SLIDE_LEFT);
     }
 }
 
@@ -298,6 +301,7 @@ class CprMenuDelegate extends TastenDelegate {
 
     function onSelect() as Lang.Boolean {                 // START bzw. Action
         if (Input.beruehrungVerwerfen()) { return true; }
+        if (auswahlVerwerfen()) { return true; }          // Loslassen des oeffnenden Drucks
         var id = CprMenuView.ITEMS[_v.index][2];
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         if (id == :overview) {

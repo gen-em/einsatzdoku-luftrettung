@@ -23,8 +23,8 @@ Kontoschlüssel gekoppelt, nichts gesendet, START halten holt ihn. `--schrumpfen
 zwei geparkte Pakete verworfen während der letzten Anfrage, kein Absturz.
 `--reaktivieren`: Gerät deaktiviert (403, kein Schlüssel, nichts kommt an), aktiviert (ohne
 Anlass weiter nichts), Sync-Seite neu geöffnet (Schlüssel, alles kommt an). `--neukoppeln`:
-Schlüssel geholt, Senden 30 s angehalten, gelöscht, trotz Rückstand neu gekoppelt an
-dasselbe Konto — die Pakete kommen an. `--fremdkonto`: ebenso, das Konto trägt
+Schlüssel geholt, Senden 30 s angehalten, gelöscht, trotz Rückstand getrennt (seit KG-08
+8 s ohne Code), mit zweitem Halten neu gekoppelt an dasselbe Konto — die Pakete kommen an. `--fremdkonto`: ebenso, das Konto trägt
 einen anderen gültig versiegelten Schlüssel — nichts kommt an, Verwerfen nach Rückfrage.
 
 ## Was es braucht
@@ -33,7 +33,7 @@ Simulator, örtliche Anlage mit eigener CA (`Technik.md` 5.6), Demo-Konto mit Sc
 
 ## Erwartete Zahl
 
-Je Lauf `12 Pruefungen, 0 Fehlschlaege`; dazu schrumpfen 3, reaktivieren 2, neukoppeln 1; fremdkonto allein 3 — je 0 Fehlschläge.
+Je Lauf `12 Pruefungen, 0 Fehlschlaege`; dazu schrumpfen 3, reaktivieren 2, neukoppeln 2; fremdkonto allein 4 — je 0 Fehlschläge (neukoppeln und fremdkonto je eine mehr seit KG-08).
 
 ## Was es nicht kann
 

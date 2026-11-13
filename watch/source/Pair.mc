@@ -256,7 +256,9 @@ module Pair {
      * Die Reihenfolge ist deshalb ausdruecklich: abfragen -> trennen -> neu
      * koppeln. Scheitert das Koppeln danach, steht die Uhr SICHTBAR ohne
      * Kopplung da (die Sync-Seite sagt „Nicht eingerichtet") statt unsichtbar
-     * mit der falschen.
+     * mit der falschen. Seit Uhr 4.6.0 sind Trennen und Koppeln zwei Griffe
+     * (E-KG-31): Eine gekoppelte Uhr fragt "Kopplung trennen?" und bleibt
+     * danach getrennt; erst das naechste Halten holt einen Code.
      *
      * EIN RUECKSTAND VERHINDERT DAS TRENNEN. Abgeschlossene, noch nicht
      * gesendete Pakete gehoeren dem BISHERIGEN Konto; nach einer Neukopplung
@@ -348,7 +350,7 @@ module Pair {
             ? (geparkt == 1
                 ? "Trennen? 1 abgewiesenes Paket geht dabei verloren"
                 : "Trennen? " + geparkt.toString() + " abgewiesene Pakete gehen dabei verloren")
-            : "Kopplung trennen und neu koppeln?";
+            : "Kopplung trennen?";
         WatchUi.pushView(new WatchUi.Confirmation(frage),
                          new TrennenDelegate(), WatchUi.SLIDE_LEFT);
     }
@@ -436,7 +438,7 @@ module Pair {
     function trennen() as Void {
         var cred = Uploader.credentials();
         var base = Uploader.serverBase();
-        if (cred == null || base.length() == 0) { lokalTrennen(); sitzungStarten(); return; }
+        if (cred == null || base.length() == 0) { lokalTrennen(); _getrennt(); return; }
 
         status = "Trenne…";
         statusHint = null;
@@ -500,21 +502,28 @@ module Pair {
      * belegt er einen Geraeteplatz; das steht in der zweiten Zeile, weil es
      * im Web mit einem Klick zu beheben ist.
      *
-     * DANACH GEHT ES WEITER, auch nach einem Fehler: Wer „trennen und neu
-     * koppeln" bestaetigt hat, will koppeln. Der belegte Platz laeuft
-     * gegebenenfalls in ein 409 mit eigener, klarer Meldung — das ist die
-     * bessere Auskunft als ein Abbruch an dieser Stelle. */
+     * DANACH IST DIE UHR GETRENNT -- und zeigt keinen neuen Code (seit
+     * Uhr 4.6.0, E-KG-31). Bis dahin hiess die Rueckfrage "Kopplung trennen
+     * und neu koppeln?", und nach "Ja" begann sofort eine neue Sitzung: Wer
+     * die Uhr nur abgeben oder vom Konto loesen wollte, musste den Code mit
+     * BACK wegdruecken und wusste nicht, ob sie nun getrennt war. Neu
+     * gekoppelt wird mit einem zweiten Halten der Auswahltaste; die
+     * Sync-Seite sagt es ("Gerät koppeln"). */
     function onTrennen(code as Lang.Number) as Void {
         lokalTrennen();
-        /* HIER ZEIGEN GEHT NICHT: sitzungStarten() setzt status im selben
-         * Rueckruf auf "Hole Code…", die Zeile waere nie zu sehen. Sie wird
-         * deshalb vorgemerkt und am Ende des Weges ausgeliefert — dann steht
-         * unter "Gekoppelt" der Hinweis auf den belegten Geraeteplatz. */
         /* 401 HEISST: DAS GERAET GIBT ES NICHT MEHR -- es belegt keinen
          * Platz, und der Rat, es im Web zu loeschen, waere falsch. Das ist
          * der gewoehnliche Fall nach einer Abmeldung mit Rueckstand. */
         if (code != 200 && code != 401) { _warnung = "Altes Gerät im Web löschen"; }
-        sitzungStarten();
+        _getrennt();
+    }
+
+    function _getrennt() as Void {
+        status = "Getrennt";
+        statusHint = _warnung;
+        statusKind = :ok;
+        _warnung = null;
+        WatchUi.requestUpdate();
     }
 
     /* Was fuer ein Geraet koppelt sich hier? (Statistik)

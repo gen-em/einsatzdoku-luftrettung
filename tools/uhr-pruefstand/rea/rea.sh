@@ -2,7 +2,7 @@
 # Probe der Reanimation auf der Garmin-Uhr — Tasten, Sperre, Menue, Pause,
 # Vibrationen und Erinnerungen des Countdowns.
 #
-# Anlass: Nr. 571, Nr. 574 — bis Uhr 4.4.0 lag die Rhythmuskontrolle auf lang DOWN,
+# Anlass: Nr. 571, Nr. 574, Nr. 576 — bis Uhr 4.4.0 lag die Rhythmuskontrolle auf lang DOWN,
 # die Bestaetigung einer Buchung ging im Doppelpuls des Countdown-Neustarts
 # unter, und vor dem Ende des Zyklus gab es keine Erinnerung.
 #
@@ -51,7 +51,9 @@ sed -i 's|^        var v = new CprMenuView();$|&\n        ReaProbe.menue(CprMenu
 sed -i 's|^        var v = new ResusOverviewView();$|&\n        ReaProbe.uebersicht();|' "$S/CprView.mc"
 # Schnellmenue der Hauptanzeige (KG-07): Oeffnen und jede Auswahl darin.
 sed -i 's|^        var v = new QuickMenuView();$|&\n        ReaProbe.menue("SCHNELLMENUE");|' "$S/ClockView.mc"
-sed -i 's|^    function onSelect() as Lang.Boolean {                 // START$|&\n        ReaProbe.menue("SCHNELL-AUSWAHL");|' "$S/ClockView.mc"
+# Der Haken sitzt dort, wo wirklich gewaehlt wird -- seit KG-08 verwirft
+# onSelect davor das Loslassen des oeffnenden Drucks.
+sed -i 's|^        var id = _v.items\[_v.index\]\[2\];$|&\n        ReaProbe.menue("SCHNELL-AUSWAHL");|' "$S/ClockView.mc"
 sed -i 's|        return \[new StartView(), new StartDelegate()\];|        Nav.index = 4;\n        return [new CprView(), new CprDelegate()];|' "$S/NAdokuApp.mc"
 sed -i 's|^    const CPR_CYCLE_S = 120;|    const CPR_CYCLE_S = 40; |' "$S/Const.mc"
 for muster in 'SCHNELLMENUE' 'SCHNELL-AUSWAHL' 'ReaProbe.vib' 'ReaProbe.profil(' 'ReaProbe.ereignis' 'ReaProbe.menue' 'ReaProbe.uebersicht' 'new CprView(), new CprDelegate()' 'CPR_CYCLE_S = 40;'; do
@@ -76,6 +78,10 @@ druck() {   # druck <taste> <sekunden>
 }
 kurz() { druck "$1" 0.15; }
 lang() { druck "$1" 1.6; }
+# Halten, waehrend des Haltens pruefen, dann loslassen (seit KG-08: das Menue
+# oeffnet nach 1 s, START ist dann noch unten).
+halte() { xdotool windowfocus "$WID"; sleep 0.3; xdotool keydown "$1"; sleep 1.6; }
+lass()  { xdotool keyup "$1"; sleep 1.2; }
 konsole() { bash "$P" konsole | grep '^REA' || true; }
 
 # Der erste Druck nach dem Laden geht regelmaessig verloren (pruefstand.sh,
@@ -129,14 +135,24 @@ kurz Down;   schritt "ohne Rea: kurz DOWN zurueck, eine Seite" kurz "REANAV 4"
 # Tasten
 kurz Return; schritt "kurz START ohne Rea beginnt" kurz "$K2"
 kurz Return; schritt "kurz START gleich danach: Sperre" kurz ""
-sleep 6
-kurz Return; schritt "kurz START nach 10 s: Rhythmuskontrolle" kurz "REAEVENT rhythmuskontrolle|$K2"
+kurz Return; schritt "kurz START danach: Rhythmuskontrolle" kurz "REAEVENT rhythmuskontrolle|$K2"
+# Die Sperre dauert seit Uhr 4.6.0 5 s (E-KG-29). Der zweite UP-Druck kommt
+# gut 6 s nach dem ersten, gemessen an der Uhr des Skripts -- unter der alten
+# Sperre von 10 s waere er verschluckt worden. Kommt er spaeter als 9 s,
+# unterscheidet der Schritt die beiden nicht mehr: dann rot.
+TA=$(date +%s.%N)
 kurz Up;     schritt "kurz UP: Adrenalin, kein Blaettern" kurz "REAEVENT adrenalin|$K1"
 kurz Down;   schritt "kurz DOWN: Defibrillation, kein Blaettern" kurz "REAEVENT defibrillation|$K2"
+while [ "$(echo "$(date +%s.%N) - $TA < 6.2" | bc)" = 1 ]; do sleep 0.1; done
+if [ "$(echo "$(date +%s.%N) - $TA < 9" | bc)" != 1 ]; then
+    echo "  FEHL  der zweite UP-Druck kaeme spaeter als 9 s -- der Schritt unterschiede 5 s und 10 s nicht"; fehl=$((fehl+1))
+fi
+kurz Up;     schritt "kurz UP nach gut 6 s: wieder Adrenalin" kurz "REAEVENT adrenalin|$K1"
 kurz Up;     schritt "kurz UP gleich danach: Sperre" kurz ""
-lang Return; schritt "lang START: Menue auf Amiodaron, nichts gebucht" kurz "REAMENU Amiodaron"
+halte Return; schritt "lang START: Menue schon beim Halten, auf Amiodaron" kurz "REAMENU Amiodaron"
+lass Return;  schritt "Loslassen im Menue: nichts gebucht" kurz ""
 kurz Return; schritt "Amiodaron aus dem Menue" kurz "REAEVENT amiodaron|$K1"
-lang Up;     schritt "lang UP nach 10 s: genau ein Adrenalin" kurz "REAEVENT adrenalin|$K1"
+lang Up;     schritt "lang UP nach der Sperre: genau ein Adrenalin" kurz "REAEVENT adrenalin|$K1"
 
 # Countdown: 40 s ab der Defibrillation -> 0:30 bei +10 s, 0:10 bei +30 s,
 # 0:00 bei +40 s. Vorher klingt aus, was die Schritte oben angestossen haben.
@@ -156,12 +172,14 @@ kurz Up;     schritt "pausiert: UP bucht nichts, blaettert nicht" kurz ""
 kurz Return; schritt "pausiert: kurz START oeffnet die Uebersicht" kurz "REAUEBERSICHT"
 kurz Escape
 kurz Escape; schritt "BACK: Hauptanzeige" kurz "REANAV 0"
-# Schnellmenue der Hauptanzeige (F-KG-08): oeffnet beim Loslassen, waehlt nichts.
-lang Return; schritt "Hauptanzeige: lang START oeffnet das Schnellmenue, waehlt nichts" kurz "REAMENU SCHNELLMENUE"
+# Schnellmenue der Hauptanzeige: oeffnet seit KG-08 schon beim Halten
+# (F-KG-18), das Loslassen waehlt nichts (F-KG-08).
+halte Return; schritt "Hauptanzeige: lang START oeffnet das Schnellmenue beim Halten" kurz "REAMENU SCHNELLMENUE"
+lass Return;  schritt "Schnellmenue: Loslassen waehlt nichts" kurz ""
 kurz Escape
 bash "$P" beenden >/dev/null 2>&1 || true
 
-SOLL=18
+SOLL=21
 [ "$pruef" = "$SOLL" ] || { echo "  FEHL  $pruef Pruefungen statt $SOLL"; fehl=$((fehl+1)); }
 echo "Reanimation: $pruef Pruefungen, $fehl Fehlschlaege ($GERAET)"
 [ "$fehl" = 0 ]

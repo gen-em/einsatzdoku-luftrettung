@@ -33,7 +33,7 @@ class CprCb {
 
 module Cpr {
 
-    const SPERRE_MS = 10000;                  // E-KG-06
+    const SPERRE_MS = 5000;                   // E-KG-06, seit Uhr 4.6.0 5 s (E-KG-29)
     const ERINNERUNG_1_S = 30;                // E-KG-11
     const ERINNERUNG_2_S = 10;
 
@@ -60,7 +60,7 @@ module Cpr {
         Model.resusStart();                      // legt eine NEUE Sitzung an
         restartCycle();
         /* AUCH UNMITTELBAR NACH DEM BEGINN GILT DIE SPERRE (E-KG-06): Ein
-         * zweiter Druck auf START in den naechsten 10 s ist der Doppeldruck,
+         * zweiter Druck auf START in den naechsten 5 s ist der Doppeldruck,
          * keine Rhythmuskontrolle. */
         _zuletzt[Const.R_RHYTHMUS] = System.getTimer();
         Util.reaKurz(2);                         // Countdown laeuft
@@ -198,7 +198,7 @@ module Cpr {
     /* EIN EREIGNIS BUCHEN — der eine Weg fuer Tasten und Menue.
      *
      * Nur bei laufender Rea; in der Pause steht der Countdown, und gebucht
-     * wird nichts. DIE SPERRE (E-KG-06): Dieselbe Art innerhalb von 10 s
+     * wird nichts. DIE SPERRE (E-KG-06): Dieselbe Art innerhalb von 5 s
      * wird nicht noch einmal gebucht, gleich ueber welchen Weg; eine andere
      * Art geht sofort. Ein abgewiesener Druck gibt kein Zeichen (E-KG-14).
      * Gibt zurueck, ob gebucht wurde. */

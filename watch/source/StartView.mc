@@ -129,7 +129,21 @@ class StartDelegate extends ActionDelegate {
         return true;
     }
 
+    /* OHNE KOPPLUNG KEIN DIENST (seit Uhr 4.6.0, E-KG-30). Bis dahin
+     * stand "Nicht gekoppelt" rot darunter, und kurz START begann trotzdem:
+     * Die Uhr zeichnete Phasen, Spur und Reanimation auf, die sie keinem
+     * Konto zuordnen konnte -- und waehrend des Dienstes ist das Koppeln
+     * gesperrt (Pair.start). Gekoppelt heisst: Zugangsdaten liegen auf der
+     * Uhr. Eine gesperrte, abgemeldete oder schluessellose Kopplung darf
+     * beginnen; ihre Daten bleiben auf der Uhr und gehen nur an dasselbe
+     * Konto (Uploader.binden). Abgewiesen wird mit einer kurzen Vibration,
+     * der Grund steht schon in der roten Zeile. */
     function actSelectShort() as Lang.Boolean {
+        if (!Uploader.hasServer() || !Uploader.hasCredentials()) {
+            Util.vibrateShort();
+            WatchUi.requestUpdate();
+            return true;
+        }
         Model.beginService();
         Util.vibrateTwice();                       // fuehlbar: Aufzeichnung laeuft
         Nav.goTo(:clock);
