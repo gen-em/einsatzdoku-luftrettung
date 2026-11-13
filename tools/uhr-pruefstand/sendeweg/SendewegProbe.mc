@@ -9,7 +9,8 @@
 // Anlass: Nr. 570 — Kopplung im Dienst, ungebundene laufende Pakete,
 // ungedeckeltes next_seq, wachsendes Wiederholungsstueck (KG-01); Nr. 573 —
 // 401/403 ohne Fehlerfeld galten als Abmeldung, und die Frist raeumte ohne
-// letzten Versuch (KG-06).
+// letzten Versuch (KG-06); Nr. 575 -- ein Dienst begann ohne Kopplung, und
+// Trennen holte sofort einen neuen Code (KG-08).
 //
 // Je Fall eine Zeile "SENDEWEG ok|FEHL <fall> <was>", am Ende
 // "SENDEWEG ENDE <faelle> <fehlschlaege>". Jeder Fall beginnt mit leerem
@@ -121,6 +122,8 @@ module SendewegProbe {
         else if (_schritt == 12) { _fall10(a); }
         else if (_schritt == 13) { _fall11a(a); }
         else if (_schritt == 14) { _fall11b(); }
+        else if (_schritt == 15) { _fall12(); }
+        else if (_schritt == 16) { _fall13(a); }
         else {
             (_t as Timer.Timer).stop();
             System.println("SENDEWEG ENDE " + _faelle.toString() + " " + _fehl.toString());
@@ -286,5 +289,25 @@ module SendewegProbe {
         Uploader.onResponse(200, { "ok" => true });
         var ack2 = Storage.getValue("ack_m-sw-ohne");
         _melde(ack2 == null, "ohne-next-seq", "quittiert " + (ack2 == null ? "nichts" : ack2.toString()));
+    }
+
+    function _fall12() as Void {
+        // 12. Ungekoppelt: kurz START auf dem Startbildschirm beginnt keinen
+        //     Dienst (KG-08). Die Server-Adresse setzt sendeweg.sh.
+        _leer();
+        new StartDelegate().actSelectShort();
+        _melde(!Model.serviceActive, "kein-dienst-ohne-kopplung",
+               "dienst=" + Model.serviceActive.toString());
+        Model.serviceActive = false;
+    }
+
+    function _fall13(a as Lang.String) as Void {
+        // 13. Trennen (Server antwortet 200): getrennt, KEIN neuer Code (KG-08).
+        _leer();
+        _koppeln(a);
+        Pair.onTrennen(200);
+        var st = Pair.status == null ? "leer" : Pair.status as Lang.String;
+        _melde(!Uploader.hasCredentials() && "Getrennt".equals(st), "trennen-ohne-neuen-code",
+               "status=" + st);
     }
 }

@@ -47,7 +47,8 @@
 # 403 — und dann GELOESCHT (wie im Web); zwei Pakete offen. Noch einmal
 # START halten: Die Uhr fragt, ob
 # sie trotz Rueckstand trennen darf, und bindet den Rueckstand an den
-# bisherigen Kontoschluessel. Dann koppelt sie neu. --neukoppeln: an dasselbe
+# bisherigen Kontoschluessel. Seit Uhr 4.6.0 bleibt sie danach getrennt
+# (kein Code binnen 8 s, KG-08); ein zweites START halten koppelt neu. --neukoppeln: an dasselbe
 # Konto -> dieselben Pakete kommen an (pruefen.php). Seit KG-05 holt die Uhr
 # den Schluessel bei AKTIVEM Geraet, und die Prueffassung haelt danach das
 # Senden 30 s an (Rundlauf.halten()); in der Zeit wird geloescht. --fremdkonto: das
@@ -236,13 +237,23 @@ if [ "$NEUKOPPELN" = 1 ]; then
     sleep 3
     bash "$P" abbild "$ABBILD/5a-rueckfrage.png" >/dev/null
     bash "$P" taste "$JA_TASTE"
+    # Seit Uhr 4.6.0 (KG-08, E-KG-31) trennt "Ja" nur: kein neuer Code, bis
+    # START noch einmal gehalten wird. 8 s lang darf keine Sitzung entstehen.
+    sleep 8
+    FRUEH=$(sql "SELECT id FROM pair_sessions WHERE id > $VORHER2 ORDER BY id DESC LIMIT 1")
+    bash "$P" abbild "$ABBILD/5a2-getrennt.png" >/dev/null
+    if [ -z "$FRUEH" ]; then echo "  ok    getrennt, ohne neuen Code"
+    else echo "  FEHL  nach dem Trennen sofort eine neue Sitzung $FRUEH ($ABBILD/5a2-getrennt.png)"; n_fehl=$((n_fehl+1))
+         echo "Neukoppeln: $n_fehl Fehlschlaege"; exit 1; fi
+    melde "Getrennt — START noch einmal halten: neu koppeln"
+    halten Return
     SITZ2=
     for _ in $(seq 1 30); do
         SITZ2=$(sql "SELECT id FROM pair_sessions WHERE id > $VORHER2 AND user_id IS NULL ORDER BY id DESC LIMIT 1")
         [ -n "$SITZ2" ] && break; sleep 1
     done
     bash "$P" abbild "$ABBILD/5b-neuer-code.png" >/dev/null
-    if [ -n "$SITZ2" ]; then echo "  ok    trotz Rueckstand getrennt, neue Sitzung $SITZ2"
+    if [ -n "$SITZ2" ]; then echo "  ok    zweites Halten: neue Sitzung $SITZ2"
     else echo "  FEHL  keine neue Sitzung — Rueckfrage nicht bestaetigt? ($ABBILD/5a-rueckfrage.png)"; n_fehl=$((n_fehl+1))
          echo "Neukoppeln: $n_fehl Fehlschlaege"; exit 1; fi
     if [ "$FREMD" = 1 ]; then
@@ -272,7 +283,7 @@ if [ "$NEUKOPPELN" = 1 ]; then
         N=$(sql "SELECT COUNT(*) FROM missions WHERE user_id=$DEMO AND client_ref='$EINSATZ'")
         if [ "$N" = 0 ]; then echo "  ok    nach dem Verwerfen weiter nichts angekommen"
         else echo "  FEHL  nach dem Verwerfen angekommen"; n_fehl=$((n_fehl+1)); fi
-        echo "Fremdkonto: 3 Pruefungen, $n_fehl Fehlschlaege (Bilder 6-fremd, 6b-verworfen ansehen)"
+        echo "Fremdkonto: 4 Pruefungen, $n_fehl Fehlschlaege (Bilder 6-fremd, 6b-verworfen ansehen)"
         [ "$n_fehl" = 0 ] || exit 1
         exit 0
     fi
@@ -323,7 +334,7 @@ if [ "$SCHRUMPFEN" = 1 ]; then
     [ "$s_fehl" = 0 ] || exit 1
 fi
 if [ "$NEUKOPPELN" = 1 ]; then
-    echo "Neukoppeln: 1 Pruefung, $n_fehl Fehlschlaege (die Ankunft danach misst pruefen.php)"
+    echo "Neukoppeln: 2 Pruefungen, $n_fehl Fehlschlaege (die Ankunft danach misst pruefen.php)"
 fi
 if [ "$REAKTIVIEREN" = 1 ]; then
     echo "Reaktivieren: 2 Pruefungen, $r_fehl Fehlschlaege (die Ankunft danach misst pruefen.php)"
