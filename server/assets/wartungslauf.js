@@ -222,24 +222,38 @@
       throw Object.assign(new Error('Der Rundlauf weicht ab — nichts geschickt.'), { grund: 'rundlauf' });
     }
 
-    let pat = null;
+    /* DIE ORTSHÖHE ÜBER DAS STANDBUCH (KA-06b-3): lesen beide Fassungen,
+       schreiben mit der Weiche an `edk2:` samt Blatt (Feld `blaetter`, nur
+       dann). Ein Konflikt am Blatt lässt die Spur liegen wie jedes andere
+       409 — der nächste Lauf zählt auf dem übernommenen Stand neu. */
+    let klar = null;
     if (e.art === 'mission') {
       try {
-        const o = e.pat_blob ? JSON.parse(await EdCrypto.decrypt(ck, e.pat_blob)) : {};
+        const o = e.pat_blob ? JSON.parse(await EdStandbuch.patOeffnen(ck, e.pat_blob, e.ref)) : {};
         if (o.ortshoehe == null) {
           const h = EdOrtsdaten.ortshoehe(punkte, (e.phases || []).map((p) => [p.phase, sek(p.occurred_at)]));
-          if (h !== null) {
-            o.ortshoehe = h;
-            pat = { pruef: e.pat_pruef, neu: await EdCrypto.encrypt(ck, JSON.stringify(o)) };
-          }
+          if (h !== null) { o.ortshoehe = h; klar = JSON.stringify(o); }
         }
-      } catch (x) { pat = null; }   // ein Blob, der nicht aufgeht, wird nicht angefasst
+      } catch (x) { klar = null; }   // ein Blob, der nicht aufgeht, wird nicht angefasst
     }
 
-    const a = await EdApi.postJson('api/wartungslauf.php', {
-      aktion: 'tauschen', art: e.art, id: e.id,
-      stand: e.stuecke.map((st) => [st.seq_from, st.punkte]), stueck: stueck, pat: pat || undefined,
-    }, { vorgang: 'Der Wartungslauf' });
+    const senden = (texte, blaetter) => {
+      const rumpf = {
+        aktion: 'tauschen', art: e.art, id: e.id,
+        stand: e.stuecke.map((st) => [st.seq_from, st.punkte]), stueck: stueck,
+        pat: texte ? { pruef: e.pat_pruef, neu: texte[0] } : undefined,
+      };
+      if (blaetter) { rumpf.blaetter = blaetter; }
+      return EdApi.postJson('api/wartungslauf.php', rumpf, { vorgang: 'Der Wartungslauf' });
+    };
+    let a;
+    try {
+      a = klar === null ? await senden(null, null)
+        : await EdStandbuch.patSchreibenViele(ck, [{ ref: e.ref, klartext: klar }], senden);
+    } catch (x) {
+      if (x && x.grund === 'konflikt') { return 'liegt'; }
+      throw x;
+    }
     if (a.ok) {
       if (a.daten && a.daten.pat === 'geschrieben') { zaehler.hoehen++; }
       return 'getauscht';

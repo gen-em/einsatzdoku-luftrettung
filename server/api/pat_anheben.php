@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     /* Auch geloeschte Einsaetze (Papierkorb) werden angehoben: Ihr Klartext
      * liegt genauso in der Spalte, und wer sie wiederherstellt, bekaeme sonst
      * einen Einsatz mit Klartextnotiz zurueck. */
-    $st = $pdo->prepare('SELECT id, notes, pat_blob
+    $st = $pdo->prepare('SELECT id, client_ref, notes, pat_blob
                            FROM missions
                           WHERE user_id = ? AND notes IS NOT NULL AND notes <> \'\'
                           ORDER BY id
@@ -90,6 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     foreach ($st->fetchAll() as $m) {
         $liste[] = [
             'id'       => (int)$m['id'],
+            /* Die Kennung dazu: Ein gebundener Block (`edk2:`, KA-06) geht
+             * nur an seiner Stelle auf. */
+            'client_ref' => (string)$m['client_ref'],
             'notes'    => (string)$m['notes'],
             'pat_blob' => $m['pat_blob'] !== null ? (string)$m['pat_blob'] : null,
         ];
@@ -131,8 +134,16 @@ foreach ($b['missions'] as $m) {
     ];
 }
 
+/* DIE BLÄTTER DES STANDBUCHS (KA-06b-3): nur mit der Weiche im Browser an,
+ * in derselben Transaktion. Ein Einsatz, den die Wache unten überspringt,
+ * darf seinen Zähler nicht heben — `sb_blaetter_schreiben()` prüft, dass
+ * jeder Block steht, und antwortet sonst 409 `uebersprungen`. */
+require_once __DIR__ . '/../standbuch_lib.php';
+$blaetter = sb_blaetter_lesen($b['blaetter'] ?? null);
+if (is_string($blaetter)) { json_out(['error' => 'format', 'feld' => $blaetter], 400); }
+
 try {
-    [$angehoben, $uebersprungen] = db_transaktion($pdo, function (PDO $pdo) use ($posten, $userId): array {
+    [$angehoben, $uebersprungen] = db_transaktion($pdo, function (PDO $pdo) use ($posten, $userId, $blaetter): array {
     $angehoben = 0; $uebersprungen = 0;
     $upd = $pdo->prepare('UPDATE missions
                              SET pat_blob = ?, notes = NULL
@@ -143,8 +154,11 @@ try {
         $upd->execute([$p['blob'], $p['id'], $userId, $p['blob_alt']]);
         if ($upd->rowCount() === 1) { $angehoben++; } else { $uebersprungen++; }
     }
+    sb_blaetter_schreiben($pdo, $userId, $blaetter, array_column($posten, 'blob'));
     return [$angehoben, $uebersprungen];
     });
+} catch (SbKonflikt $k) {
+    json_out($k->antwort, 409);
 } catch (Throwable $e) {
     json_out(['error' => 'schreiben'], 500);
 }

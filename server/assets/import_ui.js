@@ -805,7 +805,14 @@
                 };
                 pat = await ortsdatenBauen(m, eintrag, pat, alt, kk);
                 keys = Object.keys(pat);
-                blob = keys.length ? await EdCrypto.encrypt(ck, JSON.stringify(pat)) : null;
+                /* VERSCHLOSSEN WIRD BEIM SENDEN (KA-06b-3), über das
+                   Standbuch: Mit der Weiche an braucht der Block den nächsten
+                   Zähler und sein Blatt in derselben Anfrage, und beides
+                   gehört an den Zeitpunkt, an dem gesendet wird. Die Kennung
+                   ist die, unter der der Einsatz liegen wird — beim
+                   Überschreiben die des vorhandenen. */
+                blob = keys.length ? { ref: alt ? alt.client_ref : eintrag.client_ref,
+                                       klartext: JSON.stringify(pat) } : null;
 
                 missionen.push({
                     client_ref: eintrag.client_ref,
@@ -832,7 +839,8 @@
                         });
                         return o;
                     }()),
-                    pat_blob: blob,
+                    pat_blob: null,
+                    _pat: blob,           // verschlossen erst in uebernehmen()
 
                     // Felder, die nur der Rueckimport der eigenen
                     // Exportformate liefert. Profile, die sie nicht kennen,
@@ -919,12 +927,40 @@
             knopf.disabled = true;
             return;
         }
-        var mitBlob = S.nutzlast.missions.filter(function (m) { return m.pat_blob; }).length;
+        var mitBlob = S.nutzlast.missions.filter(function (m) { return m._pat || m.pat_blob; }).length;
         var neueTage = S.nutzlast.days.filter(function (d) { return d.mode === 'insert'; }).length;
         $('bereit').textContent = S.nutzlast.missions.length + ' Einsätze bereit ('
             + mitBlob + ' davon mit verschlüsselten Angaben), ' + neueTage + ' Diensttage werden '
             + 'neu angelegt.';
         knopf.disabled = S.nutzlast.missions.length === 0;
+    }
+
+    /** Die Nutzlast senden: die geschützten Angaben jetzt verschließen
+     *  (`EdStandbuch.patSchreibenViele()`, KA-06b-3) und — nur mit der
+     *  Weiche an — die Blätter im Feld `blaetter` mitschicken. Mit der
+     *  Weiche aus geht dieselbe Anfrage wie bisher hinaus. */
+    async function nutzlastSenden(n) {
+        var ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+        var ziele = n.missions.filter(function (m) { return m._pat; });
+        var bauen = function (texte, blaetter) {
+            var r = Object.assign({}, n, { missions: n.missions.map(function (m) {
+                var k = Object.assign({}, m);
+                delete k._pat;
+                return k;
+            }) });
+            if (texte) {
+                var j = 0;
+                r.missions.forEach(function (m, i) {
+                    if (n.missions[i]._pat) { m.pat_blob = texte[j++]; }
+                });
+            }
+            if (blaetter) { r.blaetter = blaetter; }
+            return EdApi.postJson('api/import_commit.php', r, { vorgang: 'Die Übernahme' });
+        };
+        if (!ziele.length) { return bauen(null, null); }
+        if (!ck) { throw new Error('gesperrt'); }
+        return EdStandbuch.patSchreibenViele(ck,
+            ziele.map(function (m) { return m._pat; }), bauen);
     }
 
     /** Uebernahme ausloesen. Der Server macht daraus eine einzige Transaktion. */
@@ -933,8 +969,14 @@
         if (!S.nutzlast) { return; }
         knopf.disabled = true;
         zustand.textContent = 'Übernahme läuft …';
-        var a = await EdApi.postJson('api/import_commit.php', S.nutzlast,
-            { vorgang: 'Die Übernahme' });
+        var a;
+        try { a = await nutzlastSenden(S.nutzlast); }
+        catch (e) {
+            zustand.innerHTML = EdHtml.meldung('fehler',
+                'Die geschützten Angaben ließen sich nicht verschlüsseln — es wurde nichts gespeichert.');
+            knopf.disabled = false;
+            return;
+        }
         if (!a.ok) {
             /* Der Folgesatz bleibt hier: Dass nichts zurueckbleibt, weiss
                nicht EdApi, sondern diese Stelle -- der Server macht aus dem

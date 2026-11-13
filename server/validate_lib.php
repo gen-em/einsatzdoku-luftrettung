@@ -135,7 +135,12 @@ const HUELLE_PRAEFIX = 'edka1:';
  * Inhaltsschluessel darin und damit jeder `pat_blob` sind unveraendert —
  * kein Datensatz wird angefasst, wenn ein Konto umstellt.
  */
-const WRAP_PRAEFIX_RE = '(?:edk1:|edka1:[0-9a-f]{8}:)?';
+/* SEIT WEB 24.16.0 AUCH FASSUNG 2 (KA-06b-3): `edk2:` und `edka2:<Kennung>:`
+ * — die Form, die `EdInhalt.huelleSchreiben()` mit umgelegter Weiche
+ * schreibt (Technik 4.42). Der Ausdruck prüft Kennung und Zeichenvorrat;
+ * die Größenklasse prüft er nicht, und der Server kann eine Hülle ohnehin
+ * nicht öffnen. */
+const WRAP_PRAEFIX_RE = '(?:edk1:|edka1:[0-9a-f]{8}:|edk2:|edka2:[0-9a-f]{8}:)?';
 
 /**
  * ZWEI AUSDRUECKE, WEIL ES ZWEI HUELLEN MIT VERSCHIEDENEN ZUSAGEN SIND.
@@ -158,7 +163,10 @@ const WRAP_PRAEFIX_RE = '(?:edk1:|edka1:[0-9a-f]{8}:)?';
  * dort die Passwort-Huelle.
  */
 const WRAP_PW_RE = '#^' . WRAP_PRAEFIX_RE . '[A-Za-z0-9+/=]{20,4000}$#';
-const WRAP_RC_RE = '#^' . CHIFFRE_PRAEFIX_RE . '[A-Za-z0-9+/=]{20,4000}$#';
+/* Die Wiederherstellungshülle — und mit ihr `rw_privat` und `kp_privat` —
+ * nimmt `edk2:` an, NIE `edka2:` (und nie `edka1:`): Sie muss ohne den
+ * Server-Anteil aufgehen (CLAUDE.md 4). */
+const WRAP_RC_RE = '#^(?:edk1:|edk2:)?[A-Za-z0-9+/=]{20,4000}$#';
 const WRAP_RE    = WRAP_PW_RE;
 
 /**
@@ -180,7 +188,7 @@ function edk2_innenlaenge(string $text, int $max_innen): ?int
     if (strncmp($text, 'edk2:', 5) !== 0) { return null; }
     $b64 = substr($text, 5);
     if ($b64 === '' || strlen($b64) % 4 !== 0
-        || !preg_match('#^[A-Za-z0-9+/]+={0,2}\z#', $b64) || false) {
+        || !preg_match('#^[A-Za-z0-9+/]+={0,2}\z#', $b64)) {
         return null;
     }
     $roh = base64_decode($b64, true);
@@ -801,6 +809,18 @@ function pruef_pat_blob($wert, string $feld = 'Patientenblock', ?Pruefliste $p =
     }
     $s = trim($wert);
     if ($s === '') { return null; }                    // bewusst ohne Angaben
+    /* FASSUNG 2 (`edk2:`, KA-06b-3): Form und Größenklasse, für den
+     * Patientenblock mindestens die Klasse 512 — darunter hätte ihn nicht
+     * der Browser geschrieben, und eine kleinere verriete wieder, wie viel
+     * darin steht (F-KA-30). */
+    if (str_starts_with($s, 'edk2:')) {
+        $innen = edk2_innenlaenge($s, intdiv(PAT_BLOB_MAX * 3, 4) - 28);
+        if ($innen === null || $innen < 512) {
+            $p?->melde($feld, 'Fassung 2 in falscher Form oder Größe');
+            return null;
+        }
+        return $s;
+    }
     if (!preg_match(PAT_BLOB_RE, $s)) {
         $laenge = strlen($s);
         $grund = $laenge < PAT_BLOB_MIN
