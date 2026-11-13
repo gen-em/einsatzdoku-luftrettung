@@ -3695,7 +3695,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             ereignisse: (r.events || []).filter((e) => e && e.type && !isNaN(rwSekunden(e.occurred_at)))
               .map((e) => ({ art: e.type, t: rwSekunden(e.occurred_at) - beginn })) })),
         };
-        m.ort_huelle = await EdOrtsdaten.einsatzVerschliessen(innen, ref);
+        m.ort_huelle = await EdOrtsdaten.einsatzVerschliessen(innen, ref, { start: beginn });
         z.verschlossen++;
       }
       for (const p of phasen) { delete p.lat; delete p.lon; }

@@ -2384,7 +2384,8 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
   if (zeiten.fehler) { ortFehler(zeiten.fehler); return; }
   try {
     document.getElementById('ort_huelle').value =
-      await EdOrtsdaten.einsatzVerschliessen(EdOrtsdaten.einsatzInnen(zeiten, ORT_ORTE), ORT.ref);
+      await EdOrtsdaten.einsatzVerschliessen(EdOrtsdaten.einsatzInnen(zeiten, ORT_ORTE), ORT.ref,
+                                             { ck: PAT_CK, start: zeiten.beginn });
   } catch (e) {
     ortFehler(e && e.grund === 'kein_paar'
       ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — einrichten unter Einstellungen → Geräte, dann die Seite neu laden.'

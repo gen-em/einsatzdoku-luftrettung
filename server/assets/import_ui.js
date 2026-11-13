@@ -687,7 +687,8 @@
                     return { art: e.art, t: e.ts - beginn }; }) };
             })
         };
-        aus.ort_huelle = await EdOrtsdaten.einsatzVerschliessen(innenNeu, aus.client_ref || alt.client_ref);
+        aus.ort_huelle = await EdOrtsdaten.einsatzVerschliessen(innenNeu, aus.client_ref || alt.client_ref,
+                                                                { ck: kk.ck, start: beginn });
         aus.ort_phasen = liste.map(function (p) { return [p.phase, p.ts]; });
         (aus.phases || []).forEach(function (p) { delete p.lat; delete p.lon; });
 

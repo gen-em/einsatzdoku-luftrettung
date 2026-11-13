@@ -340,6 +340,9 @@ const EdSchnitt = (() => {
       'Das Schneiden');
     if (!r.ok) { vorher(el, 'fehler', r.meldung); knopf.disabled = false; return; }
     const d = r.daten;
+    /* Der gesperrte Zeitraum ins Standbuch (KA-06b-3) — mit der Weiche aus
+       geschieht nichts. */
+    await EdOrtsdaten.sperreVermerken(seg.client_ref, w.vonGenau, w.bisGenau);
 
     /* NEU LADEN STATT NACHZIEHEN. Der Schnitt aendert die Einsatztabelle,
      * die Karte, die Segmentliste und den Diensttag-Zeitraum. Vier Stellen
@@ -457,6 +460,7 @@ const EdSchnitt = (() => {
       stand: (seg.spur_stuecke || []).map(st => [st.seq_from, st.punkte]),
       stuecke, geloescht: drin.length }, 'Das Löschen');
     if (!r.ok) { vorher(el, 'fehler', r.meldung); knopf.disabled = false; return; }
+    await EdOrtsdaten.sperreVermerken(seg.client_ref, w.vonGenau, w.bisGenau);   // KA-06b-3
     try {
       await neuLaden();
       melde('ok', 'Gelöscht — ' + r.daten.geloescht + ' Punkte zwischen ' + w.bv + ' und ' + w.ev
