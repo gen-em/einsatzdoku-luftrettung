@@ -558,6 +558,139 @@ pruefe(pair_code_normalisieren('ab3 k7q') === 'AB3K7Q' && pair_code_normalisiere
        '24  pair_code_normalisieren: Leerzeichen, Bindestrich, Kleinschreibung');
 
 /* ======================================================================
+ * Teil 7 — Vergleichswert: Geraeteschluessel, Zusage, Offenlegen (35 bis 43)
+ * KA-06d, Web 24.18.0. Den Klick „Wert stimmt“ im Web misst die Bedienprobe
+ * (`ka06d-kopplung`); hier laeuft er ueber die Bibliothek, wie das
+ * Beanspruchen in Teil 2.
+ * ====================================================================== */
+echo "\n  Teil 7 — Vergleichswert (KA-06d)\n";
+$b64 = fn(int $n): string => base64_encode(random_bytes($n));
+$spk = base64_encode("\x04" . random_bytes(64));
+$schluessel = ['spk' => $spk, 'zusage' => $b64(32)];
+
+$a = anfrage(['aktion' => 'start', 'schluessel' => ['spk' => $spk, 'zusage' => 'kurz']]);
+pruefe($a['code'] === 400 && ($a['daten']['error'] ?? '') === 'schluessel' && !isset($a['daten']['device_id']),
+       '35  start mit krummem Schluessel -> 400 schluessel, keine Sitzung', "HTTP {$a['code']} {$a['roh']}");
+$a = anfrage(['aktion' => 'start', 'schluessel' => ['spk' => base64_encode("\x02" . random_bytes(64)), 'zusage' => $b64(32)]]);
+pruefe($a['code'] === 400, '35  SPK ohne 0x04 vorn -> 400', "HTTP {$a['code']}");
+$h = anfrage(['aktion' => 'start', 'schluessel' => $schluessel]);
+$angelegt[] = (string)($h['daten']['device_id'] ?? '');
+$hz = sitzung($pdo, (string)($h['daten']['device_id'] ?? ''));
+pruefe($h['code'] === 200 && $hz !== null && $hz['spk'] === $spk && $hz['zusage'] === $schluessel['zusage'],
+       '35  start mit Schluessel -> SPK und Zusage in der Sitzung');
+$hd = (string)$h['daten']['device_id']; $hk = (string)$h['daten']['api_key'];
+
+$nB = $b64(16);
+pair_sitzung_beanspruchen($pdo, (string)$h['daten']['code'], $uid, $nB);
+$st = anfrage(['aktion' => 'status'], $hd, $hk);
+pruefe($st['code'] === 200 && ($st['daten']['zustand'] ?? '') === 'beansprucht'
+       && ($st['daten']['n_b'] ?? '') === $nB && array_key_exists('kontoschluessel', $st['daten'] ?? []),
+       '36  status beansprucht traegt n_b und kontoschluessel', $st['roh']);
+
+$j = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $hd, $hk);
+pruefe($j['code'] === 409 && ($j['daten']['error'] ?? '') === 'zustand',
+       '37  Ja vor dem Offenlegen -> 409 zustand', "HTTP {$j['code']} {$j['roh']}");
+
+$nG = $b64(16);
+$o1 = anfrage(['aktion' => 'offenlegen', 'n_g' => $nG], $hd, $hk);
+$o2 = anfrage(['aktion' => 'offenlegen', 'n_g' => $nG], $hd, $hk);
+$o3 = anfrage(['aktion' => 'offenlegen', 'n_g' => $b64(16)], $hd, $hk);
+$o4 = anfrage(['aktion' => 'offenlegen', 'n_g' => 'zu-kurz'], $hd, $hk);
+pruefe($o1['code'] === 200 && $o2['code'] === 200 && $o3['code'] === 409 && ($o3['daten']['error'] ?? '') === 'n_g'
+       && $o4['code'] === 400 && sitzung($pdo, $hd)['n_g'] === $nG,
+       '38  offenlegen 200, dasselbe 200, anderes 409 n_g, krumm 400', "{$o1['code']} {$o2['code']} {$o3['code']} {$o4['code']}");
+
+$j = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $hd, $hk);
+$st = anfrage(['aktion' => 'status'], $hd, $hk);
+pruefe($j['code'] === 202 && ($j['daten']['wartet'] ?? '') === 'browser'
+       && ($st['daten']['wartet'] ?? '') === 'browser' && geraet($pdo, $hd) === null,
+       '39  Ja ohne „Wert stimmt“ -> 202 wartet browser, status sagt es, kein Geraet', "HTTP {$j['code']} / {$st['roh']}");
+
+pruefe(pair_wert_melden($pdo, $hd, $uid2 > 0 ? $uid2 : 999999, true, '', true) === 'zustand',
+       '40  „Wert stimmt“ aus einem fremden Konto -> zustand');
+$w = pair_wert_melden($pdo, $hd, $uid, true, '', true);
+$w2 = pair_wert_melden($pdo, $hd, $uid, true, '', true);
+$e = pair_abschliessen($pdo, (int)sitzung($pdo, $hd)['id']);
+$gz = geraet($pdo, $hd);
+$st = anfrage(['aktion' => 'status'], $hd, $hk);
+pruefe($w === 'ok' && $w2 === 'ok' && $e['ergebnis'] === 'angelegt' && $gz !== null
+       && $gz['spk'] === $spk && (int)$gz['herkunft'] === 1
+       && ($st['daten']['zustand'] ?? '') === 'gekoppelt' && ($st['daten']['huelle'] ?? 0) === 2,
+       '40  Wert stimmt (zweimal) + Ja -> Geraet mit spk, herkunft 1, status huelle 2', $st['roh']);
+$o5 = anfrage(['aktion' => 'offenlegen', 'n_g' => $nG], $hd, $hk);
+pruefe($o5['code'] === 200, '40  offenlegen nach dem Abschluss (verlorene Antwort) -> 200', "HTTP {$o5['code']}");
+
+/* Abgelehnt im Web: Die Sitzung bleibt, das Geraet erfaehrt den Grund. */
+$r = anfrage(['aktion' => 'start', 'schluessel' => $schluessel]);
+$rd = (string)$r['daten']['device_id']; $rk = (string)$r['daten']['api_key']; $angelegt[] = $rd;
+pair_sitzung_beanspruchen($pdo, (string)$r['daten']['code'], $uid, $b64(16));
+anfrage(['aktion' => 'offenlegen', 'n_g' => $b64(16)], $rd, $rk);
+$n = pair_wert_melden($pdo, $rd, $uid, false, 'zusage', false);
+$st = anfrage(['aktion' => 'status'], $rd, $rk);
+$j = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $rd, $rk);
+pruefe($n === 'ok' && ($st['daten']['zustand'] ?? '') === 'abgelehnt' && ($st['daten']['grund'] ?? '') === 'zusage'
+       && $j['code'] === 409 && ($j['daten']['error'] ?? '') === 'abgelehnt' && geraet($pdo, $rd) === null
+       && pair_wert_melden($pdo, $rd, $uid, true, '', true) === 'zustand',
+       '41  im Web abgelehnt -> status abgelehnt/zusage, Ja 409, kein Geraet, kein spaeteres „stimmt“',
+       "{$st['roh']} / HTTP {$j['code']}");
+
+/* Erst „Wert stimmt“, dann das Ja: Das Ja schliesst ab. Ohne Gerätebuch
+ * (Weiche aus) entsteht das Geraet ohne Herkunft und ohne `huelle`. */
+$u = anfrage(['aktion' => 'start', 'schluessel' => $schluessel]);
+$ud = (string)$u['daten']['device_id']; $uk = (string)$u['daten']['api_key']; $angelegt[] = $ud;
+pair_sitzung_beanspruchen($pdo, (string)$u['daten']['code'], $uid, $b64(16));
+anfrage(['aktion' => 'offenlegen', 'n_g' => $b64(16)], $ud, $uk);
+pair_wert_melden($pdo, $ud, $uid, true, '', false);
+$j = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $ud, $uk);
+$gz = geraet($pdo, $ud);
+pruefe($j['code'] === 200 && !isset($j['daten']['huelle']) && $gz !== null && (int)$gz['herkunft'] === 0,
+       '42  „Wert stimmt“ ohne Geraetebuch, dann Ja -> 200 ohne huelle, herkunft 0', $j['roh']);
+
+/* Aeltere App: ohne Schluessel wie bisher — Ja genuegt, ohne huelle. */
+$v = anfrage(['aktion' => 'start']);
+$vd = (string)$v['daten']['device_id']; $vk = (string)$v['daten']['api_key']; $angelegt[] = $vd;
+pair_sitzung_beanspruchen($pdo, (string)$v['daten']['code'], $uid, $b64(16));
+$st = anfrage(['aktion' => 'status'], $vd, $vk);
+$j = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $vd, $vk);
+$gz = geraet($pdo, $vd);
+pruefe(!isset($st['daten']['n_b']) && $j['code'] === 200 && !isset($j['daten']['huelle'])
+       && $gz !== null && $gz['spk'] === null,
+       '43  ohne Schluessel: status ohne n_b, Ja 200 ohne huelle, Geraet ohne spk', $j['roh']);
+
+/* ======================================================================
+ * Teil 8 — Fassung 2 am Eingang (44 bis 47). Der Server prueft nur die
+ * Form: Kennbyte, SID im Kopf, 0x04, Laenge. Die Huellen hier haben genau
+ * diese Form und sonst nichts — ob sie aufgehen, misst der Browser.
+ * ====================================================================== */
+echo "\n  Teil 8 — Fassung 2 am Eingang (KA-06d)\n";
+$sidVon = fn(string $spkB64): string => substr(hash('sha256', 'nadoku-absender-1' . base64_decode($spkB64), true), 0, 8);
+$huelle2 = fn(string $sid): string => base64_encode("\x02" . $sid . "\x04" . random_bytes(64) . random_bytes(16)
+                                                   . random_bytes(32) . random_bytes(32));
+$ruhe = function (string $huelle, int $n, int $seq = 0) {
+    $ts = time() - 600;
+    return ['kind' => 'rest_segment', 'client_ref' => 'r-44-' . random_int(1000000000, 1999999999),
+            'day' => gmdate('Y-m-d'), 'started_at' => gmdate('Y-m-d\\TH:i:s\\Z', $ts), 'ended_at' => null,
+            'final' => false,
+            'track' => ['seq_from' => $seq, 'punkte' => $n, 'ts_von' => $ts, 'ts_bis' => $ts, 'huelle' => $huelle]];
+};
+/* Gerät hd ist eben angelegt: spk, herkunft 1 (Fall 40). */
+$i1 = anfrage($ruhe($huelle2($sidVon($spk)), 1), $hd, $hk, 'POST', 'ingest.php');
+pruefe($i1['code'] === 200, '44  Fassung 2 mit eigener SID -> 200', "HTTP {$i1['code']} {$i1['roh']}");
+$i2 = anfrage($ruhe($huelle2(random_bytes(8)), 1), $hd, $hk, 'POST', 'ingest.php');
+pruefe($i2['code'] === 400 && str_contains((string)($i2['daten']['grund'] ?? ''), 'Absender'),
+       '45  Fassung 2 mit fremder SID -> 400 Absender', "HTTP {$i2['code']} {$i2['roh']}");
+/* Gerät ud: spk, aber herkunft 0 (Fall 42, nicht im Gerätebuch). */
+$i3 = anfrage($ruhe($huelle2($sidVon($spk)), 1), $ud, $uk, 'POST', 'ingest.php');
+pruefe($i3['code'] === 400 && str_contains((string)($i3['daten']['grund'] ?? ''), 'ohne bestaetigten'),
+       '46  Fassung 2 ohne Herkunft -> 400', "HTTP {$i3['code']} {$i3['roh']}");
+$i4 = anfrage($ruhe($huelle2($sidVon($spk)), 0, 7), $hd, $hk, 'POST', 'ingest.php');
+$leer1 = $ruhe(base64_encode("\x01\x04" . random_bytes(64) . random_bytes(16) . random_bytes(16) . random_bytes(32)), 0, 7);
+$i5 = anfrage($leer1, $hd, $hk, 'POST', 'ingest.php');
+pruefe($i4['code'] === 200 && $i5['code'] === 400,
+       '47  leeres Schlussstueck: Fassung 2 -> 200, Fassung 1 -> 400', "{$i4['code']} {$i5['code']} {$i5['roh']}");
+$pdo->prepare('DELETE FROM devices WHERE device_id IN (?, ?, ?)')->execute([$hd, $ud, $vd]);
+
+/* ======================================================================
  * Teil 6 — Bibliothek, Job, Migration, Kaskade (25, 28, 29, 30, 34)
  * ====================================================================== */
 echo "\n  Teil 6 — Bibliothek, Aufraeumjob, Migration, Kaskade\n";
@@ -639,6 +772,12 @@ $uid2 = 0;
         $ids->execute([$u]);
         $mIds = array_map('intval', $ids->fetchAll(PDO::FETCH_COLUMN));
         if ($mIds) { spur_loeschen($pdo, 'mission', $mIds); }
+        /* Teil 8 legt Ruhesegmente an; ihre Stuecke haengen an keinem
+         * Fremdschluessel (CLAUDE.md 4, `spur_lib.php`). */
+        $ids = $pdo->prepare('SELECT id FROM rest_segments WHERE user_id = ?');
+        $ids->execute([$u]);
+        $rIds = array_map('intval', $ids->fetchAll(PDO::FETCH_COLUMN));
+        if ($rIds) { spur_loeschen($pdo, 'rest', $rIds); }
         $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$u]);
     }
     echo "\n  Konten, Sitzungen, Geraete und Toepfe der Probe wieder entfernt.\n";

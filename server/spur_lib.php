@@ -1049,7 +1049,10 @@ function spur2_stueck_schreiben(PDO $pdo, string $ownerType, int $ownerId, int $
                                 int $stufe = SPUR2_STUFE_GERAET, ?int $nOriginal = null): int
 {
     $nOriginal ??= $punkte;
-    if ($punkte < 1 || $tsBis < $tsVon || $seqFrom < 0 || $nOriginal < $punkte
+    /* `punkte` = 0 nur fuer das leere Schlussstueck eines Geraets
+     * (Stufe 1, `pruef_spurstueck()`, KA-06d). */
+    if ($punkte < 0 || ($punkte === 0 && $stufe !== SPUR2_STUFE_GERAET)
+        || $tsBis < $tsVon || $seqFrom < 0 || $nOriginal < $punkte
         || !in_array($stufe, [SPUR2_STUFE_GERAET, SPUR2_STUFE_GEPACKT, SPUR2_STUFE_DUENN], true)) {
         throw new InvalidArgumentException('Spurstueck mit unmoeglichen Zahlen');
     }

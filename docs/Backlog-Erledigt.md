@@ -11317,3 +11317,18 @@ zutreffen.
      beides in der Probe `rea`. *Abnahme:* Probe rot gegen Uhr 4.5.1.
      Erledigt 11.11.2026 mit Uhr 4.5.2 (Schritt 28, KG-07): Schnellmenü
      öffnet beim Loslassen; Probe rea, 18 Schritte.
+
+564. **Auf Staging blieben Testkonten mit erfundenen Adressen stehen.** · gehört zu: 28 · Stand: erledigt · seit 13.11.2026
+     *Aufgenommen 13.11.2026 auf Wunsch der BetreiberIn (Konzept KA,
+     E-KA-62).* Proben und Sitzungen legten auf Staging Konten an
+     (`umlauf-…`, `claude-test-…`, Plus-Adressen) und ließen sie liegen;
+     jede Mail an eine Adresse, die es nicht gibt, stand danach als Störung
+     im Reiter System. *Weg:* ein Skript, das alles außer einer Liste zu
+     behaltender Konten löscht — die Liste in der Umgebung, nicht im
+     Repositorium —, und eine Regel in `docs/Pruefablauf.md` 2.4, dass jede
+     Sitzung es am Ende fährt. *Abnahme:* Trockenlauf zeigt nur an, ohne
+     Liste wird nichts gelöscht, ein Platzhalter der Seite gilt nicht als
+     Konto.
+     Erledigt 13.11.2026 mit Web 24.18.0 (Schritt 28, KA-06d):
+     `tools/sandbox/staging_konten.py`, `NADOKU_STAGING_BEHALTEN`; erster
+     Lauf löschte ein Konto der Kette, vier blieben.

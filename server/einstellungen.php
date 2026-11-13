@@ -18,6 +18,7 @@ require_once __DIR__ . '/mail_lib.php';
 require_once __DIR__ . '/apk_lib.php';    // APK-Karte des Geraete-Reiters
 require_once __DIR__ . '/geraete_lib.php'; // Art und Modell in der Geraeteliste
 require_once __DIR__ . '/kopplung_lib.php';  // Kopplungssitzungen: Code suchen, beanspruchen
+require_once __DIR__ . '/kontopaar_lib.php'; // kp_zustand(): Vergleichswert braucht das Paar
 require_once __DIR__ . '/ratelimit_lib.php'; // Topf `pair_code` an der Code-Eingabe
 require_once __DIR__ . '/geocoder_lib.php'; // Adresssuche: beide Schalter
 require_once __DIR__ . '/format_lib.php';   // datum_text(), datum_zeit_text(), groesse_text(), groesse_paar_text()
@@ -792,7 +793,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            . 'Sync-Seite → Gerät koppeln.';
                 } elseif ($action === 'koppeln_pruefen') {
                     $koppelSitzung = $sitzung;
-                } elseif (!pair_sitzung_beanspruchen(db(), $koppelCode, $userId)) {
+                } elseif (($sitzung['spk'] ?? null) !== null && kp_zustand($userId)['stand'] !== 'da') {
+                    $error = 'Richte zuerst das Schlüsselpaar des Kontos ein (oben auf dieser Seite) — '
+                           . 'ohne es lässt sich der Vergleichswert nicht rechnen. Dann am Gerät '
+                           . 'einen neuen Code holen.';
+                } elseif (($sitzung['spk'] ?? null) !== null
+                          && pair_b64(post_text('n_b'), PAIR_NONCE_LAENGE) === null) {
+                    /* MIT GERAETESCHLUESSEL BRAUCHT ES N_b (KA-06d): Der
+                     * Browser zieht sie beim Verbinden, NACHDEM er SPK und
+                     * Zusage gesehen hat. Ohne JavaScript fehlt sie — und
+                     * ohne sie gibt es keinen Vergleichswert. Nichts
+                     * beansprucht, nichts gezaehlt. */
+                    $koppelSitzung = $sitzung;
+                    $error = 'Für dieses Gerät braucht die Seite JavaScript: Browser und Gerät '
+                           . 'zeigen beim Koppeln dieselbe Zahl, und die rechnet der Browser.';
+                } elseif (!pair_sitzung_beanspruchen(db(), $koppelCode, $userId,
+                              ($sitzung['spk'] ?? null) !== null
+                                  ? pair_b64(post_text('n_b'), PAIR_NONCE_LAENGE) : null)) {
                     /* Zwischen Suchen und Beanspruchen ist die Sitzung weg —
                      * abgelaufen, am Gerät verworfen oder von einem zweiten
                      * Browserfenster genommen. Die Datenbank hat entschieden,
@@ -816,8 +833,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      * sie hat auch nichts im Verlauf des Browsers zu suchen. */
                     rate_erfolg('pair_code', $koppelKonto);
                     $_SESSION['pair_warten'] = (string)$sitzung['device_id'];
-                    flash_setzen('notice', 'Der Code ist deinem Konto zugeordnet. '
-                                        . 'Bestätige jetzt am Gerät mit Ja.');
+                    flash_setzen('notice', ($sitzung['spk'] ?? null) !== null
+                        ? 'Der Code ist deinem Konto zugeordnet. Gleich zeigen dieser Browser '
+                          . 'und das Gerät dieselbe Zahl — vergleiche sie.'
+                        : 'Der Code ist deinem Konto zugeordnet. Bestätige jetzt am Gerät mit Ja.');
                     header('Location: einstellungen.php?t=geraete#koppeln');
                     exit;
                 }
@@ -5385,19 +5404,57 @@ ui_seite_start(['titel' => 'Einstellungen',
                `assets/kopplung.js`; ohne JavaScript bleibt der Weg
                vollständig — dann steht hier dieselbe Auskunft, und die Person
                lädt die Seite selbst neu, sobald sie am Gerät bestätigt hat. */ ?>
-      <?php $kwRest = (int)$koppelWarten['rest_s']; ?>
-      <?php ui_karte_start(['titel' => 'Am Gerät bestätigen', 'id' => 'koppeln']); ?>
+      <?php $kwRest = (int)$koppelWarten['rest_s'];
+            /* MIT GERAETESCHLUESSEL (KA-06d, Mockup M-KA-01 B bis E): vier
+               Schritte in derselben Karte, alle vom Server gebaut, das
+               Skript schaltet nur um (`assets/kopplung.js`). Ohne
+               Geraeteschluessel bleibt es beim bisherigen Warten (D). */
+            $kwHerkunft = ($koppelWarten['spk'] ?? null) !== null; ?>
+      <?php ui_karte_start(['titel' => $kwHerkunft ? 'Vergleichswert prüfen' : 'Am Gerät bestätigen',
+                            'id' => 'koppeln']); ?>
         <?php ui_zeile([
             'text'  => geraet_bezeichnung($koppelWarten['geraet_art'],
                                           $koppelWarten['geraet_modell'],
                                           $koppelWarten['geraet_teil']),
             'klein' => 'Kennung ' . geraet_kennung_kurz((string)$koppelWarten['device_id'])]); ?>
-        <p class="feld-hinweis">Das Gerät fragt jetzt mit deiner teilweise verdeckten
+        <?php if ($kwHerkunft): ?>
+          <div data-kopplung-schritt="warten">
+            <?= ui_ladeplatz('Warte auf das Gerät — es rechnet jetzt seine Zahl.', ['sichtbar' => true]) ?>
+          </div>
+          <div data-kopplung-schritt="wert" hidden>
+            <div class="codeblock"><p class="codeblock-titel">Vergleichswert</p>
+              <p class="codeblock-wert" data-kopplung-zahl></p></div>
+            <p class="feld-hinweis">Dein Gerät zeigt jetzt ebenfalls eine Zahl. <strong>Stimmt
+               sie Ziffer für Ziffer?</strong> Dann tippe hier „Wert stimmt“ und sag am Gerät
+               Ja. Ist sie anders, koppelt sich gerade nicht dein Gerät — brich ab.</p>
+            <div class="listen-form-fuss">
+              <?= ui_knopf(['text' => 'Wert stimmt', 'art' => 'primaer', 'typ' => 'button',
+                            'attr' => ' data-kopplung-antwort="ja"']) ?>
+              <?= ui_knopf(['text' => 'Wert ist anders', 'art' => 'leise', 'typ' => 'button',
+                            'attr' => ' data-kopplung-antwort="nein"']) ?>
+            </div>
+          </div>
+          <div data-kopplung-schritt="fehler" hidden>
+            <?= ui_meldung_markup('fehler', 'Die Kopplung ist abgebrochen. Die Werte passten nicht '
+                . 'zusammen — es war ein anderes Gerät, oder jemand stand zwischen deinem Browser '
+                . 'und dem Gerät. Hol am Gerät einen neuen Code. Geschieht es wieder, sag der '
+                . 'BetreiberIn Bescheid.') ?>
+            <div class="listen-form-fuss">
+              <?= ui_knopf(['text' => 'Neuen Code eingeben', 'art' => 'primaer',
+                            'href' => 'einstellungen.php?t=geraete']) ?>
+            </div>
+          </div>
+        <?php endif; ?>
+        <p class="feld-hinweis"<?= $kwHerkunft ? ' data-kopplung-schritt="geraet" hidden' : '' ?>><?=
+           $kwHerkunft ? 'Der Wert stimmt. ' : '' ?>Das Gerät fragt jetzt mit deiner teilweise verdeckten
            E-Mail-Adresse, ob es sich verbinden soll — <strong>bestätige dort mit
            Ja</strong>.</p>
         <p class="feld-klein" id="kopplung-warten"
            data-rest="<?= $kwRest ?>"
            data-quelle="api/kopplung_stand.php"
+           data-antwort="api/kopplung_wert.php"
+           data-geraet="<?= e((string)$koppelWarten['device_id']) ?>"
+           data-herkunft="<?= $kwHerkunft ? '1' : '0' ?>"
            data-ziel="einstellungen.php?t=geraete">Noch
            <span id="kopplung-restzeit"><?= e(pair_restzeit_text($kwRest)) ?></span>
            gültig. Sagst du am Gerät Nein oder läuft die Zeit ab, geschieht
@@ -5409,7 +5466,6 @@ ui_seite_start(['titel' => 'Einstellungen',
           </div>
         </form>
       <?php ui_karte_ende(); ?>
-      <script src="<?= asset('assets/kopplung.js') ?>" defer></script>
 
     <?php elseif ($koppelSitzung !== null): ?>
       <?php /* ---- Zustand 2: das erste der beiden Tore ----------
@@ -5427,9 +5483,22 @@ ui_seite_start(['titel' => 'Einstellungen',
                      . ' · gültig bis '
                      . fmt_local(gmdate('Y-m-d H:i:s', time() + $ksRest), 'H:i') . ' Uhr'
                      . ' · Kennung ' . geraet_kennung_kurz((string)$koppelSitzung['device_id'])]); ?>
-        <p class="feld-hinweis">Ist das dein Gerät und stimmt der Code, verbinde es —
-           erst dein Ja am Gerät schließt die Kopplung ab; ist es dir unbekannt,
-           brich ab.</p>
+        <?php $ksHerkunft = ($koppelSitzung['spk'] ?? null) !== null; ?>
+        <?php if ($ksHerkunft): ?>
+          <p class="feld-hinweis">Ist das dein Gerät und stimmt der Code, verbinde es.
+             <strong>Gleich zeigen dieser Browser und das Gerät dieselbe sechsstellige
+             Zahl</strong> — die vergleichst du; erst dann sagst du am Gerät Ja.</p>
+        <?php else: ?>
+          <p class="feld-hinweis">Ist das dein Gerät und stimmt der Code, verbinde es —
+             erst dein Ja am Gerät schließt die Kopplung ab; ist es dir unbekannt,
+             brich ab.</p>
+          <?php /* ZUSTAND F (M-KA-01, E-KA-63): Eine aeltere App schickt
+                   keinen Geraeteschluessel. Bis zum Stichtag aus 06e koppelt
+                   sie weiter — gesagt wird es trotzdem. */ ?>
+          <?= ui_meldung_markup('warn', 'Dieses Gerät hat eine ältere App und schickt keinen '
+              . 'Geräteschlüssel. Was es sendet, trägt keinen Herkunftsnachweis. Aktualisiere '
+              . 'die App und koppel dann neu.') ?>
+        <?php endif; ?>
         <?php if ($koppelSitzung['geraet_art'] === null && $koppelSitzung['geraet_teil'] === null): ?>
           <?php /* Ohne Selbstauskunft steht hier „Gerät unbekannt" — und dann
                    trägt die Rückfrage nichts mehr, woran sich ein fremdes
@@ -5437,11 +5506,21 @@ ui_seite_start(['titel' => 'Einstellungen',
           <?= ui_meldung_markup('warn', 'Das Gerät hat keine Angaben über sich gemacht. '
               . 'Das ist bei älteren Uhr-Apps so; sei sicher, dass es deines ist.') ?>
         <?php endif; ?>
-        <form method="post" action="einstellungen.php?t=geraete">
+        <?php /* SPK UND ZUSAGE STEHEN AM FORMULAR — das Skript legt sie
+                 beim Absenden zur Geraetekennung in die Sitzungsablage des
+                 Tabs und zieht ERST DANN N_b. Spaeter rechnet es den Wert
+                 gegen diese Werte, nicht gegen eine neue Abschrift des
+                 Servers (Entwurf 06d, Punkt 5). */ ?>
+        <form method="post" action="einstellungen.php?t=geraete"<?= $ksHerkunft
+            ? ' data-kopplung-start data-geraet="' . e((string)$koppelSitzung['device_id']) . '"'
+              . ' data-spk="' . e((string)$koppelSitzung['spk']) . '"'
+              . ' data-zusage="' . e((string)$koppelSitzung['zusage']) . '"' : '' ?>>
           <?= csrf_field() ?><input type="hidden" name="action" value="koppeln_bestaetigen">
           <input type="hidden" name="code" value="<?= e((string)$koppelSitzung['code']) ?>">
+          <?php if ($ksHerkunft): ?><input type="hidden" name="n_b" value=""><?php endif; ?>
           <div class="listen-form-fuss">
-            <?= ui_knopf(['text' => 'Mit meinem Konto verbinden', 'art' => 'primaer']) ?>
+            <?= ui_knopf(['text' => $ksHerkunft ? 'Mit meinem Konto verbinden' : 'Trotzdem verbinden',
+                          'art' => 'primaer']) ?>
             <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
                           'href' => 'einstellungen.php?t=geraete#koppeln']) ?>
           </div>
@@ -5599,6 +5678,30 @@ ui_seite_start(['titel' => 'Einstellungen',
         </div>
       <?php endif; ?>
     <?php ui_karte_ende(); endforeach; ?>
+
+    <?php /* ---- DAS SKRIPT DER KOPPLUNG UND DER ABGLEICH DES GERÄTEBUCHS ----
+             (KA-06d). `kopplung.js` laedt in jedem Zwischenzustand der
+             Kopplung; mit Geraeteschluessel braucht es dazu das Ruestzeug
+             (Inhaltsschluessel, Kontopaar, Geraetebuch). Dasselbe Ruestzeug
+             braucht der Abgleich: Ein Eintrag im Geraetebuch, zu dem es kein
+             Geraet mehr gibt (entkoppelt, oder am Geraet abgelehnt, nachdem
+             der Wert bestaetigt war), bekommt `bis` — still, nur mit einem
+             Schluessel, der ohne Nachfrage da ist, und nur bei umgelegter
+             Weiche. Fehlt das Kontopaar, laedt die Karte darueber das
+             Ruestzeug selbst; dann gibt es weder Wert noch Abgleich.
+             IMMER, NICHT NUR MIT GERAETEN MIT SCHLUESSEL: Nach dem
+             Entkoppeln des letzten steht keines mehr in der Liste — und
+             genau dann muss der Abgleich laufen (gefunden von der
+             Bedienprobe `ka06d-kopplung-buch`). */
+          $gKrypto = pair_herkunft_bereit(db()) && $kpGer !== 'fehlt'; ?>
+    <?php if ($gKrypto): ?>
+      <div hidden id="geraetebuch-abgleich"
+           data-geraete="<?= e(json_encode(array_column($devices, 'device_id'))) ?>"></div>
+      <?php ui_krypto_bootstrap(['einzug' => '      ']); ?>
+    <?php endif; ?>
+    <?php if ($gKrypto || $koppelWarten !== null || $koppelSitzung !== null): ?>
+      <script src="<?= asset('assets/kopplung.js') ?>" defer></script>
+    <?php endif; ?>
 
     <?php /* DIE PLATZZAHL ALS KLEINZEILE, die Warnung nur, wenn sie gilt. */ ?>
     <p class="feld-klein"><?= count($devices) ?> von <?= MAX_GERAETE ?> Plätzen belegt —

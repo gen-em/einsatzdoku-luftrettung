@@ -3764,6 +3764,38 @@ function migrationen_katalog(): array
              ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
         ],
     ],
+    [
+        'id'    => '2026_11_13_kopplung_herkunft',
+        'web'   => '24.18',
+        'label' => 'Kopplung mit Vergleichswert: Geraeteschluessel und Zusage (Schritt 28, KA-06d)',
+        /* DIE HERKUNFT DER GERAETEDATEN beginnt bei der Kopplung: Das
+         * Geraet schickt seinen oeffentlichen Schluessel (SPK) und eine
+         * Zusage, der Browser eine Zufallszahl, das Geraet legt seine offen,
+         * und beide zeigen denselben Vergleichswert (E-KA-44, -61).
+         * `pair_sessions` traegt den Ablauf, `devices` das Ergebnis:
+         * `spk` und `herkunft` (im Geraetebuch des Browsers eingetragen —
+         * nur dann sendet das Geraet Fassung 2).
+         *
+         * NICHT ZERSTOEREND: Es kommen Spalten dazu. Bis sie stehen, koppelt
+         * jedes Geraet auf dem alten Weg (`pair_herkunft_bereit()`). */
+        'skip'  => function (PDO $pdo): bool {
+            return db_hat_spalte($pdo, 'pair_sessions', 'zusage') && db_hat_spalte($pdo, 'devices', 'herkunft');
+        },
+        'sql'   => [
+            "ALTER TABLE pair_sessions
+               ADD COLUMN spk       VARCHAR(88) NULL AFTER geraet_teil,
+               ADD COLUMN zusage    VARCHAR(44) NULL AFTER spk,
+               ADD COLUMN n_b       VARCHAR(24) NULL AFTER zusage,
+               ADD COLUMN n_g       VARCHAR(24) NULL AFTER n_b,
+               ADD COLUMN geraet_ja TINYINT(1) NOT NULL DEFAULT 0 AFTER n_g,
+               ADD COLUMN wert_ok   TINYINT(1) NOT NULL DEFAULT 0 AFTER geraet_ja,
+               ADD COLUMN im_buch   TINYINT(1) NOT NULL DEFAULT 0 AFTER wert_ok,
+               ADD COLUMN abgelehnt VARCHAR(8) NULL AFTER im_buch",
+            "ALTER TABLE devices
+               ADD COLUMN spk      VARCHAR(88) NULL AFTER geraet_teil,
+               ADD COLUMN herkunft TINYINT(1) NOT NULL DEFAULT 0 AFTER spk",
+        ],
+    ],
     // Naechste Migration hier anhaengen.
     ];
 }

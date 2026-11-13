@@ -8952,4 +8952,18 @@ declare(strict_types=1);
  *   schreibt nur, wo noch genau der alte steht (`api/format_anheben.php`).
  *   Nur mit umgelegter Weiche — bis dahin geschieht nichts. Neben; kein
  *   Schema. */
-const WEB_VERSION = '24.17.0';
+/* 24.18.0 — DIE KOPPLUNG MIT VERGLEICHSWERT (KA-06d, E-KA-44, -61, -63).
+ *   Ein Geraet mit Geraeteschluessel schickt bei der Kopplung seinen
+ *   oeffentlichen Schluessel und eine Zusage, der Browser eine Zufallszahl,
+ *   das Geraet legt seine offen, und Geraet und Webseite zeigen dieselbe
+ *   sechsstellige Zahl. Abgeschlossen wird erst, wenn beide zugestimmt haben
+ *   (das Ja am Geraet und „Wert stimmt“ im Web); der Browser prueft vorher,
+ *   ob der ausgelieferte Kontoschluessel zu seinem privaten Teil passt. Mit
+ *   umgelegter Weiche traegt der Browser das Geraet ins Geraetebuch, und nur
+ *   dann sagt der Server dem Geraet `huelle: 2`; der Eingang nimmt Fassung 2
+ *   nur unter der eigenen Absenderkennung an, dazu das leere Schlussstueck.
+ *   Eine aeltere App koppelt weiter, mit Warnung. Dazu das Aufraeumskript
+ *   fuer Testkonten auf Staging. NEBENNUMMER MIT MIGRATION:
+ *   `2026_11_13_kopplung_herkunft` — `update.php` aufrufen; bis dahin
+ *   koppelt jedes Geraet auf dem alten Weg. */
+const WEB_VERSION = '24.18.0';

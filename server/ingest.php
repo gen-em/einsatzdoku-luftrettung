@@ -261,6 +261,9 @@ if ($rateSperre !== null) {
  * durch, bis jemand die Wartungsseite oeffnet. Dasselbe Fenster hat
  * schon einmal ein Statement geteilt (`ratelimit_lib.php`). */
 $devSpalten = 'id, user_id, api_key_hash, active, geraet_art, geraet_modell';
+/* Geraeteschluessel und Herkunft (seit Web 24.18.0, KA-06d) — erst nach der
+ * Migration; davor nimmt der Eingang keine Fassung 2 von Geraeten an. */
+if (db_hat_spalte(db(), 'devices', 'herkunft')) { $devSpalten .= ', spk, herkunft'; }
 $devVermerk = true;
 try {
     $st = db()->prepare("SELECT $devSpalten, abgewiesen_seit, abgewiesen_anzahl
@@ -518,6 +521,16 @@ if ($kind === 'mission' && ($b['ort_huelle'] ?? null) !== null) {
     $ortHuelle = pruef_huelle($b['ort_huelle'], GH_EINSATZ_MAX_BYTE, 'ort_huelle', $pruef);
     if ($ortHuelle === null) {
         json_out(['error' => 'payload', 'grund' => 'ort_huelle: ' . $pruef->text()], 400);
+    }
+}
+
+/* ---- DER ABSENDER DER HUELLEN (KA-06d) ---------------------------------
+ * Fassung 2 nur von einem Geraet mit bestaetigtem Geraeteschluessel und
+ * unter seiner eigenen SID (`pruef_huelle_absender()`). */
+foreach (['track' => $stueck['huelle'] ?? null, 'ort_huelle' => $ortHuelle] as $hFeld => $hRoh) {
+    if ($hRoh !== null && !pruef_huelle_absender($hRoh, $dev['spk'] ?? null,
+                                                  (int)($dev['herkunft'] ?? 0) === 1, $hFeld, $pruef)) {
+        json_out(['error' => 'payload', 'grund' => $hFeld . ': ' . $pruef->text()], 400);
     }
 }
 

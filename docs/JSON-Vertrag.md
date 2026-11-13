@@ -133,6 +133,8 @@ einmal.
 
 ### 1a.1 `start` — Sitzung anlegen
 
+*Mit Geräteschlüssel dazu der Block `schluessel` — 1a.7.*
+
 Ohne Kopfzeilen. Kopfzeilen, die trotzdem mitkommen, liest der Server an
 dieser Stelle nicht.
 
@@ -191,6 +193,8 @@ Servermeldung als zweite Zeile.
 
 ### 1a.2 `status` — nachfragen
 
+*Mit Geräteschlüssel dazu `kontoschluessel`, `n_b`, `wartet` und der Zustand `abgelehnt` — 1a.7.*
+
 Mit den Kopfzeilen `X-Device-Id` und `X-Api-Key` aus Schritt 1:
 
 ```json
@@ -239,6 +243,8 @@ andere. Für das Gerät läuft beides auf dasselbe hinaus; wer den Endpunkt
 nachbaut, muss den Unterschied kennen.
 
 ### 1a.3 `bestaetigen` — Ja oder Nein
+
+*Mit Geräteschlüssel erst nach `offenlegen`, und `202`, solange die Webseite den Wert nicht bestätigt hat — 1a.7.*
 
 Mit Kopfzeilen. `antwort` ist Pflicht und lautet `ja` oder `nein`:
 
@@ -450,6 +456,55 @@ Server `429`, bevor er die Aktion überhaupt ansieht.
 **Bestehende Kopplungen sind von alldem nicht berührt** — `ingest.php` und
 Abschnitt 1 ändern sich nicht. Was eine alte Uhr verliert, ist die
 Möglichkeit, sich **neu** zu koppeln.
+
+### 1a.7 Der Vergleichswert — seit Web 24.18.0 (KA-06d)
+
+Ein Gerät mit **Geräteschlüssel** (P-256, erzeugt bei der Kopplung) koppelt
+so, dass Gerät und Webseite dieselbe sechsstellige Zahl zeigen. Sie
+bestätigt beide öffentlichen Schlüssel — den des Kontos auf dem Gerät, den
+des Geräts im Browser. Die Rechnung (Zusage, Wert) steht im Kopf von
+`tools/proben/huelle/referenz.py` („DER VERGLEICHSWERT DER KOPPLUNG") und nur
+dort. **Der Server rechnet nichts davon nach**; er trägt die Werte und hält
+die Reihenfolge. Alle Werte sind **Base64** mit Auffüllung.
+
+1. **`start`** trägt zusätzlich
+   `"schluessel": {"spk": "<65 Byte SEC1, 0x04 vorn>", "zusage": "<32 Byte>"}`.
+   Falsche Form → `400 {"error":"schluessel"}`, keine Sitzung. Ohne den
+   Block koppelt das Gerät wie bisher (Fassung 1, ohne Herkunft — bis zum
+   Stichtag aus KA-06e). Ohne die Migration überliest der Server den Block.
+2. Die Person tippt den Code; der Browser zieht **N_b** (16 Byte) erst,
+   nachdem er SPK und Zusage gesehen hat, und schickt sie beim Verbinden.
+3. **`status`** im Zustand `beansprucht` trägt dann zusätzlich
+   `"kontoschluessel"` und `"n_b"`. Das Gerät legt sich auf das **erste**
+   Paar fest; ein anderes in einer späteren Antwort ist ein Abbruch.
+4. **`offenlegen`** (neu, mit Kopfzeilen):
+   `{"aktion":"offenlegen","n_g":"<16 Byte>"}` → `200 {"ok":true}`.
+   **Wiederholbar:** dasselbe N_g noch einmal → wieder `200`; ein anderes →
+   `409 {"error":"n_g"}`; vor dem Beanspruchen, ohne Geräteschlüssel oder
+   nach einer Ablehnung → `409 {"error":"zustand"}`. Nach dem Abschluss
+   (Antwort verloren) → `200`. Danach rechnet das Gerät den Wert und zeigt
+   ihn mit der maskierten Adresse.
+5. **`bestaetigen` mit `ja`** zählt erst nach dem Offenlegen (davor
+   `409 {"error":"zustand"}`). Hat die Webseite den Wert noch nicht
+   bestätigt: `202 {"wartet":"browser"}` — das Ja ist vermerkt, das Gerät
+   fragt mit `status` nach. Hat sie es schon: `200` wie bisher. Im Web
+   abgelehnt: `409 {"error":"abgelehnt","grund":"wert"|"zusage"}`.
+
+**Die Zustände von `status` nach dem Offenlegen:**
+
+| Lage | Antwort |
+|---|---|
+| Ja da, Wert im Web noch offen | `{"zustand":"beansprucht", …, "wartet":"browser"}` |
+| im Web abgelehnt | `{"zustand":"abgelehnt","grund":"wert"\|"zusage"}` — kein Paar ablegen, „Im Web abgelehnt" zeigen |
+| abgeschlossen | `{"zustand":"gekoppelt","kontoschluessel":…,"huelle":2}` |
+
+**`"huelle": 2`** steht in den Antworten an ein gekoppeltes Gerät (`status`,
+`bestaetigen`), wenn es einen Geräteschlüssel hat **und** der Browser ihn
+nach „Wert stimmt" ins Gerätebuch eingetragen hat. Nur dann sendet es
+Fassung 2 (3.4); fehlt das Feld — alter Server, oder die Weiche des Browsers
+stand bei der Kopplung aus —, sendet es Fassung 1. Auch `status` eines schon
+gekoppelten Geräts trägt es; so lernt ein Gerät, dessen Speicher geleert
+wurde, es wieder.
 
 ## 1b. Trennen (`pair.php`) — seit Uhr 1.11.0 / Web 9.15.0
 
@@ -728,10 +783,17 @@ geht dort nicht auf.
 **Fassung 2 (Kennbyte `0x02`) nimmt die Formprüfung seit Web 24.16.0 an**
 (KA-06b-3, `pruef_huelle()`): Kopf 90 Byte (dazu 8 Byte Absenderkennung
 vor dem flüchtigen Schlüssel), mindestens 138 Byte. Format und Vektoren
-stehen in `tools/proben/huelle/referenz.py`. **Senden darf ein Gerät sie
-noch nicht:** Kopplung mit Zusage und Vergleichswert, das leere
-Schlussstück `<seq>:0` und die Antwort `huelle: 2` kommen mit KA-06d, und
-bis dahin bleibt Fassung 1 die einzige, die ein Gerät schickt.
+stehen in `tools/proben/huelle/referenz.py`. **Ein Gerät sendet sie seit
+Web 24.18.0 (KA-06d), wenn der Server `huelle: 2` gesagt hat** (1a.7), und
+nur unter seiner eigenen Absenderkennung: den ersten 8 Byte von
+`SHA-256("nadoku-absender-1" ‖ SPK)`. Fassung 2 von einem Gerät ohne
+bestätigten Geräteschlüssel oder unter fremder Kennung → `400 payload`.
+
+**Das leere Schlussstück** (nur Fassung 2): Ist beim Abschluss einer
+Aufzeichnung kein Punkt mehr offen, schickt das Gerät ein Stück mit
+`"punkte": 0`, Platz `<seq>:0`, innen nur dem Kopf mit Merker SCHLUSS, und
+`ts_von` = `ts_bis` = Unix-Sekunde des Abschlusses. `seq` schließt an das
+letzte Stück an; das prüft der Browser beim Lesen, nicht der Eingang.
 
 **Innen, Spurstück** (E-S11-31, -39, -66): je Punkt 14 Byte, big-endian —
 Breite und Länge in 1e-7 Grad (`int32`), Höhe in **ganzen Metern** (`int16`,

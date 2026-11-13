@@ -279,7 +279,7 @@ return [
  'grund' => 'db_transaktion() in transaktion_lib.php (E-ZE-20; bis Web 20.37.2 in '
           . 'db.php, umgezogen wegen Nr. 288). SIEBEN namentliche Ausnahmen, '
           . 'freigegeben vom Auftraggeber am 22.09.2026 (H-ZE-4 ausgesetzt; das '
-          . 'Konzept liess acht zu). Bis S11-07 standen hier neun: api/schneiden.php '
+          . 'Konzept liess acht zu; seit KA-06d sechs, siehe unten). Bis S11-07 standen hier neun: api/schneiden.php '
           . 'verlor seine in S11-05c (Tausch ueber spur2_tauschen() in db_transaktion()), '
           . 'jobs_lib.php (spur_ausduennen_eine) fiel in S11-07 mit dem Job (F-S11-78). '
           . 'DREI wegen GROESSE oder Vertrag: ingest.php '
@@ -288,17 +288,18 @@ return [
           . 'Schleife, weiter EINE Stelle), backup_lib.php (Rumpf 1153 Zeilen, 145 Variablen) und '
           . 'api/import_commit.php (542 Zeilen, 78 Variablen) — eine use-Liste '
           . 'mit 145 Eintraegen ist kein Zentralisieren, sondern ein Rewrite. '
-          . 'VIER wegen BAUFORM: pair.php (Geraetevertrag; commit UND rollBack '
-          . 'mehrfach im try, Antwort mitten im Rahmen), '
+          . 'DREI wegen BAUFORM (bis Web 24.17.0 vier: pair.php fiel mit KA-06d, '
+          . 'der Abschluss der Kopplung steht seither in pair_abschliessen() '
+          . 'in db_transaktion()): '
           . 'diensttag_zusammenfuehren.php (drei rollBack-return als REGULAERER Weg) sowie api/day.php '
           . 'und api/kdf_upgrade.php (rollBack + json_out im '
           . 'try). db_transaktion() setzt voraus, dass der Rumpf durchlaeuft '
-          . 'ODER wirft; diese vier rollen mittendrin zurueck und machen dann '
+          . 'ODER wirft; diese drei rollen mittendrin zurueck und machen dann '
           . 'etwas anderes weiter.',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
  'ausser' => ['server/transaktion_lib.php'],
  'regel' => ['art' => 'methode', 'namen' => ['beginTransaction']],
- 'start' => 33, 'decke_jetzt' => 7, 'decke_ziel' => 7],
+ 'start' => 33, 'decke_jetzt' => 6, 'decke_ziel' => 6],
 
 ['kennung' => 'Z17', 'paket' => 'AP5',
  'beschreibung' => 'INSERT/DELETE auf Kindtabellen ausserhalb einsatz_lib.php, migration_lib.php',

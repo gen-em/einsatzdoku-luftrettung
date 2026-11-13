@@ -869,6 +869,36 @@ function pruef_huelle($wert, int $maxByte, string $feld = 'Huelle', ?Pruefliste 
 }
 
 /**
+ * PASST DER ABSENDER EINER GERAETEHUELLE ZUM SENDENDEN GERAET? (seit Web
+ * 24.18.0, KA-06d). Eine Huelle der Fassung 2 traegt im Kopf die SID ihres
+ * Absenders: die ersten 8 Byte von SHA-256("nadoku-absender-1" ‖ SPK). Der
+ * Eingang nimmt sie nur von einem Geraet, das bei der Kopplung einen
+ * Geraeteschluessel geschickt hat, den der Browser ins Geraetebuch
+ * eingetragen hat (`herkunft`), und nur mit SEINER SID.
+ *
+ * WAS DAS BELEGT UND WAS NICHT: Der Server rechnet nichts nach, was nur der
+ * Browser rechnen kann — ob die Huelle wirklich von diesem Schluessel
+ * stammt, zeigt erst das Oeffnen. Hier faellt nur auf, was ein Geraet nie
+ * senden duerfte: Fassung 2 ohne Herkunft, oder unter fremdem Namen. Fassung 1
+ * geht durch bis zum Stichtag (06e).
+ */
+function pruef_huelle_absender(string $roh, ?string $spkB64, bool $herkunft, string $feld,
+                               ?Pruefliste $p = null): bool
+{
+    if (ord($roh[0]) !== 2) { return true; }
+    $spk = $spkB64 !== null ? base64_decode($spkB64, true) : false;
+    if (!$herkunft || $spk === false || strlen($spk) !== 65) {
+        $p?->melde($feld, 'Fassung 2 von einem Geraet ohne bestaetigten Geraeteschluessel');
+        return false;
+    }
+    if (!hash_equals(substr(hash('sha256', 'nadoku-absender-1' . $spk, true), 0, 8), substr($roh, 1, 8))) {
+        $p?->melde($feld, 'Absender passt nicht zum Geraet');
+        return false;
+    }
+    return true;
+}
+
+/**
  * Ein Spurstueck (SPUR2): `seq_from`, `punkte`, `ts_von`, `ts_bis` im
  * Klartext und die Huelle. Gibt es geprueft zurueck (Huelle binaer) oder
  * null. EINE Stelle fuer den Eingang der Geraete (`ingest.php`) und die
@@ -885,7 +915,14 @@ function pruef_spurstueck($t, string $feld = 'track', ?Pruefliste $p = null): ?a
     $tsVon   = (int)($t['ts_von'] ?? -1);
     $tsBis   = (int)($t['ts_bis'] ?? -1);
     $huelle  = pruef_huelle($t['huelle'] ?? null, GH_STUECK_MAX_BYTE, $feld . '.huelle', $p);
-    if ($seqFrom < 0 || $n < 1 || $n > LIMIT_TRACKPUNKTE_ANFRAGE
+    /* DAS LEERE SCHLUSSSTUECK (seit Web 24.18.0, KA-06d): nur Kopf, Merker
+     * SCHLUSS, Platz `<seq>:0` — wenn beim Abschluss kein Punkt mehr offen
+     * ist. Nur in Fassung 2 (die Fassung 1 kennt keinen Merker) und mit
+     * `ts_bis` = `ts_von` (Unix-Sekunde des Abschlusses, JSON-Vertrag 3.4).
+     * Ob `seq` an das letzte Stueck anschliesst, prueft der Browser beim
+     * Lesen (Regel `luecke`), nicht der Eingang. */
+    $leer = $n === 0 && $huelle !== null && ord($huelle[0]) === 2 && $tsBis === $tsVon;
+    if ($seqFrom < 0 || ($n < 1 && !$leer) || $n > LIMIT_TRACKPUNKTE_ANFRAGE
         || $tsVon < 0 || $tsBis < $tsVon || $huelle === null) {
         /* Keine eigene Meldung fuer die Zahlen: Der Aufrufer nennt dann
          * „Stueck unvollstaendig" (so im Eingang). */

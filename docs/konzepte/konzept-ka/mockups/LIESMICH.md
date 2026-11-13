@@ -6,7 +6,7 @@ Pfad), dazu das Bild. Keine fremde Quelle.
 
 | Datei | Was | Stand |
 |---|---|---|
-| `M-KA-01-kopplung.html` / `.png` | Kopplung mit Vergleichswert im Reiter Geräte (KA-06d, E-KA-44, E-KA-61): A Rückfrage · B Warten auf das Gerät · C Vergleichswert prüfen · D Am Gerät bestätigen · E Wert anders oder Zusage passt nicht · F ältere App ohne Geräteschlüssel. Nur vorhandene Bausteine | 13.11.2026, **zur Freigabe** |
+| `M-KA-01-kopplung.html` / `.png` | Kopplung mit Vergleichswert im Reiter Geräte (KA-06d, E-KA-44, E-KA-61): A Rückfrage · B Warten auf das Gerät · C Vergleichswert prüfen · D Am Gerät bestätigen · E Wert anders oder Zusage passt nicht · F ältere App ohne Geräteschlüssel. Nur vorhandene Bausteine | 13.11.2026, **freigegeben 13.11.2026** samt Zustand F (E-KA-63) |
 
 **Bild:** gerendert mit Chromium (Playwright) bei 1328 px, der Ring
 angehalten, danach auf 256 Farben reduziert (Floyd-Steinberg).
