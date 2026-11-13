@@ -14,6 +14,17 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.16.0] — unveröffentlicht
+
+### Geändert
+
+- **Web — jeder Weg, der verschlüsselte Angaben liest oder schreibt, geht
+  über den neuen Kern.** Erst damit kann das gebundene Format eingeschaltet
+  werden, ohne dass ein Weg es übersieht und einen Block ungebunden
+  zurückschreibt. Speichern Datensatz und Zählerstand in einer Anfrage, und
+  der Server nimmt beide zusammen an oder keinen. Die Weiche steht weiter
+  aus; es geht dieselbe Fassung wie bisher hinaus.
+
 ## [Web 24.15.0] — unveröffentlicht
 
 ### Hinzugefügt
