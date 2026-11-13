@@ -99,5 +99,19 @@ foreach ($v['gepackt'] ?? [] as $g) {
 }
 if (empty($v['gepackt'])) { $melde(false, 'vektoren.json trägt keine gepackten Fälle — neu erzeugen'); }
 
+/* ABLEITUNG 2 IN PHP (KA-06b-3, Anlass Nr. 563): `kdf_haelfte()` aus
+ * demo_lib.php gegen die Vektoren — Fassung 1 bei 600 000, Fassung 2 bei
+ * 1 200 000 Runden. */
+require_once $hier . '/../../../server/db.php';
+require_once $hier . '/../../../server/demo_lib.php';
+$vi = json_decode((string)file_get_contents($hier . '/vektoren-inhalt.json'), true);
+foreach (($vi['ableitungen'] ?? []) as $i => $a) {
+    $salz = hex2bin($a['salz_hex']);
+    $melde(bin2hex(kdf_haelfte($a['passwort'], $salz, $a['fassung_1']['runden'])) === $a['fassung_1']['haelfte_hex'],
+           "Ableitung $i: Fassung 1 ({$a['fassung_1']['runden']} Runden), Hälfte");
+    $melde(bin2hex(kdf_haelfte($a['passwort'], $salz, $a['fassung_2']['runden'])) === $a['fassung_2']['haelfte_hex'],
+           "Ableitung $i: Fassung 2 ({$a['fassung_2']['runden']} Runden), Hälfte");
+}
+
 echo "$zeilen Prüfungen, $schlecht Abweichungen\n";
 exit($schlecht ? 1 : 0);

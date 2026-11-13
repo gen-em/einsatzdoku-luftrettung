@@ -83,7 +83,10 @@
      * dass der Anteil verloren ist; hinge sie selbst daran, gäbe es keinen.
      * Der Server weist eine `edka1:`-Hülle hier ohnehin ab — aber die
      * richtige Stelle, sie gar nicht erst zu bauen, ist diese. */
-    const wrapRc = await EdCrypto.encrypt(rk, ck);
+    /* Seit KA-06b-3 über `EdInhalt.huelleSchreiben(…, 'rc')`: mit der
+     * Weiche an `edk2:` (Zweck `wrap`, Bezug `rc`), sonst `edk1:` wie
+     * bisher — eine Kennung nimmt die Art `rc` nie an. */
+    const wrapRc = await EdInhalt.huelleSchreiben(rk, ck, 'rc', null);
 
     /* ---- 5: senden ------------------------------------------------------ */
     /* UEBER EdApi. Das Feld `csrf` haengt EdApi selbst an, die

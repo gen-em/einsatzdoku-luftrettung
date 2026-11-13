@@ -4998,7 +4998,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           }
           fgState.textContent = 'Schlüssel wird geprüft…';
           const rcKey = await EdCrypto.recoveryKeyHex(code);
-          try { altCk = await EdCrypto.decrypt(rcKey, fgPaket.pat_wrap_rc); }
+          try { altCk = await EdInhalt.huelleOeffnen(rcKey, fgPaket.pat_wrap_rc, 'rc'); }
           catch (e) { altCk = null; }
           if (!altCk) {
             fgState.textContent = 'Der Wiederherstellungsschlüssel passt nicht zu diesem '
@@ -5035,7 +5035,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         try { eigenesPaar = await EdOrtsdaten.schluessel(eigenerCk); } catch (e) { eigenesPaar = null; }
         if (braucht && fgPaket.kp_privat) {
           try {
-            const der = Uint8Array.from(atob(await EdCrypto.decrypt(altCk, fgPaket.kp_privat)),
+            const der = Uint8Array.from(atob((await EdInhalt.lesen(altCk, fgPaket.kp_privat, 'kp', '')).text),
                                         (c) => c.charCodeAt(0));
             fremdesPaar = await EdOrtsdaten.schluesselAus(der);
           } catch (e) { fremdesPaar = null; }
