@@ -649,6 +649,9 @@ const EdStandbuch = (() => {
      *  nun an ein Befund (`altformat`). Nicht umkehrbar. */
     function schliessen(nr) { return schreibe(nr, (d) => { d.zu = true; }); }
 
+    /** Ist dieses eine Blatt geschlossen (Anhebelauf, KA-06b-4)? */
+    async function blattZuNr(nr) { return !!(await lade(nr)).d.zu; }
+
     /** Sind alle 16 Blätter geschlossen? Dann ist Altformat überall ein Befund. */
     async function alleZu() {
       for (let nr = 0; nr < BLAETTER; nr++) { if (!(await lade(nr)).d.zu) { return false; } }
@@ -714,7 +717,7 @@ const EdStandbuch = (() => {
     }
 
     return { abgleichen, eintrag, blattZu, patLesen: patLesenHier, naechsterZaehler,
-             fortschreiben, vormerken, vormerkenViele, nachtragen, schliessen, alleZu,
+             fortschreiben, vormerken, vormerkenViele, nachtragen, schliessen, alleZu, blattZuNr,
              /* 409 `blatt` aus einer Sammelanfrage: das Blatt des Servers übernehmen */
              blattUebernehmen: uebernehmen,
              geraete, geraetEintragen, geraetAustragen, zurueckschreiben,

@@ -14,6 +14,16 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.17.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — der Altbestand zieht still in das gebundene Format um.** Ohne
+  diesen Lauf blieben alle Angaben von vor dem Formatwechsel ungebunden und
+  ließen sich weiter vertauschen oder zurücklegen. Jeder Block wird vor dem
+  Senden wieder geöffnet und verglichen, und der Server schreibt nur dort,
+  wo noch genau der alte steht. Er läuft erst, wenn die Weiche umgelegt ist.
+
 ## [Web 24.16.0] — unveröffentlicht
 
 ### Geändert

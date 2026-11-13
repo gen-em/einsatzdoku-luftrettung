@@ -463,6 +463,89 @@ const EdUnlock = (() => {
     }
   }
 
+  /* ---- Der Anhebelauf (KA-06b-4, E-KA-40) --------------------------------
+   *
+   * DER ALTBESTAND ZIEHT STILL IN DAS GEBUNDENE FORMAT UM — Patientenblöcke
+   * (`edk1:` → `edk2:` mit Zähler und Blatt) und die privaten Teile von
+   * Kontopaar und Rückweg. NUR MIT UMGELEGTER WEICHE (`EdInhalt.schreibt2()`);
+   * steht sie aus, geschieht nichts, und es geht keine Anfrage hinaus.
+   *
+   * NICHTS WIRD GESCHRIEBEN, WAS NICHT WIEDER AUFGEHT. Je Block: den alten
+   * öffnen, den neuen bauen, den neuen öffnen und mit dem Klartext
+   * vergleichen — erst dann senden. Der Server schreibt nur, wo noch genau der
+   * alte Block steht (`blob_alt`); was ein anderes Fenster dazwischen
+   * gespeichert hat, bleibt. Ist ein Blatt leer von Altbestand, schließt der
+   * Lauf es (`buch.schliessen()`): Von da an ist dort `edk1:` ein Befund.
+   *
+   * Wie die Notizen-Anhebung: still, je Seitenaufruf einmal, in Runden zu
+   * höchstens 200, ohne Meldung bei einem Fehlschlag — der nächste
+   * Entsperrvorgang versucht es erneut.
+   */
+  let formatLief = false;
+
+  async function formatAnheben(ck) {
+    if (formatLief || !ck || typeof EdInhalt === 'undefined' || !EdInhalt.schreibt2()) { return; }
+    formatLief = true;
+    try {
+      const holen = async () => {
+        const r = await fetch('api/format_anheben.php', { credentials: 'same-origin', signal: EdApi.signal() });
+        return r.ok ? r.json() : null;
+      };
+      /* Die privaten Teile zuerst — klein, und sie öffnen die Ortsdaten. */
+      let j = await holen();
+      if (!j) { return; }
+      const teile = {};
+      for (const [feld, zweck] of [['kp', 'kp'], ['rw', 'rw']]) {
+        if (!j[feld]) { continue; }
+        const klar = (await EdInhalt.lesen(ck, j[feld], zweck, '')).text;
+        const neu = await EdInhalt.schreiben(ck, zweck, '', klar, 0);
+        if ((await EdInhalt.lesen(ck, neu, zweck, '')).text !== klar) { return; }
+        teile[feld] = { neu: neu, alt: j[feld] };
+      }
+      if (Object.keys(teile).length) {
+        const a = await EdApi.postJson('api/format_anheben.php', Object.assign({ missions: [] }, teile));
+        if (!a.ok) { return; }
+      }
+      for (let runde = 0; runde < 100; runde++) {
+        const liste = (j && j.missions) || [];
+        if (!liste.length) { break; }
+        const posten = [];
+        for (const m of liste) {
+          let klar;
+          try { klar = (await EdInhalt.lesen(ck, m.pat_blob, 'pat', m.client_ref)).text; }
+          catch (e) { continue; }          // gehört zu einem anderen Schlüssel: nicht anfassen
+          posten.push({ id: m.id, ref: m.client_ref, klartext: klar, blob_alt: m.pat_blob });
+        }
+        if (!posten.length) { break; }     // nur Unlesbare — weitere Runden bringen nichts
+        const senden = async (texte, blaetter) => {
+          for (let i = 0; i < posten.length; i++) {
+            const o = await EdInhalt.lesen(ck, texte[i], 'pat', posten[i].ref);
+            if (o.text !== posten[i].klartext || !o.gebunden) {
+              return { ok: false, status: 0, daten: null };   // der Rundlauf weicht ab: nichts senden
+            }
+          }
+          const rumpf = { missions: posten.map((p, i) => ({ id: p.id, pat_blob: texte[i], blob_alt: p.blob_alt })) };
+          if (blaetter) { rumpf.blaetter = blaetter; }
+          return EdApi.postJson('api/format_anheben.php', rumpf);
+        };
+        const a = await EdStandbuch.patSchreibenViele(ck, posten, senden);
+        if (!a.ok || !a.daten.angehoben) { return; }
+        j = await holen();
+        if (!j) { return; }
+      }
+      /* Leere Blätter schließen — nur, wenn der Server für sie keinen
+         Altbestand mehr nennt. */
+      if (j && Array.isArray(j.rest_je_blatt)) {
+        const buch = await EdStandbuch.seitenbuch(ck);
+        for (let nr = 0; nr < j.rest_je_blatt.length; nr++) {
+          if (j.rest_je_blatt[nr] === 0 && !(await buch.blattZuNr(nr))) { await buch.schliessen(nr); }
+        }
+      }
+    } catch (e) {
+      /* still: siehe Kopf */
+    }
+  }
+
   /* ---- Das Paar des Rückwegs ---------------------------------------------
    *
    * DIE EINE STELLE, AN DER ES STILL ENTSTEHT. Es braucht zweierlei: das
@@ -533,7 +616,7 @@ const EdUnlock = (() => {
       if (!vormerkLauf) { vormerkLauf = loeseVormerkung(wrap, kdfIter); }
       const ausVormerkung = await vormerkLauf;
       if (ausVormerkung) {
-        notizenAnheben(ausVormerkung);
+        notizenAnheben(ausVormerkung); formatAnheben(ausVormerkung);
         rueckwegAnlegen(ausVormerkung);
         return ausVormerkung;
       }
@@ -545,7 +628,7 @@ const EdUnlock = (() => {
     // Richtigkeit allein daran, dass jeder Weg, auf dem das Konto wechseln
     // koennte, vorher aufraeumt — vier Stellen taten das, eine nicht.
     const vorhanden = await EdKeyGuard.contentKey(wrap);
-    if (vorhanden) { notizenAnheben(vorhanden); rueckwegAnlegen(vorhanden); return vorhanden; }
+    if (vorhanden) { notizenAnheben(vorhanden); formatAnheben(vorhanden); rueckwegAnlegen(vorhanden); return vorhanden; }
 
     // Ohne Salt laesst sich nichts ableiten; sehr alte Browser ohne <dialog>
     // bekommen bewusst keinen window.prompt (Passwort im Klartext sichtbar).
@@ -556,7 +639,7 @@ const EdUnlock = (() => {
     /* Der dritte Weg: über den Dialog. `then` statt `await`, damit der
        Aufrufer seinen Schlüssel sofort bekommt und die Anhebung daneben
        läuft. */
-    laufend.then(ck => { if (ck) { notizenAnheben(ck); rueckwegAnlegen(ck); } });
+    laufend.then(ck => { if (ck) { notizenAnheben(ck); formatAnheben(ck); rueckwegAnlegen(ck); } });
     return laufend;
   }
 

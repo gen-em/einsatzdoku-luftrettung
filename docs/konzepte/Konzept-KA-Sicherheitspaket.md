@@ -12,8 +12,8 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-06b-3** (Verbraucher, Web 24.16.0) im PR; danach 06b-4 Anhebelauf (E-KA-51). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-01, -02, -05, -06 mit PR #168 gemergt (Uhr 4.5.1), KG-03 wartet auf diese Referenz |
-| Erledigt | **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
+| In Arbeit | **KA-06b-4** (Anhebelauf, Web 24.17.0) im PR; danach 06c (Geräte), 06d (Server), 06e (Altformat der Gerätedaten), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-01, -02, -05, -06 mit PR #168 gemergt (Uhr 4.5.1), KG-03 wartet auf diese Referenz |
+| Erledigt | **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
@@ -91,7 +91,7 @@ Safari.
 | E-KA-37 | **Auch die unversiegelte Begleitdatei `konto.json` ist unlesbar** — über Punkt 7 hinaus: Seit KA-03 entscheidet ihre Adresse über eine Freigabe, und der Rückfall war derselbe wie beim Manifest | 11.11.2026, Umsetzung |
 | E-KA-38 | **KA-06a schreibt ein Unter-Agent auf Fable**, die Hauptinstanz bleibt auf Opus und übernimmt Ergebnis, Konzept und Dokumente. Der Agent schreibt nur unter `tools/proben/huelle/`, keinen Anwendungscode und keine `docs/` | 11.11.2026, BetreiberIn |
 | E-KA-39 | **Die drei Punkte zur Ableitung ohne Formatwechsel gehen vorab** als Teil von 06b mit Opus (F-KA-13, -16; Konzept 06b: „vorab als eigenes kleines Paket"). **F-KA-29 bleibt draußen** — ein neues Anmelde-Token gehört zum Entwurf von 06a | 11.11.2026, BetreiberIn |
-| E-KA-40 | **Der Altbestand der BetreiberIn zieht still nach der Anmeldung um** (Anhebelauf wie `pat_anheben`), und **alte Sicherungen bleiben einspielbar** — der Browser hebt sie beim Einspielen (06d). Beantwortet die offene Frage aus E-KA-16; übernommen mit „alle wie vorgeschlagen" aus den Vorschlägen des Konzepts (06b, 06d) — wo die BetreiberIn es anders meinte, wird es vor 06b berichtigt | 11.11.2026, BetreiberIn |
+| E-KA-40 | **Der Altbestand der BetreiberIn zieht still nach der Anmeldung um** (Anhebelauf wie `pat_anheben`), und **alte Sicherungen bleiben einspielbar** — der Browser hebt sie beim Einspielen (06d). *(Den zweiten Teil hat E-KA-60 am 13.11.2026 aufgehoben: Alte Sicherungen müssen nicht mehr einspielbar sein.)* Beantwortet die offene Frage aus E-KA-16; übernommen mit „alle wie vorgeschlagen" aus den Vorschlägen des Konzepts (06b, 06d) — wo die BetreiberIn es anders meinte, wird es vor 06b berichtigt | 11.11.2026, BetreiberIn |
 | E-KA-41 | **Untergrenze der Rundenzahl 310 000** — der kleinste Wert, den je ein Konto (Vorgabe der Spalte `kdf_iter`) oder eine Sicherung trug; 600 000 hätte Sicherungen von davor unlesbar gemacht. **Frist des Vormerkfachs sechs Minuten** — die fünf der halben Anmeldung (`TOTP_HALB_FRIST_S`) und eine für den Seitenwechsel. Eine Antwort des Salz-Endpunkts in falscher Form meldet die Seite als „derzeit nicht möglich" (`status`), nicht als fehlendes Web-Krypto | 11.11.2026, Umsetzung |
 | E-KA-42 | **Das Muster für `vendor/` in `pruefablauf.json` (F-KA-74) kommt mit dem nächsten Web-Paket**, sobald KG die Datei nicht mehr in Arbeit hat | 11.11.2026, BetreiberIn |
 | E-KA-43 | **Zählerstand (Q-KA-07):** im Browser (IndexedDB, je Konto), dazu eine verschlossene Abschrift in 16 Blättern auf dem Server (`edk2`, Zweck `stand`); das Blatt folgt aus dem Hash der `client_ref`. Preis: Migration (`update.php`), ein 409-Weg, Umdatieren, Schneiden und Löschen nur entsperrt | 11.11.2026, BetreiberIn (KA-M5) |
@@ -110,6 +110,8 @@ Safari.
 | E-KA-56 | **Vorgriff auf 06d, nur die Form:** Der Server nimmt `edk2:` (Patientenblock ab Klasse 512), `edka2:` (nur Passworthülle; `rc`, `kp`, `rw` nie) und die Gerätehülle der Fassung 2 an. Ohne das ließe sich kein Schreibweg des Browsers mit umgelegter Weiche Ende zu Ende prüfen. Geräte senden Fassung 2 erst nach 06d (JSON-Vertrag 3.4) | 13.11.2026, Umsetzung |
 | E-KA-57 | **Das Ziel der Rundenzahl bleibt 600 000, bis die Weiche umliegt** — `crypto.js` wählt Ableitung 2 nach der Rundenzahl, und ein höheres Ziel änderte das Anmelde-Token sofort. PHP rechnet Ableitung 2 schon (`kdf_haelfte()`); das Heben ist dann eine Zeile | 13.11.2026, Umsetzung |
 | E-KA-58 | **Die Kennung des Kontos für die Ablage des Standbuchs kommt aus dem Inhaltsschlüssel** (AES-GCM-Prüfwert über nichts, davon SHA-256), nicht vom Server — eine Kennung, die der Server nennt, könnte er wechseln, und der Browser fände keinen Anker. **Datensatz und Blätter in einer Anfrage** (Feld `blaetter` mit `refs`); der Server prüft, dass jeder Block steht, dessen Zähler ein Blatt hebt (`uebersprungen`), sonst 409 `blatt` und nichts gespeichert. **Wiederherstellung und Übernahme lesen ohne Standbuch** — ein eingespielter Stand ist mit Absicht älter — und schreiben mit neuem Zähler | 13.11.2026, Umsetzung |
+| E-KA-59 | **Der Anhebelauf läuft still nach der Anmeldung und nur mit umgelegter Weiche** (eigener Endpunkt `api/format_anheben.php`, Runden zu 200). Er öffnet jeden neuen Block vor dem Senden und vergleicht; der Server schreibt nur bei unverändertem `blob_alt`. Ein Blatt, für das der Server keinen Altbestand mehr nennt, wird geschlossen. Gerätedaten bleiben bei 06e | 13.11.2026, BetreiberIn („alles wie vorgeschlagen") |
+| E-KA-60 | **Alte Sicherungen müssen nicht mehr einspielbar sein** — berichtigt E-KA-40 in diesem Punkt. Daraus: Sobald der Anhebelauf einmal durchgelaufen ist und alle 16 Blätter geschlossen sind, werden vor v1.0 **der Anhebelauf und das Lesen des alten Formats (`edk1:`, Gerätehülle Fassung 1) zurückgebaut** — mit 06e oder KA-07. Eine Sicherung im alten Format wird dann mit einer Meldung abgewiesen statt gehoben | 13.11.2026, BetreiberIn |
 | E-KA-21 | **Die Garmin-Anteile gehen an eine eigene Instanz, Kürzel KG** (Abschnitt 11): KA-04 Punkt 1 und 4, der Garmin-Teil von KA-06c samt der Messung für 06a, die Garmin-Kommentare aus F-KA-43 und der Garmin-Teil von KA-M6. KG zählt eigene Nummern (`KG-NN`, `F-KG-NN`, `E-KG-NN`, `P-KG-NN`), führt ein eigenes Konzept und schreibt den Rahmenplan nicht — das tut diese Instanz | 10.11.2026, BetreiberIn |
 
 ---
@@ -594,6 +596,7 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 | Q-KA-09 | KA-M5: Frist für Geräte ohne Schlüssel? | neu koppeln, höchstens 30 Tage (E-KA-45) |
 | Q-KA-10 | KA-M5: Stichtag für Fassung 1? | Ende der Frist (E-KA-46) |
 | Q-KA-11 | KA-M5: Rundenzahl mit Ableitung 2? | 1 200 000 (E-KA-47) |
+| Q-KA-12 | Wird der Anhebeweg vor v1.0 zurückgebaut, wenn er einmal durchgelaufen ist? | ja, samt dem Lesen von `edk1:` — alte Sicherungen müssen nicht mehr einspielbar sein (E-KA-60) |
 
 ---
 
@@ -789,6 +792,27 @@ des eigenen Kontos.
 **Fassung 2 vorher gezählt** (Konzept, Punkt 7): örtlich 6 Pakete, alle
 Fassung 3; 3 Begleitdateien, alle versiegelt. Staging und Produktiv nicht
 gezählt (E-KA-31).
+
+### KA-06b-4 Anhebelauf (13.11.2026)
+
+**Was nicht geprüft werden konnte — zuerst.**
+
+1. **Der Messstand mit dem großen Bestand** ist nicht gefahren (Konzept 8:
+   „vor der Auslieferung"). Gemessen ist das Demo-Konto mit 104 Blöcken. Der
+   Lauf wird erst mit dem Umlegen der Weiche wirksam; die Messung am großen
+   Bestand gehört deshalb vor Web 25.0.0, nicht vor diese Fassung.
+2. **Ein Abbruch mitten im Lauf** (Seite verlassen) ist nicht nachgestellt;
+   er lässt nach Bauart den Rest im alten Format, und der nächste Lauf macht
+   weiter.
+
+**Gemessen:**
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Bedienprobe `ka06b4-anhebelauf` (Demo-Konto, Weiche nur im Browser der Probe umgelegt) | Weiche aus: Altbestand 104 → unverändert; Weiche an: Altbestand 0, Kontopaar `edk2:`, **16 von 16 Blättern zu**; zweiter Lauf ändert nichts; falsches `blob_alt`: 0 angehoben, Block unverändert | ohne Endpunkt und ohne den Lauf: Abbruch, rot | Anhebelauf, Rundlauf, Wache am Server, Schließen der Blätter |
+| Demo-Konto nach dem Weg | 104 Blöcke `edk1:`, 0 Blätter (zurückgesetzt) | — | die Probe hinterlässt nichts |
+
+**R91 nach PR #176 (Web 24.16.0, Staging, 13.11.2026):** Lauf 204 grün; Anmeldung im Browser mit eigenem Konto und Zweitfaktor; Kern geladen; Standbuch 16 Blätter, Buch 0 (die Weiche steht aus, nichts geschrieben); Einzelansicht des Einsatzes 20332 mit geschützten Angaben geöffnet, Sperrbanner versteckt, 0 Seitenfehler; Reiter System ohne Eintrag nach dem 09.11.2026.
 
 ### KA-06b-3 Verbraucher (13.11.2026)
 
