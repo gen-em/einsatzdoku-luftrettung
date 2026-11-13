@@ -429,7 +429,7 @@ function konto_anteil(int $userId, string $roh): string
 function huelle_anteil_kennung(?string $huelle): ?string
 {
     if ($huelle === null) { return null; }
-    return preg_match('/^edka1:([0-9a-f]{8}):/', $huelle, $m) ? $m[1] : null;
+    return preg_match('/^edka[12]:([0-9a-f]{8}):/', $huelle, $m) ? $m[1] : null;
 }
 
 /* ---- Marken in app_state ------------------------------------------------

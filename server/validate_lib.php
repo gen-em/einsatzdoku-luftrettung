@@ -135,7 +135,12 @@ const HUELLE_PRAEFIX = 'edka1:';
  * Inhaltsschluessel darin und damit jeder `pat_blob` sind unveraendert —
  * kein Datensatz wird angefasst, wenn ein Konto umstellt.
  */
-const WRAP_PRAEFIX_RE = '(?:edk1:|edka1:[0-9a-f]{8}:)?';
+/* SEIT WEB 24.16.0 AUCH FASSUNG 2 (KA-06b-3): `edk2:` und `edka2:<Kennung>:`
+ * — die Form, die `EdInhalt.huelleSchreiben()` mit umgelegter Weiche
+ * schreibt (Technik 4.42). Der Ausdruck prüft Kennung und Zeichenvorrat;
+ * die Größenklasse prüft er nicht, und der Server kann eine Hülle ohnehin
+ * nicht öffnen. */
+const WRAP_PRAEFIX_RE = '(?:edk1:|edka1:[0-9a-f]{8}:|edk2:|edka2:[0-9a-f]{8}:)?';
 
 /**
  * ZWEI AUSDRUECKE, WEIL ES ZWEI HUELLEN MIT VERSCHIEDENEN ZUSAGEN SIND.
@@ -158,7 +163,10 @@ const WRAP_PRAEFIX_RE = '(?:edk1:|edka1:[0-9a-f]{8}:)?';
  * dort die Passwort-Huelle.
  */
 const WRAP_PW_RE = '#^' . WRAP_PRAEFIX_RE . '[A-Za-z0-9+/=]{20,4000}$#';
-const WRAP_RC_RE = '#^' . CHIFFRE_PRAEFIX_RE . '[A-Za-z0-9+/=]{20,4000}$#';
+/* Die Wiederherstellungshülle — und mit ihr `rw_privat` und `kp_privat` —
+ * nimmt `edk2:` an, NIE `edka2:` (und nie `edka1:`): Sie muss ohne den
+ * Server-Anteil aufgehen (CLAUDE.md 4). */
+const WRAP_RC_RE = '#^(?:edk1:|edk2:)?[A-Za-z0-9+/=]{20,4000}$#';
 const WRAP_RE    = WRAP_PW_RE;
 
 /**
@@ -180,7 +188,7 @@ function edk2_innenlaenge(string $text, int $max_innen): ?int
     if (strncmp($text, 'edk2:', 5) !== 0) { return null; }
     $b64 = substr($text, 5);
     if ($b64 === '' || strlen($b64) % 4 !== 0
-        || !preg_match('#^[A-Za-z0-9+/]+={0,2}\z#', $b64) || false) {
+        || !preg_match('#^[A-Za-z0-9+/]+={0,2}\z#', $b64)) {
         return null;
     }
     $roh = base64_decode($b64, true);
@@ -801,6 +809,18 @@ function pruef_pat_blob($wert, string $feld = 'Patientenblock', ?Pruefliste $p =
     }
     $s = trim($wert);
     if ($s === '') { return null; }                    // bewusst ohne Angaben
+    /* FASSUNG 2 (`edk2:`, KA-06b-3): Form und Größenklasse, für den
+     * Patientenblock mindestens die Klasse 512 — darunter hätte ihn nicht
+     * der Browser geschrieben, und eine kleinere verriete wieder, wie viel
+     * darin steht (F-KA-30). */
+    if (str_starts_with($s, 'edk2:')) {
+        $innen = edk2_innenlaenge($s, intdiv(PAT_BLOB_MAX * 3, 4) - 28);
+        if ($innen === null || $innen < 512) {
+            $p?->melde($feld, 'Fassung 2 in falscher Form oder Größe');
+            return null;
+        }
+        return $s;
+    }
     if (!preg_match(PAT_BLOB_RE, $s)) {
         $laenge = strlen($s);
         $grund = $laenge < PAT_BLOB_MIN
@@ -834,9 +854,17 @@ function pruef_huelle($wert, int $maxByte, string $feld = 'Huelle', ?Pruefliste 
     $n = strlen($roh);
     if ($n < GH_MIN_BYTE) { $p?->melde($feld, 'kuerzer als ' . GH_MIN_BYTE . ' Byte'); return null; }
     if ($n > $maxByte) { $p?->melde($feld, 'laenger als ' . $maxByte . ' Byte'); return null; }
-    if (($n - 82 - 32) % 16 !== 0) { $p?->melde($feld, 'Chiffretext kein Vielfaches von 16'); return null; }
-    if ($roh[0] !== "\x01") { $p?->melde($feld, 'unbekannte Fassung ' . ord($roh[0])); return null; }
-    if ($roh[1] !== "\x04") { $p?->melde($feld, 'kein unkomprimierter Schluessel'); return null; }
+    /* ZWEI FASSUNGEN (seit Web 24.16.0, KA-06b-3, F-KA-83). Fassung 1:
+     * Kennbyte, 65 Byte EPK, 16 Byte IV — Kopf 82. Fassung 2: dazu 8 Byte
+     * SID vor dem EPK — Kopf 90, kleinste Hülle 138 (`referenz.py`). Der
+     * Browser schreibt Fassung 2 erst mit umgelegter Weiche; die Form steht
+     * schon hier, damit die Schreibwege des Browsers sie durchlassen. */
+    $fassung = ord($roh[0]);
+    if ($fassung !== 1 && $fassung !== 2) { $p?->melde($feld, 'unbekannte Fassung ' . $fassung); return null; }
+    $kopf = $fassung === 2 ? 90 : 82;
+    if ($fassung === 2 && $n < 138) { $p?->melde($feld, 'kuerzer als 138 Byte'); return null; }
+    if (($n - $kopf - 32) % 16 !== 0) { $p?->melde($feld, 'Chiffretext kein Vielfaches von 16'); return null; }
+    if ($roh[$fassung === 2 ? 9 : 1] !== "\x04") { $p?->melde($feld, 'kein unkomprimierter Schluessel'); return null; }
     return $roh;
 }
 

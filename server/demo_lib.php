@@ -675,6 +675,26 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
     }
 }
 
+/* DIE GRENZE DER ABLEITUNG 2 — dieselbe Zahl wie `ABLEITUNG2_AB` in
+ * assets/crypto.js (KA-06b-3, F-KA-29). Unter ihr Fassung 1: 64 Byte aus
+ * PBKDF2, die erste Hälfte. Ab ihr Fassung 2: ein PBKDF2-Block als Wurzel,
+ * die Hälfte per HKDF-SHA256 (Salz leer, Info „nadoku-ableitung-2|haelfte").
+ * Byte-gleich zu `ableitung2()` in tools/proben/huelle/referenz_inhalt.py;
+ * die Hüllenprobe des Servers hält es gegen `vektoren-inhalt.json`. Heute
+ * rechnet hier noch kein Konto mit 1 200 000 Runden — das Ziel hebt sich erst
+ * mit der Weiche. */
+const KDF_ABLEITUNG2_AB = 1200000;
+
+/** Die PBKDF2-Hälfte, aus der der Datenschlüssel entsteht (32 Byte). */
+function kdf_haelfte(string $passwort, string $salz, int $runden): string
+{
+    if ($runden >= KDF_ABLEITUNG2_AB) {
+        $wurzel = hash_pbkdf2('sha256', $passwort, $salz, $runden, 32, true);
+        return hash_hkdf('sha256', $wurzel, 32, 'nadoku-ableitung-2|haelfte', '');
+    }
+    return substr(hash_pbkdf2('sha256', $passwort, $salz, $runden, 64, true), 0, 32);
+}
+
 /**
  * Der Inhaltsschluessel des Demo-Kontos (32 Byte), aus dem bekannten Passwort
  * — dieselbe Rechnung wie `EdCrypto.deriveKeys()` und `huelleOeffnen()` fuer
@@ -684,8 +704,8 @@ function demo_bestand_loeschen(PDO $pdo, int $id): void
  */
 function demo_inhaltsschluessel(array $konto): string
 {
-    $haelfte = substr(hash_pbkdf2('sha256', DEMO_PASSWORT, (string)hex2bin((string)$konto['kdf_salt']),
-                                  (int)$konto['kdf_iter'], 64, true), 0, 32);
+    $haelfte = kdf_haelfte(DEMO_PASSWORT, (string)hex2bin((string)$konto['kdf_salt']),
+                           (int)$konto['kdf_iter']);
     $ckHex = demo_edk1_oeffnen($haelfte, (string)$konto['pat_wrap_pw']);
     if ($ckHex === null || !preg_match('/^[0-9a-f]{64}\z/', $ckHex)) {
         throw new RuntimeException('Das Demo-Passwort öffnet die Schlüsselhülle der Fixture '

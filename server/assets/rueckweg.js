@@ -68,7 +68,9 @@
                                                true, ['sign', 'verify']);
     const spki  = base64(await crypto.subtle.exportKey('spki', kp.publicKey));
     const pkcs8 = base64(await crypto.subtle.exportKey('pkcs8', kp.privateKey));
-    return { oeffentlich: spki, privat: await EdCrypto.encrypt(ck, pkcs8) };
+    /* Zweck `rw`, ohne Bezug (KA-06b-3): mit der Weiche an `edk2:`, sonst
+       `edk1:` wie bisher — nie am Anteil. */
+    return { oeffentlich: spki, privat: await EdInhalt.schreiben(ck, 'rw', '', pkcs8, 0) };
   }
 
   /**
@@ -133,7 +135,7 @@
     const rk = await EdCrypto.recoveryKeyHex(o.schluessel);
     let ck;
     try {
-      ck = await EdCrypto.decrypt(rk, o.wrapRc);
+      ck = await EdInhalt.huelleOeffnen(rk, o.wrapRc, 'rc');    // beide Fassungen
     } catch (e) {
       const f = new Error('passt');
       f.grund = 'passt';
@@ -141,7 +143,7 @@
     }
     let pkcs8;
     try {
-      pkcs8 = await EdCrypto.decrypt(ck, o.privat);
+      pkcs8 = (await EdInhalt.lesen(ck, o.privat, 'rw', '')).text;
     } catch (e) {
       const f = new Error('paar');
       f.grund = 'paar';

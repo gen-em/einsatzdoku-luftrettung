@@ -114,6 +114,13 @@ function import_commit(array $b, int $userId): never
 {
     $tage      = is_array($b['days'] ?? null) ? $b['days'] : [];
     $einsaetze = is_array($b['missions'] ?? null) ? $b['missions'] : [];
+    /* DIE BLÄTTER DES STANDBUCHS (KA-06b-3): nur mit der Weiche im Browser
+     * an; geschrieben in DERSELBEN Transaktion, nach den Einsätzen. Ein
+     * übersprungener Einsatz (Dublette) darf seinen Zähler nicht heben —
+     * dann 409 `uebersprungen`, und der Browser sendet ohne ihn noch einmal. */
+    require_once __DIR__ . '/../standbuch_lib.php';
+    $blaetter = sb_blaetter_lesen($b['blaetter'] ?? null);
+    if (is_string($blaetter)) { json_out(['error' => 'payload', 'feld' => $blaetter], 400); }
     if (count($tage) > 600 || count($einsaetze) > 3000) {
         json_out(['error' => 'zu_gross',
                   'meldung' => 'Zu viele Zeilen auf einmal. Bitte in Jahresabschnitten importieren.'], 413);
@@ -736,6 +743,10 @@ function import_commit(array $b, int $userId): never
             }
         }
 
+        sb_blaetter_schreiben($pdo, $userId, $blaetter,
+            array_values(array_filter(array_map(static fn($m) => is_array($m) ? ($m['pat_blob'] ?? null) : null,
+                                                $einsaetze), 'is_string')));
+
         $pdo->commit();
         konto_mengen_verwerfen($userId);
         json_out([
@@ -757,6 +768,9 @@ function import_commit(array $b, int $userId): never
              * Falle. */
             'first_day_id'          => $ersterTagId ?: null,
         ]);
+    } catch (SbKonflikt $k) {
+        $pdo->rollBack();
+        json_out($k->antwort, 409);
     } catch (DomainException $ex) {
         /* Die Ortsdaten passen nicht: fehlende Huelle oder Zeiten,
          * die der Browser anders gerechnet hat. Nichts wird uebernommen. */

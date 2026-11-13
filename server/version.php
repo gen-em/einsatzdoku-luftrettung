@@ -8935,4 +8935,13 @@ declare(strict_types=1);
  *   Anweisung; oeffnen kann er nichts. Noch schreibt kein Browser hinein —
  *   die Weiche steht aus. NEBENNUMMER MIT MIGRATION: `2026_11_11_standbuch`
  *   legt die Tabelle an; nach dem Deploy `update.php`. */
-const WEB_VERSION = '24.15.0';
+/* 24.16.0 — DIE VERBRAUCHER GEHEN UEBER DEN NEUEN KERN (KA-06b-3).
+ *   Jeder Weg, der einen Patientenblock, das Kontopaar, den Rueckweg, eine
+ *   Huelle oder Ortsdaten liest oder schreibt, geht ueber EdInhalt,
+ *   EdStandbuch und EdHuelle2; mit umgelegter Weiche fahren die Blaetter des
+ *   Standbuchs in derselben Anfrage mit, und der Server schreibt Datensatz
+ *   und Blatt in einer Transaktion (409 `blatt`). Die Formpruefung nimmt
+ *   `edk2:`, `edka2:` und die Geraetehuelle der Fassung 2 an. Die Weiche
+ *   steht weiter aus: Es geht dieselbe Fassung 1 wie bisher hinaus. Neben;
+ *   kein Schema. */
+const WEB_VERSION = '24.16.0';

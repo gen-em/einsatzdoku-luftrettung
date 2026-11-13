@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';      // liefert $userId
 require_once __DIR__ . '/../backup_lib.php';
+require_once __DIR__ . '/../standbuch_lib.php';   // Blätter mit den Einträgen (KA-06b-3)
 
 /**
  * POST api/backup_eintraege_restore.php — ein Fenster von Eintraegen.
@@ -71,9 +72,24 @@ try {
     /* `offenZurueck`: Ein Vermerk, dessen Quelle in einem spaeteren Fenster
      * steht, kommt als `schnitte_offen` zurueck statt verworfen zu werden;
      * der Browser reicht ihn nach dem letzten Fenster nach. */
-    $stats = edbak_restore($userId, $eintraege,
-                           is_array($b['day_map'] ?? null) ? $b['day_map'] : [], 'browser',
-                           null, true);
+    /* DIE BLÄTTER DES STANDBUCHS (KA-06b-3): nur mit der Weiche im Browser
+     * an. Sie gehen in DIESELBE Transaktion wie die Einträge
+     * (`edbak_restore()` öffnet keine eigene, wenn schon eine läuft), und
+     * ein Konflikt am Blatt — auch ein übersprungener Eintrag, dessen
+     * Zähler das Blatt höbe — schreibt nichts (409). */
+    $blaetter = sb_blaetter_lesen($b['blaetter'] ?? null);
+    if (is_string($blaetter)) { json_out(['error' => 'payload', 'feld' => $blaetter], 400); }
+    $texte = [];
+    foreach (($eintraege['missions'] ?? []) as $m) {
+        if (is_array($m) && is_string($m['pat_blob'] ?? null)) { $texte[] = $m['pat_blob']; }
+    }
+    $stats = db_transaktion(db(), function (PDO $pdo) use ($userId, $eintraege, $b, $blaetter, $texte): array {
+        $st = edbak_restore($userId, $eintraege,
+                            is_array($b['day_map'] ?? null) ? $b['day_map'] : [], 'browser',
+                            null, true);
+        sb_blaetter_schreiben($pdo, $userId, $blaetter, $texte);
+        return $st;
+    });
     $karte = $stats['spur_karte'] ?? null;
     $offen = $stats['schnitte_offen'] ?? [];
     unset($stats['spur_karte'], $stats['day_map'], $stats['schnitte_offen']);
@@ -81,6 +97,8 @@ try {
     json_out(['ok' => true, 'stats' => $stats,
               'spur_karte' => $karte ?: new stdClass(),
               'schnitte_offen' => $offen]);
+} catch (SbKonflikt $k) {
+    json_out($k->antwort, 409);
 } catch (DomainException $ex) {
     /* Klartext-Ortsdaten: Der Browser verschliesst
      * Orte, Reanimation und Spur vor dem Senden; eine Nutzlast mit Klartext

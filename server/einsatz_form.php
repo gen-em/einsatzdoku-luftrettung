@@ -5,6 +5,7 @@ require_once __DIR__ . '/validate_lib.php';
 require_once __DIR__ . '/einsatz_lib.php';
 require_once __DIR__ . '/mission_fields_lib.php';
 require_once __DIR__ . '/diensttag_lib.php';
+require_once __DIR__ . '/standbuch_lib.php';    // Blätter mit dem Block (KA-06b-3)
 /* `heute_lokal()` — AUSDRUECKLICH, nicht ueber `db.php` geerbt. */
 require_once __DIR__ . '/format_lib.php';
 $FIELDS = require __DIR__ . '/mission_fields.php';
@@ -434,6 +435,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // PatientInnendaten: der Browser liefert NUR Chiffretext (pat_blob).
         // Leerer Wert = Blob nicht anfassen (z. B. Sitzung nicht entsperrt).
+        $patTexte = [];      // der geschriebene Block — für die Blätter unten
         if ($patReady) {
             $blobGesetzt = false;
             $pb = post_text('pat_blob');
@@ -465,6 +467,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $fieldCols[] = 'pat_blob'; $fieldVals[] = $ok;
                     $blobGesetzt = true;
+                    $patTexte[] = $ok;
                 }
             }
 
@@ -494,6 +497,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$error) { $fieldCols[] = 'ort_huelle'; $fieldVals[] = $ortHuelle; }
 
+        /* DIE BLÄTTER DES STANDBUCHS (KA-06b-3). Nur mit der Weiche im
+         * Browser an (`inhalt2.js`) kommt das Feld; es trägt das Blatt, dessen
+         * Zähler der neue Block hebt. Geschrieben wird es in DERSELBEN
+         * Transaktion wie der Einsatz (`sb_blaetter_schreiben()`), und ein
+         * Konflikt am Blatt speichert nichts. */
+        $blaetter = [];
+        $blaetterRoh = post_text('blaetter');
+        if (!$error && $blaetterRoh !== '') {
+            $blaetter = sb_blaetter_lesen(json_decode($blaetterRoh, true));
+            if (is_string($blaetter)) {
+                $error = 'Die geschützten Angaben konnten nicht gespeichert werden (Zählerstand: '
+                       . $blaetter . '). Es wurde NICHTS geändert — bitte die Seite neu laden '
+                       . 'und erneut versuchen.';
+                $blaetter = [];
+            }
+        }
+
         /* Ein hier erst entstandener Fehler MUSS das Speichern verhindern.
          * Der umgebende Block laeuft unter !$error, geprueft VOR dem Einlesen
          * der Felder. Ohne diese zweite Abfrage wuerde ein Fehler aus der
@@ -510,9 +530,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              * zurueck: Das wirft seinerseits, und die urspruengliche Ausnahme
              * ging verloren. `db_transaktion()` schliesst den Rahmen dort, wo er
              * hingehoert; was danach kommt, laeuft ohne ihn. */
-            $id = db_transaktion(db(), function (PDO $pdo) use ($crewVals, $dayId, $editing,
+            $id = db_transaktion(db(), function (PDO $pdo) use ($blaetter, $crewVals, $dayId, $editing,
                                                                $endedAt, $fieldCols, $fieldVals,
-                                                               $id, $neuRefPost,
+                                                               $id, $neuRefPost, $patTexte,
                                                                $rows, $startedAt, $userId): int {
                 if ($editing) {
                     $set = 'started_at = ?, ended_at = ?, uhr_gesperrt = 1, edited = 1';
@@ -565,6 +585,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($rows as $r) { $phasen[] = ['phase' => $r[0], 'occurred_at' => $r[1]]; }
                 einsatz_phasen_ersetzen($pdo, $id, $phasen);
 
+                /* Zuletzt die Blätter: Sie prüfen, dass der Block steht. */
+                sb_blaetter_schreiben($pdo, $userId, $blaetter, $patTexte);
+
                 return $id;
             });
 
@@ -587,6 +610,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             header('Location: einsatz.php?id=' . $id . ($editing ? '' : '&nachtrag=1'));
             exit;
+        } catch (SbKonflikt $k) {
+            http_response_code(409);
+            $error = $k->satz();
         } catch (Throwable $ex) {
             $error = 'Speichern fehlgeschlagen.';
         }
@@ -1801,7 +1827,8 @@ async function ortOeffnen(ck) {
   if (!ORT.huelle || ORT_ORTE !== ORT_LEER) { return; }   // nichts da, oder schon offen
   try {
     const k = await EdOrtsdaten.schluessel(ck);
-    const innen = await EdOrtsdaten.einsatz({ ort_huelle: ORT.huelle, client_ref: ORT.ref }, k);
+    const innen = await EdOrtsdaten.einsatz({ ort_huelle: ORT.huelle, client_ref: ORT.ref,
+                                              started_ts: ORT.beginn }, k);
     ORT_ORTE = (innen && innen.phasen) || [];
     const uhr = (t) => EdFormat.uhrzeit(ORT.beginn + t, ORT.tz);
     document.getElementById('rearows').replaceChildren();
@@ -2169,7 +2196,7 @@ async function patLaden(){
   reaSperren(false);
   if (PAT_PREV) {
     let o = {};
-    try { o = JSON.parse(await EdCrypto.decrypt(PAT_CK, PAT_PREV)) || {}; } catch (e) { }
+    try { o = JSON.parse(await EdStandbuch.patOeffnen(PAT_CK, PAT_PREV, ORT.ref)) || {}; } catch (e) { }
     if (o.mission_no != null) document.getElementById('pat_mission_no').value = o.mission_no;
     if (o.last != null) document.getElementById('pat_last').value = o.last;
     if (o.first != null) document.getElementById('pat_first').value = o.first;
@@ -2358,7 +2385,8 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
   if (zeiten.fehler) { ortFehler(zeiten.fehler); return; }
   try {
     document.getElementById('ort_huelle').value =
-      await EdOrtsdaten.einsatzVerschliessen(EdOrtsdaten.einsatzInnen(zeiten, ORT_ORTE), ORT.ref);
+      await EdOrtsdaten.einsatzVerschliessen(EdOrtsdaten.einsatzInnen(zeiten, ORT_ORTE), ORT.ref,
+                                             { ck: PAT_CK, start: zeiten.beginn });
   } catch (e) {
     ortFehler(e && e.grund === 'kein_paar'
       ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — einrichten unter Einstellungen → Geräte, dann die Seite neu laden.'
@@ -2381,8 +2409,23 @@ document.getElementById('missionform').addEventListener('submit', async ev => {
   } catch (e) { spurDa = false; }
   if (hoehe === null && (!spurDa || duenn)) { hoehe = hoeheAlt; }
   if (hoehe !== null) { o.ortshoehe = hoehe; }
-  document.getElementById('pat_blob').value =
-    Object.keys(o).length === 0 ? '__CLEAR__' : await EdCrypto.encrypt(PAT_CK, JSON.stringify(o));
+  /* Über das Standbuch (KA-06b-3): Mit der Weiche an entsteht `edk2:` mit
+     dem nächsten Zähler, und das Blatt fährt im Feld `blaetter` mit — das
+     Feld entsteht nur dann; mit der Weiche aus bleibt die Anfrage, wie sie
+     war. Ein Konflikt am Blatt kommt als Fehlerseite zurück (409). */
+  const altBlaetter = f.querySelector('input[name="blaetter"]');
+  if (altBlaetter) { altBlaetter.remove(); }
+  if (Object.keys(o).length === 0) {
+    document.getElementById('pat_blob').value = '__CLEAR__';
+  } else {
+    const vs = await EdStandbuch.patVerschliessenViele(PAT_CK, [{ ref: ORT.ref, klartext: JSON.stringify(o) }]);
+    document.getElementById('pat_blob').value = vs.texte[0];
+    if (vs.blaetter) {
+      const feld = document.createElement('input');
+      feld.type = 'hidden'; feld.name = 'blaetter'; feld.value = JSON.stringify(vs.blaetter);
+      f.appendChild(feld);
+    }
+  }
   f.dataset.patDone = '1';
   f.submit();
 });

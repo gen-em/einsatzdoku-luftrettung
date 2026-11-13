@@ -112,6 +112,9 @@ try {
              * Einsatzorts liegt im `pat_blob` (`ortshoehe`), und die Seite
              * liest sie dort nach dem Entsperren. */
             'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,
+            /* Die Kennung dazu: Ein gebundener Block (`edk2:`, KA-06) geht nur an
+             * seiner Stelle auf. */
+            'client_ref' => (string)$m['client_ref'],
         ];
     }
 

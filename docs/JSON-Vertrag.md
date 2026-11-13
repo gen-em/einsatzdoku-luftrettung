@@ -725,6 +725,14 @@ geht dort nicht auf.
 | Spurstück eines Ruhesegments | `ruhe` | `<seq_from>:<punkte>` | binär |
 | Einsatzhülle (`ort_huelle`) | `einsatz` | leer | JSON |
 
+**Fassung 2 (Kennbyte `0x02`) nimmt die Formprüfung seit Web 24.16.0 an**
+(KA-06b-3, `pruef_huelle()`): Kopf 90 Byte (dazu 8 Byte Absenderkennung
+vor dem flüchtigen Schlüssel), mindestens 138 Byte. Format und Vektoren
+stehen in `tools/proben/huelle/referenz.py`. **Senden darf ein Gerät sie
+noch nicht:** Kopplung mit Zusage und Vergleichswert, das leere
+Schlussstück `<seq>:0` und die Antwort `huelle: 2` kommen mit KA-06d, und
+bis dahin bleibt Fassung 1 die einzige, die ein Gerät schickt.
+
 **Innen, Spurstück** (E-S11-31, -39, -66): je Punkt 14 Byte, big-endian —
 Breite und Länge in 1e-7 Grad (`int32`), Höhe in **ganzen Metern** (`int16`,
 von der Null weg gerundet, auf ±32 767 geklemmt), Zeit in Sekunden **relativ

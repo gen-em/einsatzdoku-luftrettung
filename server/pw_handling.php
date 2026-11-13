@@ -597,7 +597,7 @@ if (ERSTVERGABE) {
        * steht deshalb `encrypt()` und nicht `huelleBauen()`. Sie ist der
        * Rueckweg fuer den Fall, dass der Anteil verloren ist; haengte sie
        * selbst daran, gaebe es keinen. */
-      document.getElementById('wrap_rc').value   = await EdCrypto.encrypt(rk, ck);
+      document.getElementById('wrap_rc').value   = await EdInhalt.huelleSchreiben(rk, ck, 'rc', null);
       // Pruefsumme des Inhaltsschluessels: Sie wird hier erstmals gesetzt und
       // ist ab jetzt der Massstab, an dem jedes spaetere Umpacken gemessen
       // wird. Ohne sie koennte ein Fehler beim Passwortwechsel eine Huelle
@@ -676,7 +676,7 @@ if (ERSTVERGABE) {
       const rk = await EdCrypto.recoveryKeyHex(rc);
       let ck;
       try {
-        ck = await EdCrypto.decrypt(rk, WRAP_RC);       // Inhaltsschluessel entpacken
+        ck = await EdInhalt.huelleOeffnen(rk, WRAP_RC, 'rc');   // Inhaltsschluessel entpacken, beide Fassungen
       } catch (e) {
         /* Ab hier ist der Schluessel FORMAL in Ordnung — Laenge und Alphabet
          * stimmen. Dass er trotzdem nicht passt, heisst also: falscher

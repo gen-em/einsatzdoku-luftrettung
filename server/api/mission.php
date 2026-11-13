@@ -193,7 +193,7 @@ try {
      * bleibt die Quelle leer und es entsteht keine Linie — es wird NICHT auf
      * eine andere ausgewichen. */
     $startSrc = $m['start_src'] !== null ? (string)$m['start_src'] : null;
-    $startBase = null; $startPrevBlob = null;
+    $startBase = null; $startPrevBlob = null; $startPrevRef = null;
 
     if ($startSrc === 'base' && $tag !== null
         && $tag['base_lat'] !== null && $tag['base_lon'] !== null) {
@@ -204,7 +204,7 @@ try {
      * Vorgaengers durch wie bei 'prev_site'. Die Einsatzansicht liest daraus
      * `transport_dest`. */
     if (($startSrc === 'prev_dest' || $startSrc === 'prev_site') && $dayId > 0) {
-        $vq = db()->prepare('SELECT pat_blob FROM missions
+        $vq = db()->prepare('SELECT pat_blob, client_ref FROM missions
                               WHERE user_id = ? AND day_id = ? AND deleted_at IS NULL
                                 AND started_at < ?
                               ORDER BY started_at DESC, id DESC LIMIT 1');
@@ -212,6 +212,9 @@ try {
         $vor = $vq->fetch();
         if ($vor && !empty($vor['pat_blob'])) {
             $startPrevBlob = (string)$vor['pat_blob'];
+            /* Die Kennung des Vorgaengers dazu: Ein gebundener Block
+             * (`edk2:`, KA-06) geht nur an seiner Stelle auf. */
+            $startPrevRef = (string)$vor['client_ref'];
         }
     }
 
@@ -260,6 +263,7 @@ try {
         'start_src'        => $startSrc,
         'start_base'       => $startBase,
         'start_prev_blob'  => $startPrevBlob,
+        'start_prev_ref'   => $startPrevRef,
         'fields'     => $fields,
         'crew_effektiv' => (object)$crewEff,
         'pat_blob'   => !empty($m['pat_blob']) ? (string)$m['pat_blob'] : null,

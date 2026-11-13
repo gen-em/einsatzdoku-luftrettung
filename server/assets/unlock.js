@@ -421,7 +421,7 @@ const EdUnlock = (() => {
         for (const m of liste) {
           let o = {};
           if (m.pat_blob) {
-            try { o = JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) || {}; }
+            try { o = JSON.parse(await EdStandbuch.patOeffnen(ck, m.pat_blob, m.client_ref)) || {}; }
             catch (e) {
               /* NICHT ANFASSEN. Ein Blob, der sich mit diesem Schlüssel nicht
                  öffnen lässt, gehört zu einem anderen Schlüssel — ihn zu
@@ -434,19 +434,24 @@ const EdUnlock = (() => {
              Stand — die Spalte ist dann ein Rest, den ein Speichern hätte
              leeren sollen. */
           if (o.notes == null || String(o.notes).trim() === '') { o.notes = m.notes; }
-          posten.push({
-            id: m.id,
-            pat_blob: await EdCrypto.encrypt(ck, JSON.stringify(o)),
-            blob_alt: m.pat_blob || null
-          });
+          posten.push({ id: m.id, ref: m.client_ref, klartext: JSON.stringify(o),
+                        blob_alt: m.pat_blob || null });
         }
         if (!posten.length) { return; }       // nur Unlesbare — weitere Runden bringen nichts
 
         /* OHNE `o.vorgang`: still, siehe Kopf. Das `credentials: 'same-origin'`
            dieser Stelle faellt weg -- es ist seit 2017 der Vorgabewert von
            fetch, und die Adresse ist ohnehin die eigene. Ein Unterschied im
-           Quelltext, keiner im Verhalten. */
-        const a = await EdApi.postJson('api/pat_anheben.php', { missions: posten });
+           Quelltext, keiner im Verhalten.
+           ÜBER DAS STANDBUCH (KA-06b-3): Mit der Weiche an fahren die
+           Blätter im Feld `blaetter` mit; mit der Weiche aus nicht. */
+        const senden = (texte, blaetter) => {
+          const rumpf = { missions: posten.map((p, i) => ({ id: p.id, pat_blob: texte[i],
+                                                            blob_alt: p.blob_alt })) };
+          if (blaetter) { rumpf.blaetter = blaetter; }
+          return EdApi.postJson('api/pat_anheben.php', rumpf);
+        };
+        const a = await EdStandbuch.patSchreibenViele(ck, posten, senden);
         if (!a.ok) { return; }
         const erg = a.daten;   // bei `ok` nie null, immer ein Objekt
         /* Kein Fortschritt trotz Posten: Dann greift die Wache je Zeile (ein

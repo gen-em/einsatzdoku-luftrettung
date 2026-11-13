@@ -76,7 +76,9 @@
                                                true, ['deriveBits']);
     const spki  = base64(await crypto.subtle.exportKey('spki', kp.publicKey));
     const pkcs8 = base64(await crypto.subtle.exportKey('pkcs8', kp.privateKey));
-    return { oeffentlich: spki, privat: await EdCrypto.encrypt(ck, pkcs8) };
+    /* Zweck `kp`, ohne Bezug (KA-06b-3): mit der Weiche an `edk2:`, sonst
+       `edk1:` wie bisher. */
+    return { oeffentlich: spki, privat: await EdInhalt.schreiben(ck, 'kp', '', pkcs8, 0) };
   }
 
   /** Still: das Paar anlegen. Liefert true, wenn eines abgelegt ist. */
@@ -125,7 +127,7 @@
     const chiffre = (typeof KP_PRIVAT !== 'undefined' && KP_PRIVAT) ? KP_PRIVAT : (neu ? neu.privat : null);
     if (!chiffre) { return null; }
     try {
-      const der = await EdCrypto.decrypt(ck, chiffre);
+      const der = (await EdInhalt.lesen(ck, chiffre, 'kp', '')).text;   // beide Fassungen
       return Uint8Array.from(atob(der), c => c.charCodeAt(0));
     } catch (e) { return null; }
   }

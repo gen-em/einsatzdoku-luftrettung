@@ -122,3 +122,148 @@ function sb_ablage_pruefen(mixed $alt, mixed $neu, mixed $text): ?string
     }
     return null;
 }
+
+/* ====================================================================
+ * DATENSATZ UND BLATT IN EINER ANFRAGE (KA-06b-3)
+ * ====================================================================
+ *
+ * Wer einen Patientenblock der Fassung 2 schreibt, schickt die Blätter mit,
+ * deren Zähler er dabei hebt (`EdStandbuch.patVerschliessenViele()`):
+ *
+ *     "blaetter": [ { "wer": 0…15, "version_alt": n, "version": m,
+ *                     "text": "edk2:…", "refs": ["<client_ref>", …] } ]
+ *
+ * Steht die Weiche im Browser aus, fehlt das Feld, und nichts hier läuft.
+ *
+ * ZWEI REGELN, beide in der Transaktion des Datensatzes:
+ *
+ *   (1) KEIN BLATT VOR SEINEM BLOCK. Jeder Einsatz in `refs` muss nach dem
+ *       Schreiben einen der Blöcke dieser Anfrage tragen. Ein Blatt, das
+ *       seinem Block vorausläuft, ließe den alten Block später als
+ *       „zurückgelegt" erscheinen — den Schaden hätte, wer nichts falsch
+ *       gemacht hat. Übersprungene Einsätze (schon da, nicht mehr da, ein
+ *       anderes Fenster war schneller) nennt die Antwort; der Browser
+ *       schickt dann ohne ihre Zähler noch einmal. Der umgekehrte Fall ist
+ *       harmlos: Ein Block vor seinem Blatt „hinkt", und der Browser trägt
+ *       nach.
+ *   (2) DIE VERSIONSREGEL wie in `api/standbuch.php` (`sb_ablegen()`).
+ *
+ * Scheitert eine, wird NICHTS gespeichert: `SbKonflikt` rollt die
+ * Transaktion zurück, und der Endpunkt antwortet 409 mit `$k->antwort`:
+ *
+ *     { "error": "blatt", "grund": "version", "wer", "version", "text" }
+ *     { "error": "blatt", "grund": "uebersprungen", "refs": [ … ] }
+ *     { "error": "migration", "meldung" }     vor `update.php`
+ */
+
+/** Ein Konflikt am Blatt — die Antwort steht in `$antwort` (409). */
+final class SbKonflikt extends RuntimeException
+{
+    public function __construct(public readonly array $antwort)
+    {
+        parent::__construct('standbuch: ' . (string)($antwort['grund'] ?? $antwort['error'] ?? ''));
+    }
+
+    /** Ein Satz für eine Seite ohne JSON (das Einsatzformular). */
+    public function satz(): string
+    {
+        return ($this->antwort['error'] ?? '') === 'migration'
+            ? (string)$this->antwort['meldung']
+            : 'Der Zählerstand dieses Einsatzes wurde inzwischen an anderer Stelle '
+              . 'fortgeschrieben (ein zweites Fenster). Es wurde NICHTS gespeichert — '
+              . 'bitte die Seite neu laden und erneut speichern.';
+    }
+}
+
+/** Höchstens so viele Kennungen je Blatt — so viele Einsätze trägt eine
+ *  Anfrage höchstens (Import). */
+const SB_REFS_MAX = 5000;
+
+/**
+ * Die Blätter einer Anfrage, geprüft. Liefert `[]` (keine), die Liste oder
+ * den Namen des Felds, das nicht passt.
+ *
+ * @return list<array{wer:int, version_alt:int, version:int, text:string, refs:list<string>}>|string
+ */
+function sb_blaetter_lesen(mixed $roh): array|string
+{
+    if ($roh === null) { return []; }
+    if (!is_array($roh) || !array_is_list($roh) || !$roh || count($roh) > SB_BLAETTER) {
+        return 'blaetter';
+    }
+    $aus = []; $gesehen = [];
+    foreach ($roh as $b) {
+        if (!is_array($b)) { return 'blaetter'; }
+        $wer = $b['wer'] ?? null;
+        if (!is_int($wer) || $wer < 0 || $wer >= SB_BLAETTER || isset($gesehen[$wer])) { return 'wer'; }
+        $gesehen[$wer] = true;
+        $grund = sb_ablage_pruefen($b['version_alt'] ?? null, $b['version'] ?? null, $b['text'] ?? null);
+        if ($grund !== null) { return $grund; }
+        $refs = $b['refs'] ?? null;
+        if (!is_array($refs) || !array_is_list($refs) || !$refs || count($refs) > SB_REFS_MAX) {
+            return 'refs';
+        }
+        foreach ($refs as $r) {
+            if (!is_string($r) || $r === '' || strlen($r) > 64) { return 'refs'; }
+        }
+        $aus[] = ['wer' => $wer, 'version_alt' => $b['version_alt'], 'version' => $b['version'],
+                  'text' => $b['text'], 'refs' => array_values(array_unique($refs))];
+    }
+    return $aus;
+}
+
+/**
+ * Die Kennungen aus `$refs`, deren Einsatz nach dem Schreiben KEINEN der
+ * Blöcke aus `$texte` trägt (Regel 1). Tragen zwei Zeilen dieselbe Kennung
+ * (zwei Geräte), genügt eine.
+ *
+ * @param list<string> $refs
+ * @param list<string> $texte  die Blöcke dieser Anfrage
+ * @return list<string>
+ */
+function sb_nicht_geschrieben(PDO $pdo, int $userId, array $refs, array $texte): array
+{
+    $soll = array_flip(array_map('strval', $texte));
+    $gut = [];
+    foreach (array_chunk($refs, 500) as $stueck) {
+        $st = $pdo->prepare('SELECT client_ref, pat_blob FROM missions WHERE user_id = ? AND client_ref IN ('
+                            . implode(',', array_fill(0, count($stueck), '?')) . ')');
+        $st->execute(array_merge([$userId], $stueck));
+        foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $z) {
+            if ($z['pat_blob'] !== null && isset($soll[(string)$z['pat_blob']])) {
+                $gut[(string)$z['client_ref']] = true;
+            }
+        }
+    }
+    return array_values(array_filter($refs, static fn($r) => !isset($gut[$r])));
+}
+
+/**
+ * Die Blätter ablegen — IN DER TRANSAKTION DES DATENSATZES, nach ihm.
+ * Wirft `SbKonflikt`; der Rahmen rollt zurück, der Endpunkt antwortet 409.
+ *
+ * @param list<array>  $liste  aus `sb_blaetter_lesen()`
+ * @param list<string> $texte  die Blöcke, die diese Anfrage schreibt
+ */
+function sb_blaetter_schreiben(PDO $pdo, int $userId, array $liste, array $texte): void
+{
+    if (!$liste) { return; }
+    if (!sb_bereit($pdo)) {
+        throw new SbKonflikt(['error' => 'migration',
+            'meldung' => 'Das Standbuch ist auf dieser Anlage noch nicht eingerichtet — '
+                       . 'eine AdministratorIn muss update.php aufrufen. Es wurde nichts gespeichert.']);
+    }
+    $refs = [];
+    foreach ($liste as $b) { foreach ($b['refs'] as $r) { $refs[$r] = true; } }
+    $fehlt = sb_nicht_geschrieben($pdo, $userId, array_map('strval', array_keys($refs)), $texte);
+    if ($fehlt) {
+        throw new SbKonflikt(['error' => 'blatt', 'grund' => 'uebersprungen', 'refs' => $fehlt]);
+    }
+    foreach ($liste as $b) {
+        $e = sb_ablegen($pdo, $userId, $b['wer'], $b['version_alt'], $b['version'], $b['text']);
+        if (!$e['ok']) {
+            throw new SbKonflikt(['error' => 'blatt', 'grund' => 'version', 'wer' => $b['wer'],
+                                  'version' => $e['version'], 'text' => $e['text']]);
+        }
+    }
+}

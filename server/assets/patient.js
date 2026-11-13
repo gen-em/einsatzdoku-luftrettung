@@ -180,12 +180,17 @@
    * darauf aufbauen, brauchen ihre eigene Darstellung — sie sollen sich aber
    * nicht jede fuer sich ueberlegen, was ein Fehlschlag bedeutet.
    *
+   * @param {string} ref  die client_ref des Einsatzes — ein gebundener Block
+   *                      (`edk2:`, KA-06) geht nur an seiner Stelle auf
    * @returns {Promise<{zustand:'ok'|'leer'|'unlesbar', daten:Object|null}>}
    */
-  async function entschluessle(ck, blob) {
+  async function entschluessle(ck, blob, ref) {
     if (!blob || !ck) { return { zustand: 'leer', daten: null }; }
     try {
-      return { zustand: 'ok', daten: JSON.parse(await EdCrypto.decrypt(ck, blob)) || {} };
+      /* Über das Standbuch (KA-06b-3): beide Fassungen, und ein gebundener
+         Block wird gegen seinen Zählerstand gehalten. Fassung 1 geht bei
+         ausgeschalteter Weiche weiter über `EdCrypto.decrypt()`. */
+      return { zustand: 'ok', daten: JSON.parse(await EdStandbuch.patOeffnen(ck, blob, ref)) || {} };
     } catch (e) {
       return { zustand: 'unlesbar', daten: null };
     }
@@ -227,7 +232,7 @@
    *   m._pat      entschluesseltes Objekt (oder null)
    *   m._patState 'ok' | 'leer' | 'unlesbar'
    *
-   * @param {Array}  liste     Einsaetze mit dem Feld pat_blob
+   * @param {Array}  liste     Einsaetze mit den Feldern pat_blob und client_ref
    * @param {string} ck        Inhaltsschluessel (hex) oder null/leer
    * @returns {Promise<{ok:number, leer:number, unlesbar:number, gesperrt:boolean}>}
    */
@@ -262,7 +267,7 @@
     }
     for (let i = 0; i < arbeit.length; i += STAPEL) {
       const teil = arbeit.slice(i, i + STAPEL);
-      const erg = await Promise.all(teil.map((m) => entschluessle(ck, m.pat_blob)));
+      const erg = await Promise.all(teil.map((m) => entschluessle(ck, m.pat_blob, m.client_ref)));
       for (let j = 0; j < teil.length; j++) {
         const m = teil[j], r = erg[j];
         m._pat = r.daten;

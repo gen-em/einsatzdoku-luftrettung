@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../auth_guard.php';   // liefert $userId
 require_once __DIR__ . '/../validate_lib.php';
 require_once __DIR__ . '/../spur_lib.php';
+require_once __DIR__ . '/../standbuch_lib.php';
 
 /**
  * api/wartungslauf.php — der Wartungslauf im Browser. Der Server sieht
@@ -26,11 +27,13 @@ require_once __DIR__ . '/../spur_lib.php';
  *
  *   {aktion:'tauschen', art, id, stand:[[seq_from, punkte], …],
  *    stueck:{seq_from, punkte, n_original, ts_von, ts_bis, stufe, huelle},
- *    pat?:{pruef, neu}}
+ *    pat?:{pruef, neu}, blaetter?:[…]}
  *        Das eine neue Stück (Stufe 2 oder 3) statt der gelesenen. `pat` nur,
- *        wenn der Browser eine fehlende Ortshöhe nachgetragen hat.
+ *        wenn der Browser eine fehlende Ortshöhe nachgetragen hat;
+ *        `blaetter` nur mit `pat` der Fassung 2 (KA-06b-3,
+ *        `standbuch_lib.php`) — geschrieben nur, wenn `pat` geschrieben ist.
  *     -> 200 {ok:true, weg, neu, pat?} · 400 eingabe · 409 stand | stufe |
- *        marke | form | frist | offen | demo · 404 fehlt
+ *        marke | form | frist | offen | demo | blatt · 404 fehlt
  *
  * DER INHALT IST SACHE DES BROWSERS. Er öffnet, packt, dünnt aus, öffnet das
  * Ergebnis noch einmal und vergleicht (Rundlauf), bevor er schickt. Der
@@ -100,6 +103,9 @@ if (isset($b['pat'])) {
         $pat = ['neu' => $neu, 'pruef' => $pruefsumme];
     }
 }
+$blaetter = sb_blaetter_lesen($b['blaetter'] ?? null);
+if (is_string($blaetter)) { $pruef->melde('blaetter', $blaetter); $blaetter = []; }
+if ($blaetter && $pat === null) { $pruef->melde('blaetter', 'ohne pat'); }
 if (!in_array($art, ['mission', 'rest'], true) || $id < 1 || $stueck === null
     || !is_array($stand) || !$stand || !$pruef->sauber()) {
     json_out(['error' => 'eingabe', 'felder' => $pruef->nachUrsache()], 400);
@@ -107,7 +113,19 @@ if (!in_array($art, ['mission', 'rest'], true) || $id < 1 || $stueck === null
 $stand = array_map(static fn($x) => [(int)($x[0] ?? -1), (int)($x[1] ?? 0)], array_values($stand));
 
 try {
-    $t = spur2_wartung_tauschen($pdo, $userId, $art, $id, $stand, $stueck, $pat);
+    /* Mit Blättern in EINER Transaktion um Tausch und Block: Ist der Block
+     * nicht geschrieben (`pat` = 'geaendert'), bleibt auch das Blatt, wie es
+     * ist; scheitert das Blatt, ist auch der Tausch nicht geschehen. */
+    $t = db_transaktion($pdo, function (PDO $pdo) use ($userId, $art, $id, $stand, $stueck,
+                                                      $pat, $blaetter): array {
+        $t = spur2_wartung_tauschen($pdo, $userId, $art, $id, $stand, $stueck, $pat);
+        if ($t['ok'] && ($t['pat'] ?? null) === 'geschrieben') {
+            sb_blaetter_schreiben($pdo, $userId, $blaetter, [$pat['neu']]);
+        }
+        return $t;
+    });
+} catch (SbKonflikt $k) {
+    json_out($k->antwort, 409);
 } catch (Throwable $ex) {
     json_fehler($ex, 'wartungslauf');
 }

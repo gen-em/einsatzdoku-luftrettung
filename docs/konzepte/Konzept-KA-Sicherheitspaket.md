@@ -12,8 +12,8 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-06b-2** (Server für das Standbuch, Web 24.15.0, Migration) im PR; danach 06b-3 Verbraucher, 06b-4 Anhebelauf (E-KA-51). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-01, -02, -05, -06 mit PR #168 gemergt (Uhr 4.5.1), KG-03 wartet auf diese Referenz |
-| Erledigt | **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
+| In Arbeit | **KA-06b-3** (Verbraucher, Web 24.16.0) im PR; danach 06b-4 Anhebelauf (E-KA-51). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-01, -02, -05, -06 mit PR #168 gemergt (Uhr 4.5.1), KG-03 wartet auf diese Referenz |
+| Erledigt | **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
@@ -105,6 +105,11 @@ Safari.
 | E-KA-51 | **06b in vier Teilen, je ein PR:** 06b-1 Kern einbinden (Weiche aus), 06b-2 Server für das Standbuch (Tabelle, `api/standbuch.php`, Datensatz und Blatt in einer Transaktion, 409; Migration, `update.php`), 06b-3 Verbraucher umstellen und Ableitung 2 am Server, 06b-4 Anhebelauf. **Die Weiche wird erst umgelegt, wenn auch 06c und 06d stehen** — als Hauptstufe Web 25.0.0 | 11.11.2026, BetreiberIn |
 | E-KA-52 | **Entscheidungen des Krypto-Kerns** (Fable-Agent, E-KA-49): (1) die Fassung der Ableitung folgt aus der Rundenzahl — ab 1 200 000 Fassung 2 (`ABLEITUNG2_AB`), keine eigene Spalte; (2) die Weiche ist eine Konstante im Skript, kein Wert vom Server; (3) das Buch vergisst nichts — beim Übernehmen eines neueren Blatts gilt je Feld der höhere Wert (strenger als die Referenz); (4) 409 heißt neu aufsetzen, vier Versuche, dann `konflikt`; (5) die Ablage hält den Stand verschlossen, eigene Datenbank `nadoku-stand`; (6) neuer Grund `blatt-version`; (7) `abgleichen()` liefert Befunde statt zu werfen; (8) `EdCrypto.decrypt()` weist `edk2:` mit Grund `gebunden` ab; (9) Formprüfungen strenger als die Referenz — wo die Referenz lockerer war, ist sie mit 06b-1 nachgezogen (F-KA-90) | 11.11.2026, Umsetzung |
 | E-KA-53 | **Die Abschrift des Standbuchs liegt in einer eigenen Tabelle** (`stand_blaetter`, PK Konto und Blatt, Kaskade mit dem Konto), nicht in `users` oder `app_state`: 17 Zeilen je Konto mit eigener Version. Die Versionsregel ist **eine Anweisung je Fall** (`INSERT IGNORE` für ein neues Blatt, `UPDATE … WHERE version = ?` sonst) statt einer Transaktion mit Lesen und Schreiben. Decke 256 KB Innenlänge je Blatt. **Nicht im Konto-Backup** — ein eingespieltes Backup bekommt im Browser neue Zähler (06d); der Demo-Reset räumt die Blätter mit | 11.11.2026, Umsetzung |
+| E-KA-54 | **06b-3 als ein Paket mit einem PR und einem Prüfstand**, innen drei Commits (Patientenblock, Schlüssel und Ableitung, Ortsdaten) — statt drei PRs mit je einem vollen Lauf | 12.11.2026, BetreiberIn |
+| E-KA-55 | **Nach dem Abbruch des Agenten setzt die Hauptinstanz fort** (Variante 2): Der Agent (Opus) hatte 06b-3a angefangen; ein Neustart des Containers beendete ihn, und er ließ sich nicht fortsetzen. Sein Stand ist als Zwischencommit übernommen und durchgesehen | 13.11.2026, BetreiberIn |
+| E-KA-56 | **Vorgriff auf 06d, nur die Form:** Der Server nimmt `edk2:` (Patientenblock ab Klasse 512), `edka2:` (nur Passworthülle; `rc`, `kp`, `rw` nie) und die Gerätehülle der Fassung 2 an. Ohne das ließe sich kein Schreibweg des Browsers mit umgelegter Weiche Ende zu Ende prüfen. Geräte senden Fassung 2 erst nach 06d (JSON-Vertrag 3.4) | 13.11.2026, Umsetzung |
+| E-KA-57 | **Das Ziel der Rundenzahl bleibt 600 000, bis die Weiche umliegt** — `crypto.js` wählt Ableitung 2 nach der Rundenzahl, und ein höheres Ziel änderte das Anmelde-Token sofort. PHP rechnet Ableitung 2 schon (`kdf_haelfte()`); das Heben ist dann eine Zeile | 13.11.2026, Umsetzung |
+| E-KA-58 | **Die Kennung des Kontos für die Ablage des Standbuchs kommt aus dem Inhaltsschlüssel** (AES-GCM-Prüfwert über nichts, davon SHA-256), nicht vom Server — eine Kennung, die der Server nennt, könnte er wechseln, und der Browser fände keinen Anker. **Datensatz und Blätter in einer Anfrage** (Feld `blaetter` mit `refs`); der Server prüft, dass jeder Block steht, dessen Zähler ein Blatt hebt (`uebersprungen`), sonst 409 `blatt` und nichts gespeichert. **Wiederherstellung und Übernahme lesen ohne Standbuch** — ein eingespielter Stand ist mit Absicht älter — und schreiben mit neuem Zähler | 13.11.2026, Umsetzung |
 | E-KA-21 | **Die Garmin-Anteile gehen an eine eigene Instanz, Kürzel KG** (Abschnitt 11): KA-04 Punkt 1 und 4, der Garmin-Teil von KA-06c samt der Messung für 06a, die Garmin-Kommentare aus F-KA-43 und der Garmin-Teil von KA-M6. KG zählt eigene Nummern (`KG-NN`, `F-KG-NN`, `E-KG-NN`, `P-KG-NN`), führt ein eigenes Konzept und schreibt den Rahmenplan nicht — das tut diese Instanz | 10.11.2026, BetreiberIn |
 
 ---
@@ -785,6 +790,30 @@ des eigenen Kontos.
 Fassung 3; 3 Begleitdateien, alle versiegelt. Staging und Produktiv nicht
 gezählt (E-KA-31).
 
+### KA-06b-3 Verbraucher (13.11.2026)
+
+**Was nicht geprüft werden konnte — zuerst.**
+
+1. **Ende zu Ende gemessen ist nur das Einsatzformular** (Patientenblock und
+   Einsatzhülle, beide Stellungen der Weiche). Import, Wiederherstellung,
+   Übernahme, Wartungslauf, Notizen-Anhebung, Kontopaar, Rückweg, Schneiden
+   und Löschen sind mit umgelegter Weiche **nicht** Ende zu Ende gefahren —
+   umgebaut, mit ausgeschalteter Weiche im Prüfstand (alle bestehenden Wege
+   grün), mit umgelegter nur über die Hüllenprobe des Kerns.
+2. **Spurstücke der Fassung 2 aus einem Gerät** gibt es noch nicht (06c,
+   06d); der Leser ist nur gegen die Vektoren gemessen.
+3. **Zwei Tabs gleichzeitig** sind wie in 06b-2 nur nacheinander gemessen.
+
+**Gemessen:**
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Bedienprobe `ka06b3-patient-weiche-an` (Weiche nur im Browser der Probe umgelegt) | gespeichert `edk2:`, Blätter 1 → 2, Feld `blaetter` mitgeschickt, Block geht auf; dieselbe Anfrage noch einmal → **409**, Block unverändert | Stand vor dem Umbau (`5261e4e`): `edk1:`, kein Blatt, kein Feld, Wiederholung 302 — rot | Formular, Server-Transaktion, Versionsregel, Einsatzhülle Fassung 2 |
+| Bedienprobe `ka06b3-patient-weiche-aus` | gespeichert `edk1:`, kein Feld `blaetter` | derselbe Stand: ebenso grün | mit ausgeschalteter Weiche unverändert |
+| Hüllenprobe des Servers | **22 Prüfungen, 0 Abweichungen**, neu Ableitung 1 und 2 in PHP (4) | ohne `kdf_haelfte()` wären die zwei Fälle mit 1 200 000 Runden rot | Ableitung 2 byte-gleich zur Referenz |
+
+**R91 nach PR #175 (Web 24.15.0, Staging, 12.11.2026, nach update.php der BetreiberIn):** Anmeldung im Browser mit eigenem Konto und Zweitfaktor; Kern geladen; api/standbuch.php stand: 16 Blätter, Buch 0; edkvor leer; 0 Seitenfehler; Reiter System ohne Eintrag nach dem 09.11.2026.
+
 ### KA-06b-2 Server für das Standbuch (11.11.2026)
 
 **Was nicht geprüft werden konnte — zuerst.**
@@ -1026,6 +1055,10 @@ Klartextfelder (`final`, Strecke, Besatzung, Tagesnotizen, Phasenzeiten bis
 | F-KA-94 | **Die Rückwegprobe lief in WebKit zweimal in die Zeitgrenze eines Seitenwechsels** (90 s), in beiden vollen Läufen von 06b-2 und an verschiedenen Stellen (nach dem Tor der BetreiberIn, beim ersten Anmelden); im vollen Lauf von 06b-1 war sie grün. Einzeln dreimal **23 ok, 0 fehlen**. Der Paketcode berührt keinen Browserweg, die Ratenzähler waren leer | im Kopf allein neu gemessen; als Backlog-Punkt beobachten, wenn es wiederkommt |
 | F-KA-95 | **Nach dem Neustart des Containers liefen die Plattform-Container nicht** — die Schemaprobe fand MariaDB 10.6 und beide MySQL nicht | `plattform.sh alles` nach jedem Neustart; `hochfahren.sh` startet sie nicht mit |
 | F-KA-96 | **Die neue Migration fehlte in der Vorabliste von `schema.sql`** — eine Neuinstallation hätte sie als offen gemeldet | Zeile ergänzt; das Migrationsregister hat es gefunden |
+| F-KA-97 | **Der Agent für 06b-3 brach mit dem Neustart des Containers ab** und ließ sich nicht fortsetzen; sein Stand (11 Dateien, nur 06b-3a) lag uncommittet in der Arbeitskopie | als Zwischencommit gesichert, von der Hauptinstanz fortgeführt (E-KA-55); Agenten committen künftig je Teil |
+| F-KA-98 | **Die erste Fassung der Probe legte die Weiche nicht um, sondern brach die Seite:** `true` ist ein Zeichen kürzer als `false`, und eine abgefangene Antwort mit der alten `Content-Length` verwirft der Browser (`net::ERR_FAILED`) — ohne `EdInhalt` fiel alles Weitere | Länge und Kodierung aus dem Kopf der Antwort genommen |
+| F-KA-99 | **Formular und Import reichten dem Leser den Klartextbeginn nicht mit** — jede Einsatzhülle der Fassung 2 wäre dort mit `zeit` gescheitert und hätte das Speichern gesperrt | `started_ts` mitgegeben; `einsatz()` nimmt auch `started_at` |
+| F-KA-100 | **Die Formprüfung kannte nur die Gerätehülle der Fassung 1** (F-KA-83) — mit umgelegter Weiche wies der Server die Einsatzhülle des Formulars zurück | `pruef_huelle()` kennt beide Fassungen (E-KA-56) |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
 | F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
 | F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |

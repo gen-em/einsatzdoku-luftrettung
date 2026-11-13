@@ -962,7 +962,7 @@ async function zielUndHoeheOeffnen(m){
   if (!m.pat_blob && !m.start_prev_blob) { return; }
   const ck = await EdUnlock.ensureContentKey(m.pat_wrap, KDF_SALT, KDF_ITER);
   if (!ck) { return; }
-  const r = await EdPat.entschluessle(ck, m.pat_blob);
+  const r = await EdPat.entschluessle(ck, m.pat_blob, m.client_ref);
   const o = (r.zustand === 'ok' && r.daten) || {};
   const z = o.transport_dest;
   if (z && typeof z === 'object') {
@@ -971,7 +971,7 @@ async function zielUndHoeheOeffnen(m){
   }
   if (o.ortshoehe != null) { m.site_ele_m = Number(o.ortshoehe); }
   if (m.start_src === 'prev_dest' && m.start_prev_blob) {
-    const v = await EdPat.entschluessle(ck, m.start_prev_blob);
+    const v = await EdPat.entschluessle(ck, m.start_prev_blob, m.start_prev_ref);
     const vz = v.zustand === 'ok' && v.daten && v.daten.transport_dest;
     if (vz && vz.lat != null && vz.lon != null) {
       m.start_prev_dest = { lat: Number(vz.lat), lon: Number(vz.lon) };
@@ -987,7 +987,7 @@ async function zeigePat(m, bounds){
   }
   document.getElementById('lockbanner').hidden = true;
 
-  const r = await EdPat.entschluessle(ck, m.pat_blob);
+  const r = await EdPat.entschluessle(ck, m.pat_blob, m.client_ref);
   if (r.zustand === 'unlesbar') {
     // Auf der Einzelansicht sieht die NutzerIn genau einen Einsatz. Ein
     // stiller Fehlschlag saehe hier aus wie "keine geschuetzten Angaben
@@ -1118,7 +1118,7 @@ async function zeichneLuftlinie(m, o, ck, bounds){
    * mit — auszuwerten ist er allein hier. */
   let prevSite = null;
   if (m.start_src === 'prev_site' && m.start_prev_blob) {
-    const r = await EdPat.entschluessle(ck, m.start_prev_blob);
+    const r = await EdPat.entschluessle(ck, m.start_prev_blob, m.start_prev_ref);
     if (r.zustand === 'ok' && r.daten && r.daten.loc) { prevSite = r.daten.loc; }
   }
   const abfahrt = EdLuftlinie.abfahrt(m.start_src, {

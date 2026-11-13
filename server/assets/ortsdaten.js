@@ -68,7 +68,9 @@
     if (!priv || !pub) {
       throw fehler('kein_paar', 'Für dieses Konto ist noch kein Schlüsselpaar eingerichtet.');
     }
-    return { priv: priv, pub: pub };
+    /* `ck` reist mit (KA-06b-3): Wer eine Hülle der Fassung 2 öffnet, braucht
+       das Standbuch des Kontos — Gerätebuch, Versatz, Sperren, Zähler. */
+    return { priv: priv, pub: pub, ck: ck };
   }
 
   function gesperrt(ts, sperren) {
@@ -102,7 +104,39 @@
   /** Der Ort einer Hülle der Stufe 2 oder 3. */
   const platzGepackt = (st) => st.seq_from + ':' + st.punkte + ':' + st.stufe + ':' + st.n_original;
 
+  /* FASSUNG 2 (KA-06b-3) — erkannt am Kennbyte der Hülle (0x02). Steht die
+     * Weiche aus, gibt es keine; dann läuft jeder Leseweg unten wie bisher. */
+  function istFassung2(huelle) {
+    if (huelle instanceof Uint8Array) { return huelle[0] === 2; }
+    try { return typeof huelle === 'string' && atob(huelle.slice(0, 4)).charCodeAt(0) === 2; }
+    catch (e) { return false; }
+  }
+
+  /** Was das Standbuch zu einem Datensatz weiß — leer ohne Inhaltsschlüssel
+   *  (ein fremdes Paar im Freigabeweg hat kein Buch dieses Kontos). */
+  async function standbuchFuer(k, ref) {
+    if (!k.ck || typeof EdStandbuch === 'undefined') { return { buch: null, e: {} }; }
+    const buch = await EdStandbuch.seitenbuch(k.ck);
+    return { buch: buch, e: await buch.eintrag(ref) };
+  }
+
+  /** Eine Spur mit mindestens einer Hülle der Fassung 2 — über `EdHuelle2`,
+   *  mit den Regeln für Folge, Zeit und Herkunft. Die Sperren des Klartexts
+   *  gelten zusätzlich: Sie blenden aus, sie belegen nichts. */
+  async function spur2(stuecke, art, ref, sperren, k) {
+    const sb = await standbuchFuer(k, ref);
+    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, false);
+    const r = await EdHuelle2.spurLesen(ls, art, ref,
+      (stuecke || []).map((st) => Object.assign({}, st, { huelle: b64(st.huelle) })),
+      { versatz: sb.e.d || 0, sperren: sb.e.x || [], stand: sb.e.s || null })
+      .catch((e) => { e.art = art; throw e; });
+    return r.punkte.filter((p) => !gesperrt(p.ts, sperren));
+  }
+
   async function spur(stuecke, art, ref, sperren, k) {
+    if ((stuecke || []).some((st) => istFassung2(st.huelle))) {
+      return spur2(stuecke, art, ref, sperren, k);
+    }
     const nach = new Map();
     /* ZUERST DIE GEPACKTEN (Stufe 2 und 3). Ihre Punkte tragen keine
        eigene Nummer; das Stück deckt seq_from bis seq_from + n_original − 1,
@@ -142,6 +176,29 @@
 
   async function einsatz(m, k) {
     if (!m.ort_huelle) { return null; }
+    if (istFassung2(m.ort_huelle)) {
+      const sb = await standbuchFuer(k, m.client_ref);
+      const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, false);
+      /* Der Klartextbeginn: `started_ts` (Epoche) oder `started_at` (UTC,
+         „JJJJ-MM-TT hh:mm:ss") — je nach Quelle der Zeile. Fehlt beides,
+         lässt sich die Zeit der Hülle nicht halten, und sie geht nicht auf. */
+      const beginnTs = Number.isFinite(m.started_ts) ? m.started_ts
+        : (typeof m.started_at === 'string'
+           ? Math.floor(Date.parse(m.started_at.replace(' ', 'T') + 'Z') / 1000) : NaN);
+      const r = await EdHuelle2.einsatzLesen(ls, m.client_ref, b64(m.ort_huelle), beginnTs,
+                                             { versatz: sb.e.d || 0, stand: { o: sb.e.o || 0, k: sb.e.k || 0 } })
+        .catch((e) => { e.art = 'einsatz'; throw e; });
+      /* DER ZÄHLER STEIGT BEIM LESEN mit (wie `patLesen()`): Ein späteres
+         Zurücklegen auf eine ältere Hülle fällt dann auf. Mit der Weiche aus
+         schreibt das Buch nichts. */
+      if (sb.buch && r.absender !== null && r.inhalt.z > (sb.e.o || 0)) {
+        sb.buch.fortschreiben(m.client_ref, (e) => {
+          e.o = Math.max(e.o || 0, r.inhalt.z);
+          if (r.absender === EdHuelle2.KONTO) { e.k = 1; }
+        }).catch(() => {});
+      }
+      return r.inhalt;
+    }
     const innen = await EdCrypto.geraetehuelleOeffnen(b64(m.ort_huelle), k.priv, k.pub,
                                                       'einsatz', m.client_ref, '')
       .catch((e) => { e.art = 'einsatz'; throw e; });
@@ -380,11 +437,50 @@
    * @param {Array} punkte  aus `spur()`: {seq, lat, lon, ele, ts}, sortiert
    * @returns {Promise<Array>} [{seq_from, punkte, ts_von, ts_bis, huelle}]
    */
-  async function stueckeBauen(punkte, art, ref, o) {
-    o = o || {};
+  /* DAS PAAR ZUM SCHREIBEN (KA-06b-3). Mit der Weiche aus genügt der
+   * öffentliche Teil, und `EdHuelle2` schreibt Fassung 1 wie bisher. Mit
+   * der Weiche an ist der Browser der Absender „Konto" — dafür braucht er
+   * den privaten Teil, also den Inhaltsschlüssel (`o.ck`, F-KA-88). */
+  async function schreibpaar(o) {
     await paarBereit();
     const pub = (typeof EdKontopaar !== 'undefined') ? EdKontopaar.oeffentlich() : null;
     if (!pub) { throw fehler('kein_paar', 'Für dieses Konto ist noch kein Schlüsselpaar eingerichtet.'); }
+    if (!EdInhalt.schreibt2()) { return { pub: pub, priv: null }; }
+    /* Ohne `o.ck` der Inhaltsschlüssel der Seite — jeder Schreibweg steht auf
+       einer Seite mit dem Rüstzeug (`PAT_WRAP`). */
+    const ck = (o && o.ck) || ((typeof EdUnlock !== 'undefined' && typeof PAT_WRAP !== 'undefined')
+      ? await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER) : null);
+    if (!ck) {
+      throw fehler('kein_schluessel', 'Zum Verschließen fehlt der Inhaltsschlüssel — bitte die Seite neu laden.');
+    }
+    return schluessel(ck);
+  }
+
+  /**
+   * EINEN GESPERRTEN ZEITRAUM INS STANDBUCH (KA-06b-3, F-KA-87). Ein Schnitt
+   * oder ein Löschen lässt eine Lücke in der Folge der Stücke; in Fassung 2
+   * gilt sie nur, wenn ein Vermerk des Kontos sie deckt — sonst wäre
+   * „ein Stück entfernt" nicht von einem Schnitt zu unterscheiden. Die
+   * Vermerke stehen in der Zeit der Hülle (Klartext minus Versatz). Mit der
+   * Weiche aus schreibt das Buch nichts. Still: Ein Fehlschlag hier lässt
+   * den Schnitt stehen; die Lücke fällt dann beim Lesen auf.
+   */
+  async function sperreVermerken(ref, von, bis) {
+    if (!EdInhalt.schreibt2() || typeof PAT_WRAP === 'undefined') { return null; }
+    try {
+      const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+      if (!ck) { return null; }
+      const buch = await EdStandbuch.seitenbuch(ck);
+      return await buch.fortschreiben(ref, (e) => {
+        const d = e.d || 0;
+        e.x = (e.x || []).concat([[von - d, bis - d]]);
+      });
+    } catch (e) { return null; }
+  }
+
+  async function stueckeBauen(punkte, art, ref, o) {
+    o = o || {};
+    const k = await schreibpaar(o);
     const liste = punkte.map((p, i) => Object.assign({}, p, { seq: o.neu ? i : p.seq }));
     const gruppen = [];
     for (const p of liste) {
@@ -404,7 +500,10 @@
         dv.setUint32(i * 14 + 10, Math.max(0, p.ts - tsVon));
       });
       const platz = g[0].seq + ':' + g.length;
-      const h = await EdCrypto.geraetehuelleVerschliessen(innen, pub, art, ref, platz);
+      /* Fassung 2: absolute Zeit im Kopf; SCHLUSS trägt, wer es verlangt
+         (`o.schluss`, das letzte Stück einer abgeschlossenen Aufzeichnung). */
+      const h = await EdHuelle2.stueckSchreiben(k, art, ref, platz,
+        { tsVon: tsVon, schluss: !!(o.schluss && g === gruppen[gruppen.length - 1]) }, innen);
       aus.push({ seq_from: g[0].seq, punkte: g.length, ts_von: tsVon,
                  ts_bis: Math.max.apply(null, g.map((p) => p.ts)), huelle: zuB64(h) });
     }
@@ -422,9 +521,7 @@
    * @returns {Promise<object>} {seq_from, punkte, n_original, stufe, ts_von, ts_bis, huelle}
    */
   async function gepacktBauen(punkte, art, ref, o) {
-    await paarBereit();
-    const pub = (typeof EdKontopaar !== 'undefined') ? EdKontopaar.oeffentlich() : null;
-    if (!pub) { throw fehler('kein_paar', 'Für dieses Konto ist noch kein Schlüsselpaar eingerichtet.'); }
+    const k = await schreibpaar(o);
     const n = punkte.length;
     if (!n) { throw fehler('leer', 'Ein Stück ohne Punkte gibt es nicht.'); }
     const tsVon = Math.min.apply(null, punkte.map((p) => p.ts));
@@ -442,18 +539,28 @@
     const innen = new Uint8Array(await new Response(strom).arrayBuffer());
     const st = { seq_from: o.seqFrom, punkte: n, n_original: o.nOriginal, stufe: o.stufe, ts_von: tsVon,
                  ts_bis: Math.max.apply(null, punkte.map((p) => p.ts)) };
-    st.huelle = zuB64(await EdCrypto.geraetehuelleVerschliessen(innen, pub, art, ref, platzGepackt(st)));
+    st.huelle = zuB64(await EdHuelle2.stueckSchreiben(k, art, ref, platzGepackt(st),
+                                                      { tsVon: tsVon, schluss: !!o.schluss }, innen));
     return st;
   }
 
-  /** Die Einsatzhülle verschließen — mit dem öffentlichen Kontoschlüssel. */
-  async function einsatzVerschliessen(innen, ref) {
-    await paarBereit();
-    const pub = (typeof EdKontopaar !== 'undefined') ? EdKontopaar.oeffentlich() : null;
-    if (!pub) { throw fehler('kein_paar', 'Für dieses Konto ist noch kein Schlüsselpaar eingerichtet.'); }
-    const h = await EdCrypto.geraetehuelleVerschliessen(
-      new TextEncoder().encode(JSON.stringify(innen)), pub, 'einsatz', ref, '');
-    return zuB64(h);
+  /** Die Einsatzhülle verschließen. Weiche aus: Fassung 1 mit dem
+   *  öffentlichen Kontoschlüssel, wie bisher. Weiche an: Fassung 2 als
+   *  Absender „Konto", mit dem nächsten Zähler aus dem Standbuch und dem
+   *  absoluten Beginn (`o.start`, Unix-Sekunden) — `o.ck` ist dann Pflicht.
+   *  Den Zähler hebt das Standbuch beim nächsten Lesen (`einsatz()`). */
+  async function einsatzVerschliessen(innen, ref, o) {
+    o = o || {};
+    const k = await schreibpaar(o);
+    let kopf = null;
+    if (EdInhalt.schreibt2()) {
+      if (!Number.isSafeInteger(o.start)) {
+        throw fehler('beginn', 'Zum Verschließen fehlt der Beginn des Einsatzes.');
+      }
+      const sb = await standbuchFuer(k, ref);
+      kopf = { z: (sb.e.o || 0) + 1, start: o.start, schluss: !!o.schluss };
+    }
+    return zuB64(await EdHuelle2.einsatzSchreiben(k, ref, kopf, innen));
   }
 
   /**
@@ -479,5 +586,5 @@
                          einsatzZeiten: einsatzZeiten, einsatzInnen: einsatzInnen,
                          einsatzVerschliessen: einsatzVerschliessen, ortshoehe: ortshoehe,
                          stueckeBauen: stueckeBauen, gepacktBauen: gepacktBauen,
-                         schluesselAus: schluesselAus };
+                         schluesselAus: schluesselAus, sperreVermerken: sperreVermerken };
 })();

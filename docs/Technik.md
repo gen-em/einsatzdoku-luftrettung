@@ -10330,9 +10330,30 @@ Wiederherstellungshülle wird abgewiesen.
 Datensatz und Blatt in einer Anfrage zu speichern kommt mit den
 Verbrauchern (06b-3).
 
-**Was noch nicht da ist:** die Umstellung der Verbraucher (KA-06b-3), der
-Anhebelauf (KA-06b-4), die Kopplung mit Vergleichswert an den Geräten
-(KA-06c) und die Formprüfung am Server (KA-06d).
+**Die Verbraucher** (seit Web 24.16.0, KA-06b-3) gehen über den Kern —
+Patientenblock über `EdStandbuch.patOeffnen()` / `patSchreibenViele()`
+(Formular, Wartungslauf, Notizen-Anhebung, Import, Wiederherstellung,
+Übernahme, Listen, Einzelansicht, Export), Kontopaar und Rückweg über
+`EdInhalt` (Zweck `kp`, `rw`), die Wiederherstellungshülle über
+`EdInhalt.huelleSchreiben()` (Art `rc`), Ortsdaten über `EdHuelle2` (eine
+Hülle der Fassung 2 mit Gerätebuch, Versatz, Sperren und Zähler aus dem
+Standbuch; Schneiden und Löschen tragen den gesperrten Zeitraum ein). Ein
+Buch je Seite (`EdStandbuch.seitenbuch()`); seine Kennung in der Ablage kommt
+aus dem Inhaltsschlüssel, nicht vom Server. **Datensatz und Blatt in einer
+Anfrage:** Feld `blaetter` (`[{wer, version_alt, version, text, refs}]`, nur
+mit der Weiche an); der Server schreibt sie in der Transaktion des
+Datensatzes (`sb_blaetter_schreiben()`) und prüft, dass jeder Block steht,
+dessen Zähler ein Blatt hebt — sonst nichts und 409 `{error: 'blatt',
+grund: 'version' | 'uebersprungen', …}`. Eine Wiederherstellung liest ohne
+Standbuch (sie ist mit Absicht ein älterer Stand) und schreibt mit neuem
+Zähler. Die Formprüfung (`validate_lib.php`) nimmt `edk2:` (Patientenblock
+mindestens Klasse 512), `edka2:` (nur Passworthülle) und die Gerätehülle der
+Fassung 2 an. Das Ziel der Rundenzahl bleibt 600 000, bis die Weiche umliegt
+(PHP rechnet Ableitung 2 schon: `kdf_haelfte()`).
+
+**Was noch nicht da ist:** der Anhebelauf (KA-06b-4), die Kopplung mit
+Vergleichswert an den Geräten (KA-06c), die Annahme der Fassung 2 von Geräten
+samt Schlussstück und Stichtag (KA-06d) und das Umlegen der Weiche.
 
 ## 5. Uhr-App (Monkey C) — Modulstruktur
 

@@ -3695,7 +3695,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             ereignisse: (r.events || []).filter((e) => e && e.type && !isNaN(rwSekunden(e.occurred_at)))
               .map((e) => ({ art: e.type, t: rwSekunden(e.occurred_at) - beginn })) })),
         };
-        m.ort_huelle = await EdOrtsdaten.einsatzVerschliessen(innen, ref);
+        m.ort_huelle = await EdOrtsdaten.einsatzVerschliessen(innen, ref, { start: beginn });
         z.verschlossen++;
       }
       for (const p of phasen) { delete p.lat; delete p.lon; }
@@ -4705,18 +4705,38 @@ ui_seite_start(['titel' => 'Einstellungen',
                               && PAT_KEY_CHECK === data.pat_key_check;
         let uebernommen = 0, uebernommenFremd = 0;
 
-        /* Geschützte Angaben für DIESES Konto neu verschlüsseln — je
-           Eintragsteil (unten). */
-        async function patUmschluesseln(liste) {
-          for (const m of (liste || [])) {
+        /* Geschützte Angaben für DIESES Konto neu verschlüsseln und das
+           Eintragsteil senden — über das Standbuch (KA-06b-3): Mit der Weiche
+           an entsteht `edk2:` mit dem nächsten Zähler, und die Blätter
+           fahren im Feld `blaetter` mit; der Server schreibt sie in der
+           Transaktion der Einträge. Einträge, die er überspringt (schon
+           da), meldet er mit 409 `uebersprungen`, und es wird ohne ihre
+           Zähler noch einmal gesendet. Mit der Weiche aus bleibt die
+           Anfrage, wie sie war. */
+        async function teilEinspielen(teil, dayMap) {
+          const posten = [], ziele = [];
+          for (const m of (teil.missions || [])) {
             if (m.pat && Object.keys(m.pat).length) {
-              m.pat_blob = await EdCrypto.encrypt(key, JSON.stringify(m.pat));
+              /* Ohne Kennung vergäbe der Server eine — der Block wäre dann an
+                 eine andere gebunden als die, unter der er liegt. */
+              if (!m.client_ref) { m.client_ref = 'bak-' + EdCrypto.randomHex(12); }
+              posten.push({ ref: m.client_ref, klartext: JSON.stringify(m.pat) });
+              ziele.push(m);
             } else if (m.pat_blob) {
               if (gleichesKonto) { uebernommen++; } else { uebernommenFremd++; }
             }
             delete m.pat;
             delete m.pat_unreadable;
           }
+          const senden = (texte, blaetter) => {
+            if (texte) { ziele.forEach((m, i) => { m.pat_blob = texte[i]; }); }
+            const rumpf = { eintraege: teil, day_map: dayMap };
+            if (blaetter) { rumpf.blaetter = blaetter; }
+            return EdApi.postJson('api/backup_eintraege_restore.php', rumpf,
+                                  { vorgang: 'Das Übertragen der Einträge' });
+          };
+          return posten.length ? EdStandbuch.patSchreibenViele(key, posten, senden)
+                               : senden(null, null);
         }
 
         /* DIE RÜCKFRAGE STEHT VOR DEM ERSTEN SCHREIBEN. Bei Fassung 4 sind die
@@ -4806,10 +4826,7 @@ ui_seite_start(['titel' => 'Einstellungen',
               + `(Teil ${i + 1} von ${fassung4.eintragsteile.length})…`;
             const teil = await fassung4.teilOeffnen(ti);
             await rwEintraege(teil, rz);
-            await patUmschluesseln(teil.missions);
-            const a = await EdApi.postJson('api/backup_eintraege_restore.php',
-              { eintraege: teil, day_map: dayMap },
-              { vorgang: 'Das Übertragen der Einträge' });
+            const a = await teilEinspielen(teil, dayMap);
             if (!a.ok) {
               /* Zustandsbericht, kein Fehlertext -- bleibt beim Aufrufer. */
               throw new Error(a.meldung
@@ -4981,7 +4998,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           }
           fgState.textContent = 'Schlüssel wird geprüft…';
           const rcKey = await EdCrypto.recoveryKeyHex(code);
-          try { altCk = await EdCrypto.decrypt(rcKey, fgPaket.pat_wrap_rc); }
+          try { altCk = await EdInhalt.huelleOeffnen(rcKey, fgPaket.pat_wrap_rc, 'rc'); }
           catch (e) { altCk = null; }
           if (!altCk) {
             fgState.textContent = 'Der Wiederherstellungsschlüssel passt nicht zu diesem '
@@ -5018,7 +5035,7 @@ ui_seite_start(['titel' => 'Einstellungen',
         try { eigenesPaar = await EdOrtsdaten.schluessel(eigenerCk); } catch (e) { eigenesPaar = null; }
         if (braucht && fgPaket.kp_privat) {
           try {
-            const der = Uint8Array.from(atob(await EdCrypto.decrypt(altCk, fgPaket.kp_privat)),
+            const der = Uint8Array.from(atob((await EdInhalt.lesen(altCk, fgPaket.kp_privat, 'kp', '')).text),
                                         (c) => c.charCodeAt(0));
             fremdesPaar = await EdOrtsdaten.schluesselAus(der);
           } catch (e) { fremdesPaar = null; }
@@ -5070,7 +5087,12 @@ ui_seite_start(['titel' => 'Einstellungen',
           for (const m of (teil.missions || [])) {
             if (m.pat_blob) {
               try {
-                m.pat = JSON.parse(await EdCrypto.decrypt(braucht ? altCk : eigenerCk, m.pat_blob));
+                /* OHNE STANDBUCH (KA-06b-3): Ein eingespielter Stand ist mit
+                   Absicht ein älterer — gegen den Zählerstand gehalten, wäre
+                   jeder Block „zurückgelegt". Er bekommt beim Schreiben unten
+                   den nächsten Zähler. */
+                m.pat = JSON.parse((await EdInhalt.lesen(braucht ? altCk : eigenerCk, m.pat_blob,
+                                                         'pat', m.client_ref || '')).text);
                 delete m.pat_blob;
                 if (braucht) { um++; }
               } catch (e) {
@@ -5082,12 +5104,35 @@ ui_seite_start(['titel' => 'Einstellungen',
             }
             await huelleUm(m);
             await rwEinsatz(m, rz);
+            /* Verschlossen wird beim Senden (`teilSendenFreigabe()`), über
+               das Standbuch — samt Blatt in derselben Anfrage. */
+          }
+          for (const r of (teil.rest_segments || [])) { await rwRuhe(r); }
+        };
+        /* Ein Eintragsteil senden: die geschützten Angaben unter dem EIGENEN
+           Schlüssel verschließen (`EdStandbuch.patSchreibenViele()`, KA-06b-3)
+           und — nur mit der Weiche an — die Blätter mitschicken. */
+        const teilSendenFreigabe = async (teil, dayMap) => {
+          const posten = [], ziele = [];
+          for (const m of (teil.missions || [])) {
             if (m.pat && Object.keys(m.pat).length) {
-              m.pat_blob = await EdCrypto.encrypt(eigenerCk, JSON.stringify(m.pat));
+              if (!m.client_ref) { m.client_ref = 'bak-' + EdCrypto.randomHex(12); }
+              posten.push({ ref: m.client_ref, klartext: JSON.stringify(m.pat) });
+              ziele.push(m);
             }
             delete m.pat;
           }
-          for (const r of (teil.rest_segments || [])) { await rwRuhe(r); }
+          const schicken = (texte, blaetter) => {
+            if (texte) { ziele.forEach((m, i) => { m.pat_blob = texte[i]; }); }
+            const rumpf = { eintraege: teil, day_map: dayMap };
+            if (blaetter) { rumpf.blaetter = blaetter; }
+            return EdApi.postJson('api/backup_eintraege_restore.php', rumpf,
+                                  { vorgang: 'Das Einspielen' });
+          };
+          const a = posten.length ? await EdStandbuch.patSchreibenViele(eigenerCk, posten, schicken)
+                                  : await schicken(null, null);
+          if (!a.ok) { throw new Error(a.meldung); }
+          return a.daten;
         };
 
         const holeTeil = async (name) => {
@@ -5145,9 +5190,7 @@ ui_seite_start(['titel' => 'Einstellungen',
             const name = 'eintraege/' + String(i).padStart(4, '0') + '.json';
             const teil = await holeTeil(name);
             await umschluesseln(teil);
-            const o = await senden('api/backup_eintraege_restore.php',
-                                   { eintraege: teil, day_map: dayMap },
-                                   'Das Einspielen');
+            const o = await teilSendenFreigabe(teil, dayMap);
             Object.assign(karte, o.spur_karte || {});
             for (const [k, v] of Object.entries(o.stats || {})) {
               if (typeof v === 'number') { s[k] = (s[k] || 0) + v; }

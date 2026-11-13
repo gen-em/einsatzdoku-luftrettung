@@ -602,6 +602,35 @@ const EdStandbuch = (() => {
       };
     }
 
+    /**
+     * VIELE DATENSÄTZE IN EINER ANFRAGE (KA-06b-3): Import, Einspielen,
+     * Notizen-Anhebung. Je Blatt EINE Vormerkung, in der alle Änderungen an
+     * diesem Blatt stehen — zwei Vormerkungen desselben Blatts nennten
+     * dieselbe `version_alt`, und die zweite verlöre die erste.
+     * @param liste  [{ ref, aendern(e) }]
+     * @returns {Promise<Array|null>} je Blatt { wer, version_alt, version,
+     *          text, refs, bestaetigen() }; null, solange die Weiche aus steht
+     */
+    async function vormerkenViele(liste) {
+      if (!EdInhalt.schreibt2()) { return null; }
+      const je = new Map();
+      for (const x of liste) {
+        const wer = await blattNr(x.ref);
+        if (!je.has(wer)) { je.set(wer, []); }
+        je.get(wer).push(x);
+      }
+      const aus = [];
+      for (const [wer, xs] of je) {
+        const n = await naechste(wer, async (d) => {
+          for (const x of xs) { await amEintrag(x.ref, x.aendern)(d); }
+        });
+        aus.push({ wer: wer, version_alt: n.version_alt, version: n.version, text: n.text,
+                   refs: xs.map(x => x.ref),
+                   bestaetigen: () => merke(wer, { version: n.version, d: n.d, offen: false }) });
+      }
+      return aus;
+    }
+
     /** Der nächste Zähler für den Patientenblock dieses Datensatzes. */
     async function naechsterZaehler(ref) { return ((await eintrag(ref)).p || 0) + 1; }
 
@@ -685,14 +714,159 @@ const EdStandbuch = (() => {
     }
 
     return { abgleichen, eintrag, blattZu, patLesen: patLesenHier, naechsterZaehler,
-             fortschreiben, vormerken, nachtragen, schliessen, alleZu,
+             fortschreiben, vormerken, vormerkenViele, nachtragen, schliessen, alleZu,
+             /* 409 `blatt` aus einer Sammelanfrage: das Blatt des Servers übernehmen */
+             blattUebernehmen: uebernehmen,
              geraete, geraetEintragen, geraetAustragen, zurueckschreiben,
              /* für die Probe */
              anker: async wer => (await lade(wer)).version, ablage: lager };
   }
 
+  /* ====================================================================
+   * FÜR DIE VERBRAUCHER — ein Buch je Seite (KA-06b-3)
+   * ====================================================================
+   *
+   * Kein Verbraucher ruft `oeffnen()` selbst. Zwei Bücher desselben Kontos
+   * auf einer Seite hätten zwei Stände im Speicher, und das zweite schriebe
+   * über, was das erste eben vorgemerkt hat.
+   *
+   * DIE KENNUNG DES KONTOS FÜR DIE ABLAGE kommt aus dem Inhaltsschlüssel
+   * selbst und nicht vom Server: der Prüfwert von AES-GCM über nichts, mit
+   * fester Nonce und eigenen Zusatzdaten, davon SHA-256. Gedacht war
+   * `PAT_KEY_CHECK`; das liefert der Server, steht nur auf Seiten mit
+   * `keycheck` und fehlt im Altbestand. Eine Kennung, die der Server nennt,
+   * könnte er wechseln — und ein Browser, der unter einer neuen Kennung
+   * nachsieht, findet keinen Anker und glaubt der Abschrift. Die feste Nonce
+   * ist hier unbedenklich: Sie verschließt genau eine Nachricht (die leere,
+   * unter diesen Zusatzdaten), und das Ergebnis verlässt den Browser nicht.
+   *
+   * SOLANGE DIE WEICHE AUS STEHT, fasst ein Leseweg das Buch nur für einen
+   * gebundenen Block an — Fassung 1 geht wie bisher über `EdCrypto.decrypt()`,
+   * ohne Ablage und ohne Anfrage —, und kein Schreibweg sendet ein Blatt. */
+  const KONTO_AAD = te.encode('nadoku-stand-konto-1');
+  const buecher = new Map();          // Kennung → Versprechen auf das Buch
+
+  /** Die Kennung des Kontos für die Ablage — aus dem Inhaltsschlüssel. */
+  async function kontoKennung(ck) {
+    const key = await T.aesSchluessel(ck, ['encrypt']);
+    const tag = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: new Uint8Array(12), additionalData: KONTO_AAD }, key, new Uint8Array(0));
+    const h = new Uint8Array(await crypto.subtle.digest('SHA-256', tag));
+    return 'k1-' + T.toHex(h).slice(0, 32);
+  }
+
+  /**
+   * DAS BUCH DIESER SEITE für diesen Inhaltsschlüssel, über `apiTransport()`.
+   * Steht die Weiche an, gleicht es beim ersten Öffnen mit dem Server ab;
+   * die Befunde stehen in `buch.befunde` (der Knopf „zurückschreiben" kommt
+   * mit E-KA-50 und braucht ein Mockup).
+   */
+  async function seitenbuch(ck) {
+    const konto = await kontoKennung(ck);
+    if (!buecher.has(konto)) {
+      const v = (async () => {
+        const buch = oeffnen({ konto: konto, schluessel: ck, transport: apiTransport() });
+        buch.befunde = [];
+        if (EdInhalt.schreibt2()) {
+          try { buch.befunde = await buch.abgleichen(); }
+          catch (e) { buch.befunde = [{ wer: null, grund: e.grund || 'transport' }]; }
+        }
+        return buch;
+      })();
+      v.catch(() => buecher.delete(konto));
+      buecher.set(konto, v);
+    }
+    return buecher.get(konto);
+  }
+
+  /**
+   * EINEN PATIENTENBLOCK LESEN — der Weg für jeden Verbraucher. Beide
+   * Fassungen; ein gebundener Block geht gegen das Buch.
+   * @returns {Promise<string>} der Klartext (JSON)
+   */
+  async function patOeffnen(ck, text, ref) {
+    if (!EdInhalt.istGebunden(text) && !EdInhalt.schreibt2()) {
+      return EdCrypto.decrypt(ck, text);
+    }
+    return (await (await seitenbuch(ck)).patLesen(text, ref)).text;
+  }
+
+  /**
+   * PATIENTENBLÖCKE VERSCHLIESSEN, samt den Blättern für dieselbe Anfrage.
+   * @param posten  [{ ref, klartext }] — `ref` die client_ref des Einsatzes
+   * @param o       { ohne: Set } Kennungen, die kein Blatt bekommen (der
+   *                Server hat sie übersprungen, 409 `uebersprungen`)
+   * @returns {Promise<{texte: string[], blaetter: Array|null, bestaetigen}>}
+   *   `blaetter` ist null, solange die Weiche aus steht — dann geht KEIN
+   *   Feld mit, und `texte` sind `edk1:` wie aus `EdCrypto.encrypt()`.
+   *   Ein Blatt trägt neben `wer`, `version_alt`, `version`, `text` die
+   *   Kennungen, deren Zähler es hebt (`refs`): Daran prüft der Server, dass
+   *   er jeden dieser Blöcke wirklich geschrieben hat — ein Blatt, das einem
+   *   Block vorausläuft, ließe den alten Block als zurückgelegt erscheinen.
+   */
+  async function patVerschliessenViele(ck, posten, o) {
+    o = o || {};
+    if (!EdInhalt.schreibt2()) {
+      const texte = [];
+      for (const p of posten) { texte.push(await EdInhalt.schreiben(ck, 'pat', p.ref, p.klartext, 0)); }
+      return { texte: texte, blaetter: null, bestaetigen: async () => {} };
+    }
+    const buch = await seitenbuch(ck);
+    try { await buch.abgleichen(); } catch (e) { /* mit dem eigenen Stand weiter */ }
+    const z = [];
+    for (const p of posten) {
+      if (typeof p.ref !== 'string' || p.ref === '') { throw fehler('bezug'); }
+      z.push(await buch.naechsterZaehler(p.ref));
+    }
+    const texte = await Promise.all(posten.map((p, i) =>
+      EdInhalt.schreiben(ck, 'pat', p.ref, p.klartext, z[i])));
+    const ohne = o.ohne || new Set();
+    const vm = await buch.vormerkenViele(posten
+      .map((p, i) => ({ ref: p.ref, aendern: (e) => { e.p = z[i]; } }))
+      .filter(x => !ohne.has(x.ref)));
+    return {
+      texte: texte,
+      blaetter: vm.map(b => ({ wer: b.wer, version_alt: b.version_alt, version: b.version,
+                               text: b.text, refs: b.refs })),
+      bestaetigen: async () => { for (const b of vm) { await b.bestaetigen(); } },
+    };
+  }
+
+  /**
+   * VERSCHLIESSEN UND SENDEN, mit Wiederholung bei 409 `blatt`.
+   * `senden(texte, blaetter)` baut die Anfrage — `blaetter` als Feld nur,
+   * wenn es nicht null ist — und liefert die Antwort von `EdApi`.
+   *   409 { error: 'blatt', grund: 'version', wer, version, text }
+   *       ein anderer Tab war schneller: sein Blatt übernehmen, neu zählen,
+   *       neu verschließen, noch einmal senden;
+   *   409 { error: 'blatt', grund: 'uebersprungen', refs }
+   *       der Server hat diese Einsätze nicht geschrieben (schon da, nicht
+   *       mehr da): ohne ihre Zähler noch einmal senden.
+   * Vier Versuche; danach `konflikt`.
+   * @returns die letzte Antwort von `senden()`
+   */
+  async function patSchreibenViele(ck, posten, senden) {
+    const ohne = new Set();
+    for (let versuch = 0; versuch < 4; versuch++) {
+      const v = await patVerschliessenViele(ck, posten, { ohne: ohne });
+      const a = await senden(v.texte, v.blaetter);
+      if (a.ok) { await v.bestaetigen(); return a; }
+      const d = a.daten;
+      if (!v.blaetter || a.status !== 409 || !d || d.error !== 'blatt') { return a; }
+      if (d.grund === 'uebersprungen') {
+        for (const r of (d.refs || [])) { ohne.add(r); }
+        continue;
+      }
+      if (!d.text) { throw fehler('blatt-version'); }
+      await (await seitenbuch(ck)).blattUebernehmen(d.wer, { version: Number(d.version), text: d.text });
+    }
+    throw fehler('konflikt');
+  }
+
   return { blattNr, kennung, blattBauen, blattOeffnen, patLesen,
            geraetebuchBauen, geraetebuchOeffnen,
            oeffnen, ablage, speicherTransport, apiTransport,
+           /* für die Verbraucher (KA-06b-3) */
+           seitenbuch, kontoKennung, patOeffnen, patVerschliessenViele, patSchreibenViele,
            BLAETTER, BUCH };
 })();
