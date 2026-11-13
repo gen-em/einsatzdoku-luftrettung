@@ -616,7 +616,8 @@
             if (alt.ort_huelle) {
                 var innen;
                 try {
-                    innen = await EdOrtsdaten.einsatz({ ort_huelle: alt.ort_huelle, client_ref: alt.client_ref },
+                    innen = await EdOrtsdaten.einsatz({ ort_huelle: alt.ort_huelle, client_ref: alt.client_ref,
+                                                        started_ts: alt.started_ts },
                                                       await kontoschluessel());
                 } catch (e) {
                     EdOrtsdaten.melden(e, 'einsatz', alt.id);

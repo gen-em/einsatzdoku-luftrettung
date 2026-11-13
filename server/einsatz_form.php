@@ -1827,7 +1827,8 @@ async function ortOeffnen(ck) {
   if (!ORT.huelle || ORT_ORTE !== ORT_LEER) { return; }   // nichts da, oder schon offen
   try {
     const k = await EdOrtsdaten.schluessel(ck);
-    const innen = await EdOrtsdaten.einsatz({ ort_huelle: ORT.huelle, client_ref: ORT.ref }, k);
+    const innen = await EdOrtsdaten.einsatz({ ort_huelle: ORT.huelle, client_ref: ORT.ref,
+                                              started_ts: ORT.beginn }, k);
     ORT_ORTE = (innen && innen.phasen) || [];
     const uhr = (t) => EdFormat.uhrzeit(ORT.beginn + t, ORT.tz);
     document.getElementById('rearows').replaceChildren();

@@ -179,7 +179,13 @@
     if (istFassung2(m.ort_huelle)) {
       const sb = await standbuchFuer(k, m.client_ref);
       const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, false);
-      const r = await EdHuelle2.einsatzLesen(ls, m.client_ref, b64(m.ort_huelle), m.started_ts,
+      /* Der Klartextbeginn: `started_ts` (Epoche) oder `started_at` (UTC,
+         „JJJJ-MM-TT hh:mm:ss") — je nach Quelle der Zeile. Fehlt beides,
+         lässt sich die Zeit der Hülle nicht halten, und sie geht nicht auf. */
+      const beginnTs = Number.isFinite(m.started_ts) ? m.started_ts
+        : (typeof m.started_at === 'string'
+           ? Math.floor(Date.parse(m.started_at.replace(' ', 'T') + 'Z') / 1000) : NaN);
+      const r = await EdHuelle2.einsatzLesen(ls, m.client_ref, b64(m.ort_huelle), beginnTs,
                                              { versatz: sb.e.d || 0, stand: { o: sb.e.o || 0, k: sb.e.k || 0 } })
         .catch((e) => { e.art = 'einsatz'; throw e; });
       /* DER ZÄHLER STEIGT BEIM LESEN mit (wie `patLesen()`): Ein späteres

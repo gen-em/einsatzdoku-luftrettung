@@ -854,9 +854,17 @@ function pruef_huelle($wert, int $maxByte, string $feld = 'Huelle', ?Pruefliste 
     $n = strlen($roh);
     if ($n < GH_MIN_BYTE) { $p?->melde($feld, 'kuerzer als ' . GH_MIN_BYTE . ' Byte'); return null; }
     if ($n > $maxByte) { $p?->melde($feld, 'laenger als ' . $maxByte . ' Byte'); return null; }
-    if (($n - 82 - 32) % 16 !== 0) { $p?->melde($feld, 'Chiffretext kein Vielfaches von 16'); return null; }
-    if ($roh[0] !== "\x01") { $p?->melde($feld, 'unbekannte Fassung ' . ord($roh[0])); return null; }
-    if ($roh[1] !== "\x04") { $p?->melde($feld, 'kein unkomprimierter Schluessel'); return null; }
+    /* ZWEI FASSUNGEN (seit Web 24.16.0, KA-06b-3, F-KA-83). Fassung 1:
+     * Kennbyte, 65 Byte EPK, 16 Byte IV — Kopf 82. Fassung 2: dazu 8 Byte
+     * SID vor dem EPK — Kopf 90, kleinste Hülle 138 (`referenz.py`). Der
+     * Browser schreibt Fassung 2 erst mit umgelegter Weiche; die Form steht
+     * schon hier, damit die Schreibwege des Browsers sie durchlassen. */
+    $fassung = ord($roh[0]);
+    if ($fassung !== 1 && $fassung !== 2) { $p?->melde($feld, 'unbekannte Fassung ' . $fassung); return null; }
+    $kopf = $fassung === 2 ? 90 : 82;
+    if ($fassung === 2 && $n < 138) { $p?->melde($feld, 'kuerzer als 138 Byte'); return null; }
+    if (($n - $kopf - 32) % 16 !== 0) { $p?->melde($feld, 'Chiffretext kein Vielfaches von 16'); return null; }
+    if ($roh[$fassung === 2 ? 9 : 1] !== "\x04") { $p?->melde($feld, 'kein unkomprimierter Schluessel'); return null; }
     return $roh;
 }
 
