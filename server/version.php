@@ -8944,4 +8944,12 @@ declare(strict_types=1);
  *   `edk2:`, `edka2:` und die Geraetehuelle der Fassung 2 an. Die Weiche
  *   steht weiter aus: Es geht dieselbe Fassung 1 wie bisher hinaus. Neben;
  *   kein Schema. */
-const WEB_VERSION = '24.16.0';
+/* 24.17.0 — DER ANHEBELAUF (KA-06b-4, E-KA-40). Nach der Anmeldung zieht
+ *   der Altbestand eines Kontos still in das gebundene Format um:
+ *   Patientenbloecke mit Zaehler und Blatt, die privaten Teile von Kontopaar
+ *   und Rueckweg; ein Blatt ohne Altbestand wird geschlossen. Jeder neue Block
+ *   wird vor dem Senden wieder geoeffnet und verglichen, und der Server
+ *   schreibt nur, wo noch genau der alte steht (`api/format_anheben.php`).
+ *   Nur mit umgelegter Weiche — bis dahin geschieht nichts. Neben; kein
+ *   Schema. */
+const WEB_VERSION = '24.17.0';

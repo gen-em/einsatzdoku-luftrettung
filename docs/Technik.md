@@ -10351,7 +10351,20 @@ mindestens Klasse 512), `edka2:` (nur Passworthülle) und die Gerätehülle der
 Fassung 2 an. Das Ziel der Rundenzahl bleibt 600 000, bis die Weiche umliegt
 (PHP rechnet Ableitung 2 schon: `kdf_haelfte()`).
 
-**Was noch nicht da ist:** der Anhebelauf (KA-06b-4), die Kopplung mit
+**Der Anhebelauf** (seit Web 24.17.0, KA-06b-4, E-KA-40): still nach der
+Anmeldung, nur mit umgelegter Weiche (`formatAnheben()` in `unlock.js`,
+`api/format_anheben.php`). Er hebt Patientenblöcke (`edk1:` → `edk2:` mit
+Zähler und Blatt, in Runden zu 200, auch aus dem Papierkorb) und die privaten
+Teile von Kontopaar und Rückweg. Jeder neue Block wird vor dem Senden geöffnet
+und mit dem Klartext verglichen; der Server schreibt nur, wo noch genau der
+alte Block steht (`blob_alt`), und Datensatz und Blatt in einer Transaktion.
+Nennt der Server für ein Blatt keinen Altbestand mehr (`rest_je_blatt`,
+dieselbe Blattrechnung wie `standbuch.js`), schließt der Lauf es — von da an
+ist `edk1:` dort ein Befund (`altformat`). Die Passworthülle hebt die stille
+Umstellung beim Anmelden, die Wiederherstellungshülle das nächste
+Erneuern; Gerätedaten gehören zu 06e.
+
+**Was noch nicht da ist:** die Kopplung mit
 Vergleichswert an den Geräten (KA-06c), die Annahme der Fassung 2 von Geräten
 samt Schlussstück und Stichtag (KA-06d) und das Umlegen der Weiche.
 
