@@ -106,11 +106,11 @@
          die Frage "Zu diesem Konto koppeln?", sobald das Gerät einen
          Schlüssel mitbringt; die maskierte Adresse bleibt darunter stehen. -->
     <string name="kopplung_wert_titel">Gleiche Zahl wie im Browser?</string>
-    <string name="kopplung_wert_text">Der Browser zeigt jetzt eine sechsstellige Zahl. Stimmt sie mit dieser überein, gehört das Konto dir: im Browser <b>Wert stimmt</b>, hier <b>Ja</b>.</string>
+    <string name="kopplung_wert_text">Der Browser zeigt jetzt eine sechsstellige Zahl. Stimmt sie mit dieser überein, gehört das Konto dir — dann im Browser und hier bestätigen.</string>
     <string name="kopplung_wert_zeigen">Vergleichswert</string>
     <string name="kopplung_wert_ja">Ja, gleiche Zahl</string>
     <string name="kopplung_wert_nein">Nein, andere Zahl</string>
-    <string name="kopplung_wartet_wert">Warte auf <b>Wert stimmt</b> im Browser …</string>
+    <string name="kopplung_wartet_wert">Warte auf die Bestätigung im Browser …</string>
 
     <!-- Ablehnungen: WAS ist los (erste Zeile) und WAS HILFT (zweite).
          Die Zweiteilung ist von der Garmin-Uhr übernommen (Pair.mc) — dort

@@ -129,6 +129,13 @@ class Sender(
      * Kopplung, wie vor der Bindung.
      */
     private val bindung: Rueckstandsbindung? = null,
+    /**
+     * Geräteschlüssel und Zähler für Fassung 2 (seit KA-06c). Gesendet wird
+     * in Fassung 2 nur, wenn der Server bei der Kopplung `huelle: 2` gesagt
+     * hat UND ein gültiges Paar da ist; sonst Fassung 1 wie bisher.
+     */
+    private val geraeteschluessel: org.genem.nadoku.handy.tresor.Geraeteschluessel? = null,
+    private val zaehler: Huellenzaehler? = null,
 ) {
 
     /** Aktuelle Chunk-Größe; sie halbiert sich bei 413 und bleibt es. */
@@ -243,6 +250,13 @@ class Sender(
             "X-Api-Key" to zugang.schluessel,
         )
 
+        val paar = if (zugang.huelle2) geraeteschluessel?.liefern() else null
+        val fassung2 = if (paar != null && zaehler != null) {
+            Fassung2(paar, { zaehler.naechster() }, { jetzt().epochSecond })
+        } else {
+            null
+        }
+
         var bericht = Sendebericht(geraeumt = geraeumt, fremderRueckstand = fremd)
         /* Eine Obergrenze für die Anfragen eines Laufs. Sie ist kein Zaun
          * gegen den Normalfall — ein 12-h-Dienst braucht rund zwanzig —,
@@ -252,7 +266,7 @@ class Sender(
 
         while (verbleibendeAnfragen-- > 0) {
             val paket = naechstesPaket(grenze) ?: break
-            val ergebnis = sendeTeilstueck(paket, adresse, kopfzeilen, kontoschluessel)
+            val ergebnis = sendeTeilstueck(paket, adresse, kopfzeilen, kontoschluessel, fassung2)
             bericht = vereine(bericht, ergebnis)
             if (ergebnis.pausiert || ergebnis.spaeterErneut) break
         }
@@ -267,11 +281,14 @@ class Sender(
         adresse: String,
         kopfzeilen: Map<String, String>,
         kontoschluessel: ByteArray,
+        fassung2: Fassung2? = null,
     ): Sendebericht {
         val seqVon = paket.bestaetigtSeq
         val punkte = puffer.punkte(paket.id, seqVon, chunkPunkte)
         val phasen = if (paket.art == Paketzeile.ART_EINSATZ) phasenLeser(paket.id) else emptyList()
-        val koerper = Sendekoerper.baue(paket, seqVon, punkte, phasen, kontoschluessel).toString()
+        val letztes = seqVon + punkte.size >= puffer.punktzahl(paket.id)
+        val koerper = Sendekoerper.baue(paket, seqVon, punkte, phasen, kontoschluessel, fassung2, letztes)
+            .toString()
 
         val antwort = when (val a = netzweg.postJson(adresse, koerper, kopfzeilen)) {
             is Netzantwort.KeineVerbindung -> Sendeantwort.KeineVerbindung(a.ursache)

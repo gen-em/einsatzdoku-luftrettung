@@ -53,7 +53,10 @@ class Schluesseltresor(
             val kennung = o.optString(FELD_KENNUNG)
             val geheim = o.optString(FELD_SCHLUESSEL)
             if (kennung.isEmpty() || geheim.isEmpty()) null
-            else Zugangsdaten(kennung, geheim, o.optString(FELD_KONTOSCHLUESSEL).ifEmpty { null })
+            else Zugangsdaten(
+                kennung, geheim, o.optString(FELD_KONTOSCHLUESSEL).ifEmpty { null },
+                huelle2 = o.optInt(FELD_HUELLE, 1) == 2,
+            )
         } catch (e: Exception) {
             /* UNLESBAR IST WIE NICHT VORHANDEN, und mehr lässt sich hier auch
              * nicht tun: Ein beschädigtes oder mit einem anderen Schlüssel
@@ -92,15 +95,30 @@ class Schluesseltresor(
      * anfassen ließen. Ohne lesbaren Inhalt tut er nichts — dann gibt es keine
      * Sitzung, die gültig werden könnte.
      */
-    fun bestaetigen(kontoschluessel: String? = null) {
+    fun bestaetigen(kontoschluessel: String? = null, huelle2: Boolean = false) {
         val zugang = lesen() ?: return
-        schreiben(zugang.copy(kontoschluessel = kontoschluessel ?: zugang.kontoschluessel), schwebend = false)
+        schreiben(
+            zugang.copy(kontoschluessel = kontoschluessel ?: zugang.kontoschluessel, huelle2 = huelle2),
+            schwebend = false,
+        )
     }
 
     /**
      * Den Kontoschlüssel einer bestehenden Kopplung ablegen — der Weg, auf
      * dem eine alte Kopplung ohne Schlüssel zu einem kommt. Ändert nichts an Kennung, Schlüssel und Zustand.
      */
+    /**
+     * Was der Server über die Fassung gesagt hat (`huelle: 2`, Vertrag 1a.7),
+     * nachträglich — `status` eines gekoppelten Geräts trägt es, und so lernt
+     * ein Handy es wieder, dessen Merker verloren ging. Schreibt nur bei
+     * einer Änderung.
+     */
+    fun huelleSetzen(fassung2: Boolean) {
+        val zugang = lesen() ?: return
+        if (zugang.huelle2 == fassung2) return
+        schreiben(zugang.copy(huelle2 = fassung2), schwebend = schwebend())
+    }
+
     fun kontoschluesselSetzen(kontoschluessel: String) {
         val zugang = lesen() ?: return
         schreiben(zugang.copy(kontoschluessel = kontoschluessel), schwebend = schwebend())
@@ -112,6 +130,7 @@ class Schluesseltresor(
             .put(FELD_SCHLUESSEL, zugang.schluessel)
             .put(FELD_SCHWEBEND, schwebend)
             .apply { zugang.kontoschluessel?.let { put(FELD_KONTOSCHLUESSEL, it) } }
+            .apply { if (zugang.huelle2) put(FELD_HUELLE, 2) }
             .toString()
             .toByteArray(Charsets.UTF_8)
 
@@ -173,5 +192,7 @@ class Schluesseltresor(
         private const val FELD_SCHWEBEND = "s"
         /** Der öffentliche Kontoschlüssel. */
         private const val FELD_KONTOSCHLUESSEL = "p"
+        /** Die Fassung der Gerätehülle, die der Server verlangt hat (`2`); fehlt sie, gilt 1. */
+        private const val FELD_HUELLE = "h"
     }
 }

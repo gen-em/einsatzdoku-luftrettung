@@ -254,24 +254,7 @@ class Geraetehuelle2Test {
         }
     }
 
-    // Öffnen gibt es in der App nicht — nur hier, im Prüffall (`oeffnen2()` der Referenz).
-    private fun oeffnen2(h: ByteArray, spk: ByteArray, art: String, ref: String, platz: String): ByteArray {
-        val privat = Geraetehuelle.privat(hex(v.getJSONObject("konto").getString("privat_hex")))
-        val epk = h.copyOfRange(9, 74)
-        val iv = h.copyOfRange(74, 90)
-        val ct = h.copyOfRange(90, h.size - 32)
-        fun ecdh(gegen: ByteArray) = KeyAgreement.getInstance("ECDH").run {
-            init(privat); doPhase(Geraetehuelle.oeffentlich(gegen), true); generateSecret()
-        }
-        val okm = Geraetehuelle.hkdf(ecdh(epk) + ecdh(spk), epk, "nadoku-huelle-2".toByteArray() + konto + spk)
-        val tag = Mac.getInstance("HmacSHA256").run {
-            init(SecretKeySpec(okm.copyOfRange(32, 64), "HmacSHA256"))
-            doFinal(h.copyOfRange(0, h.size - 32) + Geraetehuelle.bindung(art, ref, platz))
-        }
-        check(tag.contentEquals(h.copyOfRange(h.size - 32, h.size))) { "pruefwert" }
-        return Cipher.getInstance("AES/CBC/PKCS5Padding").run {
-            init(Cipher.DECRYPT_MODE, SecretKeySpec(okm.copyOfRange(0, 32), "AES"), IvParameterSpec(iv))
-            doFinal(ct)
-        }
-    }
+    // Öffnen gibt es in der App nicht — nur im Prüffall (`Huellenoeffner`, `oeffnen2()` der Referenz).
+    private fun oeffnen2(h: ByteArray, spk: ByteArray, art: String, ref: String, platz: String): ByteArray =
+        Huellenoeffner.oeffnen2(h, spk, art, ref, platz)
 }
