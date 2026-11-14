@@ -3,7 +3,7 @@
 # laufenden Pakete, Deckel fuer next_seq, gleiche Stueckgroesse bei
 # Wiederholung.
 #
-# Anlass: Nr. 570 — bis Uhr 4.3.3 liess die Uhr ein Neukoppeln im Dienst zu,
+# Anlass: Nr. 570, Nr. 577 — bis Uhr 4.3.3 liess die Uhr ein Neukoppeln im Dienst zu,
 # schickte den laufenden Einsatz ohne Pruefung der Bindung, glaubte jeder
 # Quittung und liess ein unquittiertes Stueck wachsen.
 #
@@ -40,7 +40,7 @@ sed -i 's|<property id="serverUrl" type="string">[^<]*</property>|<property id="
     "$APP/resources/settings/properties.xml"
 sed -i 's|        Track.restore();|        Track.restore();\n        SendewegProbe.starten();|' "$APP/source/NAdokuApp.mc"
 sed -i 's|^\(        \)var flat = Track.readPoints(ref, seqFrom, n);$|&\n\1SendewegProbe.stueck(seqFrom, flat.size() / 4);|' "$APP/source/Uploader.mc"
-sed -i 's|^        Communications.makeWebRequest(url,$|        if (SendewegProbe.abfangen()) { return; }\n&|' "$APP/source/Uploader.mc"
+sed -i 's|^        Communications.makeWebRequest(url,$|        if (SendewegProbe.abfangen(body)) { return; }\n&|' "$APP/source/Uploader.mc"
 grep -q '127.0.0.1:1<' "$APP/resources/settings/properties.xml" || fehler "Serveradresse nicht umgestellt"
 for muster in 'SendewegProbe.starten' 'SendewegProbe.stueck' 'SendewegProbe.abfangen'; do
     [ "$(grep -rc "$muster" "$APP/source" | awk -F: '{s+=$2} END {print s}')" = 1 ] \
@@ -65,7 +65,7 @@ bash "$P" beenden >/dev/null 2>&1 || true
 printf '%s\n' "$AUSGABE" | grep -v '^SENDEWEG ENDE' | sed 's/^SENDEWEG /  /'
 pruef=$(printf '%s\n' "$AUSGABE" | grep -c '^SENDEWEG \(ok\|FEHL\)' || true)
 fehl=$(printf '%s\n' "$AUSGABE" | grep -c '^SENDEWEG FEHL' || true)
-SOLL=15
+SOLL=22
 if ! printf '%s\n' "$AUSGABE" | grep -q '^SENDEWEG ENDE'; then
     echo "  FEHL  keine ENDE-Zeile — die Probe brach nach $pruef Pruefungen ab"
     fehl=$((fehl+1))

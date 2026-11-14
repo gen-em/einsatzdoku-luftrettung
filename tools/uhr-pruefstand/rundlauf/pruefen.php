@@ -13,7 +13,12 @@
  * 600 Punkte in zwei Stuecken (500 + 100), drei Phasen, eine Reanimation,
  * ein Ruhesegment mit 3 Punkten. Jede Abweichung ist ein Fehlschlag.
  *
- * Aufruf (rundlauf.sh tut es): php pruefen.php <einsatz-ref> <ruhe-ref>
+ * Aufruf (rundlauf.sh tut es): php pruefen.php <einsatz-ref> <ruhe-ref> [2 <spk>]
+ *
+ * FASSUNG 2 (seit Uhr 5.0.0, KG-03b, Nr. 577): mit `2` und dem
+ * Geraeteschluessel (Base64, aus der Kopplung) oeffnet fassung2.py jede
+ * Huelle mit der Referenz; dazu muss jedes Stueck den Kopf tragen, das
+ * letzte den Merker SCHLUSS, und die Einsatzhuelle Fassung 2 mit Zaehler.
  * Ausgabe: je Pruefung eine Zeile, am Ende "N Pruefungen, M Fehlschlaege".
  */
 declare(strict_types=1);
@@ -24,7 +29,8 @@ require 'db.php';
 require_once 'demo_lib.php';
 require_once $wurzel . '/tools/proben/huelle/geraet.php';
 
-[$_, $einsatzRef, $ruheRef] = $argv + [null, '', ''];
+[$_, $einsatzRef, $ruheRef, $fassungArg, $spkB64] = $argv + [null, '', '', '1', ''];
+$fassung = (int)$fassungArg === 2 ? 2 : 1;
 $n = 0; $fehl = 0;
 function pruefe(bool $ok, string $was): void
 {
@@ -71,6 +77,36 @@ if ($pkcs8 === null) { fwrite(STDERR, "Privater Schluessel des Demo-Kontos geht 
 $privat = openssl_pkey_get_private("-----BEGIN PRIVATE KEY-----\n" . chunk_split($pkcs8, 64, "\n")
                                    . "-----END PRIVATE KEY-----\n");
 
+/** Eine Huelle oeffnen: Fassung 1 hier (geraet.php), Fassung 2 ueber die
+ *  Referenz (fassung2.py). */
+function oeffne(string $h, string $art, string $ref, string $platz = ''): string
+{
+    global $fassung, $privat, $pkcs8, $spkB64;
+    if ($fassung !== 2) { return gh_probe_oeffnen($h, $privat, $art, $ref, $platz); }
+    $p = proc_open(['python3', '-I', __DIR__ . '/fassung2.py', 'oeffnen'],
+                   [0 => ['pipe', 'r'], 1 => ['pipe', 'w']], $rohr);
+    fwrite($rohr[0], json_encode(['priv' => $pkcs8, 'spk' => $spkB64, 'huelle' => base64_encode($h),
+                                  'art' => $art, 'ref' => $ref, 'platz' => $platz]));
+    fclose($rohr[0]);
+    $aus = json_decode((string)stream_get_contents($rohr[1]), true);
+    fclose($rohr[1]);
+    proc_close($p);
+    if (!is_array($aus) || !isset($aus['klar'])) { throw new RuntimeException((string)($aus['fehler'] ?? 'helfer')); }
+    return (string)base64_decode($aus['klar']);
+}
+
+/** Ein Spurstueck innen: Fassung 2 traegt vor den Punkten 12 Byte Kopf
+ *  (ts_von absolut, Merker). Gibt [punkte, merker|null] zurueck. */
+function spur_lesen(string $roh, int $tsVon): array
+{
+    global $fassung;
+    if ($fassung !== 2) { return [innen_lesen($roh, $tsVon), null]; }
+    $kopfTs = unpack('J', substr($roh, 0, 8))[1];
+    $merker = ord($roh[8] ?? "\xff");
+    if ($kopfTs !== $tsVon) { throw new RuntimeException("kopf-ts $kopfTs statt $tsVon"); }
+    return [innen_lesen(substr($roh, 12), $tsVon), $merker];
+}
+
 // ---- Der Einsatz -----------------------------------------------------------
 $q = $pdo->prepare('SELECT id, client_ref, ort_huelle, started_at FROM missions WHERE user_id = ? AND client_ref = ?');
 $q->execute([$demo, $einsatzRef]);
@@ -93,8 +129,15 @@ if ($m !== false) {
            'keine Koordinatenspalte in mission_phases (seit S11-12) — kein Ort im Klartext');
 
     try {
-        $innen = json_decode(gh_probe_oeffnen((string)$m['ort_huelle'], $privat, 'einsatz', $einsatzRef), true);
-        pruefe(is_array($innen) && ($innen['fassung'] ?? 0) === 1, 'Einsatzhuelle geht auf, Fassung 1');
+        $innen = json_decode(oeffne((string)$m['ort_huelle'], 'einsatz', $einsatzRef), true);
+        pruefe(is_array($innen) && ($innen['fassung'] ?? 0) === $fassung, "Einsatzhuelle geht auf, Fassung $fassung");
+        if ($fassung === 2) {
+            /* Zaehler: Unix-Sekunde des Verschliessens (E-KA-64), also
+             * nicht kleiner als der Beginn dieses Laufs. */
+            pruefe(is_int($innen['z'] ?? null) && $innen['z'] >= (int)getenv('RUNDLAUF_LAUF')
+                   && ($innen['schluss'] ?? null) === true,
+                   'Einsatzhuelle Fassung 2: Zaehler ' . json_encode($innen['z'] ?? null) . ' ab Laufbeginn, schluss');
+        }
         $sollPh = [[2, 0, -33.4489, -70.6693], [3, 300, null, null], [4, 1200, -33.4389, -70.6493]];
         $gut = count($innen['phasen'] ?? []) === 3;
         foreach ($sollPh as $k => [$nr, $t, $la, $lo]) {
@@ -120,11 +163,13 @@ if ($m !== false) {
     pruefe(array_map(fn($s) => [(int)$s['seq_from'], (int)$s['punkte'], (int)$s['stufe']], $stuecke)
            === [[0, 500, 1], [500, 100, 1]], 'zwei Stuecke der Stufe 1: 0:500 und 500:100');
     $alle = [];
+    $merker = [];
     foreach ($stuecke as $s) {
         try {
-            $roh = gh_probe_oeffnen((string)$s['huelle'], $privat, 'spur', $einsatzRef,
-                                    $s['seq_from'] . ':' . $s['punkte']);
-            $alle = array_merge($alle, innen_lesen($roh, (int)$s['ts_von']));
+            $roh = oeffne((string)$s['huelle'], 'spur', $einsatzRef, $s['seq_from'] . ':' . $s['punkte']);
+            [$pkt, $mk] = spur_lesen($roh, (int)$s['ts_von']);
+            $alle = array_merge($alle, $pkt);
+            $merker[] = $mk;
         } catch (Throwable $e) {
             pruefe(false, "Stueck {$s['seq_from']} geht auf: " . $e->getMessage());
         }
@@ -145,6 +190,9 @@ if ($m !== false) {
            'Hoehe: 4500,5 m -> 4501 (ueber 3276 m, F-S11-64), -12,5 -> -13, keine -> -32768');
     pruefe(isset($stuecke[0]) && (int)$stuecke[0]['ts_von'] === T0 && (int)$stuecke[1]['ts_bis'] === T0 + 599 * 5,
            'Zeitraum im Klartext: ts_von und ts_bis der Stuecke');
+    if ($fassung === 2) {
+        pruefe($merker === [0, 1], 'Merker: SCHLUSS nur am letzten Stueck ' . json_encode($merker));
+    }
 }
 
 // ---- Das Ruhesegment -------------------------------------------------------
@@ -158,10 +206,11 @@ if ($r !== false) {
     $st->execute([$r]);
     $s = $st->fetch(PDO::FETCH_ASSOC);
     try {
-        $p = innen_lesen(gh_probe_oeffnen((string)$s['huelle'], $privat, 'ruhe', $ruheRef, '0:3'), (int)$s['ts_von']);
+        [$p, $mk] = spur_lesen(oeffne((string)$s['huelle'], 'ruhe', $ruheRef, '0:3'), (int)$s['ts_von']);
         pruefe($p === [[471000000, 112000000, 600, T0 - 600], [471001000, 112001000, null, T0 - 300],
                        [471002000, 112002000, 601, T0 - 10]],
                'Ruhestueck (Art "ruhe") geht auf, 3 Punkte gleich');
+        if ($fassung === 2) { pruefe($mk === 1, 'Ruhestueck: Merker SCHLUSS ' . json_encode($mk)); }
     } catch (Throwable $e) {
         pruefe(false, 'Ruhestueck geht auf: ' . $e->getMessage());
     }

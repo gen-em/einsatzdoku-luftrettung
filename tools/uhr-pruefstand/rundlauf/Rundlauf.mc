@@ -92,6 +92,11 @@ module Rundlauf {
         Storage.setValue("rl_gefuellt", true);
     }
 
+    /* Arten der NACHHOLEN-Familie (rundlauf.sh, seit KG-03b): Die Uhr koppelt
+     * wie vor Uhr 5.0.0, ohne Geraeteschluessel (E-KG-36). Nur in diesen
+     * Prueffassungen eingehaengt. */
+    function alteKopplung() as Lang.Boolean { return true; }
+
     /* Haken am Anfang von Uploader._send (nur HALTEN): true = jetzt nicht
      * senden. Die Frist beginnt beim ersten Versuch MIT Schluessel. */
     function halten() as Lang.Boolean {

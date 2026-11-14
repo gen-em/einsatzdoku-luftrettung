@@ -47,6 +47,10 @@
 //           verschliessen: Form, Kennung, Z_s aus dem Speicher und nach
 //           einem nachgestellten Neustart aus dem Storage
 //   T-FASSUNG  500 Punkte in Fassung 1 und 2: Zeit und Speicher; Z_s neu
+//   ZAEHLER-…  der Zaehler z der Einsatzhuelle (E-KA-64): die Regel
+//           max(jetzt, letztes + 1) ohne Uhr (FOLGE), am Speicher mit der
+//           Zeit des Geraets und zweimal in derselben Sekunde (ZEIT), aus
+//           dem Stand einer Uhr vor KG-03b (ALT), ueber das Trennen (TRENNEN)
 //   Zeilen, die mit EXTERN beginnen, stehen NUR auf der Konsole: Huellen
 //   mit Zufall, die die Referenz ausserhalb der Uhr oeffnet (LIESMICH).
 //   ERGEBNIS  N gut, M Fehler — am Ende und zusaetzlich als erste Zeile
@@ -58,6 +62,7 @@ import Toybox.Graphics;
 import Toybox.Lang;
 import Toybox.Math;
 import Toybox.System;
+import Toybox.Time;
 import Toybox.Timer;
 import Toybox.WatchUi;
 
@@ -288,6 +293,8 @@ module Probe {
             fassungen(n == 34);
         } else if (n == 35) {
             zsNeu();
+        } else if (n == 36) {
+            zaehler();
         } else {
             return false;
         }
@@ -377,7 +384,7 @@ module Probe {
         var innen = Huelle2.einsatzInnen(d, z2, true);
         var h = Huelle2.einsatz("probe-einsatz", d, z2, true);
         var kopf = "{\"fassung\":2,\"z\":" + z2 + ",\"start\":1784277065,\"schluss\":true,\"phasen\":[";
-        urteil("EINSATZ2", z2 == z1 + 1 && innen.find(kopf) == 0, "z " + z2);
+        urteil("EINSATZ2", z2 > z1 && innen.find(kopf) == 0, "z " + z2);
         System.println("EXTERN einsatz " + Krypto.hex(Huelle2.spk() as ByteArray) + " probe-einsatz "
                        + z2 + " 1784277065 " + h);
     }
@@ -423,6 +430,46 @@ module Probe {
         melde("T-ZS " + (System.getTimer() - t0) + " ms");
         Huelle2.paarLoeschen();
         Huelle.schluesselLoeschen();
+    }
+
+    // Der Zaehler z der Einsatzhuelle (E-KA-64, KG-03b): Unix-Sekunde des
+    // Verschliessens, lokal streng steigend. Laeuft NACH zsNeu(): Das Paar
+    // ist dort schon geloescht, und der Schritt stellt "gz" selbst um. Am
+    // Ende steht der hoechste Stand wieder im Speicher -- die Probe darf den
+    // Zaehler des Simulators nicht zuruecklegen.
+    function zaehler() as Void {
+        var T = 1794300000;
+        var M = Huelle2.Z_MAX;
+        // Die Regel ohne Uhr und Speicher: was sich am Geraet nicht stellen laesst.
+        var ok = Huelle2.zaehlerFolge(null, T) == T              // kein Vorgaenger
+                 && Huelle2.zaehlerFolge(5, T) == T              // alter +1-Zaehler
+                 && Huelle2.zaehlerFolge(T, T) == T + 1          // dieselbe Sekunde
+                 && Huelle2.zaehlerFolge(T + 500, T) == T + 501  // die Zeit sprang zurueck
+                 && Huelle2.zaehlerFolge(null, 0) == 1           // Uhr ohne Zeit
+                 && Huelle2.zaehlerFolge(7, 0) == 8
+                 && Huelle2.zaehlerFolge(null, -5) == 1
+                 && Huelle2.zaehlerFolge(-3, 0) == 1             // Unsinn im Speicher
+                 && Huelle2.zaehlerFolge("x", 10) == 10
+                 && Huelle2.zaehlerFolge(M - 1, 100) == M        // die Grenze: stehen
+                 && Huelle2.zaehlerFolge(M, 100) == M;           // bleiben, kein Umlauf
+        urteil("ZAEHLER-FOLGE", ok, "");
+
+        // Am Speicher, mit der Zeit des Geraets.
+        var jetzt = Time.now().value();
+        var z1 = Huelle2.zaehlerNaechster();
+        var z2 = Huelle2.zaehlerNaechster();        // dieselbe Sekunde
+        urteil("ZAEHLER-ZEIT", z1 >= jetzt && z2 > z1, "z " + z1 + ", jetzt " + jetzt + ", dann +" + (z2 - z1));
+
+        Storage.setValue(Huelle2.ABLAGE_ZAEHLER, 5);            // Stand einer Uhr vor KG-03b
+        var z3 = Huelle2.zaehlerNaechster();
+        urteil("ZAEHLER-ALT", z3 >= jetzt, "5 -> " + z3);
+        var hoch = (z3 > z2) ? z3 : z2;
+        Storage.setValue(Huelle2.ABLAGE_ZAEHLER, hoch);
+
+        Huelle2.paarLoeschen();
+        var bleibt = Storage.getValue(Huelle2.ABLAGE_ZAEHLER);
+        var z4 = Huelle2.zaehlerNaechster();
+        urteil("ZAEHLER-TRENNEN", bleibt instanceof Number && bleibt == hoch && z4 > hoch, "z " + z4);
     }
 
     // Das dauerhafte Paar (KG-02). Meldungen, kein Urteil: Ein erster Lauf

@@ -32,6 +32,7 @@
 using Toybox.Lang;
 using Toybox.Cryptography;
 using Toybox.Application.Storage;
+using Toybox.Time;
 
 module Huelle2 {
 
@@ -52,7 +53,8 @@ module Huelle2 {
      *   gzs    Kennung des Kontoschluessels (8 Byte) und Z_s (32 Byte) --
      *          gilt nur, solange die Kennung zum abgelegten Kontoschluessel
      *          passt
-     *   gz     der Zaehler der Einsatzhuellen
+     *   gz     der Zaehler der Einsatzhuellen: die Unix-Sekunde des letzten
+     *          Verschliessens oder mehr (zaehlerNaechster(), E-KA-64)
      *   kpruef2  Vermerk des Selbsttests, wie "kpruef" */
     const ABLAGE_PAAR = "gpaar";
     const ABLAGE_ZS = "gzs";
@@ -299,12 +301,68 @@ module Huelle2 {
                  "huelle" => verschliessen(innen, art, ref, seq.toString() + ":0") };
     }
 
-    /* Der naechste Zaehlerstand fuer eine Einsatzhuelle. EIN Zaehler fuer
-     * alle Einsaetze dieser Uhr: Er steigt mit jedem Verschliessen, also
-     * auch je Einsatz, und braucht keinen Platz im Einsatzpuffer. */
+    /* DER ZAEHLER `z` DER EINSATZHUELLE (E-KA-64, KG-03b).
+     *
+     * DIE REGEL. z = Unix-Sekunde des Verschliessens, lokal streng steigend:
+     *     z = max(jetzt, letztes z + 1)
+     * EIN Zaehler fuer alle Einsaetze dieser Uhr, abgelegt unter "gz"; er
+     * steigt mit jedem Verschliessen, also auch je Einsatz, braucht keinen
+     * Platz im Einsatzpuffer und uebersteht das Trennen (paarLoeschen()).
+     * Die Referenz verlangt je Einsatz z >= o (einsatz_lesen() in
+     * tools/proben/huelle/referenz.py: z < o ist `zurueckgelegt`, z < 1 ist
+     * `innen`) -- nicht o + 1. Bis KG-03b zaehlte er +1 ab 1; das trug auf
+     * EINER Uhr, aber nicht ueber einen Geraetewechsel: Ein zweites Geraet
+     * mit kleinerem Zaehler fiele als `zurueckgelegt` durch (Q-KA-13). Mit
+     * der Sekunde steigt er auch ueber Geraete hinweg, solange deren Uhren
+     * nicht weiter auseinandergehen als der Abstand zweier Uebergaben.
+     *
+     * 1. WOHER "JETZT" KOMMT. Time.now().value() -- dieselbe Quelle wie
+     *    Util.epochNow(); hier unmittelbar, weil die Krypto-Probe diesen
+     *    Kern ohne Util.mc uebersetzt. Es ist die Zeit der Uhr, nicht des
+     *    Servers. SPRINGT SIE ZURUECK (Zuruecksetzen, Zeitzone von Hand),
+     *    traegt "letztes z + 1": Der Zaehler laeuft der Uhr dann voraus und
+     *    zaehlt +1, bis die Zeit ihn wieder einholt. IST SIE UNPLAUSIBEL
+     *    KLEIN (Uhr ohne Zeit) oder null/negativ, gilt dasselbe, und ohne
+     *    Vorgaenger ist z = 1 -- nie kleiner, die Referenz weist z < 1 ab.
+     *    Lokal haelt die Regel also immer. WAS SIE NICHT TRAEGT: Eine Uhr,
+     *    deren Zeit einmal weit VORAUS lag, behaelt den hohen Stand; und
+     *    eine Uhr ohne Zeit liefert kleine Zahlen. Beides stoert erst den
+     *    Geraetewechsel (das andere Geraet faellt als `zurueckgelegt`
+     *    durch bzw. diese Uhr), nie die Folge dieser Uhr selbst.
+     * 2. BESTEHENDER SPEICHER. Eine Uhr mit "gz" = kleine Zahl aus dem
+     *    alten +1-Zaehler springt beim naechsten Verschliessen auf jetzt
+     *    (max greift) -- groesser als jeder Stand, den der Server von ihr
+     *    kennt. Kein Umzug, kein Fassungsmerker. Was unter "gz" keine Zahl
+     *    >= 1 ist, zaehlt als "kein Vorgaenger".
+     * 3. ZAHLENBEREICH. Lang.Number, 32 Bit mit Vorzeichen: traegt bis
+     *    2147483647 = 19.01.2038. Long braechte hier nichts, denn
+     *    Time.now().value() ist selbst eine Number -- die Grenze liegt in
+     *    der Plattform, nicht in diesem Zaehler. Das Format verlangt nur
+     *    eine ganze JSON-Zahl >= 1 ("z":<zahl>, ohne Anfuehrungszeichen,
+     *    ohne Komma); Referenz (Python) und Browser (2^53) lesen jede
+     *    Number und spaeter auch jeden Long unveraendert. An der Grenze
+     *    BLEIBT der Zaehler stehen, statt ins Negative umzulaufen: gleiches
+     *    z nimmt die Referenz an (z >= o), ein negatives nie.
+     *
+     * zaehlerFolge() ist die Regel ohne Uhr und Speicher, damit die Probe
+     * auch die Faelle messen kann, die sich am Geraet nicht stellen lassen
+     * (Zeit springt zurueck, keine Zeit, Grenze). */
+    const Z_MAX = 2147483647;
+
+    function zaehlerFolge(alt as Lang.Object or Null, jetzt as Lang.Number) as Lang.Number {
+        var n = 1;
+        if (alt instanceof Lang.Number && (alt as Lang.Number) >= 1) {
+            var a = alt as Lang.Number;
+            n = (a < Z_MAX) ? a + 1 : Z_MAX;
+        }
+        return (jetzt > n) ? jetzt : n;
+    }
+
+    /* Der naechste Zaehlerstand fuer eine Einsatzhuelle -- und abgelegt,
+     * BEVOR ihn jemand benutzt: Ein Absturz danach kostet eine Zahl, keinen
+     * Ruecklauf. */
     function zaehlerNaechster() as Lang.Number {
-        var z = Storage.getValue(ABLAGE_ZAEHLER);
-        var n = (z instanceof Lang.Number) ? (z as Lang.Number) + 1 : 1;
+        var n = zaehlerFolge(Storage.getValue(ABLAGE_ZAEHLER), Time.now().value());
         Storage.setValue(ABLAGE_ZAEHLER, n);
         return n;
     }
