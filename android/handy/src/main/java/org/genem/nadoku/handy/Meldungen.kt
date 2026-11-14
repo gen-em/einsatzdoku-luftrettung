@@ -34,6 +34,9 @@ object Meldungen {
         Abweisung.KEINE_VERBINDUNG -> R.string.fehler_keine_verbindung
         Abweisung.SERVERFEHLER -> R.string.fehler_serverfehler
         Abweisung.UNBEKANNT -> R.string.fehler_unbekannt
+        Abweisung.IM_WEB_ABGELEHNT -> R.string.fehler_im_web_abgelehnt
+        Abweisung.SCHLUESSEL_PASST_NICHT -> R.string.fehler_schluessel_passt_nicht
+        Abweisung.KONTO_OHNE_SCHLUESSEL -> R.string.fehler_konto_ohne_schluessel
     }
 
     /**
@@ -59,5 +62,9 @@ object Meldungen {
         Abweisung.KEINE_VERBINDUNG -> R.string.fehler_keine_verbindung_hinweis
         Abweisung.SERVERFEHLER -> R.string.fehler_serverfehler_hinweis
         Abweisung.UNBEKANNT -> R.string.fehler_unbekannt_hinweis
+        /* Beide Ablehnungen im Browser sagen dasselbe Was-hilft: Der Grund
+         * unterscheidet sich, die Handlung nicht (M-KA-02 E). */
+        Abweisung.IM_WEB_ABGELEHNT, Abweisung.SCHLUESSEL_PASST_NICHT -> R.string.fehler_im_web_abgelehnt_hinweis
+        Abweisung.KONTO_OHNE_SCHLUESSEL -> R.string.fehler_konto_ohne_schluessel_hinweis
     }
 }

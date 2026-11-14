@@ -45,6 +45,9 @@
     </plurals>
     <string name="sync_vollstaendig">Alles gesendet</string>
     <string name="sync_gekoppelt_mit">Gekoppelt · %1$s</string>
+    <!-- Nur bei einer Kopplung mit Vergleichswert, nach der der Server huelle: 2
+         gesagt hat (KA-06c, M-KA-02 D) — sonst fehlt die Zeile. -->
+    <string name="sync_herkunft">Herkunft gesichert</string>
 
     <!-- ==== Kopplung (JSON-Vertrag 1a) ================================== -->
     <!--
@@ -98,6 +101,17 @@
     <string name="kopplung_abbrechen">Abbrechen</string>
     <string name="kopplung_neu">Neu beginnen</string>
 
+    <!-- Kopplung mit Vergleichswert (seit KA-06c, Mockup M-KA-02, E-KA-66):
+         Die App zeigt dieselbe sechsstellige Zahl wie der Browser. Sie ersetzt
+         die Frage "Zu diesem Konto koppeln?", sobald das Gerät einen
+         Schlüssel mitbringt; die maskierte Adresse bleibt darunter stehen. -->
+    <string name="kopplung_wert_titel">Gleiche Zahl wie im Browser?</string>
+    <string name="kopplung_wert_text">Der Browser zeigt jetzt eine sechsstellige Zahl. Stimmt sie mit dieser überein, gehört das Konto dir — dann im Browser und hier bestätigen.</string>
+    <string name="kopplung_wert_zeigen">Vergleichswert</string>
+    <string name="kopplung_wert_ja">Ja, gleiche Zahl</string>
+    <string name="kopplung_wert_nein">Nein, andere Zahl</string>
+    <string name="kopplung_wartet_wert">Warte auf die Bestätigung im Browser …</string>
+
     <!-- Ablehnungen: WAS ist los (erste Zeile) und WAS HILFT (zweite).
          Die Zweiteilung ist von der Garmin-Uhr übernommen (Pair.mc) — dort
          entstand sie, weil eine lange Meldung auf dem Display abgeschnitten
@@ -118,6 +132,11 @@
     <string name="fehler_serverfehler_hinweis">Das liegt nicht am Gerät. Später erneut versuchen.</string>
     <string name="fehler_unbekannt">Kopplung fehlgeschlagen</string>
     <string name="fehler_unbekannt_hinweis">Unerwartete Antwort des Servers.</string>
+    <string name="fehler_im_web_abgelehnt">Im Browser abgelehnt</string>
+    <string name="fehler_im_web_abgelehnt_hinweis">Der Browser hat eine andere Zahl gezeigt. Nichts wurde gekoppelt. Beginne neu — und wenn die Zahlen wieder nicht passen, koppele nicht.</string>
+    <string name="fehler_schluessel_passt_nicht">Schlüssel passt nicht</string>
+    <string name="fehler_konto_ohne_schluessel">Konto noch ohne Schlüssel</string>
+    <string name="fehler_konto_ohne_schluessel_hinweis">Einmal im Browser abmelden und wieder anmelden, dann neu koppeln.</string>
 
     <!-- ==== Trennen ===================================================== -->
     <string name="trennen">Gerät trennen</string>

@@ -564,6 +564,12 @@ pruefe(pair_code_normalisieren('ab3 k7q') === 'AB3K7Q' && pair_code_normalisiere
  * Beanspruchen in Teil 2.
  * ====================================================================== */
 echo "\n  Teil 7 — Vergleichswert (KA-06d)\n";
+/* DAS KONTO BRAUCHT EIN PAAR (F-KA-108): Ohne es lehnt das Beanspruchen
+ * eine Sitzung mit Geraeteschluessel ab. Bis KA-06c koppelte die Probe hier
+ * an einem Konto, dessen Paar K8 unbrauchbar gemacht hatte — und 36 nahm
+ * `kontoschluessel: null` hin, statt den Schluessel zu verlangen. */
+$pdo->prepare('UPDATE users SET kp_oeffentlich = ? WHERE id = ?')
+    ->execute([sk_versiegeln($kpA, kp_zweck($uid)), $uid]);
 $b64 = fn(int $n): string => base64_encode(random_bytes($n));
 $spk = base64_encode("\x04" . random_bytes(64));
 $schluessel = ['spk' => $spk, 'zusage' => $b64(32)];
@@ -584,8 +590,8 @@ $nB = $b64(16);
 pair_sitzung_beanspruchen($pdo, (string)$h['daten']['code'], $uid, $nB);
 $st = anfrage(['aktion' => 'status'], $hd, $hk);
 pruefe($st['code'] === 200 && ($st['daten']['zustand'] ?? '') === 'beansprucht'
-       && ($st['daten']['n_b'] ?? '') === $nB && array_key_exists('kontoschluessel', $st['daten'] ?? []),
-       '36  status beansprucht traegt n_b und kontoschluessel', $st['roh']);
+       && ($st['daten']['n_b'] ?? '') === $nB && ($st['daten']['kontoschluessel'] ?? null) === kp_sec1($kpA),
+       '36  status beansprucht traegt n_b und den Kontoschluessel', $st['roh']);
 
 $j = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $hd, $hk);
 pruefe($j['code'] === 409 && ($j['daten']['error'] ?? '') === 'zustand',
@@ -656,6 +662,25 @@ $gz = geraet($pdo, $vd);
 pruefe(!isset($st['daten']['n_b']) && $j['code'] === 200 && !isset($j['daten']['huelle'])
        && $gz !== null && $gz['spk'] === null,
        '43  ohne Schluessel: status ohne n_b, Ja 200 ohne huelle, Geraet ohne spk', $j['roh']);
+
+/* F-KA-108: Ein Geraet mit Schluessel an einem Konto OHNE brauchbares Paar —
+ * das Beanspruchen scheitert in der Bibliothek, fuer jeden Weg, der es ruft;
+ * die Sitzung bleibt offen, das Geraet bekommt nie `n_b` ohne Schluessel.
+ * Gegenprobe: dieselbe Sitzung, das Paar wieder da — beansprucht. Gegen
+ * Web 24.18.0 rot: Dort beanspruchte die Bibliothek ohne zu fragen. */
+$x = anfrage(['aktion' => 'start', 'schluessel' => $schluessel]);
+$xd = (string)$x['daten']['device_id']; $xk = (string)$x['daten']['api_key']; $angelegt[] = $xd;
+$pdo->prepare('UPDATE users SET kp_oeffentlich = NULL WHERE id = ?')->execute([$uid]);
+$ohne = pair_sitzung_beanspruchen($pdo, (string)$x['daten']['code'], $uid, $b64(16));
+$st = anfrage(['aktion' => 'status'], $xd, $xk);
+$pdo->prepare('UPDATE users SET kp_oeffentlich = ? WHERE id = ?')
+    ->execute([sk_versiegeln($kpA, kp_zweck($uid)), $uid]);
+$mit = pair_sitzung_beanspruchen($pdo, (string)$x['daten']['code'], $uid, $b64(16));
+$st2 = anfrage(['aktion' => 'status'], $xd, $xk);
+pruefe(!$ohne && ($st['daten']['zustand'] ?? '') === 'offen' && !isset($st['daten']['n_b'])
+       && $mit && ($st2['daten']['kontoschluessel'] ?? null) === kp_sec1($kpA),
+       '48  Konto ohne Paar: Beanspruchen mit Geraeteschluessel scheitert, Sitzung offen; mit Paar beansprucht (F-KA-108)',
+       "{$st['roh']} / {$st2['roh']}");
 
 /* ======================================================================
  * Teil 8 — Fassung 2 am Eingang (44 bis 47). Der Server prueft nur die

@@ -151,6 +151,8 @@ fun DienstAnsicht(
     fremd: Int = 0,
     aufFremdeVerwerfen: () -> Unit = {},
     fristBis: String? = null,
+    /** Gekoppelt mit Vergleichswert und `huelle: 2` (KA-06c, M-KA-02 D). */
+    herkunft: Boolean = false,
     aufModus: (Modus) -> Unit,
     aufBeginnen: () -> Unit,
     aufBeenden: () -> Unit,
@@ -180,7 +182,7 @@ fun DienstAnsicht(
                 Zustandsblock(
                     stand, rueckstand, abgewiesen, verwerfbar, verworfen,
                     sendeergebnis, sendelaufLaeuft, aufJetztSenden, aufVerwerfen,
-                    fremd, aufFremdeVerwerfen, fristBis,
+                    fremd, aufFremdeVerwerfen, fristBis, herkunft,
                 )
 
                 /* ZWEI SPERREN, IN DIESER REIHENFOLGE. Erst die
@@ -235,6 +237,7 @@ private fun Zustandsblock(
     fremd: Int,
     aufFremdeVerwerfen: () -> Unit,
     fristBis: String?,
+    herkunft: Boolean,
 ) {
     if (stand.laeuft) {
         Row(
@@ -262,6 +265,14 @@ private fun Zustandsblock(
         ),
         punktfarbe = Rolle.infoLinie, schriftfarbe = Rolle.infoText,
     )
+    /* HERKUNFT GESICHERT (seit KA-06c, M-KA-02 D): Nur nach einer Kopplung
+     * mit Vergleichswert, bei der der Server `huelle: 2` gesagt hat — dann
+     * trägt jede Hülle den Geräteschlüssel als Absender, und der Browser
+     * erkennt, dass sie von diesem Handy kommt. Gedämpft und ohne Punkt: Es
+     * ist eine Auskunft, kein Zustand, um den man sich kümmern müsste. */
+    if (herkunft) {
+        Text(text = stringResource(R.string.sync_herkunft), color = Rolle.gedaempft, fontSize = 13.sp)
+    }
     Zustandszeile(
         text = if (rueckstand > 0) {
             androidx.compose.ui.res.pluralStringResource(R.plurals.sync_rueckstand, rueckstand, rueckstand)

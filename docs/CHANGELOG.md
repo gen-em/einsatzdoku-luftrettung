@@ -14,6 +14,37 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.24.0] — unveröffentlicht
+
+Schritt 28 (KA), Paket KA-06c.
+
+### Hinzugefügt
+
+- **Android — das Handy koppelt mit Vergleichswert.** Bisher bekam es den
+  Kontoschlüssel vom Server, ohne dass jemand prüfen konnte, ob es der
+  richtige war, und der Browser kannte das Handy nur als Kennung. Jetzt
+  bringt es ein eigenes Schlüsselpaar mit, legt sich mit einer Zusage fest
+  und zeigt nach dem Verbinden dieselbe sechsstellige Zahl wie der Browser;
+  erst „Wert stimmt" dort und das Ja am Handy koppeln.
+- **Android — mit `huelle: 2` verschließt das Handy in Fassung 2.** Jede
+  Hülle trägt dann den Geräteschlüssel als Absender, die Einsatzhülle einen
+  Zähler und das Ende einer Aufzeichnung den Merker Schluss, notfalls in
+  einem leeren Stück. So erkennt der Browser, dass die Daten von diesem
+  Handy kommen und nicht gekürzt wurden; die Sync-Karte sagt dann
+  „Herkunft gesichert". Ohne die Angabe des Servers bleibt es bei Fassung 1.
+
+## [Web 24.18.1] — unveröffentlicht
+
+Schritt 28 (KA), Paket KA-06c.
+
+### Behoben
+
+- **Web — ein Gerät mit Schlüssel ließ sich an ein Konto ohne
+  Schlüsselpaar binden.** Das Gerät bekam dann die Zufallszahl des Browsers,
+  aber keinen Kontoschlüssel, und konnte keinen Vergleichswert rechnen. Die
+  Seite fragte das schon vorher; jetzt fragt es die Bibliothek selbst, für
+  jeden Weg, der eine Sitzung beansprucht.
+
 ## [Uhr 5.0.0] — unveröffentlicht
 
 Schritt 28, Paket KG-03b (Backlog Nr. 577).

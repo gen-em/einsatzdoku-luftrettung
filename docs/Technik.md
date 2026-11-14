@@ -11190,6 +11190,30 @@ Kennungspräfixe unterscheiden die Quellen (`am-`/`ar-`/`ad-` für das Handy,
 `wm-` für die Wear-OS-Uhr); sie stehen seit Vertragsfassung 1.4 im
 JSON-Vertrag, Abschnitt 8 — der Nachtrag hing an R42 und ist mit S6 erledigt.
 
+**Kopplung mit Vergleichswert und Fassung 2** (seit Android 0.24.0, Konzept
+KA, KA-06c; Vertrag 1a.7 und 3.4). Den Kern hat ein Fable-Agent gebaut
+(E-KA-67), byte-gleich zur Referenz und gegen `vektoren-2.json` geprüft:
+`tresor/Geraeteschluessel.kt` erzeugt beim `start` einen **Versuch** (neues
+Gerätepaar P-256 und Zufallszahl N_g) neben einem gültigen Paar einer
+früheren Kopplung, legt bei `status beansprucht` das **erste** Paar aus
+Kontoschlüssel und `n_b` fest (ein anderes ist ein Abbruch) und gibt erst
+dann N_g heraus; `uebernehmen()` macht den Versuch nach `huelle: 2` zum
+gültigen Paar, `vergessen()` beim Trennen löscht es. Abgelegt ist alles in
+`geraet.bin` unter demselben Keystore-Schlüssel wie der Tresor, auf allen
+API-Stufen gleich — zum Rechnen liegt der private Teil im Speicher des
+Prozesses, ein Schutz durch die Hardware ist das nicht (F-KA-85; der
+Keystore rechnet ECDH erst ab API 31). `kopplung/Kopplungswert.kt` rechnet
+Zusage und Vergleichswert, `Kopplungsdienst` legt bei jeder Abfrage im
+Zustand `beansprucht` offen (wiederholbar) und meldet `Vergleich`, `202
+wartet` als `WartetBrowser`, `abgelehnt` als eigene Abweisung. Der Tresor
+merkt sich `huelle: 2` (Feld `h`); nur dann verschließt `Sendekoerper` mit
+`Geraetehuelle.einsatz2()`/`spurstueck2()`: Absender ist das Gerätepaar, die
+Einsatzhülle trägt den Zähler aus `senden/Huellenzaehler.kt` (Unix-Sekunde,
+streng steigend, Datei `huellenzaehler`, überdauert das Trennen, E-KA-64),
+SCHLUSS steht am letzten Stück eines abgeschlossenen Pakets, und ist dann
+kein Punkt mehr offen, geht `schlussstueck2()` mit null Punkten. Den Merker
+LÜCKE setzt das Handy nicht — die Referenz lässt ihn nur dem Konto.
+
 **Abgemeldet mit Rückstand: trennen und binden** (seit Android 0.20.0,
 Konzept GR, E-GR-01). Ein Rückstand sperrt das Trennen (`Kopplungsdienst.trennen()`,
 `Trennergebnis.Rueckstand`), weil der Puffer Klartext ist und erst beim Senden

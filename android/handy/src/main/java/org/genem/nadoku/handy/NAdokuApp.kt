@@ -75,6 +75,29 @@ class NAdokuApp : Application() {
     }
 
     /**
+     * Der Geräteschlüssel des Handys (seit KA-06c, F-KA-85): eigene Datei,
+     * derselbe Keystore-Schlüssel wie der Tresor. Zum Rechnen liegt der
+     * private Teil im Speicher des Prozesses — wie der API-Schlüssel; ein
+     * Schutz durch die Hardware ist das nicht (Kopf von
+     * `TresorGeraeteschluessel`).
+     */
+    val geraeteschluessel: org.genem.nadoku.handy.tresor.Geraeteschluessel by lazy {
+        org.genem.nadoku.handy.tresor.TresorGeraeteschluessel(
+            File(filesDir, org.genem.nadoku.handy.tresor.TresorGeraeteschluessel.DATEINAME),
+            KeystoreTresorschluessel(),
+        )
+    }
+
+    /** Der Zähler `z` der Einsatzhülle (E-KA-64) — überdauert das Trennen. */
+    val huellenzaehler: org.genem.nadoku.handy.senden.Huellenzaehler by lazy {
+        org.genem.nadoku.handy.senden.Huellenzaehler(
+            org.genem.nadoku.handy.senden.DateiZaehlerstand(
+                File(filesDir, org.genem.nadoku.handy.senden.DateiZaehlerstand.DATEINAME),
+            ),
+        )
+    }
+
+    /**
      * Die Warteschlange. Sie lebt hier und nicht im Vordergrunddienst, weil
      * die halbierte Chunk-Größe (nach einem 413) einen Sendelauf überdauern
      * soll — sonst liefe die App bei jedem Lauf wieder in denselben 413.
@@ -104,9 +127,13 @@ class NAdokuApp : Application() {
             // Fehlt der Kontoschlüssel, holt der Sendelauf ihn über `status`
             // nach — auf demselben Faden, ohne Bildschirm.
             schluesselHolen = {
-                org.genem.nadoku.handy.kopplung.Kopplungsdienst(HttpNetzweg(), tresor).schluesselHolen()
+                org.genem.nadoku.handy.kopplung.Kopplungsdienst(
+                    HttpNetzweg(), tresor, geraeteschluessel = geraeteschluessel,
+                ).schluesselHolen()
             },
             bindung = bindung,
+            geraeteschluessel = geraeteschluessel,
+            zaehler = huellenzaehler,
         )
     }
 

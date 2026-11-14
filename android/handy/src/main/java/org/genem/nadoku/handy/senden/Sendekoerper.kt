@@ -2,6 +2,7 @@ package org.genem.nadoku.handy.senden
 
 import org.genem.nadoku.handy.aufzeichnung.Rohpunkt
 import org.genem.nadoku.handy.puffer.Paketzeile
+import org.genem.nadoku.handy.tresor.Geraetepaar
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -24,6 +25,10 @@ object Sendekoerper {
      * @param punkte die Punkte ab [seqVon], in Reihenfolge
      * @param phasen nur für Einsätze; die **vollständige** Liste (Vertrag 3)
      * @param kontoschluessel der öffentliche Schlüssel des Kontos, SEC1 (65 Byte)
+     * @param fassung2 Absender und Zähler, wenn der Server `huelle: 2` gesagt
+     *   hat (seit KA-06c); `null` heißt Fassung 1 wie bisher
+     * @param letztesStueck trägt dieses Stück alle noch offenen Punkte? Nur
+     *   dann bekommt es bei einem abgeschlossenen Paket den Merker SCHLUSS
      */
     fun baue(
         paket: Paketzeile,
@@ -31,6 +36,8 @@ object Sendekoerper {
         punkte: List<Rohpunkt>,
         phasen: List<Phaseneintrag> = emptyList(),
         kontoschluessel: ByteArray,
+        fassung2: Fassung2? = null,
+        letztesStueck: Boolean = true,
     ): JSONObject = JSONObject().apply {
         put("kind", paket.art)
         put("client_ref", paket.clientRef)
@@ -58,7 +65,21 @@ object Sendekoerper {
              * Phasenliste: Der Server ersetzt beide nach derselben Regel
              * (Vertrag 3.1), und eine Hülle, die zu einer anderen Liste
              * gehört, zeigte im Browser die falschen Orte. */
-            put("ort_huelle", Geraetehuelle.einsatz(paket.clientRef, paket.begonnenAt, phasen, kontoschluessel))
+            put(
+                "ort_huelle",
+                if (fassung2 == null) {
+                    Geraetehuelle.einsatz(paket.clientRef, paket.begonnenAt, phasen, kontoschluessel)
+                } else {
+                    /* JE ANFRAGE EIN NEUES `z` (E-KA-64): Die Hülle wird bei
+                     * jeder Anfrage neu verschlossen, und der Zähler steigt
+                     * mit — streng, auch in derselben Sekunde. SCHLUSS
+                     * trägt sie, sobald das Paket abgeschlossen ist. */
+                    Geraetehuelle.einsatz2(
+                        paket.clientRef, paket.begonnenAt, phasen, kontoschluessel,
+                        fassung2.absender, fassung2.zaehler(), schluss = paket.final,
+                    )
+                },
+            )
             /* `resus_sessions` wird NICHT gesendet — und zwar gar nicht, statt
              * als leere Liste. Die Reanimation bleibt bei der Garmin, das
              * Handy dokumentiert sie nicht. Eine leere Liste
@@ -72,9 +93,35 @@ object Sendekoerper {
         /* OHNE PUNKTE KEIN `track`: Ein Stück hat 1 bis 2000 Punkte
          * (Vertrag 3.2). Der Server antwortet dann mit seiner eigenen Marke
          * (`next_seq`), und an der Warteschlange ändert sich nichts. */
+        val art = if (paket.art == Paketzeile.ART_EINSATZ) "spur" else "ruhe"
         if (punkte.isNotEmpty()) {
-            val art = if (paket.art == Paketzeile.ART_EINSATZ) "spur" else "ruhe"
-            put("track", Geraetehuelle.spurstueck(art, paket.clientRef, seqVon, punkte, kontoschluessel))
+            put(
+                "track",
+                if (fassung2 == null) {
+                    Geraetehuelle.spurstueck(art, paket.clientRef, seqVon, punkte, kontoschluessel)
+                } else {
+                    /* SCHLUSS NUR AM LETZTEN STÜCK eines abgeschlossenen
+                     * Pakets: Ein Paket kann final sein, während noch ein
+                     * zweites Stück mit Punkten folgt (2000 je Stück). */
+                    Geraetehuelle.spurstueck2(
+                        art, paket.clientRef, seqVon, punkte, kontoschluessel, fassung2.absender,
+                        schluss = paket.final && letztesStueck,
+                    )
+                },
+            )
+        } else if (fassung2 != null && paket.final) {
+            /* DAS LEERE SCHLUSSSTÜCK (Vertrag 3.4): Ist beim Abschluss kein
+             * Punkt mehr offen, sagt ein Stück ohne Punkte, dass die Spur
+             * hier zu Ende ist. Ohne es liest der Browser eine Spur, deren
+             * letztes Stück ohne SCHLUSS kam, als möglicherweise gekürzt. */
+            val ende = paket.beendetAt?.let { runCatching { java.time.Instant.parse(it).epochSecond }.getOrNull() }
+                ?: fassung2.jetzt()
+            put(
+                "track",
+                Geraetehuelle.schlussstueck2(
+                    art, paket.clientRef, seqVon, ende, kontoschluessel, fassung2.absender,
+                ),
+            )
         }
     }
 
@@ -92,6 +139,17 @@ object Sendekoerper {
             }
         }
 }
+
+/**
+ * Was Fassung 2 zum Verschließen braucht (seit KA-06c): das Gerätepaar als
+ * Absender und den Zähler der Einsatzhülle. Die Uhr nur für das leere
+ * Schlussstück eines Pakets ohne Endzeit.
+ */
+class Fassung2(
+    val absender: Geraetepaar,
+    val zaehler: () -> Long,
+    val jetzt: () -> Long = { System.currentTimeMillis() / 1000 },
+)
 
 /** Ein Phasen-Zeitstempel, wie er in `phases[]` steht. */
 data class Phaseneintrag(

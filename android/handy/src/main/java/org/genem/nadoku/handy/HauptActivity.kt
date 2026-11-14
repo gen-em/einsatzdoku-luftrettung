@@ -123,6 +123,8 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
             hoechstePaketId = { app.puffer.hoechstePaketId() },
             rueckstandBis = { app.puffer.rueckstandBis(it) },
             dienstLaeuft = { app.klammer.laeuft() },
+            // Mit Geräteschlüssel: Kopplung mit Vergleichswert (KA-06c).
+            geraeteschluessel = app.geraeteschluessel,
             bestand = { app.puffer.bestand() },
         )
     }
@@ -156,6 +158,7 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
         val laufenderCode = when (val s = schritt) {
             is Kopplungsschritt.Wartet -> s.code
             is Kopplungsschritt.Frage -> s.code
+            is Kopplungsschritt.Vergleich -> s.code
             else -> null
         }
         LaunchedEffect(laufenderCode) {
@@ -171,11 +174,23 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
                             laufenderCode, stand.konto, stand.restSekunden,
                         )
 
+                    /* DER WERT STEHT, UND ER BLEIBT STEHEN, bis Mensch und
+                     * Browser entschieden haben. Hat die App schon Ja gesagt
+                     * (`wartet: browser`), zeigt sie das Warten statt der
+                     * Knöpfe — ein zweites Ja gibt es nicht (M-KA-02 C). */
+                    is Sitzungsstand.Vergleich -> {
+                        val bisher = schritt as? Kopplungsschritt.Vergleich
+                        schritt = Kopplungsschritt.Vergleich(
+                            laufenderCode, stand.konto, stand.wert, stand.restSekunden,
+                            wartetBrowser = stand.wartetBrowser || bisher?.wartetBrowser == true,
+                        )
+                    }
+
                     /* Der Fall, in dem die Antwort auf `ja` verlorenging: Der
                      * Server kennt das Gerät bereits. Dann ist die Kopplung
                      * fertig, und nur die App weiß es noch nicht. */
                     is Sitzungsstand.Gekoppelt -> {
-                        tresor.bestaetigen(stand.kontoschluessel)
+                        tresor.bestaetigen(stand.kontoschluessel, huelle2 = stand.huelle2)
                         gekoppelt = true
                         schritt = Kopplungsschritt.Bereit
                         return@LaunchedEffect
@@ -211,9 +226,16 @@ fun NAdokuOberflaeche(app: NAdokuApp) {
                 }
             },
             aufAntwort = { ja ->
+                val vergleich = schritt as? Kopplungsschritt.Vergleich
                 schritt = if (ja) Kopplungsschritt.Bestaetigt else Kopplungsschritt.Abgebrochen
                 hilfsfaden.launch {
                     when (val e = withContext(Dispatchers.IO) { dienst.bestaetigen(ja) }) {
+                        /* Das Ja ist vermerkt, der Browser noch nicht: zurück
+                         * zum Wert, jetzt im Warten. Die Abfrage läuft weiter,
+                         * weil der Code derselbe ist. */
+                        is Bestaetigungsergebnis.WartetBrowser ->
+                            schritt = vergleich?.copy(wartetBrowser = true) ?: Kopplungsschritt.Bestaetigt
+
                         is Bestaetigungsergebnis.Gekoppelt -> {
                             gekoppelt = true
                             schritt = Kopplungsschritt.Bereit
@@ -341,6 +363,10 @@ private fun GekoppelteOberflaeche(
             ?.takeIf { rueckstand > 0 || fremd > 0 }
             ?.let { org.genem.nadoku.handy.dienst.Zeit.tagMonat(it) }
     }
+    /* Der Tresor wird nur nach einem Sendelauf neu gelesen: Dort kann
+     * `schluesselHolen()` den Merker `huelle: 2` nachgetragen haben. Am
+     * Sekundentakt wäre es eine Entschlüsselung je Sekunde. */
+    val herkunft = remember(app.letzterSendebericht) { app.tresor.lesen()?.huelle2 == true }
     var fremdFrageOffen by remember { mutableStateOf(false) }
     val sendelaeuft = remember(takt) { app.sendelaufLaeuft }
     val sendeergebnis = remember(takt) { sendeergebnis(app.letzterSendebericht) }
@@ -533,6 +559,7 @@ private fun GekoppelteOberflaeche(
             fremd = fremd,
             aufFremdeVerwerfen = { fremdFrageOffen = true },
             fristBis = fristBis,
+            herkunft = herkunft,
             aufModus = { gewaehlt ->
                 modus = gewaehlt
                 app.einstellungen.letzterModus = gewaehlt

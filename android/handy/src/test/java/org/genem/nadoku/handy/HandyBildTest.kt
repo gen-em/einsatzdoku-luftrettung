@@ -98,7 +98,7 @@ class HandyBildTest {
      * Stummschaltung: Er wird mitgeprüft (ungenutzte Ausnahmen fallen auf),
      * und er verlangt weiterhin einen Ausweg auf dem Bildschirm.
      */
-    private val OHNE_HAUPTHANDLUNG = listOf("kopplung-code")
+    private val OHNE_HAUPTHANDLUNG = listOf("kopplung-code", "kopplung-vergleich-wartet")
 
 
     /**
@@ -194,6 +194,7 @@ class HandyBildTest {
         laufendePhase: Int = Phasen.FREI,
         gesetztePhasen: List<Phasenzeile> = emptyList(),
         fristBis: String? = null,
+        herkunft: Boolean = false,
     ): @Composable () -> Unit = {
         DienstAnsicht(
             stand = Dienststand(
@@ -228,6 +229,7 @@ class HandyBildTest {
             sendeergebnis = sendeergebnis,
             sendelaufLaeuft = sendelaufLaeuft,
             fristBis = fristBis,
+            herkunft = herkunft,
             aufJetztSenden = {},
             aufModus = {}, aufBeginnen = {}, aufBeenden = {},
             aufOrtungFreigeben = {}, aufStandortEinschalten = {}, aufEinstellungen = {},
@@ -364,6 +366,40 @@ class HandyBildTest {
                 aufStarten = {}, aufAntwort = {},
             )
         },
+        /* Seit KA-06c (M-KA-02): der Vergleichswert, das Warten auf den
+         * Browser, die Ablehnung im Browser und der Fall ohne
+         * Kontoschlüssel (F-KA-108). */
+        "kopplung-vergleich" to {
+            KopplungAnsicht(
+                schritt = Kopplungsschritt.Vergleich("AB3K7Q", "ph***@gen-em.org", "482913", restSekunden = 540),
+                logoWahl = LogoWahl.LUFT,
+                aufStarten = {}, aufAntwort = {},
+            )
+        },
+        "kopplung-vergleich-wartet" to {
+            KopplungAnsicht(
+                schritt = Kopplungsschritt.Vergleich(
+                    "AB3K7Q", "ph***@gen-em.org", "482913", restSekunden = 480, wartetBrowser = true,
+                ),
+                logoWahl = LogoWahl.LUFT,
+                aufStarten = {}, aufAntwort = {},
+            )
+        },
+        "kopplung-im-web-abgelehnt" to {
+            KopplungAnsicht(
+                schritt = Kopplungsschritt.Abgewiesen(Abweisung.IM_WEB_ABGELEHNT),
+                logoWahl = LogoWahl.LUFT,
+                aufStarten = {}, aufAntwort = {},
+            )
+        },
+        "kopplung-ohne-kontoschluessel" to {
+            KopplungAnsicht(
+                schritt = Kopplungsschritt.Abgewiesen(Abweisung.KONTO_OHNE_SCHLUESSEL),
+                logoWahl = LogoWahl.LUFT,
+                aufStarten = {}, aufAntwort = {},
+            )
+        },
+        "bereit-herkunft" to dienst(herkunft = true),
         "einstellungen" to {
             EinstellungenAnsicht(
                 logoWahl = LogoWahl.BODEN,

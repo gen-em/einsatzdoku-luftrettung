@@ -127,13 +127,31 @@ INNEN, SPURSTÜCK (alle Stufen):
 INNEN, EINSATZHÜLLE: JSON, UTF-8, Schlüssel in dieser Reihenfolge:
 
     { "fassung": 2,
-      "z": 3,                    Zähler — steigt mit jedem Verschließen
-                                 dieses Einsatzes durch diesen Absender
+      "z": 3,                    Zähler — siehe „DER ZÄHLER z" unten
       "start": 1784277065,       ABSOLUTE Zeit des Einsatzbeginns
       "schluss": true,           die Hülle des abgeschlossenen Einsatzes
       "phasen": [ … ], "rea": [ … ],      wie Fassung 1, t seit "start"
       "herkunft": { "von": ["<sid hex>"], "uebernommen": 1794300000 } }
                                  nur Konto: wessen Daten es weiterträgt
+
+DER ZÄHLER z — geprüft JE EINSATZ, nicht je Absender. Das Standbuch hält je
+Einsatz EINEN Stand `o`: den Zähler der zuletzt abgenommenen Hülle, gleich
+von welchem Absender sie kam. `einsatz_lesen()` weist `z < o` als
+`zurueckgelegt` ab und nimmt `z ≥ o` an — verlangt ist also „nicht kleiner",
+nicht „um eins größer", und ein zweites Gerät am selben Einsatz (Übergabe im
+laufenden Dienst) muss über dem Stand des ersten liegen. Bis KA-06c stand
+hier „steigt mit jedem Verschließen dieses Einsatzes durch diesen Absender";
+das beschrieb, wie ein Gerät zählt, nicht, was geprüft wird (Rückmeldung KG,
+F-KG-22).
+WIE EIN ABSENDER ZÄHLT (E-KA-64): z = Unix-Sekunde des Verschließens, lokal
+streng steigend gehalten — `max(jetzt, letztes z + 1)`, ein Zähler für alle
+Einsätze des Geräts, der das Trennen der Kopplung überdauert. So steigt z
+auch über Geräte hinweg, solange deren Uhren nicht weiter auseinandergehen
+als der Abstand zweier Übergaben. WAS DAS NICHT TRÄGT, steht als Vektor
+unter `einsaetze` („wechsel-…"): Ein Gerät, dessen Uhr nachgeht oder fehlt,
+fällt nach einer Übergabe als `zurueckgelegt` durch, obwohl niemand etwas
+zurückgelegt hat; und z belegt den Zeitpunkt des Verschließens, nicht die
+Frische des Inhalts. Das Format verlangt nur eine ganze Zahl ≥ 1.
 
 DIE STÜCKFOLGE — verkettet über die DECKUNG, nicht über einen Hash. Die Uhr
 verschließt ein Stück bei jedem Sendeversuch neu und schneidet es nach einem
@@ -1059,6 +1077,30 @@ def vektoren2_bauen() -> dict:
     einsatz("fremdes-geraet", ef, "absender")
     einsatz("geraet-ausgetragen", eu, "absender-gesperrt", started_ts=T0 + 60, buch="uhr-ausgetragen")
 
+    # --- Zwei Absender an EINEM Einsatz: die Übergabe im laufenden Dienst
+    # (E-KA-64, Q-KA-13; bis KA-06c fehlte dieser Fall, F-KG-22). Der Zähler
+    # ist die Unix-Sekunde des Verschließens. Das Handy beginnt (z = T0+1320,
+    # ohne Reanimation — es dokumentiert keine), die Uhr übernimmt und
+    # schließt ab (T0+1500), das Handy sendet danach noch einmal (T0+1600).
+    # Die Gegenlage ist KEIN Angriff, sondern eine Uhr, die fünf Minuten
+    # nachgeht: Sie verschließt bei wahrer Zeit T0+1500 mit z = T0+1200 und
+    # fällt unter den Stand des Handys. Die Namen der festen Schlüssel sind
+    # neu; an den Fällen darüber ändert sich kein Byte.
+    z_handy, z_uhr, z_nachgang, z_spaeter = T0 + 1320, T0 + 1500, T0 + 1200, T0 + 1600
+    w_h = b64(_zu("e-wechsel-handy", "handy", konto, "einsatz", REF_E, "",
+                  einsatz_innen2(z_handy, T0, False, PHASEN2, [])))
+    w_u = b64(_zu("e-wechsel-uhr", "uhr", konto, "einsatz", REF_E, "",
+                  einsatz_innen2(z_uhr, T0, True, PHASEN2, REA2)))
+    w_n = b64(_zu("e-wechsel-uhr-nachgang", "uhr", konto, "einsatz", REF_E, "",
+                  einsatz_innen2(z_nachgang, T0, True, PHASEN2, REA2)))
+    w_s = b64(_zu("e-wechsel-handy-spaeter", "handy", konto, "einsatz", REF_E, "",
+                  einsatz_innen2(z_spaeter, T0, True, PHASEN2, [])))
+    uhr_sid = aus["geraete"]["uhr"]["sid_hex"]
+    einsatz("wechsel-erstes-geraet", w_h, {"z": z_handy, "absender": handy})
+    einsatz("wechsel-zweites-geraet", w_u, {"z": z_uhr, "absender": uhr_sid}, stand={"o": z_handy})
+    einsatz("wechsel-zurueck-zum-ersten", w_s, {"z": z_spaeter, "absender": handy}, stand={"o": z_uhr})
+    einsatz("wechsel-uhr-geht-nach", w_n, "zurueckgelegt", stand={"o": z_handy})
+
     # --- Kopplung: Zusage und Vergleichswert ---
     n_g = hashlib.sha256(b"nadoku-kopplung-vektor-n-g").digest()[:NONCE_LAENGE]
     n_b = hashlib.sha256(b"nadoku-kopplung-vektor-n-b").digest()[:NONCE_LAENGE]
@@ -1359,6 +1401,14 @@ def selbstprobe() -> int:
     faelle.append(("Fehler 2: Folge mit falscher Punktzahl", bool(pruefen2(w))))
     w = json.loads(json.dumps(v2)); w["einsaetze"][2]["stand"] = None
     faelle.append(("Fehler 2: zurückgelegte Einsatzhülle geht auf", bool(pruefen2(w))))
+    w = json.loads(json.dumps(v2))
+    nach = next(f for f in w["einsaetze"] if f["name"] == "wechsel-uhr-geht-nach")
+    nach["stand"] = None
+    faelle.append(("Fehler 2: zweites Gerät unter dem Stand des ersten geht auf", bool(pruefen2(w))))
+    w = json.loads(json.dumps(v2))
+    zweit = next(f for f in w["einsaetze"] if f["name"] == "wechsel-zweites-geraet")
+    zweit["erwartet"]["absender"] = w["geraete"]["handy"]["sid_hex"]
+    faelle.append(("Fehler 2: zweites Gerät als das erste erwartet", bool(pruefen2(w))))
     w = json.loads(json.dumps(v2)); w["kopplung"]["wert"] = "000000"
     faelle.append(("Fehler 2: falscher Vergleichswert", bool(pruefen2(w))))
     w = json.loads(json.dumps(v2)); w["kopplung"]["gegenlagen"][0]["n_g_hex"] = w["kopplung"]["n_g_hex"]

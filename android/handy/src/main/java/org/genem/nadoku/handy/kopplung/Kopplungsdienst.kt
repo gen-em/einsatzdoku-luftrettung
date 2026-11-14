@@ -1,5 +1,7 @@
 package org.genem.nadoku.handy.kopplung
 
+import org.genem.nadoku.handy.tresor.Festlegung
+import org.genem.nadoku.handy.tresor.Geraeteschluessel
 import org.genem.nadoku.handy.tresor.Schluesseltresor
 import org.genem.nadoku.handy.tresor.Zugangsdaten
 import org.json.JSONObject
@@ -26,6 +28,28 @@ enum class Abweisung {
 
     /** Ein Fall, den diese Fassung noch nicht kennt. */
     UNBEKANNT,
+
+    /**
+     * Im Browser „Wert ist anders" (`abgelehnt`, Grund `wert`, Vertrag 1a.7).
+     * Seit KA-06c. Kein Paar abgelegt — neu beginnen, und bei derselben
+     * Abweichung gar nicht koppeln: Dann steht jemand dazwischen.
+     */
+    IM_WEB_ABGELEHNT,
+
+    /**
+     * Der Browser fand, dass die offengelegte Zufallszahl nicht zur Zusage
+     * passt (`abgelehnt`, Grund `zusage`). Seit KA-06c.
+     */
+    SCHLUESSEL_PASST_NICHT,
+
+    /**
+     * Beansprucht, aber ohne Kontoschlüssel (F-KA-108, F-KG-20). Ohne ihn
+     * gibt es keinen Vergleichswert; seit Web 24.18.1 lässt der Server das
+     * Beanspruchen dann gar nicht zu. Kommt es doch an (älterer Server,
+     * Siegel des Kontos defekt), endet die Kopplung hier statt in einer
+     * Sackgasse.
+     */
+    KONTO_OHNE_SCHLUESSEL,
 }
 
 /** Was `start` ergeben hat (Vertrag 1a.1). */
@@ -64,7 +88,21 @@ sealed interface Sitzungsstand {
      *   des Kontos aus der Antwort, `null` wenn das Konto noch keinen hat
      *   oder er unbrauchbar ist.
      */
-    data class Gekoppelt(val kontoschluessel: String? = null) : Sitzungsstand
+    data class Gekoppelt(val kontoschluessel: String? = null, val huelle2: Boolean = false) : Sitzungsstand
+
+    /**
+     * Beansprucht, mit Geräteschlüssel (seit KA-06c, Vertrag 1a.7): Das Gerät
+     * hat seine Zufallszahl offengelegt und zeigt den Vergleichswert.
+     *
+     * @param wartetBrowser das Ja ist vermerkt, der Browser hat „Wert stimmt"
+     *   noch nicht gesagt (`wartet: browser`).
+     */
+    data class Vergleich(
+        val konto: String,
+        val wert: String,
+        val restSekunden: Int,
+        val wartetBrowser: Boolean = false,
+    ) : Sitzungsstand
 
     data class Abgewiesen(val art: Abweisung, val meldung: String? = null) : Sitzungsstand
 }
@@ -76,6 +114,13 @@ sealed interface Bestaetigungsergebnis {
 
     /** Nach `nein`: Sitzung und Zugangsdaten sind fort — auf beiden Seiten. */
     data object Abgebrochen : Bestaetigungsergebnis
+
+    /**
+     * Das Ja ist vermerkt, aber der Browser hat den Wert noch nicht bestätigt
+     * (`202 wartet: browser`, seit KA-06c). Kein Fehler: Die App fragt mit
+     * `status` weiter, bis „Wert stimmt" kommt oder die Frist abläuft.
+     */
+    data object WartetBrowser : Bestaetigungsergebnis
 
     data class Abgewiesen(val art: Abweisung, val meldung: String? = null) : Bestaetigungsergebnis
 }
@@ -183,6 +228,13 @@ class Kopplungsdienst(
      * den eine neue Kopplung vorfindet (KA-04).
      */
     private val bestand: () -> Int = rueckstand,
+    /**
+     * Der Geräteschlüssel des Handys (seit KA-06c, Vertrag 1a.7). Mit ihm
+     * koppelt die App mit Vergleichswert und sendet danach in Fassung 2;
+     * `null` (der Prüfstand für den alten Weg, ein Gerät ohne Ablage) heißt:
+     * Kopplung wie bis Android 0.23, ohne Herkunftsnachweis.
+     */
+    private val geraeteschluessel: Geraeteschluessel? = null,
 ) {
 
     /**
@@ -198,9 +250,21 @@ class Kopplungsdienst(
      * Kopplungsversuch und nicht bei jedem Neuzeichnen.
      */
     fun starten(geraet: Geraeteangabe): Sitzungsergebnis {
+        /* DER SCHLÜSSEL GEHT MIT DEM START (Vertrag 1a.7): Das Gerät legt
+         * sich auf seinen öffentlichen Schlüssel und seine Zufallszahl fest,
+         * BEVOR es die des Browsers kennt — nur so kann ein Server dazwischen
+         * keinen passenden Wert ausrechnen. Ein neuer Versuch je Start; ein
+         * gültiges Paar einer früheren Kopplung bleibt daneben liegen, bis
+         * dieser Versuch übernommen ist. */
+        val beginn = geraeteschluessel?.beginnen()
         val koerper = JSONObject()
             .put("aktion", "start")
             .put("geraet", geraet.alsJson())
+            .apply {
+                if (beginn != null) {
+                    put("schluessel", JSONObject().put("spk", b64(beginn.spk)).put("zusage", b64(beginn.zusage)))
+                }
+            }
             .toString()
 
         return when (val a = netzweg.postJson(Serveradresse.pair(basis), koerper, emptyMap())) {
@@ -270,9 +334,16 @@ class Kopplungsdienst(
                             // genau das zweite Tor fiele weg. Dann lieber
                             // weiterfragen als eine leere Zeile anzeigen.
                             if (konto.isEmpty()) Sitzungsstand.Offen(rest)
-                            else Sitzungsstand.Beansprucht(konto, rest)
+                            else if (o.has("n_b") && geraeteschluessel?.schwebend() != null) {
+                                vergleichen(o, konto, rest, zugang)
+                            } else Sitzungsstand.Beansprucht(konto, rest)
                         }
-                        "gekoppelt" -> Sitzungsstand.Gekoppelt(kontoschluesselAus(o))
+                        "abgelehnt" -> abgelehnt(o.optString("grund"))
+                        "gekoppelt" -> {
+                            val h2 = o.optInt("huelle", 1) == 2
+                            if (h2) geraeteschluessel?.uebernehmen()
+                            Sitzungsstand.Gekoppelt(kontoschluesselAus(o), h2)
+                        }
                         else -> Sitzungsstand.Abgewiesen(Abweisung.UNBEKANNT, meldung)
                     }
                 }
@@ -307,8 +378,10 @@ class Kopplungsdienst(
         if (!ja) {
             // Beim Nein wird IMMER lokal aufgeräumt, vor der Auswertung —
             // damit kein Zweig daran vorbeikommt (dieselbe Regel wie beim
-            // Trennen).
+            // Trennen). Der Versuch des Geräteschlüssels geht mit; ein
+            // gültiges Paar einer früheren Kopplung gibt es hier nicht mehr.
             tresor.loeschen()
+            geraeteschluessel?.verwerfen()
             return Bestaetigungsergebnis.Abgebrochen
         }
 
@@ -322,9 +395,20 @@ class Kopplungsdienst(
 
                 if (antwort.code == 200 && o?.optBoolean("ok") == true) {
                     vorgefundenesBinden()
-                    // Mit dem Ja kommt der Kontoschlüssel (Vertrag 1a.3a).
-                    tresor.bestaetigen(kontoschluesselAus(o))
+                    /* Mit dem Ja kommt der Kontoschlüssel (Vertrag 1a.3a),
+                     * und mit `huelle: 2` die Fassung (1a.7). Erst dann wird
+                     * der Versuch des Geräteschlüssels das gültige Paar. */
+                    val h2 = o.optInt("huelle", 1) == 2
+                    if (h2) geraeteschluessel?.uebernehmen()
+                    tresor.bestaetigen(kontoschluesselAus(o), huelle2 = h2)
                     return Bestaetigungsergebnis.Gekoppelt
+                }
+                if (antwort.code == 202 && o?.optString("wartet") == "browser") {
+                    return Bestaetigungsergebnis.WartetBrowser
+                }
+                if (o?.optString("error") == "abgelehnt") {
+                    val ab = abgelehnt(o.optString("grund"))
+                    return Bestaetigungsergebnis.Abgewiesen(ab.art, ab.meldung)
                 }
 
                 val art = artAus(o, antwort.code)
@@ -396,6 +480,7 @@ class Kopplungsdienst(
         if (antwort !is Netzantwort.Server || antwort.code != 200) return null
         val o = alsJson(antwort.koerper) ?: return null
         if (o.optString("zustand") != "gekoppelt") return null
+        tresor.huelleSetzen(o.optInt("huelle", 1) == 2 && geraeteschluessel?.liefern() != null)
         val ks = kontoschluesselAus(o) ?: return null
         tresor.kontoschluesselSetzen(ks)
         return ks
@@ -456,6 +541,7 @@ class Kopplungsdienst(
         // Pakete: Sie gehören dem Konto, das hier zurückgegeben wird, und
         // dürfen keine Neukopplung überleben.
         tresor.loeschen()
+        geraeteschluessel?.vergessen()
         raeumen()
 
         return when (antwort) {
@@ -471,6 +557,76 @@ class Kopplungsdienst(
             }
         }
     }
+
+    /**
+     * Beansprucht mit Geräteschlüssel: festlegen, offenlegen, Wert rechnen
+     * (Vertrag 1a.7, Schritte 3 und 4).
+     *
+     * DAS ERSTE PAAR GILT. [Geraeteschluessel.festlegen] legt Kontoschlüssel
+     * und `n_b` der ersten Antwort ab, bevor es `N_g` herausgibt; dasselbe
+     * Paar noch einmal ist eine Wiederholung, ein anderes ein Abbruch — ein
+     * Server, der nachträglich tauscht, soll keinen zweiten Wert bekommen.
+     *
+     * OFFENLEGEN IST WIEDERHOLBAR (dasselbe `N_g` → wieder `200`). Deshalb
+     * geschieht es bei jeder Abfrage in diesem Zustand: Ging eine Antwort im
+     * Funkloch verloren, holt die nächste Abfrage sie nach, und es gibt
+     * keinen Merker, der zwischen den beiden falsch stehen könnte.
+     */
+    private fun vergleichen(o: JSONObject, konto: String, rest: Int, zugang: Zugangsdaten): Sitzungsstand {
+        val gs = geraeteschluessel ?: return Sitzungsstand.Beansprucht(konto, rest)
+        if (o.isNull("kontoschluessel")) {
+            /* F-KA-108: Ohne Kontoschlüssel kein Wert. Seit Web 24.18.1 lässt
+             * der Server es nicht mehr so weit kommen; ein älterer oder ein
+             * Konto mit kaputtem Siegel könnte es noch. */
+            gs.verwerfen()
+            return Sitzungsstand.Abgewiesen(Abweisung.KONTO_OHNE_SCHLUESSEL)
+        }
+        val ks = kontoschluesselAus(o)
+        val nB = try {
+            java.util.Base64.getDecoder().decode(o.optString("n_b"))
+        } catch (e: IllegalArgumentException) {
+            null
+        }
+        if (ks == null || nB == null) return Sitzungsstand.Abgewiesen(Abweisung.UNBEKANNT)
+        val f = gs.festlegen(java.util.Base64.getDecoder().decode(ks), nB)
+        if (f !is Festlegung.Offen) {
+            gs.verwerfen()
+            return Sitzungsstand.Abgewiesen(Abweisung.UNBEKANNT)
+        }
+        val antwort = netzweg.postJson(
+            Serveradresse.pair(basis),
+            JSONObject().put("aktion", "offenlegen").put("n_g", b64(f.nG)).toString(),
+            kopfzeilen(zugang),
+        )
+        return when (antwort) {
+            is Netzantwort.KeineVerbindung -> Sitzungsstand.Abgewiesen(Abweisung.KEINE_VERBINDUNG)
+            is Netzantwort.Server -> {
+                val a = alsJson(antwort.koerper)
+                if (antwort.code == 200 && a?.optBoolean("ok") == true) {
+                    Sitzungsstand.Vergleich(konto, f.wert, rest, o.optString("wartet") == "browser")
+                } else if (a?.optString("error") == "abgelehnt") {
+                    abgelehnt(a.optString("grund"))
+                } else {
+                    Sitzungsstand.Abgewiesen(artAus(a, antwort.code), meldungAus(a))
+                }
+            }
+        }
+    }
+
+    /**
+     * Im Browser abgelehnt (`abgelehnt`, Vertrag 1a.7): kein Paar ablegen,
+     * die Zugangsdaten gehören zu nichts mehr. Der Grund unterscheidet nur
+     * den Text.
+     */
+    private fun abgelehnt(grund: String): Sitzungsstand.Abgewiesen {
+        geraeteschluessel?.verwerfen()
+        tresor.loeschen()
+        return Sitzungsstand.Abgewiesen(
+            if (grund == "zusage") Abweisung.SCHLUESSEL_PASST_NICHT else Abweisung.IM_WEB_ABGELEHNT,
+        )
+    }
+
+    private fun b64(b: ByteArray): String = java.util.Base64.getEncoder().encodeToString(b)
 
     private fun kopfzeilen(zugang: Zugangsdaten): Map<String, String> = mapOf(
         "X-Device-Id" to zugang.geraeteKennung,

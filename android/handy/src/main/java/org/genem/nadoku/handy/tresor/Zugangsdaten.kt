@@ -26,6 +26,14 @@ data class Zugangsdaten(
      * selben Tresor: eine Kopplung, eine Ablage.
      */
     val kontoschluessel: String? = null,
+    /**
+     * Hat der Server `"huelle": 2` gesagt (JSON-Vertrag 1a.7)? Nur dann
+     * verschließt das Handy in Fassung 2, mit seinem Geräteschlüssel als
+     * Absender (seit KA-06c). `false` bei jeder alten Kopplung und bei einer
+     * neuen, bei der die Weiche des Browsers aus stand — dann bleibt es bei
+     * Fassung 1, bis der Server es anders sagt.
+     */
+    val huelle2: Boolean = false,
 ) {
     override fun toString(): String = "Zugangsdaten($geraeteKennung, Schlüssel verborgen)"
 }

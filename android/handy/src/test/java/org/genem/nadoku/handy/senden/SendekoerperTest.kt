@@ -146,4 +146,75 @@ class SendekoerperTest {
             bytes < Sender.HOECHSTE_KOERPERGROESSE,
         )
     }
+
+    // ---- Fassung 2 (seit KA-06c) ------------------------------------------
+
+    private val geraet = org.genem.nadoku.handy.tresor.Geraetepaar.erzeugen()
+    private var z = 100L
+    private val abschluss = java.time.Instant.parse("2026-07-16T06:00:00Z").epochSecond
+    private fun f2() = Fassung2(geraet, { ++z }, { 1_800_000_000L })
+    private fun auf(b64: String, art: String, ref: String, platz: String): ByteArray =
+        Huellenoeffner.oeffnen2(java.util.Base64.getDecoder().decode(b64), geraet.spk, art, ref, platz)
+
+    /**
+     * Ein abgeschlossener Einsatz, letztes Stück: Die Einsatzhülle trägt den
+     * Zähler und `schluss`, das Spurstück den Merker SCHLUSS, beide unter der
+     * Absenderkennung des Geräts.
+     */
+    @Test fun fassung2AbgeschlossenUndLetztesStueck() {
+        val o = Sendekoerper.baue(einsatz(final = true), 0, punkte, emptyList(), Huellenoeffner.konto, f2(), true)
+        val h = java.util.Base64.getDecoder().decode(o.getString("ort_huelle"))
+        assertEquals(2, h[0].toInt())
+        org.junit.Assert.assertArrayEquals(geraet.sid(), h.copyOfRange(1, 9))
+        val innen = org.json.JSONObject(String(auf(o.getString("ort_huelle"), "einsatz", "am-3-0000500006", ""), Charsets.UTF_8))
+        assertEquals(101L, innen.getLong("z"))
+        assertTrue(innen.getBoolean("schluss"))
+        val spur = auf(o.getJSONObject("track").getString("huelle"), "spur", "am-3-0000500006", "0:2")
+        assertEquals("SCHLUSS am letzten Stück", 1, spur[8].toInt())
+    }
+
+    /** Ein abgeschlossenes Paket, dessen Stück nicht alle offenen Punkte trägt: kein SCHLUSS. */
+    @Test fun fassung2NichtLetztesStueckOhneSchluss() {
+        val o = Sendekoerper.baue(einsatz(final = true), 0, punkte, emptyList(), Huellenoeffner.konto, f2(), false)
+        val spur = auf(o.getJSONObject("track").getString("huelle"), "spur", "am-3-0000500006", "0:2")
+        assertEquals(0, spur[8].toInt())
+    }
+
+    /** Nicht abgeschlossen: weder die Einsatzhülle noch das Stück sagt Schluss; jede Anfrage ein neues `z`. */
+    @Test fun fassung2LaufendOhneSchluss() {
+        val zaehler = f2()
+        val a = Sendekoerper.baue(einsatz(final = false), 0, punkte, emptyList(), Huellenoeffner.konto, zaehler, true)
+        val b = Sendekoerper.baue(einsatz(final = false), 0, punkte, emptyList(), Huellenoeffner.konto, zaehler, true)
+        val ia = org.json.JSONObject(String(auf(a.getString("ort_huelle"), "einsatz", "am-3-0000500006", ""), Charsets.UTF_8))
+        val ib = org.json.JSONObject(String(auf(b.getString("ort_huelle"), "einsatz", "am-3-0000500006", ""), Charsets.UTF_8))
+        assertFalse(ia.getBoolean("schluss"))
+        assertTrue("z steigt je Anfrage", ib.getLong("z") > ia.getLong("z"))
+        assertEquals(0, auf(a.getJSONObject("track").getString("huelle"), "spur", "am-3-0000500006", "0:2")[8].toInt())
+    }
+
+    /**
+     * Abgeschlossen, kein Punkt mehr offen: das leere Schlussstück (Vertrag
+     * 3.4) — `punkte` 0, Platz `<seq>:0`, `ts_von` = `ts_bis` = Ende des
+     * Pakets, innen nur der Kopf mit SCHLUSS.
+     */
+    @Test fun leeresSchlussstueckAmEnde() {
+        val o = Sendekoerper.baue(segment(final = true), 240, emptyList(), emptyList(), Huellenoeffner.konto, f2(), true)
+        val t = o.getJSONObject("track")
+        assertEquals(240L, t.getLong("seq_from"))
+        assertEquals(0, t.getInt("punkte"))
+        assertEquals(abschluss, t.getLong("ts_von"))
+        assertEquals(abschluss, t.getLong("ts_bis"))
+        val innen = auf(t.getString("huelle"), "ruhe", "ar-2-0000300004", "240:0")
+        assertEquals(12, innen.size)
+        assertEquals(1, innen[8].toInt())
+    }
+
+    /** Fassung 1 kennt kein Schlussstück; ein laufendes Paket ohne Punkte hat in beiden Fassungen keins. */
+    @Test fun keinSchlussstueckOhneFassung2OderOhneAbschluss() {
+        assertFalse(Sendekoerper.baue(segment(final = true), 240, emptyList(), kontoschluessel = ks).has("track"))
+        assertFalse(
+            Sendekoerper.baue(segment(final = false), 240, emptyList(), emptyList(), Huellenoeffner.konto, f2(), true)
+                .has("track"),
+        )
+    }
 }

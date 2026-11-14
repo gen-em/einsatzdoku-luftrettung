@@ -459,7 +459,8 @@ Möglichkeit, sich **neu** zu koppeln.
 
 ### 1a.7 Der Vergleichswert — seit Web 24.18.0 (KA-06d)
 
-Ein Gerät mit **Geräteschlüssel** (P-256, erzeugt bei der Kopplung) koppelt
+Ein Gerät mit **Geräteschlüssel** (P-256, erzeugt bei der Kopplung; die
+Garmin-Uhr seit Uhr 5.0.0, die Android-App seit 0.24.0) koppelt
 so, dass Gerät und Webseite dieselbe sechsstellige Zahl zeigen. Sie
 bestätigt beide öffentlichen Schlüssel — den des Kontos auf dem Gerät, den
 des Geräts im Browser. Die Rechnung (Zusage, Wert) steht im Kopf von

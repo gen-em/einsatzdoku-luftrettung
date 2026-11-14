@@ -58,6 +58,25 @@ sealed interface Kopplungsschritt {
     data class Frage(val code: String, val konto: String, val restSekunden: Int) :
         Kopplungsschritt
 
+    /**
+     * DER VERGLEICHSWERT (seit KA-06c, Vertrag 1a.7, M-KA-02 B und C). Das
+     * Gerät hat einen Schlüssel mitgebracht, der Browser hat verbunden, die
+     * App hat ihre Zufallszahl offengelegt und zeigt jetzt dieselbe Zahl wie
+     * der Browser. Er ERSETZT [Frage]: Wer die Zahl vergleicht, hat das Konto
+     * gesehen — die Adresse steht weiter darunter.
+     *
+     * @param wartetBrowser das Ja ist gegeben, der Browser hat „Wert stimmt"
+     *   noch nicht gesagt (`202 wartet: browser`). Die Zahl bleibt stehen,
+     *   die Knöpfe gehen, und die App fragt im Takt weiter (M-KA-02 C).
+     */
+    data class Vergleich(
+        val code: String,
+        val konto: String,
+        val wert: String,
+        val restSekunden: Int,
+        val wartetBrowser: Boolean = false,
+    ) : Kopplungsschritt
+
     /** `bestaetigen` ist unterwegs. */
     data object Bestaetigt : Kopplungsschritt
 
@@ -152,6 +171,30 @@ fun KopplungAnsicht(
                         KnopfNeutral(stringResource(R.string.kopplung_nein)) { aufAntwort(false) }
                     }
 
+                    is Kopplungsschritt.Vergleich -> {
+                        if (!schritt.wartetBrowser) {
+                            Meldungsblock(
+                                titel = stringResource(R.string.kopplung_wert_titel),
+                                hinweis = stringResource(R.string.kopplung_wert_text),
+                            )
+                        }
+                        Kontoanzeige(schritt.konto)
+                        Wertanzeige(schritt.wert)
+                        if (schritt.wartetBrowser) {
+                            Text(
+                                text = stringResource(R.string.kopplung_wartet_wert),
+                                color = Rolle.infoText, fontSize = 15.sp,
+                            )
+                        }
+                        Restzeit(schritt.restSekunden)
+                        if (schritt.wartetBrowser) {
+                            KnopfNeutral(stringResource(R.string.kopplung_abbrechen)) { aufAntwort(false) }
+                        } else {
+                            KnopfPrimaer(stringResource(R.string.kopplung_wert_ja)) { aufAntwort(true) }
+                            KnopfNeutral(stringResource(R.string.kopplung_wert_nein)) { aufAntwort(false) }
+                        }
+                    }
+
                     is Kopplungsschritt.Startet ->
                         Text(
                             text = stringResource(R.string.kopplung_laeuft),
@@ -243,6 +286,35 @@ private fun Codeanzeige(code: String) {
         )
         Text(
             text = Kopplungscode.gruppiert(code),
+            color = Rolle.text,
+            fontSize = 34.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+/**
+ * Der Vergleichswert, groß wie der Code und ebenso in zwei Dreiergruppen.
+ *
+ * GLEICHE GRÖSSE WIE DER CODE, weil er dieselbe Aufgabe hat: Er wird mit
+ * einem anderen Bildschirm verglichen, Ziffer für Ziffer (M-KA-02 B). Der
+ * Browser gruppiert genauso — wer „482 913" neben „482913" stehen sieht,
+ * vergleicht Form statt Zahl.
+ */
+@Composable
+private fun Wertanzeige(wert: String) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(Abstand.eins),
+    ) {
+        Text(
+            text = stringResource(R.string.kopplung_wert_zeigen),
+            color = Rolle.gedaempft, fontSize = 13.sp,
+        )
+        Text(
+            text = if (wert.length == 6) wert.substring(0, 3) + " " + wert.substring(3) else wert,
             color = Rolle.text,
             fontSize = 34.sp,
             fontWeight = FontWeight.Bold,
