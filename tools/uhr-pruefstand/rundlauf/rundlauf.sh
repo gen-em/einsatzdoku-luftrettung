@@ -155,8 +155,10 @@ if [ "$FASSUNG2" = 1 ]; then
     sed -i 's|^        _wert = r\[:wert\] as Lang.String;$|&\n        Toybox.System.println("RL-WERT " + _wert);|' "$APP/source/Pair.mc"
     grep -q 'RL-WERT' "$APP/source/Pair.mc" || fehler "Haken RL-WERT nicht eingesetzt"
 else
-    sed -i 's|^        try { k = Huelle2.kopplungBeginnen(); } catch (e) { k = null; }$|        k = null;   // Rundlauf: alte Kopplung ohne Geraeteschluessel|' "$APP/source/Pair.mc"
-    grep -q 'Rundlauf: alte Kopplung' "$APP/source/Pair.mc" || fehler "Alte Kopplung nicht eingestellt"
+    # Ueber eine Funktion, nicht `k = null`: Mit einer Konstanten sieht die
+    # Typpruefung den Zugriff auf null weiter unten und bricht ab (F-KG-24).
+    sed -i 's|^        try { k = Huelle2.kopplungBeginnen(); } catch (e) { k = null; }$|        try { k = Rundlauf.alteKopplung() ? null : Huelle2.kopplungBeginnen(); } catch (e) { k = null; }|' "$APP/source/Pair.mc"
+    grep -q 'Rundlauf.alteKopplung()' "$APP/source/Pair.mc" || fehler "Alte Kopplung nicht eingestellt"
 fi
 if [ "$SCHRUMPFEN" = 1 ]; then
     sed -i 's|const SCHRUMPFEN = false;|const SCHRUMPFEN = true;|' "$APP/source/Rundlauf.mc"

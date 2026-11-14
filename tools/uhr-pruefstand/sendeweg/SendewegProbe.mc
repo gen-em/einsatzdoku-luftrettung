@@ -330,9 +330,9 @@ module SendewegProbe {
     const NB = "AAECAwQFBgcICQoLDA0ODw==";     // 16 Byte, wie der Browser sie zieht
 
     /* Eine Sitzung bis zum offengelegten N_g -- die Antworten spielt die
-     * Probe vor. Jede Sitzung mit eigener Kennung: Die echte Antwort auf
-     * `offenlegen` (127.0.0.1:1, Fehler) kommt spaeter und gehoert dann
-     * zu keiner laufenden Sitzung mehr. */
+     * Probe vor. `offenlegen` geht NICHT hinaus (_ngLaeuft vorab gesetzt):
+     * Die Antwort von 127.0.0.1:1 kam im ersten Lauf (404) noch in derselben
+     * Sitzung an und beendete sie, bevor Fall 15 lief. */
     function _sitzung(dev as Lang.String, a as Lang.String) as Void {
         Pair._sitzungVergessen();
         Pair._dev = dev;
@@ -340,6 +340,7 @@ module SendewegProbe {
         Pair._abfragen = true;
         Huelle2.kopplungBeginnen();
         Pair._mitSchluessel = true;
+        Pair._ngLaeuft = true;
         Pair.onStatus(dev, 200, { "zustand" => "beansprucht", "konto" => "pr***@pr***.de",
                                   "kontoschluessel" => a, "n_b" => NB });
     }

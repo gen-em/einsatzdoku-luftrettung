@@ -15,7 +15,7 @@ derselbe Code und dieselbe Instanz.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/vigilant-cray-9riw34`, Backlog-Spanne 570–579 |
-| In Arbeit | **KG-03b** — Einbau (Kopplung mit Vergleichswert, Fassung 2; Abschnitt 5e), Uhr 5.0.0; der Zähler `z` beim Fable-Agenten (E-KG-35) |
+| In Arbeit | **KG-03b** — fertig (Kopplung mit Vergleichswert, Fassung 2, Zähler nach E-KA-64; Abschnitt 5e), Uhr 5.0.0, PR folgt. Danach bleibt von KG nur der Rest von KG-04: die Gerätetests der BetreiberIn |
 | Erledigt | **KG-01, KG-05, KG-02, KG-06, KG-04 (Teil: Prüfdokument)** — PR #168, Uhr 4.5.1. **KG-07, KG-03a** — PR #173, Uhr 4.5.2. **KG-08** — PR #178, Uhr 4.6.0. Alle gemergt; Tags setzt die BetreiberIn nach den Gerätetests |
 | Hakt | Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05) |
 | Gelesen gegen | Commit `0be2092` · Uhr 4.3.3; die vier Befunde von KG-01 am 10.11.2026 an der heutigen Stelle bestätigt (Abschnitt 4) |
@@ -334,8 +334,17 @@ Mockup M-KG-01 (E-KG-33).
   Schritt von `syncAll()`, `_verschliessen2()` mit Merker SCHLUSS und leerem
   Schlussstück.
 
-**Gebaut (Fable-Agent, E-KG-35):** Zähler nach E-KA-64 — Ergebnis unten im
-Prüfprotokoll.
+**Gebaut (Fable-Agent, E-KG-35):** `zaehlerNaechster()` über die reine
+Regel `zaehlerFolge(alt, jetzt)` = `max(jetzt, alt + 1)`, mindestens 1, an
+`Z_MAX` (2038) stehen bleibend; „jetzt" aus `Time.now()`; ein alter
++1-Stand springt ohne Umzug auf die Sekunde. Krypto-Probe vier Urteile
+mehr (27). **Zweifel des Agenten** (an KA zur Gegenprüfung mit 06c, F-KG-22):
+Eine Uhr, deren Zeit einmal weit voraus lag, sperrt andere Geräte für
+diesen Einsatz aus, bis deren Zeit sie einholt; eine Uhr ohne Zeit fällt
+selbst durch; `z` belegt die Zeit des Verschließens, nicht die Frische des
+Inhalts (wer zuletzt sendet, gewinnt — wie mit +1); der Kopf der Referenz
+spricht noch von „je Absender"; der Referenz fehlt ein Fall mit zwei
+Absendern an einem Einsatz.
 
 **Proben:** `sendeweg` sieben Prüfungen mehr (Wert erst nach dem
 Offenlegen, anderes Paar, 202, abgelehnt, `huelle: 2`, Schlussstück,
@@ -369,6 +378,9 @@ mit `referenz.oeffnen2` (`rundlauf/fassung2.py`).
 | F-KG-19 | **Im Simulator kommt beim Loslassen `onSelect` am Menü an, auch wenn das Menü das Loslassen in `onKeyReleased` schluckt.** Welches zuerst kommt, ist nicht gemessen. Belegt hat es der erste Lauf der Probe: Ihr Haken saß am Anfang von `onSelect` und meldete `SCHNELL-AUSWAHL`, obwohl die Schutzabfrage dahinter verwarf. Ohne `auswahlVerwerfen()` in `onSelect` hätte das Loslassen also gewählt. Der Haken sitzt seither an der Stelle der Auswahl, und der Lauf ist grün | `rea.sh`, 13.11.2026 | eingetragen in `docs/Geraete-Eingabe.md` 6 |
 | F-KG-20 | **Ein Konto ohne Schlüsselpaar und eine Uhr mit Geräteschlüssel wären in eine Sackgasse gelaufen:** `pair.php` schickt dann `n_b`, aber `kontoschluessel: null`; der alte Weg (Ja ohne Wert) bekommt `409 zustand`, weil der Server das Ja eines Geräts mit Schlüssel erst nach dem Offenlegen zählt. Die Uhr bricht jetzt mit „Konto ohne Schlüssel / Erst im Web anmelden" ab | `server/pair.php` gelesen, 14.11.2026 | behoben in Uhr 5.0.0 |
 | F-KG-21 | **Die Krypto-Probe und `pruefstand.sh bauen` schreiben dieselbe Datei** (`$CIQ_BASIS/bin/<geraet>.prg`): Zwei Instanzen, die gleichzeitig bauen und starten, messen einander. Für KG-03b baute die Hauptinstanz deshalb mit einer Kopie des Skripts in ein eigenes Verzeichnis, solange der Agent den Simulator hatte | 14.11.2026 | Vorgehen, kein Fehler der App |
+| F-KG-22 | **Die Zählerregel E-KA-64 trägt nur, solange die Uhren der Geräte stimmen** — fünf Punkte des Fable-Agenten (Abschnitt 5e); dazu: Der Kopf der Referenz spricht von „je Absender", die Prüfung ist je Einsatz, und ein Fall mit zwei Absendern fehlt | Fable-Agent, 14.11.2026 | an KA (Gegenprüfung mit 06c, E-KA-64) |
+| F-KG-23 | **Die Sendeweg-Probe schickte `offenlegen` wirklich ab** (an `127.0.0.1:1`); die Antwort 404 kam in derselben Sitzung an und beendete sie, bevor der nächste Fall lief. Die Probe setzt jetzt `_ngLaeuft` vorab und spielt die Antwort selbst | `sendeweg.sh`, 14.11.2026 | behoben in der Probe |
+| F-KG-24 | **Der Rundlauf der alten Kopplung übersetzte nicht:** `sed` ersetzte den Aufruf von `Huelle2.kopplungBeginnen()` durch `k = null`, und die Typprüfung meldete den Zugriff auf `k[:spk]` darunter als Zugriff auf null. Der Schalter läuft jetzt über `Rundlauf.alteKopplung()` | Prüfstand, erster Lauf über KG-03b (`uhr-rundlauf` rot nach 5 s) | behoben in der Probe |
 | F-KG-07 | **Alle Fälle der Probe in einem Aufruf lösen den Watchdog aus** (mehrere Verschließungen am Stück, `Code Executed Too Long` in `Huelle.umgedreht()`). Die Probe läuft deshalb je Fall in einem eigenen Takt. Die App selbst verschließt je Antwort ein Stück und ist davon nicht betroffen — auf einer echten Uhr gemessen ist das aber nicht | Simulator fenix6pro, 10.11.2026 | Probe angepasst |
 
 **Gerätebeobachtungen stehen in `docs/Geraete-Eingabe.md` 2 und 6**, nicht
@@ -495,4 +507,25 @@ die Venu (lang Action öffnet jetzt auch beim Halten, P-KG-14); die Probe
 | `REA_WATCH=<Uhr 4.5.2>` | dieselben 21 | **6 rot** (Adrenalin nach gut 6 s, die Sperre danach, beide Menüs erst beim Loslassen, je zweimal) |
 | Prüfstand `pruefen.sh`, erster Lauf | Stufe klein, 10 Proben und 25 Riegel, darunter `uhr-rundlauf` (`--neukoppeln` 2/0, `--fremdkonto` 4/0, je „getrennt, ohne neuen Code“) | 33 grün, 0 rot, **1 Hinweis** `bestand`: LIESMICH von `sendeweg` 42 statt 40 Zeilen — gekürzt |
 | Prüfstand `pruefen.sh`, zweiter Lauf | dasselbe über den endgültigen Baum | Bericht in der Commit-Nachricht von KG-08 |
+
+### KG-03b (14.11.2026, Uhr 5.0.0)
+
+**Nicht geprüft:** keine echte Uhr, kein echter Browser, nicht gegen Staging
+(P-KG-21, -22); die Venu 3s (die Probe drückt START, die Venu tippt);
+ein Zeitsprung an der Uhr selbst (nur an der Regel gemessen); der
+Gerätewechsel mit zwei Absendern; `kryptoreihe` über 99 Geräte nur im
+Prüfstand (`uhr-stufe1` übersetzt die App).
+
+| Mittel | Was es misst | Ergebnis |
+|---|---|---|
+| `bauen` fenix6pro, fr945, venu3s (Kopie in eigenes Verzeichnis, F-KG-21) | Übersetzen der App | 3 von 3 BUILD SUCCESSFUL |
+| `kryptoprobe` (Fable-Agent) | 27 Urteile je Gerät, davon 4 zum Zähler | fenix6pro, fr945, venu3s je **27 gut, 0 Fehler**; `extern.py` 18 Hüllen, 0 Fehler; gegen den alten Zähler **3 rot** (`ZAEHLER-FOLGE`, `-ZEIT`, `-ALT`) |
+| `referenz.py pruefen` / `--selbstprobe` (Agent) | Referenz unberührt | Fassung 1: 6 / 8 / 0 · Fassung 2: 23 / 38 / 0 · 17/0 |
+| `sendeweg.sh fenix6pro` | 22 Prüfungen, davon 7 neu | **22 von 22 grün** (zweiter Lauf; im ersten F-KG-23) |
+| `SENDEWEG_WATCH=<Uhr 4.6.0>` | dieselbe Probe gegen den Stand vor KG-03b | **übersetzt nicht** — `Pair._mitSchluessel`, `wertAnzeige`, `onOffengelegt`, `wartetWeb`, `huelle2Gewuenscht` fehlen |
+| `rundlauf.sh fenix6pro` gegen die örtliche Anlage (Web 24.18.0, Migration eingespielt) | Kopplung mit Wert, nachgespielte Webseite, Fassung 2 | Kopplung **3 von 3** (Wert der Uhr = Referenz 252860, Ja vermerkt, Gerät mit Herkunft und eigenem SPK); `pruefen.php` **15 von 15** (Einsatzhülle Fassung 2 mit Zähler ab Laufbeginn, Merker `[0,1]`, Ruhestück SCHLUSS) |
+| Bilder `3-wert`, `3c-warte-auf-web`, `3d-gekoppelt` (fenix6pro) | gegen Mockup M-KG-01 B, D, E | gleich im Aufbau und Wortlaut |
+| Prüfstand `pruefen.sh`, erster Lauf | Stufe klein, 12 Proben und 25 Riegel, darunter `uhr-krypto`, `huellenprobe`, `uhr-stufe1` | 35 grün, **1 rot**: `uhr-rundlauf` übersetzte die alte Kopplung nicht (F-KG-24) |
+| `rundlauf.sh --nachholen fenix6pro` nach der Behebung | alte Kopplung, Fassung 1 | 12 von 12 |
+| Prüfstand `pruefen.sh`, zweiter Lauf | dasselbe über den endgültigen Baum | Bericht in der Commit-Nachricht von KG-03b |
 

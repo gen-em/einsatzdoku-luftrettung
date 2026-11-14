@@ -33,7 +33,7 @@ Simulator, örtliche Anlage mit eigener CA (`Technik.md` 5.6), Demo-Konto mit Sc
 
 ## Erwartete Zahl
 
-Je Lauf `12 Pruefungen, 0 Fehlschlaege`; dazu schrumpfen 3, reaktivieren 2, neukoppeln 2; fremdkonto allein 4 — je 0 Fehlschläge (neukoppeln und fremdkonto je eine mehr seit KG-08).
+Je Lauf `12 Pruefungen, 0 Fehlschlaege` (in Fassung 2 ohne ART 15, dazu `Kopplung mit Vergleichswert: 3`); dazu schrumpfen 3, reaktivieren 2, neukoppeln 2; fremdkonto allein 4 — je 0 Fehlschläge (neukoppeln und fremdkonto je eine mehr seit KG-08).
 
 ## Was es nicht kann
 

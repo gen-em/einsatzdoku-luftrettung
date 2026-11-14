@@ -31,8 +31,8 @@ Uhr-Prüfstand mit Simulator (`pruefstand.sh aufbau`, `Xvfb`). Keinen Server (`1
 
 ## Erwartete Zahl
 
-`Sendeweg: 15 Pruefungen, 0 Fehlschlaege`, rund 1 min; gegen Uhr 4.5.2 zwei rot (KG-08).
-Für 13 Prüfungen, nicht nachgemessen: gegen 4.5.0 drei rot, gegen 4.3.3 fünf.
+`Sendeweg: 22 Pruefungen, 0 Fehlschlaege`, rund 1 min. Gegen Uhr 4.6.0 übersetzt die Probe nicht
+(Schnittstelle von KG-03b fehlt); mit 15 Prüfungen gegen 4.5.2 zwei rot (KG-08).
 
 ## Was es nicht kann
 
