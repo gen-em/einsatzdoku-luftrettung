@@ -216,6 +216,19 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand Android 0.24.0 (Schritt 28, KA-06c: Kopplung mit Vergleichswert,
+Gerätehülle Fassung 2), `./gradlew build` im Container, 14.11.2026 —
+`BUILD SUCCESSFUL in 7m 23s`:** Lint **0** Fehler (Handy 6 Warnungen, Uhr
+keine), Prüffälle je Bauart Handy **368** (neu `Geraetehuelle2Test` 11,
+`KopplungswertTest` 5, `GeraeteschluesselTest` 11, `HuellenzaehlerTest` 9,
+`KopplungVergleichTest` 15, fünf Fälle in `SendekoerperTest`), davon 15 ohne
+Installation übersprungen, Uhr **75**, **0** Fehlschläge. Der Bilderlauf des
+Handys hat **96** Bilder je Modus (32 Bildschirme; neu `kopplung-vergleich`,
+`kopplung-vergleich-wartet`, `kopplung-im-web-abgelehnt`,
+`kopplung-ohne-kontoschluessel`, `bereit-herkunft`). APK unsigniert,
+Release: Handy **9 285 038 B**, Uhr **22 800 026 B**. Kein Emulatorlauf,
+kein Gerät.
+
 **Stand Android 0.23.0 (Schritt 28, KA-04: Kontobindung und Sendeweg),
 `./gradlew build` im Prüfstand, 10.11.2026 — `BUILD SUCCESSFUL in 6m 19s`:**
 Lint **0** Fehler (Handy 6 Warnungen, alle Fassungshinweise aus
@@ -593,15 +606,15 @@ Reihenfolge):
 
 ```bash
 ./gradlew :uhr:testDebugUnitTest   --tests '*UhrBildTest*'      #  7 Bilder
-./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 78 Bilder
+./gradlew :handy:testDebugUnitTest --tests '*HandyBildTest*'    # 96 Bilder je Modus
 ```
 
 | | `UhrBildTest` (seit C1) | `HandyBildTest` (seit E1) |
 |---|---|---|
-| Bilder | 7 — zwei Marken, laufende Ansicht, zwei Ortungszustände, „Handy nicht erreichbar" (seit 0.16.0), 227-dp-Uhr | **78** — 26 Bildschirme × 3 Breiten (360, 411, 600 dp); seit 0.17.0 mit „Abgewiesene verwerfen" und der Quittung (R4-22) |
+| Bilder | 7 — zwei Marken, laufende Ansicht, zwei Ortungszustände, „Handy nicht erreichbar" (seit 0.16.0), 227-dp-Uhr | **96** je Modus — 32 Bildschirme × 3 Breiten (360, 411, 600 dp); seit 0.17.0 mit „Abgewiesene verwerfen" und der Quittung (R4-22), seit 0.24.0 mit Vergleichswert und „Herkunft gesichert" (KA-06c) |
 | Bedienhöhe | 48 dp je Bild | 48 dp an **75 von 78** — die drei `kopplung-code` tragen keinen farbigen Knopf und werden nicht daran gemessen (benannte Ausnahme im Prüffall; die Zusammenfassung des Laufs sagt dazu „0.0 dp bis 48.0 dp an 78 von 78") |
 | Beschnitt | Anteil außerhalb des **runden Glases**, gerechnet | Knopffarbe an der **Bildkante**; dazu der **ganze** Inhalt gegen den sichtbaren Bereich |
-| Unterscheidbarkeit | alle 7 paarweise verschieden | alle 78 paarweise verschieden, **und je Breite** (bis 0.16.1 stand hier „66" neben 72 Bildern — eine Zahl, die kein Lauf gemeldet hat) |
+| Unterscheidbarkeit | alle 7 paarweise verschieden | alle 96 paarweise verschieden, **und je Breite** (bis 0.16.1 stand hier „66" neben 72 Bildern — eine Zahl, die kein Lauf gemeldet hat) |
 
 **Warum die letzte Zeile die wichtigste ist (F-P3-AQ).** Der Bilderlauf des
 Web meldete nach O9c „248 Bilder, 0 Überlauf" — 176 davon zeigten die

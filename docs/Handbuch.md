@@ -3938,6 +3938,18 @@ sag der BetreiberIn Bescheid. Die Zahl rechnet dein Browser; dafür braucht
 die Seite JavaScript und das Schlüsselpaar deines Kontos (die Karte darüber,
 wenn es fehlt), und gegebenenfalls fragt sie einmal nach deinem Passwort.
 
+**Mit neuer App heißt:** die Garmin-Uhr ab Uhr 5.0.0 (Abschnitt 13), die
+Android-App ab **0.24.0**. **Am Handy** steht nach dem Verbinden „Gleiche
+Zahl wie im Browser?", darunter deine gekürzte Adresse und groß der
+**Vergleichswert**; du tippst **„Ja, gleiche Zahl"** oder **„Nein, andere
+Zahl"**. Kommt dein Ja vor dem „Wert stimmt" im Browser, zeigt das Handy
+„Warte auf die Bestätigung im Browser …" und koppelt, sobald es da ist.
+Danach steht auf der Startseite unter „Gekoppelt" die Zeile **„Herkunft
+gesichert"** — ab jetzt trägt alles, was das Handy sendet, den Nachweis,
+dass es von ihm kommt. „Im Browser abgelehnt" heißt: Dort wurde „Wert ist
+anders" getippt; „Konto noch ohne Schlüssel": einmal im Browser abmelden
+und wieder anmelden, dann neu koppeln.
+
 **Ein Gerät mit älterer App** schickt keinen eigenen Schlüssel. Die Rückfrage
 sagt es mit einer gelben Meldung, und der Knopf heißt **„Trotzdem
 verbinden"**: Es koppelt wie bisher, aber was es sendet, trägt keinen
