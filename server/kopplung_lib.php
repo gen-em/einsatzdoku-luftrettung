@@ -7,6 +7,7 @@ require_once __DIR__ . '/geraete_lib.php';  // geraet_vorgabename(), geraet_beze
 require_once __DIR__ . '/einstieg_lib.php'; // erststart_erledigt()
 require_once __DIR__ . '/mail_lib.php';     // mail_einreihen()
 require_once __DIR__ . '/format_lib.php';   // datum_zeit_text()
+require_once __DIR__ . '/kontopaar_lib.php'; // kp_fuer_geraet() (F-KA-108)
 
 /**
  * KOPPLUNGSSITZUNGEN — die Schicht zwischen dem
@@ -220,6 +221,19 @@ function pair_geraet_da(PDO $pdo, string $deviceId, int $userId): bool
  */
 function pair_sitzung_beanspruchen(PDO $pdo, string $code, int $userId, ?string $nB = null): bool
 {
+    /* EIN GERAET MIT SCHLUESSEL NUR AN EIN KONTO MIT PAAR (F-KA-108). Ohne
+     * Kontopaar kann niemand den Vergleichswert rechnen, und das Geraet
+     * bekaeme nach dem Beanspruchen `n_b`, aber `kontoschluessel: null` —
+     * eine Sackgasse. Die Seite fragt das schon vorher (einstellungen.php,
+     * `koppeln_bestaetigen`); hier steht es, damit es fuer JEDEN Weg gilt,
+     * der beansprucht, und nicht nur fuer den, der heute vorbeikommt. */
+    if (pair_herkunft_bereit($pdo)) {
+        $vorher = pair_sitzung_nach_code($pdo, $code);
+        if ($vorher !== null && ($vorher['spk'] ?? null) !== null
+            && kp_fuer_geraet($pdo, $userId) === null) {
+            return false;
+        }
+    }
     /* N_b GEHT MIT DEMSELBEN UPDATE — genau einmal, und nur zusammen mit
      * dem Konto, das die Sitzung nimmt (KA-06d). Ohne die Spalten (Migration
      * steht aus) bleibt es beim alten Weg. */
