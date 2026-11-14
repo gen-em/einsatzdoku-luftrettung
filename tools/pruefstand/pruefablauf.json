@@ -585,13 +585,15 @@
       "pfade": [
         "server/geraete_lib.php",
         "server/pair.php",
-        "server/geraete*.php"
+        "server/geraete*.php",
+        "server/kopplung_lib.php",
+        "tools/proben/kopplung/**"
       ],
       "proben": [
         "geraeteprobe",
         "kopplungsprobe"
       ],
-      "anlass": "Edge, das sich \"uhr\" nennt; Nr. 178, 180"
+      "anlass": "Edge, das sich \"uhr\" nennt; Nr. 178, 180; seit KA-06c auch kopplung_lib.php und die Probe selbst (F-KA-114: der Prüfstand wählte die Kopplungsprobe bei geänderter Bibliothek nicht aus)"
     },
     {
       "id": "mail",
