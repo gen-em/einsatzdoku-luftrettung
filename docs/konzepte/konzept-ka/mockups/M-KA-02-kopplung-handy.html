@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>M-KA-02 Kopplung mit Vergleichswert am Handy</title>
+<!-- Mockup zu KA-06c (Konzept KA, E-KA-44). Keine fremde Quelle: Schrift aus
+     server/assets/fonts. Die App zeichnet in der Systemschrift; Farben aus
+     android/gemeinsam/res/values/rollen.xml, Abstände, Radien und
+     Schriftgrößen aus KopplungAnsicht.kt und Bausteine.kt (Karte,
+     Zustandszeile, Hinweiskasten, Meldungsblock, KnopfPrimaer, KnopfNeutral).
+     Nur vorhandene Bausteine; neu ist, was darin steht. -->
+<style>
+@font-face { font-family: "OS"; font-weight: 400; src: url("../../../../server/assets/fonts/open-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "OS"; font-weight: 700; src: url("../../../../server/assets/fonts/open-sans-latin-700-normal.woff2") format("woff2"); }
+:root {
+  --seite: #FFFCFA; --karte: #FCF8F3; --text: #1A0500; --titel: #1A2E4D; --gedaempft: #725D49;
+  --linie: #E5DECD; --linie-stark: #725D49; --aktion: #1A2E4D; --auf-aktion: #FFFCFA;
+  --info-flaeche: #D9ECFD; --info-text: #27487C; --erfolg-text: #065A27; --erfolg-linie: #147236;
+  --fehler-text: #890415; --fehler-linie: #AF1E26; --rahmen: #e9edf0;
+}
+body { margin: 0; padding: 24px; background: var(--rahmen); color: #1d2a33; font-family: "OS", sans-serif; }
+h1 { font-size: 20px; margin: 0 0 4px; }
+p.unter { margin: 0 0 20px; font-size: 14px; max-width: 1000px; line-height: 1.4; }
+.reihe { display: flex; flex-wrap: wrap; gap: 28px; }
+.fall { width: 340px; }
+.fall h2 { font-size: 15px; margin: 0 0 8px; }
+.fall > p { font-size: 13px; margin: 10px 0 0; line-height: 1.4; }
+.handy { width: 340px; height: 640px; background: var(--seite); border: 10px solid #222; border-radius: 28px;
+         overflow: hidden; box-sizing: border-box; font-size: 13px; color: var(--text); }
+.kopf { background: var(--titel); color: #fff; height: 52px; display: flex; align-items: center; gap: 10px;
+        padding: 0 16px; font-weight: 700; font-size: 17px; }
+.kopf .marke { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; box-sizing: border-box; }
+.innen { padding: 16px; }
+.karte { background: var(--karte); border: 1px solid var(--linie); border-radius: 12px; padding: 16px;
+         display: flex; flex-direction: column; gap: 12px; }
+.zeile { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.punkt { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.fehler { color: var(--fehler-text); } .fehler .punkt { background: var(--fehler-linie); }
+.erfolg { color: var(--erfolg-text); } .erfolg .punkt { background: var(--erfolg-linie); }
+.hinweis { background: var(--info-flaeche); border-radius: 10px; padding: 8px 12px; font-size: 13px; }
+.klein { color: var(--gedaempft); font-size: 13px; }
+.info { color: var(--info-text); font-size: 15px; }
+.gross { font-size: 34px; font-weight: 700; text-align: center; color: var(--text); }
+.konto { font-size: 20px; font-weight: 700; text-align: center; color: var(--text); }
+.block { display: flex; flex-direction: column; gap: 4px; }
+.knopf { min-height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+         font-size: 15px; font-weight: 700; box-sizing: border-box; padding: 0 16px; }
+.primaer { background: var(--aktion); color: var(--auf-aktion); }
+.neutral { background: var(--karte); color: var(--titel); border: 1px solid var(--linie-stark); }
+.neu { outline: 2px dashed #CA6900; outline-offset: 3px; }
+code { font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>M-KA-02 — Kopplung mit Vergleichswert am Handy (KA-06c)</h1>
+<p class="unter">Bildschirm „Gerät koppeln“ der Android-App, 360 dp breit. Aufbau wie heute (Kopfleiste, eine Karte mit
+Zustandszeile, darunter der wechselnde Block) und nur vorhandene Bausteine: Karte, Zustandszeile, Hinweiskasten,
+Meldungsblock, Knöpfe primär und neutral, 48 dp. <b>Orange gestrichelt umrandet ist, was neu ist.</b> Ablauf wie
+M-KA-01 (Web) und M-KG-01 (Garmin): Das Gerät legt sich beim Holen des Codes mit einer Zusage fest, zeigt den Wert
+erst, wenn der Browser verbunden hat, und ist erst gekoppelt, wenn der Browser „Wert stimmt“ und das Handy „Ja“
+gesagt haben. Adresse im Beispiel erfunden.</p>
+
+<div class="reihe">
+
+<div class="fall">
+<h2>A · Code (wie heute)</h2>
+<div class="handy"><div class="kopf"><span class="marke"></span>Gerät koppeln</div><div class="innen"><div class="karte">
+  <div class="zeile fehler"><span class="punkt"></span>Nicht eingerichtet</div>
+  <div class="block"><div class="klein">Diesen Code im Browser eintragen</div><div class="gross">NMA V7F</div></div>
+  <div class="hinweis">Browser → <b>Einstellungen → Geräte</b> → Feld <b>Code vom Gerät</b></div>
+  <div class="info">Warte auf den Browser …</div>
+  <div class="klein">Noch 10 Minuten gültig</div>
+  <div class="knopf neutral">Abbrechen</div>
+</div></div></div>
+<p>Unverändert. Beim Holen des Codes schickt die App zusätzlich ihren Geräteschlüssel und die Zusage mit —
+unsichtbar.</p>
+</div>
+
+<div class="fall">
+<h2>B · Vergleichswert (ersetzt „Zu diesem Konto koppeln?“)</h2>
+<div class="handy"><div class="kopf"><span class="marke"></span>Gerät koppeln</div><div class="innen"><div class="karte">
+  <div class="zeile fehler"><span class="punkt"></span>Nicht eingerichtet</div>
+  <div class="block neu">
+    <div class="zeile erfolg"><span class="punkt"></span>Gleiche Zahl wie im Browser?</div>
+    <div class="klein">Der Browser zeigt jetzt eine sechsstellige Zahl. Stimmt sie mit dieser überein, gehört
+    das Konto dir: im Browser „Wert stimmt“, hier „Ja“.</div>
+  </div>
+  <div class="konto">de•••@ge•••.org</div>
+  <div class="block neu"><div class="klein">Vergleichswert</div><div class="gross">482 913</div></div>
+  <div class="klein">Noch 9 Minuten gültig</div>
+  <div class="knopf primaer neu">Ja, gleiche Zahl</div>
+  <div class="knopf neutral neu">Nein, andere Zahl</div>
+</div></div></div>
+<p>Kommt, sobald der Browser verbunden hat: Die App legt ihre Zufallszahl offen und rechnet den Wert.
+Gezeigt wie der Code (34 sp, drei und drei Ziffern), darüber die maskierte Adresse wie bisher. Ja →
+<code>bestaetigen ja</code>; Nein → <code>bestaetigen nein</code>, Ende wie heute nach einem Nein.</p>
+</div>
+
+<div class="fall">
+<h2>C · Ja gegeben, Browser noch offen</h2>
+<div class="handy"><div class="kopf"><span class="marke"></span>Gerät koppeln</div><div class="innen"><div class="karte">
+  <div class="zeile fehler"><span class="punkt"></span>Nicht eingerichtet</div>
+  <div class="konto">de•••@ge•••.org</div>
+  <div class="block"><div class="klein">Vergleichswert</div><div class="gross">482 913</div></div>
+  <div class="info neu">Warte auf „Wert stimmt“ im Browser …</div>
+  <div class="klein">Noch 8 Minuten gültig</div>
+  <div class="knopf neutral">Abbrechen</div>
+</div></div></div>
+<p>Antwort <code>202 wartet: browser</code>. Die Zahl bleibt stehen; die App fragt im bisherigen Takt nach.
+Blau wie „Warte auf den Browser …“ in A (läuft, noch keine Aussage).</p>
+</div>
+
+<div class="fall">
+<h2>D · Gekoppelt (Startseite, Sync-Karte)</h2>
+<div class="handy"><div class="kopf"><span class="marke"></span>NAdoku</div><div class="innen"><div class="karte">
+  <div class="zeile erfolg"><span class="punkt"></span>Gekoppelt · de•••@ge•••.org</div>
+  <div class="klein neu">Herkunft gesichert</div>
+  <div class="zeile erfolg"><span class="punkt"></span>Alles gesendet</div>
+</div></div></div>
+<p>Wie heute „Gekoppelt · Adresse“. Neu die gedämpfte zweite Zeile, nur wenn der Server <code>huelle: 2</code>
+gesagt hat — sonst bleibt sie leer (alte Kopplung, Fassung 1). Dieselbe Aussage wie „Herkunft gesichert“ an der
+Garmin (M-KG-01 E).</p>
+</div>
+
+<div class="fall">
+<h2>E · Im Browser abgelehnt</h2>
+<div class="handy"><div class="kopf"><span class="marke"></span>Gerät koppeln</div><div class="innen"><div class="karte">
+  <div class="zeile fehler"><span class="punkt"></span>Nicht eingerichtet</div>
+  <div class="hinweis">Tippe auf <b>Kopplung starten</b>. Die App zeigt dir dann einen Code, den du im Browser unter
+  <b>Einstellungen → Geräte</b> einträgst.</div>
+  <div class="block neu">
+    <div class="zeile fehler"><span class="punkt"></span>Im Browser abgelehnt</div>
+    <div class="klein">Der Browser hat eine andere Zahl gezeigt. Nichts wurde gekoppelt. Beginne neu — und wenn
+    die Zahlen wieder nicht passen, koppele nicht.</div>
+  </div>
+  <div class="knopf primaer">Neu beginnen</div>
+</div></div></div>
+<p>Wie die übrigen Abweisungen (Meldungsblock, rot, „Neu beginnen“). <code>status abgelehnt</code>, Grund
+<code>wert</code> → wie oben; Grund <code>zusage</code> → Titel „Schlüssel passt nicht“, gleicher Hinweis.
+Kein Schlüssel wird abgelegt.</p>
+</div>
+
+<div class="fall">
+<h2>F · Konto ohne Schlüssel (F-KA-108)</h2>
+<div class="handy"><div class="kopf"><span class="marke"></span>Gerät koppeln</div><div class="innen"><div class="karte">
+  <div class="zeile fehler"><span class="punkt"></span>Nicht eingerichtet</div>
+  <div class="hinweis">Tippe auf <b>Kopplung starten</b>. Die App zeigt dir dann einen Code, den du im Browser unter
+  <b>Einstellungen → Geräte</b> einträgst.</div>
+  <div class="block">
+    <div class="zeile fehler"><span class="punkt"></span>Konto noch ohne Schlüssel</div>
+    <div class="klein">Einmal im Browser abmelden und wieder anmelden, dann neu koppeln.</div>
+  </div>
+  <div class="knopf primaer">Neu beginnen</div>
+</div></div></div>
+<p>Der Fall soll gar nicht mehr vorkommen: Die Webseite legt das Schlüsselpaar des Kontos vor dem Verbinden
+an, und der Server lehnt das Verbinden ohne Paar ab. Kommt er doch (alter Browser-Stand), steht der vorhandene
+Text „Konto noch ohne Schlüssel“ statt eines Absturzes.</p>
+</div>
+
+</div>
+</body>
+</html>
