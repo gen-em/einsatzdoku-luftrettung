@@ -12,8 +12,8 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-06d** (Kopplung mit Vergleichswert, Web 24.18.0, **Migration — `update.php`**, P-KA-13) im PR; danach 06c (nur noch das Handy; **Fable** für den Krypto-Kern samt Gegenprüfung des Zählers, E-KA-64), 06e (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51; dort auch F-KA-103 und -104). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-03a in PR #173; **KG-03b kann nach dem Merge von 06d beginnen** (Vertrag 1a.7) |
-| Erledigt | **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
+| In Arbeit | nichts; als Nächstes 06c (nur noch das Handy; **Fable** für den Krypto-Kern samt Gegenprüfung des Zählers, E-KA-64), 06e (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51; dort auch F-KA-103 und -104). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-03a in PR #173; **KG-03b kann beginnen** (Vertrag 1a.7, mit 06d gemergt) |
+| Erledigt | **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
@@ -905,6 +905,23 @@ gezählt (E-KA-31).
 | Prüfstand, Hauptstufe, voller Lauf, über den örtlichen Merge mit `main` (KG-08, Uhr 4.6.0; Konflikte nur in `CHANGELOG.md` und `Backlog-Erledigt.md`, beide Seiten behalten) | erster Lauf am 14.11.2026: 63 grün, **1 rot** (`rueckwegprobe` in Chromium, F-KA-107), 1 Hinweis (`tools/sandbox/LIESMICH.md` 41 statt 40 Zeilen, behoben), 9732 s; in WebKit eine Wiederholung nach E-DM-10 (`betrieb-server-frischer-code`, `waitForURL` 90 s); der zweite Lauf steht als Bericht im Commit | die rote Probe einzeln dreimal nachgefahren: 3 von 3 grün (je 50 + 23 Prüfungen); im selben Lauf Firefox und WebKit grün | der Bericht des Commits, über den gemischten Baum |
 
 **R91 nach PR #177 (Web 24.17.0)** steht beim Paket 06b-4.
+
+**R91 nach PR #179 (Web 24.18.0, Staging, 14.11.2026).** Lauf 207: Auslieferung
+grün; **Stufe 2 rot** — der Kreislauf `edbak` bekam in allen drei Engines 503
+auf `admin_users.php`, weil der Torwächter bis `update.php` geschlossen hält;
+dasselbe Bild wie Lauf 202 (PR #175, ebenfalls mit Migration). Vor
+`update.php`, mit eigenem Konto: P-P5c-42 bestanden (Updates, Komplett-Backup
+und Backup-Ziele 200 mit Wartungsbalken, eine Seite unter Verwaltung 503;
+„Jetzt sichern" ergab einen Stand mit 11 512 Zeilen aus 42 Tabellen);
+P-P5c-31 zur Hälfte (503 `maintenance` während und nach der Kette). Nach
+`update.php` der BetreiberIn: **P-KA-14 bestanden** — Seite und Gerät
+531908, Ja 200, `status` `gekoppelt` ohne `huelle`, ein Gerät in der Liste,
+über die Oberfläche entkoppelt (danach `status` 401); „Wert ist anders":
+461505 auf beiden Seiten, `abgelehnt`/`wert`, Ja 409, kein Gerät; 0
+Seitenfehler (Chromium, nachgebautes Gerät wie `ka06d.mjs`). Ein erster
+Durchgang ließ ein Testgerät stehen (Fehler im Skript der Arbeitsumgebung,
+nicht der Anwendung); es ist entfernt. Danach `staging_konten.py --wirklich`:
+ein Konto gelöscht (`umlauf-edbak@example.invalid`), vier behalten.
 
 ### KA-06b-4 Anhebelauf (13.11.2026)
 
