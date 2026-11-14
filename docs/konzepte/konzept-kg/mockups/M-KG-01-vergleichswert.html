@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>M-KG-01 Vergleichswert auf der Uhr</title>
+<!-- Mockup zu KG-03b (Konzept KG). Keine fremde Quelle: Schrift aus
+     server/assets/fonts. Die Uhr zeichnet in ihrer Systemschrift; die
+     Groessen hier folgen der Kopplungsansicht (PairView.mc) auf der
+     Fenix 6 Pro, 260 x 260 px. -->
+<style>
+@font-face { font-family: "OS"; font-weight: 400; src: url("../../../../server/assets/fonts/open-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "OS"; font-weight: 700; src: url("../../../../server/assets/fonts/open-sans-latin-700-normal.woff2") format("woff2"); }
+:root { --grau: #aaaaaa; --weiss: #ffffff; --rot: #ff0000; --gruen: #00ff00; --flaeche: #e9edf0; --text: #1d2a33; }
+body { margin: 0; padding: 24px; background: var(--flaeche); color: var(--text); font-family: "OS", sans-serif; }
+h1 { font-size: 20px; margin: 0 0 4px; }
+p.unter { margin: 0 0 20px; font-size: 14px; max-width: 900px; }
+.reihe { display: flex; flex-wrap: wrap; gap: 28px; }
+.fall { width: 300px; }
+.fall h2 { font-size: 15px; margin: 0 0 8px; }
+.fall p { font-size: 13px; margin: 10px 0 0; line-height: 1.4; }
+.uhr { width: 260px; height: 260px; border-radius: 50%; background: #000; border: 20px solid #2b2b2b;
+       position: relative; font-weight: 700; text-align: center; letter-spacing: -0.3px; }
+.z { position: absolute; left: 0; right: 0; }
+.klein { font-size: 15px; color: var(--grau); }
+.gross { font-size: 34px; color: var(--weiss); }
+.mittel { font-size: 19px; color: var(--weiss); }
+.rot { color: var(--rot); } .gruen { color: var(--gruen); }
+.dialog { position: absolute; inset: 0; border-radius: 50%; background: #000; }
+.dialog .frage { font-size: 18px; color: var(--weiss); top: 70px; padding: 0 34px; font-weight: 700; }
+.dialog .knopf { font-size: 15px; color: var(--grau); }
+</style>
+</head>
+<body>
+<h1>M-KG-01 — Vergleichswert auf der Uhr (KG-03b)</h1>
+<p class="unter">Fenix 6 Pro, 260 × 260 px. Aufbau und Schriftstufen der heutigen Kopplungsansicht
+(„Kopplungscode / NMA V7F / Im Web eingeben“, unten die Restzeit): oben klein, Mitte groß, darunter klein,
+unten der wechselnde Block. Neu ist nur, was darin steht, und dass START auf dieser Seite etwas tut.</p>
+
+<div class="reihe">
+
+<div class="fall">
+<h2>A · Code (wie heute)</h2>
+<div class="uhr">
+  <div class="z klein" style="top:78px">Kopplungscode</div>
+  <div class="z gross" style="top:104px">NMA V7F</div>
+  <div class="z klein" style="top:152px">Im Web eingeben</div>
+  <div class="z klein" style="top:210px">10 min gültig</div>
+</div>
+<p>Unverändert. Die Uhr schickt beim Holen des Codes zusätzlich ihren Geräteschlüssel und die Zusage mit — unsichtbar.</p>
+</div>
+
+<div class="fall">
+<h2>B · Vergleichswert</h2>
+<div class="uhr">
+  <div class="z klein" style="top:66px">ph•••@ch•••.net</div>
+  <div class="z klein" style="top:90px">Vergleichswert</div>
+  <div class="z gross" style="top:114px">482 913</div>
+  <div class="z klein" style="top:162px">Gleich wie im Web?</div>
+  <div class="z klein" style="top:192px">START: weiter</div>
+  <div class="z klein" style="top:212px">9 min gültig</div>
+</div>
+<p>Ersetzt die heutige Rückfrage „Mit ph•••@ch•••.net koppeln?“, sobald das Web den Code eingetragen hat.
+Oben die maskierte Adresse des Kontos (zweites Tor, wie bisher), groß der Wert, wie ihn die Webseite zeigt
+(drei und drei Ziffern). BACK bricht ab wie heute.</p>
+</div>
+
+<div class="fall">
+<h2>C · Rückfrage (vorhandener Systemdialog)</h2>
+<div class="uhr">
+  <div class="dialog">
+    <div class="z frage">Wert 482 913 gleich wie im Web?</div>
+    <div class="z knopf" style="top:170px">✓ Ja &nbsp;&nbsp;&nbsp; ✗ Nein</div>
+  </div>
+</div>
+<p><code>WatchUi.Confirmation</code>, wie heute „Mit … koppeln?“ (Darstellung macht das System).
+Ja → <code>bestaetigen ja</code>. Nein → <code>bestaetigen nein</code>, die Kopplung endet.
+Der Wert steht in der Frage, weil der Dialog die Seite verdeckt.</p>
+</div>
+
+<div class="fall">
+<h2>D · Ja gegeben, Web noch offen</h2>
+<div class="uhr">
+  <div class="z klein" style="top:66px">ph•••@ch•••.net</div>
+  <div class="z klein" style="top:90px">Vergleichswert</div>
+  <div class="z gross" style="top:114px">482 913</div>
+  <div class="z klein" style="top:162px">Im Web „Wert stimmt“</div>
+  <div class="z klein" style="top:192px">Warte auf Web…</div>
+  <div class="z klein" style="top:212px">8 min gültig</div>
+</div>
+<p>Antwort <code>202 wartet: browser</code>. Der Wert bleibt stehen; die Uhr fragt im bisherigen Takt nach.
+„Warte auf Web…“ hellgrau wie heute „Kopple…“ (läuft, noch keine Aussage).</p>
+</div>
+
+<div class="fall">
+<h2>E · Ergebnis auf der Sync-Seite</h2>
+<div class="uhr">
+  <div class="z mittel" style="top:96px">Sync vollständig</div>
+  <div class="z mittel gruen" style="top:150px">Gekoppelt</div>
+  <div class="z klein" style="top:176px">Herkunft gesichert</div>
+  <div class="z klein" style="top:206px">Version x.y.z</div>
+</div>
+<p>Wie heute „Gekoppelt“ in Grün. Neu die gedämpfte zweite Zeile, nur wenn der Server <code>huelle: 2</code> gesagt hat
+— sonst bleibt sie leer (alte Kopplung, Fassung 1).</p>
+</div>
+
+<div class="fall">
+<h2>F · Im Web abgelehnt</h2>
+<div class="uhr">
+  <div class="z mittel" style="top:96px">Nicht eingerichtet</div>
+  <div class="z mittel rot" style="top:150px">Im Web abgelehnt</div>
+  <div class="z klein" style="top:176px">Wert war anders</div>
+  <div class="z klein" style="top:206px">Version x.y.z</div>
+</div>
+<p><code>status abgelehnt</code>, Grund <code>wert</code> → „Wert war anders“, Grund <code>zusage</code> →
+„Schlüssel passt nicht“. Rot wie die übrigen Kopplungsfehler, kein Paar abgelegt.
+Neu koppeln geht wie gewohnt mit START halten.</p>
+</div>
+
+</div>
+</body>
+</html>
