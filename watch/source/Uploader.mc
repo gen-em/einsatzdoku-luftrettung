@@ -421,6 +421,14 @@ module Uploader {
         /* OHNE SCHLUESSEL ODER OHNE VERSCHLUESSELUNG: ebenso nicht.
          * Die Sync-Seite sagt, was fehlt. */
         if (!Huelle.hatSchluessel() || !Huelle.bereit()) { return; }
+        /* FASSUNG 2: DER SELBSTTEST IN EINEM EIGENEN SCHRITT (KG-03b). Er
+         * rechnet zwei Schluesselvereinbarungen mehr; im selben Aufruf wie
+         * die erste Huelle loeste das den Waechter der Laufzeit aus
+         * (Huelle2.bereit). Der naechste Anlass sendet. */
+        if (Pair.huelle2Gewuenscht() && Huelle2._geprueft == null) {
+            Huelle2.bereit();
+            return;
+        }
         bindungPruefen();
         parkFristPruefen();
         _next();
@@ -504,6 +512,7 @@ module Uploader {
         var ref = d["ref"] as Lang.String;
         var seqFrom = _ackedSeq(ref);
         var n = _openPoints(ref);
+        var offenGesamt = n;                 // fuer den Merker SCHLUSS (Fassung 2)
         if (n > Const.UPLOAD_CHUNK_POINTS) { n = Const.UPLOAD_CHUNK_POINTS; }
         /* EIN UNBESTAETIGTES STUECK GEHT GENAU SO NOCH EINMAL (F-KA-07).
          *
@@ -540,11 +549,15 @@ module Uploader {
          * Punkte, die nie angekommen sind. Ohne Punkte faellt `track` weg --
          * der Server antwortet dann mit seiner eigenen Marke (Vertrag 3.1). */
         try {
-            if (flat.size() > 0) {
-                body["track"] = Huelle.spurstueck(istEinsatz ? "spur" : "ruhe", ref, seqFrom, flat);
-            }
-            if (istEinsatz) {
-                body["ort_huelle"] = Huelle.einsatz(ref, d);
+            if (fassung2()) {
+                _verschliessen2(body, d, ref, seqFrom, flat, offenGesamt, istEinsatz);
+            } else {
+                if (flat.size() > 0) {
+                    body["track"] = Huelle.spurstueck(istEinsatz ? "spur" : "ruhe", ref, seqFrom, flat);
+                }
+                if (istEinsatz) {
+                    body["ort_huelle"] = Huelle.einsatz(ref, d);
+                }
             }
         } catch (e) {
             lastError = "Verschlüsseln gescheitert";
@@ -609,6 +622,45 @@ module Uploader {
         Communications.makeWebRequest(url,
             body as Lang.Dictionary<Lang.Object, Lang.Object>,
             opts, cb.method(:onResponse));
+    }
+
+    /* SENDET DIESE UHR FASSUNG 2? (seit Uhr 5.0.0, KG-03b, Vertrag 1a.7, 3.4)
+     *
+     * Nur wenn der Server bei der Kopplung `huelle: 2` gesagt hat, die Uhr
+     * ihr Geraetepaar hat UND der Selbsttest der Fassung 2 bestanden ist.
+     * Sonst Fassung 1 -- der Server nimmt sie bis zum Stichtag (KA-06e).
+     * Scheitert der Selbsttest, ist Fassung 1 der ehrlichere Weg: Eine
+     * Huelle, die niemand oeffnen kann, ist schlimmer als eine ohne
+     * Herkunftsnachweis. */
+    function fassung2() as Lang.Boolean {
+        return Pair.huelle2Gewuenscht() && true.equals(Huelle2._geprueft);
+    }
+
+    /* Fassung 2 in den Rumpf: Spurstueck mit Merker SCHLUSS am letzten Stueck
+     * einer abgeschlossenen Aufzeichnung, sonst das leere Schlussstueck; die
+     * Einsatzhuelle mit Zaehler. SCHLUSS steht nur, wenn dieses Stueck ALLE
+     * offenen Punkte traegt -- ein Einsatz, der in mehreren Stuecken
+     * nachkommt, bekommt es am letzten. Ein wiederholtes Stueck (F-KA-07)
+     * hat dieselbe Groesse und damit denselben Merker. */
+    function _verschliessen2(body as Lang.Dictionary, d as Lang.Dictionary, ref as Lang.String,
+                             seqFrom as Lang.Number, flat as Lang.Array, offenGesamt as Lang.Number,
+                             istEinsatz as Lang.Boolean) as Void {
+        var art = istEinsatz ? "spur" : "ruhe";
+        var abgeschlossen = d["final"] == true;
+        if (flat.size() > 0) {
+            body["track"] = Huelle2.spurstueck(art, ref, seqFrom, flat,
+                                               abgeschlossen && flat.size() / 4 >= offenGesamt);
+        } else if (abgeschlossen) {
+            /* Kein Punkt mehr offen: das leere Schlussstueck (Vertrag 3.4),
+             * ts_von = Sekunde des Abschlusses -- aus dem Paket, damit eine
+             * Wiederholung dasselbe Stueck schickt. */
+            var ende = d["endedAt"];
+            var ts = (ende instanceof Lang.String) ? Huelle._sekunden(ende as Lang.String) : Util.epochNow();
+            body["track"] = Huelle2.schlussstueck(art, ref, seqFrom, ts);
+        }
+        if (istEinsatz) {
+            body["ort_huelle"] = Huelle2.einsatz(ref, d, Huelle2.zaehlerNaechster(), abgeschlossen);
+        }
     }
 
     /* Zugangsdaten aus der Kopplung (Storage "cred"). null = nicht gekoppelt.

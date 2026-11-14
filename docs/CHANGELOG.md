@@ -14,6 +14,21 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 5.0.0] — unveröffentlicht
+
+Schritt 28, Paket KG-03b (Backlog Nr. 577).
+
+### Geändert
+
+- **Uhr — die Kopplung zeigt einen Vergleichswert, und die Uhr sendet mit
+  Herkunftsnachweis.** Bisher reichte der Server die Schlüssel von Uhr und
+  Konto nur weiter, und wer ihn beschrieb, konnte einen davon tauschen,
+  ohne dass es jemand sah. Jetzt zeigen Uhr und Webseite dieselbe
+  sechsstellige Zahl, und erst wenn beide zustimmen, gilt die Kopplung;
+  danach trägt jede Hülle die Kennung der Uhr. Eine Uhr mit älterer
+  Kopplung sendet bis zum Neukoppeln wie bisher, weil der Server das alte
+  Format bis zu einem Stichtag annimmt.
+
 ## [Web 24.18.0] — unveröffentlicht
 
 ### Hinzugefügt

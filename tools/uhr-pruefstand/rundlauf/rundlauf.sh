@@ -78,11 +78,23 @@ FREMD=0
 [ "${1:-}" = "--neukoppeln" ] && { NEUKOPPELN=1; NACHHOLEN=1; shift; }
 [ "${1:-}" = "--fremdkonto" ] && { NEUKOPPELN=1; FREMD=1; NACHHOLEN=1; shift; }
 JA_TASTE="${RUNDLAUF_JA_TASTE:-Return}"   # welche Taste in WatchUi.Confirmation "Ja" waehlt
+# FASSUNG 2 (seit Uhr 5.0.0, KG-03b, Nr. 577): Ohne ART und mit --schrumpfen
+# koppelt die Uhr mit Vergleichswert; das Skript spielt die Webseite nach
+# (N_b setzen, "Wert stimmt" ueber dieselben Funktionen wie
+# api/kopplung_wert.php), haelt den Wert der Uhr gegen die Referenz und
+# laesst pruefen.php Fassung 2 oeffnen. Die Arten der NACHHOLEN-Familie
+# messen Uhren mit ALTER Kopplung (ohne Geraeteschluessel, Fassung 1) --
+# die gibt es bis zum Stichtag weiter; die Prueffassung schickt dort keinen
+# Schluessel bei `start`.
+FASSUNG2=1
+[ "$NACHHOLEN" = 1 ] && FASSUNG2=0
+export RUNDLAUF_LAUF=0
 GERAET="${1:-fenix6pro}"
 BASIS="${CIQ_BASIS:-$HOME/.ciq-pruefstand}"
 APP="$BASIS/rundlauf-app"
 ABBILD="${RUNDLAUF_ABBILDER:-$BASIS/rundlauf}"
 LAUF="$(date +%s)"
+export RUNDLAUF_LAUF="$LAUF"
 EINSATZ="m-rl-$LAUF"
 RUHE="r-rl-$LAUF"
 DB="${RUNDLAUF_DB:-nadoku}"
@@ -138,6 +150,14 @@ if [ "$NEUKOPPELN" = 1 ]; then
     grep -q 'Rundlauf.halten()' "$APP/source/Uploader.mc" || fehler "Haken halten() nicht eingesetzt"
 fi
 grep -q 'Rundlauf.fuellen' "$APP/source/NAdokuApp.mc" || fehler "Einhaengen in NAdokuApp.onStart gescheitert"
+if [ "$FASSUNG2" = 1 ]; then
+    # Der Wert, den die Uhr zeigt, in die Konsole (gegen die Referenz).
+    sed -i 's|^        _wert = r\[:wert\] as Lang.String;$|&\n        Toybox.System.println("RL-WERT " + _wert);|' "$APP/source/Pair.mc"
+    grep -q 'RL-WERT' "$APP/source/Pair.mc" || fehler "Haken RL-WERT nicht eingesetzt"
+else
+    sed -i 's|^        try { k = Huelle2.kopplungBeginnen(); } catch (e) { k = null; }$|        k = null;   // Rundlauf: alte Kopplung ohne Geraeteschluessel|' "$APP/source/Pair.mc"
+    grep -q 'Rundlauf: alte Kopplung' "$APP/source/Pair.mc" || fehler "Alte Kopplung nicht eingestellt"
+fi
 if [ "$SCHRUMPFEN" = 1 ]; then
     sed -i 's|const SCHRUMPFEN = false;|const SCHRUMPFEN = true;|' "$APP/source/Rundlauf.mc"
     # Haken 1 nach dem Absenden, Haken 2 nach jeder angenommenen Antwort.
@@ -188,11 +208,68 @@ if [ "$NACHHOLEN" = 1 ]; then
     sql "UPDATE users SET kp_oeffentlich = NULL WHERE id = $DEMO"
     melde "Schluessel des Demo-Kontos voruebergehend geleert"
 fi
-sql "UPDATE pair_sessions SET user_id = $DEMO WHERE id = $SITZUNG"
-melde "Sitzung $SITZUNG dem Demo-Konto zugeordnet"
-sleep 9
-bash "$P" abbild "$ABBILD/3-rueckfrage.png" >/dev/null
-bash "$P" taste Return
+f2_fehl=0
+if [ "$FASSUNG2" = 1 ]; then
+    SPK=$(sql "SELECT spk FROM pair_sessions WHERE id = $SITZUNG")
+    [ -n "$SPK" ] && [ "$SPK" != "NULL" ] || fehler "Die Uhr hat bei start keinen Geraeteschluessel geschickt"
+    NB=$(openssl rand -base64 16)
+    sql "UPDATE pair_sessions SET user_id = $DEMO, n_b = '$NB' WHERE id = $SITZUNG"
+    melde "Sitzung $SITZUNG dem Demo-Konto zugeordnet, N_b gesetzt (wie der Browser)"
+    NG=
+    for _ in $(seq 1 30); do
+        NG=$(sql "SELECT n_g FROM pair_sessions WHERE id = $SITZUNG")
+        [ -n "$NG" ] && [ "$NG" != "NULL" ] && break; NG=; sleep 1
+    done
+    [ -n "$NG" ] || fehler "Die Uhr hat N_g nicht offengelegt"
+    KPUB=$(cd "$WURZEL/server" && php -r 'require "db.php"; require_once "kontopaar_lib.php";
+        echo kp_fuer_geraet(db(), (int)$argv[1]) ?? "";' -- "$DEMO")
+    WSOLL=$(python3 -I "$WURZEL/tools/uhr-pruefstand/rundlauf/fassung2.py" wert "$KPUB" "$SPK" "$NG" "$NB")
+    WUHR=
+    for _ in $(seq 1 12); do
+        WUHR=$( { bash "$P" konsole | grep '^RL-WERT ' || true; } | tail -1 | awk '{print $2}')
+        [ -n "$WUHR" ] && break; sleep 0.5
+    done
+    sleep 3
+    bash "$P" abbild "$ABBILD/3-wert.png" >/dev/null
+    if [ -n "$WUHR" ] && [ "$WUHR" = "$WSOLL" ]; then echo "  ok    Vergleichswert der Uhr gleich der Referenz: $WUHR"
+    else echo "  FEHL  Vergleichswert: Uhr ${WUHR:-keiner}, Referenz $WSOLL"; f2_fehl=$((f2_fehl+1)); fi
+    bash "$P" taste Return            # START auf dem Wert: die Rueckfrage
+    sleep 3
+    bash "$P" abbild "$ABBILD/3-rueckfrage.png" >/dev/null
+    bash "$P" taste "$JA_TASTE"
+    JA=
+    for _ in $(seq 1 20); do
+        JA=$(sql "SELECT geraet_ja FROM pair_sessions WHERE id = $SITZUNG")
+        [ "$JA" = 1 ] && break; sleep 1
+    done
+    sleep 3
+    bash "$P" abbild "$ABBILD/3c-warte-auf-web.png" >/dev/null
+    if [ "$JA" = 1 ]; then echo "  ok    Ja vermerkt, die Uhr wartet auf das Web"
+    else echo "  FEHL  kein Ja vermerkt ($ABBILD/3-rueckfrage.png)"; f2_fehl=$((f2_fehl+1)); fi
+    DEV=$(sql "SELECT device_id FROM pair_sessions WHERE id = $SITZUNG")
+    ERG=$(cd "$WURZEL/server" && php -r 'require "db.php"; require_once "kopplung_lib.php";
+        $pdo = db();
+        if (pair_wert_melden($pdo, $argv[1], (int)$argv[2], true, "", true) !== "ok") { echo "zustand"; exit; }
+        $s = pair_sitzung_nach_kennung($pdo, $argv[1]);
+        if ($s === null || !pair_abschlussreif($s)) { echo "wartet"; exit; }
+        echo pair_abschliessen($pdo, (int)$s["id"])["ergebnis"];' -- "$DEV" "$DEMO")
+    melde "Wert stimmt (wie api/kopplung_wert.php): $ERG"
+    HK=
+    for _ in $(seq 1 20); do
+        HK=$(sql "SELECT CONCAT(herkunft, ':', spk = '$SPK') FROM devices WHERE user_id = $DEMO AND id > $GERAET_VOR ORDER BY id DESC LIMIT 1")
+        [ -n "$HK" ] && break; sleep 1
+    done
+    if [ "$HK" = "1:1" ]; then echo "  ok    Geraet angelegt mit Herkunft und eigenem Geraeteschluessel"
+    else echo "  FEHL  Geraet: herkunft:spk-gleich = ${HK:-keins}"; f2_fehl=$((f2_fehl+1)); fi
+    sleep 6
+    bash "$P" abbild "$ABBILD/3d-gekoppelt.png" >/dev/null
+else
+    sql "UPDATE pair_sessions SET user_id = $DEMO WHERE id = $SITZUNG"
+    melde "Sitzung $SITZUNG dem Demo-Konto zugeordnet"
+    sleep 9
+    bash "$P" abbild "$ABBILD/3-rueckfrage.png" >/dev/null
+    bash "$P" taste Return
+fi
 if [ "$NACHHOLEN" = 1 ]; then
     sleep 12
     bash "$P" abbild "$ABBILD/3a-kein-schluessel.png" >/dev/null
@@ -315,7 +392,13 @@ done
 sleep 4
 bash "$P" abbild "$ABBILD/4-gesendet.png" >/dev/null
 melde "Gegenpruefung"
-php "$WURZEL/tools/uhr-pruefstand/rundlauf/pruefen.php" "$EINSATZ" "$RUHE"
+if [ "$FASSUNG2" = 1 ]; then
+    echo "Kopplung mit Vergleichswert: 3 Pruefungen, $f2_fehl Fehlschlaege"
+    [ "$f2_fehl" = 0 ] || exit 1
+    php "$WURZEL/tools/uhr-pruefstand/rundlauf/pruefen.php" "$EINSATZ" "$RUHE" 2 "$SPK"
+else
+    php "$WURZEL/tools/uhr-pruefstand/rundlauf/pruefen.php" "$EINSATZ" "$RUHE"
+fi
 if [ "$SCHRUMPFEN" = 1 ]; then
     melde "Schrumpfen (F-R17-52): was meldet die Uhr?"
     KONSOLE=$(bash "$P" konsole)

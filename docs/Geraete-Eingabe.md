@@ -16,7 +16,10 @@ wie bisher mit dem langen Auswahl-Druck auf der Sync-Seite (`SELECT_LONG`,
 Abschnitt 1) und braucht in der neuen Kopplungsansicht nur noch `BACK` zum
 Abbrechen — beides steht in der Tabelle. Was **entfallen** ist, ist der
 `WatchUi.TextPicker`: die einzige Texteingabe der App und der einzige Weg, der
-auf der Venu 3s eine Bildschirmtastatur brauchte.
+auf der Venu 3s eine Bildschirmtastatur brauchte. **Seit Uhr 5.0.0** (KG-03b)
+ist in der Kopplungsansicht auch der kurze Auswahl-Druck belegt, aber nur,
+solange der Vergleichswert steht: Er öffnet die Rückfrage (`onSelect` in
+`PairDelegate`, auf der Venu auch per Tippen). Vor dem Wert bewirkt er nichts.
 
 **Seit Uhr 3.1.0 ist der KURZE Auswahl-Druck auf der Sync-Seite belegt:** Er
 verwirft die Pakete, die der Server dauerhaft abgelehnt hat (Backlog Nr. 159),

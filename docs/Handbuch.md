@@ -7050,11 +7050,19 @@ Zusatz kursiv darunter — bei Garmin die folgenden.
    Mitte sind egal — die Seite räumt das auf. Sie zeigt dir dann, **welches
    Gerät** sich meldet — Art und Modell, so wie das Gerät es selbst gemeldet
    hat — und fragt, ob es zu deinem Konto soll.
-5. **Zurück an der Uhr: bestätigen.** Sie fragt **„Mit ph\*\*\*@… koppeln?"** —
-   mit deiner E-Mail-Adresse, gekürzt. **Ja** schließt die Kopplung ab (kurz
-   „Kopple…", dann **„Gekoppelt"**), **Nein** bricht ab („Nicht gekoppelt").
-   Erst dieses Ja legt das Gerät an: Wer nur den Code abliest, kommt nirgendwo
-   hinein.
+5. **Zurück an der Uhr: den Vergleichswert prüfen** *(seit Uhr 5.0.0)*. Die
+   Uhr zeigt oben deine E-Mail-Adresse, gekürzt (**„ph\*\*\*@…"**), darunter
+   **„Vergleichswert"** und groß **sechs Ziffern** in zwei Dreiergruppen —
+   dieselbe Zahl, die die Webseite in der Karte „Vergleichswert prüfen" zeigt.
+   Stimmen Adresse und Zahl, drückst du **START** (Venu: *Action*) und
+   beantwortest die Rückfrage **„Wert … gleich wie im Web?"** mit **Ja**; im
+   Web tippst du **„Wert stimmt"**. Die Reihenfolge ist egal: Kommt das Ja
+   zuerst, steht an der Uhr **„Warte auf Web…"**, bis das Web zugestimmt hat.
+   Dann **„Gekoppelt"**, darunter **„Herkunft gesichert"** — ab jetzt trägt
+   alles, was die Uhr sendet, den Nachweis, dass es von ihr kommt.
+   **Nein** (oder Zurück) bricht ab („Nicht gekoppelt").
+   *Bis Uhr 4.6.0 fragte die Uhr nur „Mit ph\*\*\*@… koppeln?". So fragt sie
+   weiter, wenn der Server den Vergleichswert noch nicht kennt.*
 6. Danach erscheint das Gerät **im Web in der Geräteliste** — mit Art und
    Modell, die es beim Koppeln selbst gemeldet hat —, und du bekommst eine
    E-Mail darüber. Die Geräteseite lädt von selbst nach; du musst nichts neu
@@ -7070,7 +7078,10 @@ darunter, mit welcher Taste es einen neuen gibt.
 
 **Warum drei Schritte und nicht einer.** Zwischen dem Code und dem fertigen
 Gerät liegen **zwei Tore**: Die Web-Seite sieht, **wer eingibt**, und die Uhr
-sieht, **wessen Konto** es wäre. Keines allein trägt. Wer dir den Code
+sieht, **wessen Konto** es wäre. Keines allein trägt. **Der Vergleichswert**
+*(seit Uhr 5.0.0)* sichert beide gegen den Server selbst: Er reicht die
+Schlüssel von Uhr und Konto nur weiter, und tauschte er einen davon, zeigten
+Uhr und Web verschiedene Zahlen. Wer dir den Code
 abschwatzt oder ihn abliest, kann ihn in **seinem** Konto eintragen — dann
 fragt deine Uhr „Mit … koppeln?" mit **seiner** Adresse. Lies sie, bevor du
 Ja sagst; das ist das zweite Tor. *(Bis Uhr 4.3.3 stand hier, ein
@@ -7091,6 +7102,10 @@ und was hilft:
 | „Server antwortet nicht" unter dem Code | Wie oben, aber die Verbindung steht und der Server schweigt. Der Code bleibt ebenfalls gültig. |
 | „Gerät unbekannt" | Die Uhr trägt Zugangsdaten, die der Server nicht kennt — meist, weil das Gerät im Web gelöscht wurde. Einfach neu koppeln. |
 | „Uhr-App aktualisieren" | Die Uhr spricht den alten Weg (bis Uhr 2.0.0) und der Server den neuen. Die App auf 3.0.0 bringen. |
+| „Im Web abgelehnt" / „Wert war anders" | Im Web wurde „Wert ist anders" getippt. Neuen Code holen und neu koppeln; geschieht es wieder, der BetreiberIn Bescheid sagen *(seit Uhr 5.0.0)*. |
+| „Im Web abgelehnt" / „Schlüssel passt nicht" | Der Browser hat festgestellt, dass der Schlüssel der Uhr nicht zu ihrer Zusage passt. Wie oben — neu koppeln, bei Wiederholung melden. |
+| „Kopplung abgebrochen" / „Schlüssel wechselte" | Mitten in der Kopplung kam ein anderer Kontoschlüssel oder eine andere Zufallszahl an. Die Uhr bricht ab, statt eine zweite Zahl zu zeigen. Neu koppeln. |
+| „Konto ohne Schlüssel" / „Erst im Web anmelden" | Dein Konto hat noch kein Schlüsselpaar. Einmal in der Weboberfläche anmelden und entsperren, dann neu koppeln. |
 | „Kopplung fehlgeschlagen (n)" | Alles Übrige, mit dem Zahlencode und — wenn der Server einen schickt — seinem Hinweis. Der Zahlencode gehört in die Fehlermeldung an die Betreuung. |
 
 ### 13.1 Eine Uhr an eine andere Person übergeben
@@ -7108,9 +7123,9 @@ aber er beginnt mit einer Rückfrage:
    lösen *(seit Uhr 4.6.0; bis 4.5.2 holte sie nach dem Ja sofort einen
    neuen Code)*.
 3. Zum Neukoppeln die Auswahltaste **noch einmal halten**, dann wie oben: den
-   Code im Web eingeben und an der Uhr mit Ja bestätigen —
-   diesmal mit der Adresse der **neuen** Person in der Rückfrage. Genau dort
-   fällt auf, wenn jemand den Code des falschen Kontos eingetippt hat.
+   Code im Web eingeben und an der Uhr den Vergleichswert bestätigen —
+   diesmal mit der Adresse der **neuen** Person darüber. Genau dort fällt
+   auf, wenn jemand den Code des falschen Kontos eingetippt hat.
 
 Drei Dinge, die dabei bewusst so sind:
 

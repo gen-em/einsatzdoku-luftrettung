@@ -1,12 +1,12 @@
 # Prüfdokument KG — Garmin-Teil des Sicherheitspakets
 
 Teil von KG-04, angelegt am 11.11.2026 für KG-01, KG-05, KG-02 und KG-06
-(Uhr 4.5.1, PR #168), seit KG-07 für Uhr 4.5.2 und seit KG-08 für Uhr 4.6.0. Was maschinell gemessen wurde, steht mit Mittel und
+(Uhr 4.5.1, PR #168), seit KG-07 für Uhr 4.5.2, seit KG-08 für Uhr 4.6.0
+und seit KG-03b für Uhr 5.0.0. Was maschinell gemessen wurde, steht mit Mittel und
 Zahl im Prüfprotokoll von `Konzept-KG-Garmin-Sicherheit.md` und im
-Prüfbericht der Commits. Die Punkte zu KG-03 (Geräteschlüssel, Kopplung mit
-Vergleichswert) kommen dazu, wenn KG-03 gebaut ist.
+Prüfbericht der Commits.
 
-**Gerät:** Fenix 6 Pro mit Uhr 4.6.0, gekoppelt an das eigene Konto, Telefon
+**Gerät:** Fenix 6 Pro mit Uhr 5.0.0, gekoppelt an das eigene Konto, Telefon
 in Reichweite. Punkt 14 braucht die Venu 3s, Punkt 16 VS Code mit SDK;
 Punkte 9 und 13 zusätzlich auf der FR 945, an der F-KG-18 gemeldet wurde.
 
@@ -40,6 +40,12 @@ Punkte 9 und 13 zusätzlich auf der FR 945, an der F-KG-18 gemeldet wurde.
   es, und das Menü verwirft es; schickt die Uhr es woanders hin, verwirft
   das Menü den nächsten echten Druck **nicht** — der hebt den Merker auf.
   Das sind Punkte 9 und 13.
+- **Die Kopplung mit Vergleichswert an einer echten Uhr** (KG-03b). Der
+  Rundlauf koppelt im Simulator gegen die örtliche Anlage und spielt die
+  Webseite nach; den echten Browser, die echte Uhr und Staging zusammen
+  zeigt nur Punkt 21. Ebenso, ob die echte Uhr ein Gerätepaar dauerhaft
+  hält (KG-02 hat es im Simulator gemessen, P-KG-16) und ob der Zähler bei
+  einer Uhr mit falscher Uhrzeit trägt.
 - **Die Venu 3s nur in Punkt 14.** Die Probe `rea` drückt UP und DOWN, und
   die Venu hat beide nicht.
 
@@ -78,3 +84,6 @@ Punkte 9 und 13 zusätzlich auf der FR 945, an der F-KG-18 gemeldet wurde.
 | **P-KG-18** | Einen Einsatz mit Spur beenden, während des Sendens kurz das Bluetooth des Telefons aus- und wieder einschalten; danach im Web die Spur ansehen | Alle Punkte liegen im Web, keine Lücke im Zeitraum | eine Lücke in der Spur (F-KA-07) |
 | **P-KG-19** | Nach P-KG-20 (getrennt, **nicht** neu gekoppelt) mit BACK zum Startbildschirm: rot „Nicht gekoppelt“, **kurz START**. Danach koppeln und noch einmal kurz START | Ungekoppelt: kurze Vibration, die App bleibt auf dem Startbildschirm, kein Dienst. Gekoppelt: der Dienst beginnt wie gewohnt. (Eine nur im Web gelöschte Uhr hat noch Zugangsdaten und beginnt — gewollt, E-KG-30) | ungekoppelt erscheint die Hauptanzeige; gekoppelt beginnt kein Dienst |
 | **P-KG-20** | Kein Dienst, nichts offen: Sync-Seite, **START halten**, „Kopplung trennen?“ mit Ja. Danach noch einmal START halten | Erst „Trenne…“, dann grün „Getrennt“, kein Code; die Uhr ist aus der Web-Geräteliste verschwunden. Das zweite Halten zeigt einen neuen Code | nach dem Ja erscheint sofort ein Code; „Getrennt“ fehlt; das Gerät steht noch im Web |
+| **P-KG-21** | Auf Staging (Web 24.18.0): Uhr trennen (P-KG-20), neu koppeln — Code im Web eingeben, „Verbinden". Uhr und Web zeigen je sechs Ziffern; an der Uhr START, „Wert … gleich wie im Web?" mit Ja, im Web „Wert stimmt". Danach einen kurzen Einsatz mit Spur beenden und im Web öffnen | Beide Zahlen gleich; an der Uhr „Warte auf Web…" (wenn das Ja zuerst kam), dann „Gekoppelt / Herkunft gesichert"; der Einsatz geht im Web auf, mit Spur, Phasen und Ort | die Zahlen weichen ab; „Gekoppelt" ohne „Herkunft gesichert"; der Einsatz kommt nicht an, oder das Web meldet ihn als nicht lesbar |
+| **P-KG-22** | Wie P-KG-21, aber im Web **„Wert ist anders"** tippen | An der Uhr „Im Web abgelehnt / Wert war anders", die Uhr bleibt ungekoppelt; ein neuer Code geht | die Uhr zeigt „Gekoppelt" oder bleibt auf dem Wert stehen |
+

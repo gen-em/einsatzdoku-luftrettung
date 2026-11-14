@@ -91,6 +91,16 @@ class PairView extends WatchUi.View {
          * Hinweis. Das ist auch der Grund, warum die Sync-Seite an derselben
          * Verankerung ueberlebt: Ihre unterste Zeile ist immer "Version …". */
         var lines = [];
+        /* DER VERGLEICHSWERT (seit Uhr 5.0.0, KG-03b, Mockup M-KG-01): Ist
+         * N_g offengelegt, steht statt des Codes der Wert; START fragt nach.
+         * Nach dem Ja wartet die Uhr, bis das Web "Wert stimmt" gedrueckt
+         * hat -- hellgrau wie "Kopple…". */
+        var wert = Pair.wertAnzeige();
+        if (wert != null && Pair.wartetWeb) {
+            lines.add(["Warte auf Web…", Graphics.COLOR_LT_GRAY]);
+        } else if (wert != null && !Pair.jaLaeuft) {
+            lines.add([Input.lSelect() + ": weiter", Graphics.COLOR_LT_GRAY]);
+        }
         /* "Kopple…" waehrend das Ja unterwegs ist. Hellgrau nach
          * Uhr-Layout_Regeln 7 ("laeuft gerade, noch keine Aussage"). Der
          * Block ist fuer eine schwankende Zeilenzahl gebaut, der Codeblock
@@ -125,24 +135,37 @@ class PairView extends WatchUi.View {
          * Code etwas Luft, und das ist der harmlose Fall. Umgekehrt liefe der
          * Block dem unteren entgegen. */
         var gCode  = Ui.s(dc, 10);
-        var blockH = hKlein + gCode + hCode + gCode + hKlein;
+        /* Ueber dem grossen Wert stehen bis zu zwei kleine Zeilen (Konto,
+         * "Vergleichswert"), ueber dem Code eine. */
+        var oben = ["Kopplungscode"];
+        var tCode = Pair.codeAnzeige();
+        var tWeg = Pair.WEG_IM_WEB;
+        if (wert != null) {
+            var konto = Pair.kontoAnzeige();
+            oben = (konto != null) ? [konto, "Vergleichswert"] : ["Vergleichswert"];
+            tCode = wert;
+            tWeg = Pair.wartetWeb ? "Im Web „Wert stimmt“" : "Gleich wie im Web?";
+        }
+        var blockH = oben.size() * hKlein + gCode + hCode + gCode + hKlein;
         var zone = untenY - Ui.s(dc, 8);
         var y = (zone - blockH) / 2;
         if (y < Ui.s(dc, 20)) { y = Ui.s(dc, 20); }
 
-        var tOben = "Kopplungscode";
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(cx, y,
-            Ui.fitFont(dc, tOben, y, hKlein, [fKlein, Graphics.FONT_XTINY]),
-            tOben, Graphics.TEXT_JUSTIFY_CENTER);
-        y += hKlein + gCode;
+        for (var i = 0; i < oben.size(); i++) {
+            var tOben = oben[i] as Lang.String;
+            dc.drawText(cx, y,
+                Ui.fitFont(dc, tOben, y, hKlein, [fKlein, Graphics.FONT_XTINY]),
+                tOben, Graphics.TEXT_JUSTIFY_CENTER);
+            y += hKlein;
+        }
+        y += gCode;
 
         /* Der Code selbst. KEINE Ziffernschrift (Uhr-Layout_Regeln 3.1): Das
          * Alphabet des Codes traegt Buchstaben, und FONT_NUMBER_* kennt nur
          * Ziffern — er erschiene als Reihe leerer Kaestchen, ohne Warnung und
          * ohne Fehler. Deshalb die Textschriften, von gross nach klein durch
          * fitFont. */
-        var tCode = Pair.codeAnzeige();
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, y,
             Ui.fitFont(dc, tCode, y, hCode,
@@ -150,7 +173,6 @@ class PairView extends WatchUi.View {
             tCode, Graphics.TEXT_JUSTIFY_CENTER);
         y += hCode + gCode;
 
-        var tWeg = Pair.WEG_IM_WEB;
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(cx, y,
             Ui.fitFont(dc, tWeg, y, hKlein, [fKlein, Graphics.FONT_XTINY]),
@@ -174,11 +196,21 @@ class PairView extends WatchUi.View {
  * drei Zielgeraeten dasselbe (Input.mc), und das Handbuch sagt es. Eine
  * vierte Hinweiszeile haette den Codeblock weiter nach oben gedraengt.
  *
- * Andere Tasten sind hier bewusst unbelegt. BehaviorDelegate schluckt sie;
- * auf einem Touchgeraet heisst das insbesondere, dass ein Tippen auf den Code
- * nichts ausloest — es gibt hier nichts auszuwaehlen. */
+ * START ist nur belegt, solange der Vergleichswert steht (seit Uhr 5.0.0):
+ * Er oeffnet die Rueckfrage. Die uebrigen Tasten sind bewusst unbelegt;
+ * BehaviorDelegate schluckt sie. Auf einem Touchgeraet loest ein Tippen auf
+ * den Wert die Rueckfrage ebenso aus wie Action -- Tippen auf den Code
+ * bewirkt nichts. */
 class PairDelegate extends TastenDelegate {
     function initialize() { TastenDelegate.initialize(); }
+
+    /* START (Venu: Action) auf dem Vergleichswert: die Rueckfrage
+     * (M-KG-01, C). Solange nur der Code steht, ohne Wirkung. */
+    function onSelect() as Lang.Boolean {
+        if (Input.beruehrungVerwerfen()) { return true; }
+        Pair.wertFragen();
+        return true;
+    }
 
     function onBack() as Lang.Boolean {
         if (Input.beruehrungVerwerfen()) { return true; }

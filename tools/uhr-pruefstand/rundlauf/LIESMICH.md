@@ -1,11 +1,11 @@
 # Rundlauf der Uhr
 
-Eine **Prüffassung** der Garmin-App (Kopie unter `$CIQ_BASIS/rundlauf-app`,
-Adresse `127.0.0.1:8443`, `Rundlauf.mc` legt Einsatz und Ruhesegment an)
-koppelt im Simulator an das Demo-Konto, sendet verschlossen, `pruefen.php` öffnet.
-**Anlass: Nr. 43** — ob die Hüllen nach Kopplung, `ingest.php` und Datenbank
-aufgehen, zeigt nur ein gesendetes Paket. **Anlass: Nr. 431** für die drei
-letzten Arten — eine abgemeldete Uhr kam nicht mehr ans Senden.
+Eine **Prüffassung** der Garmin-App (`$CIQ_BASIS/rundlauf-app`, Adresse `127.0.0.1:8443`,
+`Rundlauf.mc` legt Einsatz und Ruhesegment an) koppelt im Simulator an das Demo-Konto,
+sendet verschlossen, `pruefen.php` öffnet. **Anlass: Nr. 43** (Hüllen über den ganzen Weg),
+**Nr. 431** (die drei letzten Arten: abgemeldete Uhr), **Nr. 577** (ohne ART und `--schrumpfen`:
+Kopplung mit Vergleichswert und Fassung 2, `fassung2.py` rechnet mit der Referenz; die übrigen
+Arten messen die alte Kopplung).
 
 ## Aufruf
 
