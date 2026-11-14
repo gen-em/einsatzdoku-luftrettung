@@ -65,7 +65,7 @@ bash "$P" beenden >/dev/null 2>&1 || true
 printf '%s\n' "$AUSGABE" | grep -v '^SENDEWEG ENDE' | sed 's/^SENDEWEG /  /'
 pruef=$(printf '%s\n' "$AUSGABE" | grep -c '^SENDEWEG \(ok\|FEHL\)' || true)
 fehl=$(printf '%s\n' "$AUSGABE" | grep -c '^SENDEWEG FEHL' || true)
-SOLL=13
+SOLL=15
 if ! printf '%s\n' "$AUSGABE" | grep -q '^SENDEWEG ENDE'; then
     echo "  FEHL  keine ENDE-Zeile — die Probe brach nach $pruef Pruefungen ab"
     fehl=$((fehl+1))

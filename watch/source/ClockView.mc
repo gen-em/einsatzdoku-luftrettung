@@ -105,16 +105,19 @@ class ClockDelegate extends ActionDelegate {
         return true;
     }
 
-    /* lang START: farbcodiertes Schnellmenue -- ERST BEIM LOSLASSEN (seit
-     * Uhr 4.5.2, F-KG-08). Oeffnete es nach 1 s Halten, ging das Loslassen
-     * an das Menue und waehlte den ersten Eintrag ("Einsatzuebersicht"):
-     * im Simulator gemessen, dasselbe wie beim Rea-Menue bis Uhr 4.4.0.
-     * Die Seite schluckt das Loslassen jetzt selbst (Input.mc). */
-    function langNachLoslassen() as Lang.Boolean { return true; }
-
+    /* lang START: farbcodiertes Schnellmenue -- nach 1 s Halten, noch
+     * waehrend START unten ist (seit Uhr 4.6.0, F-KG-18). Das Loslassen
+     * schluckt das Menue selbst (TastenDelegate.startGehalten); von 4.5.2
+     * an wartete die Seite stattdessen auf das Loslassen (F-KG-08).
+     * halteAbbrechen: Dieser Delegate bleibt unter dem Menue am Leben und
+     * hielte sonst START fuer gedrueckt. */
     function actSelectLong() as Lang.Boolean {
+        var gehalten = startUnten();
+        halteAbbrechen();
         var v = new QuickMenuView();
-        WatchUi.pushView(v, new QuickMenuDelegate(v), WatchUi.SLIDE_LEFT);
+        var d = new QuickMenuDelegate(v);
+        if (gehalten) { d.startGehalten(); }
+        WatchUi.pushView(v, d, WatchUi.SLIDE_LEFT);
         return true;
     }
 
@@ -348,6 +351,7 @@ class QuickMenuDelegate extends TastenDelegate {
 
     function onSelect() as Lang.Boolean {                 // START
         if (Input.beruehrungVerwerfen()) { return true; }
+        if (auswahlVerwerfen()) { return true; }          // Loslassen des oeffnenden Drucks
         var id = _v.items[_v.index][2];
         WatchUi.popView(WatchUi.SLIDE_RIGHT);
         if (id == :endDay) {

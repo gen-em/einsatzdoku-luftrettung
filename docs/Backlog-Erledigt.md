@@ -11332,3 +11332,27 @@ zutreffen.
      Erledigt 13.11.2026 mit Web 24.18.0 (Schritt 28, KA-06d):
      `tools/sandbox/staging_konten.py`, `NADOKU_STAGING_BEHALTEN`; erster
      Lauf löschte ein Konto der Kette, vier blieben.
+
+575. **Die Garmin-Uhr begann einen Dienst ohne Kopplung und trennte nur mit Neukopplung.** · gehört zu: 28 · Stand: erledigt · seit 13.11.2026
+     *Aufgenommen 13.11.2026 mit KG-08 (Konzept KG, E-KG-30, -31).*
+     Gemeldet von der BetreiberIn: Der Startbildschirm zeigte „Nicht
+     gekoppelt" rot, und kurz START begann trotzdem einen Dienst
+     (`StartDelegate.actSelectShort()`); im Dienst ist das Koppeln gesperrt.
+     Und Trennen ging nur als „Kopplung trennen und neu koppeln?", das nach
+     dem Ja sofort einen Code holte. *Weg:* ohne Server-Adresse oder
+     Zugangsdaten kein Dienst, kurze Vibration; Trennen endet in
+     „Getrennt", neu gekoppelt wird mit einem zweiten Halten. *Abnahme:*
+     Probe sendeweg rot gegen Uhr 4.5.2. Erledigt 13.11.2026 mit Uhr 4.6.0
+     (Schritt 28, KG-08): Probe sendeweg, 15 Prüfungen; rundlauf
+     `--neukoppeln` prüft „kein Code binnen 8 s".
+
+576. **Die Menüs der Garmin-Uhr öffneten erst beim Loslassen von START, und die Rea-Sperre dauerte 10 s.** · gehört zu: 28 · Stand: erledigt · seit 13.11.2026
+     *Aufgenommen 13.11.2026 mit KG-08 (Konzept KG, F-KG-18, -19,
+     E-KG-28, -29).* An einer echten FR 945 öffnete das Schnellmenü erst
+     beim Loslassen — so gebaut seit Uhr 4.5.2 (Nr. 574), weil das
+     Loslassen ein nach 1 s geöffnetes Menü bediente. *Weg:* Menü nach 1 s
+     Halten; der Menü-Delegate verwirft das eine Loslassen und das
+     `onSelect`, das der Simulator dabei trotzdem zustellt. Sperre 5 s auf
+     Wunsch der BetreiberIn. *Abnahme:* Probe rea rot gegen Uhr 4.5.2.
+     Erledigt 13.11.2026 mit Uhr 4.6.0 (Schritt 28, KG-08): Probe rea,
+     21 Schritte, gegen 4.5.2 sechs rot.

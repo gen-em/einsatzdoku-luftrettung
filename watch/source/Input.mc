@@ -127,7 +127,6 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
     private var _fremdKey as Lang.Number or Null = null;
     private var _lastLongMs as Lang.Number = -100000;
     private var _upDown as Lang.Boolean = false;
-    private var _langOffen as Lang.Boolean = false;   // langer START, wirkt beim Loslassen
 
     // trackUpDown: Verarbeitet die Seite lange UP/DOWN-Druecke selbst
     // (nur die Reanimationsseite)? Dann laufen auch die kurzen Druecke ueber
@@ -178,14 +177,16 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
      * Reanimationsseite bucht damit waehrend einer Rea (seit Uhr 4.5.0,
      * E-KG-05) -- getrennt vom Behavior, das bei derselben Taste auch kommt
      * und dort nur blaettern darf. */
-    /* Soll ein langer START erst beim LOSLASSEN wirken? Vorgabe nein: Die
-     * Seite wirkt, sobald 1 s um ist. Die Reanimationsseite sagt ja (seit
-     * Uhr 4.5.0): Ihr langer START oeffnet ein Menue, und das Loslassen
-     * ginge sonst an das Menue und waehlte dort den Eintrag unter dem
-     * Cursor (im Simulator gemessen: Amiodaron gebucht, F-KG-08). So
-     * schluckt diese Seite das Loslassen selbst. Seit Uhr 4.5.2 sagt auch
-     * die Hauptanzeige ja (Schnellmenue). */
-    function langNachLoslassen() as Lang.Boolean { return false; }
+    /* Ist START in diesem Augenblick gedrueckt -- ruft also die Halte-Uhr
+     * gerade actSelectLong? Eine Seite, die dort ein Menue schiebt, sagt es
+     * dem Menue (TastenDelegate.startGehalten): Das Loslassen von START
+     * geht an das Menue und waehlte sonst den Eintrag unter dem Cursor
+     * (im Simulator gemessen: Amiodaron gebucht, F-KG-08). Seit Uhr 4.6.0
+     * oeffnet das Menue deshalb waehrend des Haltens und schluckt das eine
+     * Loslassen selbst; bis dahin wartete die Seite auf das Loslassen
+     * (4.5.0 bis 4.5.2), und das Menue kam spuerbar zu spaet (F-KG-18).
+     * Der lange Zurueck-Druck der Venu (onMenu) haelt START nicht: false. */
+    function startUnten() as Lang.Boolean { return _heldKey == WatchUi.KEY_ENTER; }
 
     function actUpKurz() as Lang.Boolean      { return actPagePrev(); }
     function actDownKurz() as Lang.Boolean    { return actPageNext(); }
@@ -203,7 +204,6 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
         _heldKey = null;
         _longFired = false;
         _combo = false;
-        _langOffen = false;
     }
     function actBack() as Lang.Boolean        { return true; }
 
@@ -254,7 +254,6 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
         _lastLongMs = System.getTimer();
         if (_heldKey == WatchUi.KEY_UP)        { actMarkA(); }
         else if (_heldKey == WatchUi.KEY_DOWN) { actMarkB(); }
-        else if (langNachLoslassen())          { _langOffen = true; }
         else                                   { actSelectLong(); }
         WatchUi.requestUpdate();
     }
@@ -275,7 +274,6 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
         if (_combo) { _combo = false; return true; }          // Tastensperre
         if (_longFired) {                                     // lang: erledigt
             _longFired = false;
-            if (_langOffen && k == WatchUi.KEY_ENTER) { _langOffen = false; return actSelectLong(); }
             return true;
         }
         if (k == WatchUi.KEY_UP)   { return actUpKurz(); }
@@ -333,15 +331,42 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
 // diesen Seiten fuer eine Beruehrung. `false` laesst die Taste beim System,
 // genau wie ohne diese Methoden.
 class TastenDelegate extends WatchUi.BehaviorDelegate {
+    /* START ist noch unten, weil das Menue waehrend des Haltens geoeffnet
+     * wurde (ActionDelegate.startUnten). Das Loslassen gehoert zu dem Druck,
+     * der das Menue geoeffnet hat, und waehlt nichts. Ein neuer Druck auf
+     * START hebt den Merker auf -- kommt das Loslassen auf einem Geraet
+     * also nicht hier an, kostet es hoechstens nichts. */
+    private var _startUnten as Lang.Boolean = false;
+    private var _geschlucktMs as Lang.Number = -100000;
+
     function initialize() { BehaviorDelegate.initialize(); }
+
+    function startGehalten() as Void { _startUnten = true; }
+
+    /* Fuer onSelect der Menues: Gehoert diese Auswahl zum Loslassen des
+     * oeffnenden Drucks? Beide Reihenfolgen sind abgedeckt -- kommt onSelect
+     * vor onKeyReleased, steht der Merker noch; kommt es danach, liegt das
+     * Schlucken weniger als 300 ms zurueck. */
+    function auswahlVerwerfen() as Lang.Boolean {
+        return _startUnten || System.getTimer() - _geschlucktMs < 300;
+    }
 
     function onKeyPressed(evt as WatchUi.KeyEvent) as Lang.Boolean {
         Input.tasteGesehen(true);
+        if (evt.getKey() == WatchUi.KEY_ENTER) {
+            _startUnten = false;
+            _geschlucktMs = -100000;
+        }
         return false;
     }
 
     function onKeyReleased(evt as WatchUi.KeyEvent) as Lang.Boolean {
         Input.tasteGesehen(false);
+        if (evt.getKey() == WatchUi.KEY_ENTER && _startUnten) {
+            _startUnten = false;
+            _geschlucktMs = System.getTimer();
+            return true;
+        }
         return false;
     }
 }

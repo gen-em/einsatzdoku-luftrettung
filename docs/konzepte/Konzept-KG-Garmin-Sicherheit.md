@@ -15,8 +15,8 @@ derselbe Code und dieselbe Instanz.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/vigilant-cray-9riw34`, Backlog-Spanne 570–579 |
-| In Arbeit | **KG-03a** — fertig (Kern der Fassung 2, Abschnitt 5c), mit KG-07 in PR #173, Uhr 4.5.2. Danach **KG-03b** — wartet auf die Server-Seite KA-06d und auf die offenen Punkte F-KG-16 |
-| Erledigt | **KG-01, KG-05, KG-02, KG-06, KG-04 (Teil: Prüfdokument)** — PR #168, gemergt 11.11.2026, Uhr 4.5.1; Tag `uhr-v4.5.1` setzt die BetreiberIn nach den Gerätetests |
+| In Arbeit | **KG-08** — fertig (Kopplung am Startbildschirm, Trennen, Menüs beim Halten, Sperre 5 s; Abschnitt 5d), Uhr 4.6.0, PR folgt. Danach **KG-03b** — wartet auf die Server-Seite KA-06d und auf die offenen Punkte F-KG-16 |
+| Erledigt | **KG-01, KG-05, KG-02, KG-06, KG-04 (Teil: Prüfdokument)** — PR #168, Uhr 4.5.1. **KG-07, KG-03a** — PR #173, Uhr 4.5.2, gemergt. Tags setzt die BetreiberIn nach den Gerätetests |
 | Hakt | Antwort der KA-Instanz steht aus (E-KG-21). Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05) |
 | Gelesen gegen | Commit `0be2092` · Uhr 4.3.3; die vier Befunde von KG-01 am 10.11.2026 an der heutigen Stelle bestätigt (Abschnitt 4) |
 
@@ -42,6 +42,7 @@ BetreiberIn, die KA-Instanz baut sie.
 | KG-06 | **401/403 nur mit Fehlerfeld endgültig** (Vertrag 5, E-KA-26: „Die Uhr zieht mit KG nach"): erst messen, ob Connect IQ den Rumpf einer 401/403 an die App durchreicht (Simulator, Fenix 6 Pro); dann ohne Feld = später erneut, vor dem Räumen nach Fristablauf ein Sendeversuch | F-KA-18 (Rest) | KG-02 | Opus | keine | Korrektur oder Neben |
 | KG-07 | Schnellmenü der Hauptanzeige öffnet beim Loslassen von START; doppeltes Blättern der Rea-Seite ohne Rea in der Probe `rea` festgehalten | F-KG-08, F-KG-09 | nichts | Opus | keine | Korrektur |
 | KG-05 | Umbau der Reanimation: Tastenbelegung, 10-s-Sperre, Vibrationen, Fehler kurz UP/DOWN (Abschnitt 5) | F-KG-01, F-KG-02, F-KG-03 | KG-01 (Reihenfolge, nicht Inhalt) | Opus | keine | Neben |
+| KG-08 | Gemeldet am 13.11.2026: kein Dienst ohne Kopplung, Trennen ohne Neukopplung, Menüs öffnen beim Halten (FR 945), Rea-Sperre 5 s (Abschnitt 5d) | F-KG-18, F-KG-19 | nichts | Opus | keine | Neben |
 
 Ein Pull Request je Paket. Nach jedem Paket: Konzept fortschreiben,
 Prüfstand fahren, mit dem Prüfbericht committen, pushen, PR öffnen,
@@ -79,6 +80,11 @@ abonnieren, anhalten.
 | E-KG-25 | **Nach dem Merge von #168: erst F-KG-08, dann F-KG-09, in einem PR (KG-07).** KG-03 bleibt bis KA-06a und KA-M5 liegen | 11.11.2026, BetreiberIn |
 | E-KG-26 | **Der Krypto-Kern von KG-03 geht an einen Fable-Agenten**, die Hauptinstanz bleibt auf Opus und übernimmt Ergebnis, Prüfstand, Konzept und Dokumente (wie E-KA-38) | 11.11.2026, BetreiberIn |
 | E-KG-27 | **KG-03 wird geteilt:** 03a (Kern, jetzt) und 03b (Einbau, nach KA-06d). Der Server nimmt Fassung 2 und die Kopplung mit Zusage noch nicht an; eine Uhr, die schon Fassung 2 sendete, bekäme heute 400 | 11.11.2026, Umsetzung (der BetreiberIn gemeldet) |
+| E-KG-28 | **Menüs öffnen nach 1 s Halten, noch während START unten ist**; das Menü verwirft das eine Loslassen. Ersetzt das Öffnen beim Loslassen aus KG-05/KG-07, das an der FR 945 als zu spät auffiel (F-KG-18) | 13.11.2026, BetreiberIn |
+| E-KG-29 | **Die Sperre der Reanimation dauert 5 s** statt 10 s (E-KG-06), weiter je Ereignisart | 13.11.2026, BetreiberIn |
+| E-KG-30 | **Ohne Kopplung kein Dienst:** ohne Server-Adresse oder Zugangsdaten beginnt kurz START keinen Dienst, sondern vibriert kurz. Eine gekoppelte Uhr, gesperrt, abgemeldet oder ohne Schlüssel, beginnt — ihre Daten gehen nur an dasselbe Konto | 13.11.2026, BetreiberIn |
+| E-KG-31 | **Trennen von der Uhr ohne Neukopplung:** Rückfrage „Kopplung trennen?“, danach „Getrennt“ ohne Code; ein zweites Halten koppelt. Sperren im Dienst und bei Rückstand bleiben | 13.11.2026, BetreiberIn |
+| E-KG-32 | **Die Probe `rea` bleibt auf der Fenix 6 Pro**; die FR 945 wird nicht dazugenommen. Die Rea-Karte ohne laufende Rea hat für lang START keine Funktion, und das bleibt so | 13.11.2026, BetreiberIn |
 | E-KG-16 | **Die Probe zu KG-01 läuft ohne Server** (`tools/uhr-pruefstand/sendeweg/`): Die Prüffassung hält jede Anfrage vor dem Absenden an und spielt die Antworten selbst vor. Ein verlorenes Paket und eine falsche Quittung lassen sich mit der echten Anlage nicht gezielt erzeugen; was `ingest.php` daraus macht, misst weiter `uhr-rundlauf` | 10.11.2026, Umsetzung |
 
 ---
@@ -271,6 +277,40 @@ Freigabe mit Mockup (`CLAUDE.md` 5).
 
 ---
 
+## 5d. KG-08 — Kopplung, Trennen, Menüs beim Halten (13.11.2026, Uhr 4.6.0)
+
+**Gemeldet von der BetreiberIn am 13.11.2026** (echte FR 945): (1) ohne
+Kopplung sollte kein Diensttag beginnen; (2) die Uhr sollte sich selbst
+entkoppeln können; (3) lang START öffnet das Schnellmenü erst beim
+Loslassen, auf der Rea-Karte „gar nicht“. Zuerst hieß es „lang UP“; erst
+die Rückfrage klärte, dass START gemeint war. Im Simulator (fr945, Tastatur
+und Maus) war lang UP unauffällig; zu (3) auf der Rea-Karte war die Rea
+nicht gestartet — dort hat lang START dann keine Funktion (E-KG-32).
+
+**Gebaut:**
+- `StartDelegate.actSelectShort()`: ohne `hasServer()` oder
+  `hasCredentials()` nur `Util.vibrateShort()` (E-KG-30).
+- `Pair.start()`: Rückfrage „Kopplung trennen?“; `onTrennen()` und der
+  Weg ohne Zugangsdaten enden in `_getrennt()` („Getrennt“, grün, darunter
+  gegebenenfalls „Altes Gerät im Web löschen“) statt in `sitzungStarten()`
+  (E-KG-31). Abgemeldet heißt die Sync-Zeile weiter „Neu koppeln: START
+  halten“ — das erste Halten trennt, das zweite koppelt.
+- `ActionDelegate`: `langNachLoslassen()` und `_langOffen` sind fort; die
+  Halte-Uhr ruft `actSelectLong()` nach 1 s. `startUnten()` sagt der Seite,
+  dass START unten ist; `ClockDelegate` und `CprDelegate` brechen ihre
+  Halte-Erkennung ab und rufen `startGehalten()` am Menü-Delegate.
+  `TastenDelegate` verwirft das eine Loslassen und, über
+  `auswahlVerwerfen()`, das `onSelect` dazu (F-KG-19). Ein neuer Druck auf
+  START hebt den Merker auf (E-KG-28).
+- `Cpr.SPERRE_MS` 5000 (E-KG-29).
+- Proben: `sendeweg` zwei Fälle mehr (15), `rea` drei Schritte mehr (21,
+  der zweite UP-Druck nach gut 6 s an der Uhr des Skripts gemessen, über
+  9 s rot), `rundlauf --neukoppeln`/`--fremdkonto`: nach dem Ja binnen 8 s
+  kein Code, dann ein zweites Halten.
+
+**Nicht gebaut:** ein Hinweis auf der Sync-Seite einer gekoppelten Uhr, dass
+START halten trennt — die Zeile wäre neu, und dafür gibt es keine Freigabe.
+
 ## 6. Befunde der Umsetzung
 
 | Nr. | Befund | Beleg | Stand |
@@ -291,6 +331,8 @@ Freigabe mit Mockup (`CLAUDE.md` 5).
 | F-KG-15 | **Im Simulator reicht Connect IQ den Rumpf einer 401 und 403 durch:** `upload 401 {error=>auth}` (Rundlauf `--neukoppeln`), `status 403 {error=>device_disabled}` (`--reaktivieren`), gemessen mit `RUNDLAUF_ANTWORTEN=1`. Der Kommentar in `Uploader._sperrgrund()` („geräteabhängig") ist damit für den Simulator beantwortet, für die echte Uhr nicht (P-KG-02) | Rundlauf, 11.11.2026 | Grundlage von KG-06 |
 | F-KG-16 | **Die Referenz lässt für KG-03b vier Punkte offen** (gemeldet an die KA-Instanz): (1) ob das Gerät nach dem Offenlegen von N_g ein zweites, anderes Paar (K, N_b) annehmen darf — die Uhr legt sich beim ersten fest; (2) `ts_von` des leeren Schlussstücks; (3) der Zähler `z` „je Absender" gegen das Standbuch je Einsatz — die Uhr führt einen Zähler für alle Einsätze (`gz`), der das Trennen überdauert; (4) Feldnamen, Kodierung und der Weg für N_g in `pair.php`. Dazu ein Kommentar mit falschem Datum (`T0` ist der 17.07., nicht der 16.07.2026) | Fable-Agent KG-03a, 11.11.2026 | an KA-06d |
 | F-KG-17 | **Der Kern wird ausgeliefert, bevor er gebraucht wird:** +6,6 kB Kompilat (fenix6pro 86 268 → 92 924 B, fenix5 82 380 → 89 020 B), davon 2,7 kB Selbsttest und Vektor. Der Laufzeitspeicher der 128-kB-Geräte ist nicht gemessen | Fable-Agent, `bauen -r` | hingenommen bis KG-03b |
+| F-KG-18 | **Auf der echten FR 945 öffnet das Schnellmenü erst beim Loslassen von START** — so gebaut seit Uhr 4.5.2 (F-KG-08, `langNachLoslassen()`), am Gerät aber als verzögert empfunden. Der Simulator zeigt dasselbe; es war kein Gerätefehler, sondern die Bauform | BetreiberIn, 13.11.2026; Simulator fr945 | behoben in Uhr 4.6.0 (E-KG-28) |
+| F-KG-19 | **Im Simulator kommt beim Loslassen `onSelect` am Menü an, auch wenn das Menü das Loslassen in `onKeyReleased` schluckt.** Welches zuerst kommt, ist nicht gemessen. Belegt hat es der erste Lauf der Probe: Ihr Haken saß am Anfang von `onSelect` und meldete `SCHNELL-AUSWAHL`, obwohl die Schutzabfrage dahinter verwarf. Ohne `auswahlVerwerfen()` in `onSelect` hätte das Loslassen also gewählt. Der Haken sitzt seither an der Stelle der Auswahl, und der Lauf ist grün | `rea.sh`, 13.11.2026 | eingetragen in `docs/Geraete-Eingabe.md` 6 |
 | F-KG-07 | **Alle Fälle der Probe in einem Aufruf lösen den Watchdog aus** (mehrere Verschließungen am Stück, `Code Executed Too Long` in `Huelle.umgedreht()`). Die Probe läuft deshalb je Fall in einem eigenen Takt. Die App selbst verschließt je Antwort ein Stück und ist davon nicht betroffen — auf einer echten Uhr gemessen ist das aber nicht | Simulator fenix6pro, 10.11.2026 | Probe angepasst |
 
 **Gerätebeobachtungen stehen in `docs/Geraete-Eingabe.md` 2 und 6**, nicht
@@ -400,3 +442,21 @@ einen Server (gibt es noch nicht).
 | `extern.py` (Agent) | Zufallshüllen und Kopplungen der Uhr, mit der Referenz geöffnet | 18 geprüft, 0 Fehler; Gegenlagen rot |
 | `kryptoreihe` (Agent) | Probe für alle Geräte übersetzt | 99/0 |
 | Prüfstand `pruefen.sh` | Stufe und Proben nach Berührung, darunter `uhr-krypto` und `uhr-rundlauf` (öffnet die Fassung 1 aus dem umgebauten `Huelle.mc` auf dem Server) | Bericht in der Commit-Nachricht von KG-03a |
+
+### KG-08 (13.11.2026, Uhr 4.6.0)
+
+**Nicht geprüft:** keine echte Uhr — weder ob die FR 945 und die Fenix das
+Loslassen an das beim Halten geöffnete Menü schicken (P-KG-09, -13), noch
+die Venu (lang Action öffnet jetzt auch beim Halten, P-KG-14); die Probe
+`rea` läuft nur auf der Fenix 6 Pro (E-KG-32).
+
+| Mittel | Was es misst | Ergebnis |
+|---|---|---|
+| Simulator fr945, Tastatur (`rea.sh fr945`, Uhr 4.5.2) und Maus auf die Tastenbilder | die gemeldete Beobachtung mit lang UP | 18/0; Maus: lang UP bucht in der Rea Adrenalin schon beim Halten, auf der Hauptanzeige nichts — die Meldung betraf START |
+| `sendeweg.sh fenix6pro` | 15 Prüfungen, davon 2 neu | **15 von 15 grün** |
+| `SENDEWEG_WATCH=<Uhr 4.5.2>` | dieselben 15 | **2 rot** (`kein-dienst-ohne-kopplung` dienst=true, `trennen-ohne-neuen-code` „Hole Code…“) |
+| `rea.sh fenix6pro` | 21 Schritte, davon 3 neu und 3 geändert | **21 von 21 grün** (zweiter Lauf; im ersten meldete der Haken am Anfang von `onSelect` eine Auswahl, F-KG-19) |
+| `REA_WATCH=<Uhr 4.5.2>` | dieselben 21 | **6 rot** (Adrenalin nach gut 6 s, die Sperre danach, beide Menüs erst beim Loslassen, je zweimal) |
+| Prüfstand `pruefen.sh`, erster Lauf | Stufe klein, 10 Proben und 25 Riegel, darunter `uhr-rundlauf` (`--neukoppeln` 2/0, `--fremdkonto` 4/0, je „getrennt, ohne neuen Code“) | 33 grün, 0 rot, **1 Hinweis** `bestand`: LIESMICH von `sendeweg` 42 statt 40 Zeilen — gekürzt |
+| Prüfstand `pruefen.sh`, zweiter Lauf | dasselbe über den endgültigen Baum | Bericht in der Commit-Nachricht von KG-08 |
+

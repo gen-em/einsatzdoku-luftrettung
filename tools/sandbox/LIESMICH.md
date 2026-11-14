@@ -20,9 +20,8 @@ Länge. `hochfahren.sh` richtet die örtliche Anlage ein oder startet sie — ei
 ## Was es braucht
 
 Netz (Ubuntu, Docker Hub, Debian über HTTPS, PyPI), `dockerd` für `plattform.sh` —
-**er läuft nicht von selbst**: `dockerd >/tmp/dockerd.log 2>&1 &`. Die elf
-Umgebungswerte stehen in der Arbeitsumgebung, nicht im Repositorium; ihre
-Namen und die Grenzen der Umgebung in `docs/Sandbox-Setup.md`.
+**er läuft nicht von selbst**: `dockerd >/tmp/dockerd.log 2>&1 &`. Die elf Umgebungswerte
+stehen in der Arbeitsumgebung, nicht im Repositorium; Namen und Grenzen in `docs/Sandbox-Setup.md`.
 
 ## Erwartete Zahl
 

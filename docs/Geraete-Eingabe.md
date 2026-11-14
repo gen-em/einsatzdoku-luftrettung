@@ -84,7 +84,7 @@ erfüllt `minApiLevel 3.1.0` nicht.
 - Ein Halten über 3 s wird nicht abgefangen.
 - **Lang UP erzeugt zusätzlich `onMenu`.** Dafür existiert die Absicherung in
   `ActionDelegate.onMenu` — sonst würde eine Adrenalingabe doppelt gezählt.
-  Seit Uhr 4.5.0 hält zusätzlich die 10-s-Sperre der Reanimation.
+  Seit Uhr 4.5.0 hält zusätzlich die Sperre der Reanimation (seit 4.6.0 5 s, davor 10 s).
 
 **Am Gerät beobachtet, nicht im Simulator** (BetreiberIn, 10.11.2026, Uhr
 4.3.3; Konzept KG, F-KG-01, -02, -04):
@@ -239,11 +239,16 @@ nicht gemessen (Konzept KG, F-KG-09). **Seit Uhr 4.5.0 nur noch eine Seite**:
 Der Seitenwechsel bricht die Halte-Erkennung der Seite ab
 (`halteAbbrechen()`); die Probe `rea/` misst es seit KG-07 mit.
 
-**Ein langer START, der ein Menü öffnet, wirkt erst beim Loslassen** (seit
-Uhr 4.5.0 auf der Reanimationsseite, seit 4.5.2 auf der Hauptanzeige,
-`langNachLoslassen()`): Öffnete das Menü nach 1 s Halten, ging im Simulator
-das Loslassen an das Menü und wählte den Eintrag unter dem Cursor (F-KG-08).
-Am Gerät nicht gemessen (Prüfdokument KG, P-KG-09 und -13).
+**Ein langer START öffnet ein Menü nach 1 s Halten, und das Menü verwirft
+das Loslassen** (seit Uhr 4.6.0, `startUnten()`, `startGehalten()`,
+`auswahlVerwerfen()`). Im Simulator ging das Loslassen an das eben geöffnete
+Menü und wählte den Eintrag unter dem Cursor (F-KG-08) — und zwar über
+`onSelect`, das auch dann ankommt, wenn das Menü das Loslassen in
+`onKeyReleased` schluckt (welches von beiden zuerst kommt, ist nicht
+gemessen); das Menü verwirft deshalb beide (F-KG-19). Von Uhr 4.5.0 bis 4.5.2 wartete die
+Seite stattdessen auf das Loslassen (`langNachLoslassen()`); auf einer
+echten FR 945 fiel das als „Menü erst beim Loslassen" auf (F-KG-18). Am
+Gerät nicht gemessen (Prüfdokument KG).
 
 **Ein zweiter Fall derselben Art** (10.11.2026, Abschnitt 2): Kurz UP/DOWN
 auf der Reanimationsseite bucht nach dem Seitenwechsel ein Ereignis, weil

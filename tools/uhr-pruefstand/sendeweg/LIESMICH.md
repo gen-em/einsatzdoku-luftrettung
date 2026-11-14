@@ -2,8 +2,9 @@
 
 Eine **Prüffassung** der Garmin-App (Kopie unter `$CIQ_BASIS/sendeweg-app`)
 hält jede Anfrage vor dem Absenden an und spielt die Antworten des Servers
-selbst vor. **Anlass: Nr. 570, Nr. 573** — Kopplung im Dienst, laufende
-Pakete, `next_seq`, Wiederholungsstück; 401/403 ohne Fehlerfeld, Frist.
+selbst vor. **Anlass: Nr. 570, Nr. 573, Nr. 575** — Kopplung im Dienst, laufende
+Pakete, `next_seq`, Wiederholungsstück; 401/403 ohne Fehlerfeld, Frist;
+Dienst ohne Kopplung, Trennen ohne neuen Code.
 
 ## Aufruf
 
@@ -14,12 +15,13 @@ SENDEWEG_WATCH=<verzeichnis> bash tools/uhr-pruefstand/sendeweg/sendeweg.sh   # 
 
 ## Was es misst
 
-13 Prüfungen in 11 Fällen, je Fall mit leerem Speicher: `Pair.start()` im Dienst
+15 Prüfungen in 13 Fällen, je Fall mit leerem Speicher: `Pair.start()` im Dienst
 (ungekoppelt, gekoppelt; Gegenprobe: Schlüssel holen bleibt erlaubt), ein
 laufender Einsatz nach Verlust der Zugangsdaten und Kopplung mit anderem
 Schlüssel, ein Stück nach verlorener Antwort, eine Quittung über das
 Gesendete hinaus, eine Antwort ohne `next_seq`; seit KG-06 401 und 403 ohne
-Fehlerfeld, 401 `auth` (Gegenprobe), die abgelaufene Frist mit letztem Versuch.
+Fehlerfeld, 401 `auth` (Gegenprobe), die abgelaufene Frist mit letztem Versuch;
+seit KG-08 kurz START ungekoppelt und `Pair.onTrennen(200)` ohne neue Sitzung.
 
 ## Was es braucht
 
@@ -28,8 +30,8 @@ Server — die Adresse zeigt auf `127.0.0.1:1`.
 
 ## Erwartete Zahl
 
-`Sendeweg: 13 Pruefungen, 0 Fehlschlaege`, rund 1 min; gegen Uhr 4.5.0 drei rot. Gegen Uhr 4.3.3
-(`git archive 0be2092 watch`): 5 Fehlschläge, die drei Gegenproben grün.
+`Sendeweg: 15 Pruefungen, 0 Fehlschlaege`, rund 1 min; gegen Uhr 4.5.2 zwei rot (KG-08).
+Für 13 Prüfungen, nicht nachgemessen: gegen 4.5.0 drei rot, gegen 4.3.3 fünf.
 
 ## Was es nicht kann
 
