@@ -26,6 +26,28 @@ enum class Abweisung {
 
     /** Ein Fall, den diese Fassung noch nicht kennt. */
     UNBEKANNT,
+
+    /**
+     * Im Browser „Wert ist anders" (`abgelehnt`, Grund `wert`, Vertrag 1a.7).
+     * Seit KA-06c. Kein Paar abgelegt — neu beginnen, und bei derselben
+     * Abweichung gar nicht koppeln: Dann steht jemand dazwischen.
+     */
+    IM_WEB_ABGELEHNT,
+
+    /**
+     * Der Browser fand, dass die offengelegte Zufallszahl nicht zur Zusage
+     * passt (`abgelehnt`, Grund `zusage`). Seit KA-06c.
+     */
+    SCHLUESSEL_PASST_NICHT,
+
+    /**
+     * Beansprucht, aber ohne Kontoschlüssel (F-KA-108, F-KG-20). Ohne ihn
+     * gibt es keinen Vergleichswert; seit Web 24.18.1 lässt der Server das
+     * Beanspruchen dann gar nicht zu. Kommt es doch an (älterer Server,
+     * Siegel des Kontos defekt), endet die Kopplung hier statt in einer
+     * Sackgasse.
+     */
+    KONTO_OHNE_SCHLUESSEL,
 }
 
 /** Was `start` ergeben hat (Vertrag 1a.1). */

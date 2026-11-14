@@ -8966,4 +8966,10 @@ declare(strict_types=1);
  *   fuer Testkonten auf Staging. NEBENNUMMER MIT MIGRATION:
  *   `2026_11_13_kopplung_herkunft` — `update.php` aufrufen; bis dahin
  *   koppelt jedes Geraet auf dem alten Weg. */
-const WEB_VERSION = '24.18.0';
+/* 24.18.1 — KEIN BEANSPRUCHEN OHNE KONTOPAAR (KA-06c, F-KA-108). Ein
+ *   Geraet mit Geraeteschluessel laesst sich nur an ein Konto binden, dessen
+ *   Schluesselpaar da ist; die Bibliothek fragt es selbst, fuer jeden Weg,
+ *   der beansprucht. Bis dahin fragte nur die Seite, und ein anderer Weg
+ *   haette dem Geraet `n_b` ohne Kontoschluessel gegeben — eine Sackgasse.
+ *   Korrektur; kein Schema. */
+const WEB_VERSION = '24.18.1';
