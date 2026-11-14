@@ -194,6 +194,12 @@ CREATE TABLE devices (
   geraet_modell VARCHAR(191) NULL,                   -- aufgeloest; Sammelnamen werden lang,
                                                      -- der laengste hat 153 Zeichen
   geraet_teil   VARCHAR(64) NULL,                    -- Rohangabe des Geraets, siehe update.php
+  -- Herkunft (seit Web 24.18.0, KA-06d): der oeffentliche Geraeteschluessel
+  -- (SEC1, Base64) und ob der Browser ihn nach dem Vergleichswert ins
+  -- Geraetebuch eingetragen hat. Nur mit `herkunft` = 1 sendet das Geraet
+  -- Fassung 2 (`huelle: 2`, JSON-Vertrag 1a).
+  spk          VARCHAR(88) NULL,
+  herkunft     TINYINT(1) NOT NULL DEFAULT 0,
   -- Abgewiesene Anmeldungen. Seit dort hat
   -- auch ingest.php eine Mengenbremse; eine Uhr mit veraltetem Schluessel
   -- sperrt sich damit selbst aus. Diese zwei Spalten machen das SICHTBAR --
@@ -632,6 +638,15 @@ CREATE TABLE pair_sessions (
   geraet_art    VARCHAR(16) NULL,                    -- wie devices, bei `start` gelesen
   geraet_modell VARCHAR(191) NULL,
   geraet_teil   VARCHAR(64) NULL,
+  -- Vergleichswert (seit Web 24.18.0, KA-06d), alles Base64:
+  spk           VARCHAR(88) NULL,                    -- Geraeteschluessel, bei `start`
+  zusage        VARCHAR(44) NULL,                    -- SHA-256(… ‖ N_g ‖ SPK), bei `start`
+  n_b           VARCHAR(24) NULL,                    -- Zufall des Browsers, beim Beanspruchen
+  n_g           VARCHAR(24) NULL,                    -- Zufall des Geraets, bei `offenlegen`
+  geraet_ja     TINYINT(1) NOT NULL DEFAULT 0,       -- das Ja am Geraet
+  wert_ok       TINYINT(1) NOT NULL DEFAULT 0,       -- „Wert stimmt“ im Web
+  im_buch       TINYINT(1) NOT NULL DEFAULT 0,       -- dabei ins Geraetebuch eingetragen
+  abgelehnt     VARCHAR(8) NULL,                     -- 'wert' | 'zusage': im Web abgelehnt
   user_id       INT UNSIGNED NULL,                   -- NULL = offen; gesetzt = beansprucht
   erstellt_am   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -1158,4 +1173,5 @@ INSERT IGNORE INTO schema_migrations (id, status) VALUES
   -- users.darstellung steht oben schon im Schema.
   ('2026_11_07_darstellung', 'skipped'),
   -- stand_blaetter steht oben schon im Schema.
-  ('2026_11_11_standbuch', 'skipped');
+  ('2026_11_11_standbuch', 'skipped'),
+  ('2026_11_13_kopplung_herkunft', 'skipped');

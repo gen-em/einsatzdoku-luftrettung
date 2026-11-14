@@ -15,7 +15,8 @@
  *   4. Ein Block mit falschem `blob_alt` wird übersprungen, nicht geschrieben.
  *
  * Danach setzt der Weg das Demo-Konto zurück (`demo_zuruecksetzen()`), damit
- * die übrigen Wege den Bestand vorfinden, den sie kennen — nur örtlich.
+ * die übrigen Wege den Bestand vorfinden, den sie kennen — nur örtlich —, und
+ * meldet die Rolle neu an.
  *
  * Anlass: Nr. 563.
  */
@@ -98,6 +99,12 @@ export const wege = [
         await k.seite.unroute(/assets\/inhalt2\.js/).catch(() => {});
         execFileSync('php', ['-r', 'require "server/db.php"; require "server/demo_lib.php"; demo_zuruecksetzen();'],
                      { cwd: WURZEL, stdio: 'ignore' });
+        /* DER RESET BEENDET DIE SITZUNG (`session_epoch`), aber die Seite
+         * merkt es erst an einer Anfrage im Hintergrund und leitet DANN zur
+         * Anmeldung um — nach der Wache in `gehZu()`. In Firefox und WebKit
+         * stand der nächste Weg deshalb auf `login.php?ende=passwort`
+         * (`mr-oeffner-markiert`, F-KA-106). Also hier neu anmelden. */
+        await k.neuAnmelden();
       }
     },
   },

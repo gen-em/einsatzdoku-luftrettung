@@ -308,6 +308,12 @@ Requests** — einen fremden Merge sieht sie nicht von selbst. Auf Staging
 ändert sie Testdaten und eigene Testkonten; Serverschlüssel, Wartung und
 Servereinstellungen nur, wo ein Punkt genau das verlangt, und danach stellt
 sie den Ausgangszustand her.
+**Am Ende jeder Sitzung, die auf Staging geprüft hat, räumt sie ihre
+Testkonten auf** (seit 13.11.2026, E-KA-62):
+`python3 tools/sandbox/staging_konten.py --wirklich` löscht jedes Konto
+außer dem eigenen, `demo@…` und denen aus `NADOKU_STAGING_BEHALTEN`; ohne
+die Variable löscht es nichts. Bis dahin blieben die Konten stehen, und
+jede Mail an eine erfundene Adresse stand als Störung im Reiter System.
 
 ### 2.5 Station E — Produktiv
 

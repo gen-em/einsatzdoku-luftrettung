@@ -14,6 +14,23 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.18.0] — unveröffentlicht
+
+### Hinzugefügt
+
+- **Web — Browser und Gerät zeigen beim Koppeln dieselbe sechsstellige
+  Zahl.** Bisher bekam ein Gerät den Kontoschlüssel vom Server, ohne dass
+  jemand prüfen konnte, ob es der richtige war, und der Browser kannte den
+  Schlüssel des Geräts gar nicht. Weil sich das Gerät mit einer Zusage
+  festlegt, bevor es die Zufallszahl des Browsers kennt, kann ein Server,
+  der dazwischensteht, keine passende Zahl ausrechnen. Erst wenn das Gerät
+  Ja sagt und im Web „Wert stimmt“ geklickt ist, ist es gekoppelt; eine
+  ältere App ohne Geräteschlüssel koppelt bis zum Stichtag weiter, mit
+  Warnung.
+- **Web — ein Skript räumt die Testkonten auf Staging auf.** Mails an die
+  erfundenen Adressen alter Testkonten standen sonst dauerhaft als Störung
+  im Reiter System.
+
 ## [Uhr 4.6.0] — unveröffentlicht
 
 Schritt 28, Paket KG-08 (Backlog Nr. 575, Nr. 576).

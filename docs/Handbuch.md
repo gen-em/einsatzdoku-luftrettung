@@ -3924,6 +3924,26 @@ Abschnitt 2.2 von der Uhr aus beschreibt:
    lädt von selbst nach, sobald es soweit ist — du musst nichts neu laden.
    Bis dahin läuft die Restzeit mit, und du kannst den Vorgang hier abbrechen.
 
+**Mit Vergleichswert** *(seit Web 24.18.0)*. Ein Gerät mit neuer App schickt
+beim Koppeln einen eigenen Schlüssel mit. Dann zeigen nach dem Verbinden
+**dieser Browser und das Gerät dieselbe sechsstellige Zahl** — die Karte
+heißt „Vergleichswert prüfen" und wartet zuerst ein paar Sekunden auf das
+Gerät. Stimmt die Zahl Ziffer für Ziffer, tippst du **„Wert stimmt"** und
+sagst am Gerät Ja; erst beides zusammen koppelt es, in beliebiger
+Reihenfolge. Ist sie anders, tippst du **„Wert ist anders"**: Dann koppelt
+sich gerade nicht dein Gerät, oder jemand steht zwischen deinem Browser und
+dem Gerät. Die Kopplung bricht ab, das Gerät zeigt, dass sie im Web
+abgelehnt wurde, und du holst dort einen neuen Code. Geschieht es wieder,
+sag der BetreiberIn Bescheid. Die Zahl rechnet dein Browser; dafür braucht
+die Seite JavaScript und das Schlüsselpaar deines Kontos (die Karte darüber,
+wenn es fehlt), und gegebenenfalls fragt sie einmal nach deinem Passwort.
+
+**Ein Gerät mit älterer App** schickt keinen eigenen Schlüssel. Die Rückfrage
+sagt es mit einer gelben Meldung, und der Knopf heißt **„Trotzdem
+verbinden"**: Es koppelt wie bisher, aber was es sendet, trägt keinen
+Nachweis, dass es von deinem Gerät kommt. Aktualisiere die App und koppel
+dann neu.
+
 **Fehlt der Schlüssel für Uhr und Handy, steht ganz oben eine Karte dazu**
 *(seit Web 23.7.0)*. Uhr und Handy verschließen GPS-Daten und Ortsangaben mit
 dem Schlüsselpaar deines Kontos. Es entsteht still nach der Anmeldung; klappt

@@ -23,7 +23,7 @@ steht seither ein Verweis hierher.
 | Stück | Stand |
 |---|---|
 | Was das Abbild mitbringt (1) | **gemessen 21.09.2026** |
-| Die zehn Umgebungswerte (4) | **10 von 10 gemessen** (02.11.2026) |
+| Die elf Umgebungswerte (4) | **10 von 10 gemessen** (02.11.2026); der elfte, `NADOKU_STAGING_BEHALTEN`, seit 13.11.2026 — gemessen erst nach dem nächsten Neustart der Sitzung |
 | Netzregeln und Grenzen (5, 6) | **gemessen 21.09.2026** |
 | `tools/sandbox/aufbauen.sh`, `hochfahren.sh`, `plattform.sh` | **gebaut und gemessen mit PK-02** |
 | Die Ausbaustufen `web` und `plattform` (2) | **gebaut und gemessen** |
@@ -218,7 +218,7 @@ steht**.
 
 | Stufe | Enthält | Wofür |
 |---|---|---|
-| `web` | MariaDB 10.11, PHP 8.4, **drei** Engines (nachgemessen, nicht angenommen), Python-Pakete, die zehn Umgebungswerte geprüft | jede Änderung unter `server/`, `docs/`, `tools/` |
+| `web` | MariaDB 10.11, PHP 8.4, **drei** Engines (nachgemessen, nicht angenommen), Python-Pakete, die elf Umgebungswerte geprüft | jede Änderung unter `server/`, `docs/`, `tools/` |
 | `android` | `web` plus Android-SDK (Plattform 37.0 — der Prüfstand erkennt die Stufe an der Plattform aus `compileSdk`, seit R4-02; bis dahin kam 36 dazu, nur für die Erkennung, Nr. 335), JDK 21 geprüft, Gradle über Googles Spiegel mit mehr Wiederholungen (5.1). **Kein Emulator-Abbild** — das holt `android/werkzeuge/emulator.sh aufbauen`, mehrere GB, nur für den Emulatorlauf. *Bis zum 24.09.2026 stand hier „Emulator-Abbild"; das Skript hat es nie geholt (Konzept AR, F-AR-02).* | Änderungen unter `android/` |
 | `emulator` | `android` plus Emulator, die Abbilder mit API 37 (Handy `google_apis`, Uhr `android-wear-signed`), die AVDs `handy37` und `uhr37` mit berichtigtem `target` und die Debug-Ramdisk der Uhr; `lz4`, `cpio`, `libpulse0`. Rund 9 GB, und der Start einer AVD verlangt **weitere 7,4 GB frei** für die Datenpartition — der Emulator bricht sonst sofort ab. Nicht in `alles` | den Emulatorlauf (`android/LIESMICH.md`, „Wear OS 7 ohne Root“) |
 | `uhr` | `web` plus Uhr-SDK, Gerätedateien, Simulator-Bibliotheken | Änderungen unter `watch/` |
@@ -231,7 +231,7 @@ Der Hook ruft `web`. Wer mehr braucht, ruft nach.
 
 Jeder Lauf endet mit einer Tabelle, die **je Stück die Fassung nennt** — die
 drei Engines **einzeln**, davor die Fassung von Playwright gegen
-`PW_FASSUNG` (seit Nr. 393), die zehn Umgebungswerte mit ihrer Länge, nie mit
+`PW_FASSUNG` (seit Nr. 393), die elf Umgebungswerte mit ihrer Länge, nie mit
 ihrem Wert. Der Grund steht in `Pruefablauf.md` 6.5: „3 Browser da" sagt
 nicht, welcher fehlt, und es fehlt immer nur einer. Der Prüfbericht führt
 diese Tabelle mit (`Pruefablauf.md` 5).
@@ -384,7 +384,7 @@ der gestellten Lage an.
 
 ---
 
-## 4. Die zehn Umgebungswerte
+## 4. Die elf Umgebungswerte
 
 Sie stehen **nicht** im Repositorium, sondern in den Umgebungsvariablen der
 Arbeitsumgebung. Hier stehen nur die Namen, und das bleibt so: Ein Wert, der
@@ -397,6 +397,7 @@ in der Dokumentation steht, ist keiner mehr.
 | `NADOKU_STAGING_PASS` | dessen Passwort | gesetzt, 24 Zeichen (02.11.2026) |
 | `NADOKU_STAGING_TOTP` | Zweitfaktor-Geheimnis dieses Kontos (Base32), seit 02.11.2026 | gesetzt, 39 Zeichen (02.11.2026) |
 | `NADOKU_STAGING_WIEDERHERSTELLUNG` | Wiederherstellungsschlüssel dieses Kontos (öffnet die verschlüsselten Daten ohne Passwort, `pat_wrap_rc`), seit 02.11.2026 | gesetzt, 24 Zeichen (02.11.2026) |
+| `NADOKU_STAGING_BEHALTEN` | Konten auf Staging, die das Aufräumskript `tools/sandbox/staging_konten.py` **behält** (kommagetrennt; das eigene Konto und `demo@…` bleiben immer). Fehlt der Wert, löscht das Skript nichts (E-KA-65), seit 13.11.2026 | gesetzt, 38 Zeichen (13.11.2026) |
 | `NADOKU_STAGING_JOBS_TOKEN` | Aktionen von `jobs.php` — seit Web 23.1.0 das **Kettentoken** (Karte „Auslieferungskette") | gesetzt, 64 Zeichen |
 | `_MAIL_URL` | Webmail der Prüfanlage | gesetzt, 17 Zeichen |
 | `_MAIL_USER` | Postfach dort | gesetzt, 18 Zeichen |

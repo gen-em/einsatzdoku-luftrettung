@@ -25,9 +25,23 @@ declare(strict_types=1);
  * noch kein Paar (es entsteht beim naechsten Entsperren im Browser), oder
  * sein Siegel geht nicht auf (`kp_oeffentlich_lesen()` meldet das). Ein
  * Geraet ohne Schluessel sendet nicht und sagt „Neu koppeln“.
+ *   offenlegen   mit Kopfzeilen. {"aktion":"offenlegen","n_g":"<Base64>"}
+ *                -> 200 {"ok":true} · 409 {"error":"n_g"|"zustand"}
+ *                Seit Web 24.18.0 (KA-06d): die Zufallszahl des Geraets,
+ *                nachdem es Kontoschluessel und N_b bekommen hat. Wiederholbar.
  *   trennen      mit Kopfzeilen. {"aktion":"trennen"} -> 200 {"ok":true}
  *                Die Uhr gibt ihre Kopplung zurueck, das Geraet wird geloescht
  *                (Begruendung am Zweig).
+ *
+ * DER VERGLEICHSWERT (seit Web 24.18.0, KA-06d, JSON-Vertrag 1a.7). Ein
+ * Geraet mit Geraeteschluessel schickt bei `start` den Block `schluessel`
+ * (SPK und Zusage); `status` traegt im Zustand `beansprucht` dazu den
+ * Kontoschluessel und N_b des Browsers; `offenlegen` bringt N_g; Geraet und
+ * Webseite zeigen denselben sechsstelligen Wert. Abgeschlossen wird erst,
+ * wenn das Ja am Geraet UND „Wert stimmt“ im Web vorliegen — bis dahin
+ * antwortet `bestaetigen` mit 202 {"wartet":"browser"}. Im Web abgelehnt:
+ * `status` -> {"zustand":"abgelehnt","grund":"wert"|"zusage"}. Die Rechnung
+ * selbst macht der Server nicht (kopplung_lib.php).
  *
  * DAS GERAET ZEIGT DEN CODE, nicht umgekehrt — sechs Zeichen ueber einen
  * TextPicker am Handgelenk zu tippen ist keine Bedienung. Das Geraet zeigt
@@ -188,8 +202,20 @@ if ($aktion === 'start') {
     $devId = 'dev-' . bin2hex(random_bytes(16));
     $key   = bin2hex(random_bytes(24));
 
+    /* ---- Der Geraeteschluessel (KA-06d) --------------------------------
+     * Fehlt der Block, koppelt das Geraet wie bisher, ohne Herkunft. Kommt
+     * er in falscher Form, ist das ein Fehler der App, kein Raten — 400 ohne
+     * Zaehlen. Ohne die Spalten (Migration steht aus) wird er ueberlesen. */
+    $schluessel = pair_schluessel_lesen(is_array($b) ? ($b['schluessel'] ?? null) : null);
+    if ($schluessel === false) {
+        antworten(400, ['error' => 'schluessel']);
+    }
+
     try {
         $code = pair_sitzung_anlegen($pdo, $devId, geraet_schluessel_hash($key), $geraet);
+        if ($schluessel !== null && pair_herkunft_bereit($pdo)) {
+            pair_schluessel_setzen($pdo, $devId, $schluessel);
+        }
     } catch (Throwable $ex) {
         system_melden('pair', 'Kopplungssitzung konnte nicht angelegt werden', $ex);
         antworten(500, ['error' => 'server']);
@@ -205,7 +231,7 @@ if ($aktion === 'start') {
 if (!rate_erlaubt('pair')) {
     gesperrt('zu_viele_versuche', 'Zu viele Kopplungsversuche. Bitte später erneut.');
 }
-if (!in_array($aktion, ['status', 'bestaetigen', 'trennen'], true)) {
+if (!in_array($aktion, ['status', 'bestaetigen', 'offenlegen', 'trennen'], true)) {
     // Ohne oder mit unbekannter Aktion: eine alte Uhr oder Unsinn.
     // Zaehlt nicht — hier raet niemand. Die Meldung hat 21 Zeichen und passt
     // in die Hinweiszeile der Uhr (ZEILE_MAX 26).
@@ -237,12 +263,34 @@ if ($sitzung !== null) {
 
     if ($aktion === 'status') {
         if ($rest <= 0) { antworten(410, ['error' => 'abgelaufen']); }
+        if (($sitzung['abgelehnt'] ?? null) !== null) {
+            antworten(200, ['zustand' => 'abgelehnt', 'grund' => (string)$sitzung['abgelehnt']]);
+        }
         if ($sitzung['user_id'] === null) {
             antworten(200, ['zustand' => 'offen', 'rest_s' => $rest]);
         }
-        antworten(200, ['zustand' => 'beansprucht',
-                        'konto'   => email_maskieren((string)$sitzung['konto_email']),
-                        'rest_s'  => $rest]);
+        $aus = ['zustand' => 'beansprucht',
+                'konto'   => email_maskieren((string)$sitzung['konto_email']),
+                'rest_s'  => $rest];
+        /* MIT GERAETESCHLUESSEL: Kontoschluessel und N_b, damit das Geraet
+         * den Wert rechnen kann — erst, wenn der Browser N_b gesetzt hat. */
+        if (($sitzung['spk'] ?? null) !== null && ($sitzung['n_b'] ?? null) !== null) {
+            $aus['kontoschluessel'] = kp_fuer_geraet($pdo, (int)$sitzung['user_id']);
+            $aus['n_b'] = (string)$sitzung['n_b'];
+            if ((int)$sitzung['geraet_ja'] === 1 && (int)$sitzung['wert_ok'] !== 1) {
+                $aus['wartet'] = 'browser';
+            }
+        }
+        antworten(200, $aus);
+    }
+
+    if ($aktion === 'offenlegen') {
+        $nG = pair_b64(is_array($b) ? ($b['n_g'] ?? null) : null, PAIR_NONCE_LAENGE);
+        if ($nG === null) { abweisen(400, 'payload', false); }
+        if ($rest <= 0) { antworten(410, ['error' => 'abgelaufen']); }
+        $erg = pair_offenlegen($pdo, $sid, $nG);
+        if ($erg === 'ok') { antworten(200, ['ok' => true]); }
+        antworten(409, ['error' => $erg === 'anders' ? 'n_g' : 'zustand']);
     }
 
     if ($aktion === 'bestaetigen' && !in_array($antwort, ['ja', 'nein'], true)) {
@@ -261,102 +309,54 @@ if ($sitzung !== null) {
     // Ja
     if ($rest <= 0) { antworten(410, ['error' => 'abgelaufen']); }
     if ($sitzung['user_id'] === null) { antworten(409, ['error' => 'nicht_beansprucht']); }
-
-    /* ---- Das Geraet entsteht: eine Transaktion --------------------
-     *
-     * SELECT ... FOR UPDATE sperrt die Zeile; ein zweites Ja fuer dieselbe
-     * Sitzung wartet und findet sie dann nicht mehr — es faellt unten in den
-     * Geraete-Zweig und bekommt ok, weil das Geraet inzwischen existiert.
-     * Anlegen und Loeschen stehen in EINEM Commit: Scheitert eines, bleibt die
-     * Sitzung bestehen, das Geraet bekommt 500 und darf wiederholen.
-     *
-     * DAS GERAETELIMIT WIRD HIER NOCH EINMAL GEPRUEFT, obwohl das
-     * Web es beim Eingeben schon getan hat: Zwischen Klick und Ja kann ein
-     * Geraet von Hand dazugekommen sein. Beanspruchte, unbestaetigte Sitzungen
-     * zaehlen nicht mit — zwei gleichzeitige Kopplungen enden deterministisch
-     * mit einem 409 bei der zweiten Bestaetigung. Die Sitzung ist danach weg;
-     * der Weg zurueck ist ein Geraet loeschen und neu beginnen. */
-    $verschwunden = false;
-    $frisch = null;
-    try {
-        $pdo->beginTransaction();
-        $st = $pdo->prepare('SELECT * FROM pair_sessions WHERE id = ? FOR UPDATE');
-        $st->execute([$sid]);
-        $frisch = $st->fetch();
-        if (!$frisch) {
-            $pdo->rollBack();
-            $verschwunden = true;
-        } elseif ($frisch['user_id'] === null) {
-            // Zwischen Lesen und Sperren aus der Hand gegeben? Gibt es nicht —
-            // user_id wird nie zurueckgesetzt. Trotzdem der sichere Ausgang.
-            $pdo->rollBack();
-            antworten(409, ['error' => 'nicht_beansprucht']);
-        } else {
-            $ownerId = (int)$frisch['user_id'];
-            if (geraete_grenze_erreicht($pdo, $ownerId)) {
-                $pdo->prepare('DELETE FROM pair_sessions WHERE id = ?')->execute([$sid]);
-                $pdo->commit();
-                antworten(409, ['error'   => 'device_limit',
-                                'meldung' => 'Es sind bereits ' . MAX_GERAETE . ' Geräte mit diesem '
-                                           . 'Konto verbunden. Erst eines löschen, dann neu koppeln.']);
-            }
-            $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label,
-                                                geraet_art, geraet_modell, geraet_teil)
-                           VALUES (?,?,?,?,?,?,?)')
-                ->execute([$ownerId, (string)$frisch['device_id'], (string)$frisch['api_key_hash'],
-                           /* Vorgabename nach der gemeldeten Art, OHNE Datum — das
-                            * Datum gehoert der Zeile (devices.created_at). */
-                           geraet_vorgabename($frisch['geraet_art']),
-                           $frisch['geraet_art'], $frisch['geraet_modell'], $frisch['geraet_teil']]);
-            $pdo->prepare('DELETE FROM pair_sessions WHERE id = ?')->execute([$sid]);
-            $pdo->commit();
-            /* DER DRITTE SCHRITT DES ERSTSTARTS IST ERLEDIGT. Sonst saehe,
-             * wer koppelt, „Uhr oder Handy koppeln" auf der Startseite weiter
-             * offen. Nach dem Commit: Der Vermerk ist
-             * eine Anzeige, er darf die Kopplung nicht zurueckrollen, und
-             * `erststart_erledigt()` faengt seine Fehler selbst. */
-            erststart_erledigt($ownerId, ERSTSTART_GERAET);
+    if (($sitzung['abgelehnt'] ?? null) !== null) {
+        antworten(409, ['error' => 'abgelehnt', 'grund' => (string)$sitzung['abgelehnt']]);
+    }
+    /* MIT GERAETESCHLUESSEL zaehlt das Ja erst nach dem Offenlegen, und es
+     * schliesst nur ab, wenn das Web den Wert schon bestaetigt hat. Sonst
+     * wird es vermerkt; das Web schliesst ab, wenn „Wert stimmt“ kommt. */
+    if (($sitzung['spk'] ?? null) !== null) {
+        if (($sitzung['n_g'] ?? null) === null) { antworten(409, ['error' => 'zustand']); }
+        $pdo->prepare('UPDATE pair_sessions SET geraet_ja = 1 WHERE id = ?')->execute([$sid]);
+        $sitzung['geraet_ja'] = 1;
+        if ((int)$sitzung['wert_ok'] !== 1) {
+            antworten(202, ['wartet' => 'browser']);
         }
+    }
+
+    /* ---- Das Geraet entsteht: eine Transaktion (kopplung_lib.php) -------
+     *
+     * Ein zweites Ja fuer dieselbe Sitzung wartet auf die Sperre und findet
+     * sie dann nicht mehr — es faellt unten in den Geraete-Zweig und bekommt
+     * ok, weil das Geraet inzwischen existiert. Scheitert das Anlegen, bleibt
+     * die Sitzung bestehen, das Geraet bekommt 500 und darf wiederholen. */
+    try {
+        $erg = pair_abschliessen($pdo, $sid);
     } catch (Throwable $ex) {
-        if ($pdo->inTransaction()) { $pdo->rollBack(); }
         system_melden('pair', 'Kopplung fehlgeschlagen', $ex);
         antworten(500, ['error' => 'server']);
     }
+    if ($erg['ergebnis'] === 'nicht_beansprucht') { antworten(409, ['error' => 'nicht_beansprucht']); }
+    if ($erg['ergebnis'] === 'wartet') { antworten(202, ['wartet' => 'browser']); }
+    if ($erg['ergebnis'] === 'device_limit') {
+        antworten(409, ['error'   => 'device_limit',
+                        'meldung' => 'Es sind bereits ' . MAX_GERAETE . ' Geräte mit diesem '
+                                   . 'Konto verbunden. Erst eines löschen, dann neu koppeln.']);
+    }
 
-    if (!$verschwunden) {
+    if ($erg['ergebnis'] === 'angelegt') {
+        $frisch = $erg['frisch'];
         /* `json_kopf()` und nicht `json_out()`: Diese Antwort ist NICHT das
-         * Ende der Anfrage — darunter steht der Versand der Hinweismail. */
-        json_kopf();
-        echo json_encode(['ok' => true,
-                          'kontoschluessel' => kp_fuer_geraet($pdo, (int)$frisch['user_id'])]);
-
-        /* ---- Den Kontoinhaber benachrichtigen ---------------
-         *
-         * Dies ist die Stelle, an der ein Geraet zum Konto DAZUKOMMT — und die
-         * einzige, an der die betroffene Person es erfahren kann, ohne sich
-         * zufaellig anzumelden. Beim Klick im Web gab es das Geraet noch nicht,
-         * und ein Nein haette die Mail falsch gemacht; deshalb hier.
-         *
+         * Ende der Anfrage — darunter steht der Versand der Hinweismail.
          * ERST ANTWORTEN, DANN VERSENDEN: Die Uhr wartet auf diese Antwort.
          * Bricht sie wegen eines langsamen Mailservers ab, wiederholt sie das
-         * Ja — und bekommt ok aus dem Geraete-Zweig. Ein Fehlschlag des
-         * Versands beruehrt die Kopplung nicht; er landet im Fehlerprotokoll. */
+         * Ja — und bekommt ok aus dem Geraete-Zweig. */
+        json_kopf();
+        echo json_encode(['ok' => true,
+                          'kontoschluessel' => kp_fuer_geraet($pdo, (int)$frisch['user_id'])]
+                         + pair_huelle_feld($frisch['spk'] ?? null, (int)($frisch['im_buch'] ?? 0)));
         antwort_abschliessen();
-        try {
-            $ust = $pdo->prepare('SELECT email FROM users WHERE id = ?');
-            $ust->execute([(int)$frisch['user_id']]);
-            $mail = $ust->fetchColumn();
-            if ($mail !== false && $mail !== null && $mail !== '') {
-                mail_einreihen('geraet_gekoppelt', (string)$mail, [
-                    'geraet'    => geraet_bezeichnung($frisch['geraet_art'],
-                                       $frisch['geraet_modell'], $frisch['geraet_teil']),
-                    'geraet_id' => (string)$frisch['device_id'],
-                    'zeitpunkt' => datum_zeit_text(gmdate('Y-m-d H:i:s')),
-                ]);
-            }
-        } catch (Throwable $ex) {
-            system_melden('pair', 'Hinweis auf neues Gerät konnte nicht verschickt werden', $ex);
-        }
+        pair_gekoppelt_melden($pdo, $frisch);
         exit;
     }
     // verschwunden: weiter unten im Geraete-Zweig — das Geraet gibt es jetzt.
@@ -368,7 +368,7 @@ if ($sitzung !== null) {
  * GERAET_VERGLEICHSWERT, damit aus der Dauer nicht ablesbar ist, welche
  * Geraetekennungen es gibt — die Kennung ist die Haelfte dessen, was ein
  * Upload braucht. */
-$st = $pdo->prepare('SELECT id, user_id, api_key_hash, active FROM devices WHERE device_id = ?');
+$st = $pdo->prepare('SELECT * FROM devices WHERE device_id = ?');
 $st->execute([$devId]);
 $dev = $st->fetch();
 if (!$dev) {
@@ -404,9 +404,20 @@ if ($kontoStatus !== 'aktiv') {
     abweisen(403, 'konto', false, ['grund' => $kontoStatus]);
 }
 
+/* `huelle: 2` auch hier (Rueckmeldung KG): So lernt ein Geraet, dessen
+ * Merker verloren ging, es ueber denselben Weg wieder wie den
+ * Kontoschluessel. */
+$huelle = pair_huelle_feld($dev['spk'] ?? null, (int)($dev['herkunft'] ?? 0));
+
 if ($aktion === 'status') {
     antworten(200, ['zustand' => 'gekoppelt',
-                    'kontoschluessel' => kp_fuer_geraet($pdo, (int)$dev['user_id'])]);
+                    'kontoschluessel' => kp_fuer_geraet($pdo, (int)$dev['user_id'])] + $huelle);
+}
+
+/* Offenlegen nach dem Abschluss: Die Antwort ging verloren, der Rest lief
+ * weiter (das Ja kommt erst nach dem Offenlegen). Nichts mehr zu tun. */
+if ($aktion === 'offenlegen') {
+    antworten(200, ['ok' => true]);
 }
 
 if ($aktion === 'bestaetigen') {
@@ -417,7 +428,7 @@ if ($aktion === 'bestaetigen') {
      * Richtung: Ein Nein, das ein fertiges Geraet loeschte, waere ein Trennen
      * ohne Trennen-Mail. */
     antworten(200, ['ok' => true,
-                    'kontoschluessel' => kp_fuer_geraet($pdo, (int)$dev['user_id'])]);
+                    'kontoschluessel' => kp_fuer_geraet($pdo, (int)$dev['user_id'])] + $huelle);
 }
 
 /* ---- Trennen: die Uhr gibt ihre Kopplung zurueck ---------

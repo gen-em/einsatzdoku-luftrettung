@@ -14,6 +14,23 @@
  * fuehrt zum selben Ergebnis. Deshalb steht hier auch nichts, was die Seite
  * erst aufbaut — sie ist fertig, wenn diese Datei laedt.
  *
+ * SEIT WEB 24.18.0 (KA-06d) DAZU DER VERGLEICHSWERT, und der ist keine
+ * Bequemlichkeit: Ein Gerät mit Geräteschlüssel koppelt nur, wenn Browser
+ * und Gerät dieselbe Zahl zeigen und die Person es hier bestätigt. Die
+ * Rechnung steht in `huelle2.js` (`kopplungWert()`), die Reihenfolge hier:
+ *   1. Rückfrage (Formular `data-kopplung-start`): SPK und Zusage zur
+ *      Gerätekennung in die Sitzungsablage des Tabs, DANN N_b ziehen und
+ *      mitschicken.
+ *   2. Warten, bis das Gerät N_g offenlegt (`n_g` im Stand).
+ *   3. Zusage prüfen und den Wert rechnen — gegen die Werte aus 1, nicht
+ *      gegen eine neue Abschrift des Servers; den Kontoschlüssel erst, wenn
+ *      er zum eigenen privaten Teil passt.
+ *   4. „Wert stimmt“: das Gerät ins Gerätebuch (nur bei umgelegter Weiche),
+ *      dann dem Server melden. „Wert ist anders“ oder eine Zusage, die nicht
+ *      passt: melden, abbrechen.
+ * Und beim Laden der Geräteseite der ABGLEICH DES GERÄTEBUCHS: Ein Eintrag
+ * ohne Gerät bekommt `bis` (`#geraetebuch-abgleich`).
+ *
  * SECHS BEDINGUNGEN, damit aus der Bequemlichkeit kein zweites Problem wird.
  * Sie stehen unten je an ihrer Stelle noch einmal:
  *   1. Ein Endpunkt, der genau eine Frage beantwortet und KEINE Eingabe nimmt.
@@ -30,7 +47,46 @@
 'use strict';
 (() => {
 
+  const ABLAGE = 'nadoku-kopplung:';
   const kasten = document.getElementById('kopplung-warten');
+
+  /* ---- 1. Die Rückfrage: merken, DANN N_b ---------------------------- */
+  const startForm = document.querySelector('form[data-kopplung-start]');
+  if (startForm) {
+    startForm.addEventListener('submit', () => {
+      try {
+        const T = EdCrypto.teile;
+        const nB = T.toB64(EdHuelle2.kopplungNonce());
+        sessionStorage.setItem(ABLAGE + startForm.dataset.geraet, JSON.stringify({
+          spk: startForm.dataset.spk, zusage: startForm.dataset.zusage, n_b: nB }));
+        startForm.querySelector('input[name="n_b"]').value = nB;
+      } catch (e) {
+        /* Ohne N_b weist der Server ab und sagt, warum. */
+      }
+    });
+  }
+
+  /* ---- Abgleich des Gerätebuchs -------------------------------------- */
+  (async () => {
+    const el = document.getElementById('geraetebuch-abgleich');
+    if (!el || typeof EdInhalt === 'undefined' || !EdInhalt.schreibt2()
+        || typeof PAT_WRAP === 'undefined') { return; }
+    try {
+      const da = new Set(JSON.parse(el.dataset.geraete || '[]'));
+      if (kasten && kasten.dataset.geraet) { da.add(kasten.dataset.geraet); }
+      const ck = await EdKeyGuard.contentKey(PAT_WRAP);   // still: ohne Nachfrage
+      if (!ck) { return; }
+      const buch = await EdStandbuch.seitenbuch(ck);
+      const geraete = await buch.geraete();
+      for (const sid of Object.keys(geraete)) {
+        const g = geraete[sid];
+        if (g.bis == null && !da.has(g.geraet)) { await buch.geraetAustragen(sid); }
+      }
+    } catch (e) {
+      /* still — beim nächsten Laden wieder */
+    }
+  })();
+
   if (!kasten) { return; }   // andere Seite, anderer Zustand — nichts zu tun
 
   const anzeige = document.getElementById('kopplung-restzeit');
@@ -45,6 +101,129 @@
    * Schluss, ganz gleich, was hier steht. */
   const TAKT_MS = 3000;
   const FEHLER_MAX = 3;
+
+  /* ---- 2. bis 4. Der Vergleichswert ---------------------------------- */
+  const herkunft = kasten.dataset.herkunft === '1';
+  const karte = kasten.closest('.karte');
+  const titel = karte ? karte.querySelector('.karte-titel') : null;
+  let wertGezeigt = false;
+  let gemerkt = null;   // { spk, nB, ck } für „Wert stimmt“
+
+  function schritt(name) {
+    if (!karte) { return; }
+    for (const el of karte.querySelectorAll('[data-kopplung-schritt]')) {
+      el.hidden = el.dataset.kopplungSchritt !== name;
+    }
+    if (name === 'geraet' && titel) { titel.textContent = 'Am Gerät bestätigen'; }
+  }
+  function fehlerZeigen(text) {
+    anhalten();
+    if (text && karte) {
+      const p = karte.querySelector('[data-kopplung-schritt="fehler"] .meldung p');
+      if (p) { p.textContent = text; }
+    }
+    schritt('fehler');
+    kasten.hidden = true;
+  }
+  async function melden(daten) {
+    return EdApi.postJson(kasten.dataset.antwort, daten);
+  }
+
+  /* Passt der ausgelieferte Kontoschlüssel zum eigenen privaten Teil? Über
+   * ECDH mit einem Wegwerfpaar: ECDH(privat, X) = ECDH(x, K) gilt nur für
+   * das passende K. So braucht es nichts, was `kontopaar.js` nicht schon
+   * hergibt, und nichts davon verlässt den Browser. */
+  async function kontoPubGeprueft(ck) {
+    const K = EdKontopaar.oeffentlich();
+    const privat = await EdKontopaar.privat(ck);
+    if (!K || !privat) { return null; }
+    const alg = { name: 'ECDH', namedCurve: 'P-256' };
+    const weg = await crypto.subtle.generateKey(alg, false, ['deriveBits']);
+    const kKey = await crypto.subtle.importKey('raw', K, alg, false, []);
+    const a = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: weg.publicKey }, privat, 256));
+    const b = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: kKey }, weg.privateKey, 256));
+    return a.every((x, i) => x === b[i]) ? K : null;
+  }
+
+  async function wertZeigen(nGText) {
+    wertGezeigt = true;
+    let ablage = null;
+    try { ablage = JSON.parse(sessionStorage.getItem(ABLAGE + kasten.dataset.geraet) || 'null'); } catch (e) { ablage = null; }
+    if (!ablage) {
+      fehlerZeigen('Diese Kopplung wurde in einem anderen Fenster begonnen. Mach dort weiter '
+                 + 'oder hol am Gerät einen neuen Code.');
+      return;
+    }
+    try {
+      const T = EdCrypto.teile;
+      const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+      if (!ck) { wertGezeigt = false; return; }   // Dialog abgebrochen — beim nächsten Takt wieder
+      const K = await kontoPubGeprueft(ck);
+      if (!K) {
+        fehlerZeigen('Der Schlüssel deines Kontos passt nicht zu dem, den der Server ausliefert. '
+                   + 'Bitte kein Gerät koppeln und die BetreiberIn informieren.');
+        return;
+      }
+      const spk = T.fromB64(ablage.spk);
+      const nB = T.fromB64(ablage.n_b);
+      let wert;
+      try {
+        wert = await EdHuelle2.kopplungWert(K, spk, T.fromB64(nGText), nB, T.fromB64(ablage.zusage));
+      } catch (e) {
+        if (e && e.grund === 'zusage') {
+          await melden({ antwort: 'nein', grund: 'zusage' }).catch(() => {});
+          fehlerZeigen(null);
+          return;
+        }
+        throw e;
+      }
+      gemerkt = { spk: spk, ck: ck };
+      const zahl = karte.querySelector('[data-kopplung-zahl]');
+      if (zahl) { zahl.textContent = wert.slice(0, 3) + ' ' + wert.slice(3); }
+      schritt('wert');
+    } catch (e) {
+      fehlerZeigen('Der Vergleichswert ließ sich nicht rechnen. Hol am Gerät einen neuen Code.');
+    }
+  }
+
+  if (karte) {
+    for (const knopf of karte.querySelectorAll('[data-kopplung-antwort]')) {
+      knopf.addEventListener('click', async () => {
+        for (const k of karte.querySelectorAll('[data-kopplung-antwort]')) { k.disabled = true; }
+        if (knopf.dataset.kopplungAntwort === 'nein') {
+          await melden({ antwort: 'nein', grund: 'wert' }).catch(() => {});
+          fehlerZeigen(null);
+          return;
+        }
+        try {
+          /* ERST DAS BUCH, DANN DER SERVER: Ein Gerät, das der Server
+           * anlegt, ohne im Buch zu stehen, sendete Daten, die nicht
+           * aufgehen; ein Eintrag ohne Gerät räumt der Abgleich auf. */
+          let imBuch = false;
+          if (EdInhalt.schreibt2()) {
+            const buch = await EdStandbuch.seitenbuch(gemerkt.ck);
+            imBuch = (await buch.geraetEintragen({ spk: gemerkt.spk, geraet: kasten.dataset.geraet,
+                                                    seit: Math.floor(Date.now() / 1000) })) !== null;
+          }
+          const a = await melden({ antwort: 'ja', im_buch: imBuch });
+          if (!a.ok) {
+            fehlerZeigen(a.daten && a.daten.meldung ? a.daten.meldung
+              : 'Die Bestätigung kam nicht an. Hol am Gerät einen neuen Code.');
+            return;
+          }
+          try { sessionStorage.removeItem(ABLAGE + kasten.dataset.geraet); } catch (e) { /* egal */ }
+          if (a.daten && a.daten.zustand === 'gekoppelt') {
+            anhalten();
+            window.location.assign(kasten.dataset.ziel);
+            return;
+          }
+          schritt('geraet');
+        } catch (e) {
+          fehlerZeigen('Das Gerät ließ sich nicht eintragen. Hol am Gerät einen neuen Code.');
+        }
+      });
+    }
+  }
 
   let rest = parseInt(kasten.dataset.rest || '0', 10);
   let fehler = 0;
@@ -134,6 +313,12 @@
       case 'wartet':
         rest = parseInt(antwort.rest_s, 10) || 0;
         if (anzeige) { anzeige.textContent = restText(rest); }
+        if (herkunft && antwort.wert_ok) {
+          schritt('geraet');
+        } else if (herkunft && antwort.n_g && !wertGezeigt) {
+          await wertZeigen(antwort.n_g);
+          if (!laeuft) { return; }
+        }
         if (rest <= 0) {
           /* BEDINGUNG 3, zweiter Teil: Die Frist ist die harte Grenze. Der
            * Server sagt dasselbe beim naechsten Mal von selbst; hier wird
@@ -169,6 +354,10 @@
         anhalten();
         schlussText('Am Gerät wurde die Kopplung abgelehnt. Es ist nichts geschehen — '
                   + 'wenn du es doch verbinden willst, hol dir dort einen neuen Code.');
+        return;
+
+      case 'abgelehnt':
+        fehlerZeigen(null);
         return;
 
       case 'abgelaufen':

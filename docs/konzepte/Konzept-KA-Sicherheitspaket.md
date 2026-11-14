@@ -12,8 +12,8 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-06b-4** (Anhebelauf, Web 24.17.0) im PR; danach 06c (Geräte), 06d (Server), 06e (Altformat der Gerätedaten), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-01, -02, -05, -06 mit PR #168 gemergt (Uhr 4.5.1), KG-03 wartet auf diese Referenz |
-| Erledigt | **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
+| In Arbeit | **KA-06d** (Kopplung mit Vergleichswert, Web 24.18.0, **Migration — `update.php`**, P-KA-13) im PR; danach 06c (nur noch das Handy; **Fable** für den Krypto-Kern samt Gegenprüfung des Zählers, E-KA-64), 06e (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51; dort auch F-KA-103 und -104). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-03a in PR #173; **KG-03b kann nach dem Merge von 06d beginnen** (Vertrag 1a.7) |
+| Erledigt | **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
@@ -112,6 +112,13 @@ Safari.
 | E-KA-58 | **Die Kennung des Kontos für die Ablage des Standbuchs kommt aus dem Inhaltsschlüssel** (AES-GCM-Prüfwert über nichts, davon SHA-256), nicht vom Server — eine Kennung, die der Server nennt, könnte er wechseln, und der Browser fände keinen Anker. **Datensatz und Blätter in einer Anfrage** (Feld `blaetter` mit `refs`); der Server prüft, dass jeder Block steht, dessen Zähler ein Blatt hebt (`uebersprungen`), sonst 409 `blatt` und nichts gespeichert. **Wiederherstellung und Übernahme lesen ohne Standbuch** — ein eingespielter Stand ist mit Absicht älter — und schreiben mit neuem Zähler | 13.11.2026, Umsetzung |
 | E-KA-59 | **Der Anhebelauf läuft still nach der Anmeldung und nur mit umgelegter Weiche** (eigener Endpunkt `api/format_anheben.php`, Runden zu 200). Er öffnet jeden neuen Block vor dem Senden und vergleicht; der Server schreibt nur bei unverändertem `blob_alt`. Ein Blatt, für das der Server keinen Altbestand mehr nennt, wird geschlossen. Gerätedaten bleiben bei 06e | 13.11.2026, BetreiberIn („alles wie vorgeschlagen") |
 | E-KA-60 | **Alte Sicherungen müssen nicht mehr einspielbar sein** — berichtigt E-KA-40 in diesem Punkt. Daraus: Sobald der Anhebelauf einmal durchgelaufen ist und alle 16 Blätter geschlossen sind, werden vor v1.0 **der Anhebelauf und das Lesen des alten Formats (`edk1:`, Gerätehülle Fassung 1) zurückgebaut** — mit 06e oder KA-07. Eine Sicherung im alten Format wird dann mit einer Meldung abgewiesen statt gehoben | 13.11.2026, BetreiberIn |
+| E-KA-61 | **06d kommt vor 06c, und die Webseite der Kopplung geht mit 06d** (Vergleichswert, „Wert stimmt“, Eintrag ins Gerätebuch, Demo-Gerät). Grund: Die Garmin-Uhr (KG-03b) braucht für eine vollständige Kopplung den Server **und** die Webseite; die Rechnung dafür liegt seit 06b-1 in `huelle2.js`, es ist Verdrahtung, kein neuer Krypto-Kern (Opus). 06c behält nur das Handy. Vorab gehen der Vertragsentwurf an KG und das Mockup an die BetreiberIn; gebaut wird nach der Freigabe, in einem PR mit einem Prüfstand | 13.11.2026, BetreiberIn |
+| E-KA-62 | **Ein Skript räumt die Testkonten auf Staging auf** (`tools/sandbox/staging_konten.py`, Nr. 564), und `docs/Pruefablauf.md` 2.4 sagt, dass jede Sitzung es am Ende fährt. Es löscht alles außer einer Liste, die es behält; ohne `--wirklich` zeigt es nur an. Geht mit dem PR von 06d | 13.11.2026, BetreiberIn |
+| E-KA-63 | **Entwurf 06d und Mockup M-KA-01 freigegeben**, mit den drei Ergänzungen aus KG (`offenlegen` wiederholbar, Zustände von `status`, `huelle: 2` am gekoppelten Gerät); Zustand F bleibt: Ein Gerät mit älterer App koppelt bis zum Stichtag aus 06e mit Warnung („Trotzdem verbinden") | 13.11.2026, BetreiberIn |
+| E-KA-64 | **Der Zähler `z` ist die Unix-Sekunde des Verschließens, lokal streng steigend** (`max(jetzt, letztes z + 1)`) — beantwortet Q-KA-13 unter Vorbehalt: Ein Fable-Agent prüft die Regel mit 06c gegen die Referenz | 13.11.2026, BetreiberIn |
+| E-KA-65 | **Die Liste der Konten, die das Aufräumskript behält, steht in `NADOKU_STAGING_BEHALTEN`** (Umgebung der Arbeitsumgebung, nicht im Repositorium) — beantwortet Q-KA-14; das eigene Konto und `demo@…` bleiben immer | 13.11.2026, BetreiberIn |
+| E-KA-66 | **Gerätebuch und „Wert stimmt“ gehen in zwei Schritten, nicht in einer Transaktion:** erst das Buch (über den vorhandenen Weg `geraetEintragen()`), dann der Vermerk am Server mit `im_buch`. Ein Gerät am Server ohne Buch-Eintrag sendete Daten, die nicht aufgehen; ein Buch-Eintrag ohne Gerät räumt der Abgleich der Geräteseite auf (`bis`). Weicht vom Entwurf 06d, Punkt 5 ab | 13.11.2026, Umsetzung |
+| E-KA-67 | **Den Anschluss des leeren Schlussstücks prüft der Browser beim Lesen (Regel `luecke`), nicht der Eingang** — der Eingang prüft Form (Fassung 2, `ts_von` = `ts_bis`). Eine Abfrage des letzten Stücks im Eingang kostete jede Anfrage und belegte nichts, was der Browser nicht ohnehin prüft. Weicht vom Entwurf 06d, Punkt 8 ab | 13.11.2026, Umsetzung |
 | E-KA-21 | **Die Garmin-Anteile gehen an eine eigene Instanz, Kürzel KG** (Abschnitt 11): KA-04 Punkt 1 und 4, der Garmin-Teil von KA-06c samt der Messung für 06a, die Garmin-Kommentare aus F-KA-43 und der Garmin-Teil von KA-M6. KG zählt eigene Nummern (`KG-NN`, `F-KG-NN`, `E-KG-NN`, `P-KG-NN`), führt ein eigenes Konzept und schreibt den Rahmenplan nicht — das tut diese Instanz | 10.11.2026, BetreiberIn |
 
 ---
@@ -528,6 +535,76 @@ nicht neu): Der Browser verschließt sie im Anhebelauf unter einem eigenen
 Kennzeichen „vom Browser übernommen am …". Annahme von Fassung 1 am Server
 endet zu einem Stichtag (`400`, wie `klartext` in S11).
 
+**KA-06d Entwurf der Kopplung (13.11.2026, E-KA-61) — freigegeben
+(E-KA-63).** Die Rechnung steht in der Referenz (`referenz.py`, Kopf
+„DER VERGLEICHSWERT DER KOPPLUNG"); hier steht, wie sie über `pair.php`
+und die Webseite läuft. Beantwortet F-KG-16.
+
+1. **`start`** nimmt neben `geraet` den Block
+   `"schluessel": {"spk": "<Base64, 65 Byte SEC1>", "zusage": "<Base64, 32 Byte>"}`.
+   Fehlt er, koppelt das Gerät wie bisher, ohne Herkunftsnachweis (bis zum
+   Stichtag aus 06e). Ein Block in falscher Form ist `400 schluessel`.
+2. **Webseite, „Dieses Gerät koppeln?"**: Der Browser bekommt SPK und
+   Zusage mit der Rückfrage, legt sie zur Gerätekennung in die
+   Sitzungsablage des Tabs und schickt beim Verbinden **N_b** (16 Byte,
+   Base64, im Browser gezogen) mit `koppeln_bestaetigen`. Der Server setzt
+   N_b **einmal**, beim Beanspruchen.
+3. **`status`, Zustand `beansprucht`**, trägt dazu `kontoschluessel` und
+   `n_b`. Das Gerät legt sich auf das erste Paar fest; ein anderes in einer
+   späteren Antwort bricht ab (F-KG-16 (1): **nein**, kein zweites Paar).
+4. **Neu: `offenlegen`** mit Kopfzeilen, `{"aktion":"offenlegen","n_g":"<Base64, 16 Byte>"}`
+   → `200 {"ok":true}`. Nur im Zustand `beansprucht`. **Wiederholbar:**
+   dasselbe N_g noch einmal → wieder `200` (die Antwort kann über Bluetooth
+   verloren gehen); ein anderes → `409 {"error":"n_g"}`. N_g muss
+   zur Zusage passen — **das prüft der Server nicht**, das prüft der Browser.
+   Danach rechnet das Gerät den Wert und zeigt ihn mit der maskierten Adresse.
+5. **Webseite, „Vergleichswert prüfen"**: Die Karte fragt nach, bis N_g da
+   ist (`api/kopplung_stand.php` liefert ihn), prüft die Zusage gegen die
+   SPK aus Schritt 2 (nicht gegen eine neue Abschrift des Servers),
+   rechnet den Wert und zeigt ihn. **„Wert stimmt"** schreibt den Eintrag
+   ins Gerätebuch (`sid`, `spk`, `geraet`, `seit`) und meldet dem Server
+   `wert_ok` — in einer Anfrage, Gerätebuch und Vermerk in einer
+   Transaktion (Feld `blaetter` wie in 06b-3). **„Wert ist anders"** oder
+   eine Zusage, die nicht passt, markiert die Sitzung als abgelehnt (sie
+   bleibt bis zum Ende der Frist stehen, damit das Gerät den Grund
+   erfährt) und meldet es im Reiter System (`kopplung`, ohne Werte).
+6. **`bestaetigen` (Ja)** schließt erst ab, wenn `wert_ok` vorliegt; sonst
+   `202 {"wartet":"browser"}`, und das Gerät fragt mit `status` nach.
+   **Die Zustände von `status` nach dem Offenlegen** (Rückmeldung KG):
+   (a) Ja da, Wert noch nicht bestätigt →
+   `{"zustand":"beansprucht","wartet":"browser", …}`; (b) im Web abgelehnt →
+   `{"zustand":"abgelehnt","grund":"wert"|"zusage"}` — das Gerät zeigt „Im
+   Web abgelehnt" und legt kein Paar ab; (c) abgeschlossen →
+   `{"zustand":"gekoppelt","kontoschluessel":…,"huelle":2}`. Umgekehrt schließt `wert_ok` ab, wenn das Ja schon
+   da ist. Wer zuletzt kommt, legt das Gerät an. `devices` bekommt `spk`
+   (Migration); `status` und `bestaetigen` sagen nach dem Abschluss
+   `"huelle": 2` — fehlt das Feld (alter Server), sendet das Gerät
+   Fassung 1. **Auch `status` eines schon gekoppelten Geräts trägt es**,
+   sobald am Gerät ein `spk` steht — so lernt eine Uhr, deren Merker
+   verloren ging, ihn über denselben Weg wieder wie den Kontoschlüssel.
+7. **Der Zähler `z` (F-KG-16 (3), Q-KA-13).** Die Referenz verlangt
+   `z ≥ o` je Einsatz, nicht `o + 1`; ein Zähler für alle Einsätze, der das
+   Trennen überdauert (`gz` der Uhr), erfüllt das. **Vorschlag für den
+   Gerätewechsel:** `z` = Unix-Sekunde des Verschließens, lokal streng
+   steigend gehalten (`max(jetzt, letztes z + 1)`). Dann steigt der Zähler
+   auch über Geräte hinweg, solange ihre Uhren nicht mehr als den Abstand
+   zweier Übergaben auseinandergehen; das Format ändert sich nicht.
+   **Zur Gegenprüfung durch Fable mit 06c** — es ist eine Regel der
+   Referenz, keine der Verdrahtung.
+8. **Das leere Schlussstück (F-KG-16 (2)).** `ts_von` = Unix-Sekunde des
+   Abschlusses, innen und in der Klartextspalte gleich; Platz `<seq>:0`.
+   Der Server prüft Form und dass `seq` an das letzte Stück anschließt.
+9. **Austragen und Aufräumen.** Entkoppeln im Web setzt `bis` im
+   Gerätebuch (der Browser, in derselben Anfrage). Ein Eintrag ohne Gerät
+   (das Gerät sagte Nein, nachdem der Wert bestätigt war) bekommt `bis`
+   beim nächsten Laden der Geräteseite. **Das Aufräumskript** behält das
+   eigene Konto, `demo@…` und die Adressen aus `NADOKU_STAGING_BEHALTEN`
+   (Umgebung der Arbeitsumgebung, kommagetrennt); fehlt die Variable, ist
+   es rot statt großzügig (Q-KA-14).
+10. **Mockup:** `docs/konzepte/konzept-ka/mockups/M-KA-01-kopplung.html`
+    und `.png` — nur vorhandene Bausteine (Karte, Zeile, Codeblock in der
+    großen Stufe, Meldung, Knöpfe im Fuß).
+
 **Berührt:** Web, Uhr, Android; Migration (Spalte für Geräteschlüssel,
 Zähler) — **`update.php` ansagen**. **Pflege:** `CLAUDE.md` 4 (der Absatz
 zur Verschlüsselung nennt dann Bindung und Herkunft), Technik 4.14 und 4.40,
@@ -597,6 +674,8 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 | Q-KA-10 | KA-M5: Stichtag für Fassung 1? | Ende der Frist (E-KA-46) |
 | Q-KA-11 | KA-M5: Rundenzahl mit Ableitung 2? | 1 200 000 (E-KA-47) |
 | Q-KA-12 | Wird der Anhebeweg vor v1.0 zurückgebaut, wenn er einmal durchgelaufen ist? | ja, samt dem Lesen von `edk1:` — alte Sicherungen müssen nicht mehr einspielbar sein (E-KA-60) |
+| Q-KA-13 | Wie hält der Zähler `z` der Einsatzhülle, wenn ein Einsatz das Gerät wechselt (Übergabe im laufenden Dienst)? Das Standbuch kennt je Einsatz einen Stand `o`; ein zweites Gerät mit kleinerem Zähler fiele als `zurueckgelegt` durch | Unix-Sekunde, Gegenprüfung mit 06c (E-KA-64) |
+| Q-KA-14 | Welche Konten behält das Aufräumskript auf Staging? Die Liste steht nicht im Repositorium, weil dort keine echten Adressen stehen sollen | Umgebungsvariable `NADOKU_STAGING_BEHALTEN` (E-KA-65) |
 
 ---
 
@@ -793,6 +872,40 @@ des eigenen Kontos.
 Fassung 3; 3 Begleitdateien, alle versiegelt. Staging und Produktiv nicht
 gezählt (E-KA-31).
 
+### KA-06d Kopplung mit Vergleichswert (13.11.2026)
+
+**Was nicht geprüft werden konnte — zuerst.**
+
+1. **Kein echtes Gerät.** Weder die Garmin (KG-03b) noch das Handy (06c)
+   koppeln schon mit Geräteschlüssel; gemessen ist ein nachgebautes Gerät
+   nach der Referenz (Node, WebCrypto) gegen die echte Seite und den echten
+   Endpunkt. Ob ein Gerät den Wert richtig zeigt, misst erst KG-03b bzw.
+   06c gegen dieselbe Referenz.
+2. **Fassung 2 von einem Gerät Ende zu Ende** (verschlossen am Gerät, am
+   Eingang angenommen, im Browser mit Herkunft geöffnet) ist nicht
+   gemessen: Am Eingang ist die FORM gemessen (Hüllen in genau dieser Form),
+   das Öffnen mit Herkunft seit 06a/06b-1 an den Vektoren. Das Stück
+   dazwischen gibt es erst mit einem Gerät, das Fassung 2 schreibt.
+3. **Das leere Schlussstück in Wartungslauf, Export und Sicherung** ist nicht
+   gefahren — es kommt erst von einem Gerät mit `huelle: 2`. Gemessen ist
+   der Eingang (`spur2_stueck_schreiben()` nimmt 0 Punkte nur in Stufe 1).
+4. **Die Karte am Handy und in einem echten Safari** — nur Chromium in der
+   Bedienprobe; der volle Lauf fährt Firefox und WebKit (Prüfstand).
+
+**Gemessen:**
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Kopplungsprobe `tools/proben/kopplung/probe.php`, Teil 7 und 8 (neu, Fälle 35 bis 47) | 104 von 104 Erwartungen, davon 21 neu: Schlüssel in falscher Form → 400; `status` mit `n_b` und Kontoschlüssel; Ja vor dem Offenlegen 409; `offenlegen` 200/200/409 `n_g`/400; Ja ohne Wert 202 `wartet`; Wert aus fremdem Konto `zustand`; Abschluss mit `spk`, `herkunft` 1, `huelle` 2; abgelehnt → `status` `abgelehnt`, Ja 409; ohne Gerätebuch kein `huelle`; ältere App wie bisher; Eingang: eigene SID 200, fremde 400, ohne Herkunft 400, leeres Schlussstück Fassung 2 200 / Fassung 1 400 | gegen Web 24.17.0 wären alle 21 rot (`schluessel` überlesen, `offenlegen` unbekannt → 400 `aktion`, Fassung 2 ohne Absenderprüfung angenommen) | Vertrag 1a.7 am Endpunkt, Eingang 3.4 |
+| Bedienprobe `ka06d.mjs`, vier Wege (Chromium, örtlich) | Wert: Seite und Gerät zeigen dieselbe Zahl, gekoppelt ohne `huelle`; Buch (Weiche nur im Probebrowser an): Gerät im Gerätebuch, `huelle: 2`, nach dem Entkoppeln `bis`; anders: `abgelehnt`/`wert`, Ja 409; Zusage: andere N_g → keine Zahl, Fehler, `abgelehnt`/`zusage` | der Weg „Buch" fand F-KA-101 und F-KA-102 | Webseite nach M-KA-01, Prüfung der Zusage im Browser, Gerätebuch, Abgleich |
+| Bedienprobe in Firefox und WebKit, Abfolge `ka06b4-anhebelauf` → `mr-oeffner-markiert` | im ersten vollen Lauf rot (Öffner fehlt, die Seite stand auf der Anmeldung); mit Neuanmeldung in `ka06b4` in allen drei Engines grün | allein gefahren war `mr` grün — der Fehler lag in der Reihenfolge | F-KA-106 |
+| Rundlauf der Kopplung `tools/proben/kopplung/rundlauf.mjs` | 25 von 25, 0 Konsolenfehler | — | der alte Weg (ältere App) unverändert, samt Nachladen und Bedienhöhe |
+| Zentralisierungsregister | 51 Zeilen, 0 über der Decke; Z16 von 7 auf 6 (der Rahmen von `pair.php` steht jetzt in `db_transaktion()`) | ein erster Stand mit `echo json_encode` in `api/kopplung_wert.php` stand über Z41 | die eine Stelle je Sache |
+| Aufräumskript `tools/sandbox/staging_konten.py` gegen Staging | ohne Variable: rot, nichts gelöscht; Trockenlauf: 4 bleiben; mit `--wirklich`: `umlauf-edbak@example.invalid` gelöscht | der erste Stand las den Platzhalter `neue@example.invalid` als Konto (F-KA-105) | E-KA-62, -65 |
+| Prüfstand, Hauptstufe, voller Lauf, über den örtlichen Merge mit `main` (KG-08, Uhr 4.6.0; Konflikte nur in `CHANGELOG.md` und `Backlog-Erledigt.md`, beide Seiten behalten) | erster Lauf am 14.11.2026: 63 grün, **1 rot** (`rueckwegprobe` in Chromium, F-KA-107), 1 Hinweis (`tools/sandbox/LIESMICH.md` 41 statt 40 Zeilen, behoben), 9732 s; in WebKit eine Wiederholung nach E-DM-10 (`betrieb-server-frischer-code`, `waitForURL` 90 s); der zweite Lauf steht als Bericht im Commit | die rote Probe einzeln dreimal nachgefahren: 3 von 3 grün (je 50 + 23 Prüfungen); im selben Lauf Firefox und WebKit grün | der Bericht des Commits, über den gemischten Baum |
+
+**R91 nach PR #177 (Web 24.17.0)** steht beim Paket 06b-4.
+
 ### KA-06b-4 Anhebelauf (13.11.2026)
 
 **Was nicht geprüft werden konnte — zuerst.**
@@ -813,6 +926,8 @@ gezählt (E-KA-31).
 | Demo-Konto nach dem Weg | 104 Blöcke `edk1:`, 0 Blätter (zurückgesetzt) | — | die Probe hinterlässt nichts |
 
 **R91 nach PR #176 (Web 24.16.0, Staging, 13.11.2026):** Lauf 204 grün; Anmeldung im Browser mit eigenem Konto und Zweitfaktor; Kern geladen; Standbuch 16 Blätter, Buch 0 (die Weiche steht aus, nichts geschrieben); Einzelansicht des Einsatzes 20332 mit geschützten Angaben geöffnet, Sperrbanner versteckt, 0 Seitenfehler; Reiter System ohne Eintrag nach dem 09.11.2026.
+
+**R91 nach PR #177 (Web 24.17.0, Staging, 13.11.2026):** Lauf 205 grün, Staging meldet 24.17.0; Anmeldung mit eigenem Konto und Zweitfaktor; Kern geladen; Standbuch 16 Blätter, Buch 0; Anmeldeschlüssel nicht liegen geblieben, leeres Salz abgewiesen; Einsatz 20332 geöffnet, Sperrbanner versteckt, 0 Seitenfehler; Reiter System ohne Eintrag nach dem 09.11.2026. **Nicht gemessen:** der Anhebelauf selbst — die Weiche steht aus, niemand ruft ihn.
 
 ### KA-06b-3 Verbraucher (13.11.2026)
 
@@ -1083,6 +1198,13 @@ Klartextfelder (`final`, Strecke, Besatzung, Tagesnotizen, Phasenzeiten bis
 | F-KA-98 | **Die erste Fassung der Probe legte die Weiche nicht um, sondern brach die Seite:** `true` ist ein Zeichen kürzer als `false`, und eine abgefangene Antwort mit der alten `Content-Length` verwirft der Browser (`net::ERR_FAILED`) — ohne `EdInhalt` fiel alles Weitere | Länge und Kodierung aus dem Kopf der Antwort genommen |
 | F-KA-99 | **Formular und Import reichten dem Leser den Klartextbeginn nicht mit** — jede Einsatzhülle der Fassung 2 wäre dort mit `zeit` gescheitert und hätte das Speichern gesperrt | `started_ts` mitgegeben; `einsatz()` nimmt auch `started_at` |
 | F-KA-100 | **Die Formprüfung kannte nur die Gerätehülle der Fassung 1** (F-KA-83) — mit umgelegter Weiche wies der Server die Einsatzhülle des Formulars zurück | `pruef_huelle()` kennt beide Fassungen (E-KA-56) |
+| F-KA-101 | **Die Bedienprobe `ka06b2-standbuch` legt Zufallstexte als Blatt und Gerätebuch des Prüfkontos ab und lässt sie liegen** — ein solches Gerätebuch geht zu Recht nicht auf, und jeder spätere Weg, der es öffnet, scheitert mit `pruefwert` | `ka06d-kopplung-buch` leert das Standbuch des Prüfkontos davor und danach (nur örtlich) |
+| F-KA-102 | **Die Geräteseite lud das Rüstzeug nur, solange ein Gerät mit Schlüssel in der Liste stand** — nach dem Entkoppeln des letzten lief der Abgleich des Gerätebuchs nie | geladen, sobald Migration und Kontopaar da sind; gefunden von `ka06d-kopplung-buch` |
+| F-KA-103 | **Mit ausgelieferter Weiche trägt der Browser kein Gerät ins Gerätebuch** — ein Gerät, das vor dem Umlegen koppelt, bekommt kein `huelle: 2` und sendet Fassung 1, bis es neu koppelt | benannt (Technik 4.42); für Web 25.0.0: die Geräte bis dahin neu koppeln, oder ein Weg „Wert nachträglich bestätigen" (Mockup) |
+| F-KA-104 | **Das Demo-Gerät mit festem Schlüssel (E-KA-44) ergibt erst Sinn, wenn die Demo-Daten in Fassung 2 verschlossen sind** — mit ausgelieferter Weiche gibt es weder Gerätebuch noch Fassung-2-Gerätedaten im Demo | verschoben auf das Umlegen der Weiche (Web 25.0.0), mit dem Neuverschließen der Demo-Fixture |
+| F-KA-105 | **Das Aufräumskript las zuerst jede Adresse der Kontenliste** — auch den Platzhalter des Einladungsformulars (`neue@example.invalid`), und meldete ihn als nicht löschbares Konto | es liest nur die Adressen der Kontozeilen |
+| F-KA-106 | **Der Weg `ka06b4-anhebelauf` (06b-4) ließ das Demo-Konto abgemeldet zurück** — sein Reset beendet die Sitzung, die Seite merkt es aber erst an einer Anfrage im Hintergrund und leitet nach der Wache von `gehZu()` zur Anmeldung um; in Firefox und WebKit stand `mr-oeffner-markiert` danach auf `login.php`. 06b-4 war nie dreifach gefahren worden (Hauptstufe ohne Zehnergrenze) | der Weg meldet die Rolle nach dem Reset neu an; nachgefahren in drei Engines |
+| F-KA-107 | **Die Rückwegprobe lief im ersten vollen Lauf über den Merge in Chromium in eine Zeitgrenze** — `page.goto(suche.php)` wartete 30 s auf `networkidle`, nach acht grünen Schritten; `suche.php` berührt KA-06d nicht, Firefox und WebKit waren im selben Lauf grün | nicht nachzustellen: einzeln dreimal grün; zweiter voller Lauf. **Nicht behoben:** die Probe wartet weiter auf `networkidle` — wiederholt es sich, gehört sie auf `domcontentloaded` und ein Warten auf den Inhaltsschlüssel umgestellt (eigene Nummer) |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
 | F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
 | F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |

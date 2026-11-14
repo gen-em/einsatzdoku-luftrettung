@@ -23,6 +23,12 @@ require_once __DIR__ . '/../kopplung_lib.php';
  *   verworfen   Sitzung weg, kein Gerät: Am Gerät wurde Nein gesagt.
  *   abgelaufen  Die Frist ist vorbei; die Zeile liegt noch bis zum Aufräumjob.
  *   keine       Dieses Konto wartet gerade auf nichts.
+ *   abgelehnt   Im Web wurde der Vergleichswert abgelehnt (KA-06d).
+ *
+ * MIT GERAETESCHLUESSEL (seit Web 24.18.0, KA-06d) traegt `wartet` dazu
+ * `n_g` (sobald das Geraet offengelegt hat) und `wert_ok`. SPK und Zusage
+ * stehen hier NICHT: Der Browser rechnet gegen die Werte, die er vor dem
+ * Senden von N_b gesehen hat, nicht gegen eine neue Abschrift.
  *
  * WARUM GET UND OHNE CSRF-PRÜFUNG: Der Endpunkt liest und ändert nichts —
  * dasselbe Muster wie api/day.php im GET-Zweig. Was er verrät, weiß der
@@ -47,9 +53,14 @@ $sitzung = pair_sitzung_nach_kennung($pdo, $kennung);
  * damit nichts über ein fremdes Gerät. */
 if ($sitzung !== null && (int)($sitzung['user_id'] ?? 0) === $userId) {
     $rest = (int)$sitzung['rest_s'];
-    json_out($rest > 0
-        ? ['zustand' => 'wartet', 'rest_s' => $rest]
-        : ['zustand' => 'abgelaufen']);
+    if ($rest <= 0) { json_out(['zustand' => 'abgelaufen']); }
+    if (($sitzung['abgelehnt'] ?? null) !== null) { json_out(['zustand' => 'abgelehnt']); }
+    $aus = ['zustand' => 'wartet', 'rest_s' => $rest];
+    if (($sitzung['spk'] ?? null) !== null) {
+        $aus['n_g'] = $sitzung['n_g'] ?? null;
+        $aus['wert_ok'] = (int)($sitzung['wert_ok'] ?? 0) === 1;
+    }
+    json_out($aus);
 }
 
 /* Die Sitzung ist weg. Entweder ist daraus ein Gerät geworden (das Ja auf dem
