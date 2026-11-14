@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | nichts; als Nächstes 06c (nur noch das Handy; **Fable** für den Krypto-Kern samt Gegenprüfung des Zählers, E-KA-64), 06e (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51; dort auch F-KA-103 und -104). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-03a in PR #173; **KG-03b kann beginnen** (Vertrag 1a.7, mit 06d gemergt) |
+| In Arbeit | nichts; als Nächstes 06c (nur noch das Handy; **Fable** für den Krypto-Kern samt Gegenprüfung des Zählers, E-KA-64, mit den fünf Zweifeln aus KG und F-KA-108, Abschnitt 5 KA-06c), 06e (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51; dort auch F-KA-103 und -104). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-03a in PR #173; **KG-03b gemergt** (PR #181, 14.11.2026, Uhr 5.0.0, Vertrag 1a.7) |
 | Erledigt | **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -523,6 +523,21 @@ Vergleichswert — Garmin-Uhr (**→ KG-03, E-KA-21**) und Handy; die Wear-Uhr b
 koppeln neu oder senden bis dahin Fassung 1, die der Browser als „ohne
 Herkunftsnachweis" kennzeichnet. Die Frist dafür entscheidet KA-M5.
 
+**Mit 06c zu klären (14.11.2026, BetreiberIn: „alles in 6c").** Aus der
+Rückmeldung von KG zu KG-03b (PR #181, Uhr 5.0.0; F-KG-22, Konzept KG 5e)
+gehen an die **Gegenprüfung des Zählers durch Fable** (E-KA-64):
+(1) Eine Uhr, deren Zeit einmal weit voraus lag, behält den hohen Stand;
+ein zweites Gerät fällt für diesen Einsatz als `zurueckgelegt` durch, bis
+seine Zeit den Stand überholt. (2) Eine Uhr ohne Zeit oder mit Nachgang
+fällt selbst durch, sobald ein anderes Gerät den Einsatz belegt hat — ob
+der Browser das als Angriff oder als „Uhrzeit prüfen" zeigt, ist zu
+entscheiden. (3) `z` belegt die Zeit des Verschließens, nicht die Frische
+des Inhalts; wer zuletzt sendet, gewinnt (wie mit `+1`). (4) Der Kopf von
+`referenz.py` spricht von „je Absender", geprüft wird je Einsatz. (5) Der
+Referenz fehlt ein Vektor mit zwei Absendern an einem Einsatz. **Dazu
+F-KA-108** (Server, aus 06d): Die Kopplung mit Schlüssel an einem Konto
+ohne Schlüsselpaar.
+
 **KA-06d Server und Formate.** `validate_lib.php` und `geraetehuelle_lib.php`
 prüfen Form und Größe beider Fassungen; `docs/JSON-Vertrag.md`,
 `docs/Backup-Format.md` (Nutzlast hebt sich, Altpakete werden beim
@@ -922,6 +937,9 @@ Seitenfehler (Chromium, nachgebautes Gerät wie `ka06d.mjs`). Ein erster
 Durchgang ließ ein Testgerät stehen (Fehler im Skript der Arbeitsumgebung,
 nicht der Anwendung); es ist entfernt. Danach `staging_konten.py --wirklich`:
 ein Konto gelöscht (`umlauf-edbak@example.invalid`), vier behalten.
+Lauf 208 (Merge von PR #180, nach `update.php`): **Stufe 2 grün** —
+Kreislauf `edbak` und Rückwegprobe in drei Engines gegen das neue Schema;
+das Konto des Kreislaufs danach wieder gelöscht.
 
 ### KA-06b-4 Anhebelauf (13.11.2026)
 
@@ -1222,6 +1240,7 @@ Klartextfelder (`final`, Strecke, Besatzung, Tagesnotizen, Phasenzeiten bis
 | F-KA-105 | **Das Aufräumskript las zuerst jede Adresse der Kontenliste** — auch den Platzhalter des Einladungsformulars (`neue@example.invalid`), und meldete ihn als nicht löschbares Konto | es liest nur die Adressen der Kontozeilen |
 | F-KA-106 | **Der Weg `ka06b4-anhebelauf` (06b-4) ließ das Demo-Konto abgemeldet zurück** — sein Reset beendet die Sitzung, die Seite merkt es aber erst an einer Anfrage im Hintergrund und leitet nach der Wache von `gehZu()` zur Anmeldung um; in Firefox und WebKit stand `mr-oeffner-markiert` danach auf `login.php`. 06b-4 war nie dreifach gefahren worden (Hauptstufe ohne Zehnergrenze) | der Weg meldet die Rolle nach dem Reset neu an; nachgefahren in drei Engines |
 | F-KA-107 | **Die Rückwegprobe lief im ersten vollen Lauf über den Merge in Chromium in eine Zeitgrenze** — `page.goto(suche.php)` wartete 30 s auf `networkidle`, nach acht grünen Schritten; `suche.php` berührt KA-06d nicht, Firefox und WebKit waren im selben Lauf grün | nicht nachzustellen: einzeln dreimal grün; zweiter voller Lauf. **Nicht behoben:** die Probe wartet weiter auf `networkidle` — wiederholt es sich, gehört sie auf `domcontentloaded` und ein Warten auf den Inhaltsschlüssel umgestellt (eigene Nummer) |
+| F-KA-108 | **`pair.php` beginnt die Kopplung mit Schlüssel auch an einem Konto ohne Schlüsselpaar** — `status` trägt dann `n_b`, aber `kontoschluessel: null`, und die Uhr bricht mit „Konto ohne Schlüssel" ab (gemeldet von KG, F-KG-20; hier nicht nachgestellt) | geht mit 06c (BetreiberIn, 14.11.2026): der Server lehnt den Block `schluessel` ohne Kontopaar mit eigenem Fehler ab, oder die Webseite hält vor dem Verbinden an |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
 | F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
 | F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |
