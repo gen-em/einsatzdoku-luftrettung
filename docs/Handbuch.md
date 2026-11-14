@@ -3938,7 +3938,7 @@ sag der BetreiberIn Bescheid. Die Zahl rechnet dein Browser; dafür braucht
 die Seite JavaScript und das Schlüsselpaar deines Kontos (die Karte darüber,
 wenn es fehlt), und gegebenenfalls fragt sie einmal nach deinem Passwort.
 
-**Mit neuer App heißt:** die Garmin-Uhr ab Uhr 5.0.0 (Abschnitt 13), die
+**Mit neuer App heißt:** die Uhr-App ab Uhr 5.0.0 (Abschnitt 13), die
 Android-App ab **0.24.0**. **Am Handy** steht nach dem Verbinden „Gleiche
 Zahl wie im Browser?", darunter deine gekürzte Adresse und groß der
 **Vergleichswert**; du tippst **„Ja, gleiche Zahl"** oder **„Nein, andere
