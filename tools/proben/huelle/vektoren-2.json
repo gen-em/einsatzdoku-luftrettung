@@ -1333,6 +1333,61 @@
       "buch": "uhr-ausgetragen",
       "huelle_b64": "AqSZyftFpPccBMNaVMagiXSwHq+ExYP9ytJ3AF50G9yaE4E7O+0IpDNzqsIULyVI7RWlvcf+NYyBpZrWpCKUiNdpgfGnzchrvG65WpfrsGWvketVWui3gbPGvyvDVxN9/rLMUicnsA5zgARyOZPZTVc3wsoQcLSEiUKb0NvhvOLUGyeafmWgMiDRsvpzwYuGIGYWtkVXdnabz8x0r/JNqCVlBRd0YqVHrr96oqgZmJ1SnBj3t2oH1ifn9yRAqmFWbfK138WpV1sTHwyT4aTauEfWgmMR+z0qmFTMgggAFuLBLJNLUkHWI81dF44mTph5ovqHqjaeDVMmRWbJQ8kSkmgjDKlYA5mMnvLgQ7g68IbBaWFiafMqg3ezijrkltgAf3EL5yLE6K7iaUHODnztts6cPWfU9cWt8Acrp4QWCeyBTx889tGrwo2fAmr3lEszJjmFOUYlRv1HDQ==",
       "grund": "absender-gesperrt"
+    },
+    {
+      "name": "wechsel-erstes-geraet",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": null,
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBE2rkwsigrbgdCkbzqiV+S2xdoctHdxEH9Ua2ZmbdmW4NWDfFB4NpRwZUEXj26ioFapJ4UXMluBNQ5GGNcQbg8D8h82rHL82Ca/Lj4I+2Sz4pTEuwhe/6McACkiem19k6jgO3nh1UxUkheZmuaDZ83SH9hubB5TzewT+Rn//uuov7C5bqZv8dsRjTvhHCym7RplA5ri7sGnJjQkImZtuNvgswgdQH4UNfSif9w0Dd5BkxL27akQ4SOHunO7PzQYFIV6BzoCI3KXRtIUXT39HYfYpbigexwXQAaNKarGl3du7mOArQ/eZNh1fGncv3IQPXZS18ufuA62prH80mZvYvmxBv9ot0basFELOGINKWkg40a/Dy2UrqxcoSJsi4Z/EBQ==",
+      "erwartet": {
+        "z": 1784278385,
+        "absender": "5eb5678b49bd5225"
+      }
+    },
+    {
+      "name": "wechsel-zweites-geraet",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": {
+        "o": 1784278385
+      },
+      "buch": "standard",
+      "huelle_b64": "AqSZyftFpPccBJ8uHFidbzbOmJ4y/F1uZ6Dq+H7cnWUnNuwJNwroQGswGq/Qb26xjfqqu2cSZLndXVBF9Ms+cKILPqdV4cfpNV1NA0n8FmfHjaa14MOd5kaF7kYqJhMJ/3CDB+xvYq9c3zTiR9smqYw/9Fg9B2h58gO16pjb4sEyw4+vkqwVcq1hctuKKbS+cuXabcxO7qrnnKJSBZCGVO4GKJHVrGm41Krc7DNcloHih/YKDxM02YPv1eY1zybpS6dY9nP4LTKjJuglzUodUOMlKcCdlf6WYk+P/u1C1OgzUbrcgDHS4ev2T4LIdoTP7D3BcLQ9EH5GUfo9v7A6cweu4hGn/i+RMDPw/DvCjGJ1NbxOQ3bsFMjB+pnGwRLLC1aTLNrMXktCqSY1P77pqE0NL07KIAVU4v/2E6HBuZKH7G44XZX3Er3PHluRBWZIzGa2ClLrwfHaSj65LNUpL7JxzmlpdPZQXAA=",
+      "erwartet": {
+        "z": 1784278565,
+        "absender": "a499c9fb45a4f71c"
+      }
+    },
+    {
+      "name": "wechsel-zurueck-zum-ersten",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": {
+        "o": 1784278565
+      },
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBIBAyt+tRK5nn2jjeCX/SooATim1FD0Ge161ougyysZzEdYL45V5leIii66ZGevGUKPSt76tfUMuWWWJcDyvDMZzynA7yVSuBJDE54H0dbaoOMx9Fcy4J3FPFsphzmTmi8Jk2ALT8zJMVSqmehLg0T+ic5D1Dg1ceVm03VIDUAqp/lsdYX8LJTOIdNuewuxiidSsbeV6uvdyDA6Vz91Qi50X2Oob+0hrsGmPm2d+0WTijCHNGtj/EYgpyuAw0q3U/SeYrgOhK+bXIKzmmxLcPtgnmUW0T2bxYvm1pwrZ5rbNDyYno2nZDgLyhAEZxphMF2RrXDCwDqsWDZAZctTLdbufiWInmj5dNgpGdbewsGYL1RZQxBjUHfXWQxQnw/OBRw==",
+      "erwartet": {
+        "z": 1784278665,
+        "absender": "5eb5678b49bd5225"
+      }
+    },
+    {
+      "name": "wechsel-uhr-geht-nach",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": {
+        "o": 1784278385
+      },
+      "buch": "standard",
+      "huelle_b64": "AqSZyftFpPccBE6pkB10JhZfGAykWxqPUj7/YPDbwyuOGRNVKcJM27lwgL0+kYFfvDO4MW5BAsMq0PtVgdqpwe4j5IeERZl9jXMJr/dSzw0kDg5Upebg8rzfSstJKBesLavf0Da7lvB+KeIEu78chQoquW/Uk5bA2RUlS26tWUVhFIqnJh0u59eY86tNJfxh7eZvGbM6MSVe+Mv1m/Rl6WCS2m3S7iqpcMZt+3LZlgvllLi0+VHHosz1QTMowIE6kXSfb8GwcBsCEv6FLOkw/YQSwYGEfJCqkg4PqYqnQ14hbmkBh56j05zEE/8SJBqr77MI9Zjd17pKn4HsYZ8vrhLOk0QOBZ0KyERDyRMKYygGrlaTPaT08N2+jME2rFyh3vczcfWkQRU/0s5Mmr/CmogHNMowE4053X9ZbYrSWy0II2c1EU8VzemVSEdyCz6iGGn9McBMuRcV6QjFziHQCAVtSB5k+pbw2HE=",
+      "grund": "zurueckgelegt"
     }
   ],
   "kopplung": {

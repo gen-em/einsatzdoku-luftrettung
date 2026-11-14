@@ -1,6 +1,7 @@
 package org.genem.nadoku.handy.senden
 
 import org.genem.nadoku.handy.aufzeichnung.Rohpunkt
+import org.genem.nadoku.handy.tresor.Geraetepaar
 import org.json.JSONArray
 import org.json.JSONObject
 import java.math.BigInteger
@@ -10,6 +11,8 @@ import java.security.AlgorithmParameters
 import java.security.KeyFactory
 import java.security.KeyPair
 import java.security.KeyPairGenerator
+import java.security.MessageDigest
+import java.security.PrivateKey
 import java.security.SecureRandom
 import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
@@ -32,9 +35,19 @@ import kotlin.math.floor
  * verschlossen an und weist Klartext mit `400 klartext` ab. Das
  * Handy verschließt mit dem ÖFFENTLICHEN Schlüssel des Kontos aus der
  * Kopplung; öffnen kann nur der Browser der Kontoinhaberin. Das Format steht
- * im Kopf von `tools/proben/huelle/referenz.py` und nur dort (Fassung 1);
- * die Prüffälle (`GeraetehuelleTest`) halten diese Umsetzung gegen dessen
- * Vektoren, Byte für Byte.
+ * im Kopf von `tools/proben/huelle/referenz.py` und nur dort; die Prüffälle
+ * (`GeraetehuelleTest`, `Geraetehuelle2Test`) halten diese Umsetzung gegen
+ * dessen Vektoren, Byte für Byte.
+ *
+ * ZWEI FASSUNGEN NEBENEINANDER (seit KA-06c). Fassung 1 verschließt gegen
+ * den Kontoschlüssel allein und belegt nicht, wer verschlossen hat. Fassung 2
+ * nimmt das Gerätepaar dazu ([Geraetepaar]): Der Schlüssel der Hülle entsteht
+ * aus dem flüchtigen UND dem statischen Geheimnis, und der Browser des Kontos
+ * erkennt daran das Gerät, das er bei der Kopplung über den Vergleichswert
+ * bestätigt hat. Fassung 1 bleibt, wie sie war — eine Kopplung ohne
+ * Geräteschlüssel sendet sie weiter, bis der Server `huelle: 2` sagt
+ * (JSON-Vertrag 1a.7). Welche Fassung gilt, entscheidet der Aufrufer; diese
+ * Datei rechnet nur.
  *
  * NUR BORDMITTEL: ECDH über `KeyAgreement`, AES-256-CBC über
  * `Cipher`, HMAC-SHA256 über `Mac`, HKDF daraus von Hand (RFC 5869, zwei
@@ -53,6 +66,22 @@ object Geraetehuelle {
 
     const val FASSUNG = 1
     private val INFO = "nadoku-huelle-1".toByteArray(Charsets.UTF_8)
+
+    const val FASSUNG2 = 2
+    private val INFO2 = "nadoku-huelle-2".toByteArray(Charsets.UTF_8)
+    private val ABSENDER_INFO = "nadoku-absender-1".toByteArray(Charsets.UTF_8)
+    const val SID_LAENGE = 8
+
+    /** Kopf eines Spurstücks der Fassung 2: `ts_von` (8), Merker, Zahl der Herkunftseinträge, Reserve (2). */
+    const val SPUR_KOPF2 = 12
+
+    /**
+     * Der eine Merker, den ein Gerät setzt: letztes Stück der Aufzeichnung.
+     * LUECKE (Bit 1) und UEBERNOMMEN (Bit 2) setzt nur das Konto — ein Gerät,
+     * das sie setzt, weist der Browser als `innen` ab (`spur_lesen()` der
+     * Referenz). Deshalb gibt es sie hier nicht einmal als Konstante.
+     */
+    const val M_SCHLUSS = 1
 
     /** Höhe ohne Wert in der Innenform. */
     const val HOEHE_UNBEKANNT = -32768
@@ -89,7 +118,8 @@ object Geraetehuelle {
     fun sec1(pub: ECPublicKey): ByteArray =
         byteArrayOf(0x04) + fest32(pub.w.affineX) + fest32(pub.w.affineY)
 
-    private fun fest32(z: BigInteger): ByteArray {
+    /** 32 Byte big-endian, wie SEC1 und die Referenz sie schreiben. */
+    internal fun fest32(z: BigInteger): ByteArray {
         val b = z.toByteArray()
         return when {
             b.size == 32 -> b
@@ -107,6 +137,16 @@ object Geraetehuelle {
             false
         }
     }
+
+    /** Der private Schlüssel zu `d` (32 Byte big-endian) — der Weg vom abgelegten Gerätepaar zur Rechnung. */
+    fun privat(d: ByteArray): PrivateKey {
+        require(d.size == 32) { "kein privater P-256-Schlüssel" }
+        return KeyFactory.getInstance("EC").generatePrivate(ECPrivateKeySpec(BigInteger(1, d), kurve))
+    }
+
+    /** Ein frisches Schlüsselpaar auf P-256 — je Hülle eines, und einmal je Kopplung für das Gerät. */
+    fun neuesPaar(): KeyPair = KeyPairGenerator.getInstance("EC")
+        .apply { initialize(ECGenParameterSpec("secp256r1"), SecureRandom()) }.generateKeyPair()
 
     /** Nur für Prüffälle: ein Schlüsselpaar aus festem `d` und seinem SEC1-Punkt. */
     fun paarAus(d: ByteArray, sec1: ByteArray): KeyPair = KeyPair(
@@ -160,6 +200,54 @@ object Geraetehuelle {
             doFinal(klar)
         }
         val kopf = byteArrayOf(FASSUNG.toByte()) + epk + vektor
+        val tag = hmac(okm.copyOfRange(32, 64), kopf + ct + bindung(art, clientRef, platz))
+        return kopf + ct + tag
+    }
+
+    // ---- Die Hülle, Fassung 2 ---------------------------------------------
+
+    /** Die Kennung eines Absenders: die ersten 8 Byte von SHA-256("nadoku-absender-1" ‖ SPK). */
+    fun sid(spk: ByteArray): ByteArray {
+        require(spk.size == 65 && spk[0] == 0x04.toByte()) { "kein SEC1-Punkt" }
+        return MessageDigest.getInstance("SHA-256").digest(ABSENDER_INFO + spk).copyOfRange(0, SID_LAENGE)
+    }
+
+    private fun ecdh(privat: PrivateKey, gegen: ECPublicKey): ByteArray =
+        KeyAgreement.getInstance("ECDH").run { init(privat); doPhase(gegen, true); generateSecret() }
+
+    /**
+     * Eine Hülle der Fassung 2: Kennbyte `0x02` ‖ SID ‖ EPK ‖ IV ‖ CT ‖ TAG.
+     *
+     * ZWEI GEHEIMNISSE. `Z_e` aus dem flüchtigen Paar wie in Fassung 1 —
+     * deshalb öffnet ein gefundenes Handy keine alte Hülle — und `Z_s` aus
+     * dem Gerätepaar. Das Prüfwort stimmt nur, wenn der Absender den privaten
+     * Teil zu dem Schlüssel hatte, der im Gerätebuch des Kontos steht. Das
+     * ist ein gemeinsames Geheimnis, keine Signatur: Es beweist die Herkunft
+     * dem Browser des Kontos und sonst niemandem (Kopf der Referenz).
+     *
+     * `Z_s` WIRD JE HÜLLE NEU GERECHNET, nicht abgelegt wie auf der Garmin.
+     * Dort kostet eine Schlüsselvereinbarung spürbar Laufzeit; hier kostet
+     * sie nichts, was sich messen ließe, und ein Geheimnis weniger liegt auf
+     * der Platte.
+     *
+     * `fluechtig` und `iv` nur für Prüffälle fest.
+     */
+    fun verschliessen2(
+        klar: ByteArray, kontoSec1: ByteArray, absender: Geraetepaar, art: String, clientRef: String,
+        platz: String, fluechtig: KeyPair? = null, iv: ByteArray? = null,
+    ): ByteArray {
+        val konto = oeffentlich(kontoSec1)
+        val paar = fluechtig ?: neuesPaar()
+        val epk = sec1(paar.public as ECPublicKey)
+        val vektor = iv ?: ByteArray(16).also { SecureRandom().nextBytes(it) }
+        require(vektor.size == 16) { "IV hat nicht 16 Byte" }
+        val okm = hkdf(ecdh(paar.private, konto) + ecdh(absender.schluessel(), konto), epk,
+            INFO2 + kontoSec1 + absender.spk)
+        val ct = Cipher.getInstance("AES/CBC/PKCS5Padding").run {
+            init(Cipher.ENCRYPT_MODE, SecretKeySpec(okm.copyOfRange(0, 32), "AES"), IvParameterSpec(vektor))
+            doFinal(klar)
+        }
+        val kopf = byteArrayOf(FASSUNG2.toByte()) + sid(absender.spk) + epk + vektor
         val tag = hmac(okm.copyOfRange(32, 64), kopf + ct + bindung(art, clientRef, platz))
         return kopf + ct + tag
     }
@@ -230,5 +318,110 @@ object Geraetehuelle {
     fun einsatz(clientRef: String, begonnenAt: String, phasen: List<Phaseneintrag>, kontoschluessel: ByteArray): String =
         b64(verschliessen(einsatzInnen(begonnenAt, phasen).toByteArray(Charsets.UTF_8), kontoschluessel,
             "einsatz", clientRef, ""))
+
+    // ---- Die Innenformen, Fassung 2 ---------------------------------------
+
+    /**
+     * Der Kopf eines Spurstücks: `ts_von` als ABSOLUTE Zeit (`uint64`
+     * big-endian), Merker, Zahl der Herkunftseinträge (Gerät: immer 0),
+     * Reserve. In Fassung 1 stand die absolute Zeit nur im Klartext neben der
+     * Hülle und ließ sich dort verschieben; jetzt steht sie auch innen, und
+     * der Browser hält beide gegeneinander (`zeit`).
+     */
+    private fun spurKopf2(tsVon: Long, schluss: Boolean): ByteArray {
+        require(tsVon >= 0) { "ts_von vor 1970" }
+        return ByteBuffer.allocate(SPUR_KOPF2).order(ByteOrder.BIG_ENDIAN)
+            .putLong(tsVon).put((if (schluss) M_SCHLUSS else 0).toByte()).put(0).putShort(0).array()
+    }
+
+    /**
+     * Ein Spurstück innen, Fassung 2: der Kopf, dann je Punkt 14 Byte wie in
+     * Fassung 1 — die Punktzeiten relativ zum `tsVon` DIESES Kopfs.
+     */
+    fun spurInnen2(punkte: List<Rohpunkt>, tsVon: Long, schluss: Boolean): ByteArray =
+        spurKopf2(tsVon, schluss) + spurInnen(punkte, tsVon)
+
+    /**
+     * Das Spurstück für `track`, Fassung 2. Außen dieselben Felder wie
+     * [spurstueck]; `ts_von` ist der kleinste Zeitpunkt des Stücks und steht
+     * innen und außen gleich.
+     *
+     * @param schluss Dieses Stück ist das letzte der Aufzeichnung — es trägt
+     *   ALLE noch offenen Punkte, und das Paket ist abgeschlossen. Ein
+     *   Stück, das `schluss` trägt, ohne bis ans Ende zu reichen, zählt beim
+     *   Lesen nicht als Schluss; eines, das fehlt, fällt als `ohne-schluss` auf.
+     */
+    fun spurstueck2(
+        art: String, clientRef: String, seqVon: Long, punkte: List<Rohpunkt>, kontoschluessel: ByteArray,
+        absender: Geraetepaar, schluss: Boolean, fluechtig: KeyPair? = null, iv: ByteArray? = null,
+    ): JSONObject {
+        require(punkte.isNotEmpty()) { "ohne Punkte: schlussstueck2()" }
+        val von = punkte.minOf { it.zeit }
+        val bis = punkte.maxOf { it.zeit }
+        val platz = "$seqVon:${punkte.size}"
+        return JSONObject()
+            .put("seq_from", seqVon)
+            .put("punkte", punkte.size)
+            .put("ts_von", von)
+            .put("ts_bis", bis)
+            .put("huelle", b64(verschliessen2(spurInnen2(punkte, von, schluss), kontoschluessel, absender,
+                art, clientRef, platz, fluechtig, iv)))
+    }
+
+    /**
+     * Das LEERE SCHLUSSSTÜCK (JSON-Vertrag 3.4, Konzept KA „KA-06d Entwurf"
+     * Punkt 8): Ist beim Abschluss kein Punkt mehr offen, gäbe es kein
+     * Stück, das SCHLUSS tragen könnte — und der Browser meldete eine
+     * vollständige Aufzeichnung als `ohne-schluss`. Dann geht dieses Stück:
+     * nur der Kopf, `punkte` 0, Platz `<seq>:0`.
+     *
+     * @param seq die Nummer, die der nächste Punkt bekommen hätte — sie
+     *   schließt an das letzte Stück an
+     * @param abschlussZeit Unix-Sekunde des Abschlusses; steht als `ts_von`
+     *   und `ts_bis` im Klartext und als `ts_von` im Kopf, überall gleich
+     */
+    fun schlussstueck2(
+        art: String, clientRef: String, seq: Long, abschlussZeit: Long, kontoschluessel: ByteArray,
+        absender: Geraetepaar, fluechtig: KeyPair? = null, iv: ByteArray? = null,
+    ): JSONObject = JSONObject()
+        .put("seq_from", seq)
+        .put("punkte", 0)
+        .put("ts_von", abschlussZeit)
+        .put("ts_bis", abschlussZeit)
+        .put("huelle", b64(verschliessen2(spurKopf2(abschlussZeit, true), kontoschluessel, absender,
+            art, clientRef, "$seq:0", fluechtig, iv)))
+
+    /**
+     * Die Einsatzhülle innen, Fassung 2:
+     * `{"fassung":2,"z":…,"start":…,"schluss":…,"phasen":[…],"rea":[]}`.
+     *
+     * VON HAND GESCHRIEBEN, nicht über `JSONObject`: Die Referenz legt die
+     * Reihenfolge der Schlüssel fest, und `JSONObject` verspricht keine. Die
+     * Zahlen schreibt `Double.toString()` — für jede Koordinate, die in
+     * Mitteleuropa vorkommt, dieselben Zeichen wie Pythons `json.dumps`; bei
+     * Beträgen unter 0,001 weicht die Schreibweise ab (`1.0E-5` statt
+     * `1e-05`), der Wert nicht, und gültiges JSON ist beides.
+     *
+     * @param z der Zähler ([Huellenzaehler.naechster]) — je Aufruf ein neuer
+     * @param schluss die Hülle des abgeschlossenen Einsatzes (`final`)
+     */
+    fun einsatzInnen2(begonnenAt: String, phasen: List<Phaseneintrag>, z: Long, schluss: Boolean): String {
+        require(z >= 1) { "Zähler unter 1" }
+        val beginn = Instant.parse(begonnenAt).epochSecond
+        val liste = phasen.joinToString(",") { p ->
+            "{\"phase\":${p.nummer},\"t\":${Instant.parse(p.at).epochSecond - beginn}," +
+                "\"lat\":${zahl(p.breite)},\"lon\":${zahl(p.laenge)}}"
+        }
+        return "{\"fassung\":2,\"z\":$z,\"start\":$beginn,\"schluss\":$schluss,\"phasen\":[$liste],\"rea\":[]}"
+    }
+
+    /** Eine Koordinate als JSON-Zahl; ohne Wert — oder mit einem, der keine Zahl ist — `null`. */
+    private fun zahl(x: Double?): String = if (x == null || x.isNaN() || x.isInfinite()) "null" else x.toString()
+
+    fun einsatz2(
+        clientRef: String, begonnenAt: String, phasen: List<Phaseneintrag>, kontoschluessel: ByteArray,
+        absender: Geraetepaar, z: Long, schluss: Boolean, fluechtig: KeyPair? = null, iv: ByteArray? = null,
+    ): String = b64(verschliessen2(einsatzInnen2(begonnenAt, phasen, z, schluss).toByteArray(Charsets.UTF_8),
+        kontoschluessel, absender, "einsatz", clientRef, "", fluechtig, iv))
 }
 
