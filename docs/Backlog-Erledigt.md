@@ -11356,3 +11356,14 @@ zutreffen.
      Wunsch der BetreiberIn. *Abnahme:* Probe rea rot gegen Uhr 4.5.2.
      Erledigt 13.11.2026 mit Uhr 4.6.0 (Schritt 28, KG-08): Probe rea,
      21 Schritte, gegen 4.5.2 sechs rot.
+
+577. **Die Garmin-Uhr koppelte ohne Vergleichswert und sendete ohne Herkunftsnachweis.** · gehört zu: 28 · Stand: erledigt · seit 14.11.2026
+     *Aufgenommen 14.11.2026 mit KG-03b (Konzept KG; Audit KA, F-KA-04,
+     -12, -17).* Der Server reichte Kontoschlüssel und Gerät nur weiter,
+     und die Hüllen der Uhr bewiesen nicht, von welchem Gerät sie kamen.
+     Der Kern dafür lag seit Uhr 4.5.2 ungenutzt in `Huelle2.mc`; die
+     Server-Seite kam mit KA-06d (Web 24.18.0). *Weg:* Gerätepaar und
+     Zusage bei `start`, Offenlegen und Wert nach Mockup M-KG-01, Fassung 2
+     nach `huelle: 2`, Zähler nach E-KA-64. *Abnahme:* Probe sendeweg rot
+     gegen Uhr 4.6.0, Rundlauf mit Wert gegen die Referenz. Erledigt
+     14.11.2026 mit Uhr 5.0.0 (Schritt 28, KG-03b).

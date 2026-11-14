@@ -10,7 +10,10 @@
 // ungedeckeltes next_seq, wachsendes Wiederholungsstueck (KG-01); Nr. 573 —
 // 401/403 ohne Fehlerfeld galten als Abmeldung, und die Frist raeumte ohne
 // letzten Versuch (KG-06); Nr. 575 -- ein Dienst begann ohne Kopplung, und
-// Trennen holte sofort einen neuen Code (KG-08).
+// Trennen holte sofort einen neuen Code (KG-08); Nr. 577 -- Kopplung mit
+// Vergleichswert und Fassung 2 (KG-03b): Wert erst nach dem Offenlegen,
+// anderes Paar bricht ab, 202 wartet, abgelehnt legt kein Paar ab,
+// `huelle: 2` schaltet Fassung 2 ein, das leere Schlussstueck.
 //
 // Je Fall eine Zeile "SENDEWEG ok|FEHL <fall> <was>", am Ende
 // "SENDEWEG ENDE <faelle> <fehlschlaege>". Jeder Fall beginnt mit leerem
@@ -47,8 +50,10 @@ module SendewegProbe {
     // Haken in Uploader._send, nach Track.readPoints
     function stueck(s as Lang.Number, m as Lang.Number) as Void { seq = s; n = m; }
 
-    // Haken in Uploader._send, vor makeWebRequest: nie absenden
-    function abfangen() as Lang.Boolean { abgefangen += 1; return true; }
+    // Haken in Uploader._send, vor makeWebRequest: nie absenden. Der Rumpf
+    // bleibt fuer die Faelle von KG-03b liegen.
+    var rumpf as Lang.Dictionary or Null = null;
+    function abfangen(b as Lang.Dictionary) as Lang.Boolean { abgefangen += 1; rumpf = b; return true; }
 
     function _melde(ok as Lang.Boolean, fall as Lang.String, was as Lang.String) as Void {
         _faelle += 1;
@@ -73,7 +78,10 @@ module SendewegProbe {
         Uploader._nichtVor = null;
         Pair.status = null;
         Pair.statusHint = null;
-        seq = -1; n = -1; abgefangen = 0;
+        Pair._sitzungVergessen();
+        Huelle2.paarLoeschen();          // auch der Zwischenspeicher im Modul
+        Huelle2._geprueft = null;
+        seq = -1; n = -1; abgefangen = 0; rumpf = null;
     }
 
     function _schluessel() as Lang.String {
@@ -124,6 +132,12 @@ module SendewegProbe {
         else if (_schritt == 14) { _fall11b(); }
         else if (_schritt == 15) { _fall12(); }
         else if (_schritt == 16) { _fall13(a); }
+        else if (_schritt == 17) { _fall14(a); }
+        else if (_schritt == 18) { _fall15(); }
+        else if (_schritt == 19) { _fall16(a); }
+        else if (_schritt == 20) { _fall17(a); }
+        else if (_schritt == 21) { _fall18(); }
+        else if (_schritt == 22) { _fall19(a); }
         else {
             (_t as Timer.Timer).stop();
             System.println("SENDEWEG ENDE " + _faelle.toString() + " " + _fehl.toString());
@@ -309,5 +323,123 @@ module SendewegProbe {
         var st = Pair.status == null ? "leer" : Pair.status as Lang.String;
         _melde(!Uploader.hasCredentials() && "Getrennt".equals(st), "trennen-ohne-neuen-code",
                "status=" + st);
+    }
+
+    // ---- KG-03b: Kopplung mit Vergleichswert, Fassung 2 ---------------------
+
+    const NB = "AAECAwQFBgcICQoLDA0ODw==";     // 16 Byte, wie der Browser sie zieht
+
+    /* Eine Sitzung bis zum offengelegten N_g -- die Antworten spielt die
+     * Probe vor. `offenlegen` geht NICHT hinaus (_ngLaeuft vorab gesetzt):
+     * Die Antwort von 127.0.0.1:1 kam im ersten Lauf (404) noch in derselben
+     * Sitzung an und beendete sie, bevor Fall 15 lief. */
+    function _sitzung(dev as Lang.String, a as Lang.String) as Void {
+        Pair._sitzungVergessen();
+        Pair._dev = dev;
+        Pair._key = "probe";
+        Pair._abfragen = true;
+        Huelle2.kopplungBeginnen();
+        Pair._mitSchluessel = true;
+        Pair._ngLaeuft = true;
+        Pair.onStatus(dev, 200, { "zustand" => "beansprucht", "konto" => "pr***@pr***.de",
+                                  "kontoschluessel" => a, "n_b" => NB });
+    }
+
+    function _fall14(a as Lang.String) as Void {
+        // 14. Der Wert steht erst nach der 200 auf `offenlegen`.
+        _leer();
+        _sitzung("sw-k1", a);
+        var vorher = Pair.wertAnzeige();
+        Pair.onOffengelegt("sw-k1", 200, { "ok" => true });
+        var w = Pair.wertAnzeige();
+        _melde(vorher == null && w != null && (w as Lang.String).length() == 7,
+               "wert-nach-offenlegen", "vorher=" + (vorher == null ? "keiner" : vorher)
+               + " danach=" + (w == null ? "keiner" : w));
+    }
+
+    function _fall15() as Void {
+        // 15. Ein anderes N_b in einer spaeteren Antwort bricht ab.
+        Pair._abfragen = true;
+        Pair.onStatus("sw-k1", 200, { "zustand" => "beansprucht", "konto" => "pr***@pr***.de",
+                                      "kontoschluessel" => Huelle.base64(Huelle.geraetZuSec1(
+                                          Huelle.paar(null).getPublicKey().getBytes())),
+                                      "n_b" => NB });
+        var st = Pair.status == null ? "leer" : Pair.status as Lang.String;
+        _melde("Kopplung abgebrochen".equals(st) && Pair.wertAnzeige() == null,
+               "anderes-paar-bricht-ab", "status=" + st);
+    }
+
+    function _fall16(a as Lang.String) as Void {
+        // 16. Ja -> 202: die Uhr wartet; danach im Web abgelehnt: kein Paar.
+        _leer();
+        _sitzung("sw-k2", a);
+        Pair.onOffengelegt("sw-k2", 200, { "ok" => true });
+        Pair.onBestaetigt("sw-k2", true, 202, { "wartet" => "browser" });
+        _melde(Pair.wartetWeb && Pair._abfragen, "ja-202-wartet",
+               "wartet=" + Pair.wartetWeb.toString() + " abfragen=" + Pair._abfragen.toString());
+        Pair.onStatus("sw-k2", 200, { "zustand" => "abgelehnt", "grund" => "zusage" });
+        var st = Pair.status == null ? "leer" : Pair.status as Lang.String;
+        var hi = Pair.statusHint == null ? "leer" : Pair.statusHint as Lang.String;
+        _melde("Im Web abgelehnt".equals(st) && "Schlüssel passt nicht".equals(hi)
+               && !Huelle2.hatPaar() && Storage.getValue("h2") == null && !Uploader.hasCredentials(),
+               "abgelehnt-kein-paar", "status=" + st + " / " + hi + " paar=" + Huelle2.hatPaar().toString());
+    }
+
+    function _fall17(a as Lang.String) as Void {
+        // 17. Gekoppelt mit `huelle: 2`: Paar abgelegt, Fassung 2 an.
+        _leer();
+        _sitzung("sw-k3", a);
+        Pair.onOffengelegt("sw-k3", 200, { "ok" => true });
+        Pair.onStatus("sw-k3", 200, { "zustand" => "gekoppelt", "kontoschluessel" => a, "huelle" => 2 });
+        var hi = Pair.statusHint == null ? "leer" : Pair.statusHint as Lang.String;
+        _melde(Uploader.hasCredentials() && Huelle2.hatPaar() && Pair.huelle2Gewuenscht()
+               && "Herkunft gesichert".equals(hi),
+               "gekoppelt-huelle-2", "paar=" + Huelle2.hatPaar().toString() + " h2="
+               + Pair.huelle2Gewuenscht().toString() + " hinweis=" + hi);
+    }
+
+    function _fall18() as Void {
+        // 18. ... und sendet Fassung 2: abgeschlossener Einsatz ohne offene
+        //     Punkte -> leeres Schlussstueck, beide Huellen Kennbyte 2.
+        //     (Den Selbsttest der Fassung 2 misst die Krypto-Probe.)
+        Huelle2._geprueft = true;
+        var m = _einsatz("m-sw-f2");
+        m["final"] = true;
+        m["endedAt"] = "2026-11-10T09:00:00Z";
+        Model.pendingMissions = [m];
+        Uploader._send({ "kind" => "mission", "data" => m });
+        var r = rumpf;
+        var gut = false;
+        var was = "kein Rumpf";
+        if (r != null) {
+            var t = r["track"];
+            var oh = r["ort_huelle"];
+            if (t instanceof Lang.Dictionary && oh instanceof Lang.String) {
+                var h = Huelle._ausBase64(t["huelle"] as Lang.String);
+                var e = Huelle._ausBase64(oh as Lang.String);
+                gut = t["punkte"] == 0 && t["seq_from"] == 0 && h[0] == 2 && e[0] == 2;
+                was = "punkte=" + t["punkte"].toString() + " fassung=" + h[0].toString() + "/" + e[0].toString();
+            } else {
+                was = "track=" + (t == null ? "fehlt" : "da") + " ort=" + (oh == null ? "fehlt" : "da");
+            }
+        }
+        _melde(gut, "fassung2-schlussstueck", was);
+    }
+
+    function _fall19(a as Lang.String) as Void {
+        // 19. Gegenprobe: ohne `huelle: 2` Fassung 1 und kein Schlussstueck.
+        _leer();
+        _koppeln(a);
+        var m = _einsatz("m-sw-f1");
+        m["final"] = true;
+        m["endedAt"] = "2026-11-10T09:00:00Z";
+        Model.pendingMissions = [m];
+        Uploader._send({ "kind" => "mission", "data" => m });
+        var r = rumpf;
+        var gut = false;
+        if (r != null && r["ort_huelle"] instanceof Lang.String) {
+            gut = r["track"] == null && Huelle._ausBase64(r["ort_huelle"] as Lang.String)[0] == 1;
+        }
+        _melde(gut, "fassung1-ohne-merker", "track=" + (r == null || r["track"] == null ? "fehlt" : "da"));
     }
 }

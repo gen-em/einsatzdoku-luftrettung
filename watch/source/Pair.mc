@@ -111,6 +111,17 @@ class SchluesselCb {
     }
 }
 
+/* Traeger fuer `offenlegen` (KG-03b). Er traegt die Kennung der Sitzung
+ * wie PairStatusCb: Eine Antwort, die nach einem Neuanfang eintrifft,
+ * gehoert zu einer Sitzung, die es nicht mehr gibt. */
+class PairOffenCb {
+    var _fuer as Lang.String;
+    function initialize(fuer as Lang.String) { _fuer = fuer; }
+    function onResponse(code as Lang.Number, data as Lang.Dictionary or Lang.String or Null) as Void {
+        Pair.onOffengelegt(_fuer, code, data);
+    }
+}
+
 class UnpairCb {
     function initialize() { }
     function onResponse(code as Lang.Number, data as Lang.Dictionary or Lang.String or Null) as Void {
@@ -233,6 +244,33 @@ module Pair {
      * unabhaengig davon weiter — er treibt die Restzeit. */
     var _abfragen as Lang.Boolean = false;
     var _viewOffen as Lang.Boolean = false;
+
+    /* DIE KOPPLUNG MIT VERGLEICHSWERT (seit Uhr 5.0.0, KG-03b, Vertrag 1a.7).
+     *
+     * `start` traegt den oeffentlichen Teil eines NEUEN Geraetepaars und
+     * die Zusage auf N_g (Huelle2.kopplungBeginnen). Hat das Web den Code
+     * eingetragen, nennt `status` Kontoschluessel und N_b; die Uhr legt sich
+     * auf das erste Paar fest, legt N_g offen und zeigt den Wert. Webseite
+     * und Uhr zeigen dieselben sechs Ziffern genau dann, wenn beide dieselben
+     * Schluessel sehen -- das ersetzt das Vertrauen in den Server, der beide
+     * Schluessel nur weiterreicht.
+     *
+     * Ohne Paar (Geraet gibt den privaten Teil nicht her) oder ohne
+     * Antwortfelder (Server ohne die Migration) gilt der alte Weg: Rueckfrage
+     * mit der Adresse, Fassung 1. */
+    var _mitSchluessel as Lang.Boolean = false;
+    var _ngOffen as Lang.Boolean = false;      // offenlegen hat 200 bekommen
+    var _ngLaeuft as Lang.Boolean = false;     // offenlegen ist unterwegs
+    var _ng as Lang.ByteArray or Null = null;
+    var _wert as Lang.String or Null = null;
+    var _konto as Lang.String or Null = null;
+    /* Das Ja ist da, das Web hat "Wert stimmt" noch nicht gedrueckt
+     * (`202 {"wartet":"browser"}`). Die Ansicht sagt es. */
+    var wartetWeb as Lang.Boolean = false;
+
+    /* Hat der Server bei der Kopplung `huelle: 2` gesagt? Nur dann sendet die
+     * Uhr Fassung 2 (Uploader._send). Faellt mit der Kopplung. */
+    const ABLAGE_HUELLE2 = "h2";
 
     var _ucb as UnpairCb or Null = null;
     var _spaeterT as Timer.Timer or Null = null;
@@ -400,6 +438,15 @@ module Pair {
             Uploader.gesperrt = null;
             Uploader.abgemeldet = false;
             Uploader.abmeldungVergessen();
+            /* `huelle: 2` lernt eine Uhr hier wieder, deren Merker verloren
+             * ging (Vertrag 1a.7) -- nur mit eigenem Paar. Fehlt das Feld,
+             * sendet sie Fassung 1. */
+            if (dict["huelle"] instanceof Lang.Number && (dict["huelle"] as Lang.Number) == 2
+                && Huelle2.hatPaar()) {
+                Storage.setValue(ABLAGE_HUELLE2, true);
+            } else {
+                Storage.deleteValue(ABLAGE_HUELLE2);
+            }
             if (Huelle.schluesselSetzen(dict["kontoschluessel"])) {
                 status = "Schlüssel geholt";
                 statusHint = null;
@@ -486,8 +533,12 @@ module Pair {
         Uploader.gesperrt = null;
         Uploader.abmeldungVergessen();     // die Frist gehoert zur alten Kopplung
         Storage.deleteValue("cred");
-        // Der Kontoschluessel gehoert zur Kopplung und geht mit.
+        // Der Kontoschluessel gehoert zur Kopplung und geht mit -- ebenso das
+        // Geraetepaar und der Merker fuer Fassung 2 (KG-03b). Der Zaehler
+        // der Einsatzhuellen bleibt (Huelle2.paarLoeschen).
         Huelle.schluesselLoeschen();
+        Huelle2.paarLoeschen();
+        Storage.deleteValue(ABLAGE_HUELLE2);
         /* Und der Vermerk des Selbsttests: Neu koppeln ist ein frischer
          * Anfang. */
         Huelle.pruefungVergessen();
@@ -602,9 +653,21 @@ module Pair {
         _startLaeuft = true;
         _lauf += 1;
         var cb = new PairStartCb(_lauf);
+        var rumpf = { "aktion" => "start", "geraet" => _geraeteInfo() };
+        /* Ein NEUES Geraetepaar je Kopplung (Huelle2.kopplungBeginnen); es
+         * bleibt im Arbeitsspeicher, bis die Kopplung angenommen ist. */
+        var k = null;
+        try { k = Huelle2.kopplungBeginnen(); } catch (e) { k = null; }
+        _mitSchluessel = (k != null);
+        if (k != null) {
+            rumpf["schluessel"] = {
+                "spk"    => Huelle.base64(k[:spk] as Lang.ByteArray),
+                "zusage" => Huelle.base64(k[:zusage] as Lang.ByteArray)
+            };
+        }
         Communications.makeWebRequest(
             base + "pair.php",
-            { "aktion" => "start", "geraet" => _geraeteInfo() },
+            rumpf as Lang.Dictionary<Lang.Object, Lang.Object>,
             {
                 :method => Communications.HTTP_REQUEST_METHOD_POST,
                 :headers => { "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON },
@@ -784,6 +847,30 @@ module Pair {
             if (dict != null && dict["rest_s"] instanceof Lang.Number) {
                 _endeMs = System.getTimer() + (dict["rest_s"] as Lang.Number) * 1000;
             }
+            if (zustand.equals("abgelehnt")) {
+                _abgelehnt(dict);
+                return;
+            }
+            if (zustand.equals("beansprucht") && _mitSchluessel && dict != null) {
+                if (dict["kontoschluessel"] instanceof Lang.String && dict["n_b"] instanceof Lang.String) {
+                    _vergleichen(dict as Lang.Dictionary);
+                    return;
+                }
+                /* N_b ohne Kontoschluessel: Das Konto hat noch kein
+                 * Schluesselpaar. Ohne ihn gibt es keinen Wert, und der alte
+                 * Weg ginge auch nicht -- der Server zaehlt das Ja eines
+                 * Geraets mit Schluessel erst nach dem Offenlegen. */
+                if (dict["n_b"] instanceof Lang.String) {
+                    bestaetigen("nein");
+                    _sitzungBeenden("Konto ohne Schlüssel", "Erst im Web anmelden", :error);
+                    return;
+                }
+                /* Kein N_b: Der Server kennt den Vergleichswert nicht (ohne
+                 * Migration ueberliest er den Block, Vertrag 1a.7; mit ihr
+                 * setzt er N_b beim Beanspruchen). Dann der alte Weg. */
+                Huelle2.kopplungVerwerfen();
+                _mitSchluessel = false;
+            }
             if (zustand.equals("beansprucht")) {
                 /* Ein Konto hat den Code eingetragen. Jetzt das zweite Tor:
                  * Die Abfrage haelt an, solange der Dialog steht — eine
@@ -930,9 +1017,25 @@ module Pair {
             _fertig(dict);
             return;
         }
+        /* 202: Das Ja ist vermerkt, das Web hat den Wert noch nicht
+         * bestaetigt. Weiter nachfragen; `status` sagt "gekoppelt" oder
+         * "abgelehnt" (Vertrag 1a.7). */
+        if (code == 202) {
+            jaLaeuft = false;
+            wartetWeb = true;
+            netzHinweis = null;
+            _abfragen = true;
+            WatchUi.requestUpdate();
+            return;
+        }
 
         var fehler = (dict != null && dict["error"] instanceof Lang.String)
                      ? dict["error"] as Lang.String : null;
+
+        if (fehler != null && fehler.equals("abgelehnt")) {
+            _abgelehnt(dict);
+            return;
+        }
 
         if (fehler != null && fehler.equals("device_limit")) {
             /* 409 — zwischen dem Klick im Web und dem Ja hier kann von Hand
@@ -1055,6 +1158,16 @@ module Pair {
         Uploader.abgemeldet = false;
         Uploader.gesperrt = null;
         Uploader.abmeldungVergessen();     // neue Kopplung, keine Frist
+        /* DAS GERAETEPAAR DIESER KOPPLUNG ABLEGEN -- nur wenn N_g offengelegt
+         * ist; sonst hat das Web es nie bestaetigt. Fassung 2 sendet die Uhr
+         * nur, wenn der Server `huelle: 2` sagt (Vertrag 1a.7). */
+        var h2 = false;
+        if (_mitSchluessel && _ngOffen && Huelle2.kopplungUebernehmen()) {
+            h2 = (dict != null && dict["huelle"] instanceof Lang.Number
+                  && (dict["huelle"] as Lang.Number) == 2);
+        }
+        if (h2) { Storage.setValue(ABLAGE_HUELLE2, true); }
+        else { Storage.deleteValue(ABLAGE_HUELLE2); }
         var ks = (dict != null) ? dict["kontoschluessel"] : null;
         if (!Huelle.schluesselSetzen(ks)) {
             /* Gekoppelt IST sie — das sagt die erste Zeile, gruen. Dass der
@@ -1066,8 +1179,9 @@ module Pair {
             _sitzungBeenden("Gekoppelt", "Erst im Web anmelden", :ok);
             return;
         }
-        // ohne Haken-Glyph (Geraeteschrift kennt es nicht)
-        _sitzungBeenden("Gekoppelt", null, :ok);
+        // ohne Haken-Glyph (Geraeteschrift kennt es nicht). Die zweite Zeile
+        // nur, wenn das Web den Wert bestaetigt hat (M-KG-01, E).
+        _sitzungBeenden("Gekoppelt", h2 ? "Herkunft gesichert" : null, :ok);
     }
 
     /* Sitzung beenden, Meldung auf die Sync-Seite, Ansicht zu.
@@ -1096,6 +1210,14 @@ module Pair {
     }
 
     function _sitzungVergessen() as Void {
+        Huelle2.kopplungVerwerfen();
+        _mitSchluessel = false;
+        _ngOffen = false;
+        _ngLaeuft = false;
+        _ng = null;
+        _wert = null;
+        _konto = null;
+        wartetWeb = false;
         jaLaeuft = false;
         _code = null;
         _dev = null;
@@ -1114,6 +1236,126 @@ module Pair {
      * in der Mitte halbiert sie. Das Web nimmt den Code mit und ohne
      * Leerzeichen entgegen. Eine andere Laenge als sechs wird unveraendert
      * gezeigt — dann stimmt etwas anderes nicht, und Raten hilft nicht. */
+    /* --- Der Vergleichswert (KG-03b) ------------------------------------- */
+
+    /* `status` beansprucht, mit Kontoschluessel und N_b. Die Uhr legt sich
+     * auf das ERSTE Paar fest (Huelle2.kopplungAbschliessen); ein anderes in
+     * einer spaeteren Antwort bricht ab. Die Abfrage laeuft weiter: Nur so
+     * erfaehrt die Uhr, wenn das Web den Wert ablehnt. */
+    function _vergleichen(dict as Lang.Dictionary) as Void {
+        var r = null;
+        try {
+            r = Huelle2.kopplungAbschliessen(
+                Huelle._ausBase64(dict["kontoschluessel"] as Lang.String),
+                Huelle._ausBase64(dict["n_b"] as Lang.String));
+        } catch (e) {
+            r = null;
+        }
+        if (r == null) {
+            bestaetigen("nein");
+            _sitzungBeenden("Kopplung abgebrochen", "Schlüssel wechselte", :error);
+            return;
+        }
+        _ng = r[:ng] as Lang.ByteArray;
+        _wert = r[:wert] as Lang.String;
+        if (dict["konto"] instanceof Lang.String) { _konto = dict["konto"] as Lang.String; }
+        /* "wartet": Das Ja ist schon da (Antwort auf `bestaetigen` verloren). */
+        if (dict["wartet"] instanceof Lang.String) { wartetWeb = true; }
+        if (!_ngOffen) { _offenlegen(); }
+        WatchUi.requestUpdate();
+    }
+
+    function _offenlegen() as Void {
+        var dev = _dev;
+        var key = _key;
+        var ng = _ng;
+        var base = Uploader.serverBase();
+        if (_ngLaeuft || dev == null || key == null || ng == null || base.length() == 0) { return; }
+        _ngLaeuft = true;
+        var cb = new PairOffenCb(dev);
+        Communications.makeWebRequest(
+            base + "pair.php",
+            { "aktion" => "offenlegen", "n_g" => Huelle.base64(ng) },
+            {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                :headers => {
+                    "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON,
+                    "X-Device-Id"  => dev,
+                    "X-Api-Key"    => key
+                },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON
+            },
+            cb.method(:onResponse));
+    }
+
+    /* Antwort auf `offenlegen`. Wiederholbar mit demselben N_g (Vertrag
+     * 1a.7): Bei einer Stoerung legt die naechste `beansprucht`-Antwort
+     * noch einmal offen. Erst die 200 zeigt den Wert. */
+    function onOffengelegt(fuer as Lang.String, code as Lang.Number,
+                           data as Lang.Object or Null) as Void {
+        var dev = _dev;
+        if (dev == null || !fuer.equals(dev)) { return; }
+        _ngLaeuft = false;
+        if (code == 200) {
+            _ngOffen = true;
+            netzHinweis = null;
+            WatchUi.requestUpdate();
+            return;
+        }
+        var dict = (data instanceof Lang.Dictionary) ? data : null;
+        var fehler = (dict != null && dict["error"] instanceof Lang.String)
+                     ? dict["error"] as Lang.String : null;
+        if (code < 0 || code >= 500 || (fehler != null && fehler.equals("zu_viele_versuche"))) {
+            netzHinweis = (code < 0) ? "Keine Verbindung (" + code.toString() + ")"
+                        : (code >= 500 ? "Server antwortet nicht" : "Zu viele Versuche");
+            WatchUi.requestUpdate();
+            return;
+        }
+        if (code == 410 || code == 401) {
+            _sitzungBeenden("Code abgelaufen", Input.lSelectHold() + ": neuer Code", :error);
+            return;
+        }
+        _sitzungBeenden("Kopplung fehlgeschlagen (" + code.toString() + ")", null, :error);
+    }
+
+    /* Im Web abgelehnt (`status` oder `bestaetigen`): kein Paar ablegen. */
+    function _abgelehnt(dict as Lang.Dictionary or Null) as Void {
+        var grund = (dict != null && dict["grund"] instanceof Lang.String)
+                    ? dict["grund"] as Lang.String : "";
+        _sitzungBeenden("Im Web abgelehnt",
+                        grund.equals("zusage") ? "Schlüssel passt nicht" : "Wert war anders",
+                        :error);
+    }
+
+    /* Der Wert, in zwei Dreiergruppen wie im Web ("482 913") -- oder null,
+     * solange er nicht zu zeigen ist (vor der 200 auf `offenlegen`). */
+    function wertAnzeige() as Lang.String or Null {
+        var w = _wert;
+        if (w == null || !_ngOffen) { return null; }
+        if (w.length() != 6) { return w; }
+        return w.substring(0, 3) + " " + w.substring(3, 6);
+    }
+
+    function kontoAnzeige() as Lang.String or Null { return _konto; }
+
+    /* START auf dem Wert (M-KG-01, B -> C): die vorhandene Rueckfrage. Die
+     * Abfrage haelt an, solange sie steht -- dieselbe Regel wie bei
+     * "Mit … koppeln?", und dialogWeggeklickt() erkennt daran den
+     * weggedrueckten Dialog. */
+    function wertFragen() as Void {
+        var w = wertAnzeige();
+        if (w == null || wartetWeb || jaLaeuft) { return; }
+        _abfragen = false;
+        WatchUi.pushView(new WatchUi.Confirmation("Wert " + w + " gleich wie im Web?"),
+                         new KoppelnDelegate(), WatchUi.SLIDE_LEFT);
+    }
+
+    /* Sendet die Uhr Fassung 2? Merker aus der Kopplung und ein abgelegtes
+     * Geraetepaar; ob die Uhr Fassung 2 rechnen kann, fragt Uploader. */
+    function huelle2Gewuenscht() as Lang.Boolean {
+        return true.equals(Storage.getValue(ABLAGE_HUELLE2)) && Huelle2.hatPaar();
+    }
+
     function codeAnzeige() as Lang.String {
         var c = _code;
         if (c == null) { return ""; }
