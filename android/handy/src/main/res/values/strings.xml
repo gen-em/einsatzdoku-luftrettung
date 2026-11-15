@@ -48,6 +48,10 @@
     <!-- Nur bei einer Kopplung mit Vergleichswert, nach der der Server huelle: 2
          gesagt hat (KA-06c, M-KA-02 D) — sonst fehlt die Zeile. -->
     <string name="sync_herkunft">Herkunft gesichert</string>
+    <!-- KA-15, E-KA-80, M-KA-03 F -->
+    <string name="sync_herkunft_fehlt">Herkunft fehlt — neu koppeln</string>
+    <string name="herkunft_fehlt_hinweis">Der Server verlangt Daten mit Herkunftsnachweis, aber diesem Handy fehlt sein Geräteschlüssel (etwa nach dem Update von 0.24.0). Bis du neu koppelst, sendet es nichts; die Daten bleiben gespeichert.</string>
+    <string name="neu_koppeln">Neu koppeln</string>
 
     <!-- ==== Kopplung (JSON-Vertrag 1a) ================================== -->
     <!--
@@ -312,6 +316,7 @@
     <string name="sync_ergebnis_gesendet">Gesendet · %1$s</string>
     <string name="sync_ergebnis_kein_netz">Keine Verbindung · wird nachgeholt</string>
     <string name="sync_ergebnis_schluessel">Schlüssel abgewiesen · Gerät neu koppeln</string>
+    <string name="sync_ergebnis_herkunft_fehlt">Nicht gesendet · Herkunft fehlt</string>
     <string name="sync_ergebnis_kein_schluessel">Konto noch ohne Schlüssel · einmal im Web anmelden</string>
     <!-- 403: Gerät oder Konto gesperrt. Kein Rat zum
          Neukoppeln - der Weg heraus ist das Web. Nichts ist verloren; nach

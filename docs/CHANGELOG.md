@@ -14,6 +14,20 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.26.0] — unveröffentlicht
+
+Schritt 28 (KA), Paket KA-15.
+
+### Geändert
+
+- **Android — ohne Geräteschlüssel sendet das Handy nicht mehr, sondern sagt
+  „Herkunft fehlt — neu koppeln".** Bisher fiel ein Handy, das den
+  Herkunftsnachweis schuldete, aber seinen Schlüssel verloren hatte, still auf
+  Daten ohne Nachweis zurück, die der Browser ab Web 25.0.0 nicht mehr zeigt.
+  Jetzt bleiben die Daten im Handy, die Startseite sagt, was zu tun ist, und
+  „Neu koppeln" ist auch mit Rückstand erlaubt; der Rückstand bleibt dem
+  Konto zugeordnet.
+
 ## [Web 24.19.0] — unveröffentlicht
 
 Schritt 28 (KA), Paket KA-06f.

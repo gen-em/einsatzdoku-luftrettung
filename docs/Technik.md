@@ -11222,7 +11222,14 @@ räumt das nächste `beginnen` bzw. `vergessen`. Fällt der Keystore beim
 Senden aus, sendet der Lauf nichts und versucht es später
 (`Schluesselausfall`). Bis 0.24.x lag das Paar samt privatem Teil in
 `geraet.bin` (F-KA-85); `AlteGeraeteablage.raeumen()` löscht die Datei bei
-jedem Start, ein so gekoppeltes Handy koppelt neu. Die Regeln prüft
+jedem Start, ein so gekoppeltes Handy koppelt neu. **Seit 0.26.0 (KA-15, E-KA-80)**
+sendet ein Handy mit `huelle: 2` ohne Gerätepaar nichts:
+`tresor/Herkunft.kt` rechnet je Frage den `Herkunftsstand` (`OHNE`,
+`GESICHERT`, `FEHLT`), der Sender endet bei `FEHLT` ohne Anfrage
+(`Sendebericht.herkunftFehlt`, später erneut), `schluesselHolen()` merkt
+sich `huelle` unabhängig vom Paar, und `trennen()` lässt bei `FEHLT` trotz
+Rückstand zu und bindet ihn an den Kontoschlüssel. Die Startseite zeigt
+M-KA-03 F. Die Regeln prüft
 `GeraeteschluesselTest` mit einer Ablage im Speicher (Robolectric hat keinen
 Keystore), die Keystore-Umsetzung `GeraeteschluesselGeraetTest` im Emulator
 oder am Gerät. `kopplung/Kopplungswert.kt` rechnet

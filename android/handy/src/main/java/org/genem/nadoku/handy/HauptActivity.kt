@@ -366,7 +366,7 @@ private fun GekoppelteOberflaeche(
     /* Der Tresor wird nur nach einem Sendelauf neu gelesen: Dort kann
      * `schluesselHolen()` den Merker `huelle: 2` nachgetragen haben. Am
      * Sekundentakt wäre es eine Entschlüsselung je Sekunde. */
-    val herkunft = remember(app.letzterSendebericht) { app.tresor.lesen()?.huelle2 == true }
+    val herkunft = remember(app.letzterSendebericht) { app.herkunftsstand() }
     var fremdFrageOffen by remember { mutableStateOf(false) }
     val sendelaeuft = remember(takt) { app.sendelaufLaeuft }
     val sendeergebnis = remember(takt) { sendeergebnis(app.letzterSendebericht) }
@@ -499,7 +499,10 @@ private fun GekoppelteOberflaeche(
         /* ABGEMELDET MIT RÜCKSTAND: Das Trennen ist erlaubt, und die Frage
          * sagt, was mit dem Rückstand geschieht. Sonst sperrt der Rückstand
          * das Trennen, und die Frage bleibt die alte. */
-        val gebundenFrage = app.bindung.abgemeldet && rueckstand > 0
+        /* Ebenso, wenn die Herkunft fehlt (KA-15): Dann lässt `trennen()`
+         * trotz Rückstand zu und bindet ihn an das Konto. */
+        val gebundenFrage = (app.bindung.abgemeldet ||
+            herkunft == org.genem.nadoku.handy.tresor.Herkunftsstand.FEHLT) && rueckstand > 0
         Rueckfrage(
             titel = stringResource(R.string.trennen_frage),
             text = if (gebundenFrage) {
@@ -560,6 +563,7 @@ private fun GekoppelteOberflaeche(
             aufFremdeVerwerfen = { fremdFrageOffen = true },
             fristBis = fristBis,
             herkunft = herkunft,
+            aufNeuKoppeln = { aufTrennfrage(true) },
             aufModus = { gewaehlt ->
                 modus = gewaehlt
                 app.einstellungen.letzterModus = gewaehlt
@@ -642,6 +646,7 @@ private fun sendeergebnis(lauf: Sendelauf?): Sendeergebnis? {
         l.bericht.kontoVoll -> Sendeergebnis(Sendeausgang.KONTO_VOLL, hhmm)
         l.bericht.wartetBis != null ->
             Sendeergebnis(Sendeausgang.SERVER_WARTET, Zeit.hhmm(l.bericht.wartetBis))
+        l.bericht.herkunftFehlt -> Sendeergebnis(Sendeausgang.HERKUNFT_FEHLT, hhmm)
         l.bericht.spaeterErneut -> Sendeergebnis(Sendeausgang.KEIN_NETZ, hhmm)
         l.bericht.verworfen.isNotEmpty() || l.bericht.uebergangen.isNotEmpty() ->
             Sendeergebnis(Sendeausgang.TEILWEISE, hhmm)

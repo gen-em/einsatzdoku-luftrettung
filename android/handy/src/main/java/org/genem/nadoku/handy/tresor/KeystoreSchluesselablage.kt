@@ -59,7 +59,8 @@ class KeystoreSchluesselablage(
         if (privat == null || oeffentlich == null) null else KeystoreAbsender(privat, Geraetehuelle.sec1(oeffentlich))
     } catch (e: Exception) {
         /* NICHT BENUTZBAR IST WIE NICHT VORHANDEN: Das Handy sendet in
-         * diesem Lauf ohne Geräteschlüssel, und der nächste fragt wieder.
+         * diesem Lauf nichts, wo der Server Fassung 2 verlangt (seit KA-15,
+         * E-KA-80; bis dahin Fassung 1), und der nächste fragt wieder.
          * Gelöscht wird hier nichts — ein Ausfall des Keystore-Dienstes
          * geht vorüber, ein gelöschter Eintrag nicht. */
         null

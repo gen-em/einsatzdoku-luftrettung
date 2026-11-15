@@ -9,7 +9,7 @@ Phasenknöpfe.
 Grundlage ist `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
 gebaut wird, steht in `docs/JSON-Vertrag.md` und ist die führende Quelle.
 
-> **Stand: Android 0.25.0 (Schritt 28, KA-06f, 15.11.2026).** Das Handy
+> **Stand: Android 0.26.0 (Schritt 28, KA-15, 15.11.2026; ohne Geräteschlüssel kein Senden, „neu koppeln“).** Das Handy
 > koppelt sich mit Vergleichswert, zeichnet auf, dokumentiert Phasen und
 > Einsätze und sendet alles nach dem JSON-Vertrag — Spur und Phasenorte
 > verschlossen (S11-09), mit Herkunftsnachweis in Fassung 2 (KA-06c); der
@@ -216,6 +216,13 @@ Die drei Zählungen (Web, Uhr, Android) bleiben getrennt.
 Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
+
+**Stand Android 0.26.0 (Schritt 28, KA-15: ohne Geräteschlüssel kein
+Senden), `./gradlew --offline build` im Container, 15.11.2026 —
+`BUILD SUCCESSFUL in 4m 35s`:** Lint **0** Fehler (Handy 6 Warnungen),
+Prüffälle je Bauart Handy **398** (neu 5 in `SenderTest`, 4 in
+`KopplungVergleichTest`), 15 übersprungen, Uhr **75**, **0** Fehlschläge;
+Bilderlauf neu `bereit-herkunft-fehlt` (M-KA-03 F).
 
 **Stand Android 0.25.0 (Schritt 28, KA-06f: Geräteschlüssel im Keystore,
 Zähler am Inhalt, `minSdk` 31), `./gradlew --offline build` im Container,

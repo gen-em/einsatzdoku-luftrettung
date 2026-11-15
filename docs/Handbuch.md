@@ -3960,6 +3960,15 @@ gekoppelt war, koppelst du nach dem Update einmal neu** (trennen, neuen Code
 holen): Sein alter Schlüssel lag anders und wird beim ersten Start gelöscht;
 bis zur neuen Kopplung sendet es ohne Herkunftsnachweis.
 
+**„Herkunft fehlt — neu koppeln"** *(seit Android 0.26.0)*. Diese rote
+Zeile steht auf der Startseite, wenn der Server den Herkunftsnachweis
+verlangt, dem Handy aber sein Geräteschlüssel fehlt — etwa nach dem Update
+von 0.24.0. Dann sendet es nichts; die Daten bleiben im Handy. Tippe nach
+dem Dienst auf **„Neu koppeln"**: Das ist dasselbe Trennen wie in den
+Einstellungen, und es geht hier auch mit Rückstand — der Rückstand bleibt
+deinem Konto zugeordnet und geht hinaus, sobald du dasselbe Konto wieder
+koppelst.
+
 **Ein Gerät mit älterer App** schickt keinen eigenen Schlüssel. Die Rückfrage
 sagt es mit einer gelben Meldung, und der Knopf heißt **„Trotzdem
 verbinden"**: Es koppelt wie bisher, aber was es sendet, trägt keinen

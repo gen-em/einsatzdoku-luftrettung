@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 erledigt** (M-KA-03 freigegeben, E-KA-87), **KA-12 erledigt** (Handbuch und Runbook: Geräte nach dem Tag neu koppeln), **KA-09 erledigt** (Referenz Rückweg, Fable-Agent), in Arbeit KA-15 (Agent) und KA-10, dann KA-11, -13, -14; **danach 06e** in einem Zug (E-KA-79); Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
+| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 erledigt** (M-KA-03 freigegeben, E-KA-87), **KA-12 erledigt** (Handbuch und Runbook: Geräte nach dem Tag neu koppeln), **KA-09 erledigt** (Referenz Rückweg, Fable-Agent), **KA-15 erledigt** (Android 0.26.0), in Arbeit KA-10 (Agent), dann KA-11, -13, -14; **danach 06e** in einem Zug (E-KA-79); Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
 | Erledigt | **KA-06f** (PR #187, gemergt 15.11.2026, Android 0.25.0, Web 24.19.0; Zweig `claude/amazing-keller-i2f04f`; R91 auf Staging grün, Abschnitt 9) · **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -975,6 +975,28 @@ keinen Gegenstand. Für 06f selbst gibt es auf Staging keinen Punkt der
 Arbeitsumgebung: Der Befund liegt hinter der Weiche, das Handy braucht ein
 Gerät (P-KA-16). Danach `staging_konten.py --wirklich`: ein Konto der Kette
 gelöscht, vier behalten.
+
+### KA-15 Android 0.26.0: ohne Geräteschlüssel kein Senden (15.11.2026, Fable-Agent für den Sender)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) Der echte Keystore:
+„Eintrag fehlt“ ist mit der Ablage im Speicher gespielt; wie ein Gerät
+einen vorübergehenden Ausfall meldet, zeigt nur P-KA-16. (2) Kein
+Emulatorlauf für 0.26.0 — die Anzeige belegt der Bilderlauf, der Weg
+„Neu koppeln“ → Trennfrage ist nur gelesen. (3) `herkunftsstand()` in
+`NAdokuApp` hat keinen eigenen Prüffall, nur die Regel dahinter.
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| `./gradlew --offline build`, Hauptinstanz nach der Anzeige | BUILD SUCCESSFUL in 4 min 35 s; Lint 0 Fehler; Handy **398** je Bauart (15 übersprungen), Uhr 75, 0 rot | Agent: acht eingebaute Fehler (Halt entfernt, Tresor nicht neu gelesen, `schluesselHolen` mit Paarbedingung, Trennen ohne Ausnahme, Trennen zu weit, Ausfall setzt `herkunftFehlt`, Halt ohne `huelle2`, Halt ohne `spaeterErneut`) — je 1 bis 26 Fälle rot | E-KA-80 im Sender, Trennen trotz Rückstand |
+| Bilderlauf `HandyBildTest` | neu `bereit-herkunft-fehlt` (hell, dunkel, zwei Breiten) | gegen M-KA-03 F angesehen | Anzeige nach E-KA-87 |
+
+**Über den Auftrag hinaus (Agent, übernommen):** `schluesselHolen()`
+merkt sich `huelle` unabhängig vom Paar (sonst schrieb sich ein Handy ohne
+Paar selbst auf Fassung 1 zurück); `trennen()` erlaubt bei `FEHLT` trotz
+Rückstand, mit Bindung an den Kontoschlüssel — sonst wäre „Neu koppeln“
+eine Sackgasse. **Zweifel:** Der gebundene Rückstand hat die 30-Tage-Frist
+wie nach einer Abmeldung; der Nachsende-Job läuft bei dauerhaft fehlendem
+Paar mit Rückzug bis 5 h weiter, ohne Netzanfrage.
 
 ### KA-09 Referenz: Rückweg bei zu hohem Zählerstand (15.11.2026, Fable-Agent)
 
