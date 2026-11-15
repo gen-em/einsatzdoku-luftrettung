@@ -12,8 +12,8 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-06f** auf Zweig `claude/amazing-keller-i2f04f` (neue Instanz, gesammelter PR am Ende, 15.11.2026): **06f-1 erledigt** (Zählerregel in der Referenz, Fable-Agent; Prüfprotokoll KA-06f-1), **06f-2 erledigt** (Geräteschlüssel im Keystore, `minSdk` 31, Android 0.25.0; Gerätetest im Emulator grün), **06f-3 erledigt** (Zähler am Inhalt im Puffer, Schema 3; dazu F-KA-117 behoben), **06f-4 erledigt** (Befund `offen-nach-schluss` und Standbuchfeld `f` im Browser, Web 24.19.0; E-KA-76), **als Nächstes** Prüfstand und gesammelter PR; Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät, nach `android-v0.24.0`); danach 06e (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51; dort auch F-KA-103 und -104). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-03a in PR #173; **KG-03b gemergt** (PR #181, 14.11.2026, Uhr 5.0.0, Vertrag 1a.7) |
-| Erledigt | **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
+| In Arbeit | nichts; **als Nächstes 06e** (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60; dort Q-KA-20), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51, -70; dort auch F-KA-103, -104 und die Anzeige der Befunde); Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
+| Erledigt | **KA-06f** (PR #187, gemergt 15.11.2026, Android 0.25.0, Web 24.19.0; Zweig `claude/amazing-keller-i2f04f`; R91 auf Staging grün, Abschnitt 9) · **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
 
@@ -928,6 +928,17 @@ des eigenen Kontos.
 **Fassung 2 vorher gezählt** (Konzept, Punkt 7): örtlich 6 Pakete, alle
 Fassung 3; 3 Begleitdateien, alle versiegelt. Staging und Produktiv nicht
 gezählt (E-KA-31).
+
+**R91 nach PR #187 (Web 24.19.0, Staging, 15.11.2026).** Lauf 215 grün
+(Staging ausgeliefert in 47 s, Stufe 2 mit Kreislauf `edbak` und
+Rückwegprobe); Staging meldet v24.19.0, `standbuch.js`, `huelle2.js` und
+`ortsdaten.js` liegen dort byte-gleich zum Repositorium. Mit eigenem Konto:
+Betrieb → Status ohne neuen Befund (ein Hinweis: ein nie gesichertes
+Konto), Hintergrundjobs ohne gescheiterten Job — P-BR5-08 hat damit wieder
+keinen Gegenstand. Für 06f selbst gibt es auf Staging keinen Punkt der
+Arbeitsumgebung: Der Befund liegt hinter der Weiche, das Handy braucht ein
+Gerät (P-KA-16). Danach `staging_konten.py --wirklich`: ein Konto der Kette
+gelöscht, vier behalten.
 
 ### KA-06f-4 Browser: Befund `offen-nach-schluss` (15.11.2026, Hauptinstanz)
 
