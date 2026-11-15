@@ -33,7 +33,7 @@ Python mit `cryptography`, Node mit Playwright und einen Browser aus
 `referenz.py`: Selbstprobe **48 Fälle, 0 Fehlschläge** · Fassung 1 **6 geöffnet,
 8 Störungen** · Fassung 2 **47 geöffnet, 50 Gegenlagen, 5 Hinweise**, je 0 Abweichungen.
 `referenz_inhalt.py`: **28 Fälle, 0 Fehlschläge** · **26 geöffnet, 28 Gegenlagen**.
-Server **22** (bis KA-06c stand hier 18 — überholt seit KA-06b-3) · Browser **450 Prüfungen** (39 + 194 Weiche aus + 217 an), 0 Abweichungen, **156 ausgenommen** (15.11.2026, KA-09: der Rückweg `uhrzeit-pruefen`, `rueckweg` in `vektoren-2.json` — die Seite kann ihn erst mit KA-10, dann sind es 606 und 0 ausgenommen; bis KA-09 waren es 438 und 0).
+Server **22** (bis KA-06c stand hier 18 — überholt seit KA-06b-3) · Browser **606 Prüfungen** (39 + 271 Weiche aus + 296 an), 0 Abweichungen, 0 ausgenommen (15.11.2026, KA-10; bis KA-09 450 mit 156 ausgenommen) · `ortsdaten_probe.mjs` **17 Prüfungen**, 0 Abweichungen (Rückweg über `EdOrtsdaten`, Weiche nur in der Seite an).
 
 ## Was es nicht kann
 

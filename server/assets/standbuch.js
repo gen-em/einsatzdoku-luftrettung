@@ -23,8 +23,15 @@
  *     Eintrag (jedes Feld darf fehlen):
  *       p  Zähler des Patientenblocks
  *       o  Zähler der zuletzt abgenommenen Einsatzhülle;  k: 1 = vom Konto
+ *       a  sonst: die SID (16 Hex-Zeichen) des GERÄTS, dessen Hülle `o`
+ *          gesetzt hat (KA-09/-10, E-KA-70, -88). `k` und `a` schließen
+ *          einander aus; stehen doch beide, gilt `k`. Fehlt an einem Blatt
+ *          von vor KA-09.
  *       f  1 = eine Einsatzhülle mit `schluss: true` war schon abgenommen —
  *          haftet, wird nie gelöscht (KA-06f, E-KA-69, -76)
+ *       u  Vermerke [[z_v, "<sid>", t], …], nach SID sortiert, je Absender
+ *          höchstens einer: Der Stand z_v dieses Geräts ist zur Zeit t
+ *          bewusst verworfen worden („diesen Stand übernehmen")
  *       s  [gedeckt bis, Stufe] der abgenommenen Spur
  *       d  Versatz in Sekunden (Umdatierung): Klartextzeit − Zeit in der Hülle
  *       x  Löschvermerke [[von, bis], …] in der Zeit der Hülle
@@ -123,15 +130,76 @@ const EdStandbuch = (() => {
 
   /* Ein Eintrag in fester Feldfolge und ohne leere Felder: Zwei Browser, die
    * dasselbe wissen, schreiben dieselben Bytes. */
-  const FELDER = ['p', 'o', 'k', 'f', 's', 'd', 'x'];
+  const FELDER = ['p', 'o', 'k', 'a', 'f', 'u', 's', 'd', 'x'];
+  const LISTEN = ['u', 'x'];                           // leer heißt: fehlt
   function eintragOrdnen(e) {
     const aus = {};
     for (const f of FELDER) {
       const w = e[f];
-      if (w == null || (f === 'x' && !w.length) || (f !== 's' && f !== 'x' && w === 0)) { continue; }
+      if (w == null || (LISTEN.includes(f) && !w.length)
+          || (f !== 's' && !LISTEN.includes(f) && w === 0)) { continue; }
       aus[f] = w;
     }
     return aus;
+  }
+
+  /* Die Felder der Einsatzhülle im Eintrag (`STANDFELDER` der Referenz). */
+  const STANDFELDER = ['o', 'k', 'a', 'f', 'u'];
+
+  /**
+   * ZWEI EINTRÄGE DESSELBEN EINSATZES AUS ZWEI BLÄTTERN ZU EINEM MACHEN —
+   * nur die Felder der Einsatzhülle (o, k, a, f, u). Referenz:
+   * `stand_zusammenfuehren()` in `referenz.py`, Kopf „ZWEI BLÄTTER
+   * ZUSAMMENFÜHREN".
+   *
+   * WARUM NICHT „DER HÖHERE ZÄHLER" (bis KA-10): Seit E-KA-70 kann ein Stand
+   * bewusst SINKEN („diesen Stand übernehmen"). Das veraltete Blatt eines
+   * zweiten Browsers höbe ihn still wieder an. Die Regel, in dieser Folge:
+   *   1. Führt genau EINE Seite den Stand der anderen als verworfen (ein
+   *      Vermerk für deren `a` mit z_v ≥ deren `o`), gewinnt sie mit `o`, `a`.
+   *   2. Sonst der höhere `o`; bei Gleichstand `k`, dann die Seite mit `a`,
+   *      dann die kleinere SID.
+   *   3. `f`: einer hat es. `u`: beide vereinigt, je Absender der höhere z_v
+   *      (bei Gleichstand das spätere t), ohne den Absender des Siegers; mit
+   *      `k` am Sieger entfallen `a` und `u`.
+   * Symmetrisch: (x, y) und (y, x) ergeben dasselbe.
+   *
+   * WAS DIE REGEL NICHT TUT (F-KA-119): Ein höherer GERÄTEstand gewinnt
+   * gegen einen niedrigeren KONTOstand, und `k` geht dabei verloren — so
+   * sagt es die Referenz (Vektor „konto-unter-geraet").
+   */
+  function standZusammenfuehren(x, y) {
+    x = x || {}; y = y || {};
+    const vermerk = (s, a) => (s.u || []).find(e => e[1] === a);
+    const fuehrt = (s, t) => {                         // führt s den Stand von t als verworfen?
+      if (!t.o || t.k || !t.a) { return false; }
+      const v = vermerk(s, t.a);
+      return !!v && v[0] >= t.o;
+    };
+    const gehtVor = (s, t) => {
+      const so = s.o || 0, to = t.o || 0;
+      if (so !== to) { return so > to; }
+      if (!!s.k !== !!t.k) { return !!s.k; }
+      const sa = s.k ? '' : (s.a || ''), ta = t.k ? '' : (t.a || '');
+      if (!!sa !== !!ta) { return !!sa; }
+      return sa <= ta;
+    };
+    const kx = fuehrt(x, y), ky = fuehrt(y, x);
+    const sieger = kx !== ky ? (kx ? x : y) : (gehtVor(x, y) ? x : y);
+    const neu = {};
+    if (sieger.o) { neu.o = sieger.o; }
+    if (sieger.k) { neu.k = 1; } else if (sieger.a) { neu.a = sieger.a; }
+    if (x.f || y.f) { neu.f = 1; }
+    if (!neu.k) {
+      const u = new Map();
+      for (const e of (x.u || []).concat(y.u || [])) {
+        const b = u.get(e[1]);
+        if (!b || e[0] > b[0] || (e[0] === b[0] && e[2] > b[2])) { u.set(e[1], e.slice()); }
+      }
+      u.delete(neu.a);
+      if (u.size) { neu.u = [...u.keys()].sort().map(s => u.get(s)); }
+    }
+    return neu;
   }
 
   const json = d => te.encode(JSON.stringify(d));
@@ -427,16 +495,18 @@ const EdStandbuch = (() => {
       return dran;
     }
 
-    /** Je Feld der höhere Zähler; liefert true, wenn `ziel` dabei wuchs. */
+    /** Was `quelle` (dieser Browser) mehr weiß, in `ziel` (das Blatt des
+     *  Servers) tragen: `p` und `s` je Feld der höhere Zähler, die Felder
+     *  der Einsatzhülle nach `standZusammenfuehren()` — dort kann ein Stand
+     *  bewusst gesunken sein. Liefert true, wenn `ziel` sich dabei änderte. */
     function hoeher(ziel, quelle) {
       let gewachsen = false;
       for (const k of Object.keys(quelle.e || {})) {
         const q = quelle.e[k], z = ziel.e[k] || {};
         const neu = Object.assign({}, z);
         if ((q.p || 0) > (z.p || 0)) { neu.p = q.p; }
-        if ((q.o || 0) > (z.o || 0)) { neu.o = q.o; neu.k = q.k; }
-        else if ((q.o || 0) === (z.o || 0) && q.k && !z.k) { neu.k = q.k; }
-        if (q.f && !z.f) { neu.f = 1; }                 // haftet: einer hat es (wie `zu`)
+        for (const f of STANDFELDER) { delete neu[f]; }
+        Object.assign(neu, standZusammenfuehren(z, q)); // `f` haftet: einer hat es (wie `zu`)
         if (q.s && (!z.s || q.s[0] > z.s[0] || q.s[1] > z.s[1])) {
           neu.s = z.s ? [Math.max(q.s[0], z.s[0]), Math.max(q.s[1], z.s[1])] : q.s;
         }
@@ -571,7 +641,10 @@ const EdStandbuch = (() => {
 
     /**
      * DEN EINTRAG EINES DATENSATZES FORTSCHREIBEN UND SOFORT ABLEGEN.
-     * `aendern(e)` bekommt den Eintrag ({p, o, k, s, d, x}) und ändert ihn.
+     * `aendern(e)` bekommt den Eintrag ({p, o, k, a, f, u, s, d, x}) und
+     * ändert ihn — gegen den DANN geltenden Stand: Nach einem Konflikt läuft
+     * sie auf dem Blatt des Servers noch einmal. Wirft sie, wird nichts
+     * geschrieben, und der Fehler kommt beim Aufrufer an.
      * @returns {Promise<number|null>} die neue Version des Blatts; null,
      *          solange die Weiche aus steht
      */
@@ -869,7 +942,7 @@ const EdStandbuch = (() => {
     throw fehler('konflikt');
   }
 
-  return { blattNr, kennung, blattBauen, blattOeffnen, patLesen,
+  return { blattNr, kennung, blattBauen, blattOeffnen, patLesen, standZusammenfuehren,
            geraetebuchBauen, geraetebuchOeffnen,
            oeffnen, ablage, speicherTransport, apiTransport,
            /* für die Verbraucher (KA-06b-3) */

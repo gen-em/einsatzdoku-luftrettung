@@ -1132,6 +1132,10 @@
         "tools/proben/huelle/**",
         "tools/uhr-pruefstand/krypto-probe/**",
         "server/assets/crypto.js",
+        "server/assets/inhalt2.js",
+        "server/assets/huelle2.js",
+        "server/assets/standbuch.js",
+        "server/assets/ortsdaten.js",
         "server/geraetehuelle_lib.php"
       ],
       "proben": [

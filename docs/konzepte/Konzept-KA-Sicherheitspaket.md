@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 erledigt** (M-KA-03 freigegeben, E-KA-87), **KA-12 erledigt** (Handbuch und Runbook: Geräte nach dem Tag neu koppeln), **KA-09 erledigt** (Referenz Rückweg, Fable-Agent), **KA-15 erledigt** (Android 0.26.0), in Arbeit KA-10 (Agent), dann KA-11, -13, -14; **danach 06e** in einem Zug (E-KA-79); Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
+| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 erledigt** (M-KA-03 freigegeben, E-KA-87), **KA-12 erledigt** (Handbuch und Runbook: Geräte nach dem Tag neu koppeln), **KA-09 erledigt** (Referenz Rückweg, Fable-Agent), **KA-15 erledigt** (Android 0.26.0), **KA-10 erledigt** (Browser-Kern), dann KA-11, -13, -14; **danach 06e** in einem Zug (E-KA-79); Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
 | Erledigt | **KA-06f** (PR #187, gemergt 15.11.2026, Android 0.25.0, Web 24.19.0; Zweig `claude/amazing-keller-i2f04f`; R91 auf Staging grün, Abschnitt 9) · **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -768,6 +768,7 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 | Q-KA-18 | **Befund `offen-nach-schluss`, haftet `f`?** (06f-1, Zweifel 1 des Agenten) So gebaut: `f` bleibt gesetzt, der Befund steht bei jedem Lesen, solange die offene Hülle die gespeicherte ist. Darf ein Gerät einen abgeschlossenen Einsatz legitim wieder öffnen, wäre das ein Dauerhinweis; Alternative: `f` an `o` binden, Befund nur einmal | beantwortet: E-KA-76 |
 | Q-KA-19 | **Befund auch an Hüllen des Kontos?** (06f-1, Zweifel 2) Die Referenz meldet ihn gleich von welchem Absender. Verschließt der Browser selbst (Formular, Wartungslauf) nach einem Abschluss mit `schluss: false`, meldet er sich selbst — dann das Konto ausnehmen oder `schluss` dort weitertragen | beantwortet: E-KA-76 |
 | Q-KA-20 | **Handy mit `huelle: 2`, aber ohne Geräteschlüssel** (06f-2, Zweifel 2 des Agenten): nach dem Update von 0.24.0 (alte Ablage gelöscht) oder wenn der Keystore keinen Eintrag liefert, sendet das Handy wie bisher Fassung 1, bis es neu koppelt. Soll es stattdessen gar nicht senden? Bis zum Stichtag aus 06e nimmt der Server Fassung 1 an | beantwortet: E-KA-80 |
+| Q-KA-21 | **F-KA-119: Soll `k` beim Zusammenführen zweier Blätter haften?** Heute gewinnt der höhere Zähler; ein Blatt mit einem höheren Gerätestand verdrängt einen Kontostand, und danach käme ein Gerät nach dem Konto wieder durch. Haften hieße: ein Gerät nach dem Konto bleibt hart abgewiesen, auch wenn ein anderer Browser einen höheren Gerätestand kannte | vor KA-14 oder mit 06e |
 | Q-KA-17 | **F-KA-85:** Bleibt der Geräteschlüssel des Handys im Tresor (gebaut, alle API-Stufen gleich, kein Hardware-Schutz), oder ab API 31 als nicht exportierbarer Keystore-Schlüssel mit `PURPOSE_AGREE_KEY`, darunter der Tresor? Aufwand nach dem Agenten 1 bis 1½ Pakete und Gerätetests unter und ab API 31 | beantwortet: E-KA-71, -72 |
 
 ---
@@ -975,6 +976,29 @@ keinen Gegenstand. Für 06f selbst gibt es auf Staging keinen Punkt der
 Arbeitsumgebung: Der Befund liegt hinter der Weiche, das Handy braucht ein
 Gerät (P-KA-16). Danach `staging_konten.py --wirklich`: ein Konto der Kette
 gelöscht, vier behalten.
+
+### KA-10 Browser-Kern: Rückweg (15.11.2026, Fable-Agent)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) Nur Chromium.
+(2) Kein Lauf gegen eine Anlage (`apiTransport`, IndexedDB, echte Seite) —
+das fährt der Prüfstand mit KA-14. (3) Mit Weiche aus ist „kein sichtbarer
+Weg ändert sich“ gelesen; die Hüllenprobe ruft `EdOrtsdaten` nicht.
+(4) Eine Bestätigung, die sich nur im Vermerk vom geltenden Hinweis
+unterscheidet, deckt kein Vektor (eingebauter Fehler blieb grün).
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Hüllenprobe `probe.sh` (Chromium) | **606 / 0, 0 ausgenommen** (39 + 271 + 296; vorher 450 / 156 ausgenommen) | Hauptinstanz nachgefahren; 13 von 14 eingebauten Fehlern rot (Hüllenprobe oder Ortsdatenprobe) | Kern nach E-KA-88 |
+| `ortsdaten_probe.mjs` (neu, aus dem Scratchpad des Agenten übernommen) | **17 / 0** | siehe oben | Fortschreiben, Hinweis, Übernehmen, Befunde über `EdOrtsdaten` |
+
+**Schnittstelle für KA-11:** `EdOrtsdaten.einsatz()` unverändert (nur
+Inhalt); neu `einsatzOeffnen()` → `{inhalt, absender, befund}`,
+`einsatzUebernehmen(m, k, hinweis)`, `fuerAnsicht(m, ck, {bestaetigt})`
+setzt `m.ort_absender`, `m.ort_befund`; der Hinweis ist ein Fehler mit
+`grund: 'uhrzeit-pruefen'`, `hinweis`, `inhalt`. **Zweifel:** Die vier
+übrigen Aufrufer von `einsatz()` (Export, Import, Formular, Einstellungen)
+behandeln den Hinweis wie „geht nicht auf“; `eintragOrdnen` im Browser
+prüft die Form von `a` und `u` nicht (die Referenz wirft `innen`).
 
 ### KA-15 Android 0.26.0: ohne Geräteschlüssel kein Senden (15.11.2026, Fable-Agent für den Sender)
 
@@ -1548,7 +1572,8 @@ Klartextfelder (`final`, Strecke, Besatzung, Tagesnotizen, Phasenzeiten bis
 | F-KA-116 | **Die Selbstprobe der Fassung 2 ist bei den alten Fällen schwächer, als sie aussieht:** `pruefen2()` vergleicht zuerst die ganze Datei mit dem Neubau, jede veränderte Kopie ist schon dadurch rot — die Fälle „Fehler 2“ sind damit trivial erfüllt (Fable-Agent, 06f-1) | die neun neuen Fälle verlangen die benannte Meldung; die alten bleiben, wie sie sind (Backlog-Kandidat) |
 | F-KA-117 | **Ein Abschluss ohne neuen Punkt ging am Handy nie an den Server** (älter als KA-06f, gefunden vom Fable-Agenten in 06f-3): `paketSchliessen()` ließ `metadaten_bestaetigt` stehen; war der Teil-Upload bestätigt, hatte das Paket laut `hatArbeit()` keine Arbeit — `final`, Endzeit, Strecke und die Hülle mit SCHLUSS blieben im Handy, ohne als Rückstand zu zählen | behoben: der Abschluss setzt die Bestätigung zurück; Prüffall `einAbschlussOhneNeuenPunktGehtHinaus` (ohne die Zeile rot); verwandtes Rennen bei der Bestätigung: Backlog Nr. 566 |
 | F-KA-118 | **Mit `minSdk` 31 wuchs das Release-APK von 9,3 auf 24,8 MB** — das Gradle-Plugin legt ab `minSdk` 28 die Dex-Dateien unkomprimiert ab | E-KA-77: komprimiert, 9 251 914 B |
-| F-KA-119 | **Beim Zusammenführen zweier Blätter gewann ein höherer Gerätestand über einen niedrigeren Kontostand, und `k` ging verloren** (bestehend in `hoeher()`, gefunden in KA-09) — danach käme ein Gerät nach dem Konto wieder durch | in KA-10 gegen `stand_zusammenfuehren()` prüfen |
+| F-KA-119 | **Beim Zusammenführen zweier Blätter gewann ein höherer Gerätestand über einen niedrigeren Kontostand, und `k` ging verloren** (bestehend in `hoeher()`, gefunden in KA-09) — danach käme ein Gerät nach dem Konto wieder durch | **offen:** auch `stand_zusammenfuehren()` (KA-09/-10) lässt den höheren `o` gewinnen, `k` zählt nur bei Gleichstand (Vektor „konto-unter-geraet“). Schließen hieße: Regel in der Referenz ändern („`k` haftet wie `f`“) samt Vektoren — Frage an die BetreiberIn (Q-KA-21) |
+| F-KA-120 | **Das Prüfmuster `huelle` nannte `inhalt2.js`, `huelle2.js`, `standbuch.js` und `ortsdaten.js` nicht** — eine Änderung nur dort wählte die Hüllenprobe in `klein` nicht (wie F-KA-114); und `ortsdaten.js` maß überhaupt keine Probe | vier Pfade ins Muster; neue `ortsdaten_probe.mjs` (17 Prüfungen) läuft in `probe.sh` |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
 | F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
 | F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |

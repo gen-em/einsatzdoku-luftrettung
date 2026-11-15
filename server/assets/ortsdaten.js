@@ -14,7 +14,13 @@
  *   EdOrtsdaten.spur(stuecke, art, ref, sperren, k)
  *                                         Punkte {seq, lat, lon, ele, ts}
  *   EdOrtsdaten.einsatz(m, k)             die Einsatzhülle, geöffnet, oder null
- *   EdOrtsdaten.fuerAnsicht(m, ck)        füllt m.track, m.phases, m.resus
+ *   EdOrtsdaten.einsatzOeffnen(m, k)      dasselbe mit Absender und Befunden:
+ *                                         { inhalt, absender, befund }
+ *   EdOrtsdaten.einsatzUebernehmen(m, k, hinweis)
+ *                                         „diesen Stand übernehmen": den
+ *                                         Hinweis `uhrzeit-pruefen` bestätigen
+ *   EdOrtsdaten.fuerAnsicht(m, ck, o)     füllt m.track, m.phases, m.resus,
+ *                                         m.ort_absender, m.ort_befund
  *   EdOrtsdaten.melden(e, art, id)        eine Hülle, die nicht aufging, an
  *                                         den Reiter System; die
  *                                         Art aus dem Fehler geht vor
@@ -37,7 +43,8 @@
  * verloren hat und anders stückelt) zählen einmal. Punkte in einer Sperrzeit
  * (ein herausgeschnittener Zeitraum) fallen weg. Höhe -32768 heißt: keine.
  *
- * Braucht: EdCrypto (crypto.js), EdKontopaar (kontopaar.js), EdFormat.
+ * Braucht: EdCrypto (crypto.js), EdKontopaar (kontopaar.js), EdFormat;
+ * für Fassung 2 EdHuelle2 (huelle2.js) und EdStandbuch (standbuch.js).
  */
 (function () {
   'use strict';
@@ -174,39 +181,139 @@
     return [...nach.values()].sort((a, b) => a.seq - b.seq);
   }
 
-  async function einsatz(m, k) {
+  /* DER STAND DER EINSATZHÜLLE IM STANDBUCH (KA-10, E-KA-70, -88): die
+     Felder o, k, a, f, u eines Eintrags. */
+  function standAus(e) {
+    const aus = {};
+    for (const f of EdHuelle2.STANDFELDER) { if (e && e[f] != null) { aus[f] = e[f]; } }
+    return aus;
+  }
+
+  /**
+   * DIE ABGENOMMENE HÜLLE INS STANDBUCH — als Änderung für
+   * `buch.fortschreiben()`. Gerechnet wird INNEN, gegen den Eintrag, der
+   * dann gilt: Nach einem Konflikt läuft die Änderung auf dem Blatt des
+   * Servers noch einmal, und was ein anderer Browser inzwischen geschrieben
+   * hat, zählt mit. Wirft sie dort, wird nichts geschrieben:
+   *   `zurueckgelegt`     der Stand ist inzwischen einer, gegen den diese
+   *                       Hülle hart durchfällt
+   *   `bestaetigung`      sie gälte jetzt nur noch mit einer Bestätigung,
+   *                       und es gab keine
+   *   `uhrzeit-pruefen`   es gab eine, aber für einen ANDEREN Hinweis als
+   *                       den, den der Stand jetzt ergibt — mit dem neuen
+   * Bis KA-10 stand hier `Math.max()`: Ein bewusst gesenkter Stand ließ sich
+   * so nicht schreiben, und wer ihn gesetzt hatte, blieb unbekannt.
+   * @param r           was `EdHuelle2.einsatzLesen()` geliefert hat; `befund`
+   *                    wird auf den Eintrag nachgezogen, der dann galt
+   * @param bestaetigt  der bestätigte Hinweis, oder null
+   * @param jetzt       die Unix-Sekunde der Bestätigung
+   */
+  const abnehmen = (r, bestaetigt, jetzt) => (e) => {
+    const stand = standAus(e);
+    const h = EdHuelle2.einsatzHinweis(r.inhalt, r.absender, stand);
+    const gilt = h !== null && bestaetigt != null && EdHuelle2.hinweisGleich(bestaetigt, h);
+    if (h !== null && bestaetigt != null && !gilt) { throw EdHuelle2.hinweisFehler(h, r.inhalt); }
+    const neu = EdHuelle2.standNachAbnahme(r.inhalt, r.absender, stand, gilt ? { jetzt: jetzt } : {});
+    r.befund = EdHuelle2.einsatzBefunde(r.inhalt, r.absender, stand);
+    for (const f of EdHuelle2.STANDFELDER) { delete e[f]; }
+    Object.assign(e, neu);
+  };
+
+  /* Der Klartextbeginn: `started_ts` (Epoche) oder `started_at` (UTC,
+     „JJJJ-MM-TT hh:mm:ss") — je nach Quelle der Zeile. Fehlt beides,
+     lässt sich die Zeit der Hülle nicht halten, und sie geht nicht auf. */
+  const beginnVon = (m) => (Number.isFinite(m.started_ts) ? m.started_ts
+    : (typeof m.started_at === 'string'
+       ? Math.floor(Date.parse(m.started_at.replace(' ', 'T') + 'Z') / 1000) : NaN));
+
+  /* Eine Hülle der Fassung 2 öffnen und gegen das Standbuch halten. Der
+     Hinweis-Fehler (`uhrzeit-pruefen`) geht durch, wie `EdHuelle2` ihn
+     wirft — derselbe Fehler, dazu nur `art`. */
+  async function einsatz2(m, k, bestaetigt) {
+    const sb = await standbuchFuer(k, m.client_ref);
+    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, false);
+    const r = await EdHuelle2.einsatzLesen(ls, m.client_ref, b64(m.ort_huelle), beginnVon(m),
+                                           { versatz: sb.e.d || 0, stand: standAus(sb.e), bestaetigt: bestaetigt })
+      .catch((e) => { e.art = 'einsatz'; throw e; });
+    return { sb: sb, r: r };
+  }
+
+  /**
+   * DIE EINSATZHÜLLE ÖFFNEN — MIT ABSENDER UND BEFUNDEN (KA-10).
+   * @returns {Promise<{inhalt: object, absender: string|null, befund: string[]}|null>}
+   *   null ohne Hülle. `absender`: null (Fassung 1, ohne Herkunftsnachweis),
+   *   'konto' oder die SID des Geräts (hex). `befund` weist nicht ab:
+   *   'offen-nach-schluss', 'stand-uebernommen' (`EdHuelle2`).
+   * WIRFT, wo die Hülle erst nach bewusster Bestätigung gilt, den Fehler aus
+   * `EdHuelle2.einsatzLesen()`, unverändert: `grund` 'uhrzeit-pruefen',
+   * `hinweis` { art, z, absender, o, stand_absender, vermerk }, `inhalt`.
+   * Der Weg weiter ist `einsatzUebernehmen()` mit genau diesem Hinweis.
+   */
+  async function einsatzOeffnen(m, k) {
     if (!m.ort_huelle) { return null; }
     if (istFassung2(m.ort_huelle)) {
-      const sb = await standbuchFuer(k, m.client_ref);
-      const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, false);
-      /* Der Klartextbeginn: `started_ts` (Epoche) oder `started_at` (UTC,
-         „JJJJ-MM-TT hh:mm:ss") — je nach Quelle der Zeile. Fehlt beides,
-         lässt sich die Zeit der Hülle nicht halten, und sie geht nicht auf. */
-      const beginnTs = Number.isFinite(m.started_ts) ? m.started_ts
-        : (typeof m.started_at === 'string'
-           ? Math.floor(Date.parse(m.started_at.replace(' ', 'T') + 'Z') / 1000) : NaN);
-      const r = await EdHuelle2.einsatzLesen(ls, m.client_ref, b64(m.ort_huelle), beginnTs,
-                                             { versatz: sb.e.d || 0, stand: { o: sb.e.o || 0, k: sb.e.k || 0, f: sb.e.f || 0 } })
-        .catch((e) => { e.art = 'einsatz'; throw e; });
-      /* DER ZÄHLER STEIGT BEIM LESEN mit (wie `patLesen()`): Ein späteres
-         Zurücklegen auf eine ältere Hülle fällt dann auf. Mit der Weiche aus
-         schreibt das Buch nichts. */
-      const schlussNeu = r.inhalt.schluss === true && !sb.e.f;
-      if (sb.buch && r.absender !== null && (r.inhalt.z > (sb.e.o || 0) || schlussNeu)) {
-        sb.buch.fortschreiben(m.client_ref, (e) => {
-          e.o = Math.max(e.o || 0, r.inhalt.z);
-          if (r.absender === EdHuelle2.KONTO) { e.k = 1; }
-          /* `f` haftet (KA-06f, E-KA-76): einmal abgeschlossen, immer
-             gemerkt — eine spätere offene Hülle ist dann ein Befund. */
-          if (r.inhalt.schluss === true) { e.f = 1; }
-        }).catch(() => {});
+      const { sb, r } = await einsatz2(m, k, null);
+      /* DER STAND GEHT BEIM LESEN MIT (wie `patLesen()`): Ein späteres
+         Zurücklegen auf eine ältere Hülle fällt dann auf. Geschrieben wird,
+         sobald der Eintrag danach ein anderer wäre — höherer Zähler, erster
+         Abschluss (`f` haftet, E-KA-76), ein Vermerk, der wegfällt, oder
+         nur der Absender, den ein Blatt von vor KA-09 nicht kennt. Mit der
+         Weiche aus schreibt das Buch nichts. Die Seite wartet nicht darauf;
+         was dabei scheitert, steht beim nächsten Lesen wieder an. */
+      if (sb.buch && r.absender !== null) {
+        const alt = standAus(sb.e);
+        let neu = null;
+        try { neu = EdHuelle2.standNachAbnahme(r.inhalt, r.absender, alt, {}); } catch (e) { neu = null; }
+        if (neu && JSON.stringify(neu) !== JSON.stringify(alt)) {
+          /* Auf einer Abschrift: Das Fortschreiben läuft der Rückgabe nach
+             und darf deren `befund` nicht mehr ändern. */
+          sb.buch.fortschreiben(m.client_ref, abnehmen(Object.assign({}, r), null, null)).catch(() => {});
+        }
       }
-      return r.inhalt;
+      return r;
     }
     const innen = await EdCrypto.geraetehuelleOeffnen(b64(m.ort_huelle), k.priv, k.pub,
                                                       'einsatz', m.client_ref, '')
       .catch((e) => { e.art = 'einsatz'; throw e; });
-    return JSON.parse(new TextDecoder().decode(innen));
+    return { inhalt: JSON.parse(new TextDecoder().decode(innen)), absender: null, befund: [] };
+  }
+
+  /** Die Einsatzhülle, geöffnet — nur das Innere, oder null. Wer Absender
+   *  und Befunde braucht, nimmt `einsatzOeffnen()`; der Hinweis-Fehler
+   *  kommt hier wie dort. */
+  async function einsatz(m, k) {
+    const r = await einsatzOeffnen(m, k);
+    return r ? r.inhalt : null;
+  }
+
+  /**
+   * „DIESEN STAND ÜBERNEHMEN" (E-KA-70) — die bewusste Bestätigung eines
+   * Hinweises. `hinweis` ist der aus dem Fehler `uhrzeit-pruefen`, so
+   * zurückgegeben, wie er kam. Öffnet und prüft noch einmal alles; gilt der
+   * Hinweis nicht mehr (die Hülle, ihr Absender oder der Stand hat sich
+   * geändert), steht wieder ein Hinweis-Fehler da — der neue.
+   *
+   * ERST DAS STANDBUCH, DANN DIE HÜLLE: Der gesenkte Stand und der Vermerk
+   * über den verworfenen werden geschrieben, und darauf wird GEWARTET. Geht
+   * das Schreiben nicht durch (Netz, Konflikt, Weiche aus), wirft der Weg,
+   * und es gilt nichts — eine Bestätigung, die nirgends steht, sähe der
+   * nächste Browser nicht, und der verworfene Stand kehrte still zurück.
+   * @param o  `jetzt` (Unix-Sekunde) nur für Proben
+   * @returns {Promise<{inhalt, absender, befund}>} wie `einsatzOeffnen()`
+   */
+  async function einsatzUebernehmen(m, k, hinweis, o) {
+    if (!m.ort_huelle || !istFassung2(m.ort_huelle)) {
+      throw fehler('bestaetigung', 'Zu dieser Einsatzhülle gibt es nichts zu bestätigen.');
+    }
+    const { sb, r } = await einsatz2(m, k, hinweis);
+    if (!sb.buch) { throw fehler('kein_standbuch', 'Ohne Standbuch lässt sich der Stand nicht übernehmen.'); }
+    const jetzt = (o && Number.isSafeInteger(o.jetzt)) ? o.jetzt : Math.floor(Date.now() / 1000);
+    const version = await sb.buch.fortschreiben(m.client_ref, abnehmen(r, hinweis, jetzt))
+      .catch((e) => { if (e && e.grund === EdHuelle2.UHRZEIT_PRUEFEN) { e.art = 'einsatz'; } throw e; });
+    if (version == null) {
+      throw fehler('nicht_vermerkt', 'Der übernommene Stand ließ sich nicht im Standbuch vermerken.');
+    }
+    return r;
   }
 
   /** Der Index des zeitlich nächsten Punkts — daraus wird `track_idx`. */
@@ -226,13 +333,24 @@
    * `m.phases[i].lat/lon/track_idx` aus der Einsatzhülle, `m.resus` als
    * Ereignislisten wie bisher. Die Phasen werden über Nummer und Zeit
    * zugeordnet (beide Klartext); was nicht passt, über die Reihenfolge.
+   *
+   * Dazu (KA-10): `m.ort_absender` (null, 'konto' oder die SID des Geräts)
+   * und `m.ort_befund` (Liste, siehe `einsatzOeffnen()`). Gilt die
+   * Einsatzhülle erst nach Bestätigung, WIRFT der Weg den Hinweis-Fehler
+   * (`grund` 'uhrzeit-pruefen') — `m.track` und `m.spur_punkte` stehen dann
+   * schon, Phasenorte und Reanimation nicht. Nach der Entscheidung der
+   * Person: derselbe Aufruf mit `{ bestaetigt: e.hinweis }`.
    */
-  async function fuerAnsicht(m, ck) {
+  async function fuerAnsicht(m, ck, o) {
     const k = await schluessel(ck);
     const punkte = await spur(m.spur_stuecke, 'spur', m.client_ref, m.spur_sperren, k);
     m.spur_punkte = punkte;
     m.track = punkte.map((p) => [p.lat, p.lon]);
-    const innen = await einsatz(m, k);
+    const auf = (o && o.bestaetigt) ? await einsatzUebernehmen(m, k, o.bestaetigt, o)
+                                    : await einsatzOeffnen(m, k);
+    const innen = auf ? auf.inhalt : null;
+    m.ort_absender = auf ? auf.absender : null;
+    m.ort_befund = auf ? auf.befund : [];
     const phasen = (innen && innen.phasen) || [];
     const frei = phasen.slice();
     (m.phases || []).forEach((p, i) => {
@@ -262,6 +380,9 @@
   const GRUENDE = ['laenge', 'fassung', 'schluessel', 'pruefwert', 'polsterung'];
   function melden(e, art, id) {
     if (e && e.grund === 'kein_paar') { return; }
+    /* Ein Hinweis ist keine Hülle, die nicht aufging: Sie ist echt, nur die
+       Reihenfolge ist offen (E-KA-70) — das entscheidet die Person. */
+    if (e && typeof EdHuelle2 !== 'undefined' && e.grund === EdHuelle2.UHRZEIT_PRUEFEN) { return; }
     if (typeof EdApi === 'undefined' || !id) { return; }
     const grund = e && GRUENDE.includes(e.grund) ? e.grund : 'unbekannt';
     EdApi.postJson('api/kontopaar.php', { aktion: 'oeffnen_fehler', art: (e && e.art) || art, id: id,
@@ -590,6 +711,7 @@
   }
 
   window.EdOrtsdaten = { schluessel: schluessel, spur: spur, einsatz: einsatz,
+                         einsatzOeffnen: einsatzOeffnen, einsatzUebernehmen: einsatzUebernehmen,
                          fuerAnsicht: fuerAnsicht, melden: melden,
                          einsatzZeiten: einsatzZeiten, einsatzInnen: einsatzInnen,
                          einsatzVerschliessen: einsatzVerschliessen, ortshoehe: ortshoehe,
