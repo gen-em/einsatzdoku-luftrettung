@@ -113,7 +113,6 @@ class Sender(
      * kann.
      */
     private val basis: String = Serveradresse.BASIS,
-    private val phasenLeser: (Long) -> List<Phaseneintrag> = { emptyList() },
     /** Die Uhr — einsetzbar, damit der Prüfstand die Räumfrist stellen kann. */
     private val jetzt: () -> Instant = Instant::now,
     /**
@@ -130,12 +129,14 @@ class Sender(
      */
     private val bindung: Rueckstandsbindung? = null,
     /**
-     * Geräteschlüssel und Zähler für Fassung 2 (seit KA-06c). Gesendet wird
-     * in Fassung 2 nur, wenn der Server bei der Kopplung `huelle: 2` gesagt
-     * hat UND ein gültiges Paar da ist; sonst Fassung 1 wie bisher.
+     * Der Geräteschlüssel für Fassung 2 (seit KA-06c). Gesendet wird in
+     * Fassung 2 nur, wenn der Server bei der Kopplung `huelle: 2` gesagt
+     * hat UND ein gültiges Paar da ist; sonst Fassung 1 wie bisher. Den
+     * Zähler der Einsatzhülle bekommt der Sender nicht mehr (bis KA-06f:
+     * `zaehler`, je Anfrage ein neuer, E-KA-64) — er liegt beim Paket im
+     * Puffer (E-KA-69).
      */
     private val geraeteschluessel: org.genem.nadoku.handy.tresor.Geraeteschluessel? = null,
-    private val zaehler: Huellenzaehler? = null,
 ) {
 
     /** Aktuelle Chunk-Größe; sie halbiert sich bei 413 und bleibt es. */
@@ -251,11 +252,7 @@ class Sender(
         )
 
         val paar = if (zugang.huelle2) geraeteschluessel?.liefern() else null
-        val fassung2 = if (paar != null && zaehler != null) {
-            Fassung2(paar, { zaehler.naechster() }, { jetzt().epochSecond })
-        } else {
-            null
-        }
+        val fassung2 = paar?.let { Fassung2(it, { jetzt().epochSecond }) }
 
         var bericht = Sendebericht(geraeumt = geraeumt, fremderRueckstand = fremd)
         /* Eine Obergrenze für die Anfragen eines Laufs. Sie ist kein Zaun
@@ -277,15 +274,41 @@ class Sender(
         puffer.warteschlange().firstOrNull { (grenze == null || it.id > grenze) && puffer.hatArbeit(it) }
 
     private fun sendeTeilstueck(
-        paket: Paketzeile,
+        gereiht: Paketzeile,
         adresse: String,
         kopfzeilen: Map<String, String>,
         kontoschluessel: ByteArray,
         fassung2: Fassung2? = null,
     ): Sendebericht {
+        /* DER EINSATZ AUS EINEM AUGENBLICK (seit KA-06f, E-KA-69): Paket,
+         * Zähler und Phasen kommen zusammen aus dem Puffer, nicht das Paket
+         * aus der Warteschlange und die Phasen einen Atemzug später. Eine
+         * Phase, die dazwischen fiele, stünde sonst unter dem Zähler des
+         * Stands davor. Fehlt dem Einsatz der Zähler (Bestand aus Schema 2,
+         * oder der Gerätezähler war bei der Änderung nicht ablegbar), wird
+         * er hier EINMAL vergeben und abgelegt — nur für Fassung 2. */
+        val paket: Paketzeile
+        val phasen: List<Phaseneintrag>
+        if (gereiht.art == Paketzeile.ART_EINSATZ) {
+            val stand = try {
+                puffer.einsatzstand(gereiht.id, zaehlerSichern = fassung2 != null)
+            } catch (e: Zaehlerausfall) {
+                /* KEIN ZÄHLER, KEINE HÜLLE: Der Gerätezähler lässt sich nicht
+                 * ablegen. Nichts geht hinaus, nichts wird vermerkt, der
+                 * Lauf endet als „später erneut" — wie beim Ausfall des
+                 * Keystore unten. */
+                return Sendebericht(spaeterErneut = true)
+            }
+            // Inzwischen verworfen: Der nächste Durchgang nimmt das nächste.
+            if (stand == null) return Sendebericht()
+            paket = stand.paket
+            phasen = stand.phasen
+        } else {
+            paket = gereiht
+            phasen = emptyList()
+        }
         val seqVon = paket.bestaetigtSeq
         val punkte = puffer.punkte(paket.id, seqVon, chunkPunkte)
-        val phasen = if (paket.art == Paketzeile.ART_EINSATZ) phasenLeser(paket.id) else emptyList()
         val letztes = seqVon + punkte.size >= puffer.punktzahl(paket.id)
         val koerper = try {
             Sendekoerper.baue(paket, seqVon, punkte, phasen, kontoschluessel, fassung2, letztes).toString()

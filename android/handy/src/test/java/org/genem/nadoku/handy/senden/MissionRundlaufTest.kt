@@ -95,7 +95,7 @@ class MissionRundlaufTest {
 
     private fun sender() = Sender(
         puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor,
-        basis = basis, phasenLeser = { puffer.phasen(it) },
+        basis = basis,
     )
 
     private fun klammer() = Dienstklammer(

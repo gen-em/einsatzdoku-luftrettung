@@ -791,3 +791,16 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      sonst den Kommentar auf „bis 0.24.x“ stellen (für die genannten
      schon geschehen). *Abnahme:* Lint `ObsoleteSdkInt` und `NewApi` ohne
      neuen Befund, Prüffälle grün.
+<!-- -->
+
+566. **Eine Phase während einer laufenden Anfrage wartet bis zur nächsten Änderung.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 15.11.2026
+     *Aufgenommen 15.11.2026 aus KA-06f-3 (Fable-Agent), gelesen, nicht
+     gemessen.* Fällt am Handy eine Phase, während eine Anfrage desselben
+     Pakets unterwegs ist, setzt deren Antwort `metadaten_bestaetigt` in
+     `Puffer.bestaetigungMerken()` wieder auf 1 — die neue Phase hat dann
+     keine Arbeit mehr und geht erst mit dem nächsten Punkt oder der
+     nächsten Änderung hinaus. Im Dienst fällt fast jede Sekunde ein Punkt,
+     daher selten spürbar; beim stehenden Fahrzeug nicht. *Weg:* nur
+     bestätigen, wenn der Stand noch derselbe ist (für Einsätze der Zähler
+     `z` des Pakets, für Ruhesegmente eine Änderungsnummer). *Abnahme:* ein
+     Prüffall, der die Phase zwischen Senden und Antwort setzt.

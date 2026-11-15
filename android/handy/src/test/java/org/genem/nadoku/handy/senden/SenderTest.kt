@@ -73,7 +73,6 @@ class SenderTest {
     private fun sender() = Sender(
         puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor,
         basis = server.basis,
-        phasenLeser = { puffer.phasen(it) },
         jetzt = { uhrzeit },
     )
 
@@ -322,6 +321,38 @@ class SenderTest {
         puffer.punktAnhaengen(id, p)
         puffer.paketSchliessen(id, "2026-07-16T06:00:00Z", null, null)
         return id
+    }
+
+    /**
+     * F-KA-117: Ein Paket, dessen Punkte alle bestätigt sind, wird ohne neuen
+     * Punkt abgeschlossen. Der Abschluss ist selbst Arbeit — `final` und
+     * `ended_at` müssen hinaus, und erst danach ist das Paket fertig. Bis
+     * Android 0.24.x blieb es liegen, ohne Anfrage und ohne Rückstand.
+     */
+    @Test fun einAbschlussOhneNeuenPunktGehtHinaus() {
+        server.status = 200
+        server.antwortAus = { koerper ->
+            val o = org.json.JSONObject(koerper)
+            val bis = o.optJSONObject("track")?.let { it.getLong("seq_from") + it.getInt("punkte") } ?: 1L
+            """{"ok":true,"id":1,"stored_points":0,"next_seq":$bis}"""
+        }
+        val id = offenesSegment("ab-1-a")
+        puffer.punktAnhaengen(id, Stroeme.erzeuge(Stroeme.REISEFLUG).first())
+        sender().sendeAlles()
+        assertEquals("der Teil-Upload ging hinaus", 1, server.anfragen.size)
+        assertFalse(puffer.hatArbeit(puffer.paket(id)!!))
+
+        puffer.paketSchliessen(id, "2026-07-16T08:00:00Z", null, null)
+        assertTrue("der Abschluss ist Arbeit", puffer.hatArbeit(puffer.paket(id)!!))
+        val bericht = sender().sendeAlles()
+
+        assertEquals("der Abschluss ging hinaus", 2, server.anfragen.size)
+        val k = server.letzterKoerper()
+        assertTrue(k.getBoolean("final"))
+        assertEquals("2026-07-16T08:00:00Z", k.getString("ended_at"))
+        assertFalse("ohne Punkt kein Stück", k.has("track"))
+        assertEquals(1, bericht.fertigePakete)
+        assertNull("bestätigt und entsorgt", puffer.paket(id))
     }
 
     /** Gebunden an DIESES Konto: Die Bindung fällt, der Rückstand geht hinaus. */
@@ -835,8 +866,7 @@ class SenderTest {
 
     private fun sender2(gs: org.genem.nadoku.handy.tresor.Geraeteschluessel) = Sender(
         puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor, basis = server.basis,
-        phasenLeser = { puffer.phasen(it) }, jetzt = { uhrzeit },
-        geraeteschluessel = gs, zaehler = Huellenzaehler(SpeicherZaehlerstand()) { uhrzeit.epochSecond },
+        jetzt = { uhrzeit }, geraeteschluessel = gs,
     )
 
     /**

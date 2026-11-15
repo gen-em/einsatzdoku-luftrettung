@@ -28,6 +28,23 @@ Schritt 28 (KA), Paket KA-06f.
   kann Android erst ab Fassung 12, und einen zweiten, schwächeren Weg für
   ältere Handys gibt es bewusst nicht. Ein mit 0.24.0 gekoppeltes Handy
   verliert seinen alten Schlüssel beim ersten Start und koppelt neu.
+- **Android — der Zähler der Einsatzhülle hängt am Inhalt, nicht mehr an der
+  Anfrage.** Bisher stieg er mit jedem Sendeversuch; ein Handy, das nach
+  einer Übergabe an die Uhr seinen alten Stand noch einmal schickte, hätte
+  damit den Abschluss der Uhr überschrieben. Jetzt bekommt ein Einsatz einen
+  neuen Zähler nur, wenn sich an ihm etwas ändert — Beginn, Phase,
+  Abschluss —, und ein alter Stand fällt im Browser als zurückgelegt durch.
+  Der Puffer trägt den Zähler dafür je Paket; die Umstellung behält jeden
+  gepufferten Einsatz.
+
+### Behoben
+
+- **Android — ein Abschluss ohne neuen Punkt ging nie an den Server.** War
+  alles bis dahin Aufgezeichnete schon bestätigt und kam danach kein Punkt
+  mehr, etwa weil das Fahrzeug stand, hatte das Paket für den Sender keine
+  Arbeit mehr. Ende, Strecke und „abgeschlossen" blieben dann im Handy
+  liegen, ohne dass es als Rückstand erschien. Jetzt ist der Abschluss
+  selbst Arbeit und geht mit der nächsten Gelegenheit hinaus.
 
 ## [Android 0.24.0] — unveröffentlicht
 

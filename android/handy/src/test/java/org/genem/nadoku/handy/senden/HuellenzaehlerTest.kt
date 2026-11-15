@@ -10,12 +10,17 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 
 /**
- * Der Zähler der Einsatzhülle (E-KA-64).
+ * Der Gerätezähler der Einsatzhülle — die Folge selbst (E-KA-69; bis KA-06f
+ * E-KA-64).
  *
  * Anlass: Nr. 563 — eine Hülle mit kleinerem Zähler als der zuletzt
  * abgenommenen weist der Browser als `zurueckgelegt` ab. Zählt das Handy
  * einmal rückwärts — nach einem Neustart, nach dem Trennen, weil seine Uhr
  * zurückspringt —, sieht sein eigener, richtiger Stand aus wie ein Angriff.
+ *
+ * Hier steht nur, WIE der eine Zähler des Geräts zählt. WANN er zählt — bei
+ * einer Änderung am Inhalt, nie beim Verschließen — misst
+ * `EinsatzzaehlerTest` am Puffer und am Sender.
  */
 class HuellenzaehlerTest {
 
@@ -76,7 +81,8 @@ class HuellenzaehlerTest {
             override fun lesen(): Long? = 5
             override fun schreiben(z: Long) = throw java.io.IOException("Platte voll")
         }
-        assertTrue(runCatching { Huellenzaehler(kaputt) { t }.naechster() }.isFailure)
+        val wurf = runCatching { Huellenzaehler(kaputt) { t }.naechster() }.exceptionOrNull()
+        assertTrue("als Zaehlerausfall, damit Puffer und Sender ihn erkennen", wurf is Zaehlerausfall)
     }
 
     /** Zwei Zähler auf einer Ablage, viele Fäden: keine Zahl zweimal. */

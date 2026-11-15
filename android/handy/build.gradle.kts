@@ -77,6 +77,13 @@ android {
     @Suppress("UnstableApiUsage")
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        /* DEX KOMPRIMIERT, wie bis 0.24.x (KA-06f, BetreiberIn 15.11.2026).
+         * Ab minSdk 28 legt das Gradle-Plugin die classes*.dex sonst
+         * unkomprimiert ins APK -- mit minSdk 31 wuchs das Release-APK von
+         * 9,3 auf 24,8 MB, ohne eine Zeile Code mehr. Das APK geht auch von
+         * Hand ueber server/apk/ und mobiles Netz; die etwas laengere
+         * Installation ist der kleinere Preis. */
+        dex.useLegacyPackaging = true
     }
 
     signingConfigs {

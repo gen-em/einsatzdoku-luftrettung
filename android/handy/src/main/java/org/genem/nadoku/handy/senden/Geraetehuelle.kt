@@ -421,7 +421,7 @@ object Geraetehuelle {
      * Beträgen unter 0,001 weicht die Schreibweise ab (`1.0E-5` statt
      * `1e-05`), der Wert nicht, und gültiges JSON ist beides.
      *
-     * @param z der Zähler ([Huellenzaehler.naechster]) — je Aufruf ein neuer
+     * @param z der Zähler des Pakets (`paket.zaehler`, E-KA-69) — derselbe, solange der Inhalt derselbe ist
      * @param schluss die Hülle des abgeschlossenen Einsatzes (`final`)
      */
     fun einsatzInnen2(begonnenAt: String, phasen: List<Phaseneintrag>, z: Long, schluss: Boolean): String {

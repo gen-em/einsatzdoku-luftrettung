@@ -6,8 +6,12 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import androidx.core.database.sqlite.transaction
 import java.util.concurrent.atomic.AtomicLong
+import java.io.File
 import org.genem.nadoku.handy.aufzeichnung.Rohpunkt
+import org.genem.nadoku.handy.senden.DateiZaehlerstand
+import org.genem.nadoku.handy.senden.Huellenzaehler
 import org.genem.nadoku.handy.senden.Phaseneintrag
+import org.genem.nadoku.handy.senden.Zaehlerausfall
 
 /**
  * Der Puffer: alles, was noch nicht bestätigt beim Server liegt.
@@ -29,9 +33,55 @@ import org.genem.nadoku.handy.senden.Phaseneintrag
  * alle Punkte bestätigt hat (`bestaetigt_seq >= Punktzahl`). Das ist dieselbe
  * Regel wie in `Uploader.mc`, und sie ist der Grund, warum ein Funkabriss
  * nichts kostet.
+ *
+ * DER ZÄHLER DER EINSATZHÜLLE (E-KA-69, seit KA-06f, Schema 3). Die Hülle
+ * der Fassung 2 trägt einen Zähler `z`, und er gehört zum INHALT des
+ * Einsatzes, nicht zum Verschließen ([Huellenzaehler]). Deshalb liegt er
+ * hier, in `paket.zaehler`, und wird an genau den Stellen vergeben, an denen
+ * sich ändert, was in der Hülle innen steht:
+ *
+ *   - [paketAnlegen] eines Einsatzes   — `start` entsteht
+ *   - [phaseAnhaengen]                 — die Phasenliste wächst (auch über
+ *                                        die Uhr: `Uhrannahme` geht denselben Weg)
+ *   - [paketSchliessen] eines Einsatzes, der noch offen war — `schluss` kippt
+ *
+ * Sonst nirgends: Punkte, Strecke, Anstieg, Endzeit und die Buchführung des
+ * Sendens stehen nicht in der Einsatzhülle. EIN VERGLEICH DER BYTES VOR DEM
+ * VERGEBEN ist deshalb nicht nötig, und er wäre hier nur Schein: Die ersten
+ * beiden Wege ändern die Bytes IMMER (ein neuer Einsatz, eine längere
+ * Liste), der dritte genau dann, wenn `final` von 0 auf 1 geht — und das
+ * fragt er ab. Ein zweites Schließen kostet kein `z`. Wer einen vierten Weg
+ * baut, der Beginn, Phasen oder Abschluss eines Einsatzes ändert, vergibt
+ * dort ebenfalls ([zaehlerFuerAenderung]) — `EinsatzzaehlerTest` misst
+ * „gleiches z ⇒ innen byte-gleich" an den drei, die es gibt.
+ *
+ * IN DERSELBEN SCHREIBHANDLUNG WIE DIE ÄNDERUNG. Zahl holen (der
+ * Gerätezähler legt sie ab, bevor er sie herausgibt), dann Änderung und Zahl
+ * in EINER Transaktion. Stirbt der Prozess dazwischen, ist eine Zahl
+ * verbraucht und nichts geändert; nie steht ein neuer Inhalt unter einem
+ * alten Zähler, und nie vergibt der nächste Lauf eine Zahl noch einmal. Die
+ * Zahl wird INNERHALB der Transaktion geholt: So stehen zwei Änderungen
+ * desselben Einsatzes in der Reihenfolge ihrer Zähler im Puffer.
+ *
+ * EIN PAKET OHNE ZÄHLER (`NULL`) heißt: „dieser Stand hat noch keinen".
+ * Das gibt es in zwei Lagen — das Paket stammt aus Schema 2 (die Migration
+ * vergibt nichts, siehe [onUpgrade]), oder der Gerätezähler ließ sich bei
+ * der Änderung nicht ablegen ([Zaehlerausfall]; die Aufzeichnung geht vor,
+ * eine Phase geht nicht verloren, weil eine Datei nicht schreibbar ist).
+ * Dann vergibt [einsatzstand] beim ERSTEN Verschließen einmal und legt ab;
+ * jedes weitere Verschließen liest. Ruhesegmente brauchen keinen.
  */
-class Puffer(kontext: Context, name: String = DATEINAME) :
-    SQLiteOpenHelper(kontext, name, null, FASSUNG) {
+class Puffer(
+    kontext: Context,
+    name: String = DATEINAME,
+    /**
+     * Der eine Zähler dieses Geräts. Vorgabe: die Datei, die auch die App
+     * nimmt — ein Puffer ohne Zähler wäre einer, der Einsätze ohne `z`
+     * ablegt, und das soll sich nicht versehentlich bauen lassen.
+     */
+    private val huellenzaehler: Huellenzaehler =
+        Huellenzaehler(DateiZaehlerstand(File(kontext.filesDir, DateiZaehlerstand.DATEINAME))),
+) : SQLiteOpenHelper(kontext, name, null, FASSUNG) {
 
     /*
      * DER ÄNDERUNGSZÄHLER. Läse die Hauptansicht jede Sekunde drei Zahlen
@@ -100,7 +150,8 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
                 anstieg_m            INTEGER,
                 bestaetigt_seq       INTEGER NOT NULL DEFAULT 0,
                 metadaten_bestaetigt INTEGER NOT NULL DEFAULT 0,
-                fehlerhaft           INTEGER NOT NULL DEFAULT 0
+                fehlerhaft           INTEGER NOT NULL DEFAULT 0,
+                zaehler              INTEGER
             )
             """.trimIndent()
         )
@@ -189,12 +240,28 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      * 1 → 2: die beiden Tabellen der Uhr-Buchführung kommen hinzu. Sie
      * sind leer und hängen an nichts — die Migration kann deshalb nichts
      * verlieren.
+     *
+     * 2 → 3 (KA-06f, E-KA-69): `paket.zaehler` kommt hinzu, leer. Eine neue
+     * Spalte am Ende, keine Zeile wird angefasst — auch diese Migration kann
+     * nichts verlieren. VERGEBEN WIRD HIER NICHTS, mit Absicht: Ein Zähler
+     * entsteht aus der Datei des Gerätezählers, und eine Migration, die an
+     * einer nicht schreibbaren Datei scheitern kann, ließe die App mit dem
+     * einzigen Bestand ungesendeter Daten nicht mehr starten. Die
+     * vorgefundenen Einsätze bekommen ihren Zähler beim ersten Verschließen
+     * ([einsatzstand]) — einmal, abgelegt, danach immer denselben. Er liegt
+     * über jedem `z`, das dieses Handy unter der alten Regel (E-KA-64, je
+     * Anfrage neu) gesendet hat: Es ist derselbe Gerätezähler, und er steigt
+     * streng. Der Browser nimmt den vorgefundenen Stand also an.
      */
     override fun onUpgrade(db: SQLiteDatabase, alt: Int, neu: Int) {
         var stand = alt
         if (stand == 1) {
             uhrTabellen(db)
             stand = 2
+        }
+        if (stand == 2) {
+            db.execSQL("ALTER TABLE paket ADD COLUMN zaehler INTEGER")
+            stand = 3
         }
         if (stand != neu) {
             throw IllegalStateException(
@@ -250,31 +317,109 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
 
     // ---- Pakete ------------------------------------------------------------
 
+    /**
+     * Ein Paket anlegen. Ein EINSATZ bekommt dabei seinen ersten Zähler: Mit
+     * ihm entsteht `start`, der erste Inhalt der Einsatzhülle.
+     */
     fun paketAnlegen(
         clientRef: String, art: String, tag: String, dienstRef: String?, begonnenAt: String,
-    ): Long = schreibe { it.insertOrThrow(
-        "paket", null,
-        ContentValues().apply {
-            put("client_ref", clientRef)
-            put("art", art)
-            put("tag", tag)
-            put("dienst_ref", dienstRef)
-            put("begonnen_at", begonnenAt)
-        },
-    ) }
-
-    fun paketSchliessen(paketId: Long, beendetAt: String, streckeM: Int?, anstiegM: Int?) {
-        schreibe { it.update(
-            "paket",
+    ): Long = schreibe { it.transaction {
+        insertOrThrow(
+            "paket", null,
             ContentValues().apply {
-                put("beendet_at", beendetAt)
-                put("final", 1)
-                if (streckeM != null) put("strecke_m", streckeM)
-                if (anstiegM != null) put("anstieg_m", anstiegM)
+                put("client_ref", clientRef)
+                put("art", art)
+                put("tag", tag)
+                put("dienst_ref", dienstRef)
+                put("begonnen_at", begonnenAt)
+                if (art == Paketzeile.ART_EINSATZ) put("zaehler", zaehlerFuerAenderung())
             },
-            "id = ?", arrayOf(paketId.toString()),
-        ) }
+        )
+    } }
+
+    /**
+     * Ein Paket abschließen. Ein Einsatz, der noch OFFEN war, bekommt einen
+     * neuen Zähler: `schluss` kippt. War er schon abgeschlossen, ändert sich
+     * an der Einsatzhülle nichts (Endzeit, Strecke und Anstieg stehen nicht
+     * darin), und der Zähler bleibt.
+     */
+    fun paketSchliessen(paketId: Long, beendetAt: String, streckeM: Int?, anstiegM: Int?) {
+        schreibe { it.transaction {
+            val offenerEinsatz = rawQuery(
+                "SELECT 1 FROM paket WHERE id = ? AND art = ? AND final = 0",
+                arrayOf(paketId.toString(), Paketzeile.ART_EINSATZ),
+            ).use { c -> c.moveToFirst() }
+            update(
+                "paket",
+                ContentValues().apply {
+                    put("beendet_at", beendetAt)
+                    put("final", 1)
+                    /* DER ABSCHLUSS IST SELBST ARBEIT (KA-06f, F-KA-117).
+                     * `final`, Endzeit, Strecke und — in Fassung 2 — die
+                     * Hülle mit SCHLUSS müssen hinaus, auch wenn danach kein
+                     * Punkt mehr fällt. Bis 0.24.x blieb `metadaten_bestaetigt`
+                     * hier stehen: War der Teil-Upload vollständig bestätigt,
+                     * hatte das Paket keine Arbeit mehr (`hatArbeit()`), und
+                     * der Abschluss erreichte den Server nie. */
+                    put("metadaten_bestaetigt", 0)
+                    if (streckeM != null) put("strecke_m", streckeM)
+                    if (anstiegM != null) put("anstieg_m", anstiegM)
+                    if (offenerEinsatz) put("zaehler", zaehlerFuerAenderung())
+                },
+                "id = ?", arrayOf(paketId.toString()),
+            )
+        } }
     }
+
+    /**
+     * Der Zähler für eine Änderung am Inhalt eines Einsatzes — NUR INNERHALB
+     * der Transaktion zu rufen, die die Änderung schreibt (Kopf der Klasse).
+     *
+     * `null`, wenn der Gerätezähler sich nicht ablegen ließ: Die Änderung
+     * wird trotzdem geschrieben, das Paket steht dann OHNE Zähler da — nicht
+     * mit dem alten, der zu einem anderen Inhalt gehörte —, und
+     * [einsatzstand] holt es beim Verschließen nach.
+     */
+    private fun zaehlerFuerAenderung(): Long? = try {
+        huellenzaehler.naechster()
+    } catch (e: Zaehlerausfall) {
+        null
+    }
+
+    /**
+     * Ein Einsatz, wie er JETZT ist: Paket und Phasen aus EINEM Augenblick.
+     *
+     * WARUM NICHT [paket] UND [phasen] NACHEINANDER. Zwischen zwei Lesungen
+     * kann der Aufzeichnungsfaden eine Phase anhängen. Der Sender verschlösse
+     * dann die neue Liste unter dem alten Zähler — „gleiches z ⇒ innen
+     * byte-gleich" wäre gebrochen, und zwar selten und ohne Meldung. Deshalb
+     * eine Transaktion um beide.
+     *
+     * @param zaehlerSichern Wird für Fassung 2 verschlossen? Dann bekommt ein
+     *   Einsatz ohne Zähler hier einen — einmal, abgelegt, bevor er
+     *   zurückgegeben wird; die nächste Anfrage liest denselben. Für
+     *   Fassung 1 bleibt die Spalte, wie sie ist.
+     * @return `null`, wenn es das Paket nicht mehr gibt
+     * @throws Zaehlerausfall wenn ein Zähler fällig ist und sich nicht
+     *   ablegen lässt — dann darf keine Hülle entstehen
+     */
+    fun einsatzstand(paketId: Long, zaehlerSichern: Boolean): Einsatzstand? =
+        schreibe(zaehlt = false) { it.transaction {
+            val p = paket(paketId)
+            when {
+                p == null -> null
+                p.art != Paketzeile.ART_EINSATZ -> Einsatzstand(p, emptyList())
+                zaehlerSichern && p.zaehler == null -> {
+                    val z = huellenzaehler.naechster()
+                    update(
+                        "paket", ContentValues().apply { put("zaehler", z) },
+                        "id = ?", arrayOf(paketId.toString()),
+                    )
+                    Einsatzstand(p.copy(zaehler = z), phasen(paketId))
+                }
+                else -> Einsatzstand(p, phasen(paketId))
+            }
+        } }
 
     fun paket(paketId: Long): Paketzeile? =
         readableDatabase.rawQuery(PAKET_SPALTEN + " WHERE id = ?", arrayOf(paketId.toString()))
@@ -432,6 +577,9 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
      * Nur-Aufzeichnen-Betrieb sogar bis zum Dienstende. Beim Phasenkonflikt
      * Uhr/Handy werden **beide Einträge gesendet** — gesendet, nicht nur
      * gespeichert.
+     *
+     * UND EIN NEUER ZÄHLER, in derselben Transaktion (E-KA-69): Die
+     * Phasenliste steht in der Einsatzhülle, und sie ist jetzt eine andere.
      */
     fun phaseAnhaengen(paketId: Long, nummer: Int, at: String, breite: Double?, laenge: Double?, quelle: String) {
         schreibe { it.transaction {
@@ -447,7 +595,11 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
                 },
             )
             update(
-                "paket", ContentValues().apply { put("metadaten_bestaetigt", 0) },
+                "paket",
+                ContentValues().apply {
+                    put("metadaten_bestaetigt", 0)
+                    put("zaehler", zaehlerFuerAenderung())
+                },
                 "id = ?", arrayOf(paketId.toString()),
             )
         } }
@@ -800,11 +952,11 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
 
     private companion object {
         const val DATEINAME = "puffer.db"
-        const val FASSUNG = 2
+        const val FASSUNG = 3
 
         const val PAKET_SPALTEN =
             "SELECT id, client_ref, art, tag, dienst_ref, begonnen_at, beendet_at, final, " +
-                "strecke_m, anstieg_m, bestaetigt_seq, metadaten_bestaetigt, fehlerhaft FROM paket"
+                "strecke_m, anstieg_m, bestaetigt_seq, metadaten_bestaetigt, fehlerhaft, zaehler FROM paket"
 
         fun zuPaket(c: android.database.Cursor) = Paketzeile(
             id = c.getLong(0),
@@ -820,6 +972,7 @@ class Puffer(kontext: Context, name: String = DATEINAME) :
             bestaetigtSeq = c.getLong(10),
             metadatenBestaetigt = c.getInt(11) != 0,
             fehlerhaft = c.getInt(12) != 0,
+            zaehler = if (c.isNull(13)) null else c.getLong(13),
         )
     }
 }
@@ -848,6 +1001,9 @@ data class Raeumung(val pakete: Int, val dienste: Int) {
     }
 }
 
+/** Ein Einsatz aus einem Augenblick: das Paket samt Zähler und die Phasen, die zu ihm gehören. */
+data class Einsatzstand(val paket: Paketzeile, val phasen: List<Phaseneintrag>)
+
 data class Paketzeile(
     val id: Long,
     val clientRef: String,
@@ -862,6 +1018,12 @@ data class Paketzeile(
     val bestaetigtSeq: Long,
     val metadatenBestaetigt: Boolean,
     val fehlerhaft: Boolean,
+    /**
+     * Der Zähler `z` der Einsatzhülle zu DIESEM Stand des Einsatzes
+     * (E-KA-69); `null` bei Ruhesegmenten und bei einem Einsatz, dessen
+     * Stand noch keinen hat ([Puffer.einsatzstand] vergibt ihn dann).
+     */
+    val zaehler: Long? = null,
 ) {
     companion object {
         const val ART_EINSATZ = "mission"

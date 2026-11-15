@@ -112,7 +112,7 @@ class SendeRundlaufTest {
 
     private fun sender() = Sender(
         puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor,
-        basis = basis, phasenLeser = { puffer.phasen(it) },
+        basis = basis,
     )
 
     /* EIN Zähler für den ganzen Prüffall, nicht einer je Klammer.

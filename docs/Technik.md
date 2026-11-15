@@ -11223,8 +11223,18 @@ Zustand `beansprucht` offen (wiederholbar) und meldet `Vergleich`, `202
 wartet` als `WartetBrowser`, `abgelehnt` als eigene Abweisung. Der Tresor
 merkt sich `huelle: 2` (Feld `h`); nur dann verschließt `Sendekoerper` mit
 `Geraetehuelle.einsatz2()`/`spurstueck2()`: Absender ist das Gerätepaar, die
-Einsatzhülle trägt den Zähler aus `senden/Huellenzaehler.kt` (Unix-Sekunde,
-streng steigend, Datei `huellenzaehler`, überdauert das Trennen, E-KA-64),
+Einsatzhülle trägt den Zähler `z` ihres Pakets. **Seit Android 0.25.0
+gehört `z` zum Inhalt** (KA-06f, E-KA-69): Der Puffer (Schema 3, Spalte
+`paket.zaehler`) vergibt ihn in derselben Transaktion wie die Änderung —
+beim Anlegen eines Einsatzes, bei jeder Phase und beim Abschluss —, aus dem
+Gerätezähler `senden/Huellenzaehler.kt` (Unix-Sekunde, streng steigend,
+Datei `huellenzaehler`, überdauert das Trennen); jede Anfrage desselben
+unveränderten Pakets trägt dasselbe `z`, und `Puffer.einsatzstand()` liest
+Paket, Zähler und Phasen aus einem Augenblick. Ein Paket aus Schema 2
+bekommt seinen Zähler beim ersten Verschließen; lässt sich die Zählerdatei
+nicht schreiben, sendet der Lauf nichts (`Zaehlerausfall`). Bis 0.24.x
+stieg `z` mit jeder Anfrage (E-KA-64), und ein nach einer Übergabe
+nachgesendeter alter Stand gewann.
 SCHLUSS steht am letzten Stück eines abgeschlossenen Pakets, und ist dann
 kein Punkt mehr offen, geht `schlussstueck2()` mit null Punkten. Den Merker
 LÜCKE setzt das Handy nicht — die Referenz lässt ihn nur dem Konto.

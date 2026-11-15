@@ -217,6 +217,19 @@ Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
 
+**Stand Android 0.25.0 (Schritt 28, KA-06f: Geräteschlüssel im Keystore,
+Zähler am Inhalt, `minSdk` 31), `./gradlew --offline build` im Container,
+15.11.2026 — `BUILD SUCCESSFUL in 5m 12s`:** Lint **0** Fehler (Handy 6
+Warnungen, Uhr keine), Prüffälle je Bauart Handy **389** (neu
+`EinsatzzaehlerTest` 10, `GeraeteschluesselTest` neu geschrieben 14,
+`SenderTest` 35), davon 15 ohne Installation übersprungen, Uhr **75**, **0**
+Fehlschläge. Gerätetest im Emulator (API 37, ohne KVM):
+`GeraeteschluesselGeraetTest` 6/6, `GeraetTresorTest` 6/6,
+`GeraetehuelleGeraetTest` 2/2. Release Handy **9 251 914 B** — mit
+`dex.useLegacyPackaging = true`; ohne die Zeile legt das Gradle-Plugin ab
+`minSdk` 28 die Dex-Dateien unkomprimiert ab (24 816 714 B, F-KA-118).
+Puffer-Schema **3** (Spalte `paket.zaehler`).
+
 **Stand Android 0.24.0 (Schritt 28, KA-06c: Kopplung mit Vergleichswert,
 Gerätehülle Fassung 2), `./gradlew build` im Container, 14.11.2026 —
 `BUILD SUCCESSFUL in 7m 23s`:** Lint **0** Fehler (Handy 6 Warnungen, Uhr

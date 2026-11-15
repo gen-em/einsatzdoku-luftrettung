@@ -22,13 +22,14 @@ class SendekoerperTest {
         bestaetigtSeq = 0, metadatenBestaetigt = false, fehlerhaft = false,
     )
 
-    private fun einsatz(final: Boolean = true) = Paketzeile(
+    private fun einsatz(final: Boolean = true, zaehler: Long? = 101L) = Paketzeile(
         id = 2, clientRef = "am-3-0000500006", art = Paketzeile.ART_EINSATZ,
         tag = "2026-07-16", dienstRef = "ad-1-0000100002",
         begonnenAt = "2026-07-16T08:31:05Z",
         beendetAt = if (final) "2026-07-16T09:12:40Z" else null,
         final = final, streckeM = 148230, anstiegM = 410,
         bestaetigtSeq = 0, metadatenBestaetigt = false, fehlerhaft = false,
+        zaehler = zaehler,
     )
 
     /** Der Empfänger der Referenzvektoren (`tools/proben/huelle/vektoren.json`). */
@@ -150,9 +151,8 @@ class SendekoerperTest {
     // ---- Fassung 2 (seit KA-06c) ------------------------------------------
 
     private val geraet = org.genem.nadoku.handy.tresor.SoftwareAbsender.erzeugen()
-    private var z = 100L
     private val abschluss = java.time.Instant.parse("2026-07-16T06:00:00Z").epochSecond
-    private fun f2() = Fassung2(geraet, { ++z }, { 1_800_000_000L })
+    private fun f2() = Fassung2(geraet) { 1_800_000_000L }
     private fun auf(b64: String, art: String, ref: String, platz: String): ByteArray =
         Huellenoeffner.oeffnen2(java.util.Base64.getDecoder().decode(b64), geraet.spk, art, ref, platz)
 
@@ -180,16 +180,42 @@ class SendekoerperTest {
         assertEquals(0, spur[8].toInt())
     }
 
-    /** Nicht abgeschlossen: weder die Einsatzhülle noch das Stück sagt Schluss; jede Anfrage ein neues `z`. */
-    @Test fun fassung2LaufendOhneSchluss() {
-        val zaehler = f2()
-        val a = Sendekoerper.baue(einsatz(final = false), 0, punkte, emptyList(), Huellenoeffner.konto, zaehler, true)
-        val b = Sendekoerper.baue(einsatz(final = false), 0, punkte, emptyList(), Huellenoeffner.konto, zaehler, true)
-        val ia = org.json.JSONObject(String(auf(a.getString("ort_huelle"), "einsatz", "am-3-0000500006", ""), Charsets.UTF_8))
-        val ib = org.json.JSONObject(String(auf(b.getString("ort_huelle"), "einsatz", "am-3-0000500006", ""), Charsets.UTF_8))
-        assertFalse(ia.getBoolean("schluss"))
-        assertTrue("z steigt je Anfrage", ib.getLong("z") > ia.getLong("z"))
+    /**
+     * Nicht abgeschlossen: weder die Einsatzhülle noch das Stück sagt
+     * Schluss. Und der Zähler ist der des PAKETS (E-KA-69): Zwei Anfragen aus
+     * demselben Stand tragen dasselbe `z` und innen dieselben Bytes — nur die
+     * Hülle außen ist jedes Mal eine andere (EPK, IV).
+     */
+    @Test fun fassung2LaufendOhneSchlussUndGleichesZ() {
+        val a = Sendekoerper.baue(einsatz(final = false), 0, punkte, emptyList(), Huellenoeffner.konto, f2(), true)
+        val b = Sendekoerper.baue(einsatz(final = false), 0, punkte, emptyList(), Huellenoeffner.konto, f2(), true)
+        val ia = auf(a.getString("ort_huelle"), "einsatz", "am-3-0000500006", "")
+        val ib = auf(b.getString("ort_huelle"), "einsatz", "am-3-0000500006", "")
+        assertFalse(org.json.JSONObject(String(ia, Charsets.UTF_8)).getBoolean("schluss"))
+        assertEquals("das z des Pakets", 101L, org.json.JSONObject(String(ia, Charsets.UTF_8)).getLong("z"))
+        org.junit.Assert.assertArrayEquals("gleiches z ⇒ innen byte-gleich", ia, ib)
+        assertFalse("außen neu verschlossen", a.getString("ort_huelle") == b.getString("ort_huelle"))
         assertEquals(0, auf(a.getJSONObject("track").getString("huelle"), "spur", "am-3-0000500006", "0:2")[8].toInt())
+    }
+
+    /** Das `z` kommt aus der Paketzeile und aus nichts sonst: ein anderes Paket-z, ein anderes Hüllen-z. */
+    @Test fun fassung2ZaehlerAusDemPaket() {
+        val o = Sendekoerper.baue(einsatz(zaehler = 1_784_278_376L), 0, punkte, emptyList(), Huellenoeffner.konto, f2(), true)
+        val innen = org.json.JSONObject(String(auf(o.getString("ort_huelle"), "einsatz", "am-3-0000500006", ""), Charsets.UTF_8))
+        assertEquals(1_784_278_376L, innen.getLong("z"))
+    }
+
+    /**
+     * Ein Einsatz ohne Zähler bekommt in Fassung 2 KEINE Hülle — der
+     * Baustein erfindet keinen. Fassung 1 kennt keinen Zähler und baut
+     * weiter; ein Ruhesegment braucht nie einen.
+     */
+    @Test fun fassung2OhneZaehlerKeineHuelle() {
+        assertTrue(runCatching {
+            Sendekoerper.baue(einsatz(zaehler = null), 0, punkte, emptyList(), Huellenoeffner.konto, f2(), true)
+        }.exceptionOrNull() is IllegalStateException)
+        assertTrue(Sendekoerper.baue(einsatz(zaehler = null), 0, punkte, emptyList(), ks).has("ort_huelle"))
+        assertTrue(Sendekoerper.baue(segment(final = true), 0, punkte, emptyList(), Huellenoeffner.konto, f2(), true).has("track"))
     }
 
     /**

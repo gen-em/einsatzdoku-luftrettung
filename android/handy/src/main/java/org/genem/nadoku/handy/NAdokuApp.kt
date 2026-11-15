@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class NAdokuApp : Application() {
 
-    val puffer: Puffer by lazy { Puffer(this) }
+    val puffer: Puffer by lazy { Puffer(this, huellenzaehler = huellenzaehler) }
 
     val einstellungen: Einstellungen by lazy { Einstellungen(this) }
 
@@ -90,7 +90,12 @@ class NAdokuApp : Application() {
         )
     }
 
-    /** Der Zähler `z` der Einsatzhülle (E-KA-64) — überdauert das Trennen. */
+    /**
+     * Der Zähler `z` der Einsatzhülle — EINER für das Gerät, überdauert das
+     * Trennen. Er gehört dem [puffer]: Vergeben wird, wenn sich der Inhalt
+     * eines Einsatzes ändert, und abgelegt mit dem Paket (E-KA-69, seit
+     * KA-06f; bis dahin beim Sender, je Anfrage ein neuer, E-KA-64).
+     */
     val huellenzaehler: org.genem.nadoku.handy.senden.Huellenzaehler by lazy {
         org.genem.nadoku.handy.senden.Huellenzaehler(
             org.genem.nadoku.handy.senden.DateiZaehlerstand(
@@ -125,7 +130,6 @@ class NAdokuApp : Application() {
             puffer = puffer,
             netzweg = HttpNetzweg(),
             tresor = tresor,
-            phasenLeser = { paketId -> puffer.phasen(paketId) },
             // Fehlt der Kontoschlüssel, holt der Sendelauf ihn über `status`
             // nach — auf demselben Faden, ohne Bildschirm.
             schluesselHolen = {
@@ -135,7 +139,6 @@ class NAdokuApp : Application() {
             },
             bindung = bindung,
             geraeteschluessel = geraeteschluessel,
-            zaehler = huellenzaehler,
         )
     }
 
