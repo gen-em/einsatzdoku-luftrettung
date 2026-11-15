@@ -1730,6 +1730,26 @@ Zeit davor vorübergehend keine Karte, bis dein Browser ihre Ortsdaten im
 Hintergrund verschlossen hatte. Seit Web 23 ist das abgeschlossen; alte
 Ortsdaten im Klartext gibt es auf dem Server nicht mehr.)*
 
+**Was die Karte seit Web 25.0.0 außerdem sagen kann.** Dein Browser merkt
+sich je Einsatz, welchen Stand er zuletzt gesehen hat und von welchem
+Gerät, und hält jeden neuen dagegen:
+
+- **„Nach dem Abschluss kam noch ein offener Stand"** (gelb, Karte darunter):
+  Ein Gerät hat den Einsatz nach dem Abschluss noch einmal ohne Abschluss
+  gesendet. Prüfe Phasen und Spur und schließe ihn noch einmal ab.
+- **„Uhrzeit von ‹Gerät› prüfen"** (gelb, keine Karte): Zwei Geräte haben
+  am selben Einsatz gearbeitet, und der gespeicherte Stand ist nach der Uhr
+  seines Geräts älter als der, den dein Browser kennt — meist geht eine Uhr
+  falsch. Ist er der richtige, tippe **„Diesen Stand übernehmen"**; die
+  Seite lädt neu und zeigt ihn. **„Nicht jetzt"** lässt alles, wie es ist;
+  beim nächsten Öffnen fragt die Seite wieder.
+- **„Die Ortsdaten sind älter als der Stand, den dieser Browser kennt"**
+  (rot): Dasselbe Gerät hatte schon Neueres gesendet — jemand hat einen
+  alten Stand zurückgelegt. Es gibt keinen Weg, ihn zu übernehmen.
+- **„Diese Ortsdaten tragen keinen Herkunftsnachweis"** (rot): Der Stand
+  kam ohne Geräteschlüssel, wo dein Browser schon einen kennt. Koppele das
+  Gerät neu.
+
 **Sechs Kennzeichen seit Web 14.0.0, vorher drei.** Ein Einsatz vom Handy und
 einer von der Wear-OS-Uhr standen bis dahin beide als „Uhr" da, ein
 geschnittener als „manuell" — die Anzeige konnte es nicht besser wissen, weil
