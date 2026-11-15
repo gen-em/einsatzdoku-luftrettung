@@ -14,8 +14,8 @@ derselbe Code und dieselbe Instanz.
 
 | | |
 |---|---|
-| Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/vigilant-cray-9riw34`, Backlog-Spanne 570–579 |
-| In Arbeit | **nichts** — alle Pakete gebaut und gemergt. Offen sind nur die **Gerätetests der BetreiberIn** (Rest von KG-04, Prüfdokument) und das Ergebnis von **KA-06c** (Gegenprüfung der Zählerregel, F-KA-108): Ändert 06c die Regel, braucht die Uhr eine neue Fassung (`Huelle2.zaehlerNaechster()`, Krypto-Probe; Fable wie E-KG-35). Den Tag `uhr-v5.0.0` setzt die BetreiberIn erst danach |
+| Stand | **Umsetzung** seit 10.11.2026; seit 15.11.2026 Zweig `claude/kg-zaehler-inhalt` (KG-09, KG-10, ein PR), Backlog-Spanne 580–589 (vorher `claude/vigilant-cray-9riw34`, 570–579) |
+| In Arbeit | **KG-09** (Zähler am Inhalt, E-KA-69, -74; im Konzept KA als „KG-05" beauftragt, die Nummer ist hier vergeben) — **Halt vor dem Krypto-Kern** (Fable-Agent, E-KG-42). Danach **KG-10** (E-KA-80 an der Uhr). Weiter offen: die **Gerätetests der BetreiberIn** (Rest von KG-04, Prüfdokument) |
 | Erledigt | **KG-01, KG-05, KG-02, KG-06, KG-04 (Teil: Prüfdokument)** — PR #168, Uhr 4.5.1. **KG-07, KG-03a** — PR #173, Uhr 4.5.2. **KG-08** — PR #178, Uhr 4.6.0. **KG-03b** — PR #181, Uhr 5.0.0. Alle gemergt |
 | Hakt | Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05). Den Abschluss im Rahmenplan schreibt KG nicht (Grenze) — er gehört zum Abschluss von Schritt 28 |
 | Gelesen gegen | Commit `0be2092` · Uhr 4.3.3; die vier Befunde von KG-01 am 10.11.2026 an der heutigen Stelle bestätigt (Abschnitt 4) |
@@ -42,6 +42,8 @@ BetreiberIn, die KA-Instanz baut sie.
 | KG-06 | **401/403 nur mit Fehlerfeld endgültig** (Vertrag 5, E-KA-26: „Die Uhr zieht mit KG nach"): erst messen, ob Connect IQ den Rumpf einer 401/403 an die App durchreicht (Simulator, Fenix 6 Pro); dann ohne Feld = später erneut, vor dem Räumen nach Fristablauf ein Sendeversuch | F-KA-18 (Rest) | KG-02 | Opus | keine | Korrektur oder Neben |
 | KG-07 | Schnellmenü der Hauptanzeige öffnet beim Loslassen von START; doppeltes Blättern der Rea-Seite ohne Rea in der Probe `rea` festgehalten | F-KG-08, F-KG-09 | nichts | Opus | keine | Korrektur |
 | KG-05 | Umbau der Reanimation: Tastenbelegung, 10-s-Sperre, Vibrationen, Fehler kurz UP/DOWN (Abschnitt 5) | F-KG-01, F-KG-02, F-KG-03 | KG-01 (Reihenfolge, nicht Inhalt) | Opus | keine | Neben |
+| KG-09 | **Zähler am Inhalt** (Garmin-Teil von KA-06f, im Konzept KA als „KG-05"): `z` wird vergeben, wenn sich der Inhalt eines Einsatzes ändert (alles innen außer `z`; Vergleich über SHA-256), und mit dem Paket abgelegt; jede Hülle desselben Stands trägt dasselbe `z`; Wert `max(jetzt, gz + 1)` aus dem einen Gerätezähler `gz`. Gemessen an `vektoren-2.json` (`zaehler`, `inhalt-…`) | F-KA-108, F-KG-22 | KA-06f (gemergt, PR #187) | **Fable-Agent** für den Kern (`Huelle2.mc`, Krypto-Probe), Opus für Einbau, Proben, Dokumente (E-KG-42) | keine | Neben (mit KG-10) |
+| KG-10 | **E-KA-80 an der Uhr** (E-KA-86): Merker `huelle: 2` ohne gültiges Gerätepaar oder mit gescheitertem Selbsttest der Fassung 2 → nicht senden, puffern, Hinweis auf der Sync-Seite | — | KG-09 (Reihenfolge, dieselben Dateien) | Opus | keine | Neben (mit KG-09) |
 | KG-08 | Gemeldet am 13.11.2026: kein Dienst ohne Kopplung, Trennen ohne Neukopplung, Menüs öffnen beim Halten (FR 945), Rea-Sperre 5 s (Abschnitt 5d) | F-KG-18, F-KG-19 | nichts | Opus | keine | Neben |
 
 Ein Pull Request je Paket. Nach jedem Paket: Konzept fortschreiben,
@@ -89,6 +91,12 @@ abonnieren, anhalten.
 | E-KG-34 | **Uhren mit älterer Kopplung bekommen keinen Hinweis „Neu koppeln"**: Sie senden Fassung 1, bis sie neu gekoppelt werden; der Stichtag kommt mit KA-06e | 14.11.2026, BetreiberIn |
 | E-KG-35 | **Die Zählerregel (E-KA-64) baut ein Fable-Agent** in `Huelle2.mc` samt Krypto-Probe; die Hauptinstanz baut Kopplung, Senden, Anzeige, Proben und Dokumente (wie E-KG-26) | 14.11.2026, BetreiberIn |
 | E-KG-36 | **Die Rundlauf-Arten der NACHHOLEN-Familie bleiben auf der alten Kopplung** (ohne Geräteschlüssel, Fassung 1): Sie messen Uhren, deren Kopplung vor 5.0.0 entstand, und den Zustand „gekoppelt ohne Kontoschlüssel", den es mit Vergleichswert nicht mehr gibt. Ohne Art und `--schrumpfen` koppeln mit Wert und senden Fassung 2 | 14.11.2026, Umsetzung |
+| E-KG-37 | **Der Auftrag „KG-05" aus Konzept KA heißt hier KG-09**, E-KA-80 an der Uhr **KG-10** — KG-05 ist der Umbau der Reanimation, Nummern werden nicht wiederverwendet. **Beide in einem PR** | 15.11.2026, BetreiberIn |
+| E-KG-38 | **Der Vergleich des Inhalts läuft über den SHA-256** des Inhalts ohne `z` (32 B im Paket), nicht über den abgelegten Text — Speicher der Uhr | 15.11.2026, BetreiberIn |
+| E-KG-39 | **Hinweis für KG-10:** das vorhandene Zeilenpaar der Sync-Seite, „Neu koppeln" (rot) und „Koppeln: ‹Taste halten›" (grau), wie „Kein Schlüssel / Holen: …" — kein neuer Baustein; als Mockup freigegeben | 15.11.2026, BetreiberIn |
+| E-KG-40 | **Scheitert der Selbsttest der Fassung 2 an einer Uhr mit `huelle: 2`, sendet sie nicht** und zeigt „Verschlüsseln geht nicht / Bitte melden" — ersetzt den Rückfall auf Fassung 1 aus KG-03b (`Uploader.fassung2()`): kein Senden ohne Herkunftsnachweis (E-KA-80) | 15.11.2026, BetreiberIn |
+| E-KG-41 | **E-KG-34 bleibt stehen:** Eine Uhr, deren Kopplung nie `huelle: 2` gehört hat, sendet Fassung 1 ohne Hinweis bis zum Stichtag. E-KA-80 trifft nur Uhren mit dem Merker — an der Uhr fast nur nach Verlust des Speichers, weil Trennen Merker und Paar zusammen löscht | 15.11.2026, Umsetzung |
+| E-KG-42 | **Der Kern von KG-09 geht an einen Fable-Agenten** (wie E-KG-26, -35): `Huelle2.mc` (Regel, Vergleich, Inhalt ohne `z`) und die Krypto-Probe gegen den Vektor `zaehler`; die Hauptinstanz baut den Haken in `Model.mc`, den Sendeweg, KG-10, Proben und Dokumente | 15.11.2026, Hinweis vor Beginn (CLAUDE.md 7) |
 | E-KG-16 | **Die Probe zu KG-01 läuft ohne Server** (`tools/uhr-pruefstand/sendeweg/`): Die Prüffassung hält jede Anfrage vor dem Absenden an und spielt die Antworten selbst vor. Ein verlorenes Paket und eine falsche Quittung lassen sich mit der echten Anlage nicht gezielt erzeugen; was `ingest.php` daraus macht, misst weiter `uhr-rundlauf` | 10.11.2026, Umsetzung |
 
 ---
