@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | nichts; **als Nächstes das Umlegen der Weiche als Web 25.0.0** (E-KA-51, -70; dort auch F-KA-103, -104, die Anzeige der Befunde samt „übernommen“ und Q-KA-20 am Handy, E-KA-80, -81), **danach 06e** in einem Zug (E-KA-79); Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
+| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 Mockup M-KA-03 in Arbeit**, danach am Stück KA-09 bis KA-15 (ein Halt: Freigabe des Mockups); **danach 06e** in einem Zug (E-KA-79); Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
 | Erledigt | **KA-06f** (PR #187, gemergt 15.11.2026, Android 0.25.0, Web 24.19.0; Zweig `claude/amazing-keller-i2f04f`; R91 auf Staging grün, Abschnitt 9) · **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -132,6 +132,11 @@ Safari.
 | E-KA-79 | **06e kommt ganz nach Web 25.0.0, in einem Zug** — Übernahme der Gerätedaten im Anhebelauf, Stichtag am Server und Rückbau des Altformats (E-KA-60). Stichtag und Rückbau setzen voraus, dass die Weiche umliegt und der Anhebelauf auf Produktiv einmal durch war; ändert die Reihenfolge in Abschnitt 4 (bis dahin 06e vor Web 25.0.0) | 15.11.2026, BetreiberIn |
 | E-KA-80 | **Ein Handy mit `huelle: 2`, aber ohne Geräteschlüssel, sendet nichts und zeigt „neu koppeln“** (beantwortet Q-KA-20): kein Rückfall ohne Herkunftsnachweis; die Daten bleiben im Puffer. Gebaut mit Web 25.0.0 bzw. der Android-Fassung dazu | 15.11.2026, BetreiberIn |
 | E-KA-81 | **Das Kennzeichen „vom Browser übernommen am …“ wird mit den übrigen Befunden gezeigt** (E-KA-70), ein Mockup für alles beim Umlegen der Weiche; 06e schreibt es nur in die Hülle | 15.11.2026, BetreiberIn |
+| E-KA-82 | **Web 25.0.0 in acht Paketen KA-08 bis KA-15, am Stück, ein gesammelter PR**; der einzige Halt ist die Freigabe des Mockups M-KA-03 (`CLAUDE.md` 5) — KA-09 und KA-10 hängen nicht daran und laufen weiter | 15.11.2026, BetreiberIn |
+| E-KA-83 | **F-KA-103: Geräte, die vor dem Umlegen gekoppelt wurden, koppeln neu** — kein Weg „Wert nachträglich bestätigen“; ein Satz in Handbuch und Runbook (es gibt eine Nutzerin, E-KA-16) | 15.11.2026, BetreiberIn |
+| E-KA-84 | **Das Rundenziel steigt mit der Weiche auf 1 200 000** (Ableitung 2, E-KA-57); die Dauer der Anmeldung wird gemessen | 15.11.2026, BetreiberIn |
+| E-KA-85 | **Den Krypto-Teil von KA-09, KA-10 und KA-15 schreibt ein Fable-Agent**, die Hauptinstanz bleibt auf Opus und prüft nach (wie E-KA-67, -73) | 15.11.2026, BetreiberIn |
+| E-KA-86 | **E-KA-80 gilt auch für die Garmin-Uhr** und geht zusammen mit KG-05 an eine **neu gestartete** KG-Sitzung | 15.11.2026, BetreiberIn |
 | E-KA-73 | **E-KA-69, -71 und -72 kommen als eigenes Paket KA-06f vor 06e**, in einer neuen Instanz; der Krypto-Teil (Keystore-Umsetzung von `Geraeteschluessel`, Zählerregel in Referenz und Handy) geht wieder an einen Fable-Agenten (wie E-KA-67), der Garmin-Teil von E-KA-69 an KG (E-KA-21) | 15.11.2026, BetreiberIn |
 | E-KA-66 | **Gerätebuch und „Wert stimmt“ gehen in zwei Schritten, nicht in einer Transaktion:** erst das Buch (über den vorhandenen Weg `geraetEintragen()`), dann der Vermerk am Server mit `im_buch`. Ein Gerät am Server ohne Buch-Eintrag sendete Daten, die nicht aufgehen; ein Buch-Eintrag ohne Gerät räumt der Abgleich der Geräteseite auf (`bis`). Weicht vom Entwurf 06d, Punkt 5 ab | 13.11.2026, Umsetzung |
 | E-KA-67 | **Den Anschluss des leeren Schlussstücks prüft der Browser beim Lesen (Regel `luecke`), nicht der Eingang** — der Eingang prüft Form (Fassung 2, `ts_von` = `ts_bis`). Eine Abfrage des letzten Stücks im Eingang kostete jede Anfrage und belegte nichts, was der Browser nicht ohnehin prüft. Weicht vom Entwurf 06d, Punkt 8 ab | 13.11.2026, Umsetzung |
@@ -677,6 +682,30 @@ Rahmenplans) — **vor Beginn darauf hinweisen und pausieren**; Opus für 06d,
 06e und die Oberfläche. **Fächerung:** 06a seriell. 06c: Uhr und Handy
 gefächert, nachdem die Referenz steht. 06b seriell (eine Bibliothek, viele
 Verbraucher).
+
+### KA-08 bis KA-15 — Web 25.0.0, die Weiche wird umgelegt (E-KA-82)
+
+Ein Zweig, ein gesammelter PR, am Stück; Modellwahl Opus, der Krypto-Teil
+an einen Fable-Agenten (E-KA-85). **Fächerung:** KA-09 und KA-10 laufen als
+Agent, während KA-08 auf die Freigabe wartet; sonst seriell (Prüfarbeit
+und erzählender Text lassen sich nicht fächern, `CLAUDE.md` 7).
+
+| Paket | Inhalt | Befunde, Entscheidungen | Hängt an |
+|---|---|---|---|
+| KA-08 Mockup | M-KA-03: Anzeige der Befunde im Browser (`offen-nach-schluss`, `zurueckgelegt` mit Rückweg „diesen Stand übernehmen“ und „Uhrzeit von ‹Gerät› prüfen“, Kennzeichen „übernommen“, fehlende Herkunft) und am Handy „neu koppeln“ — nur vorhandene Bausteine. **Halt bis zur Freigabe** | E-KA-70, -80, -81 | — |
+| KA-09 Referenz Rückweg | SID des Absenders zum Stand im Standbuch; kleineres `z` vom gleichen Absender hart `zurueckgelegt`, vom anderen ein Hinweis mit bewusster Bestätigung, vermerkt; gleiches `z` vom anderen Absender ebenso ein Hinweis; neue Vektoren, bestehende unverändert | E-KA-70, F-KA-112 | — |
+| KA-10 Browser-Kern | `standbuch.js`, `huelle2.js` nach KA-09; Befunde und Rückweg bis an die Verbraucher (`EdOrtsdaten`) | E-KA-70, -76 | KA-09 |
+| KA-11 Oberfläche | Befundanzeige und Rückweg nach M-KA-03, Sollliste der Kennzeichen | E-KA-70, -81 | KA-08, KA-10 |
+| KA-12 Geräte von vorher | Satz in Handbuch und Runbook: vor dem Umlegen gekoppelte Geräte koppeln neu | F-KA-103, E-KA-83 | — |
+| KA-13 Demo-Bestand | Demo-Fixture in Fassung 2 neu verschlossen, Demo-Gerät mit festem Schlüssel im Gerätebuch | F-KA-104, E-KA-44 | KA-10 |
+| KA-14 Weiche um | `SCHREIBT_FASSUNG_2 = true`, Rundenziel 1 200 000; alle Schreibwege Ende zu Ende mit umgelegter Weiche (Formular, Import, Wiederherstellung, Übernahme, Wartungslauf, Notizen, Kontopaar, Rückweg, Schneiden, Löschen); Messstand mit dem Anhebelauf am großen Bestand; Dauer der Anmeldung; Prüfstand `haupt`; Pflege `CLAUDE.md` 4, Technik 4.14/4.40/4.42, Bedrohungsmodell, Handbuch, JSON-Vertrag | E-KA-51, -57, -59, -84 | KA-10 bis KA-13 |
+| KA-15 Android 0.26.0 | Mit `huelle: 2` und ohne Geräteschlüssel kein Senden, Hinweis „neu koppeln“ nach M-KA-03 | E-KA-80 | KA-08 |
+
+**Garmin:** E-KA-80 an der Uhr und KG-05 (Zählerregel) gehen an eine neu
+gestartete KG-Sitzung (E-KA-86).
+
+**Auslieferung:** Tag `web-v25.0.0` und `android-v0.26.0` setzt die
+BetreiberIn; vorher die Messung am großen Bestand (KA-14).
 
 ### KA-07 Modell, Texte, Abschluss
 
