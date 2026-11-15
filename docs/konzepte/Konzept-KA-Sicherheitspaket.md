@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-06f** auf Zweig `claude/amazing-keller-i2f04f` (neue Instanz, gesammelter PR am Ende, 15.11.2026): **06f-1 erledigt** (Zählerregel in der Referenz, Fable-Agent; Prüfprotokoll KA-06f-1), **als Nächstes 06f-2** (Handy: Keystore, `minSdk` 31), dann 06f-3 (Zähler am Inhalt im Puffer), 06f-4 (Befund `offen-nach-schluss` im Browser — vorher Q-KA-18, -19); Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät, nach `android-v0.24.0`); danach 06e (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51; dort auch F-KA-103 und -104). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-03a in PR #173; **KG-03b gemergt** (PR #181, 14.11.2026, Uhr 5.0.0, Vertrag 1a.7) |
+| In Arbeit | **KA-06f** auf Zweig `claude/amazing-keller-i2f04f` (neue Instanz, gesammelter PR am Ende, 15.11.2026): **06f-1 erledigt** (Zählerregel in der Referenz, Fable-Agent; Prüfprotokoll KA-06f-1), **06f-2 erledigt** (Geräteschlüssel im Keystore, `minSdk` 31, Android 0.25.0; Gerätetest im Emulator grün), **als Nächstes 06f-3** (Zähler am Inhalt im Puffer), 06f-4 (Befund `offen-nach-schluss` im Browser — vorher Q-KA-18, -19); Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät, nach `android-v0.24.0`); danach 06e (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51; dort auch F-KA-103 und -104). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-03a in PR #173; **KG-03b gemergt** (PR #181, 14.11.2026, Uhr 5.0.0, Vertrag 1a.7) |
 | Erledigt | **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -125,6 +125,7 @@ Safari.
 | E-KA-71 | **Der Geräteschlüssel des Handys liegt im Android Keystore** (beantwortet Q-KA-17, F-KA-85): nicht exportierbar, ECDH im Keystore (`PURPOSE_AGREE_KEY`), **ohne Entsperrpflicht** (das Senden im Hintergrund darf nicht an der Sperre hängen). Der Versuch einer Kopplung bekommt einen eigenen Keystore-Eintrag, der beim Übernehmen zum gültigen wird | 15.11.2026, BetreiberIn |
 | E-KA-72 | **`minSdk` des Handy-Moduls steigt von 26 auf 31** (Android 12) — es gibt dann nur einen Weg für den Geräteschlüssel, keinen Tresor-Rückfall. Handys vor Android 12 bekommen die App ab dieser Fassung nicht mehr. Das Uhr-Modul bleibt bei 30 (es hält keinen Schlüssel, E-S4-11) | 15.11.2026, BetreiberIn |
 | E-KA-74 | **Was „Inhalt geändert“ heißt, und das Standbuchfeld `f`** (Fable-Agent, 06f-1): Inhalt ist alles innen außer `z` (Phasen, Reanimation, `schluss`, `start`); daraus zwei Messsätze je Absender — gleiches `z` ⇒ innen byte-gleich, anderer Inhalt ⇒ größeres `z`. Für den Befund merkt sich das Standbuch je Einsatz `f` = 1, sobald eine Hülle mit `schluss: true` abgenommen ist; es haftet und fügt sich zusammen wie `zu` (offen: Q-KA-18, -19) | 15.11.2026, Umsetzung |
+| E-KA-75 | **Keystore-Ablage des Handys** (Fable-Agent, 06f-2): je Paar ein nie wiederverwendeter Alias `nadoku-geraet-<Zufall>`; welcher gilt und was der Versuch trägt, steht in `absender.bin` unter dem Tresorschlüssel, ohne privaten Schlüssel; gültig nur, was die Datei nennt und der Keystore mit demselben `spk` führt; Übernehmen schreibt erst die Datei, dann löscht es den alten Alias; Waisen räumt `beginnen`/`vergessen`, nicht der Start. `Z_s` wird je Hülle im Keystore gerechnet, nie abgelegt. Fällt der Keystore beim Senden aus, sendet der Lauf nichts (`Schluesselausfall`, Sender) | 15.11.2026, Umsetzung |
 | E-KA-73 | **E-KA-69, -71 und -72 kommen als eigenes Paket KA-06f vor 06e**, in einer neuen Instanz; der Krypto-Teil (Keystore-Umsetzung von `Geraeteschluessel`, Zählerregel in Referenz und Handy) geht wieder an einen Fable-Agenten (wie E-KA-67), der Garmin-Teil von E-KA-69 an KG (E-KA-21) | 15.11.2026, BetreiberIn |
 | E-KA-66 | **Gerätebuch und „Wert stimmt“ gehen in zwei Schritten, nicht in einer Transaktion:** erst das Buch (über den vorhandenen Weg `geraetEintragen()`), dann der Vermerk am Server mit `im_buch`. Ein Gerät am Server ohne Buch-Eintrag sendete Daten, die nicht aufgehen; ein Buch-Eintrag ohne Gerät räumt der Abgleich der Geräteseite auf (`bis`). Weicht vom Entwurf 06d, Punkt 5 ab | 13.11.2026, Umsetzung |
 | E-KA-67 | **Den Anschluss des leeren Schlussstücks prüft der Browser beim Lesen (Regel `luecke`), nicht der Eingang** — der Eingang prüft Form (Fassung 2, `ts_von` = `ts_bis`). Eine Abfrage des letzten Stücks im Eingang kostete jede Anfrage und belegte nichts, was der Browser nicht ohnehin prüft. Weicht vom Entwurf 06d, Punkt 8 ab | 13.11.2026, Umsetzung |
@@ -727,6 +728,7 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 | Q-KA-16 | **Zähler, Zweifel (3):** `z` beim Verschließen lassen (E-KA-64, gebaut) — dann belegt es nicht die Frische des Inhalts, und ein Gerät, das nach der Übergabe einen alten, nicht abgeschlossenen Stand nachsendet, gewinnt —, oder `z` beim Ändern des Inhalts vergeben und mit dem Paket puffern (ändert E-KA-64, trifft auch die Uhr)? Kleinere Möglichkeit: Der Browser meldet eine Hülle mit `schluss: false` nach einer mit `schluss: true` als Befund | beantwortet: E-KA-69 |
 | Q-KA-18 | **Befund `offen-nach-schluss`, haftet `f`?** (06f-1, Zweifel 1 des Agenten) So gebaut: `f` bleibt gesetzt, der Befund steht bei jedem Lesen, solange die offene Hülle die gespeicherte ist. Darf ein Gerät einen abgeschlossenen Einsatz legitim wieder öffnen, wäre das ein Dauerhinweis; Alternative: `f` an `o` binden, Befund nur einmal | vor 06f-4 |
 | Q-KA-19 | **Befund auch an Hüllen des Kontos?** (06f-1, Zweifel 2) Die Referenz meldet ihn gleich von welchem Absender. Verschließt der Browser selbst (Formular, Wartungslauf) nach einem Abschluss mit `schluss: false`, meldet er sich selbst — dann das Konto ausnehmen oder `schluss` dort weitertragen | vor 06f-4 |
+| Q-KA-20 | **Handy mit `huelle: 2`, aber ohne Geräteschlüssel** (06f-2, Zweifel 2 des Agenten): nach dem Update von 0.24.0 (alte Ablage gelöscht) oder wenn der Keystore keinen Eintrag liefert, sendet das Handy wie bisher Fassung 1, bis es neu koppelt. Soll es stattdessen gar nicht senden? Bis zum Stichtag aus 06e nimmt der Server Fassung 1 an | mit 06e |
 | Q-KA-17 | **F-KA-85:** Bleibt der Geräteschlüssel des Handys im Tresor (gebaut, alle API-Stufen gleich, kein Hardware-Schutz), oder ab API 31 als nicht exportierbarer Keystore-Schlüssel mit `PURPOSE_AGREE_KEY`, darunter der Tresor? Aufwand nach dem Agenten 1 bis 1½ Pakete und Gerätetests unter und ab API 31 | beantwortet: E-KA-71, -72 |
 
 ---
@@ -923,6 +925,31 @@ des eigenen Kontos.
 **Fassung 2 vorher gezählt** (Konzept, Punkt 7): örtlich 6 Pakete, alle
 Fassung 3; 3 Begleitdateien, alle versiegelt. Staging und Produktiv nicht
 gezählt (E-KA-31).
+
+### KA-06f-2 Handy: Geräteschlüssel im Keystore, `minSdk` 31 (15.11.2026, Fable-Agent für den Kern)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) **Kein echtes Gerät:**
+Der Gerätetest lief im Emulator (API 37, `google_apis` x86_64, ohne KVM);
+der Keystore meldet dort `securityLevel=0` (Software). Ob ein Handy den
+Schlüssel im TEE oder in einer StrongBox hält, zeigt nur ein Gerät
+(P-KA-16). (2) Ein Sendelauf hinter der Bildschirmsperre und ein
+Prozesstod mitten im Schreiben der Datei sind nicht gemessen; der
+Prozesstod zwischen zwei Schritten nur mit der Ablage im Speicher.
+(3) Ein Handy unter Android 12, das die Installation ablehnt, ist nicht
+gefahren (P-KA-16). (4) Gradle-Prüfläufe für 06f-2 allein hat nur der
+Agent gefahren; die Hauptinstanz fährt den vollen Bau mit 06f-3.
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| `./gradlew build :handy:assembleDebugAndroidTest` (Agent) | BUILD SUCCESSFUL in 11 min 16 s; Lint 0 Fehler, Handy 6 Warnungen (alle Versionshinweise in `libs.versions.toml`); Handy 374 Prüffälle je Bauart, 15 übersprungen, 0 rot | zehn eingebaute Fehler (Versuch ohne Festlegung gültig, alter Schlüssel vor dem Schreiben gelöscht, `Z_s` mit falschem Schlüssel, Griff ohne `spk`-Vergleich, `geraet.bin.neu` bleibt, Sender fängt den Ausfall nicht, `vergessen` lässt Schlüssel liegen, keine Waisenräumung, zweite Antwort gilt, Verwaltung vor dem Schlüssel) — jeder rot (1 bis 14 Fälle), zurückgenommen | Regeln, Prozesstod an zehn Stellen, Byte-Gleichheit gegen `vektoren-2.json` über eine Software-Ablage |
+| Gerätetest im Emulator, Hauptinstanz (`am instrument`, API 37) | `GeraeteschluesselGeraetTest` **6 / 6**, `GeraetTresorTest` **6 / 6**, `GeraetehuelleGeraetTest` **2 / 2** | — | Eintrag im AndroidKeyStore, nicht exportierbar, nur `PURPOSE_AGREE_KEY`, keine Nutzerauthentisierung, `Z_s` byte-gleich zur Software-Rechnung, Hülle geht mit dem Kontoschlüssel der Vektoren auf; Ablauf mit echten Aliassen |
+
+**Zweifel des Agenten:** (1) Auf Geräten mit älterem Keymaster hält
+keystore2 ECDH-Schlüssel in Software — nicht exportierbar, aber nicht im
+TEE; steht im Bedrohungsmodell. (2) Q-KA-20. (3) Scheitert das Löschen
+eines Alias, bleibt ein Waise bis zum nächsten `beginnen`/`vergessen`.
+(4) Die Datei hängt an `renameTo` wie der Tresor. Der Agent hat über den
+Auftrag hinaus `Sender.kt` angefasst (E-KA-75) — übernommen.
 
 ### KA-06f-1 Zählerregel in der Referenz (15.11.2026, Fable-Agent, E-KA-73)
 

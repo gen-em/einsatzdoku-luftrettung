@@ -149,7 +149,7 @@ class SendekoerperTest {
 
     // ---- Fassung 2 (seit KA-06c) ------------------------------------------
 
-    private val geraet = org.genem.nadoku.handy.tresor.Geraetepaar.erzeugen()
+    private val geraet = org.genem.nadoku.handy.tresor.SoftwareAbsender.erzeugen()
     private var z = 100L
     private val abschluss = java.time.Instant.parse("2026-07-16T06:00:00Z").epochSecond
     private fun f2() = Fassung2(geraet, { ++z }, { 1_800_000_000L })

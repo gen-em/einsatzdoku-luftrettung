@@ -40,7 +40,9 @@ class GeraetTresorTest {
      *   D8: Space characters in SimpleName '...' are not allowed prior to
      *       DEX version 040
      *
-     * DEX 040 gibt es ab API 30; dieses Modul steht auf `minSdk = 26`. Der
+     * DEX 040 gibt es ab API 30; dieses Modul stand bis KA-06f auf `minSdk = 26`
+     * (seither 31 — ob D8 die Namen damit annimmt, ist nicht gemessen; die
+     * Regel bleibt). Der
      * Fehler faellt erst beim Dexen des Test-APK auf, nicht
      * beim Uebersetzen -- wer die Namen zurueckaendert, merkt es also erst
      * zwei Minuten spaeter und an einer Meldung, die nicht nach dem Namen

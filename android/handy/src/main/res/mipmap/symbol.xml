@@ -4,7 +4,7 @@
 
     ES LIEGT IM GRUNDORDNER `mipmap/`, nicht in `mipmap-anydpi-v26/`. Die
     uebliche Ablage mit `-v26` haelt eine zweite, flache Fassung fuer aeltere
-    Staende bereit; unser minSdk ist 26 (Handy) bzw. 30 (Uhr), es gibt also
+    Staende bereit; unser minSdk ist 31 (Handy, bis KA-06f 26) bzw. 30 (Uhr), es gibt also
     kein Zielgeraet ohne adaptive Symbole. Lint meldet die Stufe `-v26` unter
     diesen Umstaenden als ueberfluessig ["ObsoleteSdkInt"], und sie ist es.
 

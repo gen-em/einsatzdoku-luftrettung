@@ -34,10 +34,13 @@ android {
     defaultConfig {
         applicationId = "org.genem.nadoku"
 
-        /* Android 8.0.
-         * Ab hier verhalten sich Vordergrunddienste mit Benachrichtigungs-
-         * kanal stabil; aeltere Geraete sind im Zielkreis nicht zu erwarten. */
-        minSdk = 26
+        /* Android 12 (seit KA-06f, E-KA-72). Erst ab hier rechnet der
+         * Android Keystore ECDH mit einem Schluessel, der ihn nie verlaesst
+         * (PURPOSE_AGREE_KEY) -- und der Geraeteschluessel hat genau einen
+         * Weg, keinen Rueckfall fuer aeltere Handys (E-KA-71). Bis KA-06f
+         * stand hier 26 (Android 8.0). Das Uhr-Modul bleibt bei 30: Es haelt
+         * keinen Schluessel (E-S4-11). */
+        minSdk = 31
         /* 37: Es gelten die Regeln von Android 17; seine
          * Verhaltensaenderungen sind durchgesehen. */
         targetSdk = 37

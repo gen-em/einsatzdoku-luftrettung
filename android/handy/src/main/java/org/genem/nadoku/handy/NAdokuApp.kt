@@ -75,16 +75,18 @@ class NAdokuApp : Application() {
     }
 
     /**
-     * Der Geräteschlüssel des Handys (seit KA-06c, F-KA-85): eigene Datei,
-     * derselbe Keystore-Schlüssel wie der Tresor. Zum Rechnen liegt der
-     * private Teil im Speicher des Prozesses — wie der API-Schlüssel; ein
-     * Schutz durch die Hardware ist das nicht (Kopf von
-     * `TresorGeraeteschluessel`).
+     * Der Geräteschlüssel des Handys (seit KA-06c; seit KA-06f im Android
+     * Keystore, E-KA-71): Das Paar entsteht dort, ist nicht exportierbar und
+     * rechnet dort. In der Datei daneben steht nur die Verwaltung der
+     * Kopplung — welcher Eintrag gilt, und `N_g` des laufenden Versuchs —,
+     * unter demselben Keystore-Schlüssel wie der Tresor. Was das schützt
+     * und was nicht: Kopf von `DateiGeraeteschluessel`.
      */
     val geraeteschluessel: org.genem.nadoku.handy.tresor.Geraeteschluessel by lazy {
-        org.genem.nadoku.handy.tresor.TresorGeraeteschluessel(
-            File(filesDir, org.genem.nadoku.handy.tresor.TresorGeraeteschluessel.DATEINAME),
+        org.genem.nadoku.handy.tresor.DateiGeraeteschluessel(
+            File(filesDir, org.genem.nadoku.handy.tresor.DateiGeraeteschluessel.DATEINAME),
             KeystoreTresorschluessel(),
+            org.genem.nadoku.handy.tresor.KeystoreSchluesselablage(),
         )
     }
 
@@ -236,6 +238,12 @@ class NAdokuApp : Application() {
      */
     override fun onCreate() {
         super.onCreate()
+        /* DIE ALTE ABLAGE DES GERÄTESCHLÜSSELS LÖSCHEN (KA-06f, E-KA-72):
+         * `geraet.bin` trug bis 0.24.x den privaten Teil. Bei JEDEM Start und
+         * nicht erst, wenn jemand den Geräteschlüssel braucht — ein Handy,
+         * das nie wieder koppelt, behielte sie sonst. Ohne Datei geschieht
+         * nichts. */
+        runCatching { org.genem.nadoku.handy.tresor.AlteGeraeteablage.raeumen(filesDir) }
         try {
             /* DIE FRIST NACH EINER ABMELDUNG AUCH OHNE SENDELAUF (Nr. 471):
              * Ein abgemeldetes Handy sendet womöglich nie wieder, geöffnet

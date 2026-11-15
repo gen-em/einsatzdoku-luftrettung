@@ -1021,8 +1021,9 @@ nicht gemessen ist, steht im Pull Request.
   `src/androidTest/` und geht an Gradle vorbei — Befehlsfolge und Begründung
   in `android/LIESMICH.md`.
   **Und dort sind Namen in schrägen Anführungszeichen mit Leerzeichen
-  verboten:** D8 lehnt sie unterhalb von DEX 040 ab, und das Modul steht auf
-  `minSdk = 26`. Ein Prüffall, der so heißt, bricht den Bau — nicht den
+  verboten:** D8 lehnt sie unterhalb von DEX 040 ab, und das Modul stand bis
+  Android 0.24.x auf `minSdk = 26` (seither 31; ob D8 die Namen damit
+  annimmt, ist nicht gemessen — die Regel bleibt). Ein Prüffall, der so heißt, bricht den Bau — nicht den
   Prüflauf, den Bau.
 - **Der Emulator läuft mit, wie der Simulator bei der Uhr.** Bei jeder
   Änderung an einem der beiden Android-Module wird der Emulator gestartet,

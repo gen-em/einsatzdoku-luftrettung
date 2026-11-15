@@ -9,16 +9,17 @@ Phasenknöpfe.
 Grundlage ist `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
 gebaut wird, steht in `docs/JSON-Vertrag.md` und ist die führende Quelle.
 
-> **Stand: Android 0.18.1 (Schritt 12b, R17-24, 27.10.2026).** Das Handy
-> koppelt sich, zeichnet auf, dokumentiert Phasen und Einsätze und sendet
-> alles nach dem JSON-Vertrag — Spur und Phasenorte seit 0.18.0 verschlossen
-> (S11-09). Die Wear-Uhr ist Fernbedienung und puffert jedes Ereignis, bis
+> **Stand: Android 0.25.0 (Schritt 28, KA-06f, 15.11.2026).** Das Handy
+> koppelt sich mit Vergleichswert, zeichnet auf, dokumentiert Phasen und
+> Einsätze und sendet alles nach dem JSON-Vertrag — Spur und Phasenorte
+> verschlossen (S11-09), mit Herkunftsnachweis in Fassung 2 (KA-06c); der
+> Geräteschlüssel liegt im Android Keystore, `minSdk` ist 31 (E-KA-71, -72). Die Wear-Uhr ist Fernbedienung und puffert jedes Ereignis, bis
 > das Handy quittiert. **Was aussteht:** der Gerätetest, an dessen Ende die
 > erste 1.0.0 steht (E-R45-7), und am Gerät P-R17-11 (der Knopf „Dienst
 > beenden" in der Akkuwarnung, Prüfdokument des Reviews R17). Was der
 > Baulauf meldet, steht in Abschnitt 2 unter „Was der Baulauf heute meldet".
-> *(Bis 0.18.0 stand hier noch „Arbeitspaket C2" aus S4 — der Kasten war
-> seither nicht mehr nachgezogen worden.)*
+> *(Bis 0.18.0 stand hier noch „Arbeitspaket C2" aus S4, bis 0.24.0
+> „Stand 0.18.1" — der Kasten war beide Male nicht nachgezogen worden.)*
 
 ---
 
@@ -1041,7 +1042,7 @@ Nachricht von der Uhr an — und zwar ohne Fehlermeldung.
 | | gewählt | warum |
 |---|---|---|
 | `compileSdk` / `targetSdk` | **37** (Android 17, seit 0.16.0) | siehe unten |
-| `minSdk` Handy | **26** (Android 8.0) | E-S4-03, mit F-S4-A am 31.08.2026 bestätigt |
+| `minSdk` Handy | **31** (Android 12, seit 0.25.0) | E-KA-72: der Geräteschlüssel liegt im Keystore und rechnet dort ECDH (`PURPOSE_AGREE_KEY`), das geht erst ab API 31 — ein Weg, kein Rückfall (E-KA-71). Bis 0.24.x 26 (Android 8.0, E-S4-03, F-S4-A); die Umgehungen für API 26–30 stehen noch im Code (Backlog Nr. 565) |
 | `minSdk` Uhr | **30** (Wear OS 3) | Galaxy Watch4 aufwärts; ältere Tizen-Modelle führen gar keine Android-Apps aus |
 | Sprachstand | **17** | E-S4-02 |
 | AGP | **9.4.1** (seit 0.16.0) | siehe unten |

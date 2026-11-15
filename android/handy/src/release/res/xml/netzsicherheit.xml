@@ -4,7 +4,9 @@
     keine Adresse.
 
     WARUM SIE AUSDRUECKLICH DASTEHT, obwohl Android Klartext "seit Fassung 9"
-    ohnehin verbietet: Diese Vorgabe gilt erst ab API 28. `minSdk` ist 26 —
+    ohnehin verbietet: Diese Vorgabe gilt erst ab API 28. `minSdk` war bis
+    KA-06f 26 (seither 31, die Datei bleibt als zweiter Boden; Rueckbau der
+    Umgehungen unter API 31: Backlog Nr. 565) —
     auf Android 8.0 und 8.1 laesst das System Klartext zu, solange niemand es
     verbietet. Liesse `Serveradresse` `localhost` und IPv4-Adressen in JEDER
     Bauart mit `http` durch, verschickte ein Selbsthoster, der sein APK mit

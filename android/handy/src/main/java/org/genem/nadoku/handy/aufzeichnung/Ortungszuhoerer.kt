@@ -10,7 +10,8 @@ import android.os.Bundle
  *
  * WARUM DAS EINE EIGENE KLASSE IST UND KEIN `LocationListener { … }`. Ein
  * SAM-Lambda setzt genau **eine** Methode der Schnittstelle um. Auf Android 8
- * bis 10 (API 26–29) — und `minSdk` ist 26 — hat `LocationListener` vier
+ * bis 10 (API 26–29) — und `minSdk` war bis KA-06f 26 (seither 31, Rückbau:
+ * Backlog Nr. 565) — hat `LocationListener` vier
  * abstrakte Methoden; die anderen drei bekamen ihre Vorgabe erst mit API 30.
  * Ruft das System dort `onProviderDisabled`, endet das in einem
  * `AbstractMethodError`: Der Vordergrunddienst stirbt in genau dem

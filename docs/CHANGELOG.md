@@ -14,6 +14,21 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Android 0.25.0] — unveröffentlicht
+
+Schritt 28 (KA), Paket KA-06f.
+
+### Geändert
+
+- **Android — der Geräteschlüssel liegt im Android Keystore, und die App
+  braucht Android 12.** Seit 0.24.0 lag der private Teil des Gerätepaars
+  verschlüsselt in einer Datei und beim Rechnen offen im Speicher der App;
+  wer ihn auslas, konnte im Namen des Handys Daten verschließen. Jetzt
+  entsteht das Paar im Keystore, rechnet dort und verlässt ihn nie — das
+  kann Android erst ab Fassung 12, und einen zweiten, schwächeren Weg für
+  ältere Handys gibt es bewusst nicht. Ein mit 0.24.0 gekoppeltes Handy
+  verliert seinen alten Schlüssel beim ersten Start und koppelt neu.
+
 ## [Android 0.24.0] — unveröffentlicht
 
 Schritt 28 (KA), Paket KA-06c.

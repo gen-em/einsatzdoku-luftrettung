@@ -2,7 +2,7 @@ package org.genem.nadoku.handy.senden
 
 import org.genem.nadoku.handy.aufzeichnung.Rohpunkt
 import org.genem.nadoku.handy.puffer.Paketzeile
-import org.genem.nadoku.handy.tresor.Geraetepaar
+import org.genem.nadoku.handy.tresor.Absender
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -141,12 +141,13 @@ object Sendekoerper {
 }
 
 /**
- * Was Fassung 2 zum Verschließen braucht (seit KA-06c): das Gerätepaar als
- * Absender und den Zähler der Einsatzhülle. Die Uhr nur für das leere
- * Schlussstück eines Pakets ohne Endzeit.
+ * Was Fassung 2 zum Verschließen braucht (seit KA-06c): den Absender — den
+ * Griff auf den Geräteschlüssel, nicht den Schlüssel (seit KA-06f) — und den
+ * Zähler der Einsatzhülle. Die Uhr nur für das leere Schlussstück eines
+ * Pakets ohne Endzeit.
  */
 class Fassung2(
-    val absender: Geraetepaar,
+    val absender: Absender,
     val zaehler: () -> Long,
     val jetzt: () -> Long = { System.currentTimeMillis() / 1000 },
 )

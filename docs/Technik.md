@@ -10862,8 +10862,9 @@ Nr. 142, Krypto-Review AN-1). `Serveradresse` bildet im ausgelieferten Stand
 für jede Adresse `https` — die Ausnahme für `localhost` und IPv4-Adressen,
 die der Prüfstand braucht, hängt an `BuildConfig.DEBUG` —, und
 `handy/src/release/res/xml/netzsicherheit.xml` verbietet Klartext auf
-Systemebene. Das zweite braucht es wegen `minSdk` 26: Androids eigenes
-Verbot gilt erst ab API 28. Betroffen war nur ein Selbsthoster, der sein APK
+Systemebene. Das zweite brauchte es wegen `minSdk` 26 (bis Android
+0.24.x): Androids eigenes Verbot gilt erst ab API 28; seit 0.25.0 ist
+`minSdk` 31, die Datei bleibt als zweiter Boden. Betroffen war nur ein Selbsthoster, der sein APK
 mit einer IP-Adresse baut; der Standardbau mit fester Domain nie. **Kein
 Certificate Pinning**, mit Begründung (Nr. 143): `android/LIESMICH.md`,
 Abschnitt „Warum kein Certificate Pinning".
@@ -11198,11 +11199,25 @@ Gerätepaar P-256 und Zufallszahl N_g) neben einem gültigen Paar einer
 früheren Kopplung, legt bei `status beansprucht` das **erste** Paar aus
 Kontoschlüssel und `n_b` fest (ein anderes ist ein Abbruch) und gibt erst
 dann N_g heraus; `uebernehmen()` macht den Versuch nach `huelle: 2` zum
-gültigen Paar, `vergessen()` beim Trennen löscht es. Abgelegt ist alles in
-`geraet.bin` unter demselben Keystore-Schlüssel wie der Tresor, auf allen
-API-Stufen gleich — zum Rechnen liegt der private Teil im Speicher des
-Prozesses, ein Schutz durch die Hardware ist das nicht (F-KA-85; der
-Keystore rechnet ECDH erst ab API 31). `kopplung/Kopplungswert.kt` rechnet
+gültigen Paar, `vergessen()` beim Trennen löscht es. **Seit Android 0.25.0
+liegt jedes Gerätepaar im Android Keystore** (KA-06f, E-KA-71, -72;
+`minSdk` 31, `tresor/KeystoreSchluesselablage.kt`): EC P-256, nur
+`PURPOSE_AGREE_KEY`, nicht exportierbar, ohne Entsperrpflicht, je Paar ein
+nie wiederverwendeter Alias `nadoku-geraet-<Zufall>`; `Z_s` rechnet der
+Keystore je Hülle (`Absender.vereinbaren()`) und wird nirgends abgelegt.
+Welcher Alias gilt und was der laufende Versuch trägt (N_g, Kontoschlüssel,
+N_b — kein privater Schlüssel), steht in `absender.bin` unter dem
+Keystore-Schlüssel des Tresors (`DateiGeraeteschluessel`); gültig ist nur,
+was diese Datei nennt und der Keystore mit demselben `spk` führt.
+Übernehmen schreibt erst die Datei, dann löscht es den alten Alias; Waisen
+räumt das nächste `beginnen` bzw. `vergessen`. Fällt der Keystore beim
+Senden aus, sendet der Lauf nichts und versucht es später
+(`Schluesselausfall`). Bis 0.24.x lag das Paar samt privatem Teil in
+`geraet.bin` (F-KA-85); `AlteGeraeteablage.raeumen()` löscht die Datei bei
+jedem Start, ein so gekoppeltes Handy koppelt neu. Die Regeln prüft
+`GeraeteschluesselTest` mit einer Ablage im Speicher (Robolectric hat keinen
+Keystore), die Keystore-Umsetzung `GeraeteschluesselGeraetTest` im Emulator
+oder am Gerät. `kopplung/Kopplungswert.kt` rechnet
 Zusage und Vergleichswert, `Kopplungsdienst` legt bei jeder Abfrage im
 Zustand `beansprucht` offen (wiederholbar) und meldet `Vergleich`, `202
 wartet` als `WartetBrowser`, `abgelehnt` als eigene Abweisung. Der Tresor

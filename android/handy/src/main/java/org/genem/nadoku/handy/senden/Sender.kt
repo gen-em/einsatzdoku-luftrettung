@@ -287,8 +287,18 @@ class Sender(
         val punkte = puffer.punkte(paket.id, seqVon, chunkPunkte)
         val phasen = if (paket.art == Paketzeile.ART_EINSATZ) phasenLeser(paket.id) else emptyList()
         val letztes = seqVon + punkte.size >= puffer.punktzahl(paket.id)
-        val koerper = Sendekoerper.baue(paket, seqVon, punkte, phasen, kontoschluessel, fassung2, letztes)
-            .toString()
+        val koerper = try {
+            Sendekoerper.baue(paket, seqVon, punkte, phasen, kontoschluessel, fassung2, letztes).toString()
+        } catch (e: org.genem.nadoku.handy.tresor.Schluesselausfall) {
+            /* DER KEYSTORE HAT DIE VEREINBARUNG VERWEIGERT (seit KA-06f): Der
+             * Geräteschlüssel rechnet in einem Dienst des Systems, und der
+             * kann ausfallen. Dann geht NICHTS hinaus — keine Anfrage, keine
+             * Hülle der Fassung 1 als Ausweg, kein Vermerk am Paket — und der
+             * Lauf endet als „später erneut". Ohne diesen Zweig beendete die
+             * Ausnahme den Sendefaden und mit ihm den Prozess, an dem die
+             * Aufzeichnung hängt. */
+            return Sendebericht(spaeterErneut = true)
+        }
 
         val antwort = when (val a = netzweg.postJson(adresse, koerper, kopfzeilen)) {
             is Netzantwort.KeineVerbindung -> Sendeantwort.KeineVerbindung(a.ursache)

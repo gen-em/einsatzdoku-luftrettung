@@ -15,7 +15,6 @@ import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.os.BatteryManager
 import android.net.Network
-import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.SystemClock
@@ -284,7 +283,8 @@ class AufzeichnungsDienst : LifecycleService() {
      * Einen Rückruf unter einem **Token** einplanen.
      *
      * WARUM NICHT `postDelayed(r, token, ms)`: Die gibt es erst ab API 28,
-     * `minSdk` ist 26 (Lint `NewApi`, gefunden im Baulauf). `postAtTime` mit
+     * `minSdk` war bis KA-06f 26 (Lint `NewApi`, gefunden im Baulauf; seither 31,
+     * Rückbau: Backlog Nr. 565). `postAtTime` mit
      * Token gibt es seit API 1 und tut dasselbe — sie nimmt nur einen
      * absoluten Zeitpunkt statt einer Spanne, und der Bezug dafür ist
      * `uptimeMillis()`, dieselbe Uhr, an der der Handler ohnehin hängt.
@@ -325,12 +325,8 @@ class AufzeichnungsDienst : LifecycleService() {
     }
 
     private fun starteImVordergrund() {
-        val typ = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
-        } else {
-            0
-        }
-        ServiceCompat.startForeground(this, MELDUNG_ID, meldung(), typ)
+        // Seit minSdk 31 (KA-06f) gibt es den Typ auf jedem Handy der App.
+        ServiceCompat.startForeground(this, MELDUNG_ID, meldung(), ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
     }
 
     private fun ortungAnfordern() {
@@ -827,7 +823,7 @@ class AufzeichnungsDienst : LifecycleService() {
     // ---- Benachrichtigung --------------------------------------------------
 
     /**
-     * Kanäle gibt es ab Android 8.0 — und das IST unser minSdk.
+     * Kanäle gibt es ab Android 8.0 — und das war bis KA-06f unser minSdk (seither 31).
      *
      * ZWEI KANÄLE, UND DAS IST DER PUNKT. Android überlässt die
      * Einstellungen eines Kanals nach dem Anlegen der NutzerIn; „Aufzeichnung"
@@ -1047,7 +1043,7 @@ class AufzeichnungsDienst : LifecycleService() {
          * dem anderen den Rückruf weg, und zwar ohne Fehlermeldung.
          *
          * Eingeplant wird über [spaeter] und nicht über `postDelayed` mit
-         * Token — die gibt es erst ab API 28, und `minSdk` ist 26.
+         * Token — die gibt es erst ab API 28, und `minSdk` war bis KA-06f 26.
          */
         private val TOKEN_TAKT = Any()
         private val TOKEN_WAECHTER = Any()

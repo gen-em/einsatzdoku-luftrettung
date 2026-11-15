@@ -1,7 +1,7 @@
 package org.genem.nadoku.handy.senden
 
 import org.genem.nadoku.handy.aufzeichnung.Rohpunkt
-import org.genem.nadoku.handy.tresor.Geraetepaar
+import org.genem.nadoku.handy.tresor.SoftwareAbsender
 import org.json.JSONObject
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -54,9 +54,9 @@ class Geraetehuelle2Test {
 
     private val konto: ByteArray get() = hex(v.getJSONObject("konto").getString("oeffentlich_hex"))
 
-    private fun paar(wer: String): Geraetepaar {
+    private fun paar(wer: String): SoftwareAbsender {
         val o = if (wer == "konto") v.getJSONObject("konto") else v.getJSONObject("geraete").getJSONObject(wer)
-        return Geraetepaar(hex(o.getString("privat_hex")), hex(o.getString("oeffentlich_hex")))
+        return SoftwareAbsender(hex(o.getString("privat_hex")), hex(o.getString("oeffentlich_hex")))
     }
 
     private fun liste(name: String): List<JSONObject> =
@@ -221,7 +221,7 @@ class Geraetehuelle2Test {
 
     /** Eine echte Hülle (Zufall, frisches Gerätepaar) geht mit dem privaten Kontoschlüssel auf — und nur richtig gebunden. */
     @Test fun echteHuelleGehtAuf() {
-        val geraet = Geraetepaar.erzeugen()
+        val geraet = SoftwareAbsender.erzeugen()
         val klar = "nadoku-handy-2".toByteArray()
         val h1 = Geraetehuelle.verschliessen2(klar, konto, geraet, "spur", "ah-1-0000000001", "0:1")
         val h2 = Geraetehuelle.verschliessen2(klar, konto, geraet, "spur", "ah-1-0000000001", "0:1")
@@ -232,6 +232,39 @@ class Geraetehuelle2Test {
         assertTrue("anderer Platz", runCatching { oeffnen2(h1, geraet.spk, "spur", "ah-1-0000000001", "1:1") }.isFailure)
         // Die Herkunft: Mit dem Schlüssel eines anderen Geräts im Gerätebuch stimmt das Prüfwort nicht.
         assertTrue("anderes Gerät", runCatching { oeffnen2(h1, paar("fremd").spk, "spur", "ah-1-0000000001", "0:1") }.isFailure)
+    }
+
+    /**
+     * `Z_s` wird je Hülle beim Absender BESTELLT und nicht aufbewahrt (seit
+     * KA-06f): eine Vereinbarung je Hülle, auch bei demselben Konto. Und es
+     * ist das `Z_s` DIESES Absenders, das in die Hülle eingeht — ein
+     * Absender, der unter fremdem `spk` mit eigenem Schlüssel rechnet, baut
+     * eine Hülle, die unter keinem der beiden aufgeht.
+     */
+    @Test fun zsJeHuelleVomAbsender() {
+        val geraet = SoftwareAbsender.erzeugen()
+        val klar = "nadoku-handy-2".toByteArray()
+        repeat(3) { Geraetehuelle.verschliessen2(klar, konto, geraet, "spur", "ah-1-0000000001", "0:1") }
+        assertEquals("je Hülle eine Vereinbarung, nichts zwischengespeichert", 3, geraet.vereinbarungen)
+        Geraetehuelle.einsatz2("m-1", Instant.ofEpochSecond(t0).toString(), phasen2, konto, geraet, 1, false)
+        Geraetehuelle.schlussstueck2("ruhe", "ah-1-0000000001", 4, t0, konto, geraet)
+        assertEquals(5, geraet.vereinbarungen)
+
+        val anderer = SoftwareAbsender.erzeugen()
+        val falsch = object : org.genem.nadoku.handy.tresor.Absender {
+            override val spk get() = geraet.spk
+            override fun vereinbaren(konto: java.security.interfaces.ECPublicKey) = anderer.vereinbaren(konto)
+        }
+        val h = Geraetehuelle.verschliessen2(klar, konto, falsch, "spur", "ah-1-0000000001", "0:1")
+        assertArrayEquals("die Kennung nennt den vorgegebenen Schlüssel", geraet.sid(), h.copyOfRange(1, 9))
+        assertTrue(runCatching { oeffnen2(h, geraet.spk, "spur", "ah-1-0000000001", "0:1") }.isFailure)
+        assertTrue(runCatching { oeffnen2(h, anderer.spk, "spur", "ah-1-0000000001", "0:1") }.isFailure)
+        // Ein Geheimnis falscher Länge wird nicht verarbeitet.
+        val kurz = object : org.genem.nadoku.handy.tresor.Absender {
+            override val spk get() = geraet.spk
+            override fun vereinbaren(konto: java.security.interfaces.ECPublicKey) = ByteArray(31)
+        }
+        assertTrue(runCatching { Geraetehuelle.verschliessen2(klar, konto, kurz, "spur", "ah-1-0000000001", "0:1") }.isFailure)
     }
 
     /** Jede Störung der Datei an der Hülle selbst scheitert auch am Öffner dieses Prüffalls. */
