@@ -24,7 +24,7 @@ await s.goto('https://huelle.invalid/');
 s.on('pageerror', (e) => console.log('Seitenfehler', e.message));
 for (const n of ['crypto.js', 'inhalt2.js', 'huelle2.js', 'standbuch.js', 'ortsdaten.js']) {
   let t = readFileSync(path.join(A, n), 'utf-8');
-  if (n === 'inhalt2.js') { t = t.replace('const SCHREIBT_FASSUNG_2 = false;', 'const SCHREIBT_FASSUNG_2 = true;'); }
+  if (n === 'inhalt2.js') { t = t.replace(/const SCHREIBT_FASSUNG_2 = (?:true|false);/, 'const SCHREIBT_FASSUNG_2 = true;'); }
   await s.addScriptTag({ content: t });
 }
 const v2 = JSON.parse(readFileSync(path.join(ROOT, 'tools/proben/huelle/vektoren-2.json'), 'utf-8'));

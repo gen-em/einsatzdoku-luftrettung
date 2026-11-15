@@ -8981,4 +8981,16 @@ declare(strict_types=1);
  *   mit ihr. Gegenstueck zum Zaehler am Inhalt, den Handy (Android 0.25.0)
  *   und Referenz mit demselben Paket bekommen. NEBEN: neue Pruefung;
  *   kein Schema. */
-const WEB_VERSION = '24.19.0';
+/* 25.0.0 IST DIE HAUPTNUMMER DES FORMATWECHSELS (Schritt 28, Konzept KA,
+ *   KA-08 bis KA-14; E-KA-51, -82 bis -91). Die Weiche in `inhalt2.js`
+ *   liegt um: Jeder Schreibweg im Browser schreibt `edk2:` mit Zweck,
+ *   Bezug und Zaehler, das Standbuch fuehrt Buch und legt seine Abschrift
+ *   auf dem Server ab, gekoppelte Geraete kommen ins Geraetebuch und senden
+ *   mit Herkunftsnachweis, und der Anhebelauf hebt nach der Anmeldung still
+ *   den Altbestand jedes Kontos. Das Rundenziel steigt auf 1 200 000
+ *   (Ableitung 2). Die Einsatzansicht zeigt die Befunde des Standbuchs und
+ *   den Rueckweg „Diesen Stand uebernehmen“ (M-KA-03), der Demo-Bestand
+ *   liegt in Fassung 2. Hauptnummer, weil sich das Format der Daten aendert
+ *   und nicht zurueckkehrt. KEIN SCHEMA — `update.php` ist nicht noetig;
+ *   nach dem Tag die Geraete neu koppeln (Runbook 13). */
+const WEB_VERSION = '25.0.0';

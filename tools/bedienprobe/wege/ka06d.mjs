@@ -62,7 +62,7 @@ async function pair(k, rumpf, g) {
   return { status: a.status(), d };
 }
 
-const WEICHE = /const SCHREIBT_FASSUNG_2 = false;/;
+const WEICHE = /const SCHREIBT_FASSUNG_2 = (?:true|false);/;
 async function weicheAn(seite) {
   await seite.route(/assets\/inhalt2\.js/, async (route) => {
     const antwort = await route.fetch();

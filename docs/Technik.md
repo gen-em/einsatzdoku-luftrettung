@@ -10319,10 +10319,13 @@ denen ein Angriff scheitert, stehen in `tools/proben/huelle/referenz.py`
 | `standbuch.js` (`EdStandbuch`) | Zählerstand je Datensatz in 16 Blättern und das Gerätebuch, Ablage in IndexedDB `nadoku-stand`, Abschrift auf dem Server über einen austauschbaren Transport; `zurueckschreiben()` nach einem zurückgesetzten Server |
 | `crypto.js` | Ableitung 2 (ein PBKDF2-Block, Hälfte und Token per HKDF) ab 1 200 000 Runden (`ABLEITUNG2_AB`); `huelleOeffnen()` für `edka2:` |
 
-**Die Weiche steht aus.** Gelesen werden beide Fassungen; geschrieben wird
-weiter Fassung 1, bis Server (Standbuch-Endpunkt, Formprüfung), Geräte und
-Anhebelauf stehen (KA-06b-2 bis 06e). Sie ist eine Konstante im Skript und
-kein Wert vom Server, sonst hielte sie, wer den Server beschreibt. Der
+**Die Weiche steht seit Web 25.0.0 an** (KA-14, E-KA-82). Gelesen werden
+beide Fassungen; geschrieben wird nur noch Fassung 2, das Standbuch führt
+Buch, und der Anhebelauf hebt den Altbestand nach der Anmeldung. Bis
+Web 24.x stand sie aus, damit Server, Geräte und Anhebelauf zuerst
+fertig wurden (KA-06b-2 bis 06d, 06f). Sie ist eine Konstante im Skript
+und kein Wert vom Server, sonst hielte sie, wer den Server beschreibt;
+zurück auf `false` geht es nicht ohne Schaden. Der
 Rückweg bleibt frei von Server und Anteil: `edka2:` für die
 Wiederherstellungshülle wird abgewiesen.
 
@@ -10357,14 +10360,22 @@ abgenommen" (nach `k`, haftet, beim Zusammenführen „einer hat es");
 wenn eine angenommene Hülle danach `schluss: false` trägt — kein Abweisen.
 Das Konto verschließt einen solchen Einsatz selbst immer mit `schluss: true`
 (`EdOrtsdaten.einsatzVerschliessen()`). Angezeigt wird der Befund noch nicht:
-Die Anzeige der Befunde kommt mit dem Umlegen der Weiche (E-KA-70).
+**Seit Web 25.0.0** zeigt die Einsatzansicht die Befunde (M-KA-03, KA-11):
+`offen-nach-schluss` als gelbe Meldung über der Karte; der Hinweis
+`uhrzeit-pruefen` (E-KA-70, -88; Standbuchfelder `a` und `u`) als gelbe
+Meldung an der Stelle der Karte mit „Diesen Stand übernehmen“
+(`EdOrtsdaten.fuerAnsicht(m, ck, {bestaetigt})`, danach neu laden) und
+„Nicht jetzt“; `zurueckgelegt` und `ohne-herkunft` als rote Meldung.
 Die Formprüfung (`validate_lib.php`) nimmt `edk2:` (Patientenblock
 mindestens Klasse 512), `edka2:` (nur Passworthülle) und die Gerätehülle der
-Fassung 2 an. Das Ziel der Rundenzahl bleibt 600 000, bis die Weiche umliegt
-(PHP rechnet Ableitung 2 schon: `kdf_haelfte()`).
+Fassung 2 an. **Das Ziel der Rundenzahl ist seit Web 25.0.0 1 200 000**
+(Ableitung 2, E-KA-84; `KDF_ITER_LISTE` = [1 200 000, 600 000] im
+Übergang, gemessen: Anmeldung des Demo-Kontos 1,0 bis 1,4 s in Chromium im
+Container); die stille Anhebung nach der Anmeldung hebt jedes Konto.
 
 **Der Anhebelauf** (seit Web 24.17.0, KA-06b-4, E-KA-40): still nach der
-Anmeldung, nur mit umgelegter Weiche (`formatAnheben()` in `unlock.js`,
+Anmeldung, nur mit umgelegter Weiche — seit Web 25.0.0 also für jedes
+Konto mit Altbestand (`formatAnheben()` in `unlock.js`,
 `api/format_anheben.php`). Er hebt Patientenblöcke (`edk1:` → `edk2:` mit
 Zähler und Blatt, in Runden zu 200, auch aus dem Papierkorb) und die privaten
 Teile von Kontopaar und Rückweg. Jeder neue Block wird vor dem Senden geöffnet
@@ -10403,16 +10414,24 @@ dem Gerät `huelle: 2`, und nur dann nimmt der Eingang Fassung 2 an — unter
 der SID, die zu `devices.spk` gehört (`pruef_huelle_absender()`). Ein
 Eintrag ohne Gerät (entkoppelt, oder am Gerät abgelehnt, nachdem der Wert
 bestätigt war) bekommt `bis` beim nächsten Laden der Geräteseite —
-still, mit einem Schlüssel, der ohne Nachfrage da ist. **Preis der
-ausgelieferten Weiche:** Ein Gerät, das vor ihrem Umlegen koppelt, steht
-in keinem Gerätebuch und sendet Fassung 1, bis es neu koppelt (F-KA-103).
+still, mit einem Schlüssel, der ohne Nachfrage da ist. **Geräte von vor
+Web 25.0.0** stehen in keinem Gerätebuch und senden Fassung 1, bis sie neu
+gekoppelt sind (F-KA-103, E-KA-83; Runbook 13).
 Dazu nimmt der Eingang das **leere Schlussstück** (`punkte` 0, nur Fassung
 2, `ts_von` = `ts_bis`); den Anschluss prüft der Browser beim Lesen.
 
-**Was noch nicht da ist:** die Geräteseite des Handys (KA-06c) und der
-Uhr-App (KG-03b), der Stichtag für Fassung 1 und das Altformat der Gerätedaten
-(KA-06e), das Demo-Gerät mit festem Schlüssel (mit dem Umlegen der Weiche,
-F-KA-104) und das Umlegen der Weiche.
+**Der Demo-Bestand** (seit Web 25.0.0, KA-13, E-KA-90, -91): Fixture
+Format 4, gebaut von `tools/referenzdatensatz/fixture/verschliessen.py` über
+die Referenz — Gerätehüllen Fassung 2 von zwei Demo-Geräten mit festem
+Schlüssel im Gerätebuch, `edk2:`-Blöcke, 16 geschlossene Blätter, Kontopaar,
+1 200 000 Runden. Der Reset (`demo_zuruecksetzen()`) schreibt Blätter,
+Gerätebuch und Geräteschlüssel mit und wechselt dabei den Inhaltsschlüssel;
+lesende Aufrufe von `api/standbuch.php` setzen die Änderungsmarke nicht.
+Formate 1 bis 3 lädt er weiter (die Bedienprobe des Anhebelaufs braucht
+Format 3, `tools/bedienprobe/daten/`).
+
+**Was noch nicht da ist:** der Stichtag für Fassung 1 und das Altformat der
+Gerätedaten (KA-06e, nach Web 25.0.0, E-KA-79).
 
 ## 5. Uhr-App (Monkey C) — Modulstruktur
 

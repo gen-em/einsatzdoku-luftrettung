@@ -60,7 +60,7 @@ const pruefungen2 = readFileSync(path.join(HIER, 'pruefungen2.js'), 'utf-8');
 /* Die Dateien der Fassung 2, in der Reihenfolge, in der die Anwendung sie
  * einbindet. Eine, die im Bestand fehlt, wird nicht geladen. */
 const NEU = ['inhalt2.js', 'huelle2.js', 'standbuch.js'];
-const WEICHE = /const SCHREIBT_FASSUNG_2 = false;/g;
+const WEICHE = /const SCHREIBT_FASSUNG_2 = (?:true|false);/g;
 
 let browser;
 try { browser = await starten(pw, motor); }
@@ -90,8 +90,10 @@ async function fassung2(weicheAn) {
     let text = readFileSync(path.join(BESTAND, n), 'utf-8');
     if (n === 'inhalt2.js') {
       const treffer = (text.match(WEICHE) || []).length;
-      if (treffer !== 1) { return { zeilen: [`  FEHL  Weiche: „const SCHREIBT_FASSUNG_2 = false;“ steht ${treffer}-mal in inhalt2.js, erwartet einmal`], schlecht: 1, fehler }; }
-      if (weicheAn) { text = text.replace(WEICHE, 'const SCHREIBT_FASSUNG_2 = true;'); }
+      if (treffer !== 1) { return { zeilen: [`  FEHL  Weiche: „const SCHREIBT_FASSUNG_2 = …;“ steht ${treffer}-mal in inhalt2.js, erwartet einmal`], schlecht: 1, fehler }; }
+      /* Beide Stellungen ausdrücklich: Seit Web 25.0.0 ist „an“ ausgeliefert,
+       * „aus“ misst, dass die alten Wege weiter lesen (KA-14). */
+      text = text.replace(WEICHE, `const SCHREIBT_FASSUNG_2 = ${weicheAn ? 'true' : 'false'};`);
     }
     await s.addScriptTag({ content: text });
   }
@@ -196,7 +198,7 @@ for (const [k, z] of Object.entries(ergebnis.zeiten)) {
 const n = ergebnis.zeilen.length;
 console.log(`Fassung 1: ${n} Prüfungen, ${ergebnis.schlecht} Abweichungen`);
 for (const f of fehlend) { console.log(`  fehlt im Bestand: ${f}`); }
-for (const [name, e] of [['Weiche aus (wie ausgeliefert)', aus], ['Weiche an', an]]) {
+for (const [name, e] of [['Weiche aus', aus], ['Weiche an (wie ausgeliefert)', an]]) {
   console.log(`Fassung 2, ${name}`);
   console.log(e.zeilen.join('\n'));
   for (const f of new Set(e.fehler)) { console.log(`  Seitenfehler: ${f}`); }

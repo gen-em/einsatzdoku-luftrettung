@@ -503,9 +503,12 @@ die Reihenfolge. Alle Werte sind **Base64** mit Auffüllung.
 `bestaetigen`), wenn es einen Geräteschlüssel hat **und** der Browser ihn
 nach „Wert stimmt" ins Gerätebuch eingetragen hat. Nur dann sendet es
 Fassung 2 (3.4); fehlt das Feld — alter Server, oder die Weiche des Browsers
-stand bei der Kopplung aus —, sendet es Fassung 1. Auch `status` eines schon
-gekoppelten Geräts trägt es; so lernt ein Gerät, dessen Speicher geleert
-wurde, es wieder.
+stand bei der Kopplung aus (bis Web 24.x) —, sendet es Fassung 1. Auch
+`status` eines schon gekoppelten Geräts trägt es; so lernt ein Gerät, dessen
+Speicher geleert wurde, es wieder. **Hat ein Gerät `huelle: 2` gehört, aber
+kein gültiges Gerätepaar** (Speicher geleert, Update von Android 0.24.0),
+sendet es nichts und verlangt eine neue Kopplung (seit Android 0.26.0,
+E-KA-80; die Garmin folgt mit KG).
 
 ## 1b. Trennen (`pair.php`) — seit Uhr 1.11.0 / Web 9.15.0
 

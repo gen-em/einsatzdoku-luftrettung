@@ -12,13 +12,15 @@
  *     ist gestiegen, und der Block geht wieder auf. Dieselbe Anfrage noch
  *     einmal gesendet (das Blatt darin ist jetzt veraltet) bekommt 409 und
  *     ändert nichts.
- *   - `ka06b3-patient-weiche-aus`: dieselbe Seite mit der Weiche, wie sie
- *     ausgeliefert ist — der Einsatz trägt wieder `edk1:`, und die Anfrage
- *     hat kein Feld `blaetter`.
+ *   Bis Web 24.x gab es dazu `ka06b3-patient-weiche-aus` (die ausgelieferte
+ *   Weiche schrieb `edk1:`). Seit Web 25.0.0 steht die Weiche an (KA-14),
+ *   und zurück geht es nicht; der Weg ist entfallen, die Umleitung unten
+ *   ist seitdem ohne Wirkung und bleibt nur, damit der Weg auch auf einem
+ *   älteren Stand misst, was er sagt.
  *
  * Anlass: Nr. 563.
  */
-const WEICHE = /const SCHREIBT_FASSUNG_2 = false;/;
+const WEICHE = /const SCHREIBT_FASSUNG_2 = (?:true|false);/;
 
 async function weicheAn(seite) {
   await seite.route(/assets\/inhalt2\.js/, async (route) => {
@@ -107,22 +109,6 @@ export const wege = [
       } finally {
         await k.seite.unroute(/assets\/inhalt2\.js/);
       }
-    },
-  },
-  {
-    name: 'ka06b3-patient-weiche-aus',
-    paket: 'KA-06', punkt: 'F-KA-04', rolle: 'demo',
-    soll: 'mit der ausgelieferten Weiche: edk1: gespeichert, kein Feld blaetter',
-    async fahren(k) {
-      await k.gehZu(`${k.basis}/index.php`);
-      const m = await einsatzMitAngaben(k);
-      if (!m) { return { ist: 'kein Einsatz mit geschützten Angaben im Demo-Konto', ok: false }; }
-      const rumpf = await speichern(k, m.id);
-      await k.gehZu(`${k.basis}/index.php`);
-      const blob = await blobVon(k, m.id);
-      const mitBlatt = typeof rumpf === 'string' && rumpf.includes('blaetter=');
-      const ok = String(blob).startsWith('edk1:') && !mitBlatt;
-      return { ist: `gespeichert ${String(blob).slice(0, 5)}, Feld blaetter ${mitBlatt ? 'MITGESCHICKT' : 'nicht da'}`, ok };
     },
   },
 ];

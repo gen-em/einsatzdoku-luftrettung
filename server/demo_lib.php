@@ -103,9 +103,12 @@ function demo_fixture_vorhanden(): bool { return is_file(demo_fixture_pfad()); }
  * wuerde ein Konto ohne Schluesselmaterial anlegen — und das faellt erst auf,
  * wenn jemand sich anmeldet und nichts lesen kann.
  */
-function demo_fixture_laden(): array
+function demo_fixture_laden(?string $pfad = null): array
 {
-    $pfad = demo_fixture_pfad();
+    /* Ein anderer Pfad nur für Prüfmittel (KA-14): Die Bedienprobe des
+     * Anhebelaufs braucht einen Bestand im alten Format, und den trägt die
+     * ausgelieferte Fixture seit Format 4 nicht mehr. */
+    $pfad = $pfad ?? demo_fixture_pfad();
     if (!is_file($pfad)) {
         throw new RuntimeException('Keine Demo-Fixture unter server/demo/fixture.json.');
     }
@@ -600,13 +603,13 @@ function demo_zweitfaktor_leeren(PDO $pdo, int $id): void
  * kommt aus `demo_id()` und wird nicht von aussen entgegengenommen — die
  * Funktion kann kein anderes Konto treffen, auch nicht bei falschem Aufruf.
  */
-function demo_zuruecksetzen(): array
+function demo_zuruecksetzen(?string $fixture = null): array
 {
     $id = demo_id();
     if ($id === null) {
         throw new RuntimeException('Kein Demo-Konto vermerkt — nichts zurückzusetzen.');
     }
-    $fx = demo_frischer_schluessel(demo_fixture_laden());
+    $fx = demo_frischer_schluessel(demo_fixture_laden($fixture));
     $pdo = db();
     $beginn = time();
 
