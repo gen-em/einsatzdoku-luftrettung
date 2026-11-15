@@ -115,12 +115,17 @@ def gerechnet(ck_hex: str) -> str:
     return hashlib.sha256(("edk-ckchk:" + ck_hex).encode("utf-8")).hexdigest()[:32]
 
 
-def messen(email: str, passwort: str, erwartet: str) -> str | None:
-    """Anmelden, Huelle oeffnen, Pruefsumme vergleichen. Liefert das Praefix."""
+def messen(email: str, passwort: str, erwartet: tuple[str, ...]) -> str | None:
+    """Anmelden, Huelle oeffnen, Pruefsumme vergleichen. Liefert das Praefix.
+
+    `erwartet`: die Praefixe dieser Bauart in beiden Fassungen — ohne Anteil
+    `edk1:` und, seit das Demo-Konto mit Fixture-Format 4 kommt (KA-13),
+    `edk2:`; mit Anteil `edka1:` und nach der Umstellung im Browser `edka2:`.
+    """
     try:
         s = sitzungsmodul.Sitzung(BASIS).anmelden(email, passwort)
     except Exception as e:  # noqa: BLE001 — der Grund gehoert in die Zeile
-        pruefe(False, f"{erwartet}-Konto {email}: Anmeldung", str(e)[:60])
+        pruefe(False, f"{erwartet[0]}-Konto {email}: Anmeldung", str(e)[:60])
         return None
 
     huelle = s.wrap or ""
@@ -129,9 +134,9 @@ def messen(email: str, passwort: str, erwartet: str) -> str | None:
     soll = pat_key_check(email)
 
     pruefe(
-        praefix.startswith(erwartet) and bool(ck) and soll is not None
+        praefix in erwartet and bool(ck) and soll is not None
         and gerechnet(ck) == soll,
-        f"{erwartet[:-1]}-Konto: Huelle geoeffnet, Pruefsumme passt",
+        f"{erwartet[0][:-1]}-Konto: Huelle geoeffnet, Pruefsumme passt",
         f"{email}, Praefix {praefix}, Anteil-Stand {s.anteil_stand}, "
         f"pat_key_check {'gleich' if ck and soll and gerechnet(ck) == soll else 'ABWEICHEND'}")
     return praefix
@@ -141,8 +146,8 @@ print(f"Sitzungsprobe gegen {BASIS}")
 print(f"  Altfassung  {ALT[0]}")
 print(f"  Neufassung  {NEU[0]}\n")
 
-p_alt = messen(ALT[0], ALT[1], "edk1:")
-p_neu = messen(NEU[0], NEU[1], "edka1:")
+p_alt = messen(ALT[0], ALT[1], ("edk1:", "edk2:"))
+p_neu = messen(NEU[0], NEU[1], ("edka1:", "edka2:"))
 
 # DIE GEGENPROBE ZUR ZAHL. Zwei gruene Haken sagen nichts, wenn beide Konten
 # dieselbe Fassung tragen — dann ist eine Fassung schlicht nicht gemessen

@@ -87,7 +87,9 @@ const DEMO_NAME = 'Demo NutzerIn';
  * Konto kennt er weder Passwort noch Inhaltsschluessel, und keine Funktion
  * hier nimmt ein anderes Konto entgegen (`demo_id()`). Passt es nicht zur
  * Huelle der Fixture, bricht der Reset ab, statt still Klartext zu
- * hinterlassen. */
+ * hinterlassen. SEIT FIXTURE-FORMAT 4 (KA-13) ist es dieselbe eine Stelle
+ * mit anderer Arbeit: Der Bestand kommt verschlossen, und der Reset legt
+ * ihn unter einen frischen Inhaltsschluessel (`demo_frischer_schluessel()`). */
 const DEMO_PASSWORT = 'nadokudemo0815';
 
 function demo_fixture_pfad(): string { return __DIR__ . '/demo/fixture.json.gz'; }
@@ -124,16 +126,21 @@ function demo_fixture_laden(): array
     if (!is_array($fx) || ($fx['format'] ?? '') !== 'einsatzdoku-demo-fixture') {
         throw new RuntimeException('server/demo/fixture.json hat nicht das erwartete Format.');
     }
-    /* FORMAT 1 BIS 3. Format 3 (Konzept RD) traegt an spurtragenden
+    /* FORMAT 1 BIS 4. Format 3 (Konzept RD) traegt an spurtragenden
      * Eintraegen `stufe` und `n_original` und an Segmenten `loeschungen`; der
      * Reset legt daraus Stufe 2 und 3 an (`edbak_restore()`, Zweig 'server').
      * Format 2 und 1 tragen das nicht und laufen weiter — jede Spur dann auf
-     * Stufe 1. Eine hoehere Nummer stammt aus einem Erzeuger, den diese
-     * Fassung nicht kennt: abgewiesen, statt halb gelesen. */
+     * Stufe 1. FORMAT 4 (Konzept KA, KA-13, F-KA-104) traegt den Bestand
+     * VERSCHLOSSEN, wie er nach dem Umlegen der Weiche in einem Konto liegt:
+     * Geraetehuellen der Fassung 2 von zwei Demo-Geraeten mit festem
+     * Schluessel, `edk2:`-Bloecke, Standbuch, Geraetebuch und Kontopaar —
+     * der Reset reicht ihn durch (`demo_bestand_einspielen4()`). Eine hoehere
+     * Nummer stammt aus einem Erzeuger, den diese Fassung nicht kennt:
+     * abgewiesen, statt halb gelesen. */
     $fxVersion = (int)($fx['version'] ?? 1);
-    if ($fxVersion < 1 || $fxVersion > 3) {
+    if ($fxVersion < 1 || $fxVersion > 4) {
         throw new RuntimeException('Die Fixture hat Format ' . $fxVersion
-            . '; diese Fassung liest Format 1 bis 3.');
+            . '; diese Fassung liest Format 1 bis 4.');
     }
     foreach (['konto', 'daten'] as $pflicht) {
         if (!is_array($fx[$pflicht] ?? null)) {
@@ -143,6 +150,24 @@ function demo_fixture_laden(): array
     foreach (['email', 'password_hash', 'kdf_salt', 'kdf_iter', 'pat_wrap_pw'] as $pflicht) {
         if (($fx['konto'][$pflicht] ?? null) === null) {
             throw new RuntimeException("Fixture unvollstaendig: konto.$pflicht fehlt.");
+        }
+    }
+    /* FORMAT 4 BRINGT MEHR MIT, UND ALLES DAVON IST PFLICHT: Ohne Kontopaar
+     * ginge keine Geraetehuelle auf, ohne Geraetebuch (Blatt 16) keine der
+     * Demo-Geraete (`absender`), und ein fehlendes Blatt liesse den
+     * Anhebelauf nach jeder Anmeldung eines schreiben. */
+    if ($fxVersion >= 4) {
+        foreach (['kp_oeffentlich', 'kp_privat', 'pat_wrap_rc', 'rc_hex'] as $pflicht) {
+            if (!is_string($fx['konto'][$pflicht] ?? null) || $fx['konto'][$pflicht] === '') {
+                throw new RuntimeException("Fixture unvollstaendig: konto.$pflicht fehlt.");
+            }
+        }
+        $wer = array_map(static fn($b) => is_array($b) ? (int)($b['wer'] ?? -1) : -1,
+                         (array)($fx['standbuch'] ?? []));
+        sort($wer);
+        if ($wer !== range(0, 16) || !is_array($fx['spuren'] ?? null)) {
+            throw new RuntimeException('Fixture unvollstaendig: Format 4 traegt 16 Blaetter, '
+                . 'das Geraetebuch und die Spurstuecke.');
         }
     }
     /* DIE RUNDENZAHL MUSS BEDIENBAR SEIN.
@@ -164,7 +189,8 @@ function demo_fixture_laden(): array
             . ' an — das Demo-Konto koennte sich nicht anmelden.');
     }
 
-    /* DIE HUELLEN MUESSEN `edk1:` SEIN (zweiter Riegel).
+    /* DIE HUELLEN TRAGEN KEINEN ANTEIL — `edk1:`, ab Format 4 `edk2:`
+     * (zweiter Riegel).
      *
      * DERSELBE GEDANKE WIE EINE ZEILE HOEHER, mit einem anderen Geheimnis.
      * Die Rundenzahl entscheidet, ob sich das Demo-Konto anmelden kann; die
@@ -208,7 +234,7 @@ function demo_fixture_laden(): array
         throw new RuntimeException('Die Schluesselhuelle der Fixture ist fuer '
             . 'das Demo-Konto unbrauchbar: ' . $grundPw
             . ' Das Demo-Konto bekommt keinen Server-Anteil; seine Huelle muss '
-            . '`edk1:` tragen. Die Fixture neu erzeugen — '
+            . '`edk1:` oder `edk2:` tragen. Die Fixture neu erzeugen — '
             . 'tools/referenzdatensatz/fixture/erzeugen.php haelt an, wenn sie '
             . 'es nicht tut.');
     }
@@ -352,9 +378,27 @@ const DEMO_POST_OHNE_MARKE = [
     'api/wartungslauf.php' => 'antwortet dem Demo-Konto mit einer leeren Liste und tauscht nichts',
 ];
 
+/**
+ * Die lesenden Aktionen von `api/standbuch.php` (KA-13). Der Endpunkt nimmt
+ * drei Aktionen in einem `POST`: `stand` und `holen` lesen, `ablegen`
+ * schreibt. Mit umgelegter Weiche gleicht jede Seite ihr Standbuch ab —
+ * gemessen am 15.11.2026 beim blossen Ansehen des Demo-Bestands: 3 × `stand`
+ * und 17 × `holen`, und die Marke stand. Ein Eintrag in
+ * `DEMO_POST_OHNE_MARKE` waere zu grob (er naehme `ablegen` mit); entschieden
+ * wird deshalb an der Aktion im Rumpf.
+ */
+const DEMO_STANDBUCH_LIEST = ['stand', 'holen'];
+
 /** Setzt diese POST die Marke? `$skript` ist der Pfad unter `server/`. */
 function demo_post_aendert(string $skript): bool
 {
+    if ($skript === 'api/standbuch.php') {
+        /* `php://input` laesst sich mehrfach lesen; der Endpunkt liest ihn
+         * danach noch einmal (`api_rumpf()`). Ein Rumpf, der kein JSON ist
+         * oder eine andere Aktion nennt, setzt die Marke — die strenge Seite. */
+        $b = json_decode((string)file_get_contents('php://input'), true);
+        return !(is_array($b) && in_array($b['aktion'] ?? null, DEMO_STANDBUCH_LIEST, true));
+    }
     return !array_key_exists($skript, DEMO_POST_OHNE_MARKE);
 }
 
@@ -446,7 +490,7 @@ function demo_reset_wenn_faellig(): bool
  */
 function demo_anlegen(): array
 {
-    $fx = demo_fixture_laden();
+    $fx = demo_frischer_schluessel(demo_fixture_laden());
     $pdo = db();
 
     if (demo_id() !== null) {
@@ -562,7 +606,7 @@ function demo_zuruecksetzen(): array
     if ($id === null) {
         throw new RuntimeException('Kein Demo-Konto vermerkt — nichts zurückzusetzen.');
     }
-    $fx = demo_fixture_laden();
+    $fx = demo_frischer_schluessel(demo_fixture_laden());
     $pdo = db();
     $beginn = time();
 
@@ -789,8 +833,18 @@ function demo_paar_sicherstellen(PDO $pdo, int $id, string $ck): void
  */
 function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
 {
-    $ck = demo_inhaltsschluessel($fx['konto']);
-    demo_paar_sicherstellen($pdo, $id, $ck);
+    /* FORMAT 4 REICHT DURCH (KA-13): Kontopaar, Bloecke, Huellen und
+     * Standbuch kommen verschlossen aus der Fixture; der Server oeffnet
+     * davon nichts und verschliesst nichts. Bis Format 3 legt er das Paar an
+     * und verschliesst den Klartext der Fixture selbst (Fassung 1). */
+    $durchreichen = (int)($fx['version'] ?? 1) >= 4;
+    $ck = null;
+    if ($durchreichen) {
+        demo_kontopaar_setzen($pdo, $id, $fx['konto']);
+    } else {
+        $ck = demo_inhaltsschluessel($fx['konto']);
+        demo_paar_sicherstellen($pdo, $id, $ck);
+    }
 
     /* Geraete VOR dem Bestand: `edbak_restore()` verknuepft die
      * Dienstkennungen (`day_refs`) ueber die oeffentliche Geraetekennung mit
@@ -803,10 +857,17 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
      * Ansicht. Beide Felder sind in der Fixture optional (aeltere Fixtures
      * kennen sie nicht); fehlen sie, bleibt es bei NULL, und das heisst
      * genau das Richtige. */
+    /* DER GERAETESCHLUESSEL KOMMT MIT (Format 4): `spk` und `herkunft` = 1
+     * sagen, dass dieses Geraet im Geraetebuch des Kontos steht — die
+     * Geraeteseite haelt beides gegeneinander und truege einen Bucheintrag
+     * ohne Geraet sonst aus (`kopplung.js`, Abgleich). Vor `update.php` gibt
+     * es die Spalten nicht; dann bleibt es bei der alten Form. */
+    $mitSpk = $durchreichen && db_hat_spalte($pdo, 'devices', 'herkunft');
     $insDev = $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash,
                                                   label, active,
-                                                  geraet_art, geraet_modell)
-                             VALUES (?,?,?,?,1,?,?)');
+                                                  geraet_art, geraet_modell'
+                            . ($mitSpk ? ', spk, herkunft' : '') . ')
+                             VALUES (?,?,?,?,1,?,?' . ($mitSpk ? ',?,1' : '') . ')');
     $geraete = 0;
     foreach ((array)($fx['geraete'] ?? []) as $g) {
         if (!is_array($g) || empty($g['device_id']) || empty($g['api_key_hash'])) { continue; }
@@ -830,9 +891,11 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
          * (backup_lib.php, "Interne Verweise"). Gezaehlt: 0 Vorkommen von
          * 'manual-' in der Nutzlast der ausgelieferten Fixture. */
         if (geraet_virtuell((string)$g['device_id'])) { continue; }
-        $insDev->execute([$id, (string)$g['device_id'], (string)$g['api_key_hash'],
-                          $g['label'] ?? null,
-                          $g['geraet_art'] ?? null, $g['geraet_modell'] ?? null]);
+        $werte = [$id, (string)$g['device_id'], (string)$g['api_key_hash'],
+                  $g['label'] ?? null,
+                  $g['geraet_art'] ?? null, $g['geraet_modell'] ?? null];
+        if ($mitSpk) { $werte[] = (string)($g['spk'] ?? ''); }
+        $insDev->execute($werte);
         $geraete++;
     }
     /* DIE GERAETE DER FIXTURE SIND KEINE NEUEN. Der Reset legt sie mit
@@ -849,6 +912,12 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
         require_once __DIR__ . '/einstieg_lib.php';
         geraete_hinweis_bestaetigen($pdo, $id);
         erststart_erledigt($id, ERSTSTART_GERAET);
+    }
+
+    if ($durchreichen) {
+        $stats = demo_bestand_durchreichen($pdo, $id, $fx);
+        $stats['geraete'] = $geraete;
+        return $stats;
     }
 
     $blobZiel = static function (?string $blob, array $zusatz) use ($ck): string {
@@ -876,6 +945,208 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
     $stats = edbak_restore($id, $fx['daten'], null, 'server', $blobZiel);
     schnitte_stempeln($pdo, $id, $vorher);
     $stats['geraete'] = $geraete;
+    return $stats;
+}
+
+/* ---- DER INHALTSSCHLÜSSEL WECHSELT MIT JEDEM RESET (Format 4, KA-13) -----
+ *
+ * WARUM. Das Standbuch hält im Browser fest, welchen Zählerstand er je
+ * Datensatz schon gesehen hat (IndexedDB, übersteht das Abmelden), und
+ * weist alles darunter als zurückgelegt ab — das ist sein Zweck. Ein
+ * Demo-Reset IST ein Zurücklegen: Die Fixture bringt jeden Block und jedes
+ * Blatt wieder auf den Stand 1. Wer im Demo-Konto etwas gespeichert hat und
+ * nach dem Reset wiederkommt, sähe an genau diesen Einsätzen „älter als der
+ * Stand, den dieser Browser kennt" (gemessen am 15.11.2026: ein Einsatz
+ * gespeichert, Reset, derselbe Browser — `blatt-zurueckgelegt` am Blatt,
+ * `zurueckgelegt` an Block und Einsatzhülle).
+ *
+ * WIE. Der Browser führt sein Buch je INHALTSSCHLÜSSEL (`kontoKennung()` in
+ * standbuch.js): Wer einen anderen hat, hat ein anderes Buch. Der Reset
+ * würfelt deshalb einen neuen und legt alles, was unter dem der Fixture
+ * liegt, unter ihn — Patientenblöcke, Blätter, Gerätebuch, den privaten
+ * Teil des Kontopaars und die zwei Schlüsselhüllen. Die Gerätehüllen
+ * bleiben, wie sie sind: Sie hängen am Kontopaar, nicht am
+ * Inhaltsschlüssel. Nach dem Reset findet jeder Browser kein Buch zu diesem
+ * Schlüssel und glaubt der Abschrift des Servers — wie ein neuer.
+ *
+ * DAS GEHT NUR HIER. Der Server kennt den Inhaltsschlüssel dieses einen
+ * Kontos, weil sein Passwort im Handbuch steht (Kopf der Datei); für jedes
+ * andere Konto kann er nichts davon. Umgehüllt wird der INNENTEXT, wie er
+ * ist — Zähler, Länge, Nutzlast, Polster —, unter denselben Zusatzdaten
+ * (Zweck und Bezug). Das Format steht in
+ * `tools/proben/huelle/referenz_inhalt.py`; ob die Texte danach aufgehen,
+ * misst `tools/referenzdatensatz/browser/demo_fassung2.mjs` im Browser.
+ */
+
+/** Zusatzdaten eines `edk2:`-Texts: "edk2" ‖ Feld(Zweck) ‖ Feld(Bezug). */
+function demo_edk2_zusatz(string $zweck, string $bezug): string
+{
+    return 'edk2' . pack('n', strlen($zweck)) . $zweck . pack('n', strlen($bezug)) . $bezug;
+}
+
+/** Den Innentext eines `edk2:`-Texts (Zähler ‖ Länge ‖ Nutzlast ‖ Polster) — oder null. */
+function demo_edk2_innen(string $schluessel, string $text, string $zweck, string $bezug): ?string
+{
+    if (!str_starts_with($text, 'edk2:')) { return null; }
+    $roh = base64_decode(substr($text, 5), true);
+    if ($roh === false || strlen($roh) < 12 + 16 + 8) { return null; }
+    $klar = openssl_decrypt(substr($roh, 12, -16), 'aes-256-gcm', $schluessel, OPENSSL_RAW_DATA,
+                            substr($roh, 0, 12), substr($roh, -16), demo_edk2_zusatz($zweck, $bezug));
+    return $klar === false ? null : $klar;
+}
+
+/** Einen Innentext zu `edk2:` verschließen. */
+function demo_edk2_bauen(string $schluessel, string $innen, string $zweck, string $bezug): string
+{
+    $nonce = random_bytes(12);
+    $tag = '';
+    $ct = openssl_encrypt($innen, 'aes-256-gcm', $schluessel, OPENSSL_RAW_DATA, $nonce, $tag,
+                          demo_edk2_zusatz($zweck, $bezug), 16);
+    if ($ct === false) { throw new RuntimeException('AES-GCM gescheitert'); }
+    return 'edk2:' . base64_encode($nonce . $ct . $tag);
+}
+
+/** Der Innentext einer Schlüsselhülle: Zähler 0, die Nutzlast auf 128 Byte gepolstert. */
+function demo_edk2_huelle_innen(string $ckHex): string
+{
+    return str_pad(pack('NN', 0, strlen($ckHex)) . $ckHex, 128, "\0");
+}
+
+/**
+ * Die Fixture (Format 4) unter einen frischen Inhaltsschlüssel legen —
+ * rein, ohne Datenbank: Eingabe die geladene Fixture, Ausgabe dieselbe mit
+ * neuen Texten. Geht ein Text mit dem Schlüssel der Fixture nicht auf,
+ * wirft sie, und der Reset schreibt nichts.
+ */
+function demo_frischer_schluessel(array $fx): array
+{
+    if ((int)($fx['version'] ?? 1) < 4) { return $fx; }
+    $k = $fx['konto'];
+    $haelfte = kdf_haelfte(DEMO_PASSWORT, (string)hex2bin((string)$k['kdf_salt']), (int)$k['kdf_iter']);
+    $innen = demo_edk2_innen($haelfte, (string)$k['pat_wrap_pw'], 'wrap', 'pw');
+    $altHex = $innen === null ? '' : substr($innen, 8, 64);
+    if ($innen === null || !preg_match('/^[0-9a-f]{64}\z/', $altHex)) {
+        throw new RuntimeException('Das Demo-Passwort öffnet die Schlüsselhülle der Fixture '
+            . 'nicht. Passwort im Handbuch, DEMO_PASSWORT und Fixture gehören zusammen.');
+    }
+    $alt = (string)hex2bin($altHex);
+    $neu = random_bytes(32);
+    $neuHex = bin2hex($neu);
+    $um = static function (string $text, string $zweck, string $bezug, string $was) use ($alt, $neu): string {
+        $innen = demo_edk2_innen($alt, $text, $zweck, $bezug);
+        if ($innen === null) {
+            throw new RuntimeException($was . ' der Fixture geht mit ihrem Inhaltsschlüssel nicht auf.');
+        }
+        return demo_edk2_bauen($neu, $innen, $zweck, $bezug);
+    };
+
+    $k['pat_wrap_pw'] = demo_edk2_bauen($haelfte, demo_edk2_huelle_innen($neuHex), 'wrap', 'pw');
+    $k['pat_wrap_rc'] = demo_edk2_bauen((string)hex2bin((string)$k['rc_hex']),
+                                        demo_edk2_huelle_innen($neuHex), 'wrap', 'rc');
+    $k['pat_key_check'] = substr(hash('sha256', 'edk-ckchk:' . $neuHex), 0, 32);
+    $k['kp_privat'] = $um((string)$k['kp_privat'], 'kp', '', 'Das Kontopaar');
+    $fx['konto'] = $k;
+    if (isset($fx['daten']['pat_key_check'])) { $fx['daten']['pat_key_check'] = $k['pat_key_check']; }
+    foreach ($fx['daten']['missions'] as &$m) {
+        if (isset($m['pat_blob']) && $m['pat_blob'] !== null) {
+            $m['pat_blob'] = $um((string)$m['pat_blob'], 'pat', (string)$m['client_ref'],
+                                 'Der Patientenblock von ' . (string)$m['client_ref']);
+        }
+    }
+    unset($m);
+    foreach ($fx['standbuch'] as &$b) {
+        $wer = (int)$b['wer'];
+        $b['text'] = $wer === 16 ? $um((string)$b['text'], 'geraete', '', 'Das Gerätebuch')
+                                 : $um((string)$b['text'], 'stand', (string)$wer, 'Blatt ' . $wer);
+    }
+    unset($b);
+    return $fx;
+}
+
+/**
+ * Das Kontopaar der Fixture ablegen (Format 4) — der oeffentliche Teil als
+ * SPKI, der private als `edk2:` unter dem Inhaltsschluessel der Fixture.
+ *
+ * ERSETZT, WAS DA IST. Die Geraetehuellen der Fixture sind fuer DIESES Paar
+ * verschlossen; ein Paar, das die Anlage frueher selbst angelegt hat (Format
+ * 3, `demo_paar_sicherstellen()`), oeffnete keine davon. `kp_ablegen()` legt
+ * nur ab, wo keines steht — deshalb wird vorher geraeumt, in derselben
+ * Transaktion.
+ */
+function demo_kontopaar_setzen(PDO $pdo, int $id, array $konto): void
+{
+    require_once __DIR__ . '/kontopaar_lib.php';
+    if (!demo_ist_demo($id)) {
+        throw new RuntimeException('demo_kontopaar_setzen() arbeitet nur auf dem Demo-Konto.');
+    }
+    $pdo->prepare('UPDATE users SET kp_oeffentlich = NULL, kp_privat = NULL, kp_seit = NULL
+                    WHERE id = ?')->execute([$id]);
+    if (!kp_ablegen($pdo, $id, (string)$konto['kp_oeffentlich'], (string)$konto['kp_privat'])
+        || kp_zustand($id, $pdo)['stand'] !== 'da') {
+        throw new RuntimeException('Das Schlüsselpaar der Fixture ließ sich nicht ablegen.');
+    }
+}
+
+/**
+ * Den Bestand einer Fixture im Format 4 einspielen: verschlossen, wie er
+ * liegt. Erwartet eine offene Transaktion.
+ *
+ * DERSELBE WEG WIE EINE KONTOSICHERUNG, die die Verwaltung einspielt
+ * (`adminbackup_lib.php`): `edbak_restore()` im Zweig 'browser' nimmt
+ * Einsatzhuellen und `pat_blob` als Spalten und weist Klartext-Ortsdaten ab;
+ * die Stuecke gehen ueber `edbak_spuren_schreiben()` — jedes durch die
+ * Pruefschicht. Dazu, was eine Sicherung nicht traegt: die Blaetter des
+ * Standbuchs und das Geraetebuch. Sie gehoeren zum Bestand wie die Bloecke,
+ * deren Zaehler sie fuehren; ohne sie waere jeder Block dem Blatt voraus,
+ * und die Demo-Geraete staenden in keinem Buch.
+ *
+ * NICHTS DARF FEHLEN. Ein abgewiesenes Stueck oder Blatt bricht den Reset
+ * ab (die Transaktion rollt zurueck), statt ein Demo-Konto zu hinterlassen,
+ * in dem eine Spur nicht aufgeht.
+ */
+function demo_bestand_durchreichen(PDO $pdo, int $id, array $fx): array
+{
+    require_once __DIR__ . '/standbuch_lib.php';
+    if (!demo_ist_demo($id)) {
+        throw new RuntimeException('demo_bestand_durchreichen() arbeitet nur auf dem Demo-Konto.');
+    }
+    if (!sb_bereit($pdo)) {
+        throw new RuntimeException('Die Fixture im Format 4 braucht die Tabelle des Standbuchs — '
+            . 'erst `update.php` aufrufen.');
+    }
+    foreach ((array)$fx['standbuch'] as $b) {
+        $wer = (int)$b['wer'];
+        $grund = sb_ablage_pruefen(0, $b['version'] ?? null, $b['text'] ?? null);
+        if ($grund !== null || !sb_ablegen($pdo, $id, $wer, 0, (int)$b['version'], (string)$b['text'])['ok']) {
+            throw new RuntimeException('Blatt ' . $wer . ' der Fixture ließ sich nicht ablegen'
+                . ($grund !== null ? ' (' . $grund . ')' : '') . '.');
+        }
+    }
+
+    /* Die Vermerke bekommen einen Zeitpunkt vor diesem Reset — wie im Weg bis
+     * Format 3 (E-RD-18, F-RD-14, -22). */
+    $vorher = gmdate('Y-m-d H:i:s', time() - 1);
+    $stats = edbak_restore($id, $fx['daten'], null, 'browser');
+    $karte = (array)($stats['spur_karte'] ?? []);
+    unset($stats['spur_karte'], $stats['day_map']);
+    $liste = [];
+    foreach ((array)$fx['spuren'] as $e) {
+        $ziel = $karte[(int)($e['spur_ref'] ?? -1)] ?? null;
+        if ($ziel === null) {
+            throw new RuntimeException('Die GPS-Daten zu ' . (string)($e['client_ref'] ?? '?')
+                . ' in der Fixture haben keinen Eintrag im Bestand.');
+        }
+        $liste[] = ['owner_type' => $ziel['art'], 'owner_id' => $ziel['id'],
+                    'stuecke' => (array)($e['stuecke'] ?? [])];
+    }
+    $spuren = edbak_spuren_schreiben($pdo, $id, $liste);
+    if ($spuren['abgelehnt'] || $spuren['geschrieben'] !== count($liste)) {
+        throw new RuntimeException('Von ' . count($liste) . ' GPS-Aufzeichnungen der Fixture wurden '
+            . $spuren['geschrieben'] . ' geschrieben, ' . count($spuren['abgelehnt'])
+            . ' abgelehnt' . ($spuren['abgelehnt'] ? ' (' . $spuren['abgelehnt'][0]['grund'] . ')' : '') . '.');
+    }
+    schnitte_stempeln($pdo, $id, $vorher);
+    $stats['spuren'] = $spuren['geschrieben'];
     return $stats;
 }
 

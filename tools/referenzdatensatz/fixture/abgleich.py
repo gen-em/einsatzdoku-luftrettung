@@ -5,6 +5,9 @@ Anlass: Nr. 388 — die eingecheckte Fixture war vom 27.09.2026, die Referenz
 vom 19.10.2026, und beide trugen verschiedene Bestände (67 292 gegen
 67 478 Punkte), ohne dass etwas es meldete (Konzept RD, F-RD-01, Q-RD-08).
 
+Seit Fixture-Format 4 (KA-13) liegen die Spuren verschlossen in der Fixture;
+gezählt wird der Klartextumriss ihrer Stücke (`umriss_fixture()`).
+
 Verglichen werden Zahlen, kein Inhalt: Diensttage, Einsätze und Ruhesegmente
 mit ihrem Papierkorb, Schnitte und Löschvermerke, und je Spur (über die
 `client_ref`) die Punktzahl `n`, `n_original` und ob sie ausgedünnt ist
@@ -72,9 +75,29 @@ def umriss_aus(daten: dict, n_von) -> dict:
     return {"zahlen": zahlen, "spuren": dict(sorted(spuren.items()))}
 
 
+def umriss_fixture(fx: dict) -> dict:
+    """Der Umriss einer Fixture. Bis Format 3 stehen die Punkte im Eintrag;
+    Format 4 (KA-13) trägt sie verschlossen in Stücken (`spuren`), und
+    gezählt wird deren Klartextumriss — Punktzahl, Stufe und `n_original`
+    stehen neben der Hülle, wie auf dem Server. Öffnen muss der Abgleich
+    dafür nichts; ob die Stücke AUFGEHEN, misst er nicht (das tut die
+    Gegenlesung in `verschliessen.py` und `browser/demo_fassung2.mjs`)."""
+    daten = fx["daten"]
+    if int(fx.get("version") or 0) < 4:
+        return umriss_aus(daten, lambda e: len(e.get("track") or []))
+    stuecke = {(s["art"], s["spur_ref"]): s["stuecke"] for s in fx.get("spuren") or []}
+    daten = json.loads(json.dumps(daten))
+    for typ, liste in (("mission", daten.get("missions", [])), ("rest", daten.get("rest_segments", []))):
+        for e in liste:
+            st = stuecke.get((typ, e.get("spur_ref")), [])
+            e["_n"] = sum(int(x["punkte"]) for x in st)
+            e["stufe"] = max([int(x.get("stufe") or 1) for x in st] or [0])
+            e["n_original"] = sum(int(x.get("n_original") or x["punkte"]) for x in st)
+    return umriss_aus(daten, lambda e: e.get("_n"))
+
+
 def aus_fixture(pfad: pathlib.Path) -> dict:
-    fx = json.loads(gzip.decompress(pfad.read_bytes()).decode("utf-8"))
-    return umriss_aus(fx["daten"], lambda e: len(e.get("track") or []))
+    return umriss_fixture(json.loads(gzip.decompress(pfad.read_bytes()).decode("utf-8")))
 
 
 def edbak_datei() -> pathlib.Path:
@@ -138,7 +161,23 @@ def selbstprobe() -> int:
                                             lambda e: len(e.get("track") or [])), "a", "b")
     print(f"  [{'ok ' if gleich else 'FEHL'}] eine unveränderte Kopie ist gleich")
     faelle += 0 if gleich else 1
-    print(f"Selbstprobe: 8 Fälle, {faelle} Fehlschläge")
+    # Format 4: dieselben Zahlen aus dem Umriss der Stücke — und ein
+    # fehlendes Stück fällt auf.
+    vier = {"version": 4, "daten": {"days": basis["days"], "missions": [
+        {"client_ref": "m-1", "spur_ref": 1, "n": 4, "schnitte": [{}], "deleted_at": None}],
+        "rest_segments": [{"client_ref": "r-1", "spur_ref": 2, "n": 2, "loeschungen": [{}],
+                           "deleted_at": "x"}]},
+        "spuren": [{"art": "mission", "spur_ref": 1,
+                    "stuecke": [{"punkte": 4, "stufe": 3, "n_original": 9}]},
+                   {"art": "rest", "spur_ref": 2, "stuecke": [{"punkte": 1}, {"punkte": 1}]}]}
+    gleich4 = not unterschiede(a, umriss_fixture(vier), "a", "b")
+    print(f"  [{'ok ' if gleich4 else 'FEHL'}] Format 4 mit demselben Bestand ist gleich")
+    faelle += 0 if gleich4 else 1
+    del vier["spuren"][1]["stuecke"][0]
+    gesehen = bool(unterschiede(a, umriss_fixture(vier), "a", "b"))
+    print(f"  [{'ok ' if gesehen else 'FEHL'}] Format 4: ein Stück fehlt")
+    faelle += 0 if gesehen else 1
+    print(f"Selbstprobe: 10 Fälle, {faelle} Fehlschläge")
     return 1 if faelle else 0
 
 

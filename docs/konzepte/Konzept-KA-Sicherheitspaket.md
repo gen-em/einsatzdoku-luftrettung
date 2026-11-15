@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 erledigt** (M-KA-03 freigegeben, E-KA-87), **KA-12 erledigt** (Handbuch und Runbook: Geräte nach dem Tag neu koppeln), **KA-09 erledigt** (Referenz Rückweg, Fable-Agent), **KA-15 erledigt** (Android 0.26.0), **KA-10 erledigt** (Browser-Kern), **KA-11 gebaut** (Anzeige in `einsatz.php`; gefahren wird sie mit umgelegter Weiche in KA-14), dann KA-13, -14; **danach 06e** in einem Zug (E-KA-79); Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
+| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 erledigt** (M-KA-03 freigegeben, E-KA-87), **KA-12 erledigt** (Handbuch und Runbook: Geräte nach dem Tag neu koppeln), **KA-09 erledigt** (Referenz Rückweg, Fable-Agent), **KA-15 erledigt** (Android 0.26.0), **KA-10 erledigt** (Browser-Kern), **KA-11 gebaut** (Anzeige in `einsatz.php`; gefahren wird sie mit umgelegter Weiche in KA-14), **KA-13 erledigt** (Demo-Fixture Format 4; lädt erst mit KA-14), **KA-14 in Arbeit**; **danach 06e** in einem Zug (E-KA-79); Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
 | Erledigt | **KA-06f** (PR #187, gemergt 15.11.2026, Android 0.25.0, Web 24.19.0; Zweig `claude/amazing-keller-i2f04f`; R91 auf Staging grün, Abschnitt 9) · **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -140,6 +140,8 @@ Safari.
 | E-KA-87 | **Mockup M-KA-03 (Befunde in der Einsatzansicht, „neu koppeln“ am Handy) freigegeben** — sieben Zustände A bis G, nur vorhandene Bausteine; in B zeigt die Karte erst nach der Entscheidung, „Nicht jetzt“ lässt alles stehen | 15.11.2026, BetreiberIn |
 | E-KA-88 | **Der Rückweg in der Referenz** (Fable-Agent, KA-09): Standbuchfeld `a` (SID des Geräts, das `o` gesetzt hat; `k` bleibt, beide schließen einander aus) und `u` (Vermerke `[[z_v, sid, t]]` über bewusst verworfene Stände); Feldfolge p, o, k, a, f, u, s, d, x. Kleineres oder gleiches `z` von einem **anderen Gerät** ist der Hinweis `uhrzeit-pruefen` (Arten `kleiner`, `gleich`, `verworfen`); gleicher Absender, Konto und Altblatt ohne `a` bleiben hart `zurueckgelegt`. Die Bestätigung ist der Hinweis selbst und gilt nur, solange Hülle und Stand so stehen; neuer Befund `stand-uebernommen`, neuer Fehlergrund `bestaetigung`. Zwei Blätter führt `stand_zusammenfuehren()` zusammen, nicht mehr „höherer Zähler“ | 15.11.2026, Umsetzung |
 | E-KA-89 | **Kein Serverumbau gegen das „wiederkehrende“ alte Paket** (Zweifel 1 aus KA-09): Ein Gerät sendet ein Paket nur, bis der Server es angenommen hat, und entsorgt es dann; seit E-KA-69 trägt jede Wiederholung dasselbe `z`, und nach der Bestätigung geht genau diese Hülle durch („nach-bestaetigung-dieselbe-huelle“). Neu erscheint der Hinweis erst bei einer echten Änderung am Gerät mit nachgehender Uhr — das ist der Zweck des Hinweises | 15.11.2026, Umsetzung |
+| E-KA-90 | **Demo-Bestand: neu verschließen statt Einspiellauf umbauen** (Fable-Agent, KA-13): `einspielen.py` schreibt weiter Fassung 1 über die regulären Wege; `fixture/verschliessen.py` öffnet das ausgelesene Konto und verschließt alles neu über `referenz.py`/`referenz_inhalt.py` — Fixture-Format 4 mit Gerätehüllen Fassung 2 von zwei Demo-Geräten mit festem Schlüssel, `edk2:`-Blöcken, 16 geschlossenen Blättern, Gerätebuch, Kontopaar und 1 200 000 Runden; byte-gleich bei zweimaligem Bau. Kopplung über `pair.php` und Ingest in Fassung 2 im Einspiellauf sind **nicht** gebaut (Backlog Nr. 567) | 15.11.2026, Umsetzung |
+| E-KA-91 | **Der Demo-Reset wechselt den Inhaltsschlüssel und setzt die Änderungsmarke nicht beim Lesen** (KA-13): Ohne Wechsel sähe ein Browser, der vor dem Reset gespeichert hatte, danach `blatt-zurueckgelegt` (gemessen); `api/standbuch.php` `stand` und `holen` setzen die Marke (Nr. 459) nicht mehr, `ablegen` weiter | 15.11.2026, Umsetzung |
 | E-KA-73 | **E-KA-69, -71 und -72 kommen als eigenes Paket KA-06f vor 06e**, in einer neuen Instanz; der Krypto-Teil (Keystore-Umsetzung von `Geraeteschluessel`, Zählerregel in Referenz und Handy) geht wieder an einen Fable-Agenten (wie E-KA-67), der Garmin-Teil von E-KA-69 an KG (E-KA-21) | 15.11.2026, BetreiberIn |
 | E-KA-66 | **Gerätebuch und „Wert stimmt“ gehen in zwei Schritten, nicht in einer Transaktion:** erst das Buch (über den vorhandenen Weg `geraetEintragen()`), dann der Vermerk am Server mit `im_buch`. Ein Gerät am Server ohne Buch-Eintrag sendete Daten, die nicht aufgehen; ein Buch-Eintrag ohne Gerät räumt der Abgleich der Geräteseite auf (`bis`). Weicht vom Entwurf 06d, Punkt 5 ab | 13.11.2026, Umsetzung |
 | E-KA-67 | **Den Anschluss des leeren Schlussstücks prüft der Browser beim Lesen (Regel `luecke`), nicht der Eingang** — der Eingang prüft Form (Fassung 2, `ts_von` = `ts_bis`). Eine Abfrage des letzten Stücks im Eingang kostete jede Anfrage und belegte nichts, was der Browser nicht ohnehin prüft. Weicht vom Entwurf 06d, Punkt 8 ab | 13.11.2026, Umsetzung |
@@ -976,6 +978,31 @@ keinen Gegenstand. Für 06f selbst gibt es auf Staging keinen Punkt der
 Arbeitsumgebung: Der Befund liegt hinter der Weiche, das Handy braucht ein
 Gerät (P-KA-16). Danach `staging_konten.py --wirklich`: ein Konto der Kette
 gelöscht, vier behalten.
+
+### KA-13 Demo-Bestand in Fassung 2 (15.11.2026, Fable-Agent)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) Der volle Einspiellauf
+und der Prüfstand; der Mischzustand „Einspiellauf schreibt Fassung 1,
+Browserschritte nach KA-14 Fassung 2“ ist nie durchgespielt (Nr. 567).
+(2) `demo_pruefen.mjs`, Abschnitt `spurfaelle`, bricht an einer verborgenen
+Zeile ab — auch mit der alten Fixture, älter als KA-13. (3) Gemessen wurde
+gegen eine Abschrift von `server/` mit Weiche an auf Port 8444; der Baum
+selbst lädt die Fixture erst mit KA-14.
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| `demo_fassung2.mjs --zweimal` (neu), drei Engines | je **30 / 0**: 106 Einsätze und 118 Segmente gehen auf, 63 366 Punkte, kein Stück in Fassung 1, kein Befund, Marke nicht gesetzt | Demo-Gerät nicht im Gerätebuch: rot (26 Einsätze, 11 Segmente, `absender`) | Demo mit Weiche an |
+| `verschliessen.py --selbstprobe`, `abgleich.py` (auch `--tief`), `riegelprobe.php`, `sitzungsprobe.py` | 9 / 0, „Gleich.“ und 10 / 0, 11 von 11, 2 von 2 | zweimal gebaut byte-gleich | Fixture, Riegel |
+| Hüllenprobe | 606 / 0 | — | nichts am Kern gekippt |
+
+Fixture 903 114 → 1 100 377 Byte; Einsatzhüllen 2 vom Gerät, 104 vom Konto
+(jedes Speichern im Formular verschließt als Konto), Spuren 197 Gerät, 26
+Konto. **Zwischenfall:** Eine Probe gegen die Abschrift hob das Konto
+`admin@example.invalid` der örtlichen Anlage still auf 1 200 000 / `edka2:`;
+der Agent hat es zurückgestellt. **Zweifel:** `rc_hex` steht in der Fixture
+(öffentlich wie das Demo-Passwort); jeder Reset hinterlässt im Browser ein
+verwaistes Buch; Format 1–3 und der Zweig `'server'` in `edbak_restore()`
+sind Rückbau für 06e.
 
 ### KA-10 Browser-Kern: Rückweg (15.11.2026, Fable-Agent)
 

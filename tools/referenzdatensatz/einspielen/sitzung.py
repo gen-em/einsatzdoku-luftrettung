@@ -407,7 +407,9 @@ class Sitzung:
             spki = base64.b64decode(self.konstante(html, "KP_OEFFENTLICH"))
             chiffre = self.konstante(html, "KP_PRIVAT")
             if chiffre and self.inhaltsschluessel:
-                self.paar_privat = krypto.entschluesseln(chiffre, self.inhaltsschluessel)
+                # Zweck `kp`: Seit der umgelegten Weiche liegt der private
+                # Teil gebunden (`edk2:`); Fassung 1 liest die Angabe nicht.
+                self.paar_privat = krypto.entschluesseln(chiffre, self.inhaltsschluessel, zweck="kp")
             return spki[-65:]
         if stand != "fehlt":
             raise RuntimeError(f"Kontoschluessel: Stand {stand!r} -- "

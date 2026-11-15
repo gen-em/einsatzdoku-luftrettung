@@ -804,3 +804,16 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      bestätigen, wenn der Stand noch derselbe ist (für Einsätze der Zähler
      `z` des Pakets, für Ruhesegmente eine Änderungsnummer). *Abnahme:* ein
      Prüffall, der die Phase zwischen Senden und Antwort setzt.
+<!-- -->
+
+567. **Der Einspiellauf des Demo-Bestands schreibt noch Fassung 1.** · gehört zu: 28 · Stand: offen · seit 15.11.2026
+     *Aufgenommen 15.11.2026 aus KA-13 (E-KA-90).* `einspielen.py` koppelt
+     das Demo-Gerät ohne Vergleichswert und sendet Gerätehüllen der
+     Fassung 1; erst `fixture/verschliessen.py` verschließt alles neu. Nach
+     dem Umlegen der Weiche schreiben die Browserschritte des Laufs
+     (`passwort_setzen.mjs`, `csv_import.mjs`) aber schon Fassung 2 — der
+     Mischzustand ist nie durchgespielt. *Weg:* Kopplung mit Vergleichswert
+     über `pair.php` und Ingest in Fassung 2 im Einspiellauf, spätestens mit
+     dem Stichtag aus 06e. *Abnahme:* voller Einspiellauf, `erzeugen.php`
+     und `verschliessen.py` ohne Befund, Fixture byte-gleich zur heutigen
+     oder begründet anders.
