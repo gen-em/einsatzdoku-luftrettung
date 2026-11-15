@@ -14,6 +14,22 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.19.0] — unveröffentlicht
+
+Schritt 28 (KA), Paket KA-06f.
+
+### Hinzugefügt
+
+- **Web — eine offene Einsatzhülle nach dem Abschluss fällt auf.** Seit der
+  Zähler am Inhalt hängt, kann ein Gerät, das nach einer Übergabe noch
+  etwas ändert, einen schon abgeschlossenen Einsatz mit einer offenen Hülle
+  überschreiben — rechtmäßig im Sinn des Zählers, aber verdächtig. Der
+  Browser merkt sich deshalb je Einsatz, dass er schon abgeschlossen war,
+  und meldet eine spätere offene Hülle als Befund, statt sie abzuweisen. Er
+  selbst verschließt einen abgeschlossenen Einsatz immer als abgeschlossen,
+  damit er sich nicht selbst meldet; sichtbar wird der Befund mit dem
+  Umlegen der Weiche.
+
 ## [Android 0.25.0] — unveröffentlicht
 
 Schritt 28 (KA), Paket KA-06f.

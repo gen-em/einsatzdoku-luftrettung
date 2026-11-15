@@ -33,7 +33,7 @@ Python mit `cryptography`, Node mit Playwright und einen Browser aus
 `referenz.py`: Selbstprobe **28 Fälle, 0 Fehlschläge** · Fassung 1 **6 geöffnet,
 8 Störungen** · Fassung 2 **32 geöffnet, 40 Gegenlagen**, je 0 Abweichungen.
 `referenz_inhalt.py`: **21 Fälle, 0 Fehlschläge** · **23 geöffnet, 28 Gegenlagen**.
-Server **22** (bis KA-06c stand hier 18 — überholt seit KA-06b-3) · Browser **427 Prüfungen** (39 + 183 Weiche aus + 205 an), 0 Abweichungen, **10 ausgenommen** — der Befund `offen-nach-schluss`, bis `einsatzLesen()` ihn liefert (15.11.2026, mit den sechs Fällen „inhalt-…“ und der Zählerfolge aus KA-06f).
+Server **22** (bis KA-06c stand hier 18 — überholt seit KA-06b-3) · Browser **438 Prüfungen** (39 + 188 Weiche aus + 211 an), 0 Abweichungen, 0 ausgenommen (15.11.2026, KA-06f-4: der Befund `offen-nach-schluss` gemessen, dazu das Standbuchfeld `f`; bis 06f-4 waren es 427 mit 10 ausgenommenen).
 
 ## Was es nicht kann
 

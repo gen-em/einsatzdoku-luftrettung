@@ -541,5 +541,27 @@ window.hpFassung2 = async (v2, vi, weicheAn) => {
     const o = await EdStandbuch.geraetebuchOeffnen(ck, alt.lager.get('buch').text, null);
     return v === 3 && o.version === 3 && o.geraete[sidUhr].bis !== null && (await b.abgleichen()).every((x) => x.wer !== 'buch');
   });
+  /* Das Feld `f` (KA-06f, E-KA-69, -76): steht im Blatt nach `k`, geht über
+   * den Server an einen zweiten Browser und bleibt stehen, wenn ein dritter
+   * den Zähler hebt. Das Zusammenführen bei einem Konflikt misst sie nicht. */
+  await pruefe('Buch: f steht nach k, reist zu einem zweiten Browser und bleibt, wenn ein dritter den Zähler hebt', async () => {
+    const REF_F = 'm-20261115-f001';
+    const ein = EdStandbuch.speicherTransport();
+    const a = neuesBuch('f-a-' + konto, ein);
+    await a.fortschreiben(REF_F, (e) => { e.o = 7; e.k = 1; e.f = 1; });
+    const nr = String(await EdStandbuch.blattNr(REF_F));
+    const o = await EdStandbuch.blattOeffnen(ck, ein.lager.get(nr).text, Number(nr), null);
+    const kenn = await EdStandbuch.kennung(REF_F);
+    const reihe = Object.keys(o.blatt.e[kenn]).join(',');
+    const b = neuesBuch('f-b-' + konto, ein);
+    await b.abgleichen();
+    const angekommen = (await b.eintrag(REF_F)).f === 1;
+    /* b schreibt einen höheren Zähler ohne `f` — `f` darf dabei nicht fallen. */
+    await b.fortschreiben(REF_F, (e) => { e.o = 9; delete e.k; });
+    const c = neuesBuch('f-c-' + konto, ein);
+    await c.abgleichen();
+    const e = await c.eintrag(REF_F);
+    return reihe === 'o,k,f' && angekommen && e.o === 9 && e.f === 1;
+  });
   return { zeilen, schlecht, ausgenommen };
 };

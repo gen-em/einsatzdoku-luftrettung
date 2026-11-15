@@ -8972,4 +8972,13 @@ declare(strict_types=1);
  *   der beansprucht. Bis dahin fragte nur die Seite, und ein anderer Weg
  *   haette dem Geraet `n_b` ohne Kontoschluessel gegeben — eine Sackgasse.
  *   Korrektur; kein Schema. */
-const WEB_VERSION = '24.18.1';
+/* 24.19.0 — EINE OFFENE HUELLE NACH DEM ABSCHLUSS FAELLT AUF (KA-06f,
+ *   E-KA-69, -76). Das Standbuch merkt sich je Einsatz, ob schon eine
+ *   abgeschlossene Einsatzhuelle abgenommen war (`f`), und das Lesen meldet
+ *   eine spaetere offene als Befund `offen-nach-schluss`, ohne sie
+ *   abzuweisen; das Konto selbst verschliesst einen abgeschlossenen Einsatz
+ *   weiter als abgeschlossen. Alles hinter der Weiche, angezeigt wird es erst
+ *   mit ihr. Gegenstueck zum Zaehler am Inhalt, den Handy (Android 0.25.0)
+ *   und Referenz mit demselben Paket bekommen. NEBEN: neue Pruefung;
+ *   kein Schema. */
+const WEB_VERSION = '24.19.0';

@@ -10350,7 +10350,15 @@ Datensatzes (`sb_blaetter_schreiben()`) und prüft, dass jeder Block steht,
 dessen Zähler ein Blatt hebt — sonst nichts und 409 `{error: 'blatt',
 grund: 'version' | 'uebersprungen', …}`. Eine Wiederherstellung liest ohne
 Standbuch (sie ist mit Absicht ein älterer Stand) und schreibt mit neuem
-Zähler. Die Formprüfung (`validate_lib.php`) nimmt `edk2:` (Patientenblock
+Zähler. **Seit Web 24.19.0 (KA-06f, E-KA-69, -76)** merkt sich das Standbuch
+je Einsatz zusätzlich `f` = „eine Einsatzhülle mit `schluss: true` war schon
+abgenommen" (nach `k`, haftet, beim Zusammenführen „einer hat es");
+`EdHuelle2.einsatzLesen()` liefert daneben `befund: ['offen-nach-schluss']`,
+wenn eine angenommene Hülle danach `schluss: false` trägt — kein Abweisen.
+Das Konto verschließt einen solchen Einsatz selbst immer mit `schluss: true`
+(`EdOrtsdaten.einsatzVerschliessen()`). Angezeigt wird der Befund noch nicht:
+Die Anzeige der Befunde kommt mit dem Umlegen der Weiche (E-KA-70).
+Die Formprüfung (`validate_lib.php`) nimmt `edk2:` (Patientenblock
 mindestens Klasse 512), `edka2:` (nur Passworthülle) und die Gerätehülle der
 Fassung 2 an. Das Ziel der Rundenzahl bleibt 600 000, bis die Weiche umliegt
 (PHP rechnet Ableitung 2 schon: `kdf_haelfte()`).

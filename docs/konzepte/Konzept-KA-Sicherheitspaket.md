@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-06f** auf Zweig `claude/amazing-keller-i2f04f` (neue Instanz, gesammelter PR am Ende, 15.11.2026): **06f-1 erledigt** (Zählerregel in der Referenz, Fable-Agent; Prüfprotokoll KA-06f-1), **06f-2 erledigt** (Geräteschlüssel im Keystore, `minSdk` 31, Android 0.25.0; Gerätetest im Emulator grün), **06f-3 erledigt** (Zähler am Inhalt im Puffer, Schema 3; dazu F-KA-117 behoben), **als Nächstes 06f-4** (Zähler am Inhalt im Puffer), 06f-4 (Befund `offen-nach-schluss` im Browser; Q-KA-18, -19 beantwortet: E-KA-76); Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät, nach `android-v0.24.0`); danach 06e (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51; dort auch F-KA-103 und -104). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-03a in PR #173; **KG-03b gemergt** (PR #181, 14.11.2026, Uhr 5.0.0, Vertrag 1a.7) |
+| In Arbeit | **KA-06f** auf Zweig `claude/amazing-keller-i2f04f` (neue Instanz, gesammelter PR am Ende, 15.11.2026): **06f-1 erledigt** (Zählerregel in der Referenz, Fable-Agent; Prüfprotokoll KA-06f-1), **06f-2 erledigt** (Geräteschlüssel im Keystore, `minSdk` 31, Android 0.25.0; Gerätetest im Emulator grün), **06f-3 erledigt** (Zähler am Inhalt im Puffer, Schema 3; dazu F-KA-117 behoben), **06f-4 erledigt** (Befund `offen-nach-schluss` und Standbuchfeld `f` im Browser, Web 24.19.0; E-KA-76), **als Nächstes** Prüfstand und gesammelter PR; Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät, nach `android-v0.24.0`); danach 06e (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51; dort auch F-KA-103 und -104). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-03a in PR #173; **KG-03b gemergt** (PR #181, 14.11.2026, Uhr 5.0.0, Vertrag 1a.7) |
 | Erledigt | **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -928,6 +928,23 @@ des eigenen Kontos.
 **Fassung 2 vorher gezählt** (Konzept, Punkt 7): örtlich 6 Pakete, alle
 Fassung 3; 3 Begleitdateien, alle versiegelt. Staging und Produktiv nicht
 gezählt (E-KA-31).
+
+### KA-06f-4 Browser: Befund `offen-nach-schluss` (15.11.2026, Hauptinstanz)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) Dass das Konto
+`schluss` weiterträgt (`EdOrtsdaten.einsatzVerschliessen()`) und das
+Lesen `f` ins Standbuch schreibt (`EdOrtsdaten.einsatz()`), misst keine
+Probe einzeln — beides liegt hinter der Weiche, und die Browserprobe ruft
+den Kern, nicht `EdOrtsdaten`. Gelesen, nicht gefahren; der Prüfstand
+fährt die Bedienproben der Weiche. (2) Das Zusammenführen von `f` bei
+einem 409-Konflikt (`hoeher()`) ist nicht gemessen; die neue Prüfung deckt
+Schreiben, Reisen und Weiterschreiben durch einen dritten Browser.
+(3) Angezeigt wird der Befund nirgends — das kommt mit E-KA-70.
+(4) Nur Chromium; Firefox und WebKit fährt der Prüfstand.
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Browserprobe `tools/proben/huelle/probe.sh` (Chromium) | **438 Prüfungen, 0 Abweichungen, 0 ausgenommen** (39 + 188 Weiche aus + 211 an; vorher 427 mit 10 ausgenommen); Server 22 / 0 | Befund nie geliefert: **4** rot (zwei Fälle × zwei Weichenstellungen); `f` aus `FELDER` genommen: **1** rot (die neue Prüfung) — beide zurückgenommen | `einsatzLesen()` liefert den Befund wie `einsatz_befunde()` der Referenz; `f` steht nach `k`, reist mit und bleibt |
 
 ### KA-06f-3 Handy: Zähler am Inhalt (15.11.2026, Fable-Agent für den Kern)
 

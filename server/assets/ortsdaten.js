@@ -186,15 +186,19 @@
         : (typeof m.started_at === 'string'
            ? Math.floor(Date.parse(m.started_at.replace(' ', 'T') + 'Z') / 1000) : NaN);
       const r = await EdHuelle2.einsatzLesen(ls, m.client_ref, b64(m.ort_huelle), beginnTs,
-                                             { versatz: sb.e.d || 0, stand: { o: sb.e.o || 0, k: sb.e.k || 0 } })
+                                             { versatz: sb.e.d || 0, stand: { o: sb.e.o || 0, k: sb.e.k || 0, f: sb.e.f || 0 } })
         .catch((e) => { e.art = 'einsatz'; throw e; });
       /* DER ZÄHLER STEIGT BEIM LESEN mit (wie `patLesen()`): Ein späteres
          Zurücklegen auf eine ältere Hülle fällt dann auf. Mit der Weiche aus
          schreibt das Buch nichts. */
-      if (sb.buch && r.absender !== null && r.inhalt.z > (sb.e.o || 0)) {
+      const schlussNeu = r.inhalt.schluss === true && !sb.e.f;
+      if (sb.buch && r.absender !== null && (r.inhalt.z > (sb.e.o || 0) || schlussNeu)) {
         sb.buch.fortschreiben(m.client_ref, (e) => {
           e.o = Math.max(e.o || 0, r.inhalt.z);
           if (r.absender === EdHuelle2.KONTO) { e.k = 1; }
+          /* `f` haftet (KA-06f, E-KA-76): einmal abgeschlossen, immer
+             gemerkt — eine spätere offene Hülle ist dann ein Befund. */
+          if (r.inhalt.schluss === true) { e.f = 1; }
         }).catch(() => {});
       }
       return r.inhalt;
@@ -558,7 +562,11 @@
         throw fehler('beginn', 'Zum Verschließen fehlt der Beginn des Einsatzes.');
       }
       const sb = await standbuchFuer(k, ref);
-      kopf = { z: (sb.e.o || 0) + 1, start: o.start, schluss: !!o.schluss };
+      /* DAS KONTO TRÄGT `schluss` WEITER (E-KA-76): War der Einsatz schon
+         abgeschlossen (`f`), bleibt er es, auch wenn das Formular nichts
+         davon weiß — sonst meldete der Browser seine eigene Hülle als
+         `offen-nach-schluss`. */
+      kopf = { z: (sb.e.o || 0) + 1, start: o.start, schluss: !!o.schluss || !!sb.e.f };
     }
     return zuB64(await EdHuelle2.einsatzSchreiben(k, ref, kopf, innen));
   }
