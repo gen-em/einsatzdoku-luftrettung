@@ -13735,6 +13735,15 @@ jede Adresse gleich). Ein Treffer ist deshalb kein Grund, die Liste zu kürzen,
 sondern einer, die Quelle zu wechseln. Nach dem Schreiben: Zahl und Datum in
 `docs/Lizenzen.md` 7b nachziehen.
 
+**Nach dem Tag `web-v25.0.0`: alle Geräte neu koppeln** (KA-12, F-KA-103,
+E-KA-83). Bis Web 24.x trug der Browser kein Gerät ins Gerätebuch ein
+(die Weiche stand aus), und ohne Eintrag sagt `pair.php` dem Gerät nie
+`huelle: 2` — es sendet Fassung 1 ohne Herkunftsnachweis, bis es neu
+gekoppelt ist. Einen Weg „Wert nachträglich bestätigen" gibt es bewusst
+nicht. Nach dem Neukoppeln zeigt das Handy „Herkunft gesichert", die
+Garmin ebenso; ein Handy, das `huelle: 2` kennt, aber keinen Schlüssel hat,
+sendet nicht und sagt „Herkunft fehlt — neu koppeln" (E-KA-80).
+
 **Update mit Wartungsmodus (seit Web 13.2.0 der Regelweg, S5 Paket W):**
 Zwischen dem ersten und dem letzten per FTPS hochgeladenen File stehen alte
 und neue Dateien nebeneinander, und zwischen dem Hochladen und der Migration

@@ -3966,6 +3966,16 @@ verbinden"**: Es koppelt wie bisher, aber was es sendet, trägt keinen
 Nachweis, dass es von deinem Gerät kommt. Aktualisiere die App und koppel
 dann neu.
 
+**Seit Web 25.0.0: Geräte, die vorher gekoppelt wurden, einmal neu
+koppeln.** Erst seit dieser Fassung trägt der Browser ein Gerät beim
+Koppeln in das Gerätebuch deines Kontos ein, und nur ein eingetragenes
+Gerät bekommt vom Server die Zusage, mit Herkunftsnachweis zu senden. Ein
+Gerät, das schon vorher gekoppelt war, steht dort nicht: Es sendet weiter
+ohne Nachweis, und der Browser kann seine Daten nicht seinem Gerät
+zuordnen. Trenne es deshalb einmal (Einstellungen → Geräte, oder am Gerät)
+und kopple es neu, mit Vergleichswert. Danach steht am Handy „Herkunft
+gesichert" und an der Uhr ebenso.
+
 **Fehlt der Schlüssel für Uhr und Handy, steht ganz oben eine Karte dazu**
 *(seit Web 23.7.0)*. Uhr und Handy verschließen GPS-Daten und Ortsangaben mit
 dem Schlüsselpaar deines Kontos. Es entsteht still nach der Anmeldung; klappt
