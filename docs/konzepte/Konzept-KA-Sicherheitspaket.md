@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | nichts; **als Nächstes KA-06f** (Zähler am Inhalt, Geräteschlüssel im Keystore, `minSdk` 31; E-KA-69 bis -73, neue Instanz, Fable-Agent für den Krypto-Teil); offen bei der BetreiberIn P-KA-16 (Handy am Gerät, nach `android-v0.24.0`); danach 06e (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51; dort auch F-KA-103 und -104). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-03a in PR #173; **KG-03b gemergt** (PR #181, 14.11.2026, Uhr 5.0.0, Vertrag 1a.7) |
+| In Arbeit | **KA-06f** auf Zweig `claude/amazing-keller-i2f04f` (neue Instanz, gesammelter PR am Ende, 15.11.2026): **06f-1 erledigt** (Zählerregel in der Referenz, Fable-Agent; Prüfprotokoll KA-06f-1), **06f-2 erledigt** (Geräteschlüssel im Keystore, `minSdk` 31, Android 0.25.0; Gerätetest im Emulator grün), **06f-3 erledigt** (Zähler am Inhalt im Puffer, Schema 3; dazu F-KA-117 behoben), **06f-4 erledigt** (Befund `offen-nach-schluss` und Standbuchfeld `f` im Browser, Web 24.19.0; E-KA-76), **als Nächstes** Prüfstand und gesammelter PR; Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät, nach `android-v0.24.0`); danach 06e (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51; dort auch F-KA-103 und -104). **Garmin-Anteile bei KG** (E-KA-21, Abschnitt 11): KG-03a in PR #173; **KG-03b gemergt** (PR #181, 14.11.2026, Uhr 5.0.0, Vertrag 1a.7) |
 | Erledigt | **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -124,6 +124,11 @@ Safari.
 | E-KA-70 | **Der Browser bekommt einen Rückweg bei einem zu hohen Zählerstand** (beantwortet Q-KA-15): Das Standbuch merkt sich zum Stand die SID des Absenders. Kleineres `z` vom **gleichen** Absender bleibt hart „zurückgelegt"; vom **anderen** Absender ein Hinweis „Uhrzeit von ‹Gerät› prüfen" mit beiden Zeiten und der bewussten Bestätigung „diesen Stand übernehmen", vermerkt im Standbuch. Kein stilles Kappen auf „jetzt + Toleranz". Kommt mit dem Umlegen der Weiche (Web 25.0.0), dort auch F-KA-112 | 15.11.2026, BetreiberIn |
 | E-KA-71 | **Der Geräteschlüssel des Handys liegt im Android Keystore** (beantwortet Q-KA-17, F-KA-85): nicht exportierbar, ECDH im Keystore (`PURPOSE_AGREE_KEY`), **ohne Entsperrpflicht** (das Senden im Hintergrund darf nicht an der Sperre hängen). Der Versuch einer Kopplung bekommt einen eigenen Keystore-Eintrag, der beim Übernehmen zum gültigen wird | 15.11.2026, BetreiberIn |
 | E-KA-72 | **`minSdk` des Handy-Moduls steigt von 26 auf 31** (Android 12) — es gibt dann nur einen Weg für den Geräteschlüssel, keinen Tresor-Rückfall. Handys vor Android 12 bekommen die App ab dieser Fassung nicht mehr. Das Uhr-Modul bleibt bei 30 (es hält keinen Schlüssel, E-S4-11) | 15.11.2026, BetreiberIn |
+| E-KA-74 | **Was „Inhalt geändert“ heißt, und das Standbuchfeld `f`** (Fable-Agent, 06f-1): Inhalt ist alles innen außer `z` (Phasen, Reanimation, `schluss`, `start`); daraus zwei Messsätze je Absender — gleiches `z` ⇒ innen byte-gleich, anderer Inhalt ⇒ größeres `z`. Für den Befund merkt sich das Standbuch je Einsatz `f` = 1, sobald eine Hülle mit `schluss: true` abgenommen ist; es haftet und fügt sich zusammen wie `zu` (offen: Q-KA-18, -19) | 15.11.2026, Umsetzung |
+| E-KA-75 | **Keystore-Ablage des Handys** (Fable-Agent, 06f-2): je Paar ein nie wiederverwendeter Alias `nadoku-geraet-<Zufall>`; welcher gilt und was der Versuch trägt, steht in `absender.bin` unter dem Tresorschlüssel, ohne privaten Schlüssel; gültig nur, was die Datei nennt und der Keystore mit demselben `spk` führt; Übernehmen schreibt erst die Datei, dann löscht es den alten Alias; Waisen räumt `beginnen`/`vergessen`, nicht der Start. `Z_s` wird je Hülle im Keystore gerechnet, nie abgelegt. Fällt der Keystore beim Senden aus, sendet der Lauf nichts (`Schluesselausfall`, Sender) | 15.11.2026, Umsetzung |
+| E-KA-76 | **`f` haftet, und das Konto trägt `schluss` weiter** (beantwortet Q-KA-18, -19): Das Standbuchfeld `f` wird nie gelöscht; verschließt der Browser einen Einsatz, zu dem `f` steht, setzt er `schluss: true` — der Befund `offen-nach-schluss` gilt damit für jeden Absender und meldet nur echte Rückfälle | 15.11.2026, BetreiberIn |
+| E-KA-77 | **Das Release-APK bleibt komprimiert** (`packaging.dex.useLegacyPackaging = true`, F-KA-118): rund 9,3 MB statt 24,8 MB über `server/apk/`; Preis ist die etwas längere Installation | 15.11.2026, BetreiberIn |
+| E-KA-78 | **Zähler am Handy** (Fable-Agent, 06f-3): Spalte `paket.zaehler` (Schema 3), vergeben in derselben Transaktion wie Anlegen, Phase und Abschluss eines offenen Einsatzes; kein Bytevergleich (die drei Stellen ändern den Inhalt immer); Schema-2-Pakete bekommen ihn beim ersten Verschließen; der Sender liest Paket, Zähler und Phasen aus einem Augenblick (`einsatzstand()`); Zählerdatei nicht schreibbar ⇒ Änderung steht ohne Zähler, Senden wartet (`Zaehlerausfall`) | 15.11.2026, Umsetzung |
 | E-KA-73 | **E-KA-69, -71 und -72 kommen als eigenes Paket KA-06f vor 06e**, in einer neuen Instanz; der Krypto-Teil (Keystore-Umsetzung von `Geraeteschluessel`, Zählerregel in Referenz und Handy) geht wieder an einen Fable-Agenten (wie E-KA-67), der Garmin-Teil von E-KA-69 an KG (E-KA-21) | 15.11.2026, BetreiberIn |
 | E-KA-66 | **Gerätebuch und „Wert stimmt“ gehen in zwei Schritten, nicht in einer Transaktion:** erst das Buch (über den vorhandenen Weg `geraetEintragen()`), dann der Vermerk am Server mit `im_buch`. Ein Gerät am Server ohne Buch-Eintrag sendete Daten, die nicht aufgehen; ein Buch-Eintrag ohne Gerät räumt der Abgleich der Geräteseite auf (`bis`). Weicht vom Entwurf 06d, Punkt 5 ab | 13.11.2026, Umsetzung |
 | E-KA-67 | **Den Anschluss des leeren Schlussstücks prüft der Browser beim Lesen (Regel `luecke`), nicht der Eingang** — der Eingang prüft Form (Fassung 2, `ts_von` = `ts_bis`). Eine Abfrage des letzten Stücks im Eingang kostete jede Anfrage und belegte nichts, was der Browser nicht ohnehin prüft. Weicht vom Entwurf 06d, Punkt 8 ab | 13.11.2026, Umsetzung |
@@ -724,6 +729,9 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 | Q-KA-14 | Welche Konten behält das Aufräumskript auf Staging? Die Liste steht nicht im Repositorium, weil dort keine echten Adressen stehen sollen | Umgebungsvariable `NADOKU_STAGING_BEHALTEN` (E-KA-65) |
 | Q-KA-15 | **Zähler, Zweifel (1) und (2):** Soll der Browser einen Rückweg „diesen Stand übernehmen" bekommen und das Standbuch zum Stand die SID des Absenders merken — dann „zurückgelegt" hart nur bei gleichem Absender, bei anderem ein Hinweis „Uhrzeit prüfen" mit Bestätigung? Mit 06e oder mit dem Umlegen der Weiche (Web 25.0.0)? (Empfehlung des Fable-Agenten, Prüfprotokoll KA-06c) | beantwortet: E-KA-70 |
 | Q-KA-16 | **Zähler, Zweifel (3):** `z` beim Verschließen lassen (E-KA-64, gebaut) — dann belegt es nicht die Frische des Inhalts, und ein Gerät, das nach der Übergabe einen alten, nicht abgeschlossenen Stand nachsendet, gewinnt —, oder `z` beim Ändern des Inhalts vergeben und mit dem Paket puffern (ändert E-KA-64, trifft auch die Uhr)? Kleinere Möglichkeit: Der Browser meldet eine Hülle mit `schluss: false` nach einer mit `schluss: true` als Befund | beantwortet: E-KA-69 |
+| Q-KA-18 | **Befund `offen-nach-schluss`, haftet `f`?** (06f-1, Zweifel 1 des Agenten) So gebaut: `f` bleibt gesetzt, der Befund steht bei jedem Lesen, solange die offene Hülle die gespeicherte ist. Darf ein Gerät einen abgeschlossenen Einsatz legitim wieder öffnen, wäre das ein Dauerhinweis; Alternative: `f` an `o` binden, Befund nur einmal | beantwortet: E-KA-76 |
+| Q-KA-19 | **Befund auch an Hüllen des Kontos?** (06f-1, Zweifel 2) Die Referenz meldet ihn gleich von welchem Absender. Verschließt der Browser selbst (Formular, Wartungslauf) nach einem Abschluss mit `schluss: false`, meldet er sich selbst — dann das Konto ausnehmen oder `schluss` dort weitertragen | beantwortet: E-KA-76 |
+| Q-KA-20 | **Handy mit `huelle: 2`, aber ohne Geräteschlüssel** (06f-2, Zweifel 2 des Agenten): nach dem Update von 0.24.0 (alte Ablage gelöscht) oder wenn der Keystore keinen Eintrag liefert, sendet das Handy wie bisher Fassung 1, bis es neu koppelt. Soll es stattdessen gar nicht senden? Bis zum Stichtag aus 06e nimmt der Server Fassung 1 an | mit 06e |
 | Q-KA-17 | **F-KA-85:** Bleibt der Geräteschlüssel des Handys im Tresor (gebaut, alle API-Stufen gleich, kein Hardware-Schutz), oder ab API 31 als nicht exportierbarer Keystore-Schlüssel mit `PURPOSE_AGREE_KEY`, darunter der Tresor? Aufwand nach dem Agenten 1 bis 1½ Pakete und Gerätetests unter und ab API 31 | beantwortet: E-KA-71, -72 |
 
 ---
@@ -920,6 +928,115 @@ des eigenen Kontos.
 **Fassung 2 vorher gezählt** (Konzept, Punkt 7): örtlich 6 Pakete, alle
 Fassung 3; 3 Begleitdateien, alle versiegelt. Staging und Produktiv nicht
 gezählt (E-KA-31).
+
+### KA-06f-4 Browser: Befund `offen-nach-schluss` (15.11.2026, Hauptinstanz)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) Dass das Konto
+`schluss` weiterträgt (`EdOrtsdaten.einsatzVerschliessen()`) und das
+Lesen `f` ins Standbuch schreibt (`EdOrtsdaten.einsatz()`), misst keine
+Probe einzeln — beides liegt hinter der Weiche, und die Browserprobe ruft
+den Kern, nicht `EdOrtsdaten`. Gelesen, nicht gefahren; der Prüfstand
+fährt die Bedienproben der Weiche. (2) Das Zusammenführen von `f` bei
+einem 409-Konflikt (`hoeher()`) ist nicht gemessen; die neue Prüfung deckt
+Schreiben, Reisen und Weiterschreiben durch einen dritten Browser.
+(3) Angezeigt wird der Befund nirgends — das kommt mit E-KA-70.
+(4) Nur Chromium; Firefox und WebKit fährt der Prüfstand.
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Browserprobe `tools/proben/huelle/probe.sh` (Chromium) | **438 Prüfungen, 0 Abweichungen, 0 ausgenommen** (39 + 188 Weiche aus + 211 an; vorher 427 mit 10 ausgenommen); Server 22 / 0 | Befund nie geliefert: **4** rot (zwei Fälle × zwei Weichenstellungen); `f` aus `FELDER` genommen: **1** rot (die neue Prüfung) — beide zurückgenommen | `einsatzLesen()` liefert den Befund wie `einsatz_befunde()` der Referenz; `f` steht nach `k`, reist mit und bleibt |
+
+### KA-06f-3 Handy: Zähler am Inhalt (15.11.2026, Fable-Agent für den Kern)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) Kein echtes Gerät und
+kein Emulatorlauf für 06f-3: Der Puffer ist SQLite unter Robolectric, das
+genügt für Schema und Regeln; eine Migration auf einem Handy mit echtem
+Bestand aus 0.24.0 zeigt erst P-KA-16. (2) Ein Prozesstod mitten im
+`fsync` der Zählerdatei ist nicht gespielt, nur als zurückgerollte
+Transaktion und neu geöffneter Puffer. (3) Das Rennen aus Backlog Nr. 566
+ist gelesen, nicht gemessen. (4) Der Container startete zweimal neu; der
+Agent war vor dem ersten Neustart fertig, sein Stand lag unversehrt im
+Arbeitsbaum.
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| `./gradlew --offline build`, Hauptinstanz nach F-KA-117 | BUILD SUCCESSFUL in 5 min 12 s; Lint 0 Fehler, Handy 6 Warnungen (Versionshinweise); Handy **389** Prüffälle je Bauart (15 übersprungen), Uhr 75, **0** rot | der Agent: 388 / 0 vor F-KA-117; zehn eingebaute Fehler (z je Anfrage neu, Zähler nicht gespeichert, Phase oder Abschluss ohne neues z, Einsatz ohne z, Migration verliert Pakete oder Spalte, zweites Schließen kostet z, Zählerausfall behält alten Zähler, Gerätezähler nicht abgelegt) — je 1 bis 17 Fälle rot | Schema 3, Regel E-KA-69 am Handy, Migration |
+| `EinsatzzaehlerTest` (neu, 10) gegen den Vektor `zaehler` | alle zwölf Schritte gespielt; 34 geöffnete Hüllen, 61 Paare mit gleichem `z` alle innen byte-gleich, 500 Paare mit anderem Inhalt alle mit anderem `z` | siehe oben | die beiden Messsätze aus E-KA-74 |
+| `SenderTest.einAbschlussOhneNeuenPunktGehtHinaus` (F-KA-117) | grün | ohne `metadaten_bestaetigt = 0` in `paketSchliessen()`: rot, einziger von 35 | der Abschluss geht hinaus |
+| `:handy:assembleRelease` nach E-KA-77 | 9 251 914 B, `classes*.dex` `Defl:N` | vorher 24 816 714 B, `Stored` | F-KA-118 |
+
+**Zweifel des Agenten:** Anlegen und erste Phase kosten zwei `z` (T, T+1)
+— regelkonform. Jede Inhaltsänderung schreibt die Zählerdatei mit `fsync`
+in der Transaktion, nur bei Phasen, nie bei Punkten. An `Z_MAX` bleibt der
+Zähler stehen; dort gilt „anderer Inhalt ⇒ größeres z“ nicht mehr (war
+schon so). Während seines Baus beendete der Kernel einmal einen Prozess
+wegen Speichermangels; der Bau lief durch.
+
+### KA-06f-2 Handy: Geräteschlüssel im Keystore, `minSdk` 31 (15.11.2026, Fable-Agent für den Kern)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) **Kein echtes Gerät:**
+Der Gerätetest lief im Emulator (API 37, `google_apis` x86_64, ohne KVM);
+der Keystore meldet dort `securityLevel=0` (Software). Ob ein Handy den
+Schlüssel im TEE oder in einer StrongBox hält, zeigt nur ein Gerät
+(P-KA-16). (2) Ein Sendelauf hinter der Bildschirmsperre und ein
+Prozesstod mitten im Schreiben der Datei sind nicht gemessen; der
+Prozesstod zwischen zwei Schritten nur mit der Ablage im Speicher.
+(3) Ein Handy unter Android 12, das die Installation ablehnt, ist nicht
+gefahren (P-KA-16). (4) Gradle-Prüfläufe für 06f-2 allein hat nur der
+Agent gefahren; die Hauptinstanz fährt den vollen Bau mit 06f-3.
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| `./gradlew build :handy:assembleDebugAndroidTest` (Agent) | BUILD SUCCESSFUL in 11 min 16 s; Lint 0 Fehler, Handy 6 Warnungen (alle Versionshinweise in `libs.versions.toml`); Handy 374 Prüffälle je Bauart, 15 übersprungen, 0 rot | zehn eingebaute Fehler (Versuch ohne Festlegung gültig, alter Schlüssel vor dem Schreiben gelöscht, `Z_s` mit falschem Schlüssel, Griff ohne `spk`-Vergleich, `geraet.bin.neu` bleibt, Sender fängt den Ausfall nicht, `vergessen` lässt Schlüssel liegen, keine Waisenräumung, zweite Antwort gilt, Verwaltung vor dem Schlüssel) — jeder rot (1 bis 14 Fälle), zurückgenommen | Regeln, Prozesstod an zehn Stellen, Byte-Gleichheit gegen `vektoren-2.json` über eine Software-Ablage |
+| Gerätetest im Emulator, Hauptinstanz (`am instrument`, API 37) | `GeraeteschluesselGeraetTest` **6 / 6**, `GeraetTresorTest` **6 / 6**, `GeraetehuelleGeraetTest` **2 / 2** | — | Eintrag im AndroidKeyStore, nicht exportierbar, nur `PURPOSE_AGREE_KEY`, keine Nutzerauthentisierung, `Z_s` byte-gleich zur Software-Rechnung, Hülle geht mit dem Kontoschlüssel der Vektoren auf; Ablauf mit echten Aliassen |
+
+**Zweifel des Agenten:** (1) Auf Geräten mit älterem Keymaster hält
+keystore2 ECDH-Schlüssel in Software — nicht exportierbar, aber nicht im
+TEE; steht im Bedrohungsmodell. (2) Q-KA-20. (3) Scheitert das Löschen
+eines Alias, bleibt ein Waise bis zum nächsten `beginnen`/`vergessen`.
+(4) Die Datei hängt an `renameTo` wie der Tresor. Der Agent hat über den
+Auftrag hinaus `Sender.kt` angefasst (E-KA-75) — übernommen.
+
+### KA-06f-1 Zählerregel in der Referenz (15.11.2026, Fable-Agent, E-KA-73)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) Die Browserprobe lief nur
+in Chromium (156.0.8078.4); Firefox und WebKit fährt der Prüfstand am Ende
+von KA-06f. (2) Der Befund `offen-nach-schluss` ist in der Referenz
+gemessen, im Browser nicht — `EdHuelle2.einsatzLesen()` liefert ihn noch
+nicht; die Probe zählt die 10 Prüfungen dafür als „ausgenommen“ (06f-4).
+(3) Die Android-Prüffälle, die `vektoren-2.json` lesen, laufen erst mit
+06f-2/-3.
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| `referenz.py pruefen` nach `erzeugen` | Fassung 1 6 / 8; Fassung 2 **32 geöffnet, 40 Gegenlagen** (vorher 26/39), 0 Abweichungen | von der Hauptinstanz nachgefahren, gleiche Zahlen; zweites `erzeugen` ändert keine Datei | Regel und Vektoren stimmen überein |
+| `referenz.py --selbstprobe` | **28 / 0** (vorher 19); neun neue Fehlerarten, je mit benannter Meldung | nachgefahren | die neuen Prüfungen schlagen an |
+| `git diff --numstat` | `vektoren-2.json` 222 / **0**, `vektoren.json` unverändert; die vier `.mc`-Dateien byte-gleich | nachgefahren | kein bestehender Vektor gekippt, Uhr unberührt |
+| Browserprobe `probe.sh` (Chromium) | **427 Prüfungen, 0 Abweichungen, 10 ausgenommen** (39 + 183 Weiche aus + 205 an; vorher 415); Server 22 / 0 | einzeln von der Hauptinstanz gefahren: dieselben Zahlen, rc 0 | `server/assets/` liest die neuen Fälle wie die Referenz |
+
+**Neue Fälle unter `einsaetze`** (Übergabe wie in 06c: Handy ändert bei
+T0+1320, Uhr schließt bei T0+1500 ab): `inhalt-alter-stand-nachgesendet` →
+`zurueckgelegt` (der Unterschied zu E-KA-64); `inhalt-gleich-neu-verschlossen`
+→ angenommen, Stand bleibt; `inhalt-geaendert-nach-uebergabe` → angenommen;
+`inhalt-offen-nach-schluss` und `inhalt-gleiches-z-offen-nach-schluss` →
+angenommen mit Befund (der zweite fängt F-KA-112 halb);
+`inhalt-offen-ohne-schluss-im-stand` → ohne Befund. Dazu der Schlüssel
+`zaehler`: zwölf Schritte eines Geräts mit drei Einsätzen — der Vektor für
+Handy (06f-3) und KG.
+
+**Was der Browser für 06f-4 braucht** (Bericht des Agenten): Feld `f` in
+`standbuch.js` (`FELDER` p, o, k, f, s, d, x; Zusammenführen „einer hat
+es“), beim Abnehmen nach `stand_nach_abnahme()`, `einsatzLesen()` gibt
+`befund: []` zurück; dann misst die Probe die 10 ausgenommenen Prüfungen
+von selbst. `vektoren-inhalt.json` trägt `f` noch nicht — das Blattformat
+braucht dafür in 06f-4 einen Fall in `referenz_inhalt.py`.
+
+**Zweifel des Agenten, die offen bleiben:** Q-KA-18 und -19 (vor 06f-4);
+„Inhalt geändert“ besser per Bytevergleich vor dem Vergeben (Vorgabe für
+06f-3 und KG); F-KA-112 bleibt bei zwei offenen oder zwei abgeschlossenen
+Ständen mit gleichem `z` bestehen (erst E-KA-70 schließt das); F-KA-116.
+Die LIESMICH nannte für `referenz_inhalt.py` 18 Fälle, gemessen sind 21 —
+auch vor dieser Änderung; berichtigt.
 
 ### KA-06c Handy: Kopplung mit Vergleichswert und Fassung 2 (14.11.2026)
 
@@ -1336,6 +1453,10 @@ Klartextfelder (`final`, Strecke, Besatzung, Tagesnotizen, Phasenzeiten bis
 | F-KA-112 | **Gleiches `z` wird angenommen** (`z ≥ o`): Zwei Geräte, die in derselben Sekunde verschließen, sind gegeneinander austauschbar. Selten und klein, stand aber nirgends (Fable-Agent) | benannt; gehört zu Q-KA-15 |
 | F-KA-113 | **Das Handy schreibt kleine Koordinaten als `1.0E-5`** (org.json), die Referenz als `1e-05`. Beides ist gültiges JSON, die Referenz liest es; mit dem Browser nicht gemessen (Fable-Agent) | benannt; Gegenprobe im Browser mit dem nächsten Paket, das Fassung 2 vom Handy öffnet |
 | F-KA-114 | **Der Prüfstand wählte die Kopplungsprobe bei geänderter `server/kopplung_lib.php` nicht aus** — das Muster `geraete` in `tools/pruefstand/pruefablauf.json` nannte `pair.php` und `geraete*.php`, nicht die Bibliothek und nicht die Probe selbst; in `klein` lief sie deshalb für KA-06c nicht (in `neben` und `haupt` über das Auffangmuster schon) | beide Pfade ins Muster `geraete`; KA-06c hatte die Probe einzeln gefahren (105/0, Fall 48 gegen 24.18.0 rot) |
+| F-KA-115 | **E-KA-66 und E-KA-67 sind doppelt vergeben** — je einmal von der BetreiberIn (14.11.2026: Mockup M-KA-02, Fable-Agent für 06c) und von der Umsetzung (13.11.2026: Gerätebuch in zwei Schritten, Anschluss des Schlussstücks). Gefunden beim Vergeben von E-KA-74 | nicht umnummeriert (Verweise in Commits und PRs); wer zitiert, nennt Datum oder Inhalt dazu |
+| F-KA-116 | **Die Selbstprobe der Fassung 2 ist bei den alten Fällen schwächer, als sie aussieht:** `pruefen2()` vergleicht zuerst die ganze Datei mit dem Neubau, jede veränderte Kopie ist schon dadurch rot — die Fälle „Fehler 2“ sind damit trivial erfüllt (Fable-Agent, 06f-1) | die neun neuen Fälle verlangen die benannte Meldung; die alten bleiben, wie sie sind (Backlog-Kandidat) |
+| F-KA-117 | **Ein Abschluss ohne neuen Punkt ging am Handy nie an den Server** (älter als KA-06f, gefunden vom Fable-Agenten in 06f-3): `paketSchliessen()` ließ `metadaten_bestaetigt` stehen; war der Teil-Upload bestätigt, hatte das Paket laut `hatArbeit()` keine Arbeit — `final`, Endzeit, Strecke und die Hülle mit SCHLUSS blieben im Handy, ohne als Rückstand zu zählen | behoben: der Abschluss setzt die Bestätigung zurück; Prüffall `einAbschlussOhneNeuenPunktGehtHinaus` (ohne die Zeile rot); verwandtes Rennen bei der Bestätigung: Backlog Nr. 566 |
+| F-KA-118 | **Mit `minSdk` 31 wuchs das Release-APK von 9,3 auf 24,8 MB** — das Gradle-Plugin legt ab `minSdk` 28 die Dex-Dateien unkomprimiert ab | E-KA-77: komprimiert, 9 251 914 B |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
 | F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
 | F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |
@@ -1364,6 +1485,7 @@ Stand steht dort.
 | KG-02 | **Messung für KA-06a:** Hält `Toybox.Cryptography` auf den Zielgeräten ein statisches P-256-Paar dauerhaft (Speicher, Neustart, Update der App)? Was kostet dort eine ECDSA-Signatur (Zeit, Speicher), und gibt es sie überhaupt? Ergebnis als Befund mit Zahlen für die Entwurfsrunde | — | nichts | Opus |
 | KG-03 | Garmin-Teil von KA-06c: Geräteschlüssel, Gerätehülle Fassung 2, Kopplung mit Vergleichswert — byte-gleich zur Referenz aus KA-06a | F-KA-04, -12, -17 (Garmin) | KA-06a fertig und KA-M5 freigegeben | **Fable** für den Krypto-Kern — vorher pausieren |
 | KG-04 | Garmin-Teil von KA-M6: Übergabe einer echten Uhr im laufenden Dienst, Kopplung mit Vergleichswert — als Prüfliste für die BetreiberIn | — | KG-01, KG-03 | — |
+| KG-05 | **Garmin-Teil von KA-06f (E-KA-69, -74):** `z` am Inhalt — vergeben bei einer Änderung des Inhalts (alles innen außer `z`, vorher Bytevergleich), mit dem Paket abgelegt, ein Gerätezähler über Neustart und Trennen; gemessen an `vektoren-2.json`, Schlüssel `zaehler` und Fälle `inhalt-…` (Commit `466b963`). Die Sitzung KG war am 15.11.2026 nicht mehr aktiv (`session_inactive`); der Auftrag steht deshalb hier | — | 06f-1 (gepusht) | **Fable** für den Krypto-Kern |
 
 **Regeln der Zusammenarbeit:**
 

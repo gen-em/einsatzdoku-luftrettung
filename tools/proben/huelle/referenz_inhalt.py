@@ -72,6 +72,11 @@ damit der nächste Browser nicht bei null anfängt.
     Eintrag (jedes Feld darf fehlen):
       p   Zähler des Patientenblocks
       o   Zähler der zuletzt abgenommenen Einsatzhülle;  k: 1 = sie kam vom Konto
+      f   1 = zu diesem Einsatz ist schon eine Einsatzhülle mit `schluss: true`
+          abgenommen worden — haftet, wird nie gelöscht (E-KA-69, Befund
+          `offen-nach-schluss`; Regel und Vektoren in `referenz.py`). Die
+          Vektoren dieser Datei tragen es nicht; der Browser führt es ab
+          KA-06f-4.
       s   [gedeckt bis, Stufe] der abgenommenen Spur
       d   Versatz in Sekunden (Umdatierung des Diensttags): Klartextzeit −
           Zeit in der Hülle

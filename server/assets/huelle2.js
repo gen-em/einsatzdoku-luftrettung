@@ -394,8 +394,14 @@ const EdHuelle2 = (() => {
    * DIE EINSATZHÜLLE ÖFFNEN und gegen Klartextbeginn und Standbuch halten.
    * @param startedTs  der Klartextbeginn des Einsatzes
    * @param o  `versatz` und `stand` — der Eintrag des Standbuchs: `o` (Zähler
-   *           der zuletzt abgenommenen Hülle), `k` (1: sie kam vom Konto)
-   * @returns {Promise<{inhalt: object, absender: string|null}>}
+   *           der zuletzt abgenommenen Hülle), `k` (1: sie kam vom Konto),
+   *           `f` (1: eine mit `schluss: true` war schon abgenommen)
+   * @returns {Promise<{inhalt: object, absender: string|null, befund: string[]}>}
+   *
+   * `befund` weist NICHT ab (KA-06f, E-KA-69): `offen-nach-schluss` heißt,
+   * die angenommene Hülle trägt `schluss: false`, obwohl zu diesem Einsatz
+   * schon eine abgeschlossene abgenommen war — gleich von welchem Absender
+   * (E-KA-76). Referenz: `einsatz_befunde()` in `referenz.py`.
    */
   async function einsatzLesen(ls, ref, huelle, startedTs, o) {
     o = o || {};
@@ -406,7 +412,7 @@ const EdHuelle2 = (() => {
     catch (e) { throw fehler('innen'); }
     if (auf.absender === null) {
       if (stand && stand.o) { throw fehler('zurueckgelegt'); }   // Fassung 1 nach einer abgenommenen Fassung 2
-      return { inhalt: d, absender: null };
+      return { inhalt: d, absender: null, befund: [] };
     }
     if (d === null || typeof d !== 'object' || Array.isArray(d) || d.fassung !== 2
         || !Number.isSafeInteger(d.z) || d.z < 1 || !Number.isSafeInteger(d.start)) {
@@ -418,8 +424,11 @@ const EdHuelle2 = (() => {
     if (stand && stand.o && (d.z < stand.o || (stand.k && auf.absender !== KONTO))) {
       throw fehler('zurueckgelegt');
     }
-    return { inhalt: d, absender: auf.absender };
+    const befund = (stand && stand.f && d.schluss !== true) ? [OFFEN_NACH_SCHLUSS] : [];
+    return { inhalt: d, absender: auf.absender, befund: befund };
   }
+
+  const OFFEN_NACH_SCHLUSS = 'offen-nach-schluss';
 
   /* ---- Schreiben für das Konto — hinter der Weiche ----------------------
    *

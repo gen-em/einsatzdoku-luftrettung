@@ -23,6 +23,8 @@
  *     Eintrag (jedes Feld darf fehlen):
  *       p  Zähler des Patientenblocks
  *       o  Zähler der zuletzt abgenommenen Einsatzhülle;  k: 1 = vom Konto
+ *       f  1 = eine Einsatzhülle mit `schluss: true` war schon abgenommen —
+ *          haftet, wird nie gelöscht (KA-06f, E-KA-69, -76)
  *       s  [gedeckt bis, Stufe] der abgenommenen Spur
  *       d  Versatz in Sekunden (Umdatierung): Klartextzeit − Zeit in der Hülle
  *       x  Löschvermerke [[von, bis], …] in der Zeit der Hülle
@@ -121,7 +123,7 @@ const EdStandbuch = (() => {
 
   /* Ein Eintrag in fester Feldfolge und ohne leere Felder: Zwei Browser, die
    * dasselbe wissen, schreiben dieselben Bytes. */
-  const FELDER = ['p', 'o', 'k', 's', 'd', 'x'];
+  const FELDER = ['p', 'o', 'k', 'f', 's', 'd', 'x'];
   function eintragOrdnen(e) {
     const aus = {};
     for (const f of FELDER) {
@@ -434,6 +436,7 @@ const EdStandbuch = (() => {
         if ((q.p || 0) > (z.p || 0)) { neu.p = q.p; }
         if ((q.o || 0) > (z.o || 0)) { neu.o = q.o; neu.k = q.k; }
         else if ((q.o || 0) === (z.o || 0) && q.k && !z.k) { neu.k = q.k; }
+        if (q.f && !z.f) { neu.f = 1; }                 // haftet: einer hat es (wie `zu`)
         if (q.s && (!z.s || q.s[0] > z.s[0] || q.s[1] > z.s[1])) {
           neu.s = z.s ? [Math.max(q.s[0], z.s[0]), Math.max(q.s[1], z.s[1])] : q.s;
         }

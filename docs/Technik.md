@@ -10350,7 +10350,15 @@ Datensatzes (`sb_blaetter_schreiben()`) und prüft, dass jeder Block steht,
 dessen Zähler ein Blatt hebt — sonst nichts und 409 `{error: 'blatt',
 grund: 'version' | 'uebersprungen', …}`. Eine Wiederherstellung liest ohne
 Standbuch (sie ist mit Absicht ein älterer Stand) und schreibt mit neuem
-Zähler. Die Formprüfung (`validate_lib.php`) nimmt `edk2:` (Patientenblock
+Zähler. **Seit Web 24.19.0 (KA-06f, E-KA-69, -76)** merkt sich das Standbuch
+je Einsatz zusätzlich `f` = „eine Einsatzhülle mit `schluss: true` war schon
+abgenommen" (nach `k`, haftet, beim Zusammenführen „einer hat es");
+`EdHuelle2.einsatzLesen()` liefert daneben `befund: ['offen-nach-schluss']`,
+wenn eine angenommene Hülle danach `schluss: false` trägt — kein Abweisen.
+Das Konto verschließt einen solchen Einsatz selbst immer mit `schluss: true`
+(`EdOrtsdaten.einsatzVerschliessen()`). Angezeigt wird der Befund noch nicht:
+Die Anzeige der Befunde kommt mit dem Umlegen der Weiche (E-KA-70).
+Die Formprüfung (`validate_lib.php`) nimmt `edk2:` (Patientenblock
 mindestens Klasse 512), `edka2:` (nur Passworthülle) und die Gerätehülle der
 Fassung 2 an. Das Ziel der Rundenzahl bleibt 600 000, bis die Weiche umliegt
 (PHP rechnet Ableitung 2 schon: `kdf_haelfte()`).
@@ -10862,8 +10870,9 @@ Nr. 142, Krypto-Review AN-1). `Serveradresse` bildet im ausgelieferten Stand
 für jede Adresse `https` — die Ausnahme für `localhost` und IPv4-Adressen,
 die der Prüfstand braucht, hängt an `BuildConfig.DEBUG` —, und
 `handy/src/release/res/xml/netzsicherheit.xml` verbietet Klartext auf
-Systemebene. Das zweite braucht es wegen `minSdk` 26: Androids eigenes
-Verbot gilt erst ab API 28. Betroffen war nur ein Selbsthoster, der sein APK
+Systemebene. Das zweite brauchte es wegen `minSdk` 26 (bis Android
+0.24.x): Androids eigenes Verbot gilt erst ab API 28; seit 0.25.0 ist
+`minSdk` 31, die Datei bleibt als zweiter Boden. Betroffen war nur ein Selbsthoster, der sein APK
 mit einer IP-Adresse baut; der Standardbau mit fester Domain nie. **Kein
 Certificate Pinning**, mit Begründung (Nr. 143): `android/LIESMICH.md`,
 Abschnitt „Warum kein Certificate Pinning".
@@ -11198,18 +11207,42 @@ Gerätepaar P-256 und Zufallszahl N_g) neben einem gültigen Paar einer
 früheren Kopplung, legt bei `status beansprucht` das **erste** Paar aus
 Kontoschlüssel und `n_b` fest (ein anderes ist ein Abbruch) und gibt erst
 dann N_g heraus; `uebernehmen()` macht den Versuch nach `huelle: 2` zum
-gültigen Paar, `vergessen()` beim Trennen löscht es. Abgelegt ist alles in
-`geraet.bin` unter demselben Keystore-Schlüssel wie der Tresor, auf allen
-API-Stufen gleich — zum Rechnen liegt der private Teil im Speicher des
-Prozesses, ein Schutz durch die Hardware ist das nicht (F-KA-85; der
-Keystore rechnet ECDH erst ab API 31). `kopplung/Kopplungswert.kt` rechnet
+gültigen Paar, `vergessen()` beim Trennen löscht es. **Seit Android 0.25.0
+liegt jedes Gerätepaar im Android Keystore** (KA-06f, E-KA-71, -72;
+`minSdk` 31, `tresor/KeystoreSchluesselablage.kt`): EC P-256, nur
+`PURPOSE_AGREE_KEY`, nicht exportierbar, ohne Entsperrpflicht, je Paar ein
+nie wiederverwendeter Alias `nadoku-geraet-<Zufall>`; `Z_s` rechnet der
+Keystore je Hülle (`Absender.vereinbaren()`) und wird nirgends abgelegt.
+Welcher Alias gilt und was der laufende Versuch trägt (N_g, Kontoschlüssel,
+N_b — kein privater Schlüssel), steht in `absender.bin` unter dem
+Keystore-Schlüssel des Tresors (`DateiGeraeteschluessel`); gültig ist nur,
+was diese Datei nennt und der Keystore mit demselben `spk` führt.
+Übernehmen schreibt erst die Datei, dann löscht es den alten Alias; Waisen
+räumt das nächste `beginnen` bzw. `vergessen`. Fällt der Keystore beim
+Senden aus, sendet der Lauf nichts und versucht es später
+(`Schluesselausfall`). Bis 0.24.x lag das Paar samt privatem Teil in
+`geraet.bin` (F-KA-85); `AlteGeraeteablage.raeumen()` löscht die Datei bei
+jedem Start, ein so gekoppeltes Handy koppelt neu. Die Regeln prüft
+`GeraeteschluesselTest` mit einer Ablage im Speicher (Robolectric hat keinen
+Keystore), die Keystore-Umsetzung `GeraeteschluesselGeraetTest` im Emulator
+oder am Gerät. `kopplung/Kopplungswert.kt` rechnet
 Zusage und Vergleichswert, `Kopplungsdienst` legt bei jeder Abfrage im
 Zustand `beansprucht` offen (wiederholbar) und meldet `Vergleich`, `202
 wartet` als `WartetBrowser`, `abgelehnt` als eigene Abweisung. Der Tresor
 merkt sich `huelle: 2` (Feld `h`); nur dann verschließt `Sendekoerper` mit
 `Geraetehuelle.einsatz2()`/`spurstueck2()`: Absender ist das Gerätepaar, die
-Einsatzhülle trägt den Zähler aus `senden/Huellenzaehler.kt` (Unix-Sekunde,
-streng steigend, Datei `huellenzaehler`, überdauert das Trennen, E-KA-64),
+Einsatzhülle trägt den Zähler `z` ihres Pakets. **Seit Android 0.25.0
+gehört `z` zum Inhalt** (KA-06f, E-KA-69): Der Puffer (Schema 3, Spalte
+`paket.zaehler`) vergibt ihn in derselben Transaktion wie die Änderung —
+beim Anlegen eines Einsatzes, bei jeder Phase und beim Abschluss —, aus dem
+Gerätezähler `senden/Huellenzaehler.kt` (Unix-Sekunde, streng steigend,
+Datei `huellenzaehler`, überdauert das Trennen); jede Anfrage desselben
+unveränderten Pakets trägt dasselbe `z`, und `Puffer.einsatzstand()` liest
+Paket, Zähler und Phasen aus einem Augenblick. Ein Paket aus Schema 2
+bekommt seinen Zähler beim ersten Verschließen; lässt sich die Zählerdatei
+nicht schreiben, sendet der Lauf nichts (`Zaehlerausfall`). Bis 0.24.x
+stieg `z` mit jeder Anfrage (E-KA-64), und ein nach einer Übergabe
+nachgesendeter alter Stand gewann.
 SCHLUSS steht am letzten Stück eines abgeschlossenen Pakets, und ist dann
 kein Punkt mehr offen, geht `schlussstueck2()` mit null Punkten. Den Merker
 LÜCKE setzt das Handy nicht — die Referenz lässt ihn nur dem Konto.

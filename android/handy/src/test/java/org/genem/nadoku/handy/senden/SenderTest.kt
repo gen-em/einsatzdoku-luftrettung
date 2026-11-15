@@ -73,7 +73,6 @@ class SenderTest {
     private fun sender() = Sender(
         puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor,
         basis = server.basis,
-        phasenLeser = { puffer.phasen(it) },
         jetzt = { uhrzeit },
     )
 
@@ -322,6 +321,38 @@ class SenderTest {
         puffer.punktAnhaengen(id, p)
         puffer.paketSchliessen(id, "2026-07-16T06:00:00Z", null, null)
         return id
+    }
+
+    /**
+     * F-KA-117: Ein Paket, dessen Punkte alle bestätigt sind, wird ohne neuen
+     * Punkt abgeschlossen. Der Abschluss ist selbst Arbeit — `final` und
+     * `ended_at` müssen hinaus, und erst danach ist das Paket fertig. Bis
+     * Android 0.24.x blieb es liegen, ohne Anfrage und ohne Rückstand.
+     */
+    @Test fun einAbschlussOhneNeuenPunktGehtHinaus() {
+        server.status = 200
+        server.antwortAus = { koerper ->
+            val o = org.json.JSONObject(koerper)
+            val bis = o.optJSONObject("track")?.let { it.getLong("seq_from") + it.getInt("punkte") } ?: 1L
+            """{"ok":true,"id":1,"stored_points":0,"next_seq":$bis}"""
+        }
+        val id = offenesSegment("ab-1-a")
+        puffer.punktAnhaengen(id, Stroeme.erzeuge(Stroeme.REISEFLUG).first())
+        sender().sendeAlles()
+        assertEquals("der Teil-Upload ging hinaus", 1, server.anfragen.size)
+        assertFalse(puffer.hatArbeit(puffer.paket(id)!!))
+
+        puffer.paketSchliessen(id, "2026-07-16T08:00:00Z", null, null)
+        assertTrue("der Abschluss ist Arbeit", puffer.hatArbeit(puffer.paket(id)!!))
+        val bericht = sender().sendeAlles()
+
+        assertEquals("der Abschluss ging hinaus", 2, server.anfragen.size)
+        val k = server.letzterKoerper()
+        assertTrue(k.getBoolean("final"))
+        assertEquals("2026-07-16T08:00:00Z", k.getString("ended_at"))
+        assertFalse("ohne Punkt kein Stück", k.has("track"))
+        assertEquals(1, bericht.fertigePakete)
+        assertNull("bestätigt und entsorgt", puffer.paket(id))
     }
 
     /** Gebunden an DIESES Konto: Die Bindung fällt, der Rückstand geht hinaus. */
@@ -812,6 +843,91 @@ class SenderTest {
         assertNotNull("26 Tage: bleibt", puffer.paket(jung))
         assertEquals(1, puffer.abgewiesen())
         assertTrue("Abgewiesenes wird nach wie vor nicht gesendet", server.anfragen.isEmpty())
+    }
+
+    // ---- Fassung 2 über den Geräteschlüssel (seit KA-06f) -------------------
+
+    /** Ein abgeschlossenes Ruhesegment mit ein paar Punkten und eine Kopplung, die Fassung 2 verlangt. */
+    private fun fassung2Vorbereiten(): org.genem.nadoku.handy.tresor.SpeicherGeraeteschluessel {
+        tresor.speichern(Zugangsdaten(
+            "dev-pruef", "geheim-pruef", java.util.Base64.getEncoder().encodeToString(Huellenoeffner.konto), huelle2 = true,
+        ))
+        val gs = org.genem.nadoku.handy.tresor.SpeicherGeraeteschluessel()
+        gs.beginnen()
+        gs.festlegen(Huellenoeffner.konto, ByteArray(16))
+        assertTrue(gs.uebernehmen())
+        val k = klammer()
+        k.beginnen(Modus.NUR_AUFZEICHNEN)
+        for (p in Stroeme.erzeuge(Stroeme.DIENST_12H).take(40)) k.positionsfund(p)
+        uhrzeit = Instant.parse("2026-07-16T17:00:00Z")
+        k.beenden()
+        return gs
+    }
+
+    private fun sender2(gs: org.genem.nadoku.handy.tresor.Geraeteschluessel) = Sender(
+        puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor, basis = server.basis,
+        jetzt = { uhrzeit }, geraeteschluessel = gs,
+    )
+
+    /**
+     * Der Sender verschließt über den Absender aus der Schlüsselablage: Die
+     * Hülle trägt Fassung 2 und die Kennung des gültigen Schlüssels und geht
+     * mit dem Kontoschlüssel auf.
+     */
+    @Test fun fassung2UeberDenGeraeteschluessel() {
+        antworteVollstaendig()
+        val gs = fassung2Vorbereiten()
+        val bericht = sender2(gs).sendeAlles()
+        assertTrue(bericht.sauber)
+        assertEquals(1, bericht.fertigePakete)
+
+        val o = server.letzterKoerper()
+        val t = o.getJSONObject("track")
+        val h = java.util.Base64.getDecoder().decode(t.getString("huelle"))
+        assertEquals(2, h[0].toInt())
+        assertEquals(gs.spk()!!.let { Geraetehuelle.sid(it) }.toList(), h.copyOfRange(1, 9).toList())
+        val innen = Huellenoeffner.oeffnen2(
+            h, gs.spk()!!, "ruhe", o.getString("client_ref"), "${t.getLong("seq_from")}:${t.getInt("punkte")}",
+        )
+        assertEquals(Geraetehuelle.SPUR_KOPF2 + 14 * t.getInt("punkte"), innen.size)
+    }
+
+    /**
+     * Verweigert die Schlüsselablage die Vereinbarung, geht NICHTS hinaus —
+     * keine Anfrage, keine Hülle der Fassung 1 als Ausweg —, das Paket bleibt
+     * unberührt liegen, und der Lauf endet als „später erneut", statt den
+     * Sendefaden mit einer Ausnahme zu beenden. Der nächste Lauf sendet.
+     */
+    @Test fun schluesselausfallSendetNichts() {
+        antworteVollstaendig()
+        val gs = fassung2Vorbereiten()
+        val echt = gs.liefern()!!
+        var faelltAus = true
+        val wackelig = object : org.genem.nadoku.handy.tresor.Geraeteschluessel by gs {
+            override fun liefern() = object : org.genem.nadoku.handy.tresor.Absender {
+                override val spk get() = echt.spk
+                override fun vereinbaren(konto: java.security.interfaces.ECPublicKey): ByteArray =
+                    if (faelltAus) throw org.genem.nadoku.handy.tresor.Schluesselausfall(IllegalStateException("Keystore"))
+                    else echt.vereinbaren(konto)
+            }
+        }
+        val wartend = puffer.warteschlange().size
+        val s = sender2(wackelig)
+
+        val bericht = s.sendeAlles()
+        assertTrue(bericht.spaeterErneut)
+        assertEquals(0, bericht.anfragen)
+        assertEquals(0, bericht.fehlerhaft)
+        assertTrue("nichts ist hinausgegangen", server.anfragen.isEmpty())
+        assertEquals("das Paket liegt unverändert", wartend, puffer.warteschlange().size)
+        assertEquals(0, puffer.abgewiesen())
+
+        faelltAus = false
+        val danach = s.sendeAlles()
+        assertTrue(danach.sauber)
+        assertEquals(1, danach.fertigePakete)
+        assertEquals(2, java.util.Base64.getDecoder().decode(
+            server.letzterKoerper().getJSONObject("track").getString("huelle"))[0].toInt())
     }
 
     private fun abgewiesen(ref: String, beendet: String): Long {

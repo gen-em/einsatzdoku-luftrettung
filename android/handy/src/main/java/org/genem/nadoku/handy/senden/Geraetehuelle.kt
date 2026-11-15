@@ -1,7 +1,7 @@
 package org.genem.nadoku.handy.senden
 
 import org.genem.nadoku.handy.aufzeichnung.Rohpunkt
-import org.genem.nadoku.handy.tresor.Geraetepaar
+import org.genem.nadoku.handy.tresor.Absender
 import org.json.JSONArray
 import org.json.JSONObject
 import java.math.BigInteger
@@ -41,13 +41,18 @@ import kotlin.math.floor
  *
  * ZWEI FASSUNGEN NEBENEINANDER (seit KA-06c). Fassung 1 verschließt gegen
  * den Kontoschlüssel allein und belegt nicht, wer verschlossen hat. Fassung 2
- * nimmt das Gerätepaar dazu ([Geraetepaar]): Der Schlüssel der Hülle entsteht
+ * nimmt den Geräteschlüssel dazu ([Absender]): Der Schlüssel der Hülle entsteht
  * aus dem flüchtigen UND dem statischen Geheimnis, und der Browser des Kontos
  * erkennt daran das Gerät, das er bei der Kopplung über den Vergleichswert
  * bestätigt hat. Fassung 1 bleibt, wie sie war — eine Kopplung ohne
  * Geräteschlüssel sendet sie weiter, bis der Server `huelle: 2` sagt
  * (JSON-Vertrag 1a.7). Welche Fassung gilt, entscheidet der Aufrufer; diese
  * Datei rechnet nur.
+ *
+ * DAS STATISCHE GEHEIMNIS RECHNET DIESE DATEI NICHT SELBST (seit KA-06f,
+ * E-KA-71): Sie bestellt es beim [Absender], hinter dem auf dem Gerät der
+ * Android Keystore steht. Einen privaten Geräteschlüssel bekommt sie nie zu
+ * sehen.
  *
  * NUR BORDMITTEL: ECDH über `KeyAgreement`, AES-256-CBC über
  * `Cipher`, HMAC-SHA256 über `Mac`, HKDF daraus von Hand (RFC 5869, zwei
@@ -108,7 +113,7 @@ object Geraetehuelle {
          * y² = x³ + a·x + b (mod p). */
         val feld = (kurve.curve.field as java.security.spec.ECFieldFp).p
         require(x < feld && y < feld) { "Koordinate ausserhalb des Feldes" }
-        val links = y.modPow(BigInteger.valueOf(2), feld)   // nicht BigInteger.TWO: erst ab API 33, minSdk ist 26 (Lint)
+        val links = y.modPow(BigInteger.valueOf(2), feld)   // nicht BigInteger.TWO: erst ab API 33, minSdk ist 31 (Lint)
         val rechts = x.modPow(BigInteger.valueOf(3), feld).add(kurve.curve.a.multiply(x)).add(kurve.curve.b).mod(feld)
         require(links == rechts) { "Punkt liegt nicht auf P-256" }
         return KeyFactory.getInstance("EC")
@@ -138,13 +143,18 @@ object Geraetehuelle {
         }
     }
 
-    /** Der private Schlüssel zu `d` (32 Byte big-endian) — der Weg vom abgelegten Gerätepaar zur Rechnung. */
+    /**
+     * Nur für Prüffälle: der private Schlüssel zu `d` (32 Byte big-endian).
+     * Die App hat seit KA-06f kein `d` mehr in der Hand — der Geräteschlüssel
+     * liegt im Keystore —; die Prüffälle öffnen damit Hüllen mit dem
+     * Kontoschlüssel der Vektoren.
+     */
     fun privat(d: ByteArray): PrivateKey {
         require(d.size == 32) { "kein privater P-256-Schlüssel" }
         return KeyFactory.getInstance("EC").generatePrivate(ECPrivateKeySpec(BigInteger(1, d), kurve))
     }
 
-    /** Ein frisches Schlüsselpaar auf P-256 — je Hülle eines, und einmal je Kopplung für das Gerät. */
+    /** Ein frisches Schlüsselpaar auf P-256 — das flüchtige, je Hülle eines. */
     fun neuesPaar(): KeyPair = KeyPairGenerator.getInstance("EC")
         .apply { initialize(ECGenParameterSpec("secp256r1"), SecureRandom()) }.generateKeyPair()
 
@@ -220,20 +230,26 @@ object Geraetehuelle {
      *
      * ZWEI GEHEIMNISSE. `Z_e` aus dem flüchtigen Paar wie in Fassung 1 —
      * deshalb öffnet ein gefundenes Handy keine alte Hülle — und `Z_s` aus
-     * dem Gerätepaar. Das Prüfwort stimmt nur, wenn der Absender den privaten
-     * Teil zu dem Schlüssel hatte, der im Gerätebuch des Kontos steht. Das
+     * dem Geräteschlüssel. Das Prüfwort stimmt nur, wenn der Absender mit dem
+     * privaten Teil zu dem Schlüssel rechnen konnte, der im Gerätebuch des Kontos steht. Das
      * ist ein gemeinsames Geheimnis, keine Signatur: Es beweist die Herkunft
      * dem Browser des Kontos und sonst niemandem (Kopf der Referenz).
      *
-     * `Z_s` WIRD JE HÜLLE NEU GERECHNET, nicht abgelegt wie auf der Garmin.
-     * Dort kostet eine Schlüsselvereinbarung spürbar Laufzeit; hier kostet
-     * sie nichts, was sich messen ließe, und ein Geheimnis weniger liegt auf
-     * der Platte.
+     * `Z_s` WIRD JE HÜLLE NEU BESTELLT ([Absender.vereinbaren]), nicht
+     * abgelegt wie auf der Garmin und auch nicht über Aufrufe hinweg
+     * gehalten. Dort kostet eine Schlüsselvereinbarung spürbar Laufzeit;
+     * hier kostet sie einen Gang zum Keystore je Hülle, und das sind ein
+     * oder zwei je Anfrage. Wer `Z_s` hat, baut Hüllen im Namen des Handys
+     * — ein aufbewahrtes `Z_s` wäre der Schlüssel, den der Keystore gerade
+     * nicht herausgibt. Hier lebt es bis zum Ende dieser Funktion.
+     *
+     * @throws org.genem.nadoku.handy.tresor.Schluesselausfall wenn die
+     *   Schlüsselablage die Vereinbarung nicht hergibt
      *
      * `fluechtig` und `iv` nur für Prüffälle fest.
      */
     fun verschliessen2(
-        klar: ByteArray, kontoSec1: ByteArray, absender: Geraetepaar, art: String, clientRef: String,
+        klar: ByteArray, kontoSec1: ByteArray, absender: Absender, art: String, clientRef: String,
         platz: String, fluechtig: KeyPair? = null, iv: ByteArray? = null,
     ): ByteArray {
         val konto = oeffentlich(kontoSec1)
@@ -241,13 +257,16 @@ object Geraetehuelle {
         val epk = sec1(paar.public as ECPublicKey)
         val vektor = iv ?: ByteArray(16).also { SecureRandom().nextBytes(it) }
         require(vektor.size == 16) { "IV hat nicht 16 Byte" }
-        val okm = hkdf(ecdh(paar.private, konto) + ecdh(absender.schluessel(), konto), epk,
-            INFO2 + kontoSec1 + absender.spk)
+        val spk = absender.spk
+        val zS = absender.vereinbaren(konto)
+        require(zS.size == 32) { "Z_s hat nicht 32 Byte" }
+        val okm = hkdf(ecdh(paar.private, konto) + zS, epk, INFO2 + kontoSec1 + spk)
+        zS.fill(0)
         val ct = Cipher.getInstance("AES/CBC/PKCS5Padding").run {
             init(Cipher.ENCRYPT_MODE, SecretKeySpec(okm.copyOfRange(0, 32), "AES"), IvParameterSpec(vektor))
             doFinal(klar)
         }
-        val kopf = byteArrayOf(FASSUNG2.toByte()) + sid(absender.spk) + epk + vektor
+        val kopf = byteArrayOf(FASSUNG2.toByte()) + sid(spk) + epk + vektor
         val tag = hmac(okm.copyOfRange(32, 64), kopf + ct + bindung(art, clientRef, platz))
         return kopf + ct + tag
     }
@@ -353,7 +372,7 @@ object Geraetehuelle {
      */
     fun spurstueck2(
         art: String, clientRef: String, seqVon: Long, punkte: List<Rohpunkt>, kontoschluessel: ByteArray,
-        absender: Geraetepaar, schluss: Boolean, fluechtig: KeyPair? = null, iv: ByteArray? = null,
+        absender: Absender, schluss: Boolean, fluechtig: KeyPair? = null, iv: ByteArray? = null,
     ): JSONObject {
         require(punkte.isNotEmpty()) { "ohne Punkte: schlussstueck2()" }
         val von = punkte.minOf { it.zeit }
@@ -382,7 +401,7 @@ object Geraetehuelle {
      */
     fun schlussstueck2(
         art: String, clientRef: String, seq: Long, abschlussZeit: Long, kontoschluessel: ByteArray,
-        absender: Geraetepaar, fluechtig: KeyPair? = null, iv: ByteArray? = null,
+        absender: Absender, fluechtig: KeyPair? = null, iv: ByteArray? = null,
     ): JSONObject = JSONObject()
         .put("seq_from", seq)
         .put("punkte", 0)
@@ -402,7 +421,7 @@ object Geraetehuelle {
      * Beträgen unter 0,001 weicht die Schreibweise ab (`1.0E-5` statt
      * `1e-05`), der Wert nicht, und gültiges JSON ist beides.
      *
-     * @param z der Zähler ([Huellenzaehler.naechster]) — je Aufruf ein neuer
+     * @param z der Zähler des Pakets (`paket.zaehler`, E-KA-69) — derselbe, solange der Inhalt derselbe ist
      * @param schluss die Hülle des abgeschlossenen Einsatzes (`final`)
      */
     fun einsatzInnen2(begonnenAt: String, phasen: List<Phaseneintrag>, z: Long, schluss: Boolean): String {
@@ -420,7 +439,7 @@ object Geraetehuelle {
 
     fun einsatz2(
         clientRef: String, begonnenAt: String, phasen: List<Phaseneintrag>, kontoschluessel: ByteArray,
-        absender: Geraetepaar, z: Long, schluss: Boolean, fluechtig: KeyPair? = null, iv: ByteArray? = null,
+        absender: Absender, z: Long, schluss: Boolean, fluechtig: KeyPair? = null, iv: ByteArray? = null,
     ): String = b64(verschliessen2(einsatzInnen2(begonnenAt, phasen, z, schluss).toByteArray(Charsets.UTF_8),
         kontoschluessel, absender, "einsatz", clientRef, "", fluechtig, iv))
 }

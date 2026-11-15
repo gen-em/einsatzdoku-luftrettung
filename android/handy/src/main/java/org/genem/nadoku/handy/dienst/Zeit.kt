@@ -44,7 +44,7 @@ object Zeit {
      * Lokales Datum (`day`) zu einem Augenblick.
      *
      * `atZone(...).toLocalDate()` und **nicht** `LocalDate.ofInstant(...)`:
-     * Letzteres gibt es erst ab API 34, unser minSdk ist 26. Der Unterschied
+     * Letzteres gibt es erst ab API 34, unser minSdk ist 31. Der Unterschied
      * fiele erst auf einem älteren Gerät auf — und dort als Absturz.
      */
     fun tag(augenblick: Instant, zone: ZoneId = ZoneId.systemDefault()): String =

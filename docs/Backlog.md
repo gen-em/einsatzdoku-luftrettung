@@ -52,7 +52,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
 
 | Spanne | Zweig | seit |
 |---|---|---|
-| 560 bis 569 | `claude/affectionate-darwin-vqocxe` (28, Konzept KA, Sicherheitspaket) | 10.11.2026 |
+| 560 bis 569 | `claude/affectionate-darwin-vqocxe`, seit KA-06f `claude/amazing-keller-i2f04f` (28, Konzept KA, Sicherheitspaket) | 10.11.2026 |
 | 570 bis 579 | `claude/vigilant-cray-9riw34` (28, Konzept KG, Garmin-Teil des Sicherheitspakets) | 10.11.2026 |
 | ab 580 | frei — höchste reservierte Nummer 579; frei blieben 551 bis 559 aus der Spanne der Nachprüfung OF (PR #160 bis #163), 543 bis 549 aus der Spanne der Nachprüfung MA (PR #158, aufgegangen in PR #164), 531 bis 539 aus der Spanne von 27 (PR #159), 525 bis 529 aus der Spanne von 26 (PR #156), 511 bis 519 aus der Spanne von 24 und BR7 (PR #152 bis #154), 501 bis 509 aus der von 23 (PR #150, #151), 482 bis 489 aus der Spanne von 22 (PR #148, #149), 492 bis 499 aus der des Prüfdurchgangs (PR #147), 472 bis 479 aus der Spanne von 21 (PR #136), 461 bis 469 aus der Spanne von PR (PR #133), 434 bis 439 aus der Spanne von PR #129, 441 bis 449 aus der von PR #130, 420 bis 429 aus der Spanne von 20 (PR #127), 412 bis 419 aus der von 12b (PR #125), 394 bis 399 aus der Spanne von 19 (PR #112 bis #114), 389 aus der von 12a (PR #116), 372 bis 379 aus der von 12 (PR #103), 362 bis 369 aus der von PK, 359 aus der von 18 (PR #101), 348 und 349 aus der von 17, 338 aus der von AR | 04.11.2026 |
 
@@ -777,3 +777,30 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Altformat folgen in 06b bis 06e. *Abnahme:* die Hüllenprobe gegen die
      Referenz in allen vier Umsetzungen byte-gleich, je Angriff eine Probe,
      die ihn ausführt und den Grund des Browsers misst.
+<!-- -->
+
+565. **Umgehungen für Android 8 bis 11 stehen noch im Handy-Code.** · gehört zu: Pflegeaufgabe · Stand: offen · seit 15.11.2026
+     *Aufgenommen 15.11.2026 mit KA-06f (E-KA-72): `minSdk` des Handys
+     stieg von 26 auf 31.* Einige Stellen umgehen seither Lücken, die es
+     auf keinem Handy der App mehr gibt: `spaeter()` mit `postAtTime` statt
+     `postDelayed` mit Token (API 28) in `AufzeichnungsDienst`, der
+     ausgeschriebene `Ortungszuhoerer` (API 26 bis 29), die
+     Netzsicherheitsregel im Release (API 28, bleibt als zweiter Boden
+     sinnvoll). Sie schaden nicht, erklären aber eine Lage, die es nicht
+     mehr gibt. *Weg:* je Stelle prüfen, ob der Rückbau etwas vereinfacht;
+     sonst den Kommentar auf „bis 0.24.x“ stellen (für die genannten
+     schon geschehen). *Abnahme:* Lint `ObsoleteSdkInt` und `NewApi` ohne
+     neuen Befund, Prüffälle grün.
+<!-- -->
+
+566. **Eine Phase während einer laufenden Anfrage wartet bis zur nächsten Änderung.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 15.11.2026
+     *Aufgenommen 15.11.2026 aus KA-06f-3 (Fable-Agent), gelesen, nicht
+     gemessen.* Fällt am Handy eine Phase, während eine Anfrage desselben
+     Pakets unterwegs ist, setzt deren Antwort `metadaten_bestaetigt` in
+     `Puffer.bestaetigungMerken()` wieder auf 1 — die neue Phase hat dann
+     keine Arbeit mehr und geht erst mit dem nächsten Punkt oder der
+     nächsten Änderung hinaus. Im Dienst fällt fast jede Sekunde ein Punkt,
+     daher selten spürbar; beim stehenden Fahrzeug nicht. *Weg:* nur
+     bestätigen, wenn der Stand noch derselbe ist (für Einsätze der Zähler
+     `z` des Pakets, für Ruhesegmente eine Änderungsnummer). *Abnahme:* ein
+     Prüffall, der die Phase zwischen Senden und Antwort setzt.

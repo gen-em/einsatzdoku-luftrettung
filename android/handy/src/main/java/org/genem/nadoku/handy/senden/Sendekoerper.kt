@@ -2,7 +2,7 @@ package org.genem.nadoku.handy.senden
 
 import org.genem.nadoku.handy.aufzeichnung.Rohpunkt
 import org.genem.nadoku.handy.puffer.Paketzeile
-import org.genem.nadoku.handy.tresor.Geraetepaar
+import org.genem.nadoku.handy.tresor.Absender
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -17,6 +17,24 @@ import org.json.JSONObject
  * `[lat, lon, ele_m, epoch_s]`, und die Koordinaten der Phasen stehen in der
  * Einsatzhülle (`ort_huelle`) statt in `phases[]` ([Geraetehuelle]). Klartext
  * weist der Server mit `400 klartext` ab.
+ *
+ * DER ZÄHLER DER EINSATZHÜLLE KOMMT AUS DEM PAKET (E-KA-69, seit KA-06f):
+ * `paket.zaehler`, vergeben, als sich der Inhalt zuletzt änderte, und mit
+ * ihm gespeichert ([Huellenzaehler],
+ * [org.genem.nadoku.handy.puffer.Puffer]). Dieser Baustein vergibt nichts
+ * und zählt nichts — zwei Anfragen aus demselben Paket und denselben Phasen
+ * tragen dasselbe `z` und innen dieselben Bytes; nur EPK, IV, CT und TAG
+ * unterscheiden sie. Bis KA-06f (E-KA-64) bekam er eine Zählfunktion und
+ * rief sie JE ANFRAGE: Jeder Sendeversuch hob den Zähler, und ein alter,
+ * unveränderter Stand gewann nach einer Übergabe gegen den Abschluss des
+ * anderen Geräts.
+ *
+ * WAS DAS VORAUSSETZT: Paket und Phasen stammen aus EINEM Augenblick
+ * (`Puffer.einsatzstand()`), sonst stünde eine neuere Phasenliste unter
+ * einem älteren Zähler. Und: Der Zähler ordnet nach der Uhr des Geräts, das
+ * geändert hat — eine vorauslaufende oder nachgehende Uhr und der
+ * Gleichstand zweier Geräte (F-KA-112) sind seine Grenzen; sie stehen
+ * ausgeführt am [Huellenzaehler].
  */
 object Sendekoerper {
 
@@ -25,7 +43,10 @@ object Sendekoerper {
      * @param punkte die Punkte ab [seqVon], in Reihenfolge
      * @param phasen nur für Einsätze; die **vollständige** Liste (Vertrag 3)
      * @param kontoschluessel der öffentliche Schlüssel des Kontos, SEC1 (65 Byte)
-     * @param fassung2 Absender und Zähler, wenn der Server `huelle: 2` gesagt
+     * @param paket für einen Einsatz in Fassung 2 MIT Zähler
+     *   (`paket.zaehler`); fehlt er, entsteht keine Hülle (die Funktion
+     *   wirft) — ein erfundener Zähler wäre schlimmer als keine Anfrage
+     * @param fassung2 der Absender, wenn der Server `huelle: 2` gesagt
      *   hat (seit KA-06c); `null` heißt Fassung 1 wie bisher
      * @param letztesStueck trägt dieses Stück alle noch offenen Punkte? Nur
      *   dann bekommt es bei einem abgeschlossenen Paket den Merker SCHLUSS
@@ -70,13 +91,16 @@ object Sendekoerper {
                 if (fassung2 == null) {
                     Geraetehuelle.einsatz(paket.clientRef, paket.begonnenAt, phasen, kontoschluessel)
                 } else {
-                    /* JE ANFRAGE EIN NEUES `z` (E-KA-64): Die Hülle wird bei
-                     * jeder Anfrage neu verschlossen, und der Zähler steigt
-                     * mit — streng, auch in derselben Sekunde. SCHLUSS
+                    /* DAS `z` DES PAKETS, NICHT DER ANFRAGE (E-KA-69): Die
+                     * Hülle wird bei jeder Anfrage neu verschlossen, der
+                     * Zähler bleibt, solange der Inhalt bleibt. SCHLUSS
                      * trägt sie, sobald das Paket abgeschlossen ist. */
+                    val z = checkNotNull(paket.zaehler) {
+                        "Einsatz ${paket.clientRef} ohne Zähler — Puffer.einsatzstand() vergibt ihn"
+                    }
                     Geraetehuelle.einsatz2(
                         paket.clientRef, paket.begonnenAt, phasen, kontoschluessel,
-                        fassung2.absender, fassung2.zaehler(), schluss = paket.final,
+                        fassung2.absender, z, schluss = paket.final,
                     )
                 },
             )
@@ -141,13 +165,14 @@ object Sendekoerper {
 }
 
 /**
- * Was Fassung 2 zum Verschließen braucht (seit KA-06c): das Gerätepaar als
- * Absender und den Zähler der Einsatzhülle. Die Uhr nur für das leere
- * Schlussstück eines Pakets ohne Endzeit.
+ * Was Fassung 2 zum Verschließen braucht (seit KA-06c): den Absender — den
+ * Griff auf den Geräteschlüssel, nicht den Schlüssel (seit KA-06f). Die Uhr
+ * nur für das leere Schlussstück eines Pakets ohne Endzeit. Den Zähler der
+ * Einsatzhülle trägt seit KA-06f das Paket (E-KA-69), nicht mehr diese
+ * Klasse.
  */
 class Fassung2(
-    val absender: Geraetepaar,
-    val zaehler: () -> Long,
+    val absender: Absender,
     val jetzt: () -> Long = { System.currentTimeMillis() / 1000 },
 )
 

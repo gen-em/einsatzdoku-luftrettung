@@ -3950,6 +3950,16 @@ dass es von ihm kommt. „Im Browser abgelehnt" heißt: Dort wurde „Wert ist
 anders" getippt; „Konto noch ohne Schlüssel": einmal im Browser abmelden
 und wieder anmelden, dann neu koppeln.
 
+**Seit Android 0.25.0 braucht die Handy-App Android 12 oder neuer.** Ein
+älteres Handy bekommt diese und jede spätere Fassung nicht mehr; Play Store
+und Installation von Hand lehnen sie ab. Der Grund: Der Schlüssel, mit dem
+das Handy seine Herkunft belegt, liegt seither im Schlüsselspeicher von
+Android selbst und verlässt ihn nie — das kann Android erst ab Fassung 12.
+Die Wear-OS-Uhr braucht weiter Wear OS 3. **Ein Handy, das mit 0.24.0
+gekoppelt war, koppelst du nach dem Update einmal neu** (trennen, neuen Code
+holen): Sein alter Schlüssel lag anders und wird beim ersten Start gelöscht;
+bis zur neuen Kopplung sendet es ohne Herkunftsnachweis.
+
 **Ein Gerät mit älterer App** schickt keinen eigenen Schlüssel. Die Rückfrage
 sagt es mit einer gelben Meldung, und der Knopf heißt **„Trotzdem
 verbinden"**: Es koppelt wie bisher, aber was es sendet, trägt keinen

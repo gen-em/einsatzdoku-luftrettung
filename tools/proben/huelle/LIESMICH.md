@@ -30,10 +30,10 @@ Python mit `cryptography`, Node mit Playwright und einen Browser aus
 
 ## Erwartete Zahl
 
-`referenz.py`: Selbstprobe **19 Fälle, 0 Fehlschläge** · Fassung 1 **6 geöffnet,
-8 Störungen** · Fassung 2 **26 geöffnet, 39 Gegenlagen**, je 0 Abweichungen.
-`referenz_inhalt.py`: **18 Fälle, 0 Fehlschläge** · **23 geöffnet, 28 Gegenlagen**.
-Server **22** (bis KA-06c stand hier 18 — überholt seit KA-06b-3) · Browser **415 Prüfungen** (39 + 177 Weiche aus + 199 an), 0 Abweichungen (14.11.2026, mit den vier Wechselfällen aus KA-06c).
+`referenz.py`: Selbstprobe **28 Fälle, 0 Fehlschläge** · Fassung 1 **6 geöffnet,
+8 Störungen** · Fassung 2 **32 geöffnet, 40 Gegenlagen**, je 0 Abweichungen.
+`referenz_inhalt.py`: **21 Fälle, 0 Fehlschläge** · **23 geöffnet, 28 Gegenlagen**.
+Server **22** (bis KA-06c stand hier 18 — überholt seit KA-06b-3) · Browser **438 Prüfungen** (39 + 188 Weiche aus + 211 an), 0 Abweichungen, 0 ausgenommen (15.11.2026, KA-06f-4: der Befund `offen-nach-schluss` gemessen, dazu das Standbuchfeld `f`; bis 06f-4 waren es 427 mit 10 ausgenommenen).
 
 ## Was es nicht kann
 

@@ -14,6 +14,54 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 24.19.0] — unveröffentlicht
+
+Schritt 28 (KA), Paket KA-06f.
+
+### Hinzugefügt
+
+- **Web — eine offene Einsatzhülle nach dem Abschluss fällt auf.** Seit der
+  Zähler am Inhalt hängt, kann ein Gerät, das nach einer Übergabe noch
+  etwas ändert, einen schon abgeschlossenen Einsatz mit einer offenen Hülle
+  überschreiben — rechtmäßig im Sinn des Zählers, aber verdächtig. Der
+  Browser merkt sich deshalb je Einsatz, dass er schon abgeschlossen war,
+  und meldet eine spätere offene Hülle als Befund, statt sie abzuweisen. Er
+  selbst verschließt einen abgeschlossenen Einsatz immer als abgeschlossen,
+  damit er sich nicht selbst meldet; sichtbar wird der Befund mit dem
+  Umlegen der Weiche.
+
+## [Android 0.25.0] — unveröffentlicht
+
+Schritt 28 (KA), Paket KA-06f.
+
+### Geändert
+
+- **Android — der Geräteschlüssel liegt im Android Keystore, und die App
+  braucht Android 12.** Seit 0.24.0 lag der private Teil des Gerätepaars
+  verschlüsselt in einer Datei und beim Rechnen offen im Speicher der App;
+  wer ihn auslas, konnte im Namen des Handys Daten verschließen. Jetzt
+  entsteht das Paar im Keystore, rechnet dort und verlässt ihn nie — das
+  kann Android erst ab Fassung 12, und einen zweiten, schwächeren Weg für
+  ältere Handys gibt es bewusst nicht. Ein mit 0.24.0 gekoppeltes Handy
+  verliert seinen alten Schlüssel beim ersten Start und koppelt neu.
+- **Android — der Zähler der Einsatzhülle hängt am Inhalt, nicht mehr an der
+  Anfrage.** Bisher stieg er mit jedem Sendeversuch; ein Handy, das nach
+  einer Übergabe an die Uhr seinen alten Stand noch einmal schickte, hätte
+  damit den Abschluss der Uhr überschrieben. Jetzt bekommt ein Einsatz einen
+  neuen Zähler nur, wenn sich an ihm etwas ändert — Beginn, Phase,
+  Abschluss —, und ein alter Stand fällt im Browser als zurückgelegt durch.
+  Der Puffer trägt den Zähler dafür je Paket; die Umstellung behält jeden
+  gepufferten Einsatz.
+
+### Behoben
+
+- **Android — ein Abschluss ohne neuen Punkt ging nie an den Server.** War
+  alles bis dahin Aufgezeichnete schon bestätigt und kam danach kein Punkt
+  mehr, etwa weil das Fahrzeug stand, hatte das Paket für den Sender keine
+  Arbeit mehr. Ende, Strecke und „abgeschlossen" blieben dann im Handy
+  liegen, ohne dass es als Rückstand erschien. Jetzt ist der Abschluss
+  selbst Arbeit und geht mit der nächsten Gelegenheit hinaus.
+
 ## [Android 0.24.0] — unveröffentlicht
 
 Schritt 28 (KA), Paket KA-06c.

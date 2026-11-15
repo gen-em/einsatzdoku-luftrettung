@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 class NAdokuApp : Application() {
 
-    val puffer: Puffer by lazy { Puffer(this) }
+    val puffer: Puffer by lazy { Puffer(this, huellenzaehler = huellenzaehler) }
 
     val einstellungen: Einstellungen by lazy { Einstellungen(this) }
 
@@ -75,20 +75,27 @@ class NAdokuApp : Application() {
     }
 
     /**
-     * Der Geräteschlüssel des Handys (seit KA-06c, F-KA-85): eigene Datei,
-     * derselbe Keystore-Schlüssel wie der Tresor. Zum Rechnen liegt der
-     * private Teil im Speicher des Prozesses — wie der API-Schlüssel; ein
-     * Schutz durch die Hardware ist das nicht (Kopf von
-     * `TresorGeraeteschluessel`).
+     * Der Geräteschlüssel des Handys (seit KA-06c; seit KA-06f im Android
+     * Keystore, E-KA-71): Das Paar entsteht dort, ist nicht exportierbar und
+     * rechnet dort. In der Datei daneben steht nur die Verwaltung der
+     * Kopplung — welcher Eintrag gilt, und `N_g` des laufenden Versuchs —,
+     * unter demselben Keystore-Schlüssel wie der Tresor. Was das schützt
+     * und was nicht: Kopf von `DateiGeraeteschluessel`.
      */
     val geraeteschluessel: org.genem.nadoku.handy.tresor.Geraeteschluessel by lazy {
-        org.genem.nadoku.handy.tresor.TresorGeraeteschluessel(
-            File(filesDir, org.genem.nadoku.handy.tresor.TresorGeraeteschluessel.DATEINAME),
+        org.genem.nadoku.handy.tresor.DateiGeraeteschluessel(
+            File(filesDir, org.genem.nadoku.handy.tresor.DateiGeraeteschluessel.DATEINAME),
             KeystoreTresorschluessel(),
+            org.genem.nadoku.handy.tresor.KeystoreSchluesselablage(),
         )
     }
 
-    /** Der Zähler `z` der Einsatzhülle (E-KA-64) — überdauert das Trennen. */
+    /**
+     * Der Zähler `z` der Einsatzhülle — EINER für das Gerät, überdauert das
+     * Trennen. Er gehört dem [puffer]: Vergeben wird, wenn sich der Inhalt
+     * eines Einsatzes ändert, und abgelegt mit dem Paket (E-KA-69, seit
+     * KA-06f; bis dahin beim Sender, je Anfrage ein neuer, E-KA-64).
+     */
     val huellenzaehler: org.genem.nadoku.handy.senden.Huellenzaehler by lazy {
         org.genem.nadoku.handy.senden.Huellenzaehler(
             org.genem.nadoku.handy.senden.DateiZaehlerstand(
@@ -123,7 +130,6 @@ class NAdokuApp : Application() {
             puffer = puffer,
             netzweg = HttpNetzweg(),
             tresor = tresor,
-            phasenLeser = { paketId -> puffer.phasen(paketId) },
             // Fehlt der Kontoschlüssel, holt der Sendelauf ihn über `status`
             // nach — auf demselben Faden, ohne Bildschirm.
             schluesselHolen = {
@@ -133,7 +139,6 @@ class NAdokuApp : Application() {
             },
             bindung = bindung,
             geraeteschluessel = geraeteschluessel,
-            zaehler = huellenzaehler,
         )
     }
 
@@ -236,6 +241,12 @@ class NAdokuApp : Application() {
      */
     override fun onCreate() {
         super.onCreate()
+        /* DIE ALTE ABLAGE DES GERÄTESCHLÜSSELS LÖSCHEN (KA-06f, E-KA-72):
+         * `geraet.bin` trug bis 0.24.x den privaten Teil. Bei JEDEM Start und
+         * nicht erst, wenn jemand den Geräteschlüssel braucht — ein Handy,
+         * das nie wieder koppelt, behielte sie sonst. Ohne Datei geschieht
+         * nichts. */
+        runCatching { org.genem.nadoku.handy.tresor.AlteGeraeteablage.raeumen(filesDir) }
         try {
             /* DIE FRIST NACH EINER ABMELDUNG AUCH OHNE SENDELAUF (Nr. 471):
              * Ein abgemeldetes Handy sendet womöglich nie wieder, geöffnet
