@@ -69,14 +69,24 @@ damit der nächste Browser nicht bei null anfängt.
     Nutzlast (JSON): { "fassung": 1, "t": <letzte Änderung, Unix-Sekunden>,
                        "zu": false, "e": { "<Kennung>": { … } } }
 
-    Eintrag (jedes Feld darf fehlen):
+    Eintrag (jedes Feld darf fehlen; die Folge ist fest — `EINTRAG_FELDER`:
+    p, o, k, a, f, u, s, d, x —, damit zwei Browser, die dasselbe wissen,
+    dieselben Bytes schreiben):
       p   Zähler des Patientenblocks
       o   Zähler der zuletzt abgenommenen Einsatzhülle;  k: 1 = sie kam vom Konto
+      a   wer `o` gesetzt hat, wenn es ein GERÄT war: seine SID, 16 Hex-Zeichen
+          (klein). Fehlt mit `k` (die beiden schließen einander aus; stehen
+          doch beide, gilt `k`) und in Blättern von vor KA-09 — dort gilt der
+          Absender des Stands als unbekannt, und gelesen wird streng wie
+          bisher (E-KA-70; Regel und Vektoren in `referenz.py`, „DER RÜCKWEG").
       f   1 = zu diesem Einsatz ist schon eine Einsatzhülle mit `schluss: true`
           abgenommen worden — haftet, wird nie gelöscht (E-KA-69, Befund
-          `offen-nach-schluss`; Regel und Vektoren in `referenz.py`). Die
-          Vektoren dieser Datei tragen es nicht; der Browser führt es ab
-          KA-06f-4.
+          `offen-nach-schluss`; Regel und Vektoren in `referenz.py`).
+      u   Vermerke der bewussten Bestätigung „diesen Stand übernehmen":
+          [[z_v, "<sid>", t], …] — der Stand z_v des Geräts <sid> ist zur Zeit
+          t (Unix-Sekunden) verworfen worden. Nach SID sortiert, je Absender
+          höchstens einer; fehlt, wenn leer (E-KA-70, `referenz.py`).
+          Ein Blatt mit `a`, `f` und `u` byte-genau: Vektoren `standblaetter`.
       s   [gedeckt bis, Stufe] der abgenommenen Spur
       d   Versatz in Sekunden (Umdatierung des Diensttags): Klartextzeit −
           Zeit in der Hülle
@@ -163,6 +173,8 @@ KLASSEN = (128, 256, 512, 1024, 2048, 4096)
 MINDESTKLASSE = {"pat": 512}
 STAND_INFO = b"nadoku-stand-1"
 BLAETTER = 16
+# Die Felder eines Eintrags im Standbuch, in der Folge, in der sie stehen.
+EINTRAG_FELDER = ("p", "o", "k", "a", "f", "u", "s", "d", "x")
 ABLEITUNG_INFO = "nadoku-ableitung-2|"
 
 
@@ -300,6 +312,28 @@ def kennung(ref: str) -> str:
 
 def _json(d: dict) -> bytes:
     return json.dumps(d, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+
+def eintrag_ordnen(e: dict) -> dict:
+    """Ein Eintrag in fester Feldfolge und ohne leere Felder. Wirft `innen`
+    bei einem Feld, das es nicht gibt, bei einer SID, die keine ist, und bei
+    Vermerken, die nicht nach SID sortiert sind oder einen Absender doppelt
+    führen."""
+    if any(f not in EINTRAG_FELDER for f in e):
+        raise InhaltFehler("innen")
+    sid_form = re.compile(r"[0-9a-f]{16}")
+    if "a" in e and not (isinstance(e["a"], str) and sid_form.fullmatch(e["a"])):
+        raise InhaltFehler("innen")
+    u = e.get("u") or []
+    if any(not (isinstance(v, list) and len(v) == 3 and type(v[0]) is int and v[0] >= 1
+                and isinstance(v[1], str) and sid_form.fullmatch(v[1]) and type(v[2]) is int)
+           for v in u):
+        raise InhaltFehler("innen")
+    sids = [v[1] for v in u]
+    if sids != sorted(set(sids)):
+        raise InhaltFehler("innen")
+    return {f: e[f] for f in EINTRAG_FELDER
+            if f in e and e[f] is not None and e[f] != 0 and e[f] != []}
 
 
 def blatt_bauen(schluessel: bytes, nr: int, version: int, t: int, eintraege: dict, *,
@@ -453,7 +487,7 @@ def vektoren_bauen() -> dict:
                     "blattnummern": {r: blatt_nr(r) for r in (REF_A, REF_B, "man-0123456789abcdef", "Prüf-ß-€")}}
 
     # --- Das Gerätebuch ---
-    from referenz import _g, sec1, sid, T0 as T_HUELLE
+    from referenz import _g, sec1, sid, stand_nach_abnahme, T0 as T_HUELLE
     geraete = [{"sid": sid(sec1(_g(n).public_key())).hex(),
                 "spk": base64.b64encode(sec1(_g(n).public_key())).decode(), "geraet": f"dev-{n}",
                 "seit": T_HUELLE - 86400, "bis": bis} for n, bis in (("uhr", None), ("handy", T_HUELLE - 1))]
@@ -527,6 +561,29 @@ def vektoren_bauen() -> dict:
         {"name": "blatt-als-buch", "grund": "pruefwert", "anker": None, "text": blatt},
     ]
 
+    # --- Blätter mit den Feldern des Rückwegs (E-KA-70, KA-09): `a`, `f`, `u`
+    # byte-genau. Die Einträge entstehen aus der Regel in `referenz.py`, nicht
+    # von Hand: ein Stand des Handys, dann die bewusst übernommene Hülle der
+    # Uhr mit kleinerem Zähler. Eine Liste am Ende der Datei — so kippt beim
+    # Anfügen keine Zeile.
+    REF_E = "m-20261111-0004"
+    uhr_s, handy_s = (sid(sec1(_g(n).public_key())).hex() for n in ("uhr", "handy"))
+    vom_handy = stand_nach_abnahme({"z": T_HUELLE + 1320, "schluss": False}, handy_s, None)
+    uebernommen = stand_nach_abnahme({"z": T_HUELLE + 1200, "schluss": True}, uhr_s, vom_handy,
+                                     jetzt=T_HUELLE + 7200)
+    vom_konto = stand_nach_abnahme({"z": T_HUELLE + 1201, "schluss": True}, "konto", uebernommen)
+    aus["standblaetter"] = []
+    for name, version, einsatz in (("stand-vom-geraet", 3, vom_handy),
+                                   ("stand-uebernommen", 4, uebernommen),
+                                   ("stand-vom-konto", 5, vom_konto)):
+        eintraege_r = {kennung(REF_E): eintrag_ordnen(dict({"p": 2, "s": [8, 1]}, **einsatz))}
+        aus["standblaetter"].append({
+            "name": name, "client_ref": REF_E, "blatt": blatt_nr(REF_E), "kennung": kennung(REF_E),
+            "version": version, "t": T0 + 60 * version, "eintraege": eintraege_r,
+            "nonce_hex": _n("blatt-" + name).hex(),
+            "text": blatt_bauen(ck, blatt_nr(REF_E), version, T0 + 60 * version, eintraege_r,
+                                nonce=_n("blatt-" + name))})
+
     # --- Ableitung ---
     for passwort, salz_hex in ABLEITUNGEN:
         h1, t1 = ableitung1(passwort, bytes.fromhex(salz_hex), 600000)
@@ -581,6 +638,24 @@ def pruefen(v: dict, *, neu: dict | None = None) -> list[str]:
         fehler.append("Standbuch: Einträge oder Version weichen ab")
     if any(blatt_nr(r) != n for r, n in st["blattnummern"].items()) or kennung(st["client_ref"]) != st["kennung"]:
         fehler.append("Standbuch: Blattnummer oder Kennung weicht ab")
+    for f in v.get("standblaetter", []):
+        was = "Standblatt " + f["name"]
+        ist = erwarte(was, None, lambda: blatt_oeffnen(ck, f["text"], f["blatt"], f["version"]))
+        if ist is None:
+            continue
+        # Als Text verglichen — die Feldfolge gehört zum Format.
+        if (_json(ist[0]["e"]), ist[1]) != (_json(f["eintraege"]), f["version"]):
+            fehler.append(f"{was}: Einträge oder Version weichen ab")
+        try:
+            if any(_json(eintrag_ordnen(e)) != _json(e) for e in ist[0]["e"].values()):
+                fehler.append(f"{was}: Feldfolge weicht von {'/'.join(EINTRAG_FELDER)} ab")
+        except InhaltFehler as x:
+            fehler.append(f"{was}: Eintrag hat nicht die Form ({x})")
+        if blatt_bauen(ck, f["blatt"], f["version"], f["t"], f["eintraege"],
+                       nonce=hx(f["nonce_hex"])) != f["text"]:
+            fehler.append(f"{was}: neu gebaut nicht byte-gleich")
+    if not v.get("standblaetter"):
+        fehler.append("Standblatt: die Blätter mit den Feldern des Rückwegs fehlen")
     for f in v["lagen"]:
         def lesen():
             blatt = blatt_oeffnen(ck, f["blatt_text"], f["blatt"], f["anker"])[0] if f["blatt_text"] else None
@@ -604,7 +679,7 @@ def pruefen(v: dict, *, neu: dict | None = None) -> list[str]:
 
 def zahlen(v: dict) -> str:
     gut = (len(v["faelle"]) + len(v["huellen"]) + 2 + sum("grund" not in f for f in v["lagen"])
-           + 2 * len(v["ableitungen"]))
+           + 2 * len(v["ableitungen"]) + len(v.get("standblaetter", [])))
     rot = (len(v["stoerungen"]) + len(v["huellen_stoerungen"]) + sum("grund" in f for f in v["lagen"])
            + len(v["geraetebuch"]["gegenlagen"]))
     return f"Inhalt: {gut} Fälle geöffnet, {rot} Gegenlagen abgewiesen"
@@ -631,6 +706,48 @@ def selbstprobe() -> int:
     falsch("Fehler: Blattnummer verfälscht", lambda w: w["stand"]["blattnummern"].update({REF_B: 99}))
     falsch("Fehler: Hülle mit falschem Inhaltsschlüssel", lambda w: w["schluessel"].update(ck_hex="00" * 32))
     falsch("Fehler: Gerätebuch zurückgelegt geht auf", lambda w: w["geraetebuch"]["gegenlagen"][0].update(anker=4))
+    # Die Felder des Rückwegs im Blatt (KA-09): `pruefen()` meldet jede
+    # veränderte Datei schon über den Vergleich mit dem Neubau — `neu=w`
+    # schaltet ihn hier aus; verlangt ist die Meldung der Prüfung selbst.
+    def meldet(name, teil, aendern):
+        w = kopie(); aendern(w)
+        faelle.append((name, any(teil in f for f in pruefen(w, neu=w))))
+
+    def eintrag(w, i):
+        return next(iter(w["standblaetter"][i]["eintraege"].values()))
+    meldet("Fehler: Standblatt mit vertauschter Feldfolge (f vor a)", "stand-uebernommen: Einträge oder Version",
+           lambda w: eintrag(w, 1).update(a=eintrag(w, 1).pop("a")))
+    meldet("Fehler: Standblatt ohne den Vermerk u", "stand-uebernommen: Einträge oder Version",
+           lambda w: eintrag(w, 1).pop("u"))
+    meldet("Fehler: Standblatt neu gebaut ist nicht byte-gleich (anderer Nonce)",
+           "stand-vom-geraet: neu gebaut nicht byte-gleich",
+           lambda w: w["standblaetter"][0].update(nonce_hex="00" * 12))
+
+    def verdreht(w):
+        # Blatt UND Erwartung tragen dieselbe falsche Folge (a hinter u): Nur
+        # die Prüfung der Feldfolge selbst kann das noch melden.
+        b = w["standblaetter"][1]
+        e = eintrag(w, 1); e["a"] = e.pop("a")
+        b["text"] = blatt_bauen(ck_, b["blatt"], b["version"], b["t"], b["eintraege"],
+                                nonce=bytes.fromhex(b["nonce_hex"]))
+    ck_ = _s("ck")
+    meldet("Fehler: Standblatt in falscher Feldfolge geschrieben", "stand-uebernommen: Feldfolge weicht", verdreht)
+    meldet("Fehler: Blätter mit den Feldern des Rückwegs fehlen", "die Blätter mit den Feldern des Rückwegs fehlen",
+           lambda w: w.pop("standblaetter"))
+    def grund_ordnen(e):
+        try:
+            eintrag_ordnen(e); return None
+        except InhaltFehler as x:
+            return str(x)
+    faelle.append(("Fehler: Eintrag mit unsortierten Vermerken, doppeltem Absender, krummer SID (Grund innen)",
+                   [grund_ordnen(e) for e in ({"u": [[5, "bb" * 8, 1], [5, "aa" * 8, 1]]},
+                                              {"u": [[5, "aa" * 8, 1], [6, "aa" * 8, 2]]},
+                                              {"a": "AA" * 8}, {"a": "aa" * 7}, {"q": 1},
+                                              {"u": [[0, "aa" * 8, 1]]})] == ["innen"] * 6))
+    faelle.append(("Gegenprobe: eintrag_ordnen bringt jede Eingabefolge in p, o, k, a, f, u, s, d, x",
+                   list(eintrag_ordnen({"x": [[1, 2]], "u": [[5, "aa" * 8, 1]], "f": 1, "a": "bb" * 8,
+                                        "d": 3, "s": [1, 1], "o": 9, "p": 2, "k": 0}))
+                   == ["p", "o", "a", "f", "u", "s", "d", "x"]))
     falsch("Fehler: Ableitungen gleichen sich",
            lambda w: w["ableitungen"][0]["fassung_2"].update(token_hex=w["ableitungen"][0]["fassung_1"]["token_hex"]))
     # Die Vektoren gegen eine unabhängige Rechnung der Ableitung (ohne HKDF-Klasse).

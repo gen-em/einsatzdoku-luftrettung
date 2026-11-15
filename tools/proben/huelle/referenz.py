@@ -142,7 +142,11 @@ nicht „um eins größer", und ein zweites Gerät am selben Einsatz (Übergabe 
 laufenden Dienst) muss über dem Stand des ersten liegen. Bis KA-06c stand
 hier „steigt mit jedem Verschließen dieses Einsatzes durch diesen Absender";
 das beschrieb, wie ein Gerät zählt, nicht, was geprüft wird (Rückmeldung KG,
-F-KG-22). Diese Leseregel hat sich mit KA-06f NICHT geändert.
+F-KG-22). Diese Leseregel hat sich mit KA-06f NICHT geändert. Mit KA-09
+(E-KA-70) gilt sie so nur noch, wo das Standbuch den Absender des Stands
+NICHT kennt oder er derselbe ist; zwischen zwei GERÄTEN tritt an die Stelle
+von „abweisen" und von „still annehmen bei Gleichstand" der Hinweis
+`uhrzeit-pruefen` — siehe „DER RÜCKWEG" unten.
 
 WIE EIN ABSENDER ZÄHLT (E-KA-69, seit KA-06f): z gehört zum INHALT, nicht
 zum Verschließen. Ein Absender vergibt z, wenn sich der Inhalt eines
@@ -172,8 +176,9 @@ vier kosten Verfügbarkeit oder Schärfe:
                    behält den hohen Zähler (er überdauert alles), und der
                    Stand `o` des Einsatzes folgt ihm. Ein anderes Gerät
                    fällt dort als `zurueckgelegt` durch, bis seine Zeit den
-                   Stand überholt. Nichts senkt `o`; der Rückweg ist E-KA-70
-                   (Web 25.0.0), nicht Teil dieser Regel.
+                   Stand überholt. Den Stand senkt nur die bewusste
+                   Bestätigung (E-KA-70, „DER RÜCKWEG" unten) — und nur, wo
+                   das Standbuch den Absender des Stands kennt (Feld `a`).
     nachgehende Uhr      Ein Gerät, dessen Uhr nachgeht oder fehlt, vergibt
                    bei einer ECHTEN Änderung ein z unter dem Stand des
                    anderen und fällt durch, obwohl niemand etwas
@@ -185,7 +190,11 @@ vier kosten Verfügbarkeit oder Schärfe:
                    Geräte, die in derselben Sekunde ändern, sind
                    gegeneinander austauschbar, und der Zähler merkt es
                    nicht. Ist der eine Stand abgeschlossen und der andere
-                   nicht, fällt es als Befund auf (unten), sonst nicht.
+                   nicht, fällt es als Befund auf (unten). Seit KA-09 ist
+                   Gleichstand von einem ANDEREN Gerät als dem des Stands
+                   ein Hinweis (`uhrzeit-pruefen`, Art `gleich`) — still
+                   angenommen wird er nur noch vom selben Absender und an
+                   einem Blatt ohne `a`.
     Uhrzeit, nicht Reihenfolge   z ordnet nach der Uhr des Geräts, das
                    geändert hat. Wer nach der Übergabe WIRKLICH etwas ändert,
                    bekommt ein neues z und gewinnt — auch gegen einen
@@ -211,6 +220,106 @@ von welchem Absender, auch vom Konto. Weil `f` haftet, steht der Befund bei
 JEDEM Lesen, solange die offene Hülle die gespeicherte ist, und fällt weg,
 sobald wieder eine abgeschlossene abgenommen ist. Eine Hülle der Fassung 1
 kommt nicht so weit (`zurueckgelegt` bzw. ohne Stand geduldet).
+
+DER RÜCKWEG `uhrzeit-pruefen` (E-KA-70, F-KA-112; seit KA-09). Ein Gerät,
+dessen Uhr einmal vorauslief, hebt den Stand `o` eines Einsatzes über alles,
+was ein anderes Gerät je zählen kann. Bis KA-09 fiel das andere hart durch,
+und nichts führte zurück. Jetzt merkt sich das Standbuch, WER den Stand
+gesetzt hat, und unterscheidet danach (`einsatz_hinweis()`):
+
+    Absender der Hülle      Stand im Buch            z < o          z = o        z > o
+    das Gerät aus `a`       `a` (dasselbe Gerät)     zurueckgelegt  angenommen   angenommen
+    ein ANDERES Gerät       `a` (ein Gerät)          HINWEIS        HINWEIS      angenommen *
+    ein Gerät               ohne `a`, ohne `k`       zurueckgelegt  angenommen   angenommen
+    ein Gerät               `k` (Konto)              zurueckgelegt  zurueckgelegt  zurueckgelegt
+    das Konto               gleich welcher           zurueckgelegt  angenommen   angenommen
+    * außer es steht ein Vermerk für diesen Absender mit z_v ≥ z — dann HINWEIS
+
+Der HINWEIS ist weder Annahme noch Abweisung: `einsatz_lesen()` wirft
+`HuelleHinweis` (Grund `uhrzeit-pruefen`) NACH allen harten Prüfungen — die
+Hülle ist echt, vom genannten Gerät, an diesem Einsatz, mit dieser Zeit; nur
+die Reihenfolge ist offen. Er trägt, was die Person zum Entscheiden braucht:
+
+    { "art": "kleiner" | "gleich" | "verworfen",
+      "z": …, "absender": "<sid>",          diese Hülle: Zähler (eine Unix-
+                                            Sekunde, E-KA-69) und Gerät
+      "o": …, "stand_absender": "<sid>",    der Stand: Zähler und Gerät
+      "vermerk": [z_v, "<sid>", t] | null } der Vermerk für DIESEN Absender
+
+Wessen Uhr zu prüfen ist, sagt der Zähler: die des Geräts mit dem HÖHEREN
+(bei `kleiner` das Gerät des Stands, bei `verworfen` das der Hülle); bei
+`gleich` haben zwei Geräte dieselbe Sekunde gezählt. Der Hinweis senkt und
+kappt nichts — kein „jetzt + Toleranz": Was gilt, entscheidet die Person.
+
+DIE BESTÄTIGUNG „diesen Stand übernehmen" ist kein Schalter, sondern der
+Hinweis selbst, zurückgegeben: `einsatz_lesen(…, bestaetigt=<Hinweis>)`
+öffnet und prüft noch einmal alles und nimmt die Hülle an, wenn der Hinweis,
+den sie JETZT ergäbe, dem bestätigten in jedem Feld gleicht. Hat sich
+inzwischen die Hülle, ihr Absender oder der Stand geändert, steht wieder ein
+Hinweis da — der neue. Einen harten Grund (`zurueckgelegt` vom selben
+Absender, nach dem Konto, am Blatt ohne `a`; `zeit`, `absender-gesperrt` …)
+hebt keine Bestätigung auf.
+
+DER VERMERK. `stand_nach_abnahme(…, jetzt=<Unix-Sekunde der Bestätigung>)`
+schreibt den Stand der übernommenen Hülle — `o` SINKT dabei (oder bleibt,
+bei `gleich`), `a` wechselt — und legt den verworfenen Stand ab:
+
+    a   16 Hex-Zeichen: die SID des GERÄTS, dessen Hülle `o` gesetzt hat.
+        Fehlt, wenn sie vom Konto kam (dann steht `k`) oder das Blatt von
+        vor KA-09 stammt. `k` und `a` schließen einander aus; stehen doch
+        beide, gilt `k` (die strengere Regel). `k` bleibt ein eigenes Feld
+        und wird nicht durch die SID des Kontos ersetzt: Die Regel „nach
+        dem Konto kein Gerät" darf nicht daran hängen, dass der Leser das
+        Kontopaar kennt, zu dem eine alte SID gehörte, und das
+        Zusammenführen zweier Blätter kommt ohne Schlüssel aus.
+    u   Vermerke [[z_v, "<sid>", t], …], nach SID sortiert, je Absender
+        höchstens einer: „Der Stand z_v des Geräts <sid> ist zur Zeit t
+        bewusst verworfen worden." Platz im Eintrag: o, k, a, f, u.
+
+Was der Vermerk bewirkt — und was nicht:
+    dieselbe Hülle noch einmal    z = o, Absender = `a`: angenommen, ohne
+                   Hinweis. Die Bestätigung gilt, solange der Stand steht.
+    spätere desselben Absenders   z ≥ o angenommen, z < o hart
+                   `zurueckgelegt` — der Vermerk ist KEIN Generalschlüssel:
+                   Er erlaubt nichts. Er VERBIETET nur das stille
+                   Zurückkehren des verworfenen Stands.
+    der verworfene Absender       mit z ≤ z_v: Hinweis (`kleiner`, `gleich`
+                   oder, über dem gesunkenen Stand, `verworfen`) — ohne
+                   Vermerk ginge seine alte Hülle als „höherer Zähler"
+                   still wieder auf. Mit z > z_v (er hat wirklich geändert;
+                   sein Zähler steigt streng): angenommen wie jede Übergabe.
+    ein drittes Gerät             nach der Tabelle oben, vom Vermerk unberührt.
+Ein Vermerk fällt weg, sobald der Stand auf SEINEN Absender übergeht (mit
+oder ohne Bestätigung) oder eine Hülle des Kontos abgenommen wird (dann
+gilt `k`, und kein Gerät kommt mehr durch). Jede Bestätigung schreibt einen
+Vermerk, auch die Rückkehr zum verworfenen Stand (`verworfen`): Ein zweiter
+Browser erkennt daran, welcher Stand der jüngere Entschluss ist.
+
+Der Befund `stand-uebernommen` (`einsatz_befunde()`) steht an einer
+ANGENOMMENEN Gerätehülle, solange ein Vermerk mit z_v ≥ z wirkt: Der
+gezeigte Stand liegt bewusst unter (oder gleichauf mit) einem verworfenen.
+
+EIN BLATT OHNE `a` (von vor KA-09, oder von einem Browser älterer Fassung
+weitergeschrieben) wird gelesen wie bisher: `z < o` hart `zurueckgelegt`,
+`z ≥ o` angenommen — und beim Abnehmen trägt `stand_nach_abnahme()` den
+Absender nach. Einen Hinweis gibt es dort NICHT: Wer den Stand gesetzt hat,
+ist unbekannt, und „unbekannt" gilt als „derselbe" — die strenge Seite.
+Solange ein solcher Einsatz an einem zu hohen Stand hängt, hat er keinen
+Rückweg; bei Gleichstand bekommt der erste Absender, der gelesen wird, den
+Stand zugeschrieben, der andere danach den Hinweis.
+
+ZWEI BLÄTTER ZUSAMMENFÜHREN (`stand_zusammenfuehren()`, im Browser beim
+409-Konflikt). „Je Feld der höhere Zähler" reicht nicht mehr — es höbe
+einen bewusst gesenkten Stand still wieder an. Die Regel, in dieser Folge:
+    1. Führt genau EINE Seite den Stand der anderen als verworfen (ein
+       Vermerk für deren `a` mit z_v ≥ deren `o`), gewinnt sie mit `o`
+       und `a`.
+    2. Sonst gewinnt der höhere `o`; bei Gleichstand `k`, dann die Seite
+       mit `a`, dann die kleinere SID.
+    3. `f`: einer hat es. `u`: beide vereinigt, je Absender der höhere z_v
+       (bei Gleichstand das spätere t), ohne den Absender des Siegers; mit
+       `k` am Sieger entfallen `a` und `u`.
+Das Ergebnis hängt nicht von der Reihenfolge der Seiten ab.
 
 DIE STÜCKFOLGE — verkettet über die DECKUNG, nicht über einen Hash. Die Uhr
 verschließt ein Stück bei jedem Sendeversuch neu und schneidet es nach einem
@@ -298,6 +407,17 @@ N_P256 = 0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551
 
 class HuelleFehler(ValueError):
     """Eine Hülle, die nicht aufgeht — mit benanntem Grund."""
+
+
+class HuelleHinweis(HuelleFehler):
+    """Eine Einsatzhülle, die echt ist, aber erst nach bewusster Bestätigung
+    gilt (E-KA-70): Grund `uhrzeit-pruefen`. `hinweis` trägt beide Zähler
+    und beide Absender (Kopf, „DER RÜCKWEG"), `inhalt` das geöffnete Innere."""
+
+    def __init__(self, hinweis: dict, inhalt: dict):
+        super().__init__("uhrzeit-pruefen")
+        self.hinweis = hinweis
+        self.inhalt = inhalt
 
 
 def schluessel_aus_name(name: str) -> ec.EllipticCurvePrivateKey:
@@ -828,11 +948,14 @@ def spur_lesen(leser: Leser, art: str, ref: str, stuecke: list[dict], *, versatz
 
 
 def einsatz_lesen(leser: Leser, ref: str, huelle: bytes, started_ts: int, *, versatz: int = 0,
-                  stand: dict | None = None) -> tuple[dict, str | None]:
+                  stand: dict | None = None, bestaetigt: dict | None = None) -> tuple[dict, str | None]:
     """Die Einsatzhülle öffnen und gegen Klartext und Standbuch halten.
     `started_ts`: der Klartextbeginn des Einsatzes. `stand`: der Eintrag des
     Standbuchs — `o` (Zähler der zuletzt abgenommenen Hülle), `k` (1: sie kam
-    vom Konto). Gibt Inhalt und Absender zurück."""
+    vom Konto), `a` (sonst: die SID des Geräts), `u` (Vermerke). Gibt Inhalt
+    und Absender zurück. Wirft `HuelleHinweis`, wo die Hülle erst nach
+    Bestätigung gilt; `bestaetigt` ist dieser Hinweis, zurückgegeben — er
+    gilt nur, wenn er dem Hinweis gleicht, den die Hülle JETZT ergibt."""
     klar, absender = leser.huelle(huelle, "einsatz", ref, "")
     try:
         d = json.loads(klar.decode("utf-8"))
@@ -851,39 +974,168 @@ def einsatz_lesen(leser: Leser, ref: str, huelle: bytes, started_ts: int, *, ver
         raise HuelleFehler("zeit")
     if absender != KONTO and leser.gesperrt(absender, d["start"]):
         raise HuelleFehler("absender-gesperrt")
-    if stand and stand.get("o"):
-        if d["z"] < stand["o"] or (stand.get("k") and absender != KONTO):
-            raise HuelleFehler("zurueckgelegt")
+    hart = _hart_zurueckgelegt(d, absender, stand)
+    if hart:
+        raise HuelleFehler("zurueckgelegt")
+    hinweis = einsatz_hinweis(d, absender, stand)
+    if hinweis is not None and bestaetigt != hinweis:
+        raise HuelleHinweis(hinweis, d)
     return d, absender
 
 
 OFFEN_NACH_SCHLUSS = "offen-nach-schluss"
+UHRZEIT_PRUEFEN = "uhrzeit-pruefen"           # der Grund von `HuelleHinweis`
+STAND_UEBERNOMMEN = "stand-uebernommen"
+BESTAETIGUNG = "bestaetigung"                 # Abnehmen eines Hinweises ohne Zeit der Bestätigung
+# Die Felder der Einsatzhülle im Eintrag des Standbuchs, in dieser Folge.
+STANDFELDER = ("o", "k", "a", "f", "u")
+
+
+def _vermerk(stand: dict | None, absender: str | None) -> list | None:
+    """Der Vermerk `[z_v, sid, t]` für diesen Absender, oder None."""
+    for e in (stand or {}).get("u") or []:
+        if e[1] == absender:
+            return list(e)
+    return None
+
+
+def _hart_zurueckgelegt(d: dict, absender: str | None, stand: dict | None) -> bool:
+    """Die Fälle, die keine Bestätigung aufhebt (Tabelle im Kopf): ein Gerät
+    nach dem Konto; `z < o` vom Konto, vom Gerät des Stands oder an einem
+    Blatt, das den Absender des Stands nicht kennt."""
+    if not stand or not stand.get("o"):
+        return False
+    if stand.get("k"):
+        return absender != KONTO or d["z"] < stand["o"]
+    a = stand.get("a")
+    if absender == KONTO or not a or a == absender:
+        return d["z"] < stand["o"]
+    return False
+
+
+def einsatz_hinweis(d: dict, absender: str | None, stand: dict | None) -> dict | None:
+    """Gilt diese (schon geöffnete und geprüfte) Einsatzhülle erst nach
+    bewusster Bestätigung? Nur zwischen zwei GERÄTEN: Der Stand trägt `a`
+    (kein `k`), die Hülle kommt von einem anderen Gerät, und entweder ist
+    `z ≤ o` (`kleiner`, `gleich`), oder für diesen Absender steht ein
+    Vermerk mit z_v ≥ z (`verworfen`). Sonst None. Rein — öffnet nichts."""
+    if absender is None or absender == KONTO or not stand or not stand.get("o") or stand.get("k"):
+        return None
+    a = stand.get("a")
+    if not a or a == absender:
+        return None
+    z, o = d["z"], stand["o"]
+    vermerk = _vermerk(stand, absender)
+    if z < o:
+        art = "kleiner"
+    elif z == o:
+        art = "gleich"
+    elif vermerk and vermerk[0] >= z:
+        art = "verworfen"
+    else:
+        return None
+    return {"art": art, "z": z, "absender": absender, "o": o, "stand_absender": a, "vermerk": vermerk}
 
 
 def einsatz_befunde(d: dict, absender: str | None, stand: dict | None) -> list[str]:
     """Was an einer ANGENOMMENEN Einsatzhülle auffällt, ohne dass sie
-    abgewiesen wird (E-KA-69). `d`, `absender`: was `einsatz_lesen()`
+    abgewiesen wird (E-KA-69, -70). `d`, `absender`: was `einsatz_lesen()`
     geliefert hat; `stand`: derselbe Eintrag des Standbuchs, VOR dem
     Abnehmen dieser Hülle. `f` im Stand: 1 = zu diesem Einsatz war schon
-    eine Hülle mit `schluss: true` abgenommen (haftet, siehe Kopf)."""
+    eine Hülle mit `schluss: true` abgenommen (haftet, siehe Kopf).
+    `stand-uebernommen`: Nach dem Abnehmen wirkt ein Vermerk mit z_v ≥ z —
+    der gezeigte Stand liegt bewusst unter einem verworfenen oder gleichauf."""
     befunde = []
     if absender is not None and stand and stand.get("f") and d.get("schluss") is not True:
         befunde.append(OFFEN_NACH_SCHLUSS)
+    if absender is not None and absender != KONTO:
+        hinweis = einsatz_hinweis(d, absender, stand)
+        wirkt = [e for e in (stand or {}).get("u") or [] if e[1] != absender and e[0] >= d["z"]]
+        if wirkt or (hinweis is not None and hinweis["o"] >= d["z"]):
+            befunde.append(STAND_UEBERNOMMEN)
     return befunde
 
 
-def stand_nach_abnahme(d: dict, absender: str | None, stand: dict | None) -> dict:
+def stand_nach_abnahme(d: dict, absender: str | None, stand: dict | None, *,
+                       jetzt: int | None = None) -> dict:
     """Der Eintrag des Standbuchs, nachdem der Browser diese Hülle abgenommen
-    hat — nur die Felder der Einsatzhülle (`o`, `k`, `f`), in dieser
-    Reihenfolge; `k` und `f` fehlen, wenn sie nicht gesetzt sind."""
+    hat — nur die Felder der Einsatzhülle (`STANDFELDER`), in dieser
+    Reihenfolge; was nicht gesetzt ist, fehlt. `jetzt`: die Unix-Sekunde der
+    bewussten Bestätigung — verlangt, wo die Hülle nur mit ihr gilt
+    (`einsatz_hinweis()`), sonst ohne Wirkung. Wirft `bestaetigung`, wenn sie
+    dort fehlt, und `zurueckgelegt`, wo auch sie nichts hilft: Abnehmen kann
+    man nur, was `einsatz_lesen()` angenommen hat."""
     alt = stand or {}
     if absender is None:
-        return {s: alt[s] for s in ("o", "k", "f") if alt.get(s)}
-    neu = {"o": d["z"]}
+        return {s: alt[s] for s in STANDFELDER if alt.get(s)}
+    if _hart_zurueckgelegt(d, absender, stand):
+        raise HuelleFehler("zurueckgelegt")
+    hinweis = einsatz_hinweis(d, absender, stand)
+    if hinweis is not None and type(jetzt) is not int:
+        raise HuelleFehler(BESTAETIGUNG)
+    neu: dict = {"o": d["z"]}
     if absender == KONTO:
         neu["k"] = 1
+    else:
+        neu["a"] = absender
     if alt.get("f") or d.get("schluss") is True:
         neu["f"] = 1
+    if absender != KONTO:
+        u = {e[1]: list(e) for e in alt.get("u") or []}
+        if hinweis is not None:
+            u[hinweis["stand_absender"]] = [hinweis["o"], hinweis["stand_absender"], jetzt]
+        u.pop(absender, None)                         # der Stand geht auf ihn über
+        if u:
+            neu["u"] = [u[s] for s in sorted(u)]
+    return neu
+
+
+def _fuehrt_als_verworfen(x: dict, y: dict) -> bool:
+    """Führt Blatt `x` den Stand von `y` als verworfen?"""
+    if not y.get("o") or y.get("k") or not y.get("a"):
+        return False
+    v = _vermerk(x, y["a"])
+    return v is not None and v[0] >= y["o"]
+
+
+def stand_zusammenfuehren(x: dict | None, y: dict | None) -> dict:
+    """Zwei Einträge desselben Einsatzes aus zwei Blättern zu einem machen
+    (nur `STANDFELDER`) — die Regel steht im Kopf, „ZWEI BLÄTTER
+    ZUSAMMENFÜHREN". Symmetrisch: (x, y) und (y, x) ergeben dasselbe."""
+    x, y = x or {}, y or {}
+
+    def geht_vor(s: dict, t: dict) -> bool:
+        so, to = s.get("o") or 0, t.get("o") or 0
+        if so != to:
+            return so > to
+        if bool(s.get("k")) != bool(t.get("k")):
+            return bool(s.get("k"))
+        sa = "" if s.get("k") else s.get("a") or ""
+        ta = "" if t.get("k") else t.get("a") or ""
+        if bool(sa) != bool(ta):
+            return bool(sa)
+        return sa <= ta
+
+    kx, ky = _fuehrt_als_verworfen(x, y), _fuehrt_als_verworfen(y, x)
+    sieger = (x if kx else y) if kx != ky else (x if geht_vor(x, y) else y)
+    neu: dict = {}
+    if sieger.get("o"):
+        neu["o"] = sieger["o"]
+    if sieger.get("k"):
+        neu["k"] = 1
+    elif sieger.get("a"):
+        neu["a"] = sieger["a"]
+    if x.get("f") or y.get("f"):
+        neu["f"] = 1
+    if not neu.get("k"):
+        u: dict = {}
+        for e in list(x.get("u") or []) + list(y.get("u") or []):
+            b = u.get(e[1])
+            if b is None or (e[0], e[2]) > (b[0], b[2]):
+                u[e[1]] = list(e)
+        u.pop(neu.get("a"), None)
+        if u:
+            neu["u"] = [u[s] for s in sorted(u)]
     return neu
 
 
@@ -1026,6 +1278,12 @@ def _leser(v: dict, buch: str = "standard", verlangt2: bool = False) -> Leser:
     konto = ec.derive_private_key(int(v["konto"]["privat_hex"], 16), ec.SECP256R1())
     return Leser(konto, {k: {"spk": bytes.fromhex(e["spk_hex"]), "bis": e["bis"]}
                          for k, e in v["buecher"][buch].items()}, verlangt2)
+
+
+def _ohne_a(stand: dict) -> dict:
+    """Ein Eintrag ohne das Feld `a` — für die Fälle unter `einsaetze`, deren
+    `stand_danach` von vor KA-09 stammt (siehe dort)."""
+    return {s: w for s, w in stand.items() if s != "a"}
 
 
 def vektoren2_bauen() -> dict:
@@ -1271,8 +1529,11 @@ def vektoren2_bauen() -> dict:
             f["gleich_wie"] = gleich_wie
         if not isinstance(erwartet, str):
             f["befund"] = list(befund)
-            f["stand_danach"] = stand_nach_abnahme({"z": erwartet["z"], "schluss": schluss},
-                                                   erwartet["absender"], stand)
+            # Diese Fälle stammen von vor KA-09 und bleiben byte-gleich: Ihr
+            # `stand_danach` nennt `o`, `k`, `f` — das Feld `a`, das
+            # `stand_nach_abnahme()` seither nachträgt, steht in `rueckweg`.
+            f["stand_danach"] = _ohne_a(stand_nach_abnahme({"z": erwartet["z"], "schluss": schluss},
+                                                           erwartet["absender"], stand))
 
     inhalt("inhalt-alter-stand-nachgesendet", i_nach, "zurueckgelegt", nach_uhr,
            gleich_wie="wechsel-erstes-geraet")
@@ -1331,6 +1592,147 @@ def vektoren2_bauen() -> dict:
                    "unverändert beim Verschließen.",
         "letztes": 0,
         "schritte": [dict(s, **e) for s, e in zip(schritte, zaehlerfolge(schritte))],
+    }
+
+    # --- Der Rückweg (E-KA-70, F-KA-112; KA-09). Ein eigener Schlüssel, kein
+    # Zuwachs unter `einsaetze`: Wer jene Liste liest (Browser bis KA-10),
+    # kennt weder den Grund `uhrzeit-pruefen` noch `bestaetigt`. Die Hüllen
+    # sind die der Übergabe oben (Handy ändert bei T0+1320, die Uhr schließt
+    # bei T0+1500 ab, eine nachgehende Uhr zählt T0+1200) — dieselben Bytes,
+    # jetzt gegen einen Stand, der seinen Absender kennt (`a`). Neu
+    # verschlossen ist nur „e-rueckweg-uhr-aelter" (die Uhr, z = T0+1100).
+    #   `hinweis`       was `HuelleHinweis` trägt (neben `grund`)
+    #   `bestaetigt`    der zurückgegebene Hinweis; `jetzt` die Zeit dazu
+    #   `befund`, `stand_danach`   an jedem angenommenen Fall
+    # Ein Objekt mit zwei Listen — so kippt beim Anfügen keine Zeile.
+    z_aelter, t_best, t_best2 = T0 + 1100, T0 + 7200, T0 + 9000
+    fremd_sid = aus["geraete"]["fremd"]["sid_hex"]
+    r_aelter = b64(_zu("e-rueckweg-uhr-aelter", "uhr", konto, "einsatz", REF_E, "",
+                       einsatz_innen2(z_aelter, T0, True, PHASEN2, REA2)))
+    k_huelle = aus["faelle"][6]["huelle_b64"]         # „konto-einsatz": z = 4, abgeschlossen
+    REF_K = aus["faelle"][6]["client_ref"]
+    rw: list = []
+
+    def hin(art, z, wer, o, von, vermerk=None):
+        return {"art": art, "z": z, "absender": wer, "o": o, "stand_absender": von, "vermerk": vermerk}
+
+    def rueck(name, huelle_b64, erwartet, stand, *, schluss=False, hinweis=None, bestaetigt=None,
+              jetzt=None, befund=(), started_ts=T0, ref=REF_E, buch="standard"):
+        f = {"name": name, "client_ref": ref, "started_ts": started_ts, "versatz": 0, "stand": stand,
+             "buch": buch, "huelle_b64": huelle_b64}
+        if bestaetigt is not None:
+            f["bestaetigt"], f["jetzt"] = bestaetigt, jetzt
+        if isinstance(erwartet, str):
+            f["grund"] = erwartet
+            if hinweis is not None:
+                f["hinweis"] = hinweis
+        else:
+            f["erwartet"] = erwartet
+            f["befund"] = list(befund)
+            f["stand_danach"] = stand_nach_abnahme({"z": erwartet["z"], "schluss": schluss},
+                                                   erwartet["absender"], stand, jetzt=jetzt)
+        rw.append(f)
+        return f.get("stand_danach")
+
+    U, H = uhr_sid, handy
+    # (1) derselbe Absender, kleiner: hart — auch mit Bestätigung.
+    rueck("gleicher-absender-kleiner", w_n, "zurueckgelegt", {"o": z_uhr, "a": U, "f": 1})
+    rueck("gleicher-absender-kleiner-bestaetigung-wirkungslos", w_n, "zurueckgelegt",
+          {"o": z_uhr, "a": U, "f": 1}, bestaetigt=hin("kleiner", z_nachgang, U, z_uhr, U), jetzt=t_best)
+    rueck("gleicher-absender-gleich", i_nach, {"z": z_handy, "absender": H}, {"o": z_handy, "a": H})
+    rueck("gleicher-absender-hoeher", w_s, {"z": z_spaeter, "absender": H}, {"o": z_handy, "a": H},
+          schluss=True)
+    # (2) ein anderes Gerät, kleiner: Hinweis; bestätigt: angenommen, vermerkt.
+    #     Das ist „wechsel-uhr-geht-nach" — dort, am Blatt ohne `a`, hart.
+    h_kleiner = hin("kleiner", z_nachgang, U, z_handy, H)
+    rueck("anderer-absender-kleiner", w_n, UHRZEIT_PRUEFEN, {"o": z_handy, "a": H}, hinweis=h_kleiner)
+    nach_best = rueck("anderer-absender-kleiner-bestaetigt", w_n, {"z": z_nachgang, "absender": U},
+                      {"o": z_handy, "a": H}, schluss=True, bestaetigt=h_kleiner, jetzt=t_best,
+                      befund=[STAND_UEBERNOMMEN])
+    # (3) nach der Bestätigung: dieselbe Hülle, spätere, und was NICHT geht.
+    rueck("nach-bestaetigung-dieselbe-huelle", w_n, {"z": z_nachgang, "absender": U}, nach_best,
+          schluss=True, befund=[STAND_UEBERNOMMEN])
+    rueck("nach-bestaetigung-gleicher-absender-spaeter", w_u, {"z": z_uhr, "absender": U}, nach_best,
+          schluss=True)
+    rueck("nach-bestaetigung-gleicher-absender-aelter", r_aelter, "zurueckgelegt", nach_best)
+    h_verworfen = hin("verworfen", z_handy, H, z_nachgang, U, [z_handy, H, t_best])
+    rueck("nach-bestaetigung-verworfener-stand-kommt-wieder", w_h, UHRZEIT_PRUEFEN, nach_best,
+          hinweis=h_verworfen)
+    rueck("ohne-vermerk-ginge-er-still-auf", w_h, {"z": z_handy, "absender": H},
+          {"o": z_nachgang, "a": U, "f": 1}, befund=[OFFEN_NACH_SCHLUSS])
+    rueck("nach-bestaetigung-verworfener-stand-bestaetigt", w_h, {"z": z_handy, "absender": H}, nach_best,
+          bestaetigt=h_verworfen, jetzt=t_best2, befund=[OFFEN_NACH_SCHLUSS])
+    rueck("nach-bestaetigung-verworfener-absender-aendert", w_s, {"z": z_spaeter, "absender": H},
+          nach_best, schluss=True)
+    # (4) die Bestätigung ist an Hülle UND Stand gebunden.
+    rueck("bestaetigung-fuer-eine-andere-huelle", w_n, UHRZEIT_PRUEFEN, {"o": z_handy, "a": H},
+          hinweis=h_kleiner, bestaetigt=hin("kleiner", z_aelter, U, z_handy, H), jetzt=t_best)
+    rueck("bestaetigung-gegen-einen-anderen-stand", w_n, UHRZEIT_PRUEFEN, {"o": z_spaeter, "a": H, "f": 1},
+          hinweis=hin("kleiner", z_nachgang, U, z_spaeter, H), bestaetigt=h_kleiner, jetzt=t_best)
+    # (5) gleiches z von einem anderen Gerät (F-KA-112) — bisher still
+    #     angenommen („inhalt-gleiches-z-offen-nach-schluss", Blatt ohne `a`).
+    h_gleich = hin("gleich", z_uhr, H, z_uhr, U)
+    rueck("gleiches-z-anderer-absender", i_gleich, UHRZEIT_PRUEFEN, {"o": z_uhr, "a": U, "f": 1},
+          hinweis=h_gleich)
+    rueck("gleiches-z-anderer-absender-bestaetigt", i_gleich, {"z": z_uhr, "absender": H},
+          {"o": z_uhr, "a": U, "f": 1}, bestaetigt=h_gleich, jetzt=t_best,
+          befund=[OFFEN_NACH_SCHLUSS, STAND_UEBERNOMMEN])
+    # (6) ein Vermerk für ein drittes Gerät bleibt stehen und wird einsortiert.
+    dritter = [T0 + 5000, fremd_sid, T0 + 7000]
+    rueck("vermerk-eines-dritten-bleibt", w_s, {"z": z_spaeter, "absender": H},
+          {"o": z_uhr, "a": U, "f": 1, "u": [dritter]}, schluss=True, befund=[STAND_UEBERNOMMEN])
+    rueck("zweiter-vermerk-nach-sid-sortiert", i_gleich, {"z": z_uhr, "absender": H},
+          {"o": z_uhr, "a": U, "f": 1, "u": [dritter]}, bestaetigt=dict(h_gleich), jetzt=t_best,
+          befund=[OFFEN_NACH_SCHLUSS, STAND_UEBERNOMMEN])
+    # (7) das Blatt ohne `a` (von vor KA-09): wie bisher, kein Hinweis; beim
+    #     Abnehmen wird der Absender nachgetragen.
+    rueck("altblatt-kleiner", w_n, "zurueckgelegt", {"o": z_handy})
+    rueck("altblatt-kleiner-bestaetigung-wirkungslos", w_n, "zurueckgelegt", {"o": z_handy},
+          bestaetigt=h_kleiner, jetzt=t_best)
+    rueck("altblatt-gleich", i_gleich, {"z": z_uhr, "absender": H}, {"o": z_uhr, "f": 1},
+          befund=[OFFEN_NACH_SCHLUSS])
+    rueck("altblatt-hoeher", w_u, {"z": z_uhr, "absender": U}, {"o": z_handy}, schluss=True)
+    # (8) das Konto: `k` bleibt hart, und eine Hülle des Kontos löscht `a`, `u`.
+    rueck("konto-stand-bestaetigung-wirkungslos", e5, "zurueckgelegt", {"o": 4, "k": 1},
+          bestaetigt=hin("kleiner", 5, H, 4, sid(kpub).hex()), jetzt=t_best)
+    rueck("konto-und-a-zugleich-gilt-k", e5, "zurueckgelegt", {"o": 4, "k": 1, "a": U})
+    rueck("konto-nach-geraet", k_huelle, {"z": 4, "absender": KONTO},
+          {"o": 3, "a": U, "u": [[9, H, t_best]]}, schluss=True, ref=REF_K)
+    rueck("konto-kleiner-nach-geraet", k_huelle, "zurueckgelegt", {"o": 5, "a": U}, ref=REF_K,
+          bestaetigt=hin("kleiner", 4, KONTO, 5, U), jetzt=t_best)
+    # (9) der Hinweis kommt NACH den harten Prüfungen.
+    rueck("zeit-vor-hinweis", w_n, "zeit", {"o": z_handy, "a": H}, started_ts=T0 + 86400)
+    rueck("gesperrt-vor-hinweis", eu, "absender-gesperrt", {"o": 5, "a": H}, started_ts=T0 + 60,
+          buch="uhr-ausgetragen")
+
+    # --- Zwei Blätter zusammenführen: nur Einträge, keine Hüllen.
+    zf: list = []
+
+    def fuehre(name, x, y):
+        zf.append({"name": name, "x": x, "y": y, "erwartet": stand_zusammenfuehren(x, y)})
+
+    veraltet = {"o": z_handy, "a": H}
+    fuehre("gleich", dict(nach_best), dict(nach_best))
+    fuehre("leer-und-stand", {}, {"o": z_handy, "a": H, "f": 1})
+    fuehre("hoeherer-zaehler", {"o": z_handy, "a": H}, {"o": z_uhr, "a": U, "f": 1})
+    fuehre("bestaetigung-gegen-veraltetes-blatt", nach_best, veraltet)
+    fuehre("verworfener-absender-hat-geaendert", nach_best, {"o": z_spaeter, "a": H, "f": 1})
+    fuehre("rueckkehr-gegen-die-erste-bestaetigung", nach_best,
+           {"o": z_handy, "a": H, "f": 1, "u": [[z_nachgang, U, t_best2]]})
+    fuehre("gleichstand-konto-gewinnt", {"o": 4, "a": U}, {"o": 4, "k": 1})
+    fuehre("konto-unter-geraet", {"o": 3, "k": 1, "f": 1}, {"o": 5, "a": U})
+    fuehre("konto-loescht-vermerke", {"o": 9, "k": 1}, {"o": 5, "a": U, "u": [[9, H, t_best]]})
+    fuehre("altblatt-und-blatt-mit-a", {"o": z_uhr, "f": 1}, {"o": z_uhr, "a": U})
+    fuehre("gleichstand-zwei-geraete-kleinere-sid", {"o": z_uhr, "a": U}, {"o": z_uhr, "a": H})
+    fuehre("vermerke-vereinigt-je-absender-der-hoehere",
+           {"o": z_uhr, "a": U, "u": [[T0 + 5000, fremd_sid, T0 + 7000]]},
+           {"o": z_uhr, "a": U, "u": [[T0 + 6000, fremd_sid, T0 + 8000], [T0 + 4000, H, T0 + 7500]]})
+    aus["rueckweg"] = {
+        "hinweis": "E-KA-70: Der Stand kennt seinen Absender (a). Kleineres oder gleiches z von einem "
+                   "ANDEREN Gerät ist ein Hinweis (uhrzeit-pruefen), der erst mit bestaetigt gilt; "
+                   "die Bestätigung steht als Vermerk (u) im Stand.",
+        "zusammenfuehren": zf,
+        "einsaetze": rw,
     }
     return aus
 
@@ -1398,7 +1800,9 @@ def pruefen2(v: dict) -> list[str]:
                 befunde = einsatz_befunde(d, wer, f["stand"])
                 if befunde != f.get("befund", []):
                     fehler.append(f"2/Einsatz {f['name']}: Befund {befunde}, erwartet {f.get('befund', [])}")
-                danach = stand_nach_abnahme(d, wer, f["stand"])
+                # Ohne `a`: Diese Fälle sind von vor KA-09 (siehe `_ohne_a()`);
+                # mit `a` und `u` misst die Schleife über `rueckweg` unten.
+                danach = _ohne_a(stand_nach_abnahme(d, wer, f["stand"]))
                 if "stand_danach" in f and danach != f["stand_danach"]:
                     fehler.append(f"2/Einsatz {f['name']}: Stand danach {danach}, "
                                   f"erwartet {f['stand_danach']}")
@@ -1419,6 +1823,66 @@ def pruefen2(v: dict) -> list[str]:
                     fehler.append(f"2/Einsatz {f['name']}: dieselbe Hülle wie {g['name']}, nicht neu verschlossen")
             except (HuelleFehler, StopIteration) as e:
                 fehler.append(f"2/Einsatz {f['name']}: Vergleich mit {f['gleich_wie']} scheitert ({e})")
+    rw = v.get("rueckweg")
+    if not rw:
+        fehler.append("2/Rückweg: die Fälle zum Rückweg fehlen")
+    for f in (rw or {}).get("einsaetze", []):
+        was = f"2/Rückweg {f['name']}"
+        try:
+            d, wer = einsatz_lesen(_leser(v, f["buch"]), f["client_ref"], base64.b64decode(f["huelle_b64"]),
+                                   f["started_ts"], versatz=f["versatz"], stand=f["stand"],
+                                   bestaetigt=f.get("bestaetigt"))
+            ist = {"z": d.get("z"), "absender": wer}
+            if "grund" in f:
+                fehler.append(f"{was}: ging auf, erwartet {f['grund']}")
+            elif ist != f["erwartet"]:
+                fehler.append(f"{was}: {ist}, erwartet {f['erwartet']}")
+            else:
+                befunde = einsatz_befunde(d, wer, f["stand"])
+                if befunde != f["befund"]:
+                    fehler.append(f"{was}: Befund {befunde}, erwartet {f['befund']}")
+                try:
+                    danach = stand_nach_abnahme(d, wer, f["stand"], jetzt=f.get("jetzt"))
+                    # Als Text verglichen: auch die Feldfolge muss stimmen.
+                    if json.dumps(danach) != json.dumps(f["stand_danach"]):
+                        fehler.append(f"{was}: Stand danach {danach}, erwartet {f['stand_danach']}")
+                except HuelleFehler as e:
+                    fehler.append(f"{was}: Stand danach scheitert ({e})")
+                if "bestaetigt" in f:
+                    # Dieselbe Hülle OHNE die Bestätigung muss der Hinweis sein,
+                    # der bestätigt wurde — sonst hätte sie nichts bewirkt —,
+                    # und abnehmen lässt sie sich nur mit der Zeit dazu.
+                    try:
+                        einsatz_lesen(_leser(v, f["buch"]), f["client_ref"], base64.b64decode(f["huelle_b64"]),
+                                      f["started_ts"], versatz=f["versatz"], stand=f["stand"])
+                        fehler.append(f"{was}: ging auch ohne Bestätigung auf")
+                    except HuelleHinweis as e:
+                        if e.hinweis != f["bestaetigt"]:
+                            fehler.append(f"{was}: ohne Bestätigung Hinweis {e.hinweis}, bestätigt war {f['bestaetigt']}")
+                    except HuelleFehler as e:
+                        fehler.append(f"{was}: ohne Bestätigung Grund {e}, erwartet {UHRZEIT_PRUEFEN}")
+                    try:
+                        stand_nach_abnahme(d, wer, f["stand"])
+                        fehler.append(f"{was}: Stand danach entsteht ohne Zeit der Bestätigung")
+                    except HuelleFehler as e:
+                        if str(e) != BESTAETIGUNG:
+                            fehler.append(f"{was}: Stand danach ohne Zeit — Grund {e}, erwartet {BESTAETIGUNG}")
+        except HuelleHinweis as e:
+            if f.get("grund") != UHRZEIT_PRUEFEN:
+                fehler.append(f"{was}: Hinweis, erwartet {f.get('grund', 'geht auf')}")
+            elif e.hinweis != f.get("hinweis"):
+                fehler.append(f"{was}: Hinweis {e.hinweis}, erwartet {f.get('hinweis')}")
+        except HuelleFehler as e:
+            if str(e) != f.get("grund"):
+                fehler.append(f"{was}: Grund {e}, erwartet {f.get('grund', 'geht auf')}")
+            elif "hinweis" in f:
+                fehler.append(f"{was}: Grund {e} ohne Hinweis, erwartet {f['hinweis']}")
+    for f in (rw or {}).get("zusammenfuehren", []):
+        hin_, her = stand_zusammenfuehren(f["x"], f["y"]), stand_zusammenfuehren(f["y"], f["x"])
+        if json.dumps(hin_) != json.dumps(f["erwartet"]):
+            fehler.append(f"2/Zusammenführen {f['name']}: {hin_}, erwartet {f['erwartet']}")
+        if json.dumps(her) != json.dumps(hin_):
+            fehler.append(f"2/Zusammenführen {f['name']}: umgekehrt {her}, hin {hin_} — hängt an der Reihenfolge")
     zf = v.get("zaehler")
     if not zf:
         fehler.append("2/Zähler: die Zählerfolge fehlt")
@@ -1448,12 +1912,20 @@ def pruefen2(v: dict) -> list[str]:
 
 
 def zahlen2(v: dict) -> str:
+    rw = v.get("rueckweg") or {}
+    rueck = rw.get("einsaetze", [])
+    hinweise = sum(f.get("grund") == UHRZEIT_PRUEFEN for f in rueck)
     rot = (len(v["stoerungen"]) + sum("grund" in f for f in v["folgen"])
-           + sum("grund" in f for f in v["einsaetze"]) + len(v["kopplung"]["gegenlagen"]))
+           + sum("grund" in f for f in v["einsaetze"]) + len(v["kopplung"]["gegenlagen"])
+           + sum("grund" in f for f in rueck) - hinweise)
     gut = (len(v["faelle"]) + len(v["gepackt"]) + sum("grund" not in f for f in v["folgen"])
-           + sum("grund" not in f for f in v["einsaetze"]) + 1 + (1 if v.get("zaehler") else 0))
-    # + 1 die Kopplung, + 1 die Zählerfolge (E-KA-69) — je als EIN Fall.
-    return f"Fassung 2: {gut} Fälle geöffnet, {rot} Gegenlagen abgewiesen"
+           + sum("grund" not in f for f in v["einsaetze"]) + 1 + (1 if v.get("zaehler") else 0)
+           + sum("grund" not in f for f in rueck) + (1 if rw.get("zusammenfuehren") else 0))
+    # + 1 die Kopplung, + 1 die Zählerfolge (E-KA-69), + 1 das Zusammenführen
+    # (KA-09) — je als EIN Fall. Ein Hinweis ist weder geöffnet noch
+    # abgewiesen und steht für sich.
+    return (f"Fassung 2: {gut} Fälle geöffnet, {rot} Gegenlagen abgewiesen"
+            + (f", {hinweise} Hinweise" if rw else ""))
 
 
 def mc_bytes(hexwert: str) -> str:
@@ -1687,6 +2159,84 @@ def selbstprobe() -> int:
     faelle.append(("Fehler 2: Zähler fällt mit zurückgestellter Uhr", meldet(w, '2/Zähler Schritt 7')))
     w = json.loads(json.dumps(v2)); del w["zaehler"]
     faelle.append(("Fehler 2: Zählerfolge fehlt", meldet(w, 'die Zählerfolge fehlt')))
+    # Der Rückweg (E-KA-70, KA-09): je neuer Fehlerart einer.
+    def rfall(w, name):
+        return next(f for f in w["rueckweg"]["einsaetze"] if f["name"] == name)
+
+    def zfall(w, name):
+        return next(f for f in w["rueckweg"]["zusammenfuehren"] if f["name"] == name)
+    uhr_s, handy_s = v2["geraete"]["uhr"]["sid_hex"], v2["geraete"]["handy"]["sid_hex"]
+    w = json.loads(json.dumps(v2)); del rfall(w, "anderer-absender-kleiner")["stand"]["a"]
+    faelle.append(("Fehler 2: Hinweis bleibt aus (Stand ohne a) — hart abgewiesen",
+                   meldet(w, "anderer-absender-kleiner: Grund zurueckgelegt, erwartet uhrzeit-pruefen")))
+    w = json.loads(json.dumps(v2)); rfall(w, "gleicher-absender-kleiner")["stand"]["a"] = handy_s
+    faelle.append(("Fehler 2: derselbe Absender kleiner wird zum Hinweis",
+                   meldet(w, "gleicher-absender-kleiner: Hinweis, erwartet zurueckgelegt")))
+    w = json.loads(json.dumps(v2)); rfall(w, "anderer-absender-kleiner")["hinweis"]["o"] += 1
+    faelle.append(("Fehler 2: Hinweis nennt einen anderen Stand",
+                   meldet(w, "anderer-absender-kleiner: Hinweis {")))
+    w = json.loads(json.dumps(v2)); rfall(w, "gleiches-z-anderer-absender")["stand"]["a"] = handy_s
+    faelle.append(("Fehler 2: gleiches z vom anderen Absender geht still auf (F-KA-112)",
+                   meldet(w, "gleiches-z-anderer-absender: ging auf, erwartet uhrzeit-pruefen")))
+    w = json.loads(json.dumps(v2)); rfall(w, "anderer-absender-kleiner-bestaetigt")["bestaetigt"]["z"] -= 1
+    faelle.append(("Fehler 2: Bestätigung für eine andere Hülle gilt",
+                   meldet(w, "anderer-absender-kleiner-bestaetigt: Hinweis, erwartet geht auf")))
+    w = json.loads(json.dumps(v2))
+    b = rfall(w, "anderer-absender-kleiner-bestaetigt"); b["stand"]["a"] = uhr_s
+    faelle.append(("Fehler 2: Bestätigung hebt einen harten Grund auf (derselbe Absender)",
+                   meldet(w, "anderer-absender-kleiner-bestaetigt: Grund zurueckgelegt, erwartet geht auf")))
+    w = json.loads(json.dumps(v2)); del rfall(w, "anderer-absender-kleiner-bestaetigt")["stand_danach"]["u"]
+    faelle.append(("Fehler 2: Bestätigung ohne Vermerk im Stand",
+                   meldet(w, "anderer-absender-kleiner-bestaetigt: Stand danach {")))
+    w = json.loads(json.dumps(v2)); rfall(w, "anderer-absender-kleiner-bestaetigt")["jetzt"] = None
+    faelle.append(("Fehler 2: Bestätigung ohne Zeit wird abgenommen",
+                   meldet(w, "anderer-absender-kleiner-bestaetigt: Stand danach scheitert (bestaetigung)")))
+    w = json.loads(json.dumps(v2))
+    b = rfall(w, "gleicher-absender-hoeher"); b["bestaetigt"] = {"art": "kleiner"}; b["jetzt"] = T0
+    faelle.append(("Fehler 2: Bestätigung, wo kein Hinweis war",
+                   meldet(w, "gleicher-absender-hoeher: ging auch ohne Bestätigung auf")))
+    w = json.loads(json.dumps(v2)); rfall(w, "nach-bestaetigung-verworfener-stand-kommt-wieder")["stand"].pop("u")
+    faelle.append(("Fehler 2: verworfener Stand kehrt still zurück (Vermerk fehlt)",
+                   meldet(w, "nach-bestaetigung-verworfener-stand-kommt-wieder: ging auf, erwartet uhrzeit-pruefen")))
+    w = json.loads(json.dumps(v2)); rfall(w, "nach-bestaetigung-gleicher-absender-aelter")["stand"]["o"] = T0 + 1000
+    faelle.append(("Fehler 2: Vermerk als Generalschlüssel — ältere Hülle desselben Absenders geht auf",
+                   meldet(w, "nach-bestaetigung-gleicher-absender-aelter: ging auf, erwartet zurueckgelegt")))
+    w = json.loads(json.dumps(v2)); rfall(w, "altblatt-kleiner")["stand"]["a"] = handy_s
+    faelle.append(("Fehler 2: Blatt ohne a erwartet, Hinweis kommt",
+                   meldet(w, "altblatt-kleiner: Hinweis, erwartet zurueckgelegt")))
+    w = json.loads(json.dumps(v2)); del rfall(w, "altblatt-gleich")["stand_danach"]["a"]
+    faelle.append(("Fehler 2: Abnehmen am Blatt ohne a trägt den Absender nicht nach",
+                   meldet(w, "altblatt-gleich: Stand danach {")))
+    w = json.loads(json.dumps(v2))
+    b = rfall(w, "zweiter-vermerk-nach-sid-sortiert")["stand_danach"]; b["u"].reverse()
+    faelle.append(("Fehler 2: Vermerke nicht nach SID sortiert",
+                   meldet(w, "zweiter-vermerk-nach-sid-sortiert: Stand danach {")))
+    w = json.loads(json.dumps(v2))
+    b = rfall(w, "gleicher-absender-gleich")["stand_danach"]
+    b["o"] = b.pop("o")                               # `o` wandert hinter `a`
+    faelle.append(("Fehler 2: Feldfolge im Stand vertauscht (a vor o)",
+                   meldet(w, "gleicher-absender-gleich: Stand danach {")))
+    w = json.loads(json.dumps(v2)); rfall(w, "anderer-absender-kleiner-bestaetigt")["befund"] = []
+    faelle.append(("Fehler 2: Befund stand-uebernommen nicht erwartet",
+                   meldet(w, "anderer-absender-kleiner-bestaetigt: Befund ['stand-uebernommen']")))
+    w = json.loads(json.dumps(v2)); rfall(w, "konto-nach-geraet")["stand_danach"]["a"] = uhr_s
+    faelle.append(("Fehler 2: Hülle des Kontos lässt a stehen",
+                   meldet(w, "konto-nach-geraet: Stand danach {")))
+    w = json.loads(json.dumps(v2))
+    b = zfall(w, "bestaetigung-gegen-veraltetes-blatt"); b["erwartet"] = dict(b["y"])
+    faelle.append(("Fehler 2: Zusammenführen hebt den gesenkten Stand wieder an (höherer o gewinnt)",
+                   meldet(w, "2/Zusammenführen bestaetigung-gegen-veraltetes-blatt:")))
+    w = json.loads(json.dumps(v2)); del w["rueckweg"]
+    faelle.append(("Fehler 2: Fälle zum Rückweg fehlen", meldet(w, "die Fälle zum Rückweg fehlen")))
+    # Das Zusammenführen hängt nicht an der Reihenfolge: alle Paare aus den
+    # Ständen der Vektoren, hin und her (unabhängig von den erwarteten Werten).
+    staende = [f[s] for f in v2["rueckweg"]["zusammenfuehren"] for s in ("x", "y")]
+    staende += [f["stand_danach"] for f in v2["rueckweg"]["einsaetze"] if "stand_danach" in f]
+    paare = [(x, y) for x in staende for y in staende]
+    faelle.append((f"Gegenprobe 2: Zusammenführen symmetrisch und stabil ({len(paare)} Paare)",
+                   all(json.dumps(stand_zusammenfuehren(x, y)) == json.dumps(stand_zusammenfuehren(y, x))
+                       and stand_zusammenfuehren(stand_zusammenfuehren(x, y), y) == stand_zusammenfuehren(x, y)
+                       for x, y in paare)))
     w = json.loads(json.dumps(v2)); w["kopplung"]["wert"] = "000000"
     faelle.append(("Fehler 2: falscher Vergleichswert", bool(pruefen2(w))))
     w = json.loads(json.dumps(v2)); w["kopplung"]["gegenlagen"][0]["n_g_hex"] = w["kopplung"]["n_g_hex"]

@@ -54,6 +54,15 @@ window.hpFassung2 = async (v2, vi, weicheAn) => {
       { name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveBits']);
   };
   const aes = (h) => crypto.subtle.importKey('raw', hex(h), { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+  /* DER RÜCKWEG (E-KA-70, KA-09): Kann die Seite ihn? Sie sagt es mit der
+   * Konstanten `EdHuelle2.UHRZEIT_PRUEFEN`. Fehlt sie (bis KA-10), sind die
+   * Prüfungen dazu AUSGENOMMEN — je Prüfung eine Zeile, in der Schlusszahl
+   * gezählt. Steht sie, wird alles gemessen, und was dann fehlt, ist rot. */
+  const kannRueckweg = typeof EdHuelle2 !== 'undefined' && EdHuelle2.UHRZEIT_PRUEFEN === 'uhrzeit-pruefen';
+  const rueckweg = async (text, tun) => {
+    if (!kannRueckweg) { ausgenommen.push(`${text} — die Seite kann den Rückweg noch nicht (EdHuelle2.UHRZEIT_PRUEFEN fehlt)`); return; }
+    await pruefe(text, tun);
+  };
 
   /* ================================================================ Inhalt */
   const CK = vi.schluessel.ck_hex;
@@ -159,6 +168,17 @@ window.hpFassung2 = async (v2, vi, weicheAn) => {
     const o = await EdStandbuch.blattOeffnen(CK, st.text, st.blatt, st.version);
     return gleich(o.blatt.e, st.eintraege) && o.version === st.version && o.blatt.t === st.t;
   });
+  /* Blätter mit den Feldern des Rückwegs (`a`, `f`, `u`, KA-09): Das Format
+   * selbst misst die Seite schon heute — `blattBauen()` nimmt die Einträge,
+   * wie sie kommen. Dass das BUCH sie auch führt, steht unten (Weiche an). */
+  for (const f of vi.standblaetter || []) {
+    await pruefe(`Standblatt ${f.name}: bauen byte-gleich`, async () =>
+      (await EdStandbuch.blattBauen(CK, f.blatt, f.version, f.t, f.eintraege, { fest: { nonce: hex(f.nonce_hex) } })) === f.text);
+    await pruefe(`Standblatt ${f.name}: öffnen (Einträge in ihrer Feldfolge, Version)`, async () => {
+      const o = await EdStandbuch.blattOeffnen(CK, f.text, f.blatt, f.version);
+      return gleich(o.blatt.e, f.eintraege) && o.version === f.version && o.blatt.t === f.t;
+    });
+  }
   for (const f of vi.lagen) {
     const lesen = async () => {
       const blatt = f.blatt_text ? (await EdStandbuch.blattOeffnen(CK, f.blatt_text, f.blatt, f.anker)).blatt : null;
@@ -297,6 +317,56 @@ window.hpFassung2 = async (v2, vi, weicheAn) => {
         await pruefe(`2/Einsatz ${f.name}: Befund ${JSON.stringify(f.befund)}`, async () => gleich(befund, f.befund));
       }
     }
+  }
+  /* Der Rückweg (`rueckweg`, E-KA-70, F-KA-112; KA-09). Was die Seite dafür
+   * bieten muss (Referenz: `einsatz_lesen()`, `stand_nach_abnahme()`,
+   * `stand_zusammenfuehren()` in `referenz.py`):
+   *   EdHuelle2.einsatzLesen(…, { versatz, stand, bestaetigt })
+   *       wirft bei einem Hinweis einen Fehler mit grund 'uhrzeit-pruefen',
+   *       `hinweis` (art, z, absender, o, stand_absender, vermerk) und `inhalt`
+   *   EdHuelle2.standNachAbnahme(inhalt, absender, stand, { jetzt })
+   *       die Felder o, k, a, f, u in dieser Folge; wirft 'bestaetigung' bzw.
+   *       'zurueckgelegt'
+   *   EdStandbuch.standZusammenfuehren(x, y)
+   * Verglichen wird als Text: Auch die Feldfolge gehört zum Format. */
+  const rw = v2.rueckweg || { einsaetze: [], zusammenfuehren: [] };
+  for (const f of rw.einsaetze) {
+    const was = `2/Rückweg ${f.name}`;
+    const lesen = (bestaetigt) => async () => EdHuelle2.einsatzLesen(await leser(f.buch), f.client_ref, f.huelle_b64,
+      f.started_ts, { versatz: f.versatz, stand: f.stand, bestaetigt: bestaetigt });
+    if (f.grund) {
+      await rueckweg(`${was}: ${f.grund}${f.hinweis ? ' mit Hinweis ' + f.hinweis.art : ''}`, async () => {
+        try { await lesen(f.bestaetigt)(); return false; }
+        catch (e) {
+          return e.grund === f.grund && (f.hinweis ? gleich(e.hinweis, f.hinweis) && e.inhalt && e.inhalt.z === f.hinweis.z
+                                                   : e.hinweis === undefined);
+        }
+      });
+      continue;
+    }
+    let o = null;
+    await rueckweg(`${was}: angenommen${f.bestaetigt ? ' nach Bestätigung' : ''}`, async () => {
+      o = await lesen(f.bestaetigt)();
+      return gleich({ z: o.inhalt.z, absender: o.absender }, f.erwartet);
+    });
+    await rueckweg(`${was}: Befund ${JSON.stringify(f.befund)}`, async () => gleich(o.befund, f.befund));
+    await rueckweg(`${was}: Stand danach ${JSON.stringify(f.stand_danach)}`, async () =>
+      gleich(EdHuelle2.standNachAbnahme(o.inhalt, o.absender, f.stand, { jetzt: f.jetzt }), f.stand_danach));
+    if (f.bestaetigt) {
+      await rueckweg(`${was}: ohne Bestätigung derselbe Hinweis`, async () => {
+        try { await lesen(undefined)(); return false; }
+        catch (e) { return e.grund === 'uhrzeit-pruefen' && gleich(e.hinweis, f.bestaetigt); }
+      });
+      await rueckweg(`${was}: Stand danach ohne Zeit der Bestätigung scheitert`, async () => {
+        try { EdHuelle2.standNachAbnahme(o.inhalt, o.absender, f.stand, {}); return false; }
+        catch (e) { return e.grund === 'bestaetigung'; }
+      });
+    }
+  }
+  for (const f of rw.zusammenfuehren) {
+    await rueckweg(`2/Zusammenführen ${f.name}: hin und her dasselbe`, async () =>
+      gleich(EdStandbuch.standZusammenfuehren(f.x, f.y), f.erwartet)
+      && gleich(EdStandbuch.standZusammenfuehren(f.y, f.x), f.erwartet));
   }
   /* Wie ein Absender zählt (`zaehler`, E-KA-69) hat im Browser keinen
    * Gegenstand: Das Konto zählt über das Standbuch, nicht über die Uhrzeit.
@@ -562,6 +632,37 @@ window.hpFassung2 = async (v2, vi, weicheAn) => {
     await c.abgleichen();
     const e = await c.eintrag(REF_F);
     return reihe === 'o,k,f' && angekommen && e.o === 9 && e.f === 1;
+  });
+  /* Die Felder des Rückwegs im Buch (KA-09, E-KA-70): `a` und `u` stehen an
+   * ihrem Platz (o, k, a, f, u), gleich in welcher Folge sie gesetzt wurden,
+   * reisen zu einem zweiten Browser — und ein bewusst GESENKTER Stand wird
+   * beim Zusammenführen mit einem veralteten Blatt nicht wieder angehoben
+   * (bis KA-09 gewann je Feld der höhere Zähler). */
+  const sb = (vi.standblaetter || []).find((x) => x.name === 'stand-uebernommen');
+  const fuehrt = rw.zusammenfuehren.find((x) => x.name === 'bestaetigung-gegen-veraltetes-blatt');
+  await rueckweg('Buch: a und u stehen an ihrem Platz und reisen zu einem zweiten Browser', async () => {
+    const soll = sb.eintraege[sb.kennung];
+    const ein = EdStandbuch.speicherTransport();
+    const a = neuesBuch('rw-a-' + konto, ein);
+    await a.fortschreiben(sb.client_ref, (e) => { e.u = soll.u; e.s = soll.s; e.f = 1; e.a = soll.a; e.o = soll.o; e.p = soll.p; });
+    const o = await EdStandbuch.blattOeffnen(ck, ein.lager.get(String(sb.blatt)).text, sb.blatt, null);
+    const b = neuesBuch('rw-b-' + konto, ein);
+    await b.abgleichen();
+    return gleich(o.blatt.e[sb.kennung], soll) && gleich(await b.eintrag(sb.client_ref), soll);
+  });
+  await rueckweg('Buch: ein veraltetes Blatt hebt den bewusst gesenkten Stand nicht wieder an', async () => {
+    const REF_R = 'm-20261115-r001';
+    const ein = EdStandbuch.speicherTransport();
+    const setze = (stand) => (e) => { for (const s of ['o', 'k', 'a', 'f', 'u']) { delete e[s]; } Object.assign(e, stand); };
+    const a = neuesBuch('rw-c-' + konto, ein), b = neuesBuch('rw-d-' + konto, ein);
+    await a.fortschreiben(REF_R, setze(fuehrt.y));          // beide kennen den hohen Stand
+    await b.abgleichen();
+    await a.fortschreiben(REF_R, setze(fuehrt.x));          // a bestätigt: der Stand sinkt
+    await b.fortschreiben(REF_R, (e) => { e.p = 1; });      // b schreibt auf dem alten: Konflikt, zusammenführen
+    const c = neuesBuch('rw-e-' + konto, ein);
+    await c.abgleichen();
+    const e = await c.eintrag(REF_R);
+    return e.p === 1 && gleich({ o: e.o, a: e.a, f: e.f, u: e.u }, fuehrt.erwartet);
   });
   return { zeilen, schlecht, ausgenommen };
 };

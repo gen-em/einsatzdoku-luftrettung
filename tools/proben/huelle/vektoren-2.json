@@ -1655,5 +1655,1095 @@
         "letztes": 1784280065
       }
     ]
+  },
+  "rueckweg": {
+    "hinweis": "E-KA-70: Der Stand kennt seinen Absender (a). Kleineres oder gleiches z von einem ANDEREN Gerät ist ein Hinweis (uhrzeit-pruefen), der erst mit bestaetigt gilt; die Bestätigung steht als Vermerk (u) im Stand.",
+    "zusammenfuehren": [
+      {
+        "name": "gleich",
+        "x": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "y": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "erwartet": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        }
+      },
+      {
+        "name": "leer-und-stand",
+        "x": {},
+        "y": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225",
+          "f": 1
+        },
+        "erwartet": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225",
+          "f": 1
+        }
+      },
+      {
+        "name": "hoeherer-zaehler",
+        "x": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225"
+        },
+        "y": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "f": 1
+        },
+        "erwartet": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "f": 1
+        }
+      },
+      {
+        "name": "bestaetigung-gegen-veraltetes-blatt",
+        "x": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "y": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225"
+        },
+        "erwartet": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        }
+      },
+      {
+        "name": "verworfener-absender-hat-geaendert",
+        "x": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "y": {
+          "o": 1784278665,
+          "a": "5eb5678b49bd5225",
+          "f": 1
+        },
+        "erwartet": {
+          "o": 1784278665,
+          "a": "5eb5678b49bd5225",
+          "f": 1
+        }
+      },
+      {
+        "name": "rueckkehr-gegen-die-erste-bestaetigung",
+        "x": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "y": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225",
+          "f": 1,
+          "u": [
+            [
+              1784278265,
+              "a499c9fb45a4f71c",
+              1784286065
+            ]
+          ]
+        },
+        "erwartet": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225",
+          "f": 1,
+          "u": [
+            [
+              1784278265,
+              "a499c9fb45a4f71c",
+              1784286065
+            ]
+          ]
+        }
+      },
+      {
+        "name": "gleichstand-konto-gewinnt",
+        "x": {
+          "o": 4,
+          "a": "a499c9fb45a4f71c"
+        },
+        "y": {
+          "o": 4,
+          "k": 1
+        },
+        "erwartet": {
+          "o": 4,
+          "k": 1
+        }
+      },
+      {
+        "name": "konto-unter-geraet",
+        "x": {
+          "o": 3,
+          "k": 1,
+          "f": 1
+        },
+        "y": {
+          "o": 5,
+          "a": "a499c9fb45a4f71c"
+        },
+        "erwartet": {
+          "o": 5,
+          "a": "a499c9fb45a4f71c",
+          "f": 1
+        }
+      },
+      {
+        "name": "konto-loescht-vermerke",
+        "x": {
+          "o": 9,
+          "k": 1
+        },
+        "y": {
+          "o": 5,
+          "a": "a499c9fb45a4f71c",
+          "u": [
+            [
+              9,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "erwartet": {
+          "o": 9,
+          "k": 1
+        }
+      },
+      {
+        "name": "altblatt-und-blatt-mit-a",
+        "x": {
+          "o": 1784278565,
+          "f": 1
+        },
+        "y": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c"
+        },
+        "erwartet": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "f": 1
+        }
+      },
+      {
+        "name": "gleichstand-zwei-geraete-kleinere-sid",
+        "x": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c"
+        },
+        "y": {
+          "o": 1784278565,
+          "a": "5eb5678b49bd5225"
+        },
+        "erwartet": {
+          "o": 1784278565,
+          "a": "5eb5678b49bd5225"
+        }
+      },
+      {
+        "name": "vermerke-vereinigt-je-absender-der-hoehere",
+        "x": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "u": [
+            [
+              1784282065,
+              "c7d790293f2bb888",
+              1784284065
+            ]
+          ]
+        },
+        "y": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "u": [
+            [
+              1784283065,
+              "c7d790293f2bb888",
+              1784285065
+            ],
+            [
+              1784281065,
+              "5eb5678b49bd5225",
+              1784284565
+            ]
+          ]
+        },
+        "erwartet": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "u": [
+            [
+              1784281065,
+              "5eb5678b49bd5225",
+              1784284565
+            ],
+            [
+              1784283065,
+              "c7d790293f2bb888",
+              1784285065
+            ]
+          ]
+        }
+      }
+    ],
+    "einsaetze": [
+      {
+        "name": "gleicher-absender-kleiner",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "f": 1
+        },
+        "buch": "standard",
+        "huelle_b64": "AqSZyftFpPccBE6pkB10JhZfGAykWxqPUj7/YPDbwyuOGRNVKcJM27lwgL0+kYFfvDO4MW5BAsMq0PtVgdqpwe4j5IeERZl9jXMJr/dSzw0kDg5Upebg8rzfSstJKBesLavf0Da7lvB+KeIEu78chQoquW/Uk5bA2RUlS26tWUVhFIqnJh0u59eY86tNJfxh7eZvGbM6MSVe+Mv1m/Rl6WCS2m3S7iqpcMZt+3LZlgvllLi0+VHHosz1QTMowIE6kXSfb8GwcBsCEv6FLOkw/YQSwYGEfJCqkg4PqYqnQ14hbmkBh56j05zEE/8SJBqr77MI9Zjd17pKn4HsYZ8vrhLOk0QOBZ0KyERDyRMKYygGrlaTPaT08N2+jME2rFyh3vczcfWkQRU/0s5Mmr/CmogHNMowE4053X9ZbYrSWy0II2c1EU8VzemVSEdyCz6iGGn9McBMuRcV6QjFziHQCAVtSB5k+pbw2HE=",
+        "grund": "zurueckgelegt"
+      },
+      {
+        "name": "gleicher-absender-kleiner-bestaetigung-wirkungslos",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "f": 1
+        },
+        "buch": "standard",
+        "huelle_b64": "AqSZyftFpPccBE6pkB10JhZfGAykWxqPUj7/YPDbwyuOGRNVKcJM27lwgL0+kYFfvDO4MW5BAsMq0PtVgdqpwe4j5IeERZl9jXMJr/dSzw0kDg5Upebg8rzfSstJKBesLavf0Da7lvB+KeIEu78chQoquW/Uk5bA2RUlS26tWUVhFIqnJh0u59eY86tNJfxh7eZvGbM6MSVe+Mv1m/Rl6WCS2m3S7iqpcMZt+3LZlgvllLi0+VHHosz1QTMowIE6kXSfb8GwcBsCEv6FLOkw/YQSwYGEfJCqkg4PqYqnQ14hbmkBh56j05zEE/8SJBqr77MI9Zjd17pKn4HsYZ8vrhLOk0QOBZ0KyERDyRMKYygGrlaTPaT08N2+jME2rFyh3vczcfWkQRU/0s5Mmr/CmogHNMowE4053X9ZbYrSWy0II2c1EU8VzemVSEdyCz6iGGn9McBMuRcV6QjFziHQCAVtSB5k+pbw2HE=",
+        "bestaetigt": {
+          "art": "kleiner",
+          "z": 1784278265,
+          "absender": "a499c9fb45a4f71c",
+          "o": 1784278565,
+          "stand_absender": "a499c9fb45a4f71c",
+          "vermerk": null
+        },
+        "jetzt": 1784284265,
+        "grund": "zurueckgelegt"
+      },
+      {
+        "name": "gleicher-absender-gleich",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225"
+        },
+        "buch": "standard",
+        "huelle_b64": "Al61Z4tJvVIlBMUdiz3VCt9ki6ZmL+2Ko0Y228H+cM4lutuOPIgerqX1+7i0fOofLs5jkHdnGJf+eQZvqC0iYM6GSUJnOb9mU8n3RsZtu5KuGTxduHgnXDzNR528tehzjxzVPlZ8gtiH9XhupOEdHiVGinZ/0pPvEAF7qwtk6cpVCo5T2rHurE8x86FvjVDtjauxwGI0dtIZbWP+owuQmGapV0nsMIU4Rx7oUjlglLHxq4NsTuxTSzR1T5btz8Ks4GuaAKML8q1VE7A5x+js1TCD1SYrsxbOLvEFpu87IVIpS99B0iWDy1QLJwWcovXWs8xA/bxfTKW8xjuegWfsGJyBH+ka6ClOKJ8ow94kuAwZesHO/rRLeR0bifTN64/8piwfX5uRwSnYww==",
+        "erwartet": {
+          "z": 1784278385,
+          "absender": "5eb5678b49bd5225"
+        },
+        "befund": [],
+        "stand_danach": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225"
+        }
+      },
+      {
+        "name": "gleicher-absender-hoeher",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225"
+        },
+        "buch": "standard",
+        "huelle_b64": "Al61Z4tJvVIlBIBAyt+tRK5nn2jjeCX/SooATim1FD0Ge161ougyysZzEdYL45V5leIii66ZGevGUKPSt76tfUMuWWWJcDyvDMZzynA7yVSuBJDE54H0dbaoOMx9Fcy4J3FPFsphzmTmi8Jk2ALT8zJMVSqmehLg0T+ic5D1Dg1ceVm03VIDUAqp/lsdYX8LJTOIdNuewuxiidSsbeV6uvdyDA6Vz91Qi50X2Oob+0hrsGmPm2d+0WTijCHNGtj/EYgpyuAw0q3U/SeYrgOhK+bXIKzmmxLcPtgnmUW0T2bxYvm1pwrZ5rbNDyYno2nZDgLyhAEZxphMF2RrXDCwDqsWDZAZctTLdbufiWInmj5dNgpGdbewsGYL1RZQxBjUHfXWQxQnw/OBRw==",
+        "erwartet": {
+          "z": 1784278665,
+          "absender": "5eb5678b49bd5225"
+        },
+        "befund": [],
+        "stand_danach": {
+          "o": 1784278665,
+          "a": "5eb5678b49bd5225",
+          "f": 1
+        }
+      },
+      {
+        "name": "anderer-absender-kleiner",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225"
+        },
+        "buch": "standard",
+        "huelle_b64": "AqSZyftFpPccBE6pkB10JhZfGAykWxqPUj7/YPDbwyuOGRNVKcJM27lwgL0+kYFfvDO4MW5BAsMq0PtVgdqpwe4j5IeERZl9jXMJr/dSzw0kDg5Upebg8rzfSstJKBesLavf0Da7lvB+KeIEu78chQoquW/Uk5bA2RUlS26tWUVhFIqnJh0u59eY86tNJfxh7eZvGbM6MSVe+Mv1m/Rl6WCS2m3S7iqpcMZt+3LZlgvllLi0+VHHosz1QTMowIE6kXSfb8GwcBsCEv6FLOkw/YQSwYGEfJCqkg4PqYqnQ14hbmkBh56j05zEE/8SJBqr77MI9Zjd17pKn4HsYZ8vrhLOk0QOBZ0KyERDyRMKYygGrlaTPaT08N2+jME2rFyh3vczcfWkQRU/0s5Mmr/CmogHNMowE4053X9ZbYrSWy0II2c1EU8VzemVSEdyCz6iGGn9McBMuRcV6QjFziHQCAVtSB5k+pbw2HE=",
+        "grund": "uhrzeit-pruefen",
+        "hinweis": {
+          "art": "kleiner",
+          "z": 1784278265,
+          "absender": "a499c9fb45a4f71c",
+          "o": 1784278385,
+          "stand_absender": "5eb5678b49bd5225",
+          "vermerk": null
+        }
+      },
+      {
+        "name": "anderer-absender-kleiner-bestaetigt",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225"
+        },
+        "buch": "standard",
+        "huelle_b64": "AqSZyftFpPccBE6pkB10JhZfGAykWxqPUj7/YPDbwyuOGRNVKcJM27lwgL0+kYFfvDO4MW5BAsMq0PtVgdqpwe4j5IeERZl9jXMJr/dSzw0kDg5Upebg8rzfSstJKBesLavf0Da7lvB+KeIEu78chQoquW/Uk5bA2RUlS26tWUVhFIqnJh0u59eY86tNJfxh7eZvGbM6MSVe+Mv1m/Rl6WCS2m3S7iqpcMZt+3LZlgvllLi0+VHHosz1QTMowIE6kXSfb8GwcBsCEv6FLOkw/YQSwYGEfJCqkg4PqYqnQ14hbmkBh56j05zEE/8SJBqr77MI9Zjd17pKn4HsYZ8vrhLOk0QOBZ0KyERDyRMKYygGrlaTPaT08N2+jME2rFyh3vczcfWkQRU/0s5Mmr/CmogHNMowE4053X9ZbYrSWy0II2c1EU8VzemVSEdyCz6iGGn9McBMuRcV6QjFziHQCAVtSB5k+pbw2HE=",
+        "bestaetigt": {
+          "art": "kleiner",
+          "z": 1784278265,
+          "absender": "a499c9fb45a4f71c",
+          "o": 1784278385,
+          "stand_absender": "5eb5678b49bd5225",
+          "vermerk": null
+        },
+        "jetzt": 1784284265,
+        "erwartet": {
+          "z": 1784278265,
+          "absender": "a499c9fb45a4f71c"
+        },
+        "befund": [
+          "stand-uebernommen"
+        ],
+        "stand_danach": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        }
+      },
+      {
+        "name": "nach-bestaetigung-dieselbe-huelle",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "buch": "standard",
+        "huelle_b64": "AqSZyftFpPccBE6pkB10JhZfGAykWxqPUj7/YPDbwyuOGRNVKcJM27lwgL0+kYFfvDO4MW5BAsMq0PtVgdqpwe4j5IeERZl9jXMJr/dSzw0kDg5Upebg8rzfSstJKBesLavf0Da7lvB+KeIEu78chQoquW/Uk5bA2RUlS26tWUVhFIqnJh0u59eY86tNJfxh7eZvGbM6MSVe+Mv1m/Rl6WCS2m3S7iqpcMZt+3LZlgvllLi0+VHHosz1QTMowIE6kXSfb8GwcBsCEv6FLOkw/YQSwYGEfJCqkg4PqYqnQ14hbmkBh56j05zEE/8SJBqr77MI9Zjd17pKn4HsYZ8vrhLOk0QOBZ0KyERDyRMKYygGrlaTPaT08N2+jME2rFyh3vczcfWkQRU/0s5Mmr/CmogHNMowE4053X9ZbYrSWy0II2c1EU8VzemVSEdyCz6iGGn9McBMuRcV6QjFziHQCAVtSB5k+pbw2HE=",
+        "erwartet": {
+          "z": 1784278265,
+          "absender": "a499c9fb45a4f71c"
+        },
+        "befund": [
+          "stand-uebernommen"
+        ],
+        "stand_danach": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        }
+      },
+      {
+        "name": "nach-bestaetigung-gleicher-absender-spaeter",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "buch": "standard",
+        "huelle_b64": "AqSZyftFpPccBJ8uHFidbzbOmJ4y/F1uZ6Dq+H7cnWUnNuwJNwroQGswGq/Qb26xjfqqu2cSZLndXVBF9Ms+cKILPqdV4cfpNV1NA0n8FmfHjaa14MOd5kaF7kYqJhMJ/3CDB+xvYq9c3zTiR9smqYw/9Fg9B2h58gO16pjb4sEyw4+vkqwVcq1hctuKKbS+cuXabcxO7qrnnKJSBZCGVO4GKJHVrGm41Krc7DNcloHih/YKDxM02YPv1eY1zybpS6dY9nP4LTKjJuglzUodUOMlKcCdlf6WYk+P/u1C1OgzUbrcgDHS4ev2T4LIdoTP7D3BcLQ9EH5GUfo9v7A6cweu4hGn/i+RMDPw/DvCjGJ1NbxOQ3bsFMjB+pnGwRLLC1aTLNrMXktCqSY1P77pqE0NL07KIAVU4v/2E6HBuZKH7G44XZX3Er3PHluRBWZIzGa2ClLrwfHaSj65LNUpL7JxzmlpdPZQXAA=",
+        "erwartet": {
+          "z": 1784278565,
+          "absender": "a499c9fb45a4f71c"
+        },
+        "befund": [],
+        "stand_danach": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        }
+      },
+      {
+        "name": "nach-bestaetigung-gleicher-absender-aelter",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "buch": "standard",
+        "huelle_b64": "AqSZyftFpPccBDWGKsTmHOTaUg3qQ9ZGpDeZVlwfGM/ZFNXg08tiKd3kEuT6/QW+wcmM5IqB0yEqhLHTfpv3nYsAtRCDuB7gJjhdkJQFojhEpL1KCGuhHqhkcfWRPFS01WMUbE+/4yaexbGfAChRH9zl97KFn06gEaoA15dNjitTAGBnDrlsc1JUAoHvyq5vTMa/HayY5qy0db8myu4UFlWykK8ZSoA+MMRbKEbjT8c+JuI9DggggRmZrw0lM889vKKNzMcre5bsNptGkI/tgZpYY4HqxnQybBztSxkXh7bzpgFUoKdtmATHJBdLYUWt2BFF2KJs66pZ3jeTMb9FydnfX/igjhtwKUyDifq13IjN/YjMwLVzkbGT3XN9IcLJ4J+4qYxjfORaf1mXfK/lR7xk5/0E9RxY722dun9zNj+RPXKLhoCcpNBAVdNXLDq+etrlrXi7X+wGQfLzZ9nGTWnO9DBrSuQ3Go0=",
+        "grund": "zurueckgelegt"
+      },
+      {
+        "name": "nach-bestaetigung-verworfener-stand-kommt-wieder",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "buch": "standard",
+        "huelle_b64": "Al61Z4tJvVIlBE2rkwsigrbgdCkbzqiV+S2xdoctHdxEH9Ua2ZmbdmW4NWDfFB4NpRwZUEXj26ioFapJ4UXMluBNQ5GGNcQbg8D8h82rHL82Ca/Lj4I+2Sz4pTEuwhe/6McACkiem19k6jgO3nh1UxUkheZmuaDZ83SH9hubB5TzewT+Rn//uuov7C5bqZv8dsRjTvhHCym7RplA5ri7sGnJjQkImZtuNvgswgdQH4UNfSif9w0Dd5BkxL27akQ4SOHunO7PzQYFIV6BzoCI3KXRtIUXT39HYfYpbigexwXQAaNKarGl3du7mOArQ/eZNh1fGncv3IQPXZS18ufuA62prH80mZvYvmxBv9ot0basFELOGINKWkg40a/Dy2UrqxcoSJsi4Z/EBQ==",
+        "grund": "uhrzeit-pruefen",
+        "hinweis": {
+          "art": "verworfen",
+          "z": 1784278385,
+          "absender": "5eb5678b49bd5225",
+          "o": 1784278265,
+          "stand_absender": "a499c9fb45a4f71c",
+          "vermerk": [
+            1784278385,
+            "5eb5678b49bd5225",
+            1784284265
+          ]
+        }
+      },
+      {
+        "name": "ohne-vermerk-ginge-er-still-auf",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1
+        },
+        "buch": "standard",
+        "huelle_b64": "Al61Z4tJvVIlBE2rkwsigrbgdCkbzqiV+S2xdoctHdxEH9Ua2ZmbdmW4NWDfFB4NpRwZUEXj26ioFapJ4UXMluBNQ5GGNcQbg8D8h82rHL82Ca/Lj4I+2Sz4pTEuwhe/6McACkiem19k6jgO3nh1UxUkheZmuaDZ83SH9hubB5TzewT+Rn//uuov7C5bqZv8dsRjTvhHCym7RplA5ri7sGnJjQkImZtuNvgswgdQH4UNfSif9w0Dd5BkxL27akQ4SOHunO7PzQYFIV6BzoCI3KXRtIUXT39HYfYpbigexwXQAaNKarGl3du7mOArQ/eZNh1fGncv3IQPXZS18ufuA62prH80mZvYvmxBv9ot0basFELOGINKWkg40a/Dy2UrqxcoSJsi4Z/EBQ==",
+        "erwartet": {
+          "z": 1784278385,
+          "absender": "5eb5678b49bd5225"
+        },
+        "befund": [
+          "offen-nach-schluss"
+        ],
+        "stand_danach": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225",
+          "f": 1
+        }
+      },
+      {
+        "name": "nach-bestaetigung-verworfener-stand-bestaetigt",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "buch": "standard",
+        "huelle_b64": "Al61Z4tJvVIlBE2rkwsigrbgdCkbzqiV+S2xdoctHdxEH9Ua2ZmbdmW4NWDfFB4NpRwZUEXj26ioFapJ4UXMluBNQ5GGNcQbg8D8h82rHL82Ca/Lj4I+2Sz4pTEuwhe/6McACkiem19k6jgO3nh1UxUkheZmuaDZ83SH9hubB5TzewT+Rn//uuov7C5bqZv8dsRjTvhHCym7RplA5ri7sGnJjQkImZtuNvgswgdQH4UNfSif9w0Dd5BkxL27akQ4SOHunO7PzQYFIV6BzoCI3KXRtIUXT39HYfYpbigexwXQAaNKarGl3du7mOArQ/eZNh1fGncv3IQPXZS18ufuA62prH80mZvYvmxBv9ot0basFELOGINKWkg40a/Dy2UrqxcoSJsi4Z/EBQ==",
+        "bestaetigt": {
+          "art": "verworfen",
+          "z": 1784278385,
+          "absender": "5eb5678b49bd5225",
+          "o": 1784278265,
+          "stand_absender": "a499c9fb45a4f71c",
+          "vermerk": [
+            1784278385,
+            "5eb5678b49bd5225",
+            1784284265
+          ]
+        },
+        "jetzt": 1784286065,
+        "erwartet": {
+          "z": 1784278385,
+          "absender": "5eb5678b49bd5225"
+        },
+        "befund": [
+          "offen-nach-schluss"
+        ],
+        "stand_danach": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225",
+          "f": 1,
+          "u": [
+            [
+              1784278265,
+              "a499c9fb45a4f71c",
+              1784286065
+            ]
+          ]
+        }
+      },
+      {
+        "name": "nach-bestaetigung-verworfener-absender-aendert",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "buch": "standard",
+        "huelle_b64": "Al61Z4tJvVIlBIBAyt+tRK5nn2jjeCX/SooATim1FD0Ge161ougyysZzEdYL45V5leIii66ZGevGUKPSt76tfUMuWWWJcDyvDMZzynA7yVSuBJDE54H0dbaoOMx9Fcy4J3FPFsphzmTmi8Jk2ALT8zJMVSqmehLg0T+ic5D1Dg1ceVm03VIDUAqp/lsdYX8LJTOIdNuewuxiidSsbeV6uvdyDA6Vz91Qi50X2Oob+0hrsGmPm2d+0WTijCHNGtj/EYgpyuAw0q3U/SeYrgOhK+bXIKzmmxLcPtgnmUW0T2bxYvm1pwrZ5rbNDyYno2nZDgLyhAEZxphMF2RrXDCwDqsWDZAZctTLdbufiWInmj5dNgpGdbewsGYL1RZQxBjUHfXWQxQnw/OBRw==",
+        "erwartet": {
+          "z": 1784278665,
+          "absender": "5eb5678b49bd5225"
+        },
+        "befund": [],
+        "stand_danach": {
+          "o": 1784278665,
+          "a": "5eb5678b49bd5225",
+          "f": 1
+        }
+      },
+      {
+        "name": "bestaetigung-fuer-eine-andere-huelle",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225"
+        },
+        "buch": "standard",
+        "huelle_b64": "AqSZyftFpPccBE6pkB10JhZfGAykWxqPUj7/YPDbwyuOGRNVKcJM27lwgL0+kYFfvDO4MW5BAsMq0PtVgdqpwe4j5IeERZl9jXMJr/dSzw0kDg5Upebg8rzfSstJKBesLavf0Da7lvB+KeIEu78chQoquW/Uk5bA2RUlS26tWUVhFIqnJh0u59eY86tNJfxh7eZvGbM6MSVe+Mv1m/Rl6WCS2m3S7iqpcMZt+3LZlgvllLi0+VHHosz1QTMowIE6kXSfb8GwcBsCEv6FLOkw/YQSwYGEfJCqkg4PqYqnQ14hbmkBh56j05zEE/8SJBqr77MI9Zjd17pKn4HsYZ8vrhLOk0QOBZ0KyERDyRMKYygGrlaTPaT08N2+jME2rFyh3vczcfWkQRU/0s5Mmr/CmogHNMowE4053X9ZbYrSWy0II2c1EU8VzemVSEdyCz6iGGn9McBMuRcV6QjFziHQCAVtSB5k+pbw2HE=",
+        "bestaetigt": {
+          "art": "kleiner",
+          "z": 1784278165,
+          "absender": "a499c9fb45a4f71c",
+          "o": 1784278385,
+          "stand_absender": "5eb5678b49bd5225",
+          "vermerk": null
+        },
+        "jetzt": 1784284265,
+        "grund": "uhrzeit-pruefen",
+        "hinweis": {
+          "art": "kleiner",
+          "z": 1784278265,
+          "absender": "a499c9fb45a4f71c",
+          "o": 1784278385,
+          "stand_absender": "5eb5678b49bd5225",
+          "vermerk": null
+        }
+      },
+      {
+        "name": "bestaetigung-gegen-einen-anderen-stand",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278665,
+          "a": "5eb5678b49bd5225",
+          "f": 1
+        },
+        "buch": "standard",
+        "huelle_b64": "AqSZyftFpPccBE6pkB10JhZfGAykWxqPUj7/YPDbwyuOGRNVKcJM27lwgL0+kYFfvDO4MW5BAsMq0PtVgdqpwe4j5IeERZl9jXMJr/dSzw0kDg5Upebg8rzfSstJKBesLavf0Da7lvB+KeIEu78chQoquW/Uk5bA2RUlS26tWUVhFIqnJh0u59eY86tNJfxh7eZvGbM6MSVe+Mv1m/Rl6WCS2m3S7iqpcMZt+3LZlgvllLi0+VHHosz1QTMowIE6kXSfb8GwcBsCEv6FLOkw/YQSwYGEfJCqkg4PqYqnQ14hbmkBh56j05zEE/8SJBqr77MI9Zjd17pKn4HsYZ8vrhLOk0QOBZ0KyERDyRMKYygGrlaTPaT08N2+jME2rFyh3vczcfWkQRU/0s5Mmr/CmogHNMowE4053X9ZbYrSWy0II2c1EU8VzemVSEdyCz6iGGn9McBMuRcV6QjFziHQCAVtSB5k+pbw2HE=",
+        "bestaetigt": {
+          "art": "kleiner",
+          "z": 1784278265,
+          "absender": "a499c9fb45a4f71c",
+          "o": 1784278385,
+          "stand_absender": "5eb5678b49bd5225",
+          "vermerk": null
+        },
+        "jetzt": 1784284265,
+        "grund": "uhrzeit-pruefen",
+        "hinweis": {
+          "art": "kleiner",
+          "z": 1784278265,
+          "absender": "a499c9fb45a4f71c",
+          "o": 1784278665,
+          "stand_absender": "5eb5678b49bd5225",
+          "vermerk": null
+        }
+      },
+      {
+        "name": "gleiches-z-anderer-absender",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "f": 1
+        },
+        "buch": "standard",
+        "huelle_b64": "Al61Z4tJvVIlBCJjTwk7df+ShPeo1wZxCcVd746zc/LLiwxmkU2c9y/Sr91/dCtLuYzMYmmMP80tcKa6laY6v2NTncx+h8DLCTEu+v9Wu3ZP3+CS7ISP96/UPh5db7mQvlG/7KFytuMIhyS+1ou1Qv5GqZwqdafkj/DkE9hLAJgP5xQqRxVVpbE3UcCq0LZAhC0Ettd46nLIpbDaa385HxVLbK0F9UYCVlImOCPbZ1JIxUYqWU8IDFGlXHm5rmoJfNBnDIp1yXjntQ2CIZJrqAkW4Lpq4rAXns9HKkTDwRVsTjXzPRPBQJ3lZ/4zMdpYAB0wiomNj3RL2ZuRJvOa3pANajlBUwR80yUhLF/DQQumyZqcEd5PZK2fDtIqmAfxA65pEve5Cc0Dhb91G4VleECZgIM5jKLGggqW9Mkq/uSsrUD/zxNPAHBhC7HE+H9yUSLzMLc3OeX2bQ==",
+        "grund": "uhrzeit-pruefen",
+        "hinweis": {
+          "art": "gleich",
+          "z": 1784278565,
+          "absender": "5eb5678b49bd5225",
+          "o": 1784278565,
+          "stand_absender": "a499c9fb45a4f71c",
+          "vermerk": null
+        }
+      },
+      {
+        "name": "gleiches-z-anderer-absender-bestaetigt",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "f": 1
+        },
+        "buch": "standard",
+        "huelle_b64": "Al61Z4tJvVIlBCJjTwk7df+ShPeo1wZxCcVd746zc/LLiwxmkU2c9y/Sr91/dCtLuYzMYmmMP80tcKa6laY6v2NTncx+h8DLCTEu+v9Wu3ZP3+CS7ISP96/UPh5db7mQvlG/7KFytuMIhyS+1ou1Qv5GqZwqdafkj/DkE9hLAJgP5xQqRxVVpbE3UcCq0LZAhC0Ettd46nLIpbDaa385HxVLbK0F9UYCVlImOCPbZ1JIxUYqWU8IDFGlXHm5rmoJfNBnDIp1yXjntQ2CIZJrqAkW4Lpq4rAXns9HKkTDwRVsTjXzPRPBQJ3lZ/4zMdpYAB0wiomNj3RL2ZuRJvOa3pANajlBUwR80yUhLF/DQQumyZqcEd5PZK2fDtIqmAfxA65pEve5Cc0Dhb91G4VleECZgIM5jKLGggqW9Mkq/uSsrUD/zxNPAHBhC7HE+H9yUSLzMLc3OeX2bQ==",
+        "bestaetigt": {
+          "art": "gleich",
+          "z": 1784278565,
+          "absender": "5eb5678b49bd5225",
+          "o": 1784278565,
+          "stand_absender": "a499c9fb45a4f71c",
+          "vermerk": null
+        },
+        "jetzt": 1784284265,
+        "erwartet": {
+          "z": 1784278565,
+          "absender": "5eb5678b49bd5225"
+        },
+        "befund": [
+          "offen-nach-schluss",
+          "stand-uebernommen"
+        ],
+        "stand_danach": {
+          "o": 1784278565,
+          "a": "5eb5678b49bd5225",
+          "f": 1,
+          "u": [
+            [
+              1784278565,
+              "a499c9fb45a4f71c",
+              1784284265
+            ]
+          ]
+        }
+      },
+      {
+        "name": "vermerk-eines-dritten-bleibt",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784282065,
+              "c7d790293f2bb888",
+              1784284065
+            ]
+          ]
+        },
+        "buch": "standard",
+        "huelle_b64": "Al61Z4tJvVIlBIBAyt+tRK5nn2jjeCX/SooATim1FD0Ge161ougyysZzEdYL45V5leIii66ZGevGUKPSt76tfUMuWWWJcDyvDMZzynA7yVSuBJDE54H0dbaoOMx9Fcy4J3FPFsphzmTmi8Jk2ALT8zJMVSqmehLg0T+ic5D1Dg1ceVm03VIDUAqp/lsdYX8LJTOIdNuewuxiidSsbeV6uvdyDA6Vz91Qi50X2Oob+0hrsGmPm2d+0WTijCHNGtj/EYgpyuAw0q3U/SeYrgOhK+bXIKzmmxLcPtgnmUW0T2bxYvm1pwrZ5rbNDyYno2nZDgLyhAEZxphMF2RrXDCwDqsWDZAZctTLdbufiWInmj5dNgpGdbewsGYL1RZQxBjUHfXWQxQnw/OBRw==",
+        "erwartet": {
+          "z": 1784278665,
+          "absender": "5eb5678b49bd5225"
+        },
+        "befund": [
+          "stand-uebernommen"
+        ],
+        "stand_danach": {
+          "o": 1784278665,
+          "a": "5eb5678b49bd5225",
+          "f": 1,
+          "u": [
+            [
+              1784282065,
+              "c7d790293f2bb888",
+              1784284065
+            ]
+          ]
+        }
+      },
+      {
+        "name": "zweiter-vermerk-nach-sid-sortiert",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784282065,
+              "c7d790293f2bb888",
+              1784284065
+            ]
+          ]
+        },
+        "buch": "standard",
+        "huelle_b64": "Al61Z4tJvVIlBCJjTwk7df+ShPeo1wZxCcVd746zc/LLiwxmkU2c9y/Sr91/dCtLuYzMYmmMP80tcKa6laY6v2NTncx+h8DLCTEu+v9Wu3ZP3+CS7ISP96/UPh5db7mQvlG/7KFytuMIhyS+1ou1Qv5GqZwqdafkj/DkE9hLAJgP5xQqRxVVpbE3UcCq0LZAhC0Ettd46nLIpbDaa385HxVLbK0F9UYCVlImOCPbZ1JIxUYqWU8IDFGlXHm5rmoJfNBnDIp1yXjntQ2CIZJrqAkW4Lpq4rAXns9HKkTDwRVsTjXzPRPBQJ3lZ/4zMdpYAB0wiomNj3RL2ZuRJvOa3pANajlBUwR80yUhLF/DQQumyZqcEd5PZK2fDtIqmAfxA65pEve5Cc0Dhb91G4VleECZgIM5jKLGggqW9Mkq/uSsrUD/zxNPAHBhC7HE+H9yUSLzMLc3OeX2bQ==",
+        "bestaetigt": {
+          "art": "gleich",
+          "z": 1784278565,
+          "absender": "5eb5678b49bd5225",
+          "o": 1784278565,
+          "stand_absender": "a499c9fb45a4f71c",
+          "vermerk": null
+        },
+        "jetzt": 1784284265,
+        "erwartet": {
+          "z": 1784278565,
+          "absender": "5eb5678b49bd5225"
+        },
+        "befund": [
+          "offen-nach-schluss",
+          "stand-uebernommen"
+        ],
+        "stand_danach": {
+          "o": 1784278565,
+          "a": "5eb5678b49bd5225",
+          "f": 1,
+          "u": [
+            [
+              1784278565,
+              "a499c9fb45a4f71c",
+              1784284265
+            ],
+            [
+              1784282065,
+              "c7d790293f2bb888",
+              1784284065
+            ]
+          ]
+        }
+      },
+      {
+        "name": "altblatt-kleiner",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278385
+        },
+        "buch": "standard",
+        "huelle_b64": "AqSZyftFpPccBE6pkB10JhZfGAykWxqPUj7/YPDbwyuOGRNVKcJM27lwgL0+kYFfvDO4MW5BAsMq0PtVgdqpwe4j5IeERZl9jXMJr/dSzw0kDg5Upebg8rzfSstJKBesLavf0Da7lvB+KeIEu78chQoquW/Uk5bA2RUlS26tWUVhFIqnJh0u59eY86tNJfxh7eZvGbM6MSVe+Mv1m/Rl6WCS2m3S7iqpcMZt+3LZlgvllLi0+VHHosz1QTMowIE6kXSfb8GwcBsCEv6FLOkw/YQSwYGEfJCqkg4PqYqnQ14hbmkBh56j05zEE/8SJBqr77MI9Zjd17pKn4HsYZ8vrhLOk0QOBZ0KyERDyRMKYygGrlaTPaT08N2+jME2rFyh3vczcfWkQRU/0s5Mmr/CmogHNMowE4053X9ZbYrSWy0II2c1EU8VzemVSEdyCz6iGGn9McBMuRcV6QjFziHQCAVtSB5k+pbw2HE=",
+        "grund": "zurueckgelegt"
+      },
+      {
+        "name": "altblatt-kleiner-bestaetigung-wirkungslos",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278385
+        },
+        "buch": "standard",
+        "huelle_b64": "AqSZyftFpPccBE6pkB10JhZfGAykWxqPUj7/YPDbwyuOGRNVKcJM27lwgL0+kYFfvDO4MW5BAsMq0PtVgdqpwe4j5IeERZl9jXMJr/dSzw0kDg5Upebg8rzfSstJKBesLavf0Da7lvB+KeIEu78chQoquW/Uk5bA2RUlS26tWUVhFIqnJh0u59eY86tNJfxh7eZvGbM6MSVe+Mv1m/Rl6WCS2m3S7iqpcMZt+3LZlgvllLi0+VHHosz1QTMowIE6kXSfb8GwcBsCEv6FLOkw/YQSwYGEfJCqkg4PqYqnQ14hbmkBh56j05zEE/8SJBqr77MI9Zjd17pKn4HsYZ8vrhLOk0QOBZ0KyERDyRMKYygGrlaTPaT08N2+jME2rFyh3vczcfWkQRU/0s5Mmr/CmogHNMowE4053X9ZbYrSWy0II2c1EU8VzemVSEdyCz6iGGn9McBMuRcV6QjFziHQCAVtSB5k+pbw2HE=",
+        "bestaetigt": {
+          "art": "kleiner",
+          "z": 1784278265,
+          "absender": "a499c9fb45a4f71c",
+          "o": 1784278385,
+          "stand_absender": "5eb5678b49bd5225",
+          "vermerk": null
+        },
+        "jetzt": 1784284265,
+        "grund": "zurueckgelegt"
+      },
+      {
+        "name": "altblatt-gleich",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278565,
+          "f": 1
+        },
+        "buch": "standard",
+        "huelle_b64": "Al61Z4tJvVIlBCJjTwk7df+ShPeo1wZxCcVd746zc/LLiwxmkU2c9y/Sr91/dCtLuYzMYmmMP80tcKa6laY6v2NTncx+h8DLCTEu+v9Wu3ZP3+CS7ISP96/UPh5db7mQvlG/7KFytuMIhyS+1ou1Qv5GqZwqdafkj/DkE9hLAJgP5xQqRxVVpbE3UcCq0LZAhC0Ettd46nLIpbDaa385HxVLbK0F9UYCVlImOCPbZ1JIxUYqWU8IDFGlXHm5rmoJfNBnDIp1yXjntQ2CIZJrqAkW4Lpq4rAXns9HKkTDwRVsTjXzPRPBQJ3lZ/4zMdpYAB0wiomNj3RL2ZuRJvOa3pANajlBUwR80yUhLF/DQQumyZqcEd5PZK2fDtIqmAfxA65pEve5Cc0Dhb91G4VleECZgIM5jKLGggqW9Mkq/uSsrUD/zxNPAHBhC7HE+H9yUSLzMLc3OeX2bQ==",
+        "erwartet": {
+          "z": 1784278565,
+          "absender": "5eb5678b49bd5225"
+        },
+        "befund": [
+          "offen-nach-schluss"
+        ],
+        "stand_danach": {
+          "o": 1784278565,
+          "a": "5eb5678b49bd5225",
+          "f": 1
+        }
+      },
+      {
+        "name": "altblatt-hoeher",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278385
+        },
+        "buch": "standard",
+        "huelle_b64": "AqSZyftFpPccBJ8uHFidbzbOmJ4y/F1uZ6Dq+H7cnWUnNuwJNwroQGswGq/Qb26xjfqqu2cSZLndXVBF9Ms+cKILPqdV4cfpNV1NA0n8FmfHjaa14MOd5kaF7kYqJhMJ/3CDB+xvYq9c3zTiR9smqYw/9Fg9B2h58gO16pjb4sEyw4+vkqwVcq1hctuKKbS+cuXabcxO7qrnnKJSBZCGVO4GKJHVrGm41Krc7DNcloHih/YKDxM02YPv1eY1zybpS6dY9nP4LTKjJuglzUodUOMlKcCdlf6WYk+P/u1C1OgzUbrcgDHS4ev2T4LIdoTP7D3BcLQ9EH5GUfo9v7A6cweu4hGn/i+RMDPw/DvCjGJ1NbxOQ3bsFMjB+pnGwRLLC1aTLNrMXktCqSY1P77pqE0NL07KIAVU4v/2E6HBuZKH7G44XZX3Er3PHluRBWZIzGa2ClLrwfHaSj65LNUpL7JxzmlpdPZQXAA=",
+        "erwartet": {
+          "z": 1784278565,
+          "absender": "a499c9fb45a4f71c"
+        },
+        "befund": [],
+        "stand_danach": {
+          "o": 1784278565,
+          "a": "a499c9fb45a4f71c",
+          "f": 1
+        }
+      },
+      {
+        "name": "konto-stand-bestaetigung-wirkungslos",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 4,
+          "k": 1
+        },
+        "buch": "standard",
+        "huelle_b64": "Al61Z4tJvVIlBJ8vFIv6x8Ug0Amv6KzLi3RQC1iCy1ArnjOyVFgUoqyFfib0r/Zo5OBQQxrIUaqmUknikiF/MVFGXp1kZXbbTMOEMBJlCbn41e/gUEllKhimtT70Kv86VaBOKBdWBpycGixlyP98kMCM5rNSctz/nn0jav7x2nE00llFmgBhZZvmc7adGgECbgSTyk2rzDdpoCnpfss/k5BJqPB3S38hOfZfjEydjztNUKkmUfivrHk6Kz0e4GO0xIKswny2rnE64NJlNnkhpXvIvEisArFAD8i2hrka16WkOkklajIt2KxONIbCQNNeW2d5ydaztnM30E3d2ioj5knlnMFaT15QZv6EtTmajZzL6EOsdDD/ABVJ4YJHkInzcmyuxgHZMzN7wTjMWLQGAMfvKXICz54OGr+PHjD6dn3cH/E//h/bT0y3abYsKgFANoK51gsZpbfnRg==",
+        "bestaetigt": {
+          "art": "kleiner",
+          "z": 5,
+          "absender": "5eb5678b49bd5225",
+          "o": 4,
+          "stand_absender": "5a659059d82d8b35",
+          "vermerk": null
+        },
+        "jetzt": 1784284265,
+        "grund": "zurueckgelegt"
+      },
+      {
+        "name": "konto-und-a-zugleich-gilt-k",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 4,
+          "k": 1,
+          "a": "a499c9fb45a4f71c"
+        },
+        "buch": "standard",
+        "huelle_b64": "Al61Z4tJvVIlBJ8vFIv6x8Ug0Amv6KzLi3RQC1iCy1ArnjOyVFgUoqyFfib0r/Zo5OBQQxrIUaqmUknikiF/MVFGXp1kZXbbTMOEMBJlCbn41e/gUEllKhimtT70Kv86VaBOKBdWBpycGixlyP98kMCM5rNSctz/nn0jav7x2nE00llFmgBhZZvmc7adGgECbgSTyk2rzDdpoCnpfss/k5BJqPB3S38hOfZfjEydjztNUKkmUfivrHk6Kz0e4GO0xIKswny2rnE64NJlNnkhpXvIvEisArFAD8i2hrka16WkOkklajIt2KxONIbCQNNeW2d5ydaztnM30E3d2ioj5knlnMFaT15QZv6EtTmajZzL6EOsdDD/ABVJ4YJHkInzcmyuxgHZMzN7wTjMWLQGAMfvKXICz54OGr+PHjD6dn3cH/E//h/bT0y3abYsKgFANoK51gsZpbfnRg==",
+        "grund": "zurueckgelegt"
+      },
+      {
+        "name": "konto-nach-geraet",
+        "client_ref": "man-0123456789abcdef",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 3,
+          "a": "a499c9fb45a4f71c",
+          "u": [
+            [
+              9,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "buch": "standard",
+        "huelle_b64": "AlplkFnYLYs1BGeD2c7iqwWllFx/xxqN2DrQFFpQ9JFa4Hsqv7i9d6ZKvrAsLXql1WFU1/oGG7admC2LDSPub8JpQ7Lxc19um3d/vuqF+0vFzU4ZMOHA4AI6mUaKdt48NH10tEkrbWtkP1F59kJ3fotKQmVVV96o2NBD6oUbyXesHhW5DYfVNBEquvD3VhlFZKJ81zQ4dSAhgI5rErHaX6KDDijN5OKEmSkZ+pGF1BWQkMDQ+6fa7UJwYYwDKR1Ko9TWFbHAxF7ECjG9RFtta4Fc5VktsoDVDgDNNPR50w0E4Bnasc6Tqg7XMwwLkwi7xkkorv3tqOYeBo1AfOqI3b8MBp0F5H0NG+QYXRnlA8m1wngKZL7hOqa3eHbgZzHxi6QhTKGnioX82RUZDUc9+Ul0jXSdMcQQ1MV7CnhDHv4EW0aVmtqqvWyLtnGkR8/EG2qn5kk7W4IX24Sbg/6KOl+H7Ea+YZuSUfVPDKJYp6Vhk11Hp/vpJahS4adAt+1lzw2B+ZfrlTVF97Am0gJFjd45fKaqn8TiY+4=",
+        "erwartet": {
+          "z": 4,
+          "absender": "konto"
+        },
+        "befund": [],
+        "stand_danach": {
+          "o": 4,
+          "k": 1,
+          "f": 1
+        }
+      },
+      {
+        "name": "konto-kleiner-nach-geraet",
+        "client_ref": "man-0123456789abcdef",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "stand": {
+          "o": 5,
+          "a": "a499c9fb45a4f71c"
+        },
+        "buch": "standard",
+        "huelle_b64": "AlplkFnYLYs1BGeD2c7iqwWllFx/xxqN2DrQFFpQ9JFa4Hsqv7i9d6ZKvrAsLXql1WFU1/oGG7admC2LDSPub8JpQ7Lxc19um3d/vuqF+0vFzU4ZMOHA4AI6mUaKdt48NH10tEkrbWtkP1F59kJ3fotKQmVVV96o2NBD6oUbyXesHhW5DYfVNBEquvD3VhlFZKJ81zQ4dSAhgI5rErHaX6KDDijN5OKEmSkZ+pGF1BWQkMDQ+6fa7UJwYYwDKR1Ko9TWFbHAxF7ECjG9RFtta4Fc5VktsoDVDgDNNPR50w0E4Bnasc6Tqg7XMwwLkwi7xkkorv3tqOYeBo1AfOqI3b8MBp0F5H0NG+QYXRnlA8m1wngKZL7hOqa3eHbgZzHxi6QhTKGnioX82RUZDUc9+Ul0jXSdMcQQ1MV7CnhDHv4EW0aVmtqqvWyLtnGkR8/EG2qn5kk7W4IX24Sbg/6KOl+H7Ea+YZuSUfVPDKJYp6Vhk11Hp/vpJahS4adAt+1lzw2B+ZfrlTVF97Am0gJFjd45fKaqn8TiY+4=",
+        "bestaetigt": {
+          "art": "kleiner",
+          "z": 4,
+          "absender": "konto",
+          "o": 5,
+          "stand_absender": "a499c9fb45a4f71c",
+          "vermerk": null
+        },
+        "jetzt": 1784284265,
+        "grund": "zurueckgelegt"
+      },
+      {
+        "name": "zeit-vor-hinweis",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784363465,
+        "versatz": 0,
+        "stand": {
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225"
+        },
+        "buch": "standard",
+        "huelle_b64": "AqSZyftFpPccBE6pkB10JhZfGAykWxqPUj7/YPDbwyuOGRNVKcJM27lwgL0+kYFfvDO4MW5BAsMq0PtVgdqpwe4j5IeERZl9jXMJr/dSzw0kDg5Upebg8rzfSstJKBesLavf0Da7lvB+KeIEu78chQoquW/Uk5bA2RUlS26tWUVhFIqnJh0u59eY86tNJfxh7eZvGbM6MSVe+Mv1m/Rl6WCS2m3S7iqpcMZt+3LZlgvllLi0+VHHosz1QTMowIE6kXSfb8GwcBsCEv6FLOkw/YQSwYGEfJCqkg4PqYqnQ14hbmkBh56j05zEE/8SJBqr77MI9Zjd17pKn4HsYZ8vrhLOk0QOBZ0KyERDyRMKYygGrlaTPaT08N2+jME2rFyh3vczcfWkQRU/0s5Mmr/CmogHNMowE4053X9ZbYrSWy0II2c1EU8VzemVSEdyCz6iGGn9McBMuRcV6QjFziHQCAVtSB5k+pbw2HE=",
+        "grund": "zeit"
+      },
+      {
+        "name": "gesperrt-vor-hinweis",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277125,
+        "versatz": 0,
+        "stand": {
+          "o": 5,
+          "a": "5eb5678b49bd5225"
+        },
+        "buch": "uhr-ausgetragen",
+        "huelle_b64": "AqSZyftFpPccBMNaVMagiXSwHq+ExYP9ytJ3AF50G9yaE4E7O+0IpDNzqsIULyVI7RWlvcf+NYyBpZrWpCKUiNdpgfGnzchrvG65WpfrsGWvketVWui3gbPGvyvDVxN9/rLMUicnsA5zgARyOZPZTVc3wsoQcLSEiUKb0NvhvOLUGyeafmWgMiDRsvpzwYuGIGYWtkVXdnabz8x0r/JNqCVlBRd0YqVHrr96oqgZmJ1SnBj3t2oH1ifn9yRAqmFWbfK138WpV1sTHwyT4aTauEfWgmMR+z0qmFTMgggAFuLBLJNLUkHWI81dF44mTph5ovqHqjaeDVMmRWbJQ8kSkmgjDKlYA5mMnvLgQ7g68IbBaWFiafMqg3ezijrkltgAf3EL5yLE6K7iaUHODnztts6cPWfU9cWt8Acrp4QWCeyBTx889tGrwo2fAmr3lEszJjmFOUYlRv1HDQ==",
+        "grund": "absender-gesperrt"
+      }
+    ]
   }
 }

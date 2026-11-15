@@ -14,7 +14,7 @@ python3 tools/proben/huelle/referenz_inhalt.py erzeugen   # ebenso, für edk2
 ## Was es misst
 
 `referenz.py` ist die Referenz der Gerätehülle (Format im Kopf): Fassung 1 →
-`vektoren.json`, `Vektoren.mc`; Fassung 2 (Herkunft, Zeit, Zähler, Stückfolge,
+`vektoren.json`, `Vektoren.mc`; Fassung 2 (Herkunft, Zeit, Zähler samt Rückweg, Stückfolge,
 Vergleichswert der Kopplung) → `vektoren-2.json`, `Vektoren2.mc`, `HuelleVektor2.mc`. `referenz_inhalt.py`: `edk2:`,
 Standbuch, Gerätebuch, Ableitung → `vektoren-inhalt.json`. Jede Gegenlage
 (vertauscht, zurückgelegt, Zeit verschoben, Stück entfernt, ohne Geräteschlüssel)
@@ -30,10 +30,10 @@ Python mit `cryptography`, Node mit Playwright und einen Browser aus
 
 ## Erwartete Zahl
 
-`referenz.py`: Selbstprobe **28 Fälle, 0 Fehlschläge** · Fassung 1 **6 geöffnet,
-8 Störungen** · Fassung 2 **32 geöffnet, 40 Gegenlagen**, je 0 Abweichungen.
-`referenz_inhalt.py`: **21 Fälle, 0 Fehlschläge** · **23 geöffnet, 28 Gegenlagen**.
-Server **22** (bis KA-06c stand hier 18 — überholt seit KA-06b-3) · Browser **438 Prüfungen** (39 + 188 Weiche aus + 211 an), 0 Abweichungen, 0 ausgenommen (15.11.2026, KA-06f-4: der Befund `offen-nach-schluss` gemessen, dazu das Standbuchfeld `f`; bis 06f-4 waren es 427 mit 10 ausgenommenen).
+`referenz.py`: Selbstprobe **48 Fälle, 0 Fehlschläge** · Fassung 1 **6 geöffnet,
+8 Störungen** · Fassung 2 **47 geöffnet, 50 Gegenlagen, 5 Hinweise**, je 0 Abweichungen.
+`referenz_inhalt.py`: **28 Fälle, 0 Fehlschläge** · **26 geöffnet, 28 Gegenlagen**.
+Server **22** (bis KA-06c stand hier 18 — überholt seit KA-06b-3) · Browser **450 Prüfungen** (39 + 194 Weiche aus + 217 an), 0 Abweichungen, **156 ausgenommen** (15.11.2026, KA-09: der Rückweg `uhrzeit-pruefen`, `rueckweg` in `vektoren-2.json` — die Seite kann ihn erst mit KA-10, dann sind es 606 und 0 ausgenommen; bis KA-09 waren es 438 und 0).
 
 ## Was es nicht kann
 
