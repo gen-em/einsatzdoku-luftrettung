@@ -200,9 +200,14 @@ for (const [name, e] of [['Weiche aus (wie ausgeliefert)', aus], ['Weiche an', a
   console.log(`Fassung 2, ${name}`);
   console.log(e.zeilen.join('\n'));
   for (const f of new Set(e.fehler)) { console.log(`  Seitenfehler: ${f}`); }
-  console.log(`Fassung 2, ${name}: ${e.zeilen.length} Prüfungen, ${e.schlecht} Abweichungen`);
+  for (const a of e.ausgenommen || []) { console.log(`  ----  nicht gemessen: ${a}`); }
+  console.log(`Fassung 2, ${name}: ${e.zeilen.length} Prüfungen, ${e.schlecht} Abweichungen`
+    + ((e.ausgenommen || []).length ? `, ${e.ausgenommen.length} ausgenommen` : ''));
 }
 const gesamt = n + aus.zeilen.length + an.zeilen.length;
 const rot = ergebnis.schlecht + aus.schlecht + an.schlecht;
-console.log(`${gesamt} Prüfungen, ${rot} Abweichungen`);
+/* Ausgenommen heißt: Der Vektor verlangt es, die Seite kann es noch nicht.
+ * Es zählt nicht als Prüfung und steht in der Schlusszeile, solange es das gibt. */
+const offen = (aus.ausgenommen || []).length + (an.ausgenommen || []).length;
+console.log(`${gesamt} Prüfungen, ${rot} Abweichungen` + (offen ? `, ${offen} ausgenommen (nicht gemessen)` : ''));
 process.exit(rot ? 1 : 0);

@@ -26,6 +26,9 @@
 'use strict';
 window.hpFassung2 = async (v2, vi, weicheAn) => {
   const zeilen = [];
+  /* Was die Vektoren verlangen und die Seite noch nicht kann — benannt und
+   * gezählt, nicht als Prüfung gewertet (keine grüne Zahl ohne Gegenstand). */
+  const ausgenommen = [];
   let schlecht = 0;
   const melde = (gut, text) => { zeilen.push(`  ${gut ? 'ok  ' : 'FEHL'}  ${text}`); if (!gut) { schlecht++; } };
   /* `tun` liefert true/false oder wirft. */
@@ -277,11 +280,27 @@ window.hpFassung2 = async (v2, vi, weicheAn) => {
     const lesen = async () => {
       const o = await EdHuelle2.einsatzLesen(await leser(f.buch), f.client_ref, f.huelle_b64, f.started_ts,
         { versatz: f.versatz, stand: f.stand });
+      befund = o.befund;
       return { z: o.inhalt.z === undefined ? null : o.inhalt.z, absender: o.absender };
     };
+    let befund;
     if (f.grund) { await scheitert(`2/Einsatz ${f.name}`, f.grund, lesen); }
     else { await pruefe(`2/Einsatz ${f.name}`, async () => gleich(await lesen(), f.erwartet)); }
+    /* Der Befund an einer angenommenen Hülle (E-KA-69, `offen-nach-schluss`).
+     * `einsatzLesen()` liefert bis KA-06f-4 kein `befund`; bis dahin ist der
+     * Fall ausgenommen und steht als Zeile im Lauf. Sobald das Feld da ist,
+     * wird es von selbst gegen den Vektor gehalten. */
+    if (f.befund !== undefined) {
+      if (befund === undefined) {
+        ausgenommen.push(`2/Einsatz ${f.name}: Befund ${JSON.stringify(f.befund)} — einsatzLesen() liefert noch kein befund`);
+      } else {
+        await pruefe(`2/Einsatz ${f.name}: Befund ${JSON.stringify(f.befund)}`, async () => gleich(befund, f.befund));
+      }
+    }
   }
+  /* Wie ein Absender zählt (`zaehler`, E-KA-69) hat im Browser keinen
+   * Gegenstand: Das Konto zählt über das Standbuch, nicht über die Uhrzeit.
+   * Die Folge messen die Referenz, das Handy und die Uhr. */
   const kp = v2.kopplung;
   await pruefe('Kopplung: Zusage byte-gleich', async () =>
     zuHex(await EdHuelle2.kopplungZusage(hex(kp.n_g_hex), hex(kp.spk_hex))) === kp.zusage_hex);
@@ -340,7 +359,7 @@ window.hpFassung2 = async (v2, vi, weicheAn) => {
       const g = await b.geraetEintragen({ spk: hex(uhr.oeffentlich_hex), geraet: 'dev-uhr', seit: 1 });
       return a === null && v === null && g === null && (await b.nachtragen()) === null && tr.lager.size === 0;
     });
-    return { zeilen, schlecht };
+    return { zeilen, schlecht, ausgenommen };
   }
 
   await pruefe('Weiche an: schreiben() ergibt edk2 und geht gebunden auf', async () => {
@@ -522,5 +541,5 @@ window.hpFassung2 = async (v2, vi, weicheAn) => {
     const o = await EdStandbuch.geraetebuchOeffnen(ck, alt.lager.get('buch').text, null);
     return v === 3 && o.version === 3 && o.geraete[sidUhr].bis !== null && (await b.abgleichen()).every((x) => x.wer !== 'buch');
   });
-  return { zeilen, schlecht };
+  return { zeilen, schlecht, ausgenommen };
 };

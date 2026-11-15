@@ -1388,6 +1388,126 @@
       "buch": "standard",
       "huelle_b64": "AqSZyftFpPccBE6pkB10JhZfGAykWxqPUj7/YPDbwyuOGRNVKcJM27lwgL0+kYFfvDO4MW5BAsMq0PtVgdqpwe4j5IeERZl9jXMJr/dSzw0kDg5Upebg8rzfSstJKBesLavf0Da7lvB+KeIEu78chQoquW/Uk5bA2RUlS26tWUVhFIqnJh0u59eY86tNJfxh7eZvGbM6MSVe+Mv1m/Rl6WCS2m3S7iqpcMZt+3LZlgvllLi0+VHHosz1QTMowIE6kXSfb8GwcBsCEv6FLOkw/YQSwYGEfJCqkg4PqYqnQ14hbmkBh56j05zEE/8SJBqr77MI9Zjd17pKn4HsYZ8vrhLOk0QOBZ0KyERDyRMKYygGrlaTPaT08N2+jME2rFyh3vczcfWkQRU/0s5Mmr/CmogHNMowE4053X9ZbYrSWy0II2c1EU8VzemVSEdyCz6iGGn9McBMuRcV6QjFziHQCAVtSB5k+pbw2HE=",
       "grund": "zurueckgelegt"
+    },
+    {
+      "name": "inhalt-alter-stand-nachgesendet",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": {
+        "o": 1784278565,
+        "f": 1
+      },
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBMUdiz3VCt9ki6ZmL+2Ko0Y228H+cM4lutuOPIgerqX1+7i0fOofLs5jkHdnGJf+eQZvqC0iYM6GSUJnOb9mU8n3RsZtu5KuGTxduHgnXDzNR528tehzjxzVPlZ8gtiH9XhupOEdHiVGinZ/0pPvEAF7qwtk6cpVCo5T2rHurE8x86FvjVDtjauxwGI0dtIZbWP+owuQmGapV0nsMIU4Rx7oUjlglLHxq4NsTuxTSzR1T5btz8Ks4GuaAKML8q1VE7A5x+js1TCD1SYrsxbOLvEFpu87IVIpS99B0iWDy1QLJwWcovXWs8xA/bxfTKW8xjuegWfsGJyBH+ka6ClOKJ8ow94kuAwZesHO/rRLeR0bifTN64/8piwfX5uRwSnYww==",
+      "grund": "zurueckgelegt",
+      "gleich_wie": "wechsel-erstes-geraet"
+    },
+    {
+      "name": "inhalt-gleich-neu-verschlossen",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": {
+        "o": 1784278385
+      },
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBMUdiz3VCt9ki6ZmL+2Ko0Y228H+cM4lutuOPIgerqX1+7i0fOofLs5jkHdnGJf+eQZvqC0iYM6GSUJnOb9mU8n3RsZtu5KuGTxduHgnXDzNR528tehzjxzVPlZ8gtiH9XhupOEdHiVGinZ/0pPvEAF7qwtk6cpVCo5T2rHurE8x86FvjVDtjauxwGI0dtIZbWP+owuQmGapV0nsMIU4Rx7oUjlglLHxq4NsTuxTSzR1T5btz8Ks4GuaAKML8q1VE7A5x+js1TCD1SYrsxbOLvEFpu87IVIpS99B0iWDy1QLJwWcovXWs8xA/bxfTKW8xjuegWfsGJyBH+ka6ClOKJ8ow94kuAwZesHO/rRLeR0bifTN64/8piwfX5uRwSnYww==",
+      "erwartet": {
+        "z": 1784278385,
+        "absender": "5eb5678b49bd5225"
+      },
+      "gleich_wie": "wechsel-erstes-geraet",
+      "befund": [],
+      "stand_danach": {
+        "o": 1784278385
+      }
+    },
+    {
+      "name": "inhalt-geaendert-nach-uebergabe",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": {
+        "o": 1784278565,
+        "f": 1
+      },
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBAnLyTbFErP5uhbDmrJwdi3l5QIPWqYkRr6BtSOSHiomnXMwMNRq93KLYiy8O37cJ++qxKuzNlU5r4FKDLPev4KKg5ZNqjGN2jBK3m+gjmu9mQtatCRExK7gFBpcW76yONI+5d7jJsfPK54+aUypojDz3j7l8rdpnpCYS5v0NA/W3blf2/hcXKEmmsyVovKiYyqg3lfc4ew7/xMLRm51Kz5NM6CP+APseAMOcBLB7sbAvgci3gyRxnQQmyiKuA0QbMavJAXia1V9G1hdmwvK5h8manzhFA7RK9YSrBFMrDOII77ULesUByjPdyHaj4/IFblRTgvbIK44Tr3THhHMnM/+jewFgNFGlGfsgwoSepzyGOTm/3Fk1kc7XoQOe99e0M8io+6MTKJ1Ylki8xdNNcAkWKC4xYMY5MRTf92AyvztS2AG36ksQJ+YyoRftfFNNg==",
+      "erwartet": {
+        "z": 1784278655,
+        "absender": "5eb5678b49bd5225"
+      },
+      "befund": [],
+      "stand_danach": {
+        "o": 1784278655,
+        "f": 1
+      }
+    },
+    {
+      "name": "inhalt-offen-nach-schluss",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": {
+        "o": 1784278565,
+        "f": 1
+      },
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBP8scFo2MqJdi2D6tWCAQKhBXLb746gP/9BV+UFys7M0K0EzGvZf9WC7UqQE/rbWt7XqV2LqzEHgFmGfvlGLnwMnM8Kp/YhhbSYaGoJRR+htkbvB4KuvWuvhUBHE4Rtu/pGF1YmS0TxdV1BvLRJLvF16/tbFgLqEPhY5hiuFQzGwU7oBXg439RPgclMbpBvl3z//sdMo8WU5ni1NADOZeI2FC36tf3qdQg6Wt7NM4nr7a7x6x4OO9AiH6PXfGeu1HTjGq3axt+yMzXrpvJkTJoM0MQVSw6dPsvWEF/n+tTGVikRTAzap8d5Zl9VZ+wx7bdrSrKbO7p/QxSjYr5/v0zT8aB1F/ij+x7xeVyMJt1WhnyC8rAHtUO4CtBdQBwjc5Gw4ZxxXF912QV2hFg/+gzGi5OwBAHTxsnVlOFAsosMPqd/7U+6cYluBU7Y8EcrQYg==",
+      "erwartet": {
+        "z": 1784278625,
+        "absender": "5eb5678b49bd5225"
+      },
+      "befund": [
+        "offen-nach-schluss"
+      ],
+      "stand_danach": {
+        "o": 1784278625,
+        "f": 1
+      }
+    },
+    {
+      "name": "inhalt-gleiches-z-offen-nach-schluss",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": {
+        "o": 1784278565,
+        "f": 1
+      },
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBCJjTwk7df+ShPeo1wZxCcVd746zc/LLiwxmkU2c9y/Sr91/dCtLuYzMYmmMP80tcKa6laY6v2NTncx+h8DLCTEu+v9Wu3ZP3+CS7ISP96/UPh5db7mQvlG/7KFytuMIhyS+1ou1Qv5GqZwqdafkj/DkE9hLAJgP5xQqRxVVpbE3UcCq0LZAhC0Ettd46nLIpbDaa385HxVLbK0F9UYCVlImOCPbZ1JIxUYqWU8IDFGlXHm5rmoJfNBnDIp1yXjntQ2CIZJrqAkW4Lpq4rAXns9HKkTDwRVsTjXzPRPBQJ3lZ/4zMdpYAB0wiomNj3RL2ZuRJvOa3pANajlBUwR80yUhLF/DQQumyZqcEd5PZK2fDtIqmAfxA65pEve5Cc0Dhb91G4VleECZgIM5jKLGggqW9Mkq/uSsrUD/zxNPAHBhC7HE+H9yUSLzMLc3OeX2bQ==",
+      "erwartet": {
+        "z": 1784278565,
+        "absender": "5eb5678b49bd5225"
+      },
+      "befund": [
+        "offen-nach-schluss"
+      ],
+      "stand_danach": {
+        "o": 1784278565,
+        "f": 1
+      }
+    },
+    {
+      "name": "inhalt-offen-ohne-schluss-im-stand",
+      "client_ref": "m-20261111-0004",
+      "started_ts": 1784277065,
+      "versatz": 0,
+      "stand": {
+        "o": 1784278385
+      },
+      "buch": "standard",
+      "huelle_b64": "Al61Z4tJvVIlBP8scFo2MqJdi2D6tWCAQKhBXLb746gP/9BV+UFys7M0K0EzGvZf9WC7UqQE/rbWt7XqV2LqzEHgFmGfvlGLnwMnM8Kp/YhhbSYaGoJRR+htkbvB4KuvWuvhUBHE4Rtu/pGF1YmS0TxdV1BvLRJLvF16/tbFgLqEPhY5hiuFQzGwU7oBXg439RPgclMbpBvl3z//sdMo8WU5ni1NADOZeI2FC36tf3qdQg6Wt7NM4nr7a7x6x4OO9AiH6PXfGeu1HTjGq3axt+yMzXrpvJkTJoM0MQVSw6dPsvWEF/n+tTGVikRTAzap8d5Zl9VZ+wx7bdrSrKbO7p/QxSjYr5/v0zT8aB1F/ij+x7xeVyMJt1WhnyC8rAHtUO4CtBdQBwjc5Gw4ZxxXF912QV2hFg/+gzGi5OwBAHTxsnVlOFAsosMPqd/7U+6cYluBU7Y8EcrQYg==",
+      "erwartet": {
+        "z": 1784278625,
+        "absender": "5eb5678b49bd5225"
+      },
+      "befund": [],
+      "stand_danach": {
+        "o": 1784278625
+      }
     }
   ],
   "kopplung": {
@@ -1431,6 +1551,108 @@
         "spk_hex": "04b660d2b5d5395e0dce2e0ba81a17de7ad5744fec7dbcc3caa41d48605c4bf5dc3c929b060d561bd8df93540ae6a8fd54cbf4163eb59c1679f141152e6223dce4",
         "n_g_hex": "9e7802a1f107c4cb9016689042162afd",
         "n_b_hex": "a5fbc6370fa74725c1c3db9031fc3f90"
+      }
+    ]
+  },
+  "zaehler": {
+    "hinweis": "z gehört zum Inhalt: vergeben beim Ändern (max(jetzt, letztes + 1)), unverändert beim Verschließen.",
+    "letztes": 0,
+    "schritte": [
+      {
+        "tat": "aendern",
+        "einsatz": "a",
+        "jetzt": 1784278262,
+        "warum": "erste Phase",
+        "z": 1784278262,
+        "letztes": 1784278262
+      },
+      {
+        "tat": "verschliessen",
+        "einsatz": "a",
+        "jetzt": 1784278265,
+        "warum": "senden zählt nicht",
+        "z": 1784278262,
+        "letztes": 1784278262
+      },
+      {
+        "tat": "aendern",
+        "einsatz": "a",
+        "jetzt": 1784278375,
+        "warum": "zweite Phase",
+        "z": 1784278375,
+        "letztes": 1784278375
+      },
+      {
+        "tat": "aendern",
+        "einsatz": "a",
+        "jetzt": 1784278375,
+        "warum": "dieselbe Sekunde: + 1",
+        "z": 1784278376,
+        "letztes": 1784278376
+      },
+      {
+        "tat": "aendern",
+        "einsatz": "b",
+        "jetzt": 1784278376,
+        "warum": "zweiter Einsatz, derselbe Zähler",
+        "z": 1784278377,
+        "letztes": 1784278377
+      },
+      {
+        "tat": "verschliessen",
+        "einsatz": "a",
+        "jetzt": 1784279065,
+        "warum": "später nachgesendet: altes z",
+        "z": 1784278376,
+        "letztes": 1784278377
+      },
+      {
+        "tat": "verschliessen",
+        "einsatz": "a",
+        "jetzt": 1784279066,
+        "warum": "noch einmal: dasselbe z",
+        "z": 1784278376,
+        "letztes": 1784278377
+      },
+      {
+        "tat": "aendern",
+        "einsatz": "b",
+        "jetzt": 1784277965,
+        "warum": "Uhr zurückgestellt: + 1",
+        "z": 1784278378,
+        "letztes": 1784278378
+      },
+      {
+        "tat": "verschliessen",
+        "einsatz": "b",
+        "jetzt": 1784277966,
+        "warum": "trägt das z der Änderung",
+        "z": 1784278378,
+        "letztes": 1784278378
+      },
+      {
+        "tat": "trennen",
+        "einsatz": null,
+        "jetzt": 1784279165,
+        "warum": "Kopplung gelöst: der Zähler bleibt",
+        "z": null,
+        "letztes": 1784278378
+      },
+      {
+        "tat": "aendern",
+        "einsatz": "c",
+        "jetzt": 1784278065,
+        "warum": "nach dem Trennen weiter über dem alten",
+        "z": 1784278379,
+        "letztes": 1784278379
+      },
+      {
+        "tat": "aendern",
+        "einsatz": "c",
+        "jetzt": 1784280065,
+        "warum": "die Uhr stimmt wieder: jetzt",
+        "z": 1784280065,
+        "letztes": 1784280065
       }
     ]
   }

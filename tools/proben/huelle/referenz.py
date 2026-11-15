@@ -142,16 +142,75 @@ nicht „um eins größer", und ein zweites Gerät am selben Einsatz (Übergabe 
 laufenden Dienst) muss über dem Stand des ersten liegen. Bis KA-06c stand
 hier „steigt mit jedem Verschließen dieses Einsatzes durch diesen Absender";
 das beschrieb, wie ein Gerät zählt, nicht, was geprüft wird (Rückmeldung KG,
-F-KG-22).
-WIE EIN ABSENDER ZÄHLT (E-KA-64): z = Unix-Sekunde des Verschließens, lokal
-streng steigend gehalten — `max(jetzt, letztes z + 1)`, ein Zähler für alle
-Einsätze des Geräts, der das Trennen der Kopplung überdauert. So steigt z
-auch über Geräte hinweg, solange deren Uhren nicht weiter auseinandergehen
-als der Abstand zweier Übergaben. WAS DAS NICHT TRÄGT, steht als Vektor
-unter `einsaetze` („wechsel-…"): Ein Gerät, dessen Uhr nachgeht oder fehlt,
-fällt nach einer Übergabe als `zurueckgelegt` durch, obwohl niemand etwas
-zurückgelegt hat; und z belegt den Zeitpunkt des Verschließens, nicht die
-Frische des Inhalts. Das Format verlangt nur eine ganze Zahl ≥ 1.
+F-KG-22). Diese Leseregel hat sich mit KA-06f NICHT geändert.
+
+WIE EIN ABSENDER ZÄHLT (E-KA-69, seit KA-06f): z gehört zum INHALT, nicht
+zum Verschließen. Ein Absender vergibt z, wenn sich der Inhalt eines
+Einsatzes ändert — alles, was innen steht außer z selbst: Phasen,
+Reanimation, `schluss`, `start` —, und legt es MIT DEM PAKET ab. Jede Hülle,
+die er danach aus diesem Paket verschließt, trägt dasselbe z, wie oft und
+wann er auch sendet. Der Wert: die Unix-Sekunde der Änderung, lokal streng
+steigend gehalten — `max(jetzt, letztes z + 1)` (`zaehler_naechster()`), EIN
+Zähler für alle Einsätze des Geräts, der das Trennen der Kopplung
+überdauert. Daraus zwei Sätze, an denen eine Umsetzung zu messen ist
+(`Absenderzaehler`, Vektor `zaehler`):
+    gleiches z   ⇒ innen byte-gleich (an EINEM Absender; nur EPK, IV, CT,
+                   TAG unterscheiden zwei Hüllen desselben Stands)
+    anderer Inhalt ⇒ größeres z (an EINEM Absender, über alle Einsätze)
+Bis KA-06f (E-KA-64) war z die Unix-Sekunde des VERSCHLIESSENS: Jeder
+Sendeversuch hob den Zähler, und ein Gerät, das nach einer Übergabe seinen
+alten, unveränderten Stand nachsandte, gewann gegen den Abschluss des
+anderen. Jetzt trägt es den alten Zähler und fällt als `zurueckgelegt`
+durch (Vektor „inhalt-alter-stand-nachgesendet"; dieselben Bytes gehen
+gegen den Stand von vor der Übergabe auf, „inhalt-gleich-neu-verschlossen").
+Die Hüllen der Fälle „wechsel-…" bleiben byte-gleich und gültig — das
+Format kennt den Unterschied nicht, es verlangt nur eine ganze Zahl ≥ 1.
+
+WAS DAS NICHT TRÄGT — vier Grenzen, keine davon bricht die Zusage, alle
+vier kosten Verfügbarkeit oder Schärfe:
+    vorauslaufende Uhr   Ein Gerät, dessen Zeit einmal weit voraus lag,
+                   behält den hohen Zähler (er überdauert alles), und der
+                   Stand `o` des Einsatzes folgt ihm. Ein anderes Gerät
+                   fällt dort als `zurueckgelegt` durch, bis seine Zeit den
+                   Stand überholt. Nichts senkt `o`; der Rückweg ist E-KA-70
+                   (Web 25.0.0), nicht Teil dieser Regel.
+    nachgehende Uhr      Ein Gerät, dessen Uhr nachgeht oder fehlt, vergibt
+                   bei einer ECHTEN Änderung ein z unter dem Stand des
+                   anderen und fällt durch, obwohl niemand etwas
+                   zurückgelegt hat („wechsel-uhr-geht-nach"). Von einem
+                   Zurücklegen ist das am Zähler nicht zu unterscheiden.
+    gleiches z (F-KA-112)  `z ≥ o` nimmt Gleichstand an. Das MUSS so sein:
+                   Derselbe Stand, neu verschlossen, trägt jetzt dasselbe z.
+                   Über Geräte hinweg sagt Gleichstand aber nichts — zwei
+                   Geräte, die in derselben Sekunde ändern, sind
+                   gegeneinander austauschbar, und der Zähler merkt es
+                   nicht. Ist der eine Stand abgeschlossen und der andere
+                   nicht, fällt es als Befund auf (unten), sonst nicht.
+    Uhrzeit, nicht Reihenfolge   z ordnet nach der Uhr des Geräts, das
+                   geändert hat. Wer nach der Übergabe WIRKLICH etwas ändert,
+                   bekommt ein neues z und gewinnt — auch gegen einen
+                   Abschluss, von dem er nichts weiß. Das ist gewollt (es
+                   ist neuer Inhalt), aber es heißt: z belegt „später
+                   geändert", nicht „vollständiger".
+
+DER BEFUND `offen-nach-schluss` (kleiner Teil von E-KA-69). Eine Hülle, die
+ANGENOMMEN wird (`z ≥ o`), aber `schluss: false` trägt, obwohl zu diesem
+Einsatz schon eine mit `schluss: true` abgenommen war, ist KEIN Fehler und
+wird nicht abgewiesen — der Browser zeigt den Inhalt und meldet den Befund.
+Das fängt den Rest, den der Zähler nicht fängt: das Gerät, das nach der
+Übergabe wirklich noch etwas geändert hat, und den Gleichstand aus
+F-KA-112. Damit das feststellbar ist, merkt sich das Standbuch je Einsatz
+EIN Bit mehr (`referenz_inhalt.py`, Eintrag):
+    f   1 = zu diesem Einsatz ist schon eine Einsatzhülle der Fassung 2 mit
+        `schluss: true` abgenommen worden. Gesetzt beim Abnehmen einer
+        solchen Hülle, danach NIE gelöscht; beim Zusammenführen zweier
+        Blätter gilt „einer hat es" (wie `zu`). Platz im Eintrag: nach `k`.
+`einsatz_befunde()` meldet `offen-nach-schluss`, wenn `f` gesetzt ist und
+die angenommene Hülle der Fassung 2 nicht `schluss: true` trägt — gleich
+von welchem Absender, auch vom Konto. Weil `f` haftet, steht der Befund bei
+JEDEM Lesen, solange die offene Hülle die gespeicherte ist, und fällt weg,
+sobald wieder eine abgeschlossene abgenommen ist. Eine Hülle der Fassung 1
+kommt nicht so weit (`zurueckgelegt` bzw. ohne Stand geduldet).
 
 DIE STÜCKFOLGE — verkettet über die DECKUNG, nicht über einen Hash. Die Uhr
 verschließt ein Stück bei jedem Sendeversuch neu und schneidet es nach einem
@@ -798,6 +857,79 @@ def einsatz_lesen(leser: Leser, ref: str, huelle: bytes, started_ts: int, *, ver
     return d, absender
 
 
+OFFEN_NACH_SCHLUSS = "offen-nach-schluss"
+
+
+def einsatz_befunde(d: dict, absender: str | None, stand: dict | None) -> list[str]:
+    """Was an einer ANGENOMMENEN Einsatzhülle auffällt, ohne dass sie
+    abgewiesen wird (E-KA-69). `d`, `absender`: was `einsatz_lesen()`
+    geliefert hat; `stand`: derselbe Eintrag des Standbuchs, VOR dem
+    Abnehmen dieser Hülle. `f` im Stand: 1 = zu diesem Einsatz war schon
+    eine Hülle mit `schluss: true` abgenommen (haftet, siehe Kopf)."""
+    befunde = []
+    if absender is not None and stand and stand.get("f") and d.get("schluss") is not True:
+        befunde.append(OFFEN_NACH_SCHLUSS)
+    return befunde
+
+
+def stand_nach_abnahme(d: dict, absender: str | None, stand: dict | None) -> dict:
+    """Der Eintrag des Standbuchs, nachdem der Browser diese Hülle abgenommen
+    hat — nur die Felder der Einsatzhülle (`o`, `k`, `f`), in dieser
+    Reihenfolge; `k` und `f` fehlen, wenn sie nicht gesetzt sind."""
+    alt = stand or {}
+    if absender is None:
+        return {s: alt[s] for s in ("o", "k", "f") if alt.get(s)}
+    neu = {"o": d["z"]}
+    if absender == KONTO:
+        neu["k"] = 1
+    if alt.get("f") or d.get("schluss") is True:
+        neu["f"] = 1
+    return neu
+
+
+# ---------------------------------------------- Wie ein Absender zählt
+
+def zaehler_naechster(jetzt: int, letztes: int) -> int:
+    """Der Zähler für einen GEÄNDERTEN Inhalt (E-KA-69): die Unix-Sekunde,
+    lokal streng steigend. `letztes`: der zuletzt vergebene Zähler dieses
+    Geräts, über alle Einsätze; 0 am frischen Gerät."""
+    return max(jetzt, letztes + 1)
+
+
+class Absenderzaehler:
+    """Das Modell eines Geräts: EIN Zähler für alle Einsätze, je Einsatz das
+    z seines gespeicherten Pakets. `aendern()` ruft, wer den Inhalt eines
+    Einsatzes geändert hat (alles innen außer z); `verschliessen()` liest
+    nur. `trennen()` (Kopplung gelöst) lässt den Zähler stehen."""
+
+    def __init__(self, letztes: int = 0):
+        self.letztes = letztes
+        self.pakete: dict[str, int] = {}
+
+    def aendern(self, einsatz: str, jetzt: int) -> int:
+        self.letztes = zaehler_naechster(jetzt, self.letztes)
+        self.pakete[einsatz] = self.letztes
+        return self.letztes
+
+    def verschliessen(self, einsatz: str, jetzt: int) -> int:
+        return self.pakete[einsatz]
+
+    def trennen(self, jetzt: int) -> None:
+        return None
+
+
+def zaehlerfolge(schritte: list[dict], letztes: int = 0) -> list[dict]:
+    """Die Schritte des Vektors `zaehler` durchspielen: je Schritt das z der
+    Hülle (None beim Trennen) und der Stand des Gerätezählers danach."""
+    g = Absenderzaehler(letztes)
+    aus = []
+    for s in schritte:
+        z = (g.trennen(s["jetzt"]) if s["tat"] == "trennen"
+             else getattr(g, s["tat"])(s["einsatz"], s["jetzt"]))
+        aus.append({"z": z, "letztes": g.letztes})
+    return aus
+
+
 # ----------------------------------------------- Kopplung: Vergleichswert
 
 ZUSAGE_INFO = b"nadoku-kopplung-zusage-1"
@@ -1101,6 +1233,59 @@ def vektoren2_bauen() -> dict:
     einsatz("wechsel-zurueck-zum-ersten", w_s, {"z": z_spaeter, "absender": handy}, stand={"o": z_uhr})
     einsatz("wechsel-uhr-geht-nach", w_n, "zurueckgelegt", stand={"o": z_handy})
 
+    # --- Der Zähler am Inhalt (E-KA-69, KA-06f). Dieselbe Übergabe, aber
+    # z ist jetzt die Sekunde der letzten ÄNDERUNG und liegt beim Paket. Das
+    # Handy hat seinen Stand bei T0+1320 zuletzt geändert, die Uhr hat bei
+    # T0+1500 abgeschlossen; der Stand danach: o = z_uhr, f = 1.
+    #   (a) Das Handy sendet seinen ALTEN Stand nach: innen byte-gleich mit
+    #       „wechsel-erstes-geraet", neu verschlossen (anderes EPK, IV) —
+    #       zurueckgelegt. Unter E-KA-64 hätte es mit der Sendezeit gezählt
+    #       (wie „wechsel-zurueck-zum-ersten") und gewonnen.
+    #   (c) Dieselben Bytes gegen den Stand VOR der Übergabe (o = z_handy):
+    #       angenommen, der Stand bleibt. `gleich_wie` nennt den Fall, dessen
+    #       Inneres byte-gleich sein muss.
+    #   (b) Das Handy ÄNDERT nach der Übergabe (Phase 7, schließt ab): neues
+    #       z über dem Stand — angenommen, kein Befund.
+    #   (d) Es ändert, schließt aber nicht ab: angenommen, Befund
+    #       `offen-nach-schluss`. Ebenso bei GLEICHEM z (F-KA-112).
+    #       Gegenprobe: dieselbe Hülle, wo noch kein Abschluss abgenommen war.
+    # `befund` und `stand_danach` stehen NEBEN `erwartet`, nur an den neuen
+    # Fällen; die Namen der festen Schlüssel sind neu — an den Fällen
+    # darüber ändert sich kein Byte.
+    z_geaendert, z_offen = T0 + 1590, T0 + 1560
+    phasen7 = PHASEN2 + [{"phase": 7, "t": 1580, "lat": None, "lon": None}]
+    i_nach = b64(_zu("e-inhalt-handy-nachgesendet", "handy", konto, "einsatz", REF_E, "",
+                     einsatz_innen2(z_handy, T0, False, PHASEN2, [])))
+    i_neu = b64(_zu("e-inhalt-handy-geaendert", "handy", konto, "einsatz", REF_E, "",
+                    einsatz_innen2(z_geaendert, T0, True, phasen7, [])))
+    i_offen = b64(_zu("e-inhalt-handy-offen", "handy", konto, "einsatz", REF_E, "",
+                      einsatz_innen2(z_offen, T0, False, phasen7, [])))
+    i_gleich = b64(_zu("e-inhalt-handy-gleiches-z", "handy", konto, "einsatz", REF_E, "",
+                       einsatz_innen2(z_uhr, T0, False, phasen7, [])))
+    nach_uhr = {"o": z_uhr, "f": 1}
+
+    def inhalt(name, huelle_b64, erwartet, stand, *, schluss=False, befund=(), gleich_wie=None):
+        einsatz(name, huelle_b64, erwartet, stand=stand)
+        f = aus["einsaetze"][-1]
+        if gleich_wie:
+            f["gleich_wie"] = gleich_wie
+        if not isinstance(erwartet, str):
+            f["befund"] = list(befund)
+            f["stand_danach"] = stand_nach_abnahme({"z": erwartet["z"], "schluss": schluss},
+                                                   erwartet["absender"], stand)
+
+    inhalt("inhalt-alter-stand-nachgesendet", i_nach, "zurueckgelegt", nach_uhr,
+           gleich_wie="wechsel-erstes-geraet")
+    inhalt("inhalt-gleich-neu-verschlossen", i_nach, {"z": z_handy, "absender": handy}, {"o": z_handy},
+           gleich_wie="wechsel-erstes-geraet")
+    inhalt("inhalt-geaendert-nach-uebergabe", i_neu, {"z": z_geaendert, "absender": handy}, nach_uhr,
+           schluss=True)
+    inhalt("inhalt-offen-nach-schluss", i_offen, {"z": z_offen, "absender": handy}, nach_uhr,
+           befund=[OFFEN_NACH_SCHLUSS])
+    inhalt("inhalt-gleiches-z-offen-nach-schluss", i_gleich, {"z": z_uhr, "absender": handy}, nach_uhr,
+           befund=[OFFEN_NACH_SCHLUSS])
+    inhalt("inhalt-offen-ohne-schluss-im-stand", i_offen, {"z": z_offen, "absender": handy}, {"o": z_handy})
+
     # --- Kopplung: Zusage und Vergleichswert ---
     n_g = hashlib.sha256(b"nadoku-kopplung-vektor-n-g").digest()[:NONCE_LAENGE]
     n_b = hashlib.sha256(b"nadoku-kopplung-vektor-n-b").digest()[:NONCE_LAENGE]
@@ -1121,6 +1306,31 @@ def vektoren2_bauen() -> dict:
              "anderer_wert": kopplung_wert(kpub, fremd, n_g, n_b),
              "konto_hex": kpub.hex(), "spk_hex": fremd.hex(), "n_g_hex": n_g.hex(), "n_b_hex": n_b.hex()},
         ],
+    }
+
+    # --- Wie ein Absender zählt (E-KA-69): EIN Gerät, drei Einsätze. Je
+    # Schritt `z` (was die Hülle dieses Einsatzes trägt; null beim Trennen)
+    # und `letztes` (der Gerätezähler danach). Ein Objekt, keine Liste — so
+    # kippt beim Anfügen keine Zeile der Datei.
+    schritte = [
+        {"tat": "aendern", "einsatz": "a", "jetzt": T0 + 1197, "warum": "erste Phase"},
+        {"tat": "verschliessen", "einsatz": "a", "jetzt": T0 + 1200, "warum": "senden zählt nicht"},
+        {"tat": "aendern", "einsatz": "a", "jetzt": T0 + 1310, "warum": "zweite Phase"},
+        {"tat": "aendern", "einsatz": "a", "jetzt": T0 + 1310, "warum": "dieselbe Sekunde: + 1"},
+        {"tat": "aendern", "einsatz": "b", "jetzt": T0 + 1311, "warum": "zweiter Einsatz, derselbe Zähler"},
+        {"tat": "verschliessen", "einsatz": "a", "jetzt": T0 + 2000, "warum": "später nachgesendet: altes z"},
+        {"tat": "verschliessen", "einsatz": "a", "jetzt": T0 + 2001, "warum": "noch einmal: dasselbe z"},
+        {"tat": "aendern", "einsatz": "b", "jetzt": T0 + 900, "warum": "Uhr zurückgestellt: + 1"},
+        {"tat": "verschliessen", "einsatz": "b", "jetzt": T0 + 901, "warum": "trägt das z der Änderung"},
+        {"tat": "trennen", "einsatz": None, "jetzt": T0 + 2100, "warum": "Kopplung gelöst: der Zähler bleibt"},
+        {"tat": "aendern", "einsatz": "c", "jetzt": T0 + 1000, "warum": "nach dem Trennen weiter über dem alten"},
+        {"tat": "aendern", "einsatz": "c", "jetzt": T0 + 3000, "warum": "die Uhr stimmt wieder: jetzt"},
+    ]
+    aus["zaehler"] = {
+        "hinweis": "z gehört zum Inhalt: vergeben beim Ändern (max(jetzt, letztes + 1)), "
+                   "unverändert beim Verschließen.",
+        "letztes": 0,
+        "schritte": [dict(s, **e) for s, e in zip(schritte, zaehlerfolge(schritte))],
     }
     return aus
 
@@ -1182,9 +1392,41 @@ def pruefen2(v: dict) -> list[str]:
                 fehler.append(f"2/Einsatz {f['name']}: ging auf, erwartet {f['grund']}")
             elif ist != f["erwartet"]:
                 fehler.append(f"2/Einsatz {f['name']}: {ist}, erwartet {f['erwartet']}")
+            else:
+                # Befund und Stand danach: an Fällen ohne die Schlüssel (bis
+                # KA-06c) gilt „kein Befund", der Stand wird nicht verglichen.
+                befunde = einsatz_befunde(d, wer, f["stand"])
+                if befunde != f.get("befund", []):
+                    fehler.append(f"2/Einsatz {f['name']}: Befund {befunde}, erwartet {f.get('befund', [])}")
+                danach = stand_nach_abnahme(d, wer, f["stand"])
+                if "stand_danach" in f and danach != f["stand_danach"]:
+                    fehler.append(f"2/Einsatz {f['name']}: Stand danach {danach}, "
+                                  f"erwartet {f['stand_danach']}")
         except HuelleFehler as e:
             if str(e) != f.get("grund"):
                 fehler.append(f"2/Einsatz {f['name']}: Grund {e}, erwartet {f.get('grund', 'geht auf')}")
+        if "gleich_wie" in f:
+            # Derselbe Stand, neu verschlossen: innen byte-gleich (also auch
+            # dasselbe z), die Hülle eine andere. Geöffnet ohne Standbuch.
+            try:
+                g = next(x for x in v["einsaetze"] if x["name"] == f["gleich_wie"])
+                le_f = _leser(v, f["buch"])
+                innen = [le_f.huelle(base64.b64decode(x["huelle_b64"]), "einsatz", x["client_ref"], "")
+                         for x in (f, g)]
+                if innen[0] != innen[1]:
+                    fehler.append(f"2/Einsatz {f['name']}: innen nicht byte-gleich mit {g['name']}")
+                if f["huelle_b64"] == g["huelle_b64"]:
+                    fehler.append(f"2/Einsatz {f['name']}: dieselbe Hülle wie {g['name']}, nicht neu verschlossen")
+            except (HuelleFehler, StopIteration) as e:
+                fehler.append(f"2/Einsatz {f['name']}: Vergleich mit {f['gleich_wie']} scheitert ({e})")
+    zf = v.get("zaehler")
+    if not zf:
+        fehler.append("2/Zähler: die Zählerfolge fehlt")
+    else:
+        for i, (s, ist) in enumerate(zip(zf["schritte"], zaehlerfolge(zf["schritte"], zf["letztes"]))):
+            if (s["z"], s["letztes"]) != (ist["z"], ist["letztes"]):
+                fehler.append(f"2/Zähler Schritt {i} ({s['tat']} {s['einsatz']}): z {ist['z']}, letztes "
+                              f"{ist['letztes']}; erwartet z {s['z']}, letztes {s['letztes']}")
     k = v["kopplung"]
     hx = bytes.fromhex
     if (kopplung_zusage(hx(k["n_g_hex"]), hx(k["spk_hex"])).hex() != k["zusage_hex"]
@@ -1209,7 +1451,8 @@ def zahlen2(v: dict) -> str:
     rot = (len(v["stoerungen"]) + sum("grund" in f for f in v["folgen"])
            + sum("grund" in f for f in v["einsaetze"]) + len(v["kopplung"]["gegenlagen"]))
     gut = (len(v["faelle"]) + len(v["gepackt"]) + sum("grund" not in f for f in v["folgen"])
-           + sum("grund" not in f for f in v["einsaetze"]) + 1)
+           + sum("grund" not in f for f in v["einsaetze"]) + 1 + (1 if v.get("zaehler") else 0))
+    # + 1 die Kopplung, + 1 die Zählerfolge (E-KA-69) — je als EIN Fall.
     return f"Fassung 2: {gut} Fälle geöffnet, {rot} Gegenlagen abgewiesen"
 
 
@@ -1409,6 +1652,41 @@ def selbstprobe() -> int:
     zweit = next(f for f in w["einsaetze"] if f["name"] == "wechsel-zweites-geraet")
     zweit["erwartet"]["absender"] = w["geraete"]["handy"]["sid_hex"]
     faelle.append(("Fehler 2: zweites Gerät als das erste erwartet", bool(pruefen2(w))))
+    # Zähler am Inhalt (E-KA-69): je neuer Fehlerart einer.
+    # `pruefen2()` meldet JEDE veränderte Datei schon über den Vergleich mit
+    # dem Neubau; diese Fälle verlangen deshalb die Meldung der Prüfung
+    # selbst (`meldet`), nicht nur irgendeine.
+    def fall(w, name):
+        return next(f for f in w["einsaetze"] if f["name"] == name)
+
+    def meldet(w, teil):
+        return any(teil in f for f in pruefen2(w))
+    w = json.loads(json.dumps(v2)); fall(w, "inhalt-alter-stand-nachgesendet")["stand"] = {"o": T0 + 1320}
+    faelle.append(("Fehler 2: nachgesendeter alter Stand geht auf", meldet(w, 'inhalt-alter-stand-nachgesendet: ging auf')))
+    w = json.loads(json.dumps(v2)); fall(w, "inhalt-offen-nach-schluss")["stand"] = {"o": T0 + 1500}
+    faelle.append(("Fehler 2: Befund offen-nach-schluss bleibt aus (Stand ohne f)", meldet(w, 'inhalt-offen-nach-schluss: Befund []')))
+    w = json.loads(json.dumps(v2))
+    ohne = fall(w, "inhalt-offen-ohne-schluss-im-stand")
+    ohne["stand"] = {"o": T0 + 1320, "f": 1}; ohne["stand_danach"]["f"] = 1
+    faelle.append(("Fehler 2: Befund gemeldet, wo keiner erwartet ist", meldet(w, "inhalt-offen-ohne-schluss-im-stand: Befund ['offen-nach-schluss']")))
+    w = json.loads(json.dumps(v2)); del fall(w, "inhalt-geaendert-nach-uebergabe")["stand_danach"]["f"]
+    faelle.append(("Fehler 2: Stand danach vergisst den Abschluss", meldet(w, 'inhalt-geaendert-nach-uebergabe: Stand danach')))
+    w = json.loads(json.dumps(v2))
+    fall(w, "inhalt-gleich-neu-verschlossen")["gleich_wie"] = "wechsel-zurueck-zum-ersten"
+    faelle.append(("Fehler 2: neu verschlossen, aber innen nicht byte-gleich", meldet(w, 'inhalt-gleich-neu-verschlossen: innen nicht byte-gleich')))
+    w = json.loads(json.dumps(v2))
+    fall(w, "inhalt-gleich-neu-verschlossen")["huelle_b64"] = fall(w, "wechsel-erstes-geraet")["huelle_b64"]
+    faelle.append(("Fehler 2: neu verschlossen ist dieselbe Hülle", meldet(w, 'inhalt-gleich-neu-verschlossen: dieselbe Hülle')))
+    w = json.loads(json.dumps(v2))
+    sendet = next(s for s in w["zaehler"]["schritte"] if s["tat"] == "verschliessen" and s["jetzt"] == T0 + 2000)
+    sendet["z"] = sendet["jetzt"]
+    faelle.append(("Fehler 2: Zähler steigt beim Verschließen (E-KA-64)", meldet(w, '2/Zähler Schritt 5')))
+    w = json.loads(json.dumps(v2))
+    zurueck = next(s for s in w["zaehler"]["schritte"] if s["jetzt"] == T0 + 900)
+    zurueck["z"] = zurueck["letztes"] = T0 + 900
+    faelle.append(("Fehler 2: Zähler fällt mit zurückgestellter Uhr", meldet(w, '2/Zähler Schritt 7')))
+    w = json.loads(json.dumps(v2)); del w["zaehler"]
+    faelle.append(("Fehler 2: Zählerfolge fehlt", meldet(w, 'die Zählerfolge fehlt')))
     w = json.loads(json.dumps(v2)); w["kopplung"]["wert"] = "000000"
     faelle.append(("Fehler 2: falscher Vergleichswert", bool(pruefen2(w))))
     w = json.loads(json.dumps(v2)); w["kopplung"]["gegenlagen"][0]["n_g_hex"] = w["kopplung"]["n_g_hex"]
