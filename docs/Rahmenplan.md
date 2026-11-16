@@ -1,14 +1,14 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 247 (13.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 248 (16.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `1bec55c`, PR #176, gemessen 13.11.2026): Web 24.16.0 ·
-Uhr 4.5.2 · Android 0.23.0; auf Staging; Produktiv Web 24.11.0 (Tag `web-v24.11.0`, Lauf 193), Uhr 4.3.2 · Android 0.21.0.
-**Läuft:** 28 (KA) — Umsetzung; KA-01 bis KA-05, KA-06a, 06b vorab, 06b-1 bis 06b-3 erledigt, KA-06b-4 (Anhebelauf, Web 24.17.0) im PR, dann 06c bis 06e und die Weiche (E-KA-51); Garmin-Teil bei KG seit 10.11.2026 (KG-01, -02, -05, -06 mit PR #168, Uhr 4.5.1; offen KG-03, Rest KG-04) (R92).
-**Als Nächstes:** 28 (KA), danach 13 (P7).
-**Offene PRs:** KA-06b-4 (28, Web 24.17.0; kein Schema).
+**Stand `origin/main`** (Commit `cae436c`, PR #190, gemessen 16.11.2026): Web 25.0.0 ·
+Uhr 5.1.0 · Android 0.26.0; auf Staging; Produktiv Web 24.11.0 (Tag `web-v24.11.0`, Lauf 193), Uhr 5.1.0 · Android 0.21.0.
+**Läuft:** 28 (KA) — Umsetzung; KA-01 bis KA-06d, 06f und die Weiche (KA-08 bis KA-15, Web 25.0.0, Android 0.26.0) erledigt, Garmin-Teil mit KG-09/10 (Uhr 5.1.0); offen 06e (E-KA-79) (R92).
+**Als Nächstes:** Tags `web-v25.0.0` und `android-v0.26.0` (Betreiberin), dann 06e; danach 13 (P7).
+**Offene PRs:** keine.
 **Fällig bei der Betreiberin:** 44 Posten (Abschnitt 6.1). **`update.php`:** auf Staging nichts offen (Betreiberin, 12.11.2026, nach KA-06b-2); auf Produktiv seit dem Tag `web-v24.11.0` fällig, falls noch nicht aufgerufen (Migration `2026_11_07_darstellung`).
 
 Kennungen sind Namen, keine Reihenfolge.
@@ -187,8 +187,8 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | **Prüfliste SR:** auf Staging P-SR-05, -10, -11, -14, -16, -17 — Notzugang, Passkeys und Rechenaufgabe an echten Geräten, Cookie-Absatz; freiwillig -09 | 18 | 05.10.2026 | `Pruefliste.md` 4 |
 | **Zuarbeiten aus Kette II:** Aufbewahrung der Komplett-Stände auf Staging (Nr. 261, Vorschlag 5); `info.php` auf Staging löschen; Hotfix-Weg beim ersten Hotfix | Kette II | 21.09.2026 | `Pruefliste.md`, 4a, 9, 27, 28 |
 | **Prüfliste S11:** Gerätetests Uhr 4.0.0 und Android 0.18.0 (P-S11-32 bis -35, -05, -39), Staging (-23 echte Uhr-Datei, -25 (b) alte Sicherung; -30 und -31 bestanden mit Schritt 24, 05.11.2026), Safari (-43), alte Sicherungen (-07, -08), Rechtstexte (-40) | 12a | 20.10.2026 | `Pruefliste.md` 4 |
-| **Prüfliste PU:** P-PU-05 und -07 beim nächsten passenden Paket (Zehnergrenze, Stylesheet), -09 und -10 lesen; -01, -04, -06 bestanden mit Schritt 24 (05.11.2026) | 20 | 02.11.2026 | `Pruefliste.md` 2, 12 |
-| **Prüfliste PR:** P-PR-01 (Freigabeprobe nach der Anteilprobe im nächsten passenden Lauf), -02 (Prüfstand im offenen Merge), -03 (keine Sperrzeile nach der Zweitfaktorprobe) | PR | 02.11.2026 | `Pruefliste.md` 12 |
+| **Prüfliste PU:** P-PU-07 beim nächsten passenden Paket (Stylesheet), -09 und -10 lesen; -01, -04, -06 bestanden mit Schritt 24 (05.11.2026), -05 mit Web 25.0.0 (16.11.2026) | 20 | 02.11.2026 | `Pruefliste.md` 2, 12 |
+| **Prüfliste PR:** P-PR-03 (keine Sperrzeile nach der Zweitfaktorprobe); -01 und -02 bestanden mit dem Merge zu PR #190 (16.11.2026) | PR | 02.11.2026 | `Pruefliste.md` 12 |
 | **Prüfliste DM:** P-DM-03 (Registrierung in Safari: Knopf sofort frei), -06 (dasselbe auf Produktiv nach dem Tag `web-v23.0.1`, nur bei offener Registrierung) | 19 | 20.10.2026 | `Pruefliste.md` 3 |
 | **Prüfliste R17:** P-R17-38 (lesen); -11, -27 (Geräte); -34 (Rest Nr. 430); -26 ging in P-GR-02 auf; freiwillig -24, -31, -32. Der Rest ist erledigt (02.11.2026) | 12, 12b | 11.10.2026 | `Pruefliste.md` |
 | **Antwort des Hosters auswerten** (gestellt 28.10.2026): Haltedauer der Zugriffslogs (F-R17-22, -57; in die Betriebsakte) und ob er GitHub-Läufer zeitweise sperrt (F-R17-74) | 12b (R17-19, Übergabe) | 21.10.2026 | `Review-R17.md` 2.3 und 2.3a (gelöscht, `630756f0`) |
