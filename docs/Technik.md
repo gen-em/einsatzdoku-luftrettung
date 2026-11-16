@@ -10448,7 +10448,7 @@ Schlüssel im Gerätebuch, `edk2:`-Blöcke, 16 geschlossene Blätter, Kontopaar,
 Gerätebuch und Geräteschlüssel mit und wechselt dabei den Inhaltsschlüssel;
 lesende Aufrufe von `api/standbuch.php` setzen die Änderungsmarke nicht.
 Formate 1 bis 3 lädt er weiter (die Bedienprobe des Anhebelaufs braucht
-Format 3, `tools/bedienprobe/daten/`).
+Format 3, `tools/referenzdatensatz/fixture/alt/`).
 
 **Was noch nicht da ist:** der Stichtag für Fassung 1 und das Altformat der
 Gerätedaten (KA-06e, nach Web 25.0.0, E-KA-79).
