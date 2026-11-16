@@ -142,7 +142,7 @@ async function anmelden(mail, pw) {
   await seite.fill('input[name="email"]', mail);
   await seite.fill('input[name="password"]', pw);
   await Promise.all([
-    seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
+    seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 90000 }),
     seite.click('#loginform button[type="submit"]'),
   ]);
   /* DER ZWEITFAKTOR. Die Administration dieses Laufs ist

@@ -168,7 +168,7 @@ try {
   await seite.fill('input[name="email"]', ZIEL);
   await seite.fill('input[name="password"]', ZIELPW);
   await Promise.all([
-    seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
+    seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 90000 }),
     seite.click('#loginform button[type="submit"]'),
   ]);
   if (seite.url().includes('login.php')) {

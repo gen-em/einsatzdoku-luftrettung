@@ -839,7 +839,8 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      über einen Zeitraum 224,56 s statt rund 70 s; GPX braucht 114 401
      Krypto-Aufrufe. Das Standbuch ist es nach der Behebung nicht mehr
      (0 × 409); vermutlich die Gerätehülle der Fassung 2 je Stück (zwei
-     ECDH statt einer). Beide bleiben unter der Zielzahl. *Weg:* messen,
+     ECDH statt einer). Beide bleiben unter der Zielzahl; die Halde
+     steigt beim GPX-Export auf 364 bis 411 MB. *Weg:* messen,
      wo die Zeit liegt (Krypto-Aufrufe je Stück), dann Z_s je Absender
      zwischenspeichern, wo es nicht schadet. *Abnahme:* Messstand mit
      Zahl je Schritt.

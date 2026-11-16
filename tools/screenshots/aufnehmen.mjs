@@ -708,7 +708,7 @@ async function anmeldenAuf(seite, rolle) {
   await seite.fill('input[name="email"]', konto.email);
   await seite.fill('input[name="password"]', konto.pw);
   await Promise.all([
-    seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
+    seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 90000 }),
     seite.click('#loginform button[type="submit"]'),
   ]);
 

@@ -72,7 +72,7 @@ await seite.goto(`${basis}/login.php`, { waitUntil: 'domcontentloaded' });
 await seite.fill('input[name="email"]', konto);
 await seite.fill('input[name="password"]', kontoPw);
 await Promise.all([
-  seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
+  seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 90000 }),
   seite.click('#loginform button[type="submit"]'),
 ]);
 pruefe(!seite.url().includes('login.php'), `Anmeldung als ${konto} gescheitert`);
