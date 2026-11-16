@@ -455,7 +455,8 @@ try {
   const blob12 = await s.evaluate(async (mid) => {
     const m = await (await fetch('api/mission.php?id=' + mid)).json();
     const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
-    return JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob));
+    /* Über das Standbuch: seit Web 25.0.0 ist der Block `edk2:` (KA-14). */
+    return JSON.parse(await EdStandbuch.patOeffnen(ck, m.pat_blob, m.client_ref));
   }, mid);
   pruefe(Object.values(spalten12).every(v => v === null), '12 Transportziel, Koordinate, Höhe: keine Klartextspalten',
          JSON.stringify(spalten12));
@@ -482,7 +483,8 @@ try {
   const amb12 = await s.evaluate(async (mid) => {
     const m = await (await fetch('api/mission.php?id=' + mid)).json();
     const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
-    return JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob));
+    /* Über das Standbuch: seit Web 25.0.0 ist der Block `edk2:` (KA-14). */
+    return JSON.parse(await EdStandbuch.patOeffnen(ck, m.pat_blob, m.client_ref));
   }, mid);
   pruefe(!amb12.transport_dest && amb12.ortshoehe === hoeheSoll, '12 „ambulant": kein Ziel im Blob, Höhe bleibt',
          JSON.stringify(amb12).slice(0, 70));
