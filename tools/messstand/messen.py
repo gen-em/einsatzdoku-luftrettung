@@ -230,7 +230,10 @@ def schritt_browser(a) -> None:
               "MESSSTAND_KONTO": KONTO, "MESSSTAND_PASSWORT": KONTO_PW,
               "MESSSTAND_BACKUP_PASSWORT": BACKUP_PW,
               "MESSSTAND_ZIELE": json.dumps(ziele),
-              "MESSSTAND_WIEDERHOLUNGEN": str(a.wiederholungen)})
+              "MESSSTAND_WIEDERHOLUNGEN": str(a.wiederholungen),
+              # Anlass: Nr. 569 -- einzelne Browserschritte, auf Wunsch mit
+              # CPU-Profil; was ausgelassen wird, sagt die Probe selbst.
+              "MESSSTAND_NUR": a.nur, "MESSSTAND_PROFIL": a.profil})
 
 
 def schritt_server(a) -> None:
@@ -400,6 +403,13 @@ def main() -> int:
     # Laeufe je Einzelansicht der Huellen-Messungen; gezaehlt wird der Median.
     # Die Massenwege laufen einmal.
     p.add_argument("--wiederholungen", type=int, default=5)
+    p.add_argument("--nur", default="",
+                   help="Schritt browser: nur Schritte, deren Name einen dieser "
+                        "Teile trägt (Komma), z. B. 'Backup,GPX' -- der Rest wird "
+                        "ausgelassen und so genannt (Nr. 569)")
+    p.add_argument("--profil", default="",
+                   help="Schritt browser: Verzeichnis für ein CPU-Profil je Schritt "
+                        "(kostet Zeit -- keine Vergleichszahl)")
     p.add_argument("--frisch", action="store_true",
                    help="Messstandkonto vorher löschen (nur mit Präfix "
                         f"'{PRAEFIX}')")

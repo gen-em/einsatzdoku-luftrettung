@@ -218,7 +218,7 @@ async function anmelden(rolle) {
   await seite.fill('input[name="email"]', konto.email);
   await seite.fill('input[name="password"]', konto.pw);
   await Promise.all([
-    seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
+    seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 90000 }),
     seite.click('#loginform button[type="submit"]'),
   ]);
   /* DER CODE-SCHRITT DES ZWEITFAKTORS. Das Pruefkonto
@@ -382,7 +382,7 @@ async function neuAnmelden(r) {
   await r.seite.fill('input[name="email"]', konto.email);
   await r.seite.fill('input[name="password"]', konto.pw);
   await Promise.all([
-    r.seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
+    r.seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 90000 }),
     r.seite.click('#loginform button[type="submit"]'),
   ]);
   /* Derselbe Code-Schritt wie in `anmelden()`. Ein gescheiterter wirft

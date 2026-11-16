@@ -15,8 +15,9 @@ declare(strict_types=1);
  * ihn — beide Richtungen, denn ein Riegel, der IMMER zuschlaegt, ist ebenso
  * kaputt wie einer, der es nie tut:
  *
- *   1. POSITIV — das Demo-Konto traegt `edk1:`, und `erzeugen.php` laeuft
- *      durch (Rueckgabe 0, eine Datei entsteht).
+ *   1. POSITIV — das Demo-Konto traegt eine Huelle ohne Anteil (`edk1:`,
+ *      seit Fixture-Format 4 `edk2:`), und `erzeugen.php` laeuft durch
+ *      (Rueckgabe 0, eine Datei im Format 4 entsteht).
  *   2. NEGATIV — ein Konto mit `edka1:`-Huelle wird abgewiesen
  *      (Rueckgabe 2, Meldung nennt das gefundene Praefix, KEINE Datei).
  *
@@ -37,10 +38,12 @@ declare(strict_types=1);
  *     php tools/referenzdatensatz/fixture/riegelprobe.php
  *     php tools/referenzdatensatz/fixture/riegelprobe.php umlauf-csv@example.invalid
  *
- * Das Argument ist das Konto fuer den NEGATIVfall; es muss eine
- * `edka1:`-Huelle tragen, die Rolle `user` haben und auf `KDF_ITER_ZIEL`
- * stehen — sonst schlaegt ein anderer Riegel vorher zu, und die Probe sagt
- * das, statt gruen zu melden.
+ * Das Argument ist das Konto fuer den NEGATIVfall; es muss eine Huelle mit
+ * Anteil tragen (`edka1:` oder `edka2:`) und die Rolle `user` haben — sonst
+ * schlaegt ein anderer Riegel vorher zu, und die Probe sagt das, statt
+ * gruen zu melden. Die Rundenzahl spielt seit KA-13 keine Rolle mehr: Die
+ * Fixture traegt `KDF_ITER_ZIEL` durch Bau (`erzeugen.php`, Kopf).
+ * `NADOKU_SERVER` (Umgebung) nennt ein anderes `server/`.
  *
  * Erwartet: **11 von 11**, Rueckgabe 0.
  *
@@ -56,7 +59,7 @@ declare(strict_types=1);
  */
 
 $wurzel  = dirname(__DIR__, 3);
-$server  = $wurzel . '/server';
+$server  = rtrim((string)(getenv('NADOKU_SERVER') ?: $wurzel . '/server'), '/');
 $erzeuge = __DIR__ . '/erzeugen.php';
 
 require_once $server . '/db.php';
@@ -103,15 +106,15 @@ if (!$demo || !$neg) {
  * der Huelle; ein Konto mit anderer Rolle oder Rundenzahl wuerde an einem
  * anderen Riegel abgewiesen, und Fall 2b waere rot aus einem Grund, der mit
  * der Huelle nichts zu tun hat. */
-if ($neg['role'] !== 'user' || (int)$neg['kdf_iter'] !== KDF_ITER_ZIEL) {
-    fwrite(STDERR, sprintf("Das Negativkonto %s hat Rolle '%s' und %d Runden; gebraucht werden "
-                         . "'user' und %d.\n", $negativKonto, $neg['role'], (int)$neg['kdf_iter'],
-                           KDF_ITER_ZIEL));
+if ($neg['role'] !== 'user') {
+    fwrite(STDERR, sprintf("Das Negativkonto %s hat Rolle '%s'; gebraucht wird 'user'.\n",
+                           $negativKonto, $neg['role']));
     exit(2);
 }
-if (!str_starts_with((string)$neg['praefix'], 'edka1:')) {
+$negPraefix = explode(':', (string)$neg['praefix'])[0] . ':';
+if (!in_array($negPraefix, ['edka1:', 'edka2:'], true)) {
     fwrite(STDERR, sprintf(
-        "Das Negativkonto %s traegt `%s`, gebraucht wird `edka1:`.\n"
+        "Das Negativkonto %s traegt `%s`, gebraucht wird `edka1:` oder `edka2:`.\n"
       . "Herzustellen, indem sich das Konto einmal im Browser anmeldet -- oder\n"
       . "mit tools/proben/anteil/huelle_stellen.py <konto> <passwort> edka1.\n",
         $negativKonto, (string)$neg['praefix']));
@@ -124,7 +127,7 @@ echo "  Negativ  $negativKonto  Praefix {$neg['praefix']}\n\n";
 /* ---- 1. Positiv: das Demo-Konto laeuft durch ------------------------------ */
 $ziel = sys_get_temp_dir() . '/riegelprobe-' . bin2hex(random_bytes(4)) . '.json.gz';
 $a = lauf($erzeuge, 'demo@gen-em.org', $ziel);
-pruef('1  Demo-Konto mit `edk1:` laeuft durch', $a['rc'] === 0,
+pruef('1  Demo-Konto ohne Anteil laeuft durch', $a['rc'] === 0,
       'Rueckgabe ' . $a['rc'] . ($a['rc'] !== 0 ? ' — ' . trim($a['err']) : ''));
 pruef('1  ... und legt eine Fixture an', $a['datei'] > 0,
       $a['datei'] > 0 ? round($a['datei'] / 1024) . ' KB' : 'keine Datei');
@@ -133,11 +136,11 @@ pruef('1  ... und legt eine Fixture an', $a['datei'] > 0,
  * abbrach (Nr. 388). */
 $fx = $a['datei'] > 0 ? json_decode((string)gzdecode((string)file_get_contents($ziel)), true) : null;
 $punkte = 0;
-foreach (['missions', 'rest_segments'] as $liste) {
-    foreach ((array)($fx['daten'][$liste] ?? []) as $e) { $punkte += count($e['track'] ?? []); }
+foreach ((array)($fx['spuren'] ?? []) as $e) {
+    foreach ((array)($e['stuecke'] ?? []) as $t) { $punkte += (int)($t['punkte'] ?? 0); }
 }
-pruef('1  ... im Format 3, Nutzlast 7, mit Spurpunkten',
-      ($fx['version'] ?? null) === 3 && ($fx['daten']['version'] ?? null) === 7 && $punkte > 0,
+pruef('1  ... im Format 4, Nutzlast 13, mit Spurstuecken',
+      ($fx['version'] ?? null) === 4 && ($fx['daten']['version'] ?? null) === 13 && $punkte > 0,
       'Format ' . var_export($fx['version'] ?? null, true) . ', Nutzlast '
       . var_export($fx['daten']['version'] ?? null, true) . ", $punkte Punkte");
 @unlink($ziel);
@@ -145,12 +148,12 @@ pruef('1  ... im Format 3, Nutzlast 7, mit Spurpunkten',
 /* ---- 2. Negativ: ein Konto mit Anteil wird abgewiesen --------------------- */
 $ziel2 = sys_get_temp_dir() . '/riegelprobe-' . bin2hex(random_bytes(4)) . '.json.gz';
 $b = lauf($erzeuge, $negativKonto, $ziel2);
-pruef('2  Konto mit `edka1:` wird abgewiesen', $b['rc'] === 2,
+pruef('2  Konto mit Anteil (`' . $negPraefix . '`) wird abgewiesen', $b['rc'] === 2,
       'Rueckgabe ' . $b['rc']);
 /* Die Meldung muss das GEFUNDENE Praefix nennen. Ein „stimmt nicht" ohne den
  * Wert schickt die naechste Person in die Datenbank, um nachzusehen. */
-pruef('2  ... die Meldung nennt `edka1:` und schreibt KEINE Datei',
-      str_contains($b['err'], 'edka1:') && $b['datei'] === 0,
+pruef('2  ... die Meldung nennt das Praefix und schreibt KEINE Datei',
+      str_contains($b['err'], $negPraefix) && $b['datei'] === 0,
       trim(explode("\n", $b['err'])[0] ?? ''));
 @unlink($ziel2);
 
@@ -178,7 +181,7 @@ pruef('2  ... die Meldung nennt `edka1:` und schreibt KEINE Datei',
  *   3. Das `finally` legt zurueck, auch bei einem Abbruch, und die letzte
  *      Zeile dieses Teils nennt die Pruefsumme vorher/nachher.
  */
-$fxPfad   = $wurzel . '/server/demo/fixture.json.gz';
+$fxPfad   = $server . '/demo/fixture.json.gz';
 $fxSicher = sys_get_temp_dir() . '/riegelprobe-fixture-' . bin2hex(random_bytes(4)) . '.gz';
 $summeVor = @hash_file('sha256', $fxPfad);
 
@@ -200,11 +203,11 @@ $verbiegen = static function (string $spalte) use ($fxSicher, $fxPfad): void {
 };
 
 /** `demo_fixture_laden()` in einem EIGENEN Prozess rufen. */
-$laden = static function () use ($wurzel): array {
+$laden = static function () use ($server): array {
     $d = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
     $p = proc_open(['php', '-r',
-        'require ' . var_export($wurzel . '/server/db.php', true) . ';'
-      . 'require ' . var_export($wurzel . '/server/demo_lib.php', true) . ';'
+        'require ' . var_export($server . '/db.php', true) . ';'
+      . 'require ' . var_export($server . '/demo_lib.php', true) . ';'
       . 'try { demo_fixture_laden(); echo "ANGENOMMEN"; }'
       . 'catch (Throwable $e) { echo "ABGEWIESEN: " . $e->getMessage(); }'], $d, $rohr);
     $aus = stream_get_contents($rohr[1]); fclose($rohr[1]);
@@ -257,11 +260,11 @@ try {
      * mit einer Aenderungsmarke. Nur den letzten Reset zurueckzuschieben
      * hiesse jetzt, gar keinen Versuch auszuloesen — und die Probe meldete
      * „0 Stoerungen", also rot, aber aus dem falschen Grund. */
-    $r3 = (static function () use ($wurzel): string {
+    $r3 = (static function () use ($server): string {
         $d = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
         $p = proc_open(['php', '-r',
-            'require ' . var_export($wurzel . '/server/db.php', true) . ';'
-          . 'require ' . var_export($wurzel . '/server/demo_lib.php', true) . ';'
+            'require ' . var_export($server . '/db.php', true) . ';'
+          . 'require ' . var_export($server . '/demo_lib.php', true) . ';'
           . '$m = (int)db()->query("SELECT v FROM app_state WHERE k = \'demo_letzter_reset\'")'
           . '  ->fetchColumn();'
           . '$n = (int)db()->query("SELECT COUNT(*) FROM missions WHERE user_id = "'

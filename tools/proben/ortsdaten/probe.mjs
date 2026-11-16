@@ -455,7 +455,8 @@ try {
   const blob12 = await s.evaluate(async (mid) => {
     const m = await (await fetch('api/mission.php?id=' + mid)).json();
     const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
-    return JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob));
+    /* Über das Standbuch: seit Web 25.0.0 ist der Block `edk2:` (KA-14). */
+    return JSON.parse(await EdStandbuch.patOeffnen(ck, m.pat_blob, m.client_ref));
   }, mid);
   pruefe(Object.values(spalten12).every(v => v === null), '12 Transportziel, Koordinate, Höhe: keine Klartextspalten',
          JSON.stringify(spalten12));
@@ -482,7 +483,8 @@ try {
   const amb12 = await s.evaluate(async (mid) => {
     const m = await (await fetch('api/mission.php?id=' + mid)).json();
     const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
-    return JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob));
+    /* Über das Standbuch: seit Web 25.0.0 ist der Block `edk2:` (KA-14). */
+    return JSON.parse(await EdStandbuch.patOeffnen(ck, m.pat_blob, m.client_ref));
   }, mid);
   pruefe(!amb12.transport_dest && amb12.ortshoehe === hoeheSoll, '12 „ambulant": kein Ziel im Blob, Höhe bleibt',
          JSON.stringify(amb12).slice(0, 70));
@@ -696,8 +698,10 @@ try {
       missions: [{ day: tag, started_local: '10:00', transport_dest: 'Klinikum X', dup: 'insert',
                    client_ref: 'imp-' + 'a'.repeat(24) }] });
     const ref = 'imp-' + 'b'.repeat(24);
+    /* Fassung 2 seit Web 25.0.0 (KA-14): Inhaltsschlüssel und Beginn mitgeben. */
+    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
     const h = await EdOrtsdaten.einsatzVerschliessen({ fassung: 1, phasen: [{ phase: 2, t: 0, lat: null, lon: null }],
-                                                      rea: [] }, ref);
+                                                      rea: [] }, ref, { ck: ck, start: 12345 });
     const waechter = await ruf({ action: 'commit', days: [{ day: tag, mode: 'keep' }],
       missions: [{ day: tag, started_local: '10:00', dup: 'insert', client_ref: ref, ort_huelle: h,
                    ort_phasen: [[2, 12345]] }] });
@@ -726,7 +730,8 @@ try {
   try {
     k15b = await s.evaluate(async ([tag, ref, ts]) => {
       const ruf = async (b) => (await EdApi.postJson('api/import_commit.php', b, { vorgang: 'x' }));
-      const h = await EdOrtsdaten.einsatzVerschliessen({ fassung: 1, phasen: [], rea: [] }, ref);
+      const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+      const h = await EdOrtsdaten.einsatzVerschliessen({ fassung: 1, phasen: [], rea: [] }, ref, { ck: ck, start: ts });
       const neben = await ruf({ action: 'commit', days: [{ day: tag, mode: 'keep' }],
         missions: [{ day: tag, started_local: '11:00', dup: 'insert', client_ref: ref, ort_huelle: h,
                      ort_phasen: [[2, ts]] }] });

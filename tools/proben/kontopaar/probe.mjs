@@ -7,7 +7,7 @@
  * WAS SIE FÄHRT, gegen die örtliche Anlage:
  *   1. ein Wegwerfkonto über den Anlegeweg des Kreislaufs (`pruefkonto.py`)
  *   2. anmelden — das Paar entsteht still (`KP_STAND` fehlt → da); in der
- *      Datenbank: das Siegel (`edsk1:`), der private Teil `edk1:`, ein
+ *      Datenbank: das Siegel (`edsk1:`), der private Teil `edk2:` (bis Web 24.x `edk1:`), ein
  *      Eintrag `kontopaar_angelegt`
  *   2b. eine zweite Seite, aufgebaut WÄHREND das Paar entsteht (`KP_STAND`
  *      fehlt): `EdKontopaar.bereit()` holt den Schlüssel nach, und die Seite
@@ -134,7 +134,11 @@ try {
   const r2b = await b.evaluate(async () => {
     const vorher = EdKontopaar.oeffentlich();
     await EdKontopaar.bereit();
-    const h = await EdOrtsdaten.einsatzVerschliessen({ fassung: 1, phasen: [], rea: [] }, 'imp-' + '0'.repeat(24));
+    /* Seit Web 25.0.0 (Weiche an, KA-14) verschließt das Konto in Fassung 2:
+       dafür braucht es den Inhaltsschlüssel (Standbuch) und den Beginn. */
+    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+    const h = await EdOrtsdaten.einsatzVerschliessen({ fassung: 1, phasen: [], rea: [] }, 'imp-' + '0'.repeat(24),
+                                                     { ck: ck, start: Math.floor(Date.now() / 1000) });
     return { vorher: vorher !== null, nachher: EdKontopaar.oeffentlich() !== null, huelle: h.length };
   }).catch(e => ({ fehler: String(e && e.message || e) }));
   /* SEIT NR. 392 darf die zweite Seite das Paar selbst anlegen (Anlegemarke)
@@ -154,9 +158,10 @@ try {
   }
   pruefe(stand === 'da', '2  KP_STAND da nach dem Entsperren', String(stand));
   const z = zeile(id);
-  pruefe(String(z.kp_oeffentlich).startsWith('edsk1:') && String(z.kp_privat).startsWith('edk1:')
+  /* `edk2:` seit Web 25.0.0 (KA-14); bis dahin `edk1:`. */
+  pruefe(String(z.kp_oeffentlich).startsWith('edsk1:') && String(z.kp_privat).startsWith('edk2:')
          && z.kp_seit !== null,
-         '2  Datenbank: Siegel edsk1:, privat edk1:, Zeitpunkt',
+         '2  Datenbank: Siegel edsk1:, privat edk2:, Zeitpunkt',
          `${String(z.kp_oeffentlich).slice(0, 6)} / ${String(z.kp_privat).slice(0, 5)}`);
   pruefe(protokoll(id, 'kontopaar_angelegt') === 1, '2  Protokoll kontopaar_angelegt, einmal');
 

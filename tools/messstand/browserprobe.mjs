@@ -34,7 +34,7 @@
  *
  * Umgebung: MESSSTAND_KONTO, MESSSTAND_PASSWORT, MESSSTAND_BACKUP_PASSWORT
  */
-import { writeFileSync, statSync } from 'node:fs';
+import { writeFileSync, statSync, mkdirSync } from 'node:fs';
 import { cpus, totalmem } from 'node:os';
 
 const MODUL = process.env.PLAYWRIGHT_MODUL
@@ -47,6 +47,19 @@ const drossel = Number(process.argv[4] || 6);
 const konto   = process.env.MESSSTAND_KONTO || 'messstand@example.invalid';
 const kontoPw = process.env.MESSSTAND_PASSWORT || 'messstandpruefung2026';
 const bpw     = process.env.MESSSTAND_BACKUP_PASSWORT || 'nadokudemo0815';
+/* NUR EINZELNE SCHRITTE (Anlass: Nr. 569). `MESSSTAND_NUR` nennt Teile von
+ * Schrittnamen, mit Komma getrennt („Backup,GPX"); alles andere wird
+ * AUSGELASSEN UND SO GENANNT — in der Ausgabe und im Protokoll (`nur`,
+ * `ausgelassen` je Schritt). Ein solcher Lauf ist kein Messprotokoll des
+ * Bestands, sondern ein Vorher-nachher an einem Weg. Die Anmeldung läuft
+ * immer. `MESSSTAND_PROFIL` nennt ein Verzeichnis: Je gemessenem Schritt
+ * schreibt der Lauf dort ein CPU-Profil (`.cpuprofile`, für die
+ * Entwicklerwerkzeuge) und nennt die Funktionen mit der meisten Eigenzeit —
+ * „wo liegt die Zeit" statt „wie lange dauert es". Das Profil selbst
+ * kostet Zeit; eine Dauer aus einem Profil-Lauf ist keine Vergleichszahl. */
+const nur = (process.env.MESSSTAND_NUR || '').split(',').map(t => t.trim()).filter(Boolean);
+const profilOrdner = process.env.MESSSTAND_PROFIL || '';
+const gewaehlt = name => !nur.length || name === 'Anmelden' || nur.some(t => name.includes(t));
 
 const lokal = /^https:\/\/(127\.0\.0\.1|localhost)(:|\/)/.test(basis);
 const browser = await chromium.launch();
@@ -126,12 +139,31 @@ await kontext.addInitScript(() => {
    * deriveKey und importKey mit Beginn und Ende. Die Aufrufe laufen
    * nebeneinander; gemeldet wird deshalb die Spanne vom ersten Beginn bis
    * zum letzten Ende und die Zahl, nicht eine Summe. */
-  z.krypto = { n: 0, von: null, bis: null };
+  /* JE ART (Anlass: Nr. 569): `art` zählt dieselben Aufrufe nach Verfahren
+   * getrennt („importKey ECDH", „deriveBits HKDF") — die Summe ist `n`.
+   * `sonst` zählt, was `n` nie gezählt hat (digest, sign, verify,
+   * generateKey, exportKey); `n` behält damit seine Bedeutung, und die
+   * Zahlen älterer Protokolle bleiben vergleichbar. */
+  z.krypto = { n: 0, von: null, bis: null, art: {}, sonst: {} };
+  const verfahren = (name, args) => {
+    const a = name === 'importKey' ? args[2] : args[0];
+    return name + ' ' + ((a && a.name) || a || '?');
+  };
+  for (const name of ['digest', 'sign', 'verify', 'generateKey', 'exportKey']) {
+    const echt = crypto.subtle[name].bind(crypto.subtle);
+    crypto.subtle[name] = function (...args) {
+      const k = name === 'exportKey' ? name : verfahren(name, args);
+      z.krypto.sonst[k] = (z.krypto.sonst[k] || 0) + 1;
+      return echt(...args);
+    };
+  }
   for (const name of ['decrypt', 'encrypt', 'deriveBits', 'deriveKey', 'importKey']) {
     const echt = crypto.subtle[name].bind(crypto.subtle);
     crypto.subtle[name] = function (...args) {
       const t = performance.now();
       z.krypto.n++;
+      const k = verfahren(name, args);
+      z.krypto.art[k] = (z.krypto.art[k] || 0) + 1;
       if (name === 'decrypt' && z.decryptVon === null) { z.decryptVon = t; }
       if (z.krypto.von === null) { z.krypto.von = t; }
       const fertig = () => { z.krypto.bis = Math.max(z.krypto.bis || 0, performance.now()); };
@@ -237,17 +269,31 @@ async function zaehler() {
  * Die Haldenspitze wird während des Schritts abgetastet — ein Wert nur am
  * Ende verpasst genau die Spitze, um die es geht. */
 async function messen(name, tun) {
+  if (!gewaehlt(name)) {
+    console.log(`  ${name}: AUSGELASSEN (MESSSTAND_NUR=${nur.join(',')})`);
+    return { schritt: name, ausgelassen: true, dauer_s: null, halde_spitze_mb: 0, fehler: null };
+  }
   antwortBytes = 0; postGroesste = 0;
   const vorher = await zaehler();
   let spitze = await halde();
   const wecker = setInterval(async () => {
     try { const h = await halde(); if (h > spitze) spitze = h; } catch { /* Seite beschäftigt */ }
   }, 500);
+  if (profilOrdner) {
+    await cdp.send('Profiler.enable');
+    await cdp.send('Profiler.setSamplingInterval', { interval: 1000 });
+    await cdp.send('Profiler.start');
+  }
   const t0 = Date.now();
   let ergebnis = null, fehler = null;
   try { ergebnis = await tun(); } catch (e) { fehler = String(e.message || e).slice(0, 300); }
   const dauer = (Date.now() - t0) / 1000;
   clearInterval(wecker);
+  let profil = null;
+  if (profilOrdner) {
+    try { profil = profilAuswerten(name, (await cdp.send('Profiler.stop')).profile); }
+    catch (e) { profil = { fehler: String(e.message || e).slice(0, 200) }; }
+  }
   const nachher = await zaehler();
   const messung = {
     schritt: name,
@@ -264,6 +310,7 @@ async function messen(name, tun) {
     fehler,
   };
   if (ergebnis && typeof ergebnis === 'object') { Object.assign(messung, ergebnis); }
+  if (profil) { messung.profil = profil; }
   /* DIE ZERLEGUNG: Zeitmarken der zuletzt geladenen Seite, in ms ab
    * ihrem Navigationsbeginn. Wofür: „sichtbar“ ist eine Zahl; wo sie
    * entsteht — Server, Skripte, api/, Entschlüsseln, belegter Hauptfaden —,
@@ -294,6 +341,7 @@ async function messen(name, tun) {
       api_ende_ms: r(Math.max(0, ...api.map((e) => e.responseEnd))),
       api_kb: Math.round(api.reduce((a, e) => a + (e.encodedBodySize || 0), 0) / 1024),
       krypto_n: z.krypto ? z.krypto.n : null,
+      krypto_art: z.krypto ? z.krypto.art : null, krypto_sonst: z.krypto ? z.krypto.sonst : null,
       krypto_von_ms: r(z.krypto && z.krypto.von), krypto_bis_ms: r(z.krypto && z.krypto.bis),
       lang_n: lang.length, lang_ms: r(lang.reduce((a, l) => a + (l[1] - l[0]), 0)),
     };
@@ -307,8 +355,37 @@ async function messen(name, tun) {
       + ` · HTML ${zl.html_ms} · DOM ${zl.dom_ms} ms` + (zl.lesbar_ms != null ? ` · lesbar ${zl.lesbar_ms}` : '')
       + ` · ${zl.skripte} Skripte bis ${zl.skripte_ende_ms} · ${zl.api} api/ (${zl.api_kb} kB) bis ${zl.api_ende_ms}`
       + ` · Krypto ${zl.krypto_n}× ${zl.krypto_von_ms}–${zl.krypto_bis_ms} · Hauptfaden ${zl.lang_n} Aufgaben ${zl.lang_ms} ms`);
+    const arten = (o) => Object.entries(o || {}).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(' · ');
+    if (zl.krypto_n > 1000) {
+      console.log(`    Krypto je Art: ${arten(zl.krypto_art)}`);
+      console.log(`    nicht in der Zahl: ${arten(zl.krypto_sonst)}`);
+    }
+  }
+  if (messung.profil && messung.profil.oben) {
+    console.log(`    Profil ${messung.profil.datei} — Eigenzeit (gedrosselt), ${messung.profil.gesamt_s} s gesamt:`);
+    for (const [wer, sek] of messung.profil.oben) { console.log(`      ${String(sek).padStart(7)} s  ${wer}`); }
   }
   return messung;
+}
+
+/* EIN CPU-PROFIL ZU ZAHLEN (Anlass: Nr. 569): Eigenzeit je Funktion aus den
+ * Stichproben, die fünfzehn größten. „(program)" und „(idle)" sind der
+ * Browser selbst bzw. Warten — bei einem Weg voller `crypto.subtle` ist
+ * „(program)" die Arbeit hinter den Versprechen. */
+function profilAuswerten(name, profil) {
+  mkdirSync(profilOrdner, { recursive: true });
+  const datei = `${profilOrdner}/${name.replace(/[^A-Za-z0-9]+/g, '_').slice(0, 60)}.cpuprofile`;
+  writeFileSync(datei, JSON.stringify(profil));
+  const nach = new Map(profil.nodes.map(n => [n.id, n]));
+  const zeit = new Map();
+  profil.samples.forEach((id, i) => {
+    const f = nach.get(id).callFrame;
+    const wer = `${f.functionName || '(anonym)'} ${f.url ? f.url.replace(/^.*\//, '').replace(/\?.*$/, '') + ':' + (f.lineNumber + 1) : ''}`.trim();
+    zeit.set(wer, (zeit.get(wer) || 0) + (profil.timeDeltas[i] || 0));
+  });
+  const sek = (us) => Math.round(us / 1e4) / 100;
+  return { datei, gesamt_s: sek(profil.endTime - profil.startTime),
+           oben: [...zeit.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15).map(([w, us]) => [w, sek(us)]) };
 }
 
 /* ENTSPERREN, OHNE DIE MESSUNG ZU VERFAELSCHEN.
@@ -449,7 +526,7 @@ const suche = await messen('Suche — erste Trefferanzeige', async () => {
  * gemessenen Abschnitt, stiege „sichtbar" um die Zeit bis dahin — und um die,
  * die Playwright braucht, um auf dem belegten Hauptfaden nachzufragen. Die
  * Marke selbst setzt die Seite; sie wird hier nur abgeholt. */
-try {
+if (!suche.ausgelassen) { try {
   await seite.waitForFunction(() => window.__messstand && window.__messstand.lesbar !== null,
                               null, { timeout: 300000, polling: 500 });
   const lesbar = await seite.evaluate(() => window.__messstand.lesbar);
@@ -458,7 +535,7 @@ try {
   console.log(`    geschützt lesbar ${suche.lesbar_s} s`);
 } catch (e) {
   suche.fehler = suche.fehler || 'geschützt lesbar nicht erreicht: ' + String(e.message || e).slice(0, 200);
-}
+} }
 messungen.push(suche);
 
 /* ---- DIE BEIDEN LANGE OFFENEN MESSUNGEN ---------------------------------
@@ -525,6 +602,7 @@ const zeitraum = await messen(name, async () => {
   await zeileDa;
   return { ...zusatz };
 });
+if (zeitraum.ausgelassen) { return zeitraum; }
 try {
   const zeilen = await seite.locator('#rangetable tbody tr').count();
   const zahl = (await seite.locator('#einsatzzahl').textContent().catch(() => '') || '').trim();
@@ -748,16 +826,22 @@ if (!ziele || !ziele.einsatz || !ziele.tag) {
     const meldung = (await seite.locator('#exp_state').textContent().catch(() => '') || '').trim();
     const spuren = Number(/(\d+) GPX-Tracks enthalten/.exec(meldung)?.[1] || 0);
     /* Abschnitte: ab „Daten werden geladen…" bis „Fertig". Die
-     * Zeilen „Tracks n / m" zählen zusammen als „Spuren laden und GPX bauen". */
+     * Zeilen „Tracks n / m" zählen zusammen. SEIT NR. 569 GEHT JEDE
+     * GPX-DATEI SOFORT INS ARCHIV: Das Packen der Spuren liegt seither in
+     * diesem Abschnitt und nicht mehr in „Archiv packen" (dort bleiben die
+     * fünf Tabellen und der Abschluss) — die Namen sagen es, und die
+     * Abschnitte älterer Protokolle sind damit nicht vergleichbar, die
+     * Summe ist es. Wie schon zuvor zählt das Bauen der CSV-Tabellen zum
+     * Abschnitt davor: Es läuft im selben Zug wie der Textwechsel. */
     const zustand = await seite.evaluate(() => window.__messstand.zustand);
     const abschnitte = {};
     const beginn = zustand.findIndex(z => z[1].startsWith('Daten werden geladen'));
     for (let i = Math.max(0, beginn); i < zustand.length - 1; i++) {
       const t = zustand[i][1];
-      const n = t.startsWith('Tracks') ? 'Spuren laden und GPX bauen'
+      const n = t.startsWith('Tracks') ? 'Spuren laden, GPX bauen und packen'
         : t.startsWith('Daten werden geladen') ? 'Daten laden'
         : t.startsWith('Geschützte Angaben') ? 'Patientendaten entschlüsseln'
-        : t.startsWith('Archiv') ? 'Archiv packen' + (pwOn ? ' (mit AES)' : '')
+        : t.startsWith('Archiv') ? 'Tabellen packen, Archiv abschließen' + (pwOn ? ' (mit AES)' : '')
         : t.startsWith('Einsätze werden aufbereitet') ? 'Einsätze aufbereiten' : t.slice(0, 40);
       abschnitte[n] = Math.round(((abschnitte[n] || 0) + (zustand[i + 1][0] - zustand[i][0]) / 1000) * 100) / 100;
     }
@@ -804,6 +888,7 @@ const ergebnis = {
    * Prozessor — deshalb steht er in jedem Protokoll. */
   maschine: { prozessor: cpus()[0]?.model || '?', kerne: cpus().length, eichung_ms,
               speicher_gb: Math.round(totalmem() / 1024 ** 3) },
+  nur: nur.length ? nur : null,
   messungen, konsolenfehler: konsole, titel: bestand,
   gescheiterte_anfragen: [...new Set(gescheitert)],
   budgets_z3: { json_mb: 10, halde_mb: 100, pbkdf2_je_vorgang: 1, post_mb: 2 },

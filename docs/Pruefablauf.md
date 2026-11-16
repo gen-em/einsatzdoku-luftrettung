@@ -511,7 +511,7 @@ Zwei Dinge hängen mit daran, und beide sind gemessen:
 | `server/kontopaar_lib.php`, `server/api/kontopaar.php`, `server/assets/kontopaar.js`, `server/assets/unlock.js`, `tools/proben/kontopaar/**` | klein | `kontopaarprobe` | Nr. 43 |
 | `server/ingest.php`, `server/spur_lib.php`, `server/api/mission.php`, `server/api/day.php`, `server/geraetehuelle_lib.php`, `tools/proben/ortsdaten/**`, `tools/proben/huelle/geraet.php`, `tools/proben/huelle/geraet_cli.php`, `server/einstellungen.php`, `server/admin_sicherungen.php`, `server/admin_user.php`, `server/api/import_commit.php` | klein | `ortsdatenprobe` | Nr. 43; seit Web 23.0.2 auch die Meldung beim Einspielen (Schritt 16, Nr. 387) |
 | `server/api/wartungslauf.php`, `server/assets/wartungslauf.js`, `server/spur_lib.php`, `server/validate_lib.php`, `tools/proben/wartungslauf/**` | klein | `wartungslaufprobe` | Nr. 43 |
-| `tools/proben/huelle/**`, `tools/uhr-pruefstand/krypto-probe/**`, `server/assets/crypto.js`, `server/geraetehuelle_lib.php` | klein | `huellenprobe`, `uhr-krypto` | Nr. 43 |
+| `tools/proben/huelle/**`, `tools/uhr-pruefstand/krypto-probe/**`, `server/assets/crypto.js`, `server/assets/inhalt2.js`, `server/assets/huelle2.js`, `server/assets/standbuch.js`, `server/assets/ortsdaten.js`, `server/geraetehuelle_lib.php` | klein | `huellenprobe`, `uhr-krypto` | Nr. 43 |
 | `watch/**`, `tools/uhr-pruefstand/**` | klein | `uhr-stufe1`, `uhr-rundlauf`, `uhr-syncseite`, `uhr-sendeweg`, `uhr-rea` | E-PK-02 |
 | `server/**` | neben | `ingestprobe`, `spurprobe`, `jobprobe`, `komplettprobe`, `wiederherstellung`, `gpxprobe`, `geraeteprobe`, `kopplungsprobe`, `mailprobe`, `versandprobe`, `ratenprobe`, `wartungsprobe`, `freigabeprobe`, `fristprobe`, `abmelde-probe`, `containerprobe`, `browserprobe-csp`, `kreislauf-csv`, `kreislauf-edbak`, `spaltenregister-wegprobe`, `protokollprobe`, `rollenprobe`, `zweitfaktorprobe`, `rueckwegprobe`, `sitzungsprobe`, `passkeyprobe`, `schluesselwechselprobe`, `notfallblattprobe` | Pruefablauf.md 3, Zeile neben: alle Proben gegen die oertliche Installation, beide Kreislaeufe, Bilderlauf aller Seiten in zehn Breiten (acht bis R4-08), Bedienprobe. Bis PK-05 gab es dieses Muster nicht -- eine Nebenstufe mass dasselbe wie eine Korrekturstufe (F-P5c-49, E-P5c-32). protokollprobe und rollenprobe kamen mit P5c/AP2 und fehlten hier bis AP3 (F-P5c-90). zweitfaktorprobe kam mit P5c/AP5 und steht hier im selben Paket, rueckwegprobe ebenso mit RW-01, sitzungsprobe mit SR-01, passkeyprobe mit SR-09, schluesselwechselprobe mit SR-03. Bilderlauf und Bedienprobe stehen seit PU-04 nicht mehr hier: Sie laufen wie in klein nur ueber ihre eigenen Muster, beim vollen Lauf immer (E-PU-04, Q-PU-03). |
 | `server/betrieb_statistik.php`, `server/statistik_lib.php` | klein | `messstand`, `bilderlauf` | Nr. 295 (Messstand-Schritt statistik: drei Reiter unter 1 s bei 5000 Einsätzen, EXPLAIN). Stand bis R4-04 am ENDE der Muster, weil die Reihenfolge der Proben entschied, wen der Demo-Reset traf (F-P5c-127); seit R4-04 schiebt der Pruefstand die Demo-Marke vor jeder Probe mit demo: true (Nr. 322), und die Stelle ist gleichgueltig. |
@@ -636,6 +636,26 @@ Bericht kam in einen Folge-Commit über denselben Baum (F-SR-14). Berührt ist d
 ändert — nicht, was `main` mitbringt (F-PK-39). Zum ersten Mal gegangen
 beim Merge von PR #80 in PK-05 (`5671d24`). Wer doch „Update branch" gedrückt hat, holt den Commit
 herunter und fährt ab Schritt 2 mit einem eigenen Commit darüber.
+
+### 5.3a Vor dem letzten Prüfstand — erst `main` hereinholen
+
+*Seit dem 16.11.2026, Anordnung der BetreiberIn nach PR #190.* Der volle
+Prüfstand, dessen Bericht in den PR geht, misst einen Baum; holt der Zweig
+`main` erst danach herein, ist der Bericht verbraucht, und ein zweiter Lauf
+über Stunden folgt (PR #190: KG-09/10 kam während des Laufs auf `main`, der
+PR hatte gleich nach dem Öffnen einen Konflikt). Deshalb gilt, **in dieser
+Reihenfolge**:
+
+1. **Vor dem Start des Prüfstands:** `git fetch origin main`. Liegt `main`
+   vor dem Zweig (`git log --oneline HEAD..origin/main` nicht leer), erst
+   nach 5.3 Schritt 1 mergen, Konflikte lösen, dann messen — der Bericht
+   gehört dann in den Merge-Commit (5.3 Schritt 3).
+2. **Vor dem Öffnen des PR:** noch einmal `git fetch origin main`. Ist
+   `main` während des Laufs weitergegangen, den PR **nicht** öffnen, sondern
+   der BetreiberIn sagen, dass ein Merge und ein weiterer Lauf nötig sind.
+
+Ein PR, der mit Konflikt aufgeht, startet auf GitHub Läufe über einen Baum,
+der so nie gemergt wird.
 
 ### 5.4 Der ererbte Bericht
 

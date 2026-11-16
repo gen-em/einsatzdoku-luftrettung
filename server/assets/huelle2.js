@@ -37,6 +37,8 @@
  *                  polsterung, ohne-herkunft (Fassung 1, wo 2 verlangt ist)
  *   an der Folge   luecke, ohne-schluss, zeit, zurueckgelegt,
  *                  absender-gesperrt, innen
+ *   am Stand       uhrzeit-pruefen (ein Hinweis, mit `.hinweis` und
+ *                  `.inhalt` — siehe `einsatzLesen()`), bestaetigung
  *   Kopplung       laenge, zusage
  * Was aufgeht, trägt seinen ABSENDER: null (Fassung 1 — „ohne
  * Herkunftsnachweis"), 'konto' oder die SID des Geräts (hex).
@@ -71,9 +73,30 @@ const EdHuelle2 = (() => {
     new Uint8Array(await crypto.subtle.digest('SHA-256', verbinde(...teile)));
   const bytes = h => (typeof h === 'string' ? T.fromB64(h) : h);
 
+  /* JE SEITE GEMERKT, NIE ABGELEGT (Nr. 569). Was sich je Absender nicht
+   * ändert, wird einmal gerechnet statt je Hülle — ein Export öffnet
+   * Tausende: die Kennung (`sidFach`), der importierte statische Schlüssel
+   * und Z_s (`zsFach`). Alle Fächer hängen am GANZEN öffentlichen Schlüssel
+   * (65 Byte, hex), nie an der Kennung oder an der Reihenfolge der Aufrufe:
+   * Ein Fach, das beim Wechsel des Absenders den alten Wert lieferte, ließe
+   * jede Hülle des zweiten mit `pruefwert` scheitern — die Hüllenprobe
+   * öffnet deshalb Konto und Gerät im Wechsel. Sie leben im Speicher der
+   * Seite und verschwinden mit ihr; in eine Ablage geht davon nichts. */
+  const FACH_HOECHSTENS = 64;
+  const sidFach = new Map();
+
   /** Die Kennung eines Absenders: 8 Byte aus seinem statischen Schlüssel. */
-  async function sid(spk) {
-    return (await sha256(ABSENDER_INFO, spk)).slice(0, SID_LAENGE);
+  function sid(spk) {
+    const k = T.toHex(spk);
+    if (!sidFach.has(k)) {
+      if (sidFach.size >= FACH_HOECHSTENS) { sidFach.clear(); }
+      const v = sha256(ABSENDER_INFO, spk).then(h => h.slice(0, SID_LAENGE));
+      v.catch(() => sidFach.delete(k));
+      sidFach.set(k, v);
+    }
+    /* Eine Abschrift: Wer die Kennung bekommt, darf sie ändern, ohne das
+       Fach zu treffen. */
+    return sidFach.get(k).then(h => h.slice());
   }
 
   /* Z_s IST JE PAAR (ABSENDER, KONTO) FEST. Gemerkt wird es am privaten
@@ -81,8 +104,11 @@ const EdHuelle2 = (() => {
    * verschwindet. Ohne das Fach kostete jede Hülle zwei ECDH statt einer;
    * eine Spur mit 300 Stücken eines Geräts rechnet so Z_s einmal. */
   const zsFach = new WeakMap();
-  async function ecdh(privat, pubRoh) {
-    const pub = await T.ghOeffentlich(pubRoh);
+  /* `pub` ist der schon importierte Schlüssel, wo der Aufrufer ihn hat
+     (`oeffnen2()` prüft EPK ohnehin, bevor es rechnet) — sonst wird er
+     hier importiert. Zweimal importieren hieß je Hülle ein Aufruf mehr. */
+  async function ecdh(privat, pubRoh, pub) {
+    pub = pub || await T.ghOeffentlich(pubRoh);
     return new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: pub }, privat, 256));
   }
   function statisch(privat, pubRoh) {
@@ -140,18 +166,21 @@ const EdHuelle2 = (() => {
   async function oeffnen2(huelle, kontoPriv, kontoPub, absenderSpk, art, ref, platz) {
     if (huelle.length < KOPF2 + 16 + TAG || (huelle.length - KOPF2 - TAG) % 16) { throw fehler('laenge'); }
     if (huelle[0] !== FASSUNG2) { throw fehler('fassung'); }
+    /* `s`, `epk` und `iv` sind Abschriften (klein, und `s` geht an den
+       Aufrufer zurück); Chiffretext und Prüfwert sind Sichten auf die Hülle —
+       eine Spur am Stück kopierte sonst jedes Byte dreimal. */
     const s = huelle.slice(1, 9), epk = huelle.slice(9, 74), iv = huelle.slice(74, KOPF2);
-    const ct = huelle.slice(KOPF2, huelle.length - TAG), tag = huelle.slice(huelle.length - TAG);
+    const ct = huelle.subarray(KOPF2, huelle.length - TAG), tag = huelle.subarray(huelle.length - TAG);
     const spk = absenderSpk(s);
     if (!spk) { throw fehler('absender'); }
-    await T.ghOeffentlich(epk);                    // wirft `schluessel`
+    const epkSchluessel = await T.ghOeffentlich(epk);   // wirft `schluessel`
     let zE, zS;
     try {
-      zE = await ecdh(kontoPriv, epk);
+      zE = await ecdh(kontoPriv, epk, epkSchluessel);
       zS = await statisch(kontoPriv, spk);
     } catch (e) { throw fehler('schluessel'); }
     const k = await ableiten2(zE, zS, epk, kontoPub, spk);
-    const soll = await T.ghHmac(k.kMac, verbinde(huelle.slice(0, huelle.length - TAG),
+    const soll = await T.ghHmac(k.kMac, verbinde(huelle.subarray(0, huelle.length - TAG),
                                                  EdCrypto.geraetehuelleBindung(art, ref, platz)));
     let d = 0;
     for (let i = 0; i < TAG; i++) { d |= soll[i] ^ tag[i]; }      // feste Zeit
@@ -393,15 +422,28 @@ const EdHuelle2 = (() => {
   /**
    * DIE EINSATZHÜLLE ÖFFNEN und gegen Klartextbeginn und Standbuch halten.
    * @param startedTs  der Klartextbeginn des Einsatzes
-   * @param o  `versatz` und `stand` — der Eintrag des Standbuchs: `o` (Zähler
-   *           der zuletzt abgenommenen Hülle), `k` (1: sie kam vom Konto),
-   *           `f` (1: eine mit `schluss: true` war schon abgenommen)
+   * @param o  `versatz`, `stand` und `bestaetigt`. `stand` ist der Eintrag
+   *           des Standbuchs: `o` (Zähler der zuletzt abgenommenen Hülle),
+   *           `k` (1: sie kam vom Konto), `a` (sonst: die SID des Geräts,
+   *           hex), `f` (1: eine mit `schluss: true` war schon abgenommen),
+   *           `u` (Vermerke [[z_v, sid, t], …] über verworfene Stände)
    * @returns {Promise<{inhalt: object, absender: string|null, befund: string[]}>}
+   *
+   * DER HINWEIS (KA-09/-10, E-KA-70, -88). Zwischen zwei GERÄTEN ist ein
+   * kleinerer oder gleicher Zähler — oder einer, den ein Vermerk als
+   * verworfen führt — weder Annahme noch Abweisung: geworfen wird ein Fehler
+   * mit `grund` 'uhrzeit-pruefen', `hinweis` { art, z, absender, o,
+   * stand_absender, vermerk } und `inhalt` (das geöffnete Innere), NACH
+   * allen harten Prüfungen. Die Bestätigung ist dieser Hinweis selbst,
+   * zurückgegeben als `o.bestaetigt`: Sie gilt nur, wenn er dem Hinweis in
+   * jedem Feld gleicht, den die Hülle JETZT ergibt. Einen harten Grund hebt
+   * sie nicht auf. Die Tabelle steht im Kopf von `referenz.py`, „DER RÜCKWEG".
    *
    * `befund` weist NICHT ab (KA-06f, E-KA-69): `offen-nach-schluss` heißt,
    * die angenommene Hülle trägt `schluss: false`, obwohl zu diesem Einsatz
    * schon eine abgeschlossene abgenommen war — gleich von welchem Absender
-   * (E-KA-76). Referenz: `einsatz_befunde()` in `referenz.py`.
+   * (E-KA-76); `stand-uebernommen`: Der gezeigte Stand liegt bewusst unter
+   * einem verworfenen oder gleichauf. Referenz: `einsatz_befunde()`.
    */
   async function einsatzLesen(ls, ref, huelle, startedTs, o) {
     o = o || {};
@@ -421,14 +463,125 @@ const EdHuelle2 = (() => {
     if (auf.absender !== KONTO && 'herkunft' in d) { throw fehler('innen'); }
     if (startedTs - d.start !== (o.versatz || 0)) { throw fehler('zeit'); }
     if (auf.absender !== KONTO && ls.gesperrt(auf.absender, d.start)) { throw fehler('absender-gesperrt'); }
-    if (stand && stand.o && (d.z < stand.o || (stand.k && auf.absender !== KONTO))) {
-      throw fehler('zurueckgelegt');
-    }
-    const befund = (stand && stand.f && d.schluss !== true) ? [OFFEN_NACH_SCHLUSS] : [];
-    return { inhalt: d, absender: auf.absender, befund: befund };
+    if (hartZurueckgelegt(d, auf.absender, stand)) { throw fehler('zurueckgelegt'); }
+    const hinweis = einsatzHinweis(d, auf.absender, stand);
+    if (hinweis !== null && !hinweisGleich(o.bestaetigt, hinweis)) { throw hinweisFehler(hinweis, d); }
+    return { inhalt: d, absender: auf.absender, befund: einsatzBefunde(d, auf.absender, stand) };
   }
 
   const OFFEN_NACH_SCHLUSS = 'offen-nach-schluss';
+  const UHRZEIT_PRUEFEN = 'uhrzeit-pruefen';          // der Grund des Hinweises
+  const STAND_UEBERNOMMEN = 'stand-uebernommen';
+  const BESTAETIGUNG = 'bestaetigung';                // Abnehmen eines Hinweises ohne Zeit der Bestätigung
+  /* Die Felder der Einsatzhülle im Eintrag des Standbuchs, in dieser Folge. */
+  const STANDFELDER = ['o', 'k', 'a', 'f', 'u'];
+
+  /** Der Vermerk [z_v, sid, t] für diesen Absender, oder null. */
+  function vermerkFuer(stand, absender) {
+    const v = ((stand && stand.u) || []).find(e => e[1] === absender);
+    return v ? v.slice() : null;
+  }
+
+  /* Die Fälle, die keine Bestätigung aufhebt: ein Gerät nach dem Konto;
+   * `z < o` vom Konto, vom Gerät des Stands oder an einem Blatt, das den
+   * Absender des Stands nicht kennt („unbekannt" gilt als „derselbe"). */
+  function hartZurueckgelegt(d, absender, stand) {
+    if (!stand || !stand.o) { return false; }
+    if (stand.k) { return absender !== KONTO || d.z < stand.o; }
+    if (absender === KONTO || !stand.a || stand.a === absender) { return d.z < stand.o; }
+    return false;
+  }
+
+  /**
+   * Gilt diese (schon geöffnete und geprüfte) Einsatzhülle erst nach
+   * bewusster Bestätigung? Rein — öffnet nichts. Die Schlüsselfolge des
+   * Hinweises ist die der Referenz (`einsatz_hinweis()`).
+   * @returns {{art: 'kleiner'|'gleich'|'verworfen', z: number, absender: string,
+   *            o: number, stand_absender: string, vermerk: Array|null}|null}
+   */
+  function einsatzHinweis(d, absender, stand) {
+    if (absender === null || absender === KONTO || !stand || !stand.o || stand.k) { return null; }
+    if (!stand.a || stand.a === absender) { return null; }
+    const vermerk = vermerkFuer(stand, absender);
+    let art;
+    if (d.z < stand.o) { art = 'kleiner'; }
+    else if (d.z === stand.o) { art = 'gleich'; }
+    else if (vermerk && vermerk[0] >= d.z) { art = 'verworfen'; }
+    else { return null; }
+    return { art: art, z: d.z, absender: absender, o: stand.o, stand_absender: stand.a, vermerk: vermerk };
+  }
+
+  /** Der Fehler, als der ein Hinweis reist — die EINE Stelle, die ihn baut. */
+  function hinweisFehler(hinweis, inhalt) {
+    const e = fehler(UHRZEIT_PRUEFEN);
+    e.hinweis = hinweis;
+    e.inhalt = inhalt;
+    return e;
+  }
+
+  /* Feld für Feld, nicht über den Text: Die Bestätigung kommt von einer
+   * Seite zurück und darf nicht an der Reihenfolge ihrer Schlüssel hängen —
+   * wohl aber an jedem Wert. Alles, was kein Hinweis ist, gleicht keinem. */
+  function hinweisGleich(b, h) {
+    if (b === null || typeof b !== 'object' || Array.isArray(b)) { return false; }
+    if (Object.keys(b).length !== 6) { return false; }
+    for (const f of ['art', 'z', 'absender', 'o', 'stand_absender']) { if (b[f] !== h[f]) { return false; } }
+    if (h.vermerk === null) { return b.vermerk === null; }
+    return Array.isArray(b.vermerk) && b.vermerk.length === 3 && b.vermerk.every((w, i) => w === h.vermerk[i]);
+  }
+
+  /* Was an einer ANGENOMMENEN Einsatzhülle auffällt — gegen den Stand VOR
+   * dem Abnehmen dieser Hülle. */
+  function einsatzBefunde(d, absender, stand) {
+    const befund = [];
+    if (absender !== null && stand && stand.f && d.schluss !== true) { befund.push(OFFEN_NACH_SCHLUSS); }
+    if (absender !== null && absender !== KONTO) {
+      const h = einsatzHinweis(d, absender, stand);
+      const wirkt = ((stand && stand.u) || []).some(e => e[1] !== absender && e[0] >= d.z);
+      if (wirkt || (h !== null && h.o >= d.z)) { befund.push(STAND_UEBERNOMMEN); }
+    }
+    return befund;
+  }
+
+  /**
+   * DER EINTRAG DES STANDBUCHS, NACHDEM DER BROWSER DIESE HÜLLE ABGENOMMEN
+   * HAT — nur die Felder der Einsatzhülle, in der Folge o, k|a, f, u; was
+   * nicht gesetzt ist, fehlt. Rein: schreibt nichts (das tut
+   * `EdOrtsdaten`, im Fortschreiben des Standbuchs und gegen den DANN
+   * geltenden Eintrag).
+   * @param d         das Innere, wie `einsatzLesen()` es liefert
+   * @param absender  ebenso: null, 'konto' oder die SID (hex)
+   * @param stand     der Eintrag VOR dem Abnehmen
+   * @param o  `jetzt`: die Unix-Sekunde der bewussten Bestätigung — verlangt,
+   *           wo die Hülle nur mit ihr gilt, sonst ohne Wirkung
+   * Wirft `bestaetigung`, wenn sie dort fehlt, und `zurueckgelegt`, wo auch
+   * sie nichts hilft: Abnehmen kann man nur, was `einsatzLesen()` annimmt.
+   * `o` SINKT bei einer Bestätigung (oder bleibt, bei `gleich`), `a`
+   * wechselt, und der verworfene Stand steht danach als Vermerk in `u`.
+   */
+  function standNachAbnahme(d, absender, stand, o) {
+    const alt = stand || {}, jetzt = (o || {}).jetzt;
+    const neu = {};
+    if (absender === null) {
+      for (const s of STANDFELDER) {
+        if (alt[s] && !(s === 'u' && !alt[s].length)) { neu[s] = alt[s]; }
+      }
+      return neu;
+    }
+    if (hartZurueckgelegt(d, absender, stand)) { throw fehler('zurueckgelegt'); }
+    const h = einsatzHinweis(d, absender, stand);
+    if (h !== null && !Number.isSafeInteger(jetzt)) { throw fehler(BESTAETIGUNG); }
+    neu.o = d.z;
+    if (absender === KONTO) { neu.k = 1; } else { neu.a = absender; }
+    if (alt.f || d.schluss === true) { neu.f = 1; }
+    if (absender !== KONTO) {
+      const u = new Map((alt.u || []).map(e => [e[1], e.slice()]));
+      if (h !== null) { u.set(h.stand_absender, [h.o, h.stand_absender, jetzt]); }
+      u.delete(absender);                              // der Stand geht auf ihn über
+      if (u.size) { neu.u = [...u.keys()].sort().map(s => u.get(s)); }
+    }
+    return neu;
+  }
 
   /* ---- Schreiben für das Konto — hinter der Weiche ----------------------
    *
@@ -515,7 +668,9 @@ const EdHuelle2 = (() => {
     return String(zahl).padStart(6, '0');
   }
 
-  return { sid, leser, spurLesen, einsatzLesen,
+  return { sid, leser, spurLesen, einsatzLesen, einsatzHinweis, einsatzBefunde, standNachAbnahme,
+           hinweisGleich, hinweisFehler, STANDFELDER,
+           UHRZEIT_PRUEFEN, STAND_UEBERNOMMEN, OFFEN_NACH_SCHLUSS,
            stueckSchreiben, einsatzSchreiben,
            kopplungNonce, kopplungZusage, kopplungWert,
            /* die Bausteine einzeln — für den Anhebelauf und die Probe */

@@ -1178,7 +1178,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `stern.svg` | Tabler Icons „star" (MIT) | 7 |
 | `stift.svg` | Tabler Icons „pencil" (MIT) | 9 |
 | `tausch.svg` | Tabler Icons „arrows-exchange" (MIT) | 16 |
-| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 282 |
+| `uhr.svg` | Tabler Icons „device-watch" (MIT) | 283 |
 | `uhrzeit.svg` | Tabler Icons „clock" (MIT) | 4 |
 | `veranstaltung.svg` | Tabler Icons „ticket" (MIT) | 11 |
 | `vollbild.svg` | Tabler Icons „maximize" (MIT) | 1 |
@@ -1188,7 +1188,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `winkel.svg` | Tabler Icons „chevron-down" (MIT) | 18 |
 | `zahnrad.svg` | Tabler Icons „settings" (MIT) | 3 |
 | `ziel-fern.svg` | Tabler Icons „cloud-upload" (MIT) | 0 |
-| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 34 |
+| `zurueck.svg` | Tabler Icons „arrow-left" (MIT) | 36 |
 
 64 Dateien in `server/assets/images/symbole/`, dazu `LICENSE-tabler-icons.txt` und `LIESMICH.md`.
 **Nirgends genannt:** `luftlinie`, `reanimation`, `werkzeug`, `ziel-fern`.

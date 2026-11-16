@@ -129,7 +129,10 @@ await seite.goto(`${BASIS}/login.php`, { waitUntil: 'domcontentloaded' });
 /* ---- 2. Anmelden -------------------------------------------------------- */
 await seite.fill('input[name="email"]', ADMIN.email);
 await seite.fill('input[name="password"]', ADMIN.pw);
-await Promise.all([ seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
+/* 90 s wie die übrigen Anmeldewege: Seit Web 25.0.0 leitet die Anmeldung im
+ * Übergang zweimal ab (1 200 000 und 600 000 Runden, KA-14), und WebKit
+ * rechnet PBKDF2 im Container langsam. */
+await Promise.all([ seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 90000 }),
                     seite.click('#loginform button[type="submit"]') ]);
 /* DER ZWEITFAKTOR. Die BetreiberIn hat einen; nach dem
  * Passwort fragt `login.php` nach dem Code. `codeSchritt()` geht ihn und

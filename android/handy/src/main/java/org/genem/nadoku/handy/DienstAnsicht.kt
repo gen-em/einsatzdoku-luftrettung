@@ -70,6 +70,13 @@ enum class Sendeausgang {
     PAKET_ABGEWIESEN,
 
     /**
+     * Der Server verlangt den Herkunftsnachweis, aber das Gerätepaar fehlt
+     * (KA-15, E-KA-80): Nichts gesendet, nichts verloren; es hilft
+     * Neukoppeln.
+     */
+    HERKUNFT_FEHLT,
+
+    /**
      * Kein Kontoschlüssel, auch nach dem Nachholen nicht: Das Konto
      * hat noch keines. Nichts gesendet, nichts verloren; nach einer Anmeldung
      * im Web holt der nächste Lauf ihn von selbst.
@@ -151,8 +158,13 @@ fun DienstAnsicht(
     fremd: Int = 0,
     aufFremdeVerwerfen: () -> Unit = {},
     fristBis: String? = null,
-    /** Gekoppelt mit Vergleichswert und `huelle: 2` (KA-06c, M-KA-02 D). */
-    herkunft: Boolean = false,
+    /**
+     * Gekoppelt mit Vergleichswert und `huelle: 2` (KA-06c, M-KA-02 D) —
+     * oder verlangt, aber ohne Gerätepaar (KA-15, M-KA-03 F).
+     */
+    herkunft: org.genem.nadoku.handy.tresor.Herkunftsstand = org.genem.nadoku.handy.tresor.Herkunftsstand.OHNE,
+    /** „Neu koppeln“ (M-KA-03 F): derselbe Weg wie Trennen in den Einstellungen. */
+    aufNeuKoppeln: () -> Unit = {},
     aufModus: (Modus) -> Unit,
     aufBeginnen: () -> Unit,
     aufBeenden: () -> Unit,
@@ -182,7 +194,7 @@ fun DienstAnsicht(
                 Zustandsblock(
                     stand, rueckstand, abgewiesen, verwerfbar, verworfen,
                     sendeergebnis, sendelaufLaeuft, aufJetztSenden, aufVerwerfen,
-                    fremd, aufFremdeVerwerfen, fristBis, herkunft,
+                    fremd, aufFremdeVerwerfen, fristBis, herkunft, aufNeuKoppeln,
                 )
 
                 /* ZWEI SPERREN, IN DIESER REIHENFOLGE. Erst die
@@ -237,7 +249,8 @@ private fun Zustandsblock(
     fremd: Int,
     aufFremdeVerwerfen: () -> Unit,
     fristBis: String?,
-    herkunft: Boolean,
+    herkunft: org.genem.nadoku.handy.tresor.Herkunftsstand,
+    aufNeuKoppeln: () -> Unit,
 ) {
     if (stand.laeuft) {
         Row(
@@ -270,8 +283,25 @@ private fun Zustandsblock(
      * trägt jede Hülle den Geräteschlüssel als Absender, und der Browser
      * erkennt, dass sie von diesem Handy kommt. Gedämpft und ohne Punkt: Es
      * ist eine Auskunft, kein Zustand, um den man sich kümmern müsste. */
-    if (herkunft) {
-        Text(text = stringResource(R.string.sync_herkunft), color = Rolle.gedaempft, fontSize = 13.sp)
+    when (herkunft) {
+        org.genem.nadoku.handy.tresor.Herkunftsstand.GESICHERT ->
+            Text(text = stringResource(R.string.sync_herkunft), color = Rolle.gedaempft, fontSize = 13.sp)
+        /* HERKUNFT FEHLT (KA-15, E-KA-80, M-KA-03 F): Der Server verlangt den
+         * Nachweis, das Gerätepaar ist nicht da — es geht nichts hinaus.
+         * Fehlerton, weil sonst niemand merkt, dass der Rückstand wächst;
+         * vorhandene Bausteine (Zustandszeile, Hinweiskasten, KnopfPrimaer).
+         * Im Dienst kein Knopf: Getrennt wird erst nach dem Dienst (KA-04). */
+        org.genem.nadoku.handy.tresor.Herkunftsstand.FEHLT -> {
+            Zustandszeile(
+                text = stringResource(R.string.sync_herkunft_fehlt),
+                punktfarbe = Rolle.fehlerLinie, schriftfarbe = Rolle.fehlerText,
+            )
+            Hinweiskasten(stringResource(R.string.herkunft_fehlt_hinweis))
+            if (!stand.laeuft) {
+                KnopfPrimaer(stringResource(R.string.neu_koppeln)) { aufNeuKoppeln() }
+            }
+        }
+        org.genem.nadoku.handy.tresor.Herkunftsstand.OHNE -> Unit
     }
     Zustandszeile(
         text = if (rueckstand > 0) {
@@ -374,6 +404,8 @@ private fun Zustandsblock(
                     stringResource(R.string.sync_ergebnis_schluessel)
                 Sendeausgang.KEIN_SCHLUESSEL ->
                     stringResource(R.string.sync_ergebnis_kein_schluessel)
+                Sendeausgang.HERKUNFT_FEHLT ->
+                    stringResource(R.string.sync_ergebnis_herkunft_fehlt)
                 Sendeausgang.PAKET_ABGEWIESEN ->
                     androidx.compose.ui.res.pluralStringResource(
                         R.plurals.sync_ergebnis_abgewiesen, ergebnis.anzahl, ergebnis.anzahl,

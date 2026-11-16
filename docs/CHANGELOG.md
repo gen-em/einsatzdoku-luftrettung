@@ -14,6 +14,71 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 25.0.0] — unveröffentlicht
+
+Schritt 28 (KA), Pakete KA-08 bis KA-14.
+
+### Geändert
+
+- **Web — die Daten werden im neuen Format geschrieben.** Seit dem Audit
+  ließen sich verschlüsselte Blöcke zwischen Einsätzen vertauschen, ältere
+  Stände zurücklegen und Gerätedaten ohne Herkunft einspielen; Format,
+  Standbuch und Kopplung mit Vergleichswert dagegen standen seit Web 24.13
+  bereit, aber ausgeschaltet. Jetzt schreibt der Browser jeden Block an
+  Einsatz und Zweck gebunden, merkt sich je Datensatz den zuletzt
+  gesehenen Stand und hebt den Bestand jedes Kontos nach der Anmeldung
+  still ins neue Format. Gekoppelte Geräte belegen damit ihre Herkunft; wer
+  schon vorher gekoppelt hatte, koppelt einmal neu.
+- **Web — die Anmeldung rechnet doppelt so viele Runden.** Das schützt das
+  Passwort gegen Raten aus einem Datenbankabzug; die Anmeldung dauert
+  dafür etwa eine Sekunde, im Übergang etwas länger.
+
+### Hinzugefügt
+
+- **Web — die Einsatzansicht sagt, wenn mit einem Stand etwas nicht
+  stimmt.** Kam ein Einsatz nach dem Abschluss noch einmal offen, ist ein
+  gespeicherter Stand älter als der bekannte oder fehlt ihm der
+  Herkunftsnachweis, steht eine Meldung an der Karte. Weicht nur die Uhr
+  eines zweiten Geräts ab, lässt sich der Stand bewusst übernehmen; ein
+  Stand, den dasselbe Gerät schon überholt hatte, bleibt verborgen.
+- **Web — „Geräte neu verbinden", wenn die Geräteliste nicht mehr aufgeht.**
+  Lag auf dem Server eine verschlossene Geräteliste, die der Browser nicht
+  öffnen konnte, ließ sich kein Gerät mehr koppeln, und niemand sah, warum.
+  Jetzt übernimmt der Browser nichts vom Server: Kennt er die Liste selbst,
+  legt er seine Fassung still zurück; sonst fängt er leer an und bittet auf
+  Startseite und Geräteseite, die Geräte einmal neu zu koppeln.
+
+### Behoben
+
+- **Web — GPX-Export und Sicherung sind wieder schnell.** Mit dem neuen
+  Format dauerte ein großer Export fast doppelt so lange und hielt alle
+  Spuren auf einmal im Speicher. Die Zeit lag nicht an der Verschlüsselung,
+  sondern an Umwandlungen, die je Hülle und je Zeitangabe neu gerechnet
+  wurden; jetzt geschieht das einmal, und jede Spur geht sofort ins Archiv.
+  Die Spuren stehen deshalb vorn im Archiv, die Tabellen am Ende.
+
+## [Android 0.26.0] — unveröffentlicht
+
+Schritt 28 (KA), Paket KA-15.
+
+### Geändert
+
+- **Android — ohne Geräteschlüssel sendet das Handy nicht mehr, sondern sagt
+  „Herkunft fehlt — neu koppeln".** Bisher fiel ein Handy, das den
+  Herkunftsnachweis schuldete, aber seinen Schlüssel verloren hatte, still auf
+  Daten ohne Nachweis zurück, die der Browser ab Web 25.0.0 nicht mehr zeigt.
+  Jetzt bleiben die Daten im Handy, die Startseite sagt, was zu tun ist, und
+  „Neu koppeln" ist auch mit Rückstand erlaubt; der Rückstand bleibt dem
+  Konto zugeordnet.
+
+### Behoben
+
+- **Android — eine Phase, die während des Sendens dazukam, wartete.** Die
+  Antwort des Servers bestätigte das ganze Paket, auch eine Phase, die erst
+  während der Anfrage gespeichert worden war; sie ging erst mit der nächsten
+  Änderung hinaus, eine späte letzte Phase nie. Jetzt gilt eine Bestätigung
+  nur für den Stand, der gesendet wurde.
+
 ## [Uhr 5.1.0] — unveröffentlicht
 
 Schritt 28, Pakete KG-09 und KG-10 (Backlog Nr. 580).

@@ -1,0 +1,64 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>KA · Mockup M-KA-03 — Befunde und neu koppeln</title>
+<!-- Mockup zu KA-08 (Konzept KA, E-KA-70, -80, -81). Web: nur vorhandene Bausteine (Karte, Meldung mit Aktion `meldung-aktion`, Knöpfe) aus server/assets/style.css. Handy: Bausteine aus M-KA-02. Neu ist, was darin steht. -->
+<link rel="stylesheet" href="../../../../server/assets/style.css"><style>body{background:var(--flaeche-abgesetzt);padding:20px 24px;width:1280px}.mk-kopf h1{font-family:var(--schrift-kopf);margin:0 0 4px}.mk-kopf p{margin:0 0 12px;max-width:1180px}.mk-raster{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:start}.mk-titel{font-size:var(--groesse-2);font-weight:600;color:var(--text-sekundaer);text-transform:uppercase;letter-spacing:.06em;margin:0 0 6px}.mk-not{font-size:13px;line-height:1.4;margin:6px 0 0}.mk-karte{height:120px;border:1px dashed var(--linie,#ccc);display:flex;align-items:center;justify-content:center;color:var(--text-sekundaer);font-size:13px;margin-top:8px}</style></head><body>
+<div class="mk-kopf"><h1>M-KA-03 · Befunde in der Einsatzansicht und „neu koppeln“ am Handy</h1><p>Web 25.0.0 (KA-08). Die Befunde stehen dort, wo heute „Die Ortsdaten dieses Einsatzes lassen sich nicht öffnen“ steht: oben in der Karte der Einsatzansicht, als Meldung. Neuer Baustein: keiner; neu ist der Rückweg als Aktion in der Meldung (B).</p></div><div class="mk-raster">
+<div><p class="mk-titel">A · Offen nach dem Abschluss (Befund, nichts abgewiesen)</p><section class="karte"><div class="karte-kopf"><h2 class="karte-titel">Karte</h2></div><div class="karte-inhalt"><div class="meldung meldung-warn" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="../../../../server/assets/images/symbole/warnung.svg#i"></use></svg><p><strong>Nach dem Abschluss kam noch ein offener Stand.</strong> Diesen Einsatz hatte ein Gerät schon als abgeschlossen gesendet; danach kam von <em>Handy Pixel 8</em> ein Stand ohne Abschluss. Angezeigt wird dieser neuere Stand. Prüfe Phasen und Spur, und schließe den Einsatz am Gerät oder hier im Formular noch einmal ab.</p></div><div class="mk-karte">Karte mit Spur und Phasen</div></div></section><p class="mk-not">Befund <code>offen-nach-schluss</code> (E-KA-69, -76). Ton <code>warn</code>, keine Aktion: Der Stand ist gültig und angenommen. Verschwindet, sobald wieder ein abgeschlossener Stand abgenommen ist.</p></div>
+<div><p class="mk-titel">B · Uhrzeit prüfen (anderes Gerät, kleinerer Zähler)</p><section class="karte"><div class="karte-kopf"><h2 class="karte-titel">Karte</h2></div><div class="karte-inhalt"><div class="meldung meldung-warn" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="../../../../server/assets/images/symbole/warnung.svg#i"></use></svg><p><strong>Uhrzeit von <em>Garmin fēnix 6 Pro</em> prüfen.</strong> Dieser Browser kennt schon einen Stand vom 14.11.2026, 09:31 Uhr (Handy Pixel 8). Der gespeicherte Stand kommt von der Uhr und trägt 09:26 Uhr — älter, obwohl er später kam. Geht die Uhr nach, ist er trotzdem der richtige. Bis du entscheidest, zeigt die Karte nichts.</p><div class="meldung-aktion"><button class="knopf knopf-primaer" type="button"><span>Diesen Stand übernehmen</span></button> <button class="knopf knopf-leise" type="button"><span>Nicht jetzt</span></button></div></div></div></section><p class="mk-not">Hinweis nach E-KA-70: anderer Absender, <code>z</code> kleiner (oder gleich, F-KA-112). Beide Zeiten, beide Geräte aus dem Gerätebuch. „Übernehmen“ fragt nicht noch einmal nach und wird im Standbuch vermerkt; danach erscheint die Karte. „Nicht jetzt“ lässt alles, wie es ist — der Hinweis kommt beim nächsten Öffnen wieder.</p></div>
+<div><p class="mk-titel">C · Zurückgelegt (gleiches Gerät, kleinerer Zähler)</p><section class="karte"><div class="karte-kopf"><h2 class="karte-titel">Karte</h2></div><div class="karte-inhalt"><div class="meldung meldung-fehler" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="../../../../server/assets/images/symbole/warnung.svg#i"></use></svg><p><strong>Die Ortsdaten sind älter als der Stand, den dieser Browser kennt.</strong> Dasselbe Gerät hatte schon einen neueren Stand gesendet — jemand hat einen alten zurückgelegt. Die Ortsdaten werden nicht angezeigt; die übrigen Angaben stimmen. Sag der Betreiberin Bescheid.</p></div></div></section><p class="mk-not">Heute dieselbe Lage mit dem allgemeinen Satz „lassen sich nicht öffnen“. Neu ist nur der Text nach dem Grund; kein Rückweg (E-KA-70: gleicher Absender bleibt hart).</p></div>
+<div><p class="mk-titel">D · Vom Browser übernommen (Altbestand ohne Herkunft)</p><section class="karte"><div class="karte-kopf"><h2 class="karte-titel">Karte</h2></div><div class="karte-inhalt"><div class="meldung meldung-info" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="../../../../server/assets/images/symbole/hinweis.svg#i"></use></svg><p><strong>Vom Browser übernommen am 02.12.2026.</strong> Diese Ortsdaten kamen von einem Gerät, das ihre Herkunft noch nicht belegen konnte (alte App). Dieser Browser hat sie geprüft übernommen; dass sie vom Gerät stammen, ist nicht belegt.</p></div><div class="mk-karte">Karte mit Spur und Phasen</div></div></section><p class="mk-not">Kennzeichen nach E-KA-81 (Merker ÜBERNOMMEN bzw. <code>herkunft.uebernommen</code>, geschrieben von 06e). Ton <code>info</code>, die Karte erscheint normal.</p></div>
+<div><p class="mk-titel">E · Ohne Herkunft, wo sie verlangt ist</p><section class="karte"><div class="karte-kopf"><h2 class="karte-titel">Karte</h2></div><div class="karte-inhalt"><div class="meldung meldung-fehler" role="status"><svg class="symbol symbol-gross" viewBox="0 0 24 24" focusable="false" aria-hidden="true"><use href="../../../../server/assets/images/symbole/warnung.svg#i"></use></svg><p><strong>Diese Ortsdaten tragen keinen Herkunftsnachweis.</strong> Seit der Umstellung verschließen Uhr und Handy mit ihrem Geräteschlüssel; dieser Stand kam ohne. Er wird nicht angezeigt. Koppele das Gerät neu (Einstellungen → Geräte).</p></div></div></section><p class="mk-not">Grund <code>ohne-herkunft</code>: Fassung 1, wo das Standbuch schon Fassung 2 kennt. Bis 06e selten; danach weist der Server Fassung 1 ab.</p></div>
+</div><h2 style="margin:28px 0 8px;font-family:var(--schrift-kopf)">Handy (Android 0.26.0, KA-15)</h2>
+<div class="handyteil"><style>
+@font-face { font-family: "OS"; font-weight: 400; src: url("../../../../server/assets/fonts/open-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "OS"; font-weight: 700; src: url("../../../../server/assets/fonts/open-sans-latin-700-normal.woff2") format("woff2"); }
+:root {
+  --seite: #FFFCFA; --karte: #FCF8F3; --text: #1A0500; --titel: #1A2E4D; --gedaempft: #725D49;
+  --linie: #E5DECD; --linie-stark: #725D49; --aktion: #1A2E4D; --auf-aktion: #FFFCFA;
+  --info-flaeche: #D9ECFD; --info-text: #27487C; --erfolg-text: #065A27; --erfolg-linie: #147236;
+  --fehler-text: #890415; --fehler-linie: #AF1E26; --rahmen: #e9edf0;
+}
+.handyteil { margin: 0; padding: 24px; background: var(--rahmen); color: #1d2a33; font-family: "OS", sans-serif; }
+.handyteil h1 { font-size: 20px; margin: 0 0 4px; }
+.handyteil p.unter { margin: 0 0 20px; font-size: 14px; max-width: 1000px; line-height: 1.4; }
+.handyteil .reihe { display: flex; flex-wrap: wrap; gap: 28px; }
+.handyteil .fall { width: 340px; }
+.handyteil .fall h2 { font-size: 15px; margin: 0 0 8px; }
+.handyteil .fall > p { font-size: 13px; margin: 10px 0 0; line-height: 1.4; }
+.handyteil .handy { width: 340px; height: 640px; background: var(--seite); border: 10px solid #222; border-radius: 28px;
+         overflow: hidden; box-sizing: border-box; font-size: 13px; color: var(--text); }
+.handyteil .kopf { background: var(--titel); color: #fff; height: 52px; display: flex; align-items: center; gap: 10px;
+        padding: 0 16px; font-weight: 700; font-size: 17px; }
+.handyteil .kopf .marke { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; box-sizing: border-box; }
+.handyteil .innen { padding: 16px; }
+.handyteil .karte { background: var(--karte); border: 1px solid var(--linie); border-radius: 12px; padding: 16px;
+         display: flex; flex-direction: column; gap: 12px; }
+.handyteil .zeile { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.handyteil .punkt { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.handyteil .fehler { color: var(--fehler-text); } .fehler .punkt { background: var(--fehler-linie); }
+.handyteil .erfolg { color: var(--erfolg-text); } .erfolg .punkt { background: var(--erfolg-linie); }
+.handyteil .hinweis { background: var(--info-flaeche); border-radius: 10px; padding: 8px 12px; font-size: 13px; }
+.handyteil .klein { color: var(--gedaempft); font-size: 13px; }
+.handyteil .info { color: var(--info-text); font-size: 15px; }
+.handyteil .gross { font-size: 34px; font-weight: 700; text-align: center; color: var(--text); }
+.handyteil .konto { font-size: 20px; font-weight: 700; text-align: center; color: var(--text); }
+.handyteil .block { display: flex; flex-direction: column; gap: 4px; }
+.handyteil .knopf { min-height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+         font-size: 15px; font-weight: 700; box-sizing: border-box; padding: 0 16px; }
+.handyteil .primaer { background: var(--aktion); color: var(--auf-aktion); }
+.handyteil .neutral { background: var(--karte); color: var(--titel); border: 1px solid var(--linie-stark); }
+.handyteil .neu { outline: 2px dashed #CA6900; outline-offset: 3px; }
+.handyteil code { font-size: 12px; }
+</style><div class="reihe">
+<div class="fall"><h2>F · Handy: Herkunft fehlt — neu koppeln</h2><div class="handy"><div class="kopf"><span class="marke"></span>NAdoku</div><div class="innen"><div class="karte">
+  <div class="zeile erfolg"><span class="punkt"></span>Gekoppelt · de•••@ge•••.org</div>
+  <div class="zeile fehler neu"><span class="punkt"></span>Herkunft fehlt — neu koppeln</div>
+  <div class="zeile fehler"><span class="punkt"></span>3 Pakete warten</div>
+  <div class="hinweis neu">Der Server verlangt Daten mit Herkunftsnachweis, aber diesem Handy fehlt sein Geräteschlüssel (etwa nach dem Update von 0.24.0). Bis du neu koppelst, sendet es nichts; die Daten bleiben gespeichert.</div>
+  <div class="knopf primaer neu">Neu koppeln</div>
+</div></div></div><p>E-KA-80. Zweite Zeile wie „Herkunft gesichert“ in M-KA-02 D, aber im Fehlerton; Meldungsblock und Primärknopf sind vorhandene Bausteine (Bausteine.kt). „Neu koppeln“ führt in den bisherigen Weg Trennen → Kopplung (im Dienst gesperrt wie heute, KA-04).</p></div>
+<div class="fall"><h2>G · Handy: nach dem neuen Koppeln</h2><div class="handy"><div class="kopf"><span class="marke"></span>NAdoku</div><div class="innen"><div class="karte">
+  <div class="zeile erfolg"><span class="punkt"></span>Gekoppelt · de•••@ge•••.org</div>
+  <div class="klein">Herkunft gesichert</div>
+  <div class="zeile erfolg"><span class="punkt"></span>Alles gesendet</div>
+</div></div></div><p>Unverändert wie M-KA-02 D — zur Gegenüberstellung.</p></div>
+</div></div></body></html>

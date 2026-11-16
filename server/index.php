@@ -142,6 +142,11 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
              keine neuen Geraete und keine Diensttage; die Karte steht dann
              allein da, und das ist die Absicht. */ ?>
     <?php if ($erststartZeigen): require __DIR__ . '/erststart_karte.php'; endif; ?>
+    <?php /* „GERÄTE NEU VERBINDEN“ (Backlog Nr. 568, E-KA-92, M-KA-04 B): Hat
+             dieser Browser ein unlesbares Gerätebuch durch ein leeres ersetzt,
+             steht hier der kurze Hinweis, bis die Geräteseite keinen
+             Rückstand mehr sieht. Gefüllt vom Skript am Seitenende. */ ?>
+    <div id="geraete-neu-verbinden" hidden></div>
     <?php if ($neueGeraete): ?>
       <?php /* Warnmeldung: Symbol, Text, Ausweg als Knopf IM
                Rahmen. Der Hinweis bleibt bestaetigbar — eine Warnung,
@@ -641,6 +646,23 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
 <?php ui_krypto_bootstrap(['csrf' => true, 'keycheck' => $rueckfrageZeigen]); ?>
 <script src="<?= asset('assets/ortsdaten.js') ?>"></script>
 <script src="<?= asset('assets/wartungslauf.js') ?>"></script>
+<script<?= kopf_nonce_attr() ?>>
+/* Nr. 568: der Merker aus `EdStandbuch.buchReparieren()` — nur dieser Browser
+ * weiß, dass er ein leeres Gerätebuch angelegt hat. Still: ohne Schlüssel
+ * keine Meldung. */
+(async () => {
+  const platz = document.getElementById('geraete-neu-verbinden');
+  if (!platz || typeof EdStandbuch === 'undefined' || typeof PAT_WRAP === 'undefined') { return; }
+  try {
+    const ck = await EdKeyGuard.contentKey(PAT_WRAP);
+    if (!ck || !(await EdStandbuch.neuVerbinden(ck))) { return; }
+    platz.innerHTML = EdHtml.meldung('warn', 'Uhr und Handy müssen einmal neu gekoppelt werden.',
+      { auftakt: 'Geräte neu verbinden.',
+        knopf: '<a class="knopf knopf-primaer" href="einstellungen.php?t=geraete"><span>Zu den Geräten</span></a>' });
+    platz.hidden = false;
+  } catch (e) { /* still */ }
+})();
+</script>
 <script src="<?= asset('assets/gpx.js') ?>"></script>
 <?php /* Steht `vorladen.js` schon im Kopf (ein Tag ist gewaehlt), braucht
          der Rumpf es nicht ein zweites Mal. */ ?>

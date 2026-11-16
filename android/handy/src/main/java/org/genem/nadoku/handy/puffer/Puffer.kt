@@ -151,7 +151,8 @@ class Puffer(
                 bestaetigt_seq       INTEGER NOT NULL DEFAULT 0,
                 metadaten_bestaetigt INTEGER NOT NULL DEFAULT 0,
                 fehlerhaft           INTEGER NOT NULL DEFAULT 0,
-                zaehler              INTEGER
+                zaehler              INTEGER,
+                aenderung            INTEGER NOT NULL DEFAULT 0
             )
             """.trimIndent()
         )
@@ -252,6 +253,13 @@ class Puffer(
      * über jedem `z`, das dieses Handy unter der alten Regel (E-KA-64, je
      * Anfrage neu) gesendet hat: Es ist derselbe Gerätezähler, und er steigt
      * streng. Der Browser nimmt den vorgefundenen Stand also an.
+     *
+     * 3 → 4 (Nr. 566): `paket.aenderung` kommt hinzu, mit 0 für jede
+     * vorgefundene Zeile. Wieder eine Spalte am Ende, keine Zeile verliert
+     * etwas. 0 ist für den Bestand richtig: Eine Anfrage, deren Antwort noch
+     * aussteht, gibt es nach einem Neustart nicht — der Prozess, der sie
+     * stellte, ist fort —, also kann keine Bestätigung mit einem älteren
+     * Stand mehr eintreffen ([bestaetigungMerken]).
      */
     override fun onUpgrade(db: SQLiteDatabase, alt: Int, neu: Int) {
         var stand = alt
@@ -262,6 +270,10 @@ class Puffer(
         if (stand == 2) {
             db.execSQL("ALTER TABLE paket ADD COLUMN zaehler INTEGER")
             stand = 3
+        }
+        if (stand == 3) {
+            db.execSQL("ALTER TABLE paket ADD COLUMN aenderung INTEGER NOT NULL DEFAULT 0")
+            stand = 4
         }
         if (stand != neu) {
             throw IllegalStateException(
@@ -368,7 +380,37 @@ class Puffer(
                 },
                 "id = ?", arrayOf(paketId.toString()),
             )
+            aenderungZaehlen(this, paketId)
         } }
+    }
+
+    /**
+     * Die Änderungsnummer eines Pakets weiterzählen — NUR INNERHALB der
+     * Transaktion, die `metadaten_bestaetigt = 0` setzt (Nr. 566).
+     *
+     * WARUM ES SIE GIBT. Eine Bestätigung gilt dem Stand, den die Anfrage
+     * TRUG, nicht dem, der beim Eintreffen der Antwort im Puffer steht.
+     * Fiel dazwischen eine Phase oder der Abschluss, setzte die Antwort
+     * `metadaten_bestaetigt` bis Schema 3 trotzdem auf 1, und die Änderung
+     * hatte keine Arbeit mehr ([hatArbeit]) — sie ging erst mit dem
+     * nächsten Punkt hinaus, beim stehenden Fahrzeug womöglich nie, und ein
+     * abgeschlossener Einsatz wurde samt einer nachgereichten Phase
+     * entsorgt. [bestaetigungMerken] vergleicht deshalb diese Nummer.
+     *
+     * WARUM NICHT DER ZÄHLER `z` DES EINSATZES. Er misst etwas anderes: den
+     * Inhalt der Einsatzhülle, nicht den Stand der Anfrage. Ein zweites
+     * Schließen ändert Endzeit und Strecke ohne neues `z`; ein Einsatz kann
+     * ohne `z` dastehen ([zaehlerFuerAenderung] gibt bei [Zaehlerausfall]
+     * `null`, und `null` gegen `null` sähe gleich aus, obwohl eine Phase
+     * dazukam); Ruhesegmente haben keinen. Diese Nummer dagegen zählt in
+     * SQL, kann nicht ausfallen und gilt für jede Art gleich — EIN Weg statt
+     * zweier.
+     *
+     * DIE REGEL: Wer `metadaten_bestaetigt = 0` setzt, zählt hier. Heute
+     * sind das [phaseAnhaengen] und [paketSchliessen].
+     */
+    private fun aenderungZaehlen(db: SQLiteDatabase, paketId: Long) {
+        db.execSQL("UPDATE paket SET aenderung = aenderung + 1 WHERE id = ?", arrayOf<Any>(paketId))
     }
 
     /**
@@ -602,6 +644,7 @@ class Puffer(
                 },
                 "id = ?", arrayOf(paketId.toString()),
             )
+            aenderungZaehlen(this, paketId)
         } }
     }
 
@@ -621,17 +664,32 @@ class Puffer(
      * davor darf sie lokal verwerfen. `metadatenBestaetigt` merkt, dass der
      * Datensatz überhaupt einmal angekommen ist: Ein Paket ohne Punkte
      * (ein Einsatz, der nur Phasen trägt) hätte sonst nie „Arbeit erledigt".
+     *
+     * NUR DER STAND, DEN DIE ANFRAGE TRUG (Nr. 566). `aenderung` ist die
+     * Änderungsnummer aus der [Paketzeile], aus der die Anfrage gebaut
+     * wurde. Steht im Puffer inzwischen eine andere — eine Phase, ein
+     * Abschluss fiel, während die Anfrage unterwegs war —, bleibt
+     * `metadaten_bestaetigt` stehen, und das Paket behält seine Arbeit. Die
+     * Punkte gelten trotzdem als bestätigt: Sie hängen nur an, und was der
+     * Server von ihnen hat, hat er. Vergleich und Schreiben stehen in EINER
+     * Anweisung; dazwischen kann keine Änderung fallen.
+     *
+     * @return ob der Stand noch derselbe war — nur dann darf der Sender ein
+     *   abgeschlossenes Paket entsorgen
      */
-    fun bestaetigungMerken(paketId: Long, naechsteSeq: Long) {
-        schreibe { it.update(
-            "paket",
-            ContentValues().apply {
-                put("bestaetigt_seq", naechsteSeq)
-                put("metadaten_bestaetigt", 1)
-            },
-            "id = ?", arrayOf(paketId.toString()),
-        ) }
-    }
+    fun bestaetigungMerken(paketId: Long, naechsteSeq: Long, aenderung: Long): Boolean =
+        schreibe { it.transaction {
+            execSQL(
+                "UPDATE paket SET bestaetigt_seq = ?, " +
+                    "metadaten_bestaetigt = CASE WHEN aenderung = ? THEN 1 ELSE metadaten_bestaetigt END " +
+                    "WHERE id = ?",
+                arrayOf<Any>(naechsteSeq, aenderung, paketId),
+            )
+            rawQuery(
+                "SELECT 1 FROM paket WHERE id = ? AND aenderung = ?",
+                arrayOf(paketId.toString(), aenderung.toString()),
+            ).use { c -> c.moveToFirst() }
+        } }
 
     /**
      * 400 vom Server: Die Nachricht ist fehlerhaft und wird **nicht
@@ -651,17 +709,30 @@ class Puffer(
      * ERST NACH `final` UND VOLLSTÄNDIGER BESTÄTIGUNG — dieselbe Regel wie in
      * `Uploader.mc`. Sie ist der Grund, warum ein Funkabriss nichts kostet:
      * Solange der Server nicht bestätigt hat, liegt alles noch hier.
+     *
+     * @param aenderung Wenn gesetzt: nur entsorgen, wenn das Paket noch
+     *   diesen Stand hat (Nr. 566) — geprüft in derselben Transaktion wie
+     *   das Löschen. Eine Phase, die die Uhr einem abgeschlossenen Einsatz
+     *   nachreicht, während seine letzte Antwort eintrifft, fiele sonst mit
+     *   ihm weg.
+     * @return ob gelöscht wurde
      */
-    fun paketEntsorgen(paketId: Long) {
+    fun paketEntsorgen(paketId: Long, aenderung: Long? = null): Boolean =
         /* IN EINER TRANSAKTION. Bräche der Vorgang zwischen den drei
          * Löschungen ab, bliebe ein Paket ohne Punkte stehen — oder, schlimmer,
          * Punkte ohne Paket, die nie wieder jemand sähe. */
         schreibe { it.transaction {
-            delete("punkt", "paket_id = ?", arrayOf(paketId.toString()))
-            delete("phase", "paket_id = ?", arrayOf(paketId.toString()))
-            delete("paket", "id = ?", arrayOf(paketId.toString()))
+            val gleich = aenderung == null || rawQuery(
+                "SELECT 1 FROM paket WHERE id = ? AND aenderung = ?",
+                arrayOf(paketId.toString(), aenderung.toString()),
+            ).use { c -> c.moveToFirst() }
+            if (gleich) {
+                delete("punkt", "paket_id = ?", arrayOf(paketId.toString()))
+                delete("phase", "paket_id = ?", arrayOf(paketId.toString()))
+                delete("paket", "id = ?", arrayOf(paketId.toString()))
+            }
+            gleich
         } }
-    }
 
     /**
      * Die Warteschlange in ihrer Reihenfolge (wie `Uploader._findJob`):
@@ -952,11 +1023,11 @@ class Puffer(
 
     private companion object {
         const val DATEINAME = "puffer.db"
-        const val FASSUNG = 3
+        const val FASSUNG = 4
 
         const val PAKET_SPALTEN =
             "SELECT id, client_ref, art, tag, dienst_ref, begonnen_at, beendet_at, final, " +
-                "strecke_m, anstieg_m, bestaetigt_seq, metadaten_bestaetigt, fehlerhaft, zaehler FROM paket"
+                "strecke_m, anstieg_m, bestaetigt_seq, metadaten_bestaetigt, fehlerhaft, zaehler, aenderung FROM paket"
 
         fun zuPaket(c: android.database.Cursor) = Paketzeile(
             id = c.getLong(0),
@@ -973,6 +1044,7 @@ class Puffer(
             metadatenBestaetigt = c.getInt(11) != 0,
             fehlerhaft = c.getInt(12) != 0,
             zaehler = if (c.isNull(13)) null else c.getLong(13),
+            aenderung = c.getLong(14),
         )
     }
 }
@@ -1024,6 +1096,12 @@ data class Paketzeile(
      * Stand noch keinen hat ([Puffer.einsatzstand] vergibt ihn dann).
      */
     val zaehler: Long? = null,
+    /**
+     * Die Änderungsnummer dieses Stands (Nr. 566, Schema 4): steigt mit
+     * jeder Phase und jedem Schließen. Eine Bestätigung gilt nur, wenn sie
+     * noch dieselbe ist ([Puffer.bestaetigungMerken]).
+     */
+    val aenderung: Long = 0,
 ) {
     companion object {
         const val ART_EINSATZ = "mission"

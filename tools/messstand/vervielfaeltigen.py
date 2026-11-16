@@ -219,6 +219,14 @@ def runde_bauen(quelle: dict, runde: int, abstand_tage: int) -> dict:
         sek = int(delta.total_seconds())
         for pt in (n.get("track") or []):
             pt[4] = int(pt[4]) + sek
+        # Die Loeschvermerke (Nutzlast 13) wandern mit der Spur, aus demselben
+        # Grund wie die Schnitte oben. Bis KA-14 blieben sie in der Zeit der
+        # Runde 0 stehen; das fiel erst auf, als die Weiche umlag: Eine Spur
+        # mit Luecke gilt in Fassung 2 nur mit einem Vermerk, der die Luecke
+        # deckt, und das Einspielen lehnt sie sonst ab (F-KA-122).
+        for lv in (n.get("loeschungen") or []):
+            lv["von_ts"] = int(lv["von_ts"]) + sek
+            lv["bis_ts"] = int(lv["bis_ts"]) + sek
         ruhe.append(n)
 
     return {"days": tage, "missions": einsaetze, "rest_segments": ruhe}

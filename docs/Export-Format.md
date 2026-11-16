@@ -269,6 +269,12 @@ tracks/              nur mit personenbezogenen Angaben und aktiviertem Haken
   rest_000007_2026-03-14_1330.gpx
 ```
 
+Die Liste zeigt den Inhalt, nicht die Reihenfolge im Archiv; die ist nicht
+zugesagt. **Seit Web 25.0.0 stehen die Spuren vorn**: Jede GPX-Datei geht
+gleich nach dem Öffnen ins Archiv, statt bis zum Packen im Speicher zu
+liegen, und die Tabellen folgen am Ende, weil sie die Dateinamen der Spuren
+nennen (Backlog Nr. 569).
+
 ### 3.1 CSV-Konventionen
 
 Gelten für alle drei Tabellen:

@@ -59,11 +59,25 @@ data class Sendebericht(
      * das alte Konto koppelt oder sie verwirft.
      */
     val fremderRueckstand: Int = 0,
+    /**
+     * Der Server verlangt Fassung 2 (`huelle: 2`), aber dieses Handy hat
+     * kein gültiges Gerätepaar (seit KA-15, E-KA-80;
+     * [org.genem.nadoku.handy.tresor.Herkunft]). Es ist NICHTS gesendet —
+     * auch keine Hülle der Fassung 1 —, und der Puffer ist unberührt. Der
+     * Weg heraus ist eine neue Kopplung.
+     *
+     * Der Lauf gilt zugleich als [spaeterErneut], wie bei [ohneSchluessel]:
+     * Ob das Paar fehlt oder der Keystore es nur gerade nicht hergibt, weiß
+     * der Sender nicht, und der Nachsende-Job fragt deshalb wieder — ohne
+     * Anfrage ans Netz, solange es fehlt. Wer den Bericht anzeigt, prüft
+     * dieses Feld VOR `spaeterErneut`, sonst steht dort „Keine Verbindung".
+     */
+    val herkunftFehlt: Boolean = false,
 ) {
     /** Ein Lauf, an dem nichts zu beanstanden ist. */
     val sauber: Boolean
         get() = verworfen.isEmpty() && uebergangen.isEmpty() && fehlerhaft == 0 && !pausiert &&
-            !ohneSchluessel && !kontoVoll && fremderRueckstand == 0
+            !ohneSchluessel && !kontoVoll && fremderRueckstand == 0 && !herkunftFehlt
 }
 
 /**
@@ -129,9 +143,10 @@ class Sender(
      */
     private val bindung: Rueckstandsbindung? = null,
     /**
-     * Der Geräteschlüssel für Fassung 2 (seit KA-06c). Gesendet wird in
-     * Fassung 2 nur, wenn der Server bei der Kopplung `huelle: 2` gesagt
-     * hat UND ein gültiges Paar da ist; sonst Fassung 1 wie bisher. Den
+     * Der Geräteschlüssel für Fassung 2 (seit KA-06c). Hat der Server
+     * `huelle: 2` gesagt, wird in Fassung 2 gesendet — oder gar nicht: Ohne
+     * gültiges Paar geht seit KA-15 nichts hinaus (E-KA-80; bis dahin
+     * Fassung 1 als Rückfall). Ohne `huelle: 2` Fassung 1 wie bisher. Den
      * Zähler der Einsatzhülle bekommt der Sender nicht mehr (bis KA-06f:
      * `zaehler`, je Anfrage ein neuer, E-KA-64) — er liegt beim Paket im
      * Puffer (E-KA-69).
@@ -214,7 +229,7 @@ class Sender(
         }
 
         val adresse = Serveradresse.ingest(basis)
-        val zugang = tresor.lesen()
+        val gelesen = tresor.lesen()
             ?: return Sendebericht(spaeterErneut = true, geraeumt = geraeumt)
 
         /* OHNE KONTOSCHLÜSSEL GEHT NICHTS HINAUS. Der Server nähme Klartext
@@ -223,9 +238,27 @@ class Sender(
          * nachholen — das ist der Weg, auf dem eine alte Kopplung ohne
          * Schlüssel zu einem kommt —, dann aufgeben, aber nur für diesen
          * Lauf. */
-        val ksText = zugang.kontoschluessel ?: schluesselHolen()
+        val ksText = gelesen.kontoschluessel ?: schluesselHolen()
             ?: return Sendebericht(spaeterErneut = true, ohneSchluessel = true, geraeumt = geraeumt)
         val kontoschluessel = java.util.Base64.getDecoder().decode(ksText)
+
+        /* NACH DEM NACHHOLEN NEU LESEN: `status` trägt auch `huelle: 2`, und
+         * der Kopplungsdienst legt es im selben Zug in den Tresor. Mit dem
+         * Stand von davor ginge dieser Lauf noch in Fassung 1 hinaus, obwohl
+         * der Server gerade Fassung 2 verlangt hat. */
+        val zugang = if (gelesen.kontoschluessel == null) tresor.lesen() ?: gelesen else gelesen
+
+        /* OHNE HERKUNFTSNACHWEIS GEHT NICHTS HINAUS, WO ER VERLANGT IST
+         * (seit KA-15, E-KA-80). Bis dahin fiel der Sender hier still auf
+         * Fassung 1 zurück — nach dem Update von 0.24.0, das die alte Ablage
+         * des Geräteschlüssels löschte, oder wenn der Keystore keinen
+         * Eintrag liefert. Vor der Bindung und vor jedem Griff in den
+         * Puffer: Dieser Lauf ändert nichts, was liegt. Die Regel selbst
+         * steht in [Herkunft], für Sender, Ansicht und Trennen dieselbe. */
+        val paar = if (zugang.huelle2) geraeteschluessel?.liefern() else null
+        if (zugang.huelle2 && paar == null) {
+            return Sendebericht(spaeterErneut = true, herkunftFehlt = true, geraeumt = geraeumt)
+        }
 
         /* DIE BINDUNG VOR DEM ERSTEN PAKET. Derselbe Schlüssel heißt dasselbe
          * Konto: Die Bindung fällt, und der Rückstand geht hinaus. Ein anderer
@@ -251,7 +284,6 @@ class Sender(
             "X-Api-Key" to zugang.schluessel,
         )
 
-        val paar = if (zugang.huelle2) geraeteschluessel?.liefern() else null
         val fassung2 = paar?.let { Fassung2(it, { jetzt().epochSecond }) }
 
         var bericht = Sendebericht(geraeumt = geraeumt, fremderRueckstand = fremd)
@@ -339,13 +371,21 @@ class Sender(
                  * wäre danach entsorgt. Liegt beim Server schon mehr, kostet
                  * die Deckelung nur Wiederholungen, die er übergeht. */
                 val bestaetigt = minOf(antwort.naechsteSeq, seqVon + punkte.size)
-                puffer.bestaetigungMerken(paket.id, bestaetigt)
+                /* BESTÄTIGT IST DER STAND, DEN DIESE ANFRAGE TRUG (Nr. 566):
+                 * `paket.aenderung` stammt aus derselben Lesung wie Körper und
+                 * Phasen. Fiel seither eine Phase oder der Abschluss, bleibt
+                 * das Paket sendepflichtig, und der nächste Durchgang dieser
+                 * Schleife schickt den neuen Stand. */
+                val gleicherStand = puffer.bestaetigungMerken(paket.id, bestaetigt, paket.aenderung)
                 var fertig = 0
                 /* AUFRÄUMEN ERST NACH `final` UND VOLLSTÄNDIGER BESTÄTIGUNG.
                  * `next_seq` ist die erste NICHT gespeicherte Nummer — sie
-                 * muss also die Punktzahl erreichen, nicht überschreiten. */
-                if (paket.final && bestaetigt >= puffer.punktzahl(paket.id)) {
-                    puffer.paketEntsorgen(paket.id)
+                 * muss also die Punktzahl erreichen, nicht überschreiten.
+                 * Und nur, wenn der Stand noch derselbe ist — `paketEntsorgen`
+                 * prüft es in seiner Transaktion noch einmal. */
+                if (paket.final && gleicherStand && bestaetigt >= puffer.punktzahl(paket.id) &&
+                    puffer.paketEntsorgen(paket.id, paket.aenderung)
+                ) {
                     fertig = 1
                 }
                 Sendebericht(
@@ -416,6 +456,7 @@ class Sender(
         spaeterErneut = a.spaeterErneut || b.spaeterErneut,
         geraeumt = a.geraeumt + b.geraeumt,
         ohneSchluessel = a.ohneSchluessel || b.ohneSchluessel,
+        herkunftFehlt = a.herkunftFehlt || b.herkunftFehlt,
         fremderRueckstand = maxOf(a.fremderRueckstand, b.fremderRueckstand),
     )
 

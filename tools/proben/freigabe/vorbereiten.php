@@ -172,7 +172,7 @@ if ($schritt === 'paar') {
 if ($schritt === 'pruefen') {
     $zielId = (int)$pdo->query('SELECT id FROM users WHERE email = '
         . $pdo->quote((string)$daten['ziel']))->fetchColumn();
-    $r = $pdo->query("SELECT client_ref, pat_blob, ort_huelle FROM missions
+    $r = $pdo->query("SELECT client_ref, pat_blob, ort_huelle, started_at FROM missions
                        WHERE user_id = $zielId AND client_ref = 'fg-rc-1'")->fetch();
     require_once $w . '/spur_lib.php';
     $mid = (int)$pdo->query("SELECT id FROM missions
@@ -185,6 +185,10 @@ if ($schritt === 'pruefen') {
          * im Zielkonto liegen — er oeffnet sie mit dessen Paar. */
         'client_ref' => $r['client_ref'] ?? null,
         'ort_huelle' => ($r['ort_huelle'] ?? null) !== null ? base64_encode((string)$r['ort_huelle']) : null,
+        /* Die Einsatzhuelle der Fassung 2 bindet den Beginn (KA-14,
+         * F-KA-126): Ohne ihn geht sie mit `zeit` nicht auf. UTC, wie die
+         * Spalte. */
+        'started_at' => $r['started_at'] ?? null,
         'stuecke'    => $mid ? spur2_lesen($pdo, 'mission', $mid) : [],
     ]), "\n";
     exit(0);

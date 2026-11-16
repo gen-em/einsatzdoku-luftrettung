@@ -42,6 +42,7 @@ Wiederholung des Wegs nach einer Zeitüberschreitung (Nr. 393).
 | `tools/proben/frist/pruefe.mjs` | Probe: fristprobe | |
 | `tools/proben/gpx/probe.mjs` | Probe: gpxprobe | |
 | `tools/proben/huelle/probe.mjs` | Probe: huellenprobe | `--drossel` geht nur in Chromium (CDP, E-DM-05); der Prüfstand fährt ohne |
+| `tools/proben/huelle/ortsdaten_probe.mjs` | Probe: huellenprobe | über `probe.sh`, seit KA-10 |
 | `tools/proben/kontopaar/probe.mjs` | Probe: kontopaarprobe | |
 | `tools/proben/notfallblatt/probe.mjs` | Probe: notfallblattprobe | |
 | `tools/proben/ortsdaten/probe.mjs` | Probe: ortsdatenprobe | |
@@ -60,6 +61,7 @@ Wiederholung des Wegs nach einer Zeitüberschreitung (Nr. 393).
 | `tools/referenzdatensatz/browser/angriffswerte.mjs` | von Hand | kein Prüfstand ruft ihn (Nr. 391) |
 | `tools/referenzdatensatz/browser/csv_import.mjs` | von Hand | kein Prüfstand ruft ihn (Nr. 391) |
 | `tools/referenzdatensatz/browser/demo_bremse.mjs` | von Hand | kein Prüfstand ruft ihn (Nr. 391) |
+| `tools/referenzdatensatz/browser/demo_fassung2.mjs` | von Hand | kein Prüfstand ruft ihn — misst den Demo-Bestand mit umgelegter Weiche (Nr. 563, KA-13) |
 | `tools/referenzdatensatz/browser/demo_pruefen.mjs` | von Hand | kein Prüfstand ruft ihn (Nr. 391) |
 | `tools/referenzdatensatz/browser/papierkorb_misch.mjs` | von Hand | kein Prüfstand ruft ihn (Nr. 391) |
 | `tools/referenzdatensatz/browser/referenz_export.mjs` | von Hand | kein Prüfstand ruft ihn (Nr. 391) |

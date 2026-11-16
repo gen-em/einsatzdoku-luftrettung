@@ -23,8 +23,15 @@
  *     Eintrag (jedes Feld darf fehlen):
  *       p  Zähler des Patientenblocks
  *       o  Zähler der zuletzt abgenommenen Einsatzhülle;  k: 1 = vom Konto
+ *       a  sonst: die SID (16 Hex-Zeichen) des GERÄTS, dessen Hülle `o`
+ *          gesetzt hat (KA-09/-10, E-KA-70, -88). `k` und `a` schließen
+ *          einander aus; stehen doch beide, gilt `k`. Fehlt an einem Blatt
+ *          von vor KA-09.
  *       f  1 = eine Einsatzhülle mit `schluss: true` war schon abgenommen —
  *          haftet, wird nie gelöscht (KA-06f, E-KA-69, -76)
+ *       u  Vermerke [[z_v, "<sid>", t], …], nach SID sortiert, je Absender
+ *          höchstens einer: Der Stand z_v dieses Geräts ist zur Zeit t
+ *          bewusst verworfen worden („diesen Stand übernehmen")
  *       s  [gedeckt bis, Stufe] der abgenommenen Spur
  *       d  Versatz in Sekunden (Umdatierung): Klartextzeit − Zeit in der Hülle
  *       x  Löschvermerke [[von, bis], …] in der Zeit der Hülle
@@ -103,6 +110,13 @@ const EdStandbuch = (() => {
   const STAND_INFO = te.encode('nadoku-stand-1');
   const BLAETTER = 16;
   const BUCH = 'buch';
+  /* Merker „Geräte neu verbinden“ je Konto (localStorage, nur Komfort:
+   * fehlt er, sagt es die Geräteseite trotzdem — sie rechnet selbst). */
+  const NEU_VERBINDEN = 'nadoku-geraete-neu-verbinden:';
+  /* Eine Änderung, die nichts ändert (`naechste()`): kein Schreiben. */
+  const UNVERAENDERT = Symbol('unveraendert');
+  /* Sammeln beim Lesen (`fortschreibenGesammelt()`), in Millisekunden. */
+  const SAMMELN_RUHE = 300, SAMMELN_HOECHSTENS = 2000;
 
   /* ---- Blatt und Kennung eines Datensatzes ----------------------------- */
 
@@ -123,15 +137,76 @@ const EdStandbuch = (() => {
 
   /* Ein Eintrag in fester Feldfolge und ohne leere Felder: Zwei Browser, die
    * dasselbe wissen, schreiben dieselben Bytes. */
-  const FELDER = ['p', 'o', 'k', 'f', 's', 'd', 'x'];
+  const FELDER = ['p', 'o', 'k', 'a', 'f', 'u', 's', 'd', 'x'];
+  const LISTEN = ['u', 'x'];                           // leer heißt: fehlt
   function eintragOrdnen(e) {
     const aus = {};
     for (const f of FELDER) {
       const w = e[f];
-      if (w == null || (f === 'x' && !w.length) || (f !== 's' && f !== 'x' && w === 0)) { continue; }
+      if (w == null || (LISTEN.includes(f) && !w.length)
+          || (f !== 's' && !LISTEN.includes(f) && w === 0)) { continue; }
       aus[f] = w;
     }
     return aus;
+  }
+
+  /* Die Felder der Einsatzhülle im Eintrag (`STANDFELDER` der Referenz). */
+  const STANDFELDER = ['o', 'k', 'a', 'f', 'u'];
+
+  /**
+   * ZWEI EINTRÄGE DESSELBEN EINSATZES AUS ZWEI BLÄTTERN ZU EINEM MACHEN —
+   * nur die Felder der Einsatzhülle (o, k, a, f, u). Referenz:
+   * `stand_zusammenfuehren()` in `referenz.py`, Kopf „ZWEI BLÄTTER
+   * ZUSAMMENFÜHREN".
+   *
+   * WARUM NICHT „DER HÖHERE ZÄHLER" (bis KA-10): Seit E-KA-70 kann ein Stand
+   * bewusst SINKEN („diesen Stand übernehmen"). Das veraltete Blatt eines
+   * zweiten Browsers höbe ihn still wieder an. Die Regel, in dieser Folge:
+   *   1. Führt genau EINE Seite den Stand der anderen als verworfen (ein
+   *      Vermerk für deren `a` mit z_v ≥ deren `o`), gewinnt sie mit `o`, `a`.
+   *   2. Sonst der höhere `o`; bei Gleichstand `k`, dann die Seite mit `a`,
+   *      dann die kleinere SID.
+   *   3. `f`: einer hat es. `u`: beide vereinigt, je Absender der höhere z_v
+   *      (bei Gleichstand das spätere t), ohne den Absender des Siegers; mit
+   *      `k` am Sieger entfallen `a` und `u`.
+   * Symmetrisch: (x, y) und (y, x) ergeben dasselbe.
+   *
+   * WAS DIE REGEL NICHT TUT (F-KA-119): Ein höherer GERÄTEstand gewinnt
+   * gegen einen niedrigeren KONTOstand, und `k` geht dabei verloren — so
+   * sagt es die Referenz (Vektor „konto-unter-geraet").
+   */
+  function standZusammenfuehren(x, y) {
+    x = x || {}; y = y || {};
+    const vermerk = (s, a) => (s.u || []).find(e => e[1] === a);
+    const fuehrt = (s, t) => {                         // führt s den Stand von t als verworfen?
+      if (!t.o || t.k || !t.a) { return false; }
+      const v = vermerk(s, t.a);
+      return !!v && v[0] >= t.o;
+    };
+    const gehtVor = (s, t) => {
+      const so = s.o || 0, to = t.o || 0;
+      if (so !== to) { return so > to; }
+      if (!!s.k !== !!t.k) { return !!s.k; }
+      const sa = s.k ? '' : (s.a || ''), ta = t.k ? '' : (t.a || '');
+      if (!!sa !== !!ta) { return !!sa; }
+      return sa <= ta;
+    };
+    const kx = fuehrt(x, y), ky = fuehrt(y, x);
+    const sieger = kx !== ky ? (kx ? x : y) : (gehtVor(x, y) ? x : y);
+    const neu = {};
+    if (sieger.o) { neu.o = sieger.o; }
+    if (sieger.k) { neu.k = 1; } else if (sieger.a) { neu.a = sieger.a; }
+    if (x.f || y.f) { neu.f = 1; }
+    if (!neu.k) {
+      const u = new Map();
+      for (const e of (x.u || []).concat(y.u || [])) {
+        const b = u.get(e[1]);
+        if (!b || e[0] > b[0] || (e[0] === b[0] && e[2] > b[2])) { u.set(e[1], e.slice()); }
+      }
+      u.delete(neu.a);
+      if (u.size) { neu.u = [...u.keys()].sort().map(s => u.get(s)); }
+    }
+    return neu;
   }
 
   const json = d => te.encode(JSON.stringify(d));
@@ -377,6 +452,10 @@ const EdStandbuch = (() => {
     const id = wer => o.konto + '|' + wer;
     const zustand = new Map();       // wer → Versprechen auf { version, d, offen }
     const schlange = new Map();      // wer → das letzte Schreiben in die Ablage
+    const reihe = new Map();         // wer → das letzte Schreiben an den Server
+    const wartend = new Map();       // wer → gesammelte Änderungen (`fortschreibenGesammelt()`)
+    const anmeldungen = new Set();   // Blattnummern, die noch gerechnet werden
+    let uhr = null, sammelnSeit = 0;
     const jetzt = () => (o.jetzt ? o.jetzt() : Math.floor(Date.now() / 1000));
     const leer = wer => (wer === BUCH ? { fassung: 1, geraete: [] } : { fassung: 1, t: 0, zu: false, e: {} });
     const klon = d => JSON.parse(JSON.stringify(d));
@@ -427,16 +506,18 @@ const EdStandbuch = (() => {
       return dran;
     }
 
-    /** Je Feld der höhere Zähler; liefert true, wenn `ziel` dabei wuchs. */
+    /** Was `quelle` (dieser Browser) mehr weiß, in `ziel` (das Blatt des
+     *  Servers) tragen: `p` und `s` je Feld der höhere Zähler, die Felder
+     *  der Einsatzhülle nach `standZusammenfuehren()` — dort kann ein Stand
+     *  bewusst gesunken sein. Liefert true, wenn `ziel` sich dabei änderte. */
     function hoeher(ziel, quelle) {
       let gewachsen = false;
       for (const k of Object.keys(quelle.e || {})) {
         const q = quelle.e[k], z = ziel.e[k] || {};
         const neu = Object.assign({}, z);
         if ((q.p || 0) > (z.p || 0)) { neu.p = q.p; }
-        if ((q.o || 0) > (z.o || 0)) { neu.o = q.o; neu.k = q.k; }
-        else if ((q.o || 0) === (z.o || 0) && q.k && !z.k) { neu.k = q.k; }
-        if (q.f && !z.f) { neu.f = 1; }                 // haftet: einer hat es (wie `zu`)
+        for (const f of STANDFELDER) { delete neu[f]; }
+        Object.assign(neu, standZusammenfuehren(z, q)); // `f` haftet: einer hat es (wie `zu`)
         if (q.s && (!z.s || q.s[0] > z.s[0] || q.s[1] > z.s[1])) {
           neu.s = z.s ? [Math.max(q.s[0], z.s[0]), Math.max(q.s[1], z.s[1])] : q.s;
         }
@@ -491,6 +572,16 @@ const EdStandbuch = (() => {
           if (!srv) { throw fehler('blatt-version'); }
           await uebernehmen(wer, srv);
         } catch (e) {
+          /* EIN GERÄTEBUCH, DAS NICHT AUFGEHT, REPARIERT DIESER BROWSER SELBST
+           * (Backlog Nr. 568, E-KA-92) — sonst sperrte es jede Kopplung. */
+          if (wer === BUCH && buchUnlesbar(e)) {
+            try {
+              const art = await buchReparieren();
+              befunde.push({ wer: wer, grund: art === 'neu' ? 'buch-neu' : 'buch-zurueckgeschrieben',
+                             hier: hier.version, dort: dort });
+              continue;
+            } catch (e2) { /* fällt unten als Befund durch */ }
+          }
           befunde.push({ wer: wer, grund: e.grund || 'transport', hier: hier.version, dort: dort });
         }
       }
@@ -526,11 +617,14 @@ const EdStandbuch = (() => {
                blatt_hinkt: erg.blatt_hinkt };
     }
 
-    /* Die nächste Fassung eines Blatts: Änderung anwenden, Version + 1. */
+    /* Die nächste Fassung eines Blatts: Änderung anwenden, Version + 1.
+     * Liefert `aendern` UNVERAENDERT, gibt es nichts zu schreiben (`nichts`). */
     async function naechste(wer, aendern) {
       const z = await lade(wer);
       const d = klon(z.d);
-      if (aendern) { await aendern(d); }
+      if (aendern && (await aendern(d)) === UNVERAENDERT) {
+        return { wer: wer, nichts: true, version: z.version };
+      }
       if (wer !== BUCH) {
         d.t = jetzt();
         for (const k of Object.keys(d.e)) { d.e[k] = eintragOrdnen(d.e[k]); }
@@ -546,15 +640,33 @@ const EdStandbuch = (() => {
      * kein Zufall mehr, und der Aufrufer erfährt es. */
     async function schreibe(wer, aendern) {
       if (!EdInhalt.schreibt2()) { return null; }
+      /* EIN SCHREIBEN JE BLATT ZUR ZEIT (KA-14, F-KA-122, -124). Zwei
+       * Schreibvorgänge dieser Seite am selben Blatt gingen sonst von
+       * derselben Version aus, und der zweite liefe sicher in ein 409 —
+       * beim Öffnen vieler Einsätze waren das Hunderte, jeder mit Übernehmen
+       * und neuem Versiegeln, und nach vier Versuchen blieb es liegen. */
+      const vorher = reihe.get(wer) || Promise.resolve();
+      const dran = vorher.catch(() => {}).then(() => schreibeJetzt(wer, aendern));
+      reihe.set(wer, dran.catch(() => {}));
+      return dran;
+    }
+
+    async function schreibeJetzt(wer, aendern) {
       for (let versuch = 0; versuch < 4; versuch++) {
         const n = await naechste(wer, aendern);
+        if (n.nichts) { return n.version; }
         const a = await transport.ablegen(wer, { version_alt: n.version_alt, version: n.version, text: n.text });
         if (a.ok) {
           await merke(wer, { version: n.version, d: n.d, offen: false });
           return n.version;
         }
         if (!a.text) { throw fehler('blatt-version'); }
-        await uebernehmen(wer, { version: a.version, text: a.text });
+        try {
+          await uebernehmen(wer, { version: a.version, text: a.text });
+        } catch (e) {
+          if (wer !== BUCH || !buchUnlesbar(e)) { throw e; }
+          await buchReparieren();                 // Nr. 568: dann noch einmal
+        }
       }
       const e = fehler('konflikt');
       e.wer = wer;
@@ -571,12 +683,111 @@ const EdStandbuch = (() => {
 
     /**
      * DEN EINTRAG EINES DATENSATZES FORTSCHREIBEN UND SOFORT ABLEGEN.
-     * `aendern(e)` bekommt den Eintrag ({p, o, k, s, d, x}) und ändert ihn.
+     * `aendern(e)` bekommt den Eintrag ({p, o, k, a, f, u, s, d, x}) und
+     * ändert ihn — gegen den DANN geltenden Stand: Nach einem Konflikt läuft
+     * sie auf dem Blatt des Servers noch einmal. Wirft sie, wird nichts
+     * geschrieben, und der Fehler kommt beim Aufrufer an.
      * @returns {Promise<number|null>} die neue Version des Blatts; null,
      *          solange die Weiche aus steht
      */
     async function fortschreiben(ref, aendern) {
       return schreibe(await blattNr(ref), amEintrag(ref, aendern));
+    }
+
+    /* Viele Änderungen an EINEM Blatt in einem Schreiben. Jede für sich:
+     * Wirft eine, bleibt ihr Eintrag, wie er war, und die übrigen gehen
+     * trotzdem — ihr Fehler steht danach an ihr (`x.fehler`). Ändert keine
+     * etwas, wird nichts gesendet. */
+    function schreibeSammlung(wer, xs) {
+      return schreibe(wer, async (d) => {
+        let geaendert = false;
+        for (const x of xs) {
+          const vor = JSON.stringify(d.e[await kennung(x.ref)] || null);
+          try { await amEintrag(x.ref, x.aendern)(d); x.fehler = null; }
+          catch (e) { x.fehler = e; continue; }
+          if (JSON.stringify(d.e[await kennung(x.ref)] || null) !== vor) { geaendert = true; }
+        }
+        return geaendert ? undefined : UNVERAENDERT;
+      });
+    }
+
+    /**
+     * VIELE EINTRÄGE FORTSCHREIBEN, je Blatt EIN Schreiben (Einspielen:
+     * Löschvermerke vieler Aufzeichnungen). Gewartet wird auf alle.
+     * @param liste  [{ ref, aendern(e) }]
+     * @returns {Promise<Array|null>} je Posten { ref, version, fehler } —
+     *          `fehler` gesetzt, wenn GENAU DIESER Eintrag nicht geschrieben
+     *          ist; null, solange die Weiche aus steht
+     */
+    async function fortschreibenViele(liste) {
+      if (!EdInhalt.schreibt2()) { return null; }
+      const je = new Map();
+      const aus = liste.map(x => ({ ref: x.ref, aendern: x.aendern, version: null, fehler: null }));
+      for (const x of aus) {
+        const wer = await blattNr(x.ref);
+        if (!je.has(wer)) { je.set(wer, []); }
+        je.get(wer).push(x);
+      }
+      await Promise.all([...je].map(([wer, xs]) => schreibeSammlung(wer, xs).then(
+        (v) => { for (const x of xs) { if (!x.fehler) { x.version = v; } } },
+        (e) => { for (const x of xs) { x.fehler = e; } })));
+      return aus.map(x => ({ ref: x.ref, version: x.version, fehler: x.fehler }));
+    }
+
+    /**
+     * FORTSCHREIBEN, GESAMMELT — für das, was beim LESEN anfällt (KA-14,
+     * F-KA-124). Wer eine Einsatzhülle öffnet, deren Stand das Buch noch
+     * nicht kennt, trägt ihn ein; ein Export oder eine Liste öffnet aber
+     * Tausende. Einzeln geschrieben hieß das ein Schreiben je Einsatz, alle
+     * zugleich auf 16 Blättern, und eine Flut von 409. Gesammelt wird, bis
+     * `SAMMELN_RUHE` lang nichts dazukam, höchstens `SAMMELN_HOECHSTENS`;
+     * dann je Blatt ein Schreiben mit allen Änderungen. Das Versprechen
+     * erfüllt sich mit der Version, sobald der Eintrag steht — wer nicht
+     * wartet, verliert nichts: Was nicht ankam, steht beim nächsten Lesen
+     * wieder an. `festschreiben()` schreibt sofort, was wartet.
+     *
+     * WARUM ÜBERHAUPT SCHREIBEN, WENN NUR GELESEN WIRD (E-KA-70, -88): Das
+     * Buch soll wissen, welche Hülle dieser Browser schon als gültig
+     * genommen hat (`o`), von wem (`k`/`a`) und ob sie abgeschlossen war
+     * (`f`). Ein Export nimmt sie genauso als gültig wie die Einzelansicht
+     * — legte der Server danach die ältere zurück, fiele es sonst nicht
+     * auf, und der Hinweis „Uhrzeit prüfen" entschiede gegen einen Stand,
+     * den der Browser längst gesehen hat.
+     */
+    async function fortschreibenGesammelt(ref, aendern) {
+      if (!EdInhalt.schreibt2()) { return null; }
+      /* Die Blattnummer kommt asynchron; bis sie da ist, zählt der Posten
+         als angemeldet, damit `festschreiben()` ihn nicht übersieht. */
+      const nr = blattNr(ref);
+      anmeldungen.add(nr);
+      let wer;
+      try { wer = await nr; } finally { anmeldungen.delete(nr); }
+      return new Promise((ok, nein) => {
+        if (!wartend.has(wer)) { wartend.set(wer, []); }
+        wartend.get(wer).push({ ref: ref, aendern: aendern, ok: ok, nein: nein });
+        const t = Date.now();
+        if (!sammelnSeit) { sammelnSeit = t; }
+        if (uhr) { clearTimeout(uhr); }
+        const warten = Math.max(0, Math.min(SAMMELN_RUHE, sammelnSeit + SAMMELN_HOECHSTENS - t));
+        uhr = setTimeout(() => { abarbeiten(); }, warten);
+      });
+    }
+
+    function abarbeiten() {
+      if (uhr) { clearTimeout(uhr); uhr = null; }
+      sammelnSeit = 0;
+      const jetzt = [...wartend];
+      wartend.clear();
+      return Promise.all(jetzt.map(([wer, xs]) => schreibeSammlung(wer, xs).then(
+        (v) => { for (const x of xs) { if (x.fehler) { x.nein(x.fehler); } else { x.ok(v); } } },
+        (e) => { for (const x of xs) { x.nein(e); } })));
+    }
+
+    /** Was gesammelt wartet, jetzt schreiben; wartet auf alle Schreiben. */
+    async function festschreiben() {
+      await Promise.all([...anmeldungen].map(p => p.catch(() => {})));
+      await abarbeiten();
+      await Promise.all([...reihe.values()]);
     }
 
     /**
@@ -663,6 +874,40 @@ const EdStandbuch = (() => {
 
     /* ---- Das Gerätebuch ------------------------------------------------ */
 
+    /** Geht das Buch des Servers nicht auf (und nicht nur, weil es älter ist
+     *  oder das Netz fehlt)? Dann ist es beschädigt oder ersetzt. */
+    function buchUnlesbar(e) {
+      const g = e && e.grund;
+      return !!g && !['transport', 'buch-zurueckgelegt', 'blatt-zurueckgelegt', 'blatt-version',
+                      'konflikt'].includes(g);
+    }
+
+    /**
+     * DAS GERÄTEBUCH REPARIEREN (Backlog Nr. 568, E-KA-92, Mockup M-KA-04).
+     * Hat dieser Browser eine eigene Fassung, legt er sie mit einer Version
+     * über der des Servers zurück ('zurueck') — still. Hat er keine, legt er
+     * ein neues, LEERES Buch an ('neu'): Nichts kommt vom Server, denn das
+     * Buch ist gerade der Schutz dagegen, dass jemand, der den Server
+     * beschreibt, einen Geräteschlüssel unterschiebt. Dann müssen die
+     * Geräte neu gekoppelt werden; die Geräteseite sagt es („Geräte neu
+     * verbinden“), und ein Merker in der Ablage dieses Browsers lässt es die
+     * Startseite sagen, bis die Geräteseite keinen Rückstand mehr sieht.
+     */
+    async function buchReparieren() {
+      const hier = await lade(BUCH);
+      const s = await transport.stand();
+      const dort = s.buch || 0;
+      const neu = hier.version === 0;
+      const d = neu ? leer(BUCH) : hier.d;
+      const version = Math.max(dort, hier.version) + 1;
+      const a = await transport.ablegen(BUCH, { version_alt: dort, version: version,
+                                                text: await versiegeln(BUCH, version, d) });
+      if (!a.ok) { throw fehler('konflikt'); }
+      await merke(BUCH, { version: version, d: d, offen: false });
+      if (neu) { try { localStorage.setItem(NEU_VERBINDEN + o.konto, String(jetzt())); } catch (e) { /* egal */ } }
+      return neu ? 'neu' : 'zurueck';
+    }
+
     /** Die bestätigten Geräte, in der Form für `EdHuelle2.leser()`. */
     async function geraete() {
       const z = await lade(BUCH);
@@ -720,7 +965,9 @@ const EdStandbuch = (() => {
     }
 
     return { abgleichen, eintrag, blattZu, patLesen: patLesenHier, naechsterZaehler,
-             fortschreiben, vormerken, vormerkenViele, nachtragen, schliessen, alleZu, blattZuNr,
+             buchReparieren,
+             fortschreiben, fortschreibenViele, fortschreibenGesammelt, festschreiben,
+             vormerken, vormerkenViele, nachtragen, schliessen, alleZu, blattZuNr,
              /* 409 `blatt` aus einer Sammelanfrage: das Blatt des Servers übernehmen */
              blattUebernehmen: uebernehmen,
              geraete, geraetEintragen, geraetAustragen, zurueckschreiben,
@@ -767,6 +1014,15 @@ const EdStandbuch = (() => {
    * die Befunde stehen in `buch.befunde` (der Knopf „zurückschreiben" kommt
    * mit E-KA-50 und braucht ein Mockup).
    */
+  /** Steht für dieses Konto „Geräte neu verbinden“ an (Merker aus
+   *  `buchReparieren()`)? Und: der Merker fällt, wenn nichts mehr fehlt. */
+  async function neuVerbinden(ck) {
+    try { return localStorage.getItem(NEU_VERBINDEN + await kontoKennung(ck)) !== null; } catch (e) { return false; }
+  }
+  async function neuVerbundenQuittieren(ck) {
+    try { localStorage.removeItem(NEU_VERBINDEN + await kontoKennung(ck)); } catch (e) { /* egal */ }
+  }
+
   async function seitenbuch(ck) {
     const konto = await kontoKennung(ck);
     if (!buecher.has(konto)) {
@@ -803,8 +1059,9 @@ const EdStandbuch = (() => {
    * @param o       { ohne: Set } Kennungen, die kein Blatt bekommen (der
    *                Server hat sie übersprungen, 409 `uebersprungen`)
    * @returns {Promise<{texte: string[], blaetter: Array|null, bestaetigen}>}
-   *   `blaetter` ist null, solange die Weiche aus steht — dann geht KEIN
-   *   Feld mit, und `texte` sind `edk1:` wie aus `EdCrypto.encrypt()`.
+   *   `blaetter` ist null, solange die Weiche aus steht, und wenn kein
+   *   Blatt etwas hebt (alle in `ohne`) — dann geht KEIN Feld mit; bei
+   *   Weiche aus sind `texte` `edk1:` wie aus `EdCrypto.encrypt()`.
    *   Ein Blatt trägt neben `wer`, `version_alt`, `version`, `text` die
    *   Kennungen, deren Zähler es hebt (`refs`): Daran prüft der Server, dass
    *   er jeden dieser Blöcke wirklich geschrieben hat — ein Blatt, das einem
@@ -830,10 +1087,14 @@ const EdStandbuch = (() => {
     const vm = await buch.vormerkenViele(posten
       .map((p, i) => ({ ref: p.ref, aendern: (e) => { e.p = z[i]; } }))
       .filter(x => !ohne.has(x.ref)));
+    /* KEIN LEERES FELD (KA-14, F-KA-123): Hat der Server alle Einsätze
+       übersprungen (zweites Einspielen), hebt kein Blatt etwas. `[]` ginge
+       als Feld mit — ein leeres Array ist in JS wahr —, und der Server weist
+       eine leere Liste mit 400 `blaetter` ab. Dann geht keins mit. */
     return {
       texte: texte,
-      blaetter: vm.map(b => ({ wer: b.wer, version_alt: b.version_alt, version: b.version,
-                               text: b.text, refs: b.refs })),
+      blaetter: vm.length ? vm.map(b => ({ wer: b.wer, version_alt: b.version_alt, version: b.version,
+                                           text: b.text, refs: b.refs })) : null,
       bestaetigen: async () => { for (const b of vm) { await b.bestaetigen(); } },
     };
   }
@@ -869,10 +1130,10 @@ const EdStandbuch = (() => {
     throw fehler('konflikt');
   }
 
-  return { blattNr, kennung, blattBauen, blattOeffnen, patLesen,
+  return { blattNr, kennung, blattBauen, blattOeffnen, patLesen, standZusammenfuehren,
            geraetebuchBauen, geraetebuchOeffnen,
            oeffnen, ablage, speicherTransport, apiTransport,
            /* für die Verbraucher (KA-06b-3) */
-           seitenbuch, kontoKennung, patOeffnen, patVerschliessenViele, patSchreibenViele,
+           seitenbuch, kontoKennung, neuVerbinden, neuVerbundenQuittieren, patOeffnen, patVerschliessenViele, patSchreibenViele,
            BLAETTER, BUCH };
 })();

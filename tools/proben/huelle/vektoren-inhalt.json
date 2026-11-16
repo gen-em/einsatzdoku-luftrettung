@@ -524,5 +524,79 @@
       "art": "pw",
       "text": "edk2:OTPkoByPDCBHJd5Wp1HeLYSL2OYYHRUrAODKPMJ7HY7RdqCOQaTVgsRTht5bjNYQmp7Q7OJ0lqL5IInvDBt5QMHSkVzrwbVomgaPc5OKYmFBx2bXuCBl5oD5Bfp0y15qXhxdtqipEnYNHQpp8vTGsW2IJOl/Oayi4Tp2+TcywXWy8dI3JXTt4fJb9GK+8/ZW5WNyAtq9b/TET1ZA"
     }
+  ],
+  "standblaetter": [
+    {
+      "name": "stand-vom-geraet",
+      "client_ref": "m-20261111-0004",
+      "blatt": 7,
+      "kennung": "1z4nzDO8Vwn2",
+      "version": 3,
+      "t": 1794300180,
+      "eintraege": {
+        "1z4nzDO8Vwn2": {
+          "p": 2,
+          "o": 1784278385,
+          "a": "5eb5678b49bd5225",
+          "s": [
+            8,
+            1
+          ]
+        }
+      },
+      "nonce_hex": "1daec8a478b7e69e30991441",
+      "text": "edk2:Ha7IpHi35p4wmRRB6T0YfsYA+8q0hHF50Ahr0EjOtiCI3GeUgLa+AetG/Lisp7bkiEJGZGPUh62lUkNnqa8JxDzwjCCZYWyLUy5O+kveYVDEgs2hkAWI+Fr6aHMr6MdlbjWbyt6NdqcPmAHY457YDN0vdyv3WJCisfGjZGi+02O0bUe0d62ddHL+UJLt9t6tVeFtTfNLFsrm+KOK"
+    },
+    {
+      "name": "stand-uebernommen",
+      "client_ref": "m-20261111-0004",
+      "blatt": 7,
+      "kennung": "1z4nzDO8Vwn2",
+      "version": 4,
+      "t": 1794300240,
+      "eintraege": {
+        "1z4nzDO8Vwn2": {
+          "p": 2,
+          "o": 1784278265,
+          "a": "a499c9fb45a4f71c",
+          "f": 1,
+          "u": [
+            [
+              1784278385,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ],
+          "s": [
+            8,
+            1
+          ]
+        }
+      },
+      "nonce_hex": "1b95a08aadc6238896bd5fe0",
+      "text": "edk2:G5Wgiq3GI4iWvV/gaMYf6k5Uct/MYsFDiIjsJN9Ph9bOu7j/8WoHRpU9LQ/xk3mXm69W74KJuHebPLa6WHha1D07/vVZH279PZVmFMIsh4NUwfqsPOcsMdxi29lfx6h1DWV/efw6o26p4+5Ebk2qeS56gJyjEtGAH+t2V59FWuLzfJmTO3y1MOIc4iEPTdj8Vxd4cYyjfvZcQ5RlSzeLHqR1XOYhLAv24obC/gOkOsfQoL+PwWoLCmflINi4HxcN1RFxymynwwjNpwj0QUL+cc3044DEdas8D1gGfwA4+IJLiFrKNXfXeB/8xdj1ZleiG8tXMtTi22BejqUrHhHJN1yCYe/HyBE2cEeER3DzEexcw2JDyo9L1SzD1vI="
+    },
+    {
+      "name": "stand-vom-konto",
+      "client_ref": "m-20261111-0004",
+      "blatt": 7,
+      "kennung": "1z4nzDO8Vwn2",
+      "version": 5,
+      "t": 1794300300,
+      "eintraege": {
+        "1z4nzDO8Vwn2": {
+          "p": 2,
+          "o": 1784278266,
+          "k": 1,
+          "f": 1,
+          "s": [
+            8,
+            1
+          ]
+        }
+      },
+      "nonce_hex": "e83c20a6dda7380f20fd147d",
+      "text": "edk2:6Dwgpt2nOA8g/RR9vS2gtEeRUFesxKE4rQsuTOg0eNVTdSJEdP4LZyRWegPul1OuQ5e6uL5/2RuUiZDbJS/kAecF4zloHyueCCf4jg61fB3xeNeJwrVrmKcWJimRI/lhsPFfpLBXa3of/tBXQ1ji1I6BHhUn1xWh8WYiDtcmF2NcmtiGC2ExrTfIe8oiqSEU6iufKJXtg9t/GjYN"
+    }
   ]
 }

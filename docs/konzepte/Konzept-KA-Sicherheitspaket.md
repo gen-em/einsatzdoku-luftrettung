@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | nichts; **als Nächstes 06e** (Altformat der Gerätedaten, Stichtag, Rückbau nach E-KA-60; dort Q-KA-20), dann das Umlegen der Weiche als Web 25.0.0 (E-KA-51, -70; dort auch F-KA-103, -104 und die Anzeige der Befunde); Garmin-Teil als KG-05 (Abschnitt 11; die KG-Sitzung war nicht erreichbar); offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
+| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 erledigt** (M-KA-03 freigegeben, E-KA-87), **KA-12 erledigt** (Handbuch und Runbook: Geräte nach dem Tag neu koppeln), **KA-09 erledigt** (Referenz Rückweg, Fable-Agent), **KA-15 erledigt** (Android 0.26.0), **KA-10 erledigt** (Browser-Kern), **KA-11 gebaut** (Anzeige in `einsatz.php`; gefahren wird sie mit umgelegter Weiche in KA-14), **KA-13 erledigt** (Demo-Fixture Format 4; lädt erst mit KA-14), **KA-14 erledigt** (Prüfstand `haupt` 74 grün, 0 rot); **alle Pakete KA-08 bis KA-15 fertig**; vor dem PR auf Wunsch der BetreiberIn Backlog **Nr. 566** (Android, erledigt), **Nr. 568** (E-KA-92, erledigt) und **Nr. 569** (Sichern und GPX schneller, Fable-Agent, erledigt); Prüfstand `haupt` 74 grün, 0 rot; **gesammelter PR #190 offen** — ging mit Konflikt auf (KG-09/10 kam während des Laufs auf `main`), `main` örtlich gemergt, Prüfstand über den Merge neu (Regel seither `Pruefablauf.md` 5.3a); **danach 06e** in einem Zug (E-KA-79); Garmin-Teil (Zähler am Inhalt, kein Senden ohne Herkunft) erledigt als KG-09/KG-10, Uhr 5.1.0, PR #189 gemergt; offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
 | Erledigt | **KA-06f** (PR #187, gemergt 15.11.2026, Android 0.25.0, Web 24.19.0; Zweig `claude/amazing-keller-i2f04f`; R91 auf Staging grün, Abschnitt 9) · **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -129,6 +129,20 @@ Safari.
 | E-KA-76 | **`f` haftet, und das Konto trägt `schluss` weiter** (beantwortet Q-KA-18, -19): Das Standbuchfeld `f` wird nie gelöscht; verschließt der Browser einen Einsatz, zu dem `f` steht, setzt er `schluss: true` — der Befund `offen-nach-schluss` gilt damit für jeden Absender und meldet nur echte Rückfälle | 15.11.2026, BetreiberIn |
 | E-KA-77 | **Das Release-APK bleibt komprimiert** (`packaging.dex.useLegacyPackaging = true`, F-KA-118): rund 9,3 MB statt 24,8 MB über `server/apk/`; Preis ist die etwas längere Installation | 15.11.2026, BetreiberIn |
 | E-KA-78 | **Zähler am Handy** (Fable-Agent, 06f-3): Spalte `paket.zaehler` (Schema 3), vergeben in derselben Transaktion wie Anlegen, Phase und Abschluss eines offenen Einsatzes; kein Bytevergleich (die drei Stellen ändern den Inhalt immer); Schema-2-Pakete bekommen ihn beim ersten Verschließen; der Sender liest Paket, Zähler und Phasen aus einem Augenblick (`einsatzstand()`); Zählerdatei nicht schreibbar ⇒ Änderung steht ohne Zähler, Senden wartet (`Zaehlerausfall`) | 15.11.2026, Umsetzung |
+| E-KA-79 | **06e kommt ganz nach Web 25.0.0, in einem Zug** — Übernahme der Gerätedaten im Anhebelauf, Stichtag am Server und Rückbau des Altformats (E-KA-60). Stichtag und Rückbau setzen voraus, dass die Weiche umliegt und der Anhebelauf auf Produktiv einmal durch war; ändert die Reihenfolge in Abschnitt 4 (bis dahin 06e vor Web 25.0.0) | 15.11.2026, BetreiberIn |
+| E-KA-80 | **Ein Handy mit `huelle: 2`, aber ohne Geräteschlüssel, sendet nichts und zeigt „neu koppeln“** (beantwortet Q-KA-20): kein Rückfall ohne Herkunftsnachweis; die Daten bleiben im Puffer. Gebaut mit Web 25.0.0 bzw. der Android-Fassung dazu | 15.11.2026, BetreiberIn |
+| E-KA-81 | **Das Kennzeichen „vom Browser übernommen am …“ wird mit den übrigen Befunden gezeigt** (E-KA-70), ein Mockup für alles beim Umlegen der Weiche; 06e schreibt es nur in die Hülle | 15.11.2026, BetreiberIn |
+| E-KA-82 | **Web 25.0.0 in acht Paketen KA-08 bis KA-15, am Stück, ein gesammelter PR**; der einzige Halt ist die Freigabe des Mockups M-KA-03 (`CLAUDE.md` 5) — KA-09 und KA-10 hängen nicht daran und laufen weiter | 15.11.2026, BetreiberIn |
+| E-KA-83 | **F-KA-103: Geräte, die vor dem Umlegen gekoppelt wurden, koppeln neu** — kein Weg „Wert nachträglich bestätigen“; ein Satz in Handbuch und Runbook (es gibt eine Nutzerin, E-KA-16) | 15.11.2026, BetreiberIn |
+| E-KA-84 | **Das Rundenziel steigt mit der Weiche auf 1 200 000** (Ableitung 2, E-KA-57); die Dauer der Anmeldung wird gemessen | 15.11.2026, BetreiberIn |
+| E-KA-85 | **Den Krypto-Teil von KA-09, KA-10 und KA-15 schreibt ein Fable-Agent**, die Hauptinstanz bleibt auf Opus und prüft nach (wie E-KA-67, -73) | 15.11.2026, BetreiberIn |
+| E-KA-86 | **E-KA-80 gilt auch für die Garmin-Uhr** und geht zusammen mit KG-05 an eine **neu gestartete** KG-Sitzung | 15.11.2026, BetreiberIn |
+| E-KA-87 | **Mockup M-KA-03 (Befunde in der Einsatzansicht, „neu koppeln“ am Handy) freigegeben** — sieben Zustände A bis G, nur vorhandene Bausteine; in B zeigt die Karte erst nach der Entscheidung, „Nicht jetzt“ lässt alles stehen | 15.11.2026, BetreiberIn |
+| E-KA-88 | **Der Rückweg in der Referenz** (Fable-Agent, KA-09): Standbuchfeld `a` (SID des Geräts, das `o` gesetzt hat; `k` bleibt, beide schließen einander aus) und `u` (Vermerke `[[z_v, sid, t]]` über bewusst verworfene Stände); Feldfolge p, o, k, a, f, u, s, d, x. Kleineres oder gleiches `z` von einem **anderen Gerät** ist der Hinweis `uhrzeit-pruefen` (Arten `kleiner`, `gleich`, `verworfen`); gleicher Absender, Konto und Altblatt ohne `a` bleiben hart `zurueckgelegt`. Die Bestätigung ist der Hinweis selbst und gilt nur, solange Hülle und Stand so stehen; neuer Befund `stand-uebernommen`, neuer Fehlergrund `bestaetigung`. Zwei Blätter führt `stand_zusammenfuehren()` zusammen, nicht mehr „höherer Zähler“ | 15.11.2026, Umsetzung |
+| E-KA-89 | **Kein Serverumbau gegen das „wiederkehrende“ alte Paket** (Zweifel 1 aus KA-09): Ein Gerät sendet ein Paket nur, bis der Server es angenommen hat, und entsorgt es dann; seit E-KA-69 trägt jede Wiederholung dasselbe `z`, und nach der Bestätigung geht genau diese Hülle durch („nach-bestaetigung-dieselbe-huelle“). Neu erscheint der Hinweis erst bei einer echten Änderung am Gerät mit nachgehender Uhr — das ist der Zweck des Hinweises | 15.11.2026, Umsetzung |
+| E-KA-90 | **Demo-Bestand: neu verschließen statt Einspiellauf umbauen** (Fable-Agent, KA-13): `einspielen.py` schreibt weiter Fassung 1 über die regulären Wege; `fixture/verschliessen.py` öffnet das ausgelesene Konto und verschließt alles neu über `referenz.py`/`referenz_inhalt.py` — Fixture-Format 4 mit Gerätehüllen Fassung 2 von zwei Demo-Geräten mit festem Schlüssel, `edk2:`-Blöcken, 16 geschlossenen Blättern, Gerätebuch, Kontopaar und 1 200 000 Runden; byte-gleich bei zweimaligem Bau. Kopplung über `pair.php` und Ingest in Fassung 2 im Einspiellauf sind **nicht** gebaut (Backlog Nr. 567) | 15.11.2026, Umsetzung |
+| E-KA-91 | **Der Demo-Reset wechselt den Inhaltsschlüssel und setzt die Änderungsmarke nicht beim Lesen** (KA-13): Ohne Wechsel sähe ein Browser, der vor dem Reset gespeichert hatte, danach `blatt-zurueckgelegt` (gemessen); `api/standbuch.php` `stand` und `holen` setzen die Marke (Nr. 459) nicht mehr, `ablegen` weiter | 15.11.2026, Umsetzung |
+| E-KA-92 | **Ein Gerätebuch, das nicht aufgeht, repariert der Browser selbst** (Backlog Nr. 568, Mockup M-KA-04 Fassung 2): Hat er eine eigene gute Fassung, schreibt er sie still zurück; hat er keine, legt er still ein neues, leeres Buch an — nichts vom Server übernommen — und zeigt „Geräte neu verbinden“ auf Geräteseite und Startseite, bis jedes gekoppelte Gerät neu gekoppelt ist. Die BetreiberInnen sollen das Wort Gerätebuch nicht kennen müssen. Preis: früher gesendete Gerätedaten bleiben unlesbar (sie sind es bei einem unlesbaren Buch ohnehin); wer den Server beschreibt, kann so ein Neukoppeln erzwingen (Verfügbarkeit, keine Zusage) | 16.11.2026, BetreiberIn |
 | E-KA-73 | **E-KA-69, -71 und -72 kommen als eigenes Paket KA-06f vor 06e**, in einer neuen Instanz; der Krypto-Teil (Keystore-Umsetzung von `Geraeteschluessel`, Zählerregel in Referenz und Handy) geht wieder an einen Fable-Agenten (wie E-KA-67), der Garmin-Teil von E-KA-69 an KG (E-KA-21) | 15.11.2026, BetreiberIn |
 | E-KA-66 | **Gerätebuch und „Wert stimmt“ gehen in zwei Schritten, nicht in einer Transaktion:** erst das Buch (über den vorhandenen Weg `geraetEintragen()`), dann der Vermerk am Server mit `im_buch`. Ein Gerät am Server ohne Buch-Eintrag sendete Daten, die nicht aufgehen; ein Buch-Eintrag ohne Gerät räumt der Abgleich der Geräteseite auf (`bis`). Weicht vom Entwurf 06d, Punkt 5 ab | 13.11.2026, Umsetzung |
 | E-KA-67 | **Den Anschluss des leeren Schlussstücks prüft der Browser beim Lesen (Regel `luecke`), nicht der Eingang** — der Eingang prüft Form (Fassung 2, `ts_von` = `ts_bis`). Eine Abfrage des letzten Stücks im Eingang kostete jede Anfrage und belegte nichts, was der Browser nicht ohnehin prüft. Weicht vom Entwurf 06d, Punkt 8 ab | 13.11.2026, Umsetzung |
@@ -195,7 +209,8 @@ KA-02 Blatt ──┴─► KA-M3 (Tag: beide hohen Befunde auf Produktiv) ─�
 KA-03 Verwaltung
 KA-04 Geräte: Kontobindung, Sendeweg
 KA-05 Mengen, Schreibwege, Fremdbestandteile
-KA-06 Bindung und Herkunft (a Entwurf → b Browser → c Geräte → d Server → e Altformat)
+KA-06 Bindung und Herkunft (a Entwurf → b Browser → c Geräte → d Server → f Zähler/Keystore
+      → Weiche um, Web 25.0.0 → e Altformat; E-KA-73, -79)
 KA-07 Modell, Texte, Abschluss
 ```
 
@@ -674,6 +689,30 @@ Rahmenplans) — **vor Beginn darauf hinweisen und pausieren**; Opus für 06d,
 gefächert, nachdem die Referenz steht. 06b seriell (eine Bibliothek, viele
 Verbraucher).
 
+### KA-08 bis KA-15 — Web 25.0.0, die Weiche wird umgelegt (E-KA-82)
+
+Ein Zweig, ein gesammelter PR, am Stück; Modellwahl Opus, der Krypto-Teil
+an einen Fable-Agenten (E-KA-85). **Fächerung:** KA-09 und KA-10 laufen als
+Agent, während KA-08 auf die Freigabe wartet; sonst seriell (Prüfarbeit
+und erzählender Text lassen sich nicht fächern, `CLAUDE.md` 7).
+
+| Paket | Inhalt | Befunde, Entscheidungen | Hängt an |
+|---|---|---|---|
+| KA-08 Mockup | M-KA-03: Anzeige der Befunde im Browser (`offen-nach-schluss`, `zurueckgelegt` mit Rückweg „diesen Stand übernehmen“ und „Uhrzeit von ‹Gerät› prüfen“, Kennzeichen „übernommen“, fehlende Herkunft) und am Handy „neu koppeln“ — nur vorhandene Bausteine. **Halt bis zur Freigabe** | E-KA-70, -80, -81 | — |
+| KA-09 Referenz Rückweg | SID des Absenders zum Stand im Standbuch; kleineres `z` vom gleichen Absender hart `zurueckgelegt`, vom anderen ein Hinweis mit bewusster Bestätigung, vermerkt; gleiches `z` vom anderen Absender ebenso ein Hinweis; neue Vektoren, bestehende unverändert | E-KA-70, F-KA-112 | — |
+| KA-10 Browser-Kern | `standbuch.js`, `huelle2.js` nach KA-09; Befunde und Rückweg bis an die Verbraucher (`EdOrtsdaten`) | E-KA-70, -76 | KA-09 |
+| KA-11 Oberfläche | Befundanzeige und Rückweg nach M-KA-03, Sollliste der Kennzeichen | E-KA-70, -81 | KA-08, KA-10 |
+| KA-12 Geräte von vorher | Satz in Handbuch und Runbook: vor dem Umlegen gekoppelte Geräte koppeln neu | F-KA-103, E-KA-83 | — |
+| KA-13 Demo-Bestand | Demo-Fixture in Fassung 2 neu verschlossen, Demo-Gerät mit festem Schlüssel im Gerätebuch | F-KA-104, E-KA-44 | KA-10 |
+| KA-14 Weiche um | `SCHREIBT_FASSUNG_2 = true`, Rundenziel 1 200 000; alle Schreibwege Ende zu Ende mit umgelegter Weiche (Formular, Import, Wiederherstellung, Übernahme, Wartungslauf, Notizen, Kontopaar, Rückweg, Schneiden, Löschen); Messstand mit dem Anhebelauf am großen Bestand; Dauer der Anmeldung; Prüfstand `haupt`; Pflege `CLAUDE.md` 4, Technik 4.14/4.40/4.42, Bedrohungsmodell, Handbuch, JSON-Vertrag | E-KA-51, -57, -59, -84 | KA-10 bis KA-13 |
+| KA-15 Android 0.26.0 | Mit `huelle: 2` und ohne Geräteschlüssel kein Senden, Hinweis „neu koppeln“ nach M-KA-03 | E-KA-80 | KA-08 |
+
+**Garmin:** E-KA-80 an der Uhr und KG-05 (Zählerregel) gehen an eine neu
+gestartete KG-Sitzung (E-KA-86).
+
+**Auslieferung:** Tag `web-v25.0.0` und `android-v0.26.0` setzt die
+BetreiberIn; vorher die Messung am großen Bestand (KA-14).
+
 ### KA-07 Modell, Texte, Abschluss
 
 **Ziel:** Was die Dokumente sagen, tut der Code.
@@ -731,7 +770,9 @@ deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 | Q-KA-16 | **Zähler, Zweifel (3):** `z` beim Verschließen lassen (E-KA-64, gebaut) — dann belegt es nicht die Frische des Inhalts, und ein Gerät, das nach der Übergabe einen alten, nicht abgeschlossenen Stand nachsendet, gewinnt —, oder `z` beim Ändern des Inhalts vergeben und mit dem Paket puffern (ändert E-KA-64, trifft auch die Uhr)? Kleinere Möglichkeit: Der Browser meldet eine Hülle mit `schluss: false` nach einer mit `schluss: true` als Befund | beantwortet: E-KA-69 |
 | Q-KA-18 | **Befund `offen-nach-schluss`, haftet `f`?** (06f-1, Zweifel 1 des Agenten) So gebaut: `f` bleibt gesetzt, der Befund steht bei jedem Lesen, solange die offene Hülle die gespeicherte ist. Darf ein Gerät einen abgeschlossenen Einsatz legitim wieder öffnen, wäre das ein Dauerhinweis; Alternative: `f` an `o` binden, Befund nur einmal | beantwortet: E-KA-76 |
 | Q-KA-19 | **Befund auch an Hüllen des Kontos?** (06f-1, Zweifel 2) Die Referenz meldet ihn gleich von welchem Absender. Verschließt der Browser selbst (Formular, Wartungslauf) nach einem Abschluss mit `schluss: false`, meldet er sich selbst — dann das Konto ausnehmen oder `schluss` dort weitertragen | beantwortet: E-KA-76 |
-| Q-KA-20 | **Handy mit `huelle: 2`, aber ohne Geräteschlüssel** (06f-2, Zweifel 2 des Agenten): nach dem Update von 0.24.0 (alte Ablage gelöscht) oder wenn der Keystore keinen Eintrag liefert, sendet das Handy wie bisher Fassung 1, bis es neu koppelt. Soll es stattdessen gar nicht senden? Bis zum Stichtag aus 06e nimmt der Server Fassung 1 an | mit 06e |
+| Q-KA-20 | **Handy mit `huelle: 2`, aber ohne Geräteschlüssel** (06f-2, Zweifel 2 des Agenten): nach dem Update von 0.24.0 (alte Ablage gelöscht) oder wenn der Keystore keinen Eintrag liefert, sendet das Handy wie bisher Fassung 1, bis es neu koppelt. Soll es stattdessen gar nicht senden? Bis zum Stichtag aus 06e nimmt der Server Fassung 1 an | beantwortet: E-KA-80 |
+| Q-KA-21 | **F-KA-119: Soll `k` beim Zusammenführen zweier Blätter haften?** Heute gewinnt der höhere Zähler; ein Blatt mit einem höheren Gerätestand verdrängt einen Kontostand, und danach käme ein Gerät nach dem Konto wieder durch. Haften hieße: ein Gerät nach dem Konto bleibt hart abgewiesen, auch wenn ein anderer Browser einen höheren Gerätestand kannte | vor KA-14 oder mit 06e |
+| Q-KA-22 | **Eine Spur mit echter Lücke ohne Löschvermerk** (alte Gerätedaten der Fassung 1 mit verlorenen Punkten, aus einer Sicherung neu verschlossen) lehnt das Einspielen seit KA-14 ab und meldet sie. Soll es sie lesbar übernehmen — durch einen engen Vermerk des Kontos in der Lücke, oder indem der Leser den Merker `LUECKE` des Kontos gelten lässt (Referenz-Änderung)? | mit 06e |
 | Q-KA-17 | **F-KA-85:** Bleibt der Geräteschlüssel des Handys im Tresor (gebaut, alle API-Stufen gleich, kein Hardware-Schutz), oder ab API 31 als nicht exportierbarer Keystore-Schlüssel mit `PURPOSE_AGREE_KEY`, darunter der Tresor? Aufwand nach dem Agenten 1 bis 1½ Pakete und Gerätetests unter und ab API 31 | beantwortet: E-KA-71, -72 |
 
 ---
@@ -939,6 +980,146 @@ keinen Gegenstand. Für 06f selbst gibt es auf Staging keinen Punkt der
 Arbeitsumgebung: Der Befund liegt hinter der Weiche, das Handy braucht ein
 Gerät (P-KA-16). Danach `staging_konten.py --wirklich`: ein Konto der Kette
 gelöscht, vier behalten.
+
+### Backlog Nr. 566, 568, 569 vor dem PR (16.11.2026)
+
+Auf Wunsch der BetreiberIn vor dem gesammelten PR abgearbeitet, damit ein
+Prüfstand reicht. Keine eigene Nummer: 566 fährt in Android 0.26.0, 568 und
+569 in Web 25.0.0.
+
+**Was nicht geprüft werden konnte — zuerst.** (1) Nr. 566: das Rennen an
+einem echten Handy (Phase während einer laufenden Anfrage) — gemessen nur
+unter Robolectric. (2) Nr. 568: ein echtes, von außen beschädigtes Buch auf
+Staging; die Probe legt einen Zufallstext örtlich ab. (3) Nr. 568 in Firefox
+und WebKit — gefahren im Prüfstand, nicht einzeln. (4) Nr. 569: kein Vorher vor der
+Weiche auf dieser Maschine — Vergleich gegen den KA-14-Lauf desselben Tags;
+je Messung ein Lauf. **Offen gelassen:** Im Backup gehen noch rund 49 000 von
+173 000 Krypto-Aufrufen ans Standbuch (`eintrag()` rechnet den Hash zweimal,
+`patOeffnen()` je Block `kontoKennung()`); mit 06e. Die Reihenfolge im
+CSV-Archiv hat sich geändert (Spuren vorn) — keine Zusage, in
+`Export-Format.md` 3 vermerkt.
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Nr. 566 `./gradlew --offline build` | Handy **402** Prüffälle je Bauart (15 übersprungen), Uhr 75, **0** rot | vier eingebaute Gegenfehler, alle rot (Commit `6fe9bfa`) | Schema 4, Bestätigung nur für den gesendeten Stand |
+| Nr. 568 Bedienprobe `geraetebuch-unlesbar-neu`, `-zurueck` (Chromium) | **2 / 0**: ohne eigene Fassung v1 → v2, Buch geht auf, Merker gesetzt, Hinweis auf Geräte- und Startseite, Zeile „neu verbinden · …“; mit eigener Fassung v2 → v3, still, kein Merker | `buchUnlesbar()` liefert immer falsch: **0 / 2** (Buch bleibt v1/v2 und geht nicht auf) | E-KA-92, Mockup M-KA-04 |
+| Nr. 569 Messstand `messen.py --nur Backup,GPX` (5 088 Einsätze, Drossel 6×, Fable-Agent) | Backup **117,4 → 98,1 s** (Halde 100 → 67 MB, Krypto 143 639 → 113 784); GPX mit Passwort **223,6 → 116,6 s** (364 → 84 MB), ohne **221,3 → 114,5 s** (411 → 88 MB) | CPU-Profil je Schritt (neu `--profil`): Zeit lag in `zip.TextReader` (~48 s), `new Intl.DateTimeFormat` je Feld (~35 s), `Uint8Array.from(atob())` (14–19 s), `seitenbuch()` je Hülle (15 635 ×) — nicht in der Rechnung der Fassung 2 | der Titel von Nr. 569 ist so nicht belegt; behoben ist die Zeit trotzdem |
+| Nr. 569 Hüllenprobe `tools/proben/huelle/probe.sh` | **606 / 0**, Ortsdatenprobe **19 / 0** | `zsFach` mit festem Schlüssel: 126 Abweichungen (`pruefwert`); `sidFach` mit festem Schlüssel: SID nicht byte-gleich — beide rot, zurückgenommen | die Fächer hängen am ganzen Schlüssel |
+| Nr. 569 Kreislauf `edbak --frisch`, `csv --frisch` | 345 356 bzw. 11 424 Vergleiche, **0** unerklärt | — | Sicherung und CSV inhaltsgleich |
+| Nr. 569 GPX gegen Referenzarchiv 05.11. | 212 / 212 GPX inhaltsgleich (Kennung, `creator`, Zeit ausgeblendet); Firefox und WebKit je ein Export, Archiv intakt | — | der Strom ins Archiv ändert keinen Inhalt; **nicht geöffnet:** das AES-verschlüsselte Archiv (kein Werkzeug im Container), nur der Download belegt |
+| Nr. 568 erster Lauf | „neu“ ohne Hinweis | — | kein Fehler: ohne gekoppeltes Gerät mit Schlüssel ist nichts neu zu verbinden, die Geräteseite quittiert den Merker; die Probe legt jetzt ein Gerät an |
+
+### KA-14 Die Weiche wird umgelegt — Web 25.0.0 (15./16.11.2026)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) **Produktiv:** Der
+Anhebelauf am echten Bestand, die Anmeldung auf echten Handys mit 1 200 000
+Runden und das Neukoppeln aller Geräte prüft die BetreiberIn nach dem Tag
+(P-KA-18, -19). (2) **Ein echter Hinweis „Uhrzeit prüfen“** entsteht nur mit
+zwei Geräten und einer nachgehenden Uhr; die Seite ist mit einem
+eingespielten Hinweis gemessen (Bedienprobe `ka11-*`), der Kern an den
+Vektoren. (3) Ein echtes Safari. (4) Die Garmin-Uhr folgt E-KA-80 erst mit KG.
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Prüfstand `haupt`, erster Lauf | **11 rot**, 1 nicht gemessen, 61 grün, 11 990 s | — | Befunde F-KA-122 bis -126 |
+| Prüfstand `haupt`, zweiter Lauf (nach den Behebungen) | **74 grün, 0 rot, 0 nicht gemessen**, 9 906 s; drei Engines, zehn Breiten, alle Seiten, `handy=gebaut`; Bericht im Commit, `bericht.py` „in Ordnung“ (80 Zahlen) | Gegenfehler je Behebung (Agent): Kreislauf 222 Spuren / 1 Abweichung, 242 × 409, Freigabe 400, Kopplung rot | Web 25.0.0 mit umgelegter Weiche über alle Wege |
+| Messstand (5 088 Einsätze, Drossel 6×) | Backup 117 s, GPX mit/ohne Passwort 224 / 221 s, 0 × 409 | erster Lauf: GPX Abbruch nach 1 800 s | F-KA-124 behoben; langsamer als vor der Weiche (Nr. 569; Halde beim GPX 364–411 MB) |
+| Bedienprobe `ka06b4` mit alter Fixture | Altbestand 104 → 0, `kp`/`rw` `edk2:`, 16 von 16 Blättern zu | — | Anhebelauf mit ausgelieferter Weiche |
+| Bedienprobe `ka11-*` (neu) | 3 / 3 (M-KA-03 B, C, E) | — | Anzeige und Rückweg der Seite |
+| `demo_fassung2.mjs --zweimal` | Ohne Befund (106 Einsätze, 118 Segmente, Gerätebuch 2 Geräte) | — | Demo mit Weiche an |
+| Anmeldung Demo-Konto | Chromium 1,0–1,4 s, WebKit 1,5 s (Container) | — | Rundenziel 1 200 000 |
+
+### KA-13 Demo-Bestand in Fassung 2 (15.11.2026, Fable-Agent)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) Der volle Einspiellauf
+und der Prüfstand; der Mischzustand „Einspiellauf schreibt Fassung 1,
+Browserschritte nach KA-14 Fassung 2“ ist nie durchgespielt (Nr. 567).
+(2) `demo_pruefen.mjs`, Abschnitt `spurfaelle`, bricht an einer verborgenen
+Zeile ab — auch mit der alten Fixture, älter als KA-13. (3) Gemessen wurde
+gegen eine Abschrift von `server/` mit Weiche an auf Port 8444; der Baum
+selbst lädt die Fixture erst mit KA-14.
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| `demo_fassung2.mjs --zweimal` (neu), drei Engines | je **30 / 0**: 106 Einsätze und 118 Segmente gehen auf, 63 366 Punkte, kein Stück in Fassung 1, kein Befund, Marke nicht gesetzt | Demo-Gerät nicht im Gerätebuch: rot (26 Einsätze, 11 Segmente, `absender`) | Demo mit Weiche an |
+| `verschliessen.py --selbstprobe`, `abgleich.py` (auch `--tief`), `riegelprobe.php`, `sitzungsprobe.py` | 9 / 0, „Gleich.“ und 10 / 0, 11 von 11, 2 von 2 | zweimal gebaut byte-gleich | Fixture, Riegel |
+| Hüllenprobe | 606 / 0 | — | nichts am Kern gekippt |
+
+Fixture 903 114 → 1 100 377 Byte; Einsatzhüllen 2 vom Gerät, 104 vom Konto
+(jedes Speichern im Formular verschließt als Konto), Spuren 197 Gerät, 26
+Konto. **Zwischenfall:** Eine Probe gegen die Abschrift hob das Konto
+`admin@example.invalid` der örtlichen Anlage still auf 1 200 000 / `edka2:`;
+der Agent hat es zurückgestellt. **Zweifel:** `rc_hex` steht in der Fixture
+(öffentlich wie das Demo-Passwort); jeder Reset hinterlässt im Browser ein
+verwaistes Buch; Format 1–3 und der Zweig `'server'` in `edbak_restore()`
+sind Rückbau für 06e.
+
+### KA-10 Browser-Kern: Rückweg (15.11.2026, Fable-Agent)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) Nur Chromium.
+(2) Kein Lauf gegen eine Anlage (`apiTransport`, IndexedDB, echte Seite) —
+das fährt der Prüfstand mit KA-14. (3) Mit Weiche aus ist „kein sichtbarer
+Weg ändert sich“ gelesen; die Hüllenprobe ruft `EdOrtsdaten` nicht.
+(4) Eine Bestätigung, die sich nur im Vermerk vom geltenden Hinweis
+unterscheidet, deckt kein Vektor (eingebauter Fehler blieb grün).
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| Hüllenprobe `probe.sh` (Chromium) | **606 / 0, 0 ausgenommen** (39 + 271 + 296; vorher 450 / 156 ausgenommen) | Hauptinstanz nachgefahren; 13 von 14 eingebauten Fehlern rot (Hüllenprobe oder Ortsdatenprobe) | Kern nach E-KA-88 |
+| `ortsdaten_probe.mjs` (neu, aus dem Scratchpad des Agenten übernommen) | **17 / 0** | siehe oben | Fortschreiben, Hinweis, Übernehmen, Befunde über `EdOrtsdaten` |
+
+**Schnittstelle für KA-11:** `EdOrtsdaten.einsatz()` unverändert (nur
+Inhalt); neu `einsatzOeffnen()` → `{inhalt, absender, befund}`,
+`einsatzUebernehmen(m, k, hinweis)`, `fuerAnsicht(m, ck, {bestaetigt})`
+setzt `m.ort_absender`, `m.ort_befund`; der Hinweis ist ein Fehler mit
+`grund: 'uhrzeit-pruefen'`, `hinweis`, `inhalt`. **Zweifel:** Die vier
+übrigen Aufrufer von `einsatz()` (Export, Import, Formular, Einstellungen)
+behandeln den Hinweis wie „geht nicht auf“; `eintragOrdnen` im Browser
+prüft die Form von `a` und `u` nicht (die Referenz wirft `innen`).
+
+### KA-15 Android 0.26.0: ohne Geräteschlüssel kein Senden (15.11.2026, Fable-Agent für den Sender)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) Der echte Keystore:
+„Eintrag fehlt“ ist mit der Ablage im Speicher gespielt; wie ein Gerät
+einen vorübergehenden Ausfall meldet, zeigt nur P-KA-16. (2) Kein
+Emulatorlauf für 0.26.0 — die Anzeige belegt der Bilderlauf, der Weg
+„Neu koppeln“ → Trennfrage ist nur gelesen. (3) `herkunftsstand()` in
+`NAdokuApp` hat keinen eigenen Prüffall, nur die Regel dahinter.
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| `./gradlew --offline build`, Hauptinstanz nach der Anzeige | BUILD SUCCESSFUL in 4 min 35 s; Lint 0 Fehler; Handy **398** je Bauart (15 übersprungen), Uhr 75, 0 rot | Agent: acht eingebaute Fehler (Halt entfernt, Tresor nicht neu gelesen, `schluesselHolen` mit Paarbedingung, Trennen ohne Ausnahme, Trennen zu weit, Ausfall setzt `herkunftFehlt`, Halt ohne `huelle2`, Halt ohne `spaeterErneut`) — je 1 bis 26 Fälle rot | E-KA-80 im Sender, Trennen trotz Rückstand |
+| Bilderlauf `HandyBildTest` | neu `bereit-herkunft-fehlt` (hell, dunkel, zwei Breiten) | gegen M-KA-03 F angesehen | Anzeige nach E-KA-87 |
+
+**Über den Auftrag hinaus (Agent, übernommen):** `schluesselHolen()`
+merkt sich `huelle` unabhängig vom Paar (sonst schrieb sich ein Handy ohne
+Paar selbst auf Fassung 1 zurück); `trennen()` erlaubt bei `FEHLT` trotz
+Rückstand, mit Bindung an den Kontoschlüssel — sonst wäre „Neu koppeln“
+eine Sackgasse. **Zweifel:** Der gebundene Rückstand hat die 30-Tage-Frist
+wie nach einer Abmeldung; der Nachsende-Job läuft bei dauerhaft fehlendem
+Paar mit Rückzug bis 5 h weiter, ohne Netzanfrage.
+
+### KA-09 Referenz: Rückweg bei zu hohem Zählerstand (15.11.2026, Fable-Agent)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) 156 Browserprüfungen
+sind „ausgenommen“, bis KA-10 sie baut; dass sie erfüllbar sind, zeigt ein
+Probeumbau des Agenten im Scratchpad (606 / 0 / 0), nicht der Code.
+(2) Nur Chromium. (3) Android- und Uhr-Prüffälle nicht gefahren (neuer
+Schlüssel `rueckweg`, nach Lesen der Quellen ohne Wirkung auf sie).
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| `referenz.py pruefen` / `--selbstprobe` | Fassung 2 **47 geöffnet, 50 Gegenlagen, 5 Hinweise** (vorher 32/40), 0 Abweichungen; Selbstprobe **48 / 0** (19 eingebaute Fehler) | Hauptinstanz: dieselben Zahlen; zweites `erzeugen` ändert nichts | Regel E-KA-88 |
+| `referenz_inhalt.py` | **26 / 28**, Selbstprobe **28 / 0**; Vektor `standblaetter` (drei Blätter byte-genau) | nachgefahren | Blattformat mit `a`, `u` |
+| `git diff --numstat` | `vektoren-2.json` 1090 / **0**, `vektoren-inhalt.json` 74 / **0**; `vektoren.json` und vier `.mc` unverändert | nachgefahren | kein bestehender Vektor gekippt |
+| Browserprobe (Chromium) | **450 / 0, 156 ausgenommen** | Probeumbau: 606 / 0 / 0; neues `huelle2.js` mit altem `standbuch.js`: 26 rot | was KA-10 bauen muss |
+
+**Folge für den Betrieb:** Das nach einer Übergabe nachgesendete alte
+Paket ist mit `a` im Stand ein Hinweis, nicht mehr hart (E-KA-70 so
+gewollt). Offen aus dem Bericht: Altblatt ohne `a` bleibt hart; Konto mit
+gleichem `z` gegen Gerätestand wird still angenommen (F-KA-112 nur für
+Geräte geschlossen); zwei Browser bestätigen gegensätzlich — der höhere
+`o` gewinnt, eine Entscheidung ist neu zu treffen.
 
 ### KA-06f-4 Browser: Befund `offen-nach-schluss` (15.11.2026, Hauptinstanz)
 
@@ -1468,6 +1649,15 @@ Klartextfelder (`final`, Strecke, Besatzung, Tagesnotizen, Phasenzeiten bis
 | F-KA-116 | **Die Selbstprobe der Fassung 2 ist bei den alten Fällen schwächer, als sie aussieht:** `pruefen2()` vergleicht zuerst die ganze Datei mit dem Neubau, jede veränderte Kopie ist schon dadurch rot — die Fälle „Fehler 2“ sind damit trivial erfüllt (Fable-Agent, 06f-1) | die neun neuen Fälle verlangen die benannte Meldung; die alten bleiben, wie sie sind (Backlog-Kandidat) |
 | F-KA-117 | **Ein Abschluss ohne neuen Punkt ging am Handy nie an den Server** (älter als KA-06f, gefunden vom Fable-Agenten in 06f-3): `paketSchliessen()` ließ `metadaten_bestaetigt` stehen; war der Teil-Upload bestätigt, hatte das Paket laut `hatArbeit()` keine Arbeit — `final`, Endzeit, Strecke und die Hülle mit SCHLUSS blieben im Handy, ohne als Rückstand zu zählen | behoben: der Abschluss setzt die Bestätigung zurück; Prüffall `einAbschlussOhneNeuenPunktGehtHinaus` (ohne die Zeile rot); verwandtes Rennen bei der Bestätigung: Backlog Nr. 566 |
 | F-KA-118 | **Mit `minSdk` 31 wuchs das Release-APK von 9,3 auf 24,8 MB** — das Gradle-Plugin legt ab `minSdk` 28 die Dex-Dateien unkomprimiert ab | E-KA-77: komprimiert, 9 251 914 B |
+| F-KA-119 | **Beim Zusammenführen zweier Blätter gewann ein höherer Gerätestand über einen niedrigeren Kontostand, und `k` ging verloren** (bestehend in `hoeher()`, gefunden in KA-09) — danach käme ein Gerät nach dem Konto wieder durch | **offen:** auch `stand_zusammenfuehren()` (KA-09/-10) lässt den höheren `o` gewinnen, `k` zählt nur bei Gleichstand (Vektor „konto-unter-geraet“). Schließen hieße: Regel in der Referenz ändern („`k` haftet wie `f`“) samt Vektoren — Frage an die BetreiberIn (Q-KA-21) |
+| F-KA-120 | **Das Prüfmuster `huelle` nannte `inhalt2.js`, `huelle2.js`, `standbuch.js` und `ortsdaten.js` nicht** — eine Änderung nur dort wählte die Hüllenprobe in `klein` nicht (wie F-KA-114); und `ortsdaten.js` maß überhaupt keine Probe | vier Pfade ins Muster; neue `ortsdaten_probe.mjs` (17 Prüfungen) läuft in `probe.sh` |
+| F-KA-121 | **Zwei Abweichungen von M-KA-03 im Bau von KA-11:** (1) Die Zeiten stehen ohne Datum („09:31 Uhr“) — `EdFormat` kennt keinen Tag aus einer Unix-Sekunde, und eine eigene Rechnung verbietet das Register; (2) die Geräte heißen wie im Gerätebuch (Kennung, z. B. `dev-…`), nicht „Garmin fēnix 6 Pro“ — das Buch kennt kein Modell. Zustand D („übernommen“) zeigt die Seite erst mit 06e, das die Kennzeichnung schreibt; der Befund `stand-uebernommen` nach einer Bestätigung wird nicht eigens angezeigt (im Mockup nicht vorgesehen) | benannt; Modellname wäre ein Feld im Gerätebuch (06e oder später) |
+| F-KA-122 | **Kreislauf `edbak` mit umgelegter Weiche verliert eine Aufzeichnung** (Ruhesegment, 131 → 0 Punkte; 222 statt 223 Spuren nach Einspielen und erneutem Sichern) und erzeugt dabei 239 Antworten 409 | **behoben (KA-14):** Ursache war nicht der Import der 409, sondern der fehlende Löschvermerk im Standbuch für eine Lücke (Fassung 2 verlangt ihn, `luecke`); das Einspielen trägt jetzt die deckenden Vermerke ein und lehnt eine Spur ohne ab. Die 409 kamen vom gleichzeitigen Fortschreiben beim Sichern (wie F-KA-124). Kreislauf 223 Spuren, 0 Abweichungen, 0 × 409 |
+| F-KA-123 | **Die Übernahme einer Kontosicherung (Freigabe) scheitert mit umgelegter Weiche** — 409, 400, Gerätehülle `zeit` | **behoben (KA-14):** `blaetter: []` ging beim zweiten Versuch mit (400); jetzt `null`. Die Probe öffnet über das Standbuch und reicht den Beginn durch. Freigabeprobe 27 / 0 |
+| F-KA-124 | **Der GPX-Export über einen Zeitraum hängt am Messstand mit umgelegter Weiche** (5 088 Einsätze, nach 1 800 s kein Download, 101 867 Krypto-Aufrufe) | **behoben (KA-14):** Standbuch schreibt je Blatt nacheinander, Lesen schreibt gesammelt fort. Messstand: Backup 120,75 s (Ziel ≤ 5 min), GPX mit Passwort 224,56 s, ohne 207,04 s, 0 × 409 — langsamer als vor der Weiche (Backlog Nr. 569) |
+| F-KA-125 | **Die erste Kopplung nach der Anmeldung meldet mit ausgelieferter Weiche „Das Gerät ließ sich nicht eintragen“** (Bedienprobe `ka06d-kopplung-wert`; derselbe Ablauf mit nur im Probebrowser umgelegter Weiche war grün) — genau der Weg, den KA-12 nach dem Tag verlangt | **kein Fehler der Anwendung:** Reste von `ka06b2-standbuch` (ein Zufallstext als Gerätebuch im Prüfkonto) ließen `geraetEintragen()` scheitern; `ka06d` räumt Standbuch und Ablage jetzt vor und nach. Ein Gerätebuch, das nicht aufgeht, sperrt aber jede Kopplung (Backlog Nr. 568) |
+| F-KA-126 | **Prüfmittel erwarteten das alte Format oder rechneten Ableitung 1:** `probekonto.mjs` (Token bei 1 200 000 Runden), Rückweg-, Kontopaar-, Ortsdaten-, Freigabeprobe (`edk1:` erwartet bzw. mit `EdCrypto.decrypt` geöffnet), Spurprobe (Punkte aus der Fixture), `ka06b3-…-weiche-aus` (Zustand vor Web 25) | Probekonto, Rückweg, Spurprobe (alte Fixture unter `tools/referenzdatensatz/fixture/alt/`), `ka06b3`, Ortsdaten-, Wartungslauf-, Kontopaar-, Freigabe-, CSP-Probe (Zeitgrenze 90 s) berichtigt |
+| F-KA-127 | **Vierzehn Browserwerkzeuge warteten beim Anmelden nur 30 s** — seit dem Rundenziel 1 200 000 (im Übergang zweimal abgeleitet) riss das in WebKit unter der Last des Prüfstands von Lauf zu Lauf an anderer Stelle (CSP-Probe, Barrierefreiheit); einzeln gemessen dauert die Anmeldung in WebKit 1,5 s | alle auf 90 s, wie die übrigen Anmeldewege |
 | F-KA-61 | **Lauf 193 (Tag `web-v24.11.0`) hat Produktiv von Web 23.8.2 auf 24.11.0 gehoben** — damit auch die Migration `2026_11_07_darstellung`, die der Rahmenplan für den nie gesetzten Tag `web-v23.11.3` ansagte | Rahmenplan-Kopf berichtigt; `update.php` auf Produktiv ist fällig, falls noch nicht aufgerufen (Bericht an die BetreiberIn) |
 | F-KA-62 | **Der erste Bau von Punkt 4 hätte einen Gerätevertrag still gebrochen:** `jobs.php` las das Token über `app_state_lesen()`, das einen Datenbankfehler fängt — bei toter Datenbank wäre aus 500 `datenbank` ein 403 „Token falsch" geworden (AP4-c). Gefunden nicht von einer Probe, sondern vom Grundtext der Zählzeile Z10, deren Ratsche nach unten anschlug | `token_gespeichert()` liest mit eigenem SELECT, das wirft; Z10 bleibt bei 2, der Grund nennt die neue Stelle. **Nicht gemessen:** keine Probe stellt eine tote Datenbank vor `jobs.php` nach |
 | F-KA-63 | **Erster Prüfstand von KA-03: 3 rot** — Ratenprobe (erwartete den Health-Token aus `config.php` im Klartext abgelegt), Zählung (zwei Rollenvergleiche von Hand in `admin_users.php`, Z13; dazu Z10 aus F-KA-62), Wortliste (ein Satz im Bedrohungsmodell nannte „im Klartext" neben Ort und Spur). Dazu der Hinweis `erzeugen`: `docs/Design.md` neu erzeugt | Ratenprobe erwartet den Hash (102/0); `rolle_darf_support()` statt `!== 'user'`; Satz umformuliert; `Design.md` geht in den Commit |

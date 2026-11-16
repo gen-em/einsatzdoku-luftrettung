@@ -1622,11 +1622,17 @@ function geraet_schluessel_gueltig(string $schluessel, string $hash): bool
  * DAMIT RECHNET JEDE ANMELDUNG WIEDER NUR EINMAL AB — das war der Preis
  * des Uebergangs, nicht sein Ziel.
  *
+ * 1200000 IST DER ZIELWERT SEIT WEB 25.0.0 (KA-14, E-KA-84). Ab dieser
+ * Zahl rechnet der Browser Ableitung 2 (`ABLEITUNG2_AB`, E-KA-52); die
+ * stille Anhebung nach der Anmeldung hebt jedes Konto dorthin. 600000 bleibt
+ * in der Liste, bis die Abfrage oben 0 ergibt — solange rechnet jede
+ * Anmeldung zweimal ab.
+ *
  * REIHENFOLGE: Der Zielwert steht VORNE. Der Browser probiert nicht der Reihe
  * nach (er schickt alle Token), aber die Reihenfolge ist die Lesart.
  */
-const KDF_ITER_ZIEL  = 600000;
-const KDF_ITER_LISTE = [600000];
+const KDF_ITER_ZIEL  = 1200000;
+const KDF_ITER_LISTE = [1200000, 600000];
 
 /* ---- Mindestlaenge des Passworts ----------------------------------------
  *

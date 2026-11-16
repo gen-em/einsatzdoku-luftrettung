@@ -91,6 +91,17 @@ class NAdokuApp : Application() {
     }
 
     /**
+     * Kann dieses Handy seine Herkunft belegen — für die zweite Zeile der
+     * Sync-Karte (seit KA-15, E-KA-80). Dieselbe Rechnung, nach der der
+     * Sender anhält ([org.genem.nadoku.handy.tresor.Herkunft]); nicht
+     * abgelegt, sondern je Frage neu gerechnet. Kostet eine Entschlüsselung
+     * des Tresors und einen Griff in den Keystore — also nach einem
+     * Sendelauf oder einer Kopplung fragen, nicht im Sekundentakt.
+     */
+    fun herkunftsstand(): org.genem.nadoku.handy.tresor.Herkunftsstand =
+        org.genem.nadoku.handy.tresor.Herkunft.stand(tresor.lesen(), geraeteschluessel)
+
+    /**
      * Der Zähler `z` der Einsatzhülle — EINER für das Gerät, überdauert das
      * Trennen. Er gehört dem [puffer]: Vergeben wird, wenn sich der Inhalt
      * eines Einsatzes ändert, und abgelegt mit dem Paket (E-KA-69, seit

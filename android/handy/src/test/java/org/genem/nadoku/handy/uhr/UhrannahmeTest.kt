@@ -226,7 +226,7 @@ class UhrannahmeTest {
         klammer.phaseSetzen(3)
 
         val einsatz = einsaetze().single()
-        puffer.bestaetigungMerken(einsatz.id, 0)             // der Server hat ihn schon
+        puffer.bestaetigungMerken(einsatz.id, 0, puffer.paket(einsatz.id)!!.aenderung) // der Server hat ihn schon
         assertFalse("Vorher gibt es nichts zu tun", puffer.hatArbeit(puffer.paket(einsatz.id)!!))
 
         annahme.uebernimm(meldung(Ereignisart.PHASE, "2026-07-16T05:10:30Z", phase = 3, einsatzRef = WM))

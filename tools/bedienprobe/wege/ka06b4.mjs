@@ -1,15 +1,18 @@
 /* Weg aus Konzept KA, Paket KA-06b-4 — der Anhebelauf.
  * ===========================================================================
  *
- * `ka06b4-anhebelauf`, in dieser Reihenfolge und am Demo-Konto, dessen
- * Bestand aus der Fixture im alten Format liegt (`edk1:`):
+ * `ka06b4-anhebelauf`, in dieser Reihenfolge und am Demo-Konto. Seit
+ * Web 25.0.0 trägt die ausgelieferte Fixture keinen Altbestand mehr (Format
+ * 4, KA-13); der Weg setzt deshalb zuerst mit der letzten Fixture im alten
+ * Format zurück (`tools/referenzdatensatz/fixture/alt/fixture-format3.json.gz`, Stand
+ * e2e4d8f) — genau der Bestand, den der Lauf auf Produktiv vorfindet:
  *
- *   1. Weiche wie ausgeliefert: Die Startseite lädt, und nichts zieht um —
- *      der Server nennt danach denselben Altbestand wie davor.
- *   2. Weiche nur im Browser der Probe umgelegt (wie `ka06b3.mjs`): Die
- *      Startseite lädt, und still zieht alles um — der Server nennt keinen
- *      Altbestand mehr, Kontopaar und Rückweg tragen `edk2:`, und jedes
- *      Blatt des Standbuchs ist geschlossen.
+ *   1. Weiche nur im Browser der Probe auf `false` gestellt: Die Startseite
+ *      lädt, und nichts zieht um.
+ *   2. Weiche wie ausgeliefert (an, seit KA-14): Die Startseite lädt, und
+ *      still zieht alles um — der Server nennt keinen Altbestand mehr,
+ *      Kontopaar und Rückweg tragen `edk2:`, und jedes Blatt des Standbuchs
+ *      ist geschlossen.
  *   3. Noch einmal geladen: Es geschieht nichts mehr (die Versionen der
  *      Blätter bleiben).
  *   4. Ein Block mit falschem `blob_alt` wird übersprungen, nicht geschrieben.
@@ -25,15 +28,15 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const WURZEL = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
-const WEICHE = /const SCHREIBT_FASSUNG_2 = false;/;
+const WEICHE = /const SCHREIBT_FASSUNG_2 = (?:true|false);/;
 
-async function weicheAn(seite) {
+async function weicheStellen(seite, an) {
   await seite.route(/assets\/inhalt2\.js/, async (route) => {
     const antwort = await route.fetch();
     const kopf = Object.assign({}, antwort.headers(), { 'cache-control': 'no-store' });
     delete kopf['content-length']; delete kopf['content-encoding'];
     await route.fulfill({ status: antwort.status(), headers: kopf,
-      body: (await antwort.text()).replace(WEICHE, 'const SCHREIBT_FASSUNG_2 = true;') });
+      body: (await antwort.text()).replace(WEICHE, `const SCHREIBT_FASSUNG_2 = ${an ? 'true' : 'false'};`) });
   });
 }
 
@@ -49,6 +52,11 @@ export const wege = [
         + 'zweiter Lauf ändert nichts; falsches blob_alt wird übersprungen',
     async fahren(k) {
       try {
+        execFileSync('php', ['-r', 'require "server/db.php"; require "server/demo_lib.php"; demo_zuruecksetzen($argv[1]);',
+                             resolve(WURZEL, 'tools/referenzdatensatz/fixture/alt/fixture-format3.json.gz')],
+                     { cwd: WURZEL, stdio: 'ignore' });
+        await k.neuAnmelden();
+        await weicheStellen(k.seite, false);
         await k.gehZu(`${k.basis}/index.php`);
         const vorher = await stand(k);
         await k.seite.waitForTimeout(3000);
@@ -56,7 +64,7 @@ export const wege = [
         await k.seite.waitForTimeout(3000);
         const ausGleich = (await stand(k)).offen === vorher.offen && vorher.offen > 0;
 
-        await weicheAn(k.seite);
+        await k.seite.unroute(/assets\/inhalt2\.js/);
         await k.gehZu(`${k.basis}/index.php`);
         let nachher = null;
         for (let i = 0; i < 60; i++) {           // still im Hintergrund: abwarten

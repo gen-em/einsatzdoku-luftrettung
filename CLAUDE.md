@@ -306,9 +306,15 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   Klinik und Reanimation findet er nicht mehr.
   **Mit zwei Grenzen, die zur Zusage gehören:** (1) Die **Puffer auf
   Garmin und Handy** sind Klartext bis zum Senden (Bedrohungsmodell,
-  Lage H). (2) Der öffentliche Schlüssel kommt **ohne zweiten Kanal** vom
-  Server; wer den Server beschreibt, tauscht ihn. Wer die Zusage zitiert,
-  zitiert diesen Absatz vollständig oder gar nicht. *(Bis S11-11 stand
+  Lage H). (2) Der öffentliche Schlüssel kommt vom Server; **seit Web
+  25.0.0** bestätigt ihn bei der Kopplung der **Vergleichswert** (sechs
+  Ziffern, die ein Mensch an Gerät und Browser vergleicht, Bedrohungsmodell
+  6.3) — ein Gerät, das vorher gekoppelt wurde, hat ihn ohne zweiten Kanal
+  bekommen, bis es neu koppelt. **Seit Web 25.0.0 sind die Blöcke außerdem
+  gebunden und belegt:** `edk2:` an Konto, Datensatz und Zweck, mit Zähler
+  gegen Zurücklegen im Standbuch des Browsers, Gerätedaten mit
+  Herkunftsnachweis des Geräts (Konzept KA, `docs/Technik.md` 4.42). Wer
+  die Zusage zitiert, zitiert diesen Absatz vollständig oder gar nicht. *(Bis S11-11 stand
   hier, Spur, Phasenkoordinaten, Reanimation und Transportziel lägen im
   Klartext — das war der Stand bis Web 21. Bis Web 22.7.0 standen hier
   vier Grenzen: dazu der Altbestand im Klartext bis zum Umzug und
@@ -665,6 +671,12 @@ Satz zur Sache — bei einem Konzept beginnt sie mit dem Paket (Abschnitt 7).
 **Der Arbeitszweig wird nach jedem Arbeitspaket gepusht** (Rahmenplan K7,
 R62) — das deployt nichts, solange es nicht `main` ist, und andere Instanzen
 sehen Stand und laufendes Paket.
+
+**Vor dem letzten Prüfstand und vor dem Öffnen eines PR wird `main`
+hereingeholt** (BetreiberIn, 16.11.2026; `docs/Pruefablauf.md` 5.3a): erst
+`git fetch origin main`, liegt `main` vorn, mergen und Konflikte lösen,
+dann messen; vor dem Öffnen noch einmal nachsehen. Ein PR, der mit Konflikt
+aufgeht, kostet einen zweiten vollen Lauf.
 
 **Eine Instanz mergt nie.** Sie öffnet am Ende der Phase einen Pull Request;
 die Betreiberin mergt ihn. Auf `main` kommt eine Phase einmal, am Ende, nach

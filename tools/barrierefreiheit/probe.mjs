@@ -85,7 +85,7 @@ async function kontext(rolle) {
     await s.goto(`${BASIS}/login.php`, { waitUntil: 'domcontentloaded' });
     await s.fill('input[name="email"]', mail);
     await s.fill('input[name="password"]', pw);
-    await Promise.all([s.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }),
+    await Promise.all([s.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 90000 }),
       s.click('#loginform button[type="submit"]')]);
     const zf = await codeSchritt(s);
     if (!zf.ok || s.url().includes('login.php')) {

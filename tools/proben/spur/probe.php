@@ -59,7 +59,13 @@ echo "Spurprobe gegen $konto\n";
 
 echo "\n  Teil 1 — Ausduennung: haelt sie ihre Zusage? (E-S2-05)\n";
 
-$fx = demo_fixture_vorhanden() ? demo_fixture_laden()['daten'] : ['missions' => [], 'rest_segments' => []];
+/* DIE PUNKTE KOMMEN AUS DER LETZTEN FIXTURE IM ALTEN FORMAT (Format 3,
+ * Stand e2e4d8f): Seit Web 25.0.0 trägt die ausgelieferte Fixture nur noch
+ * verschlossene Hüllen der Fassung 2 (Format 4, KA-13), und der Server kann
+ * sie nicht öffnen. Die Ausdünnung ist eine Rechnung über Punkte — welche
+ * Fixture sie liefert, ändert an der Zusage nichts. */
+$altFixture = dirname(__DIR__, 2) . '/referenzdatensatz/fixture/alt/fixture-format3.json.gz';
+$fx = is_file($altFixture) ? demo_fixture_laden($altFixture)['daten'] : ['missions' => [], 'rest_segments' => []];
 $spuren = [];
 foreach ($fx['missions'] ?? [] as $m) {
     if (!empty($m['track'])) {

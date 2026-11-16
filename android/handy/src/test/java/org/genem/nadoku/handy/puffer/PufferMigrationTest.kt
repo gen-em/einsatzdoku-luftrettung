@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteDatabase
 import androidx.test.core.app.ApplicationProvider
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -32,6 +33,10 @@ import org.robolectric.RobolectricTestRunner
  * Einsatzhülle zum Paket. Der Fall von 2 auf 3 trägt, was ein Handy mitten
  * im Dienst im Puffer hat: einen offenen und einen abgeschlossenen Einsatz
  * mit Phasen und Punkten, ein Ruhesegment, die Buchführung der Uhr.
+ *
+ * Anlass: Nr. 566 — Schema 4 legt die Änderungsnummer zum Paket, an der eine
+ * Bestätigung erkennt, ob sie noch dem Stand gilt, den die Anfrage trug. Der
+ * Fall von 3 auf 4 trägt denselben Bestand, dazu einen Zähler aus Schema 3.
  */
 @RunWith(RobolectricTestRunner::class)
 class PufferMigrationTest {
@@ -90,7 +95,7 @@ class PufferMigrationTest {
         try {
             puffer.laufenderDienst()                    // öffnet und migriert
             assertEquals("jede Zeile, jeder Wert wie vorher", vorher, abzug())
-            assertEquals(3, version())
+            assertEquals(4, version())
 
             val offen = puffer.paketNach("am-2-offen")!!
             val zu = puffer.paketNach("am-3-zu")!!
@@ -127,6 +132,46 @@ class PufferMigrationTest {
         }
     }
 
+    /**
+     * 3 → 4 (Nr. 566): Kein Paket, kein Punkt, keine Phase, kein Zähler und
+     * kein Vermerk ändert sich; die Änderungsnummer steht überall auf 0. Eine
+     * Bestätigung mit 0 gilt also für den vorgefundenen Stand — und eine
+     * Änderung danach zählt weiter, sodass eine Bestätigung des alten Stands
+     * nicht mehr greift.
+     */
+    @Test fun dieMigrationVonDreiAufVierVerliertNichts() {
+        dritteFassungAnlegen()
+        val vorher = abzug()
+
+        val zaehlerstand = SpeicherZaehlerstand(1_784_400_000L)
+        val puffer = Puffer(kontext, DATEI, Huellenzaehler(zaehlerstand) { 1_784_300_000L })
+        try {
+            puffer.laufenderDienst()                    // öffnet und migriert
+            assertEquals("jede Zeile, jeder Wert wie vorher", vorher, abzug())
+            assertEquals(4, version())
+            assertEquals("die Zähler aus Schema 3 bleiben", listOf("ar-1-ruhe=∅", "am-2-offen=501", "am-3-zu=∅"),
+                listOf("ar-1-ruhe", "am-2-offen", "am-3-zu").map { ref ->
+                    ref + "=" + (puffer.paketNach(ref)!!.zaehler?.toString() ?: "∅")
+                })
+            assertEquals("die Migration vergibt keinen Zähler", 1_784_400_000L, zaehlerstand.wert)
+
+            val offen = puffer.paketNach("am-2-offen")!!
+            assertEquals(0L, offen.aenderung)
+            assertEquals(0L, puffer.paketNach("ar-1-ruhe")!!.aenderung)
+            assertEquals("der Rückstand zählt wie vorher", 1, puffer.rueckstand())
+
+            // Benutzbar wie frisch: Eine Phase zählt weiter, eine Bestätigung des alten Stands greift nicht.
+            puffer.phaseAnhaengen(offen.id, 5, "2026-07-16T06:20:00Z", null, null, "handy")
+            assertEquals(1L, puffer.paketNach("am-2-offen")!!.aenderung)
+            assertFalse(puffer.bestaetigungMerken(offen.id, 3, 0))
+            assertTrue("die Phase bleibt Arbeit", puffer.hatArbeit(puffer.paketNach("am-2-offen")!!))
+            assertTrue(puffer.bestaetigungMerken(offen.id, 3, 1))
+            assertFalse(puffer.hatArbeit(puffer.paketNach("am-2-offen")!!))
+        } finally {
+            puffer.close()
+        }
+    }
+
     /** Ein migrierter Puffer hat dieselbe Tabelle `paket` wie ein frisch angelegter. */
     @Test fun migriertUndFrischHabenDasselbeSchema() {
         zweiteFassungAnlegen()
@@ -137,6 +182,7 @@ class PufferMigrationTest {
             Puffer(kontext, FRISCH).use { it.laufenderDienst() }
             assertEquals(spalten(FRISCH), migriert)
             assertTrue(migriert.any { it.startsWith("zaehler|INTEGER|0|") })
+            assertTrue(migriert.any { it.startsWith("aenderung|INTEGER|1|0") })
         } finally {
             kontext.deleteDatabase(FRISCH)
         }
@@ -222,6 +268,20 @@ class PufferMigrationTest {
         db.execSQL("INSERT INTO uhr_stand VALUES ('u-1', 7)")
         db.execSQL("INSERT INTO uhr_ereignis VALUES ('u-1', 9)")
         db.version = 2
+        db.close()
+    }
+
+    /**
+     * Eine Datenbank der Fassung 3: der Bestand von Fassung 2, dazu die Spalte
+     * `zaehler` mit dem Wortlaut der Migration von KA-06f und einem Zähler am
+     * offenen Einsatz.
+     */
+    private fun dritteFassungAnlegen() {
+        zweiteFassungAnlegen()
+        val db = SQLiteDatabase.openDatabase(kontext.getDatabasePath(DATEI).path, null, SQLiteDatabase.OPEN_READWRITE)
+        db.execSQL("ALTER TABLE paket ADD COLUMN zaehler INTEGER")
+        db.execSQL("UPDATE paket SET zaehler = 501 WHERE client_ref = 'am-2-offen'")
+        db.version = 3
         db.close()
     }
 

@@ -38,6 +38,15 @@ WELCHE HUELLE WELCHEN SCHLUESSEL BRAUCHT, steht in ihrem Praefix:
   `edka1:<kennung>:…`  ->  HKDF mit dem Anteil zu <kennung>
   `edk1:…` oder ohne   ->  die Haelfte unveraendert (Altfassung)
 
+FASSUNG 2 WIRD GELESEN (Konzept KA, KA-13). Mit umgelegter Weiche (Web
+25.0.0) stellt der Browser ein Konto bei der Anmeldung um: Ableitung 2 ab
+1 200 000 Runden (ein PBKDF2-Block, Haelfte und Token per HKDF) und die
+gebundene Huelle `edk2:` bzw. `edka2:<kennung>:`. Dieses Modul rechnet die
+Ableitung nach der Rundenzahl und oeffnet beide Huellenfassungen — das
+Format der Fassung 2 steht in `tools/proben/huelle/referenz_inhalt.py`, und
+von dort wird es gerufen, nicht nachgebaut. Geschrieben wird hier weiter
+Fassung 1 (`verschluesseln()`, `huelle_bauen()`, `pat_blob()`).
+
 DIESES MODUL STELLT NICHT UM. Es liest beide Fassungen und baut auf
 Verlangen die neue; ob ein Konto umgestellt WIRD, entscheidet der Browser
 (`unlock.js`). Ein Konto, das nur ueber den Pruefstand angemeldet war, bleibt
@@ -52,9 +61,18 @@ import json
 import os
 import re
 
+import pathlib
+import sys
+
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "proben" / "huelle"))
+import referenz_inhalt  # noqa: E402  (edk2 und Ableitung 2 — eine Stelle)
+
 PRAEFIX = "edk1:"
+PRAEFIX2 = "edk2:"
+HUELLE_PRAEFIX2 = "edka2:"
+ABLEITUNG2_AB = 1_200_000           # wie `ABLEITUNG2_AB` in assets/crypto.js
 
 
 def ableiten(passwort: str, salt_hex: str, runden: int) -> tuple[str, str]:
@@ -64,6 +82,10 @@ def ableiten(passwort: str, salt_hex: str, runden: int) -> tuple[str, str]:
         # Entwickeln als ein leiser im Betrieb. Ein Vorgabewert liesse eine
         # vergessene Aufrufstelle stillschweigend falsch rechnen.
         raise ValueError(f"Rundenzahl fehlt oder ist unbrauchbar: {runden!r}")
+    if runden >= ABLEITUNG2_AB:
+        # Ableitung 2: Rundenzahl und Fassung wechseln zusammen (F-KA-29).
+        _, haelfte, token = referenz_inhalt.ableitung2(passwort, bytes.fromhex(salt_hex), runden)
+        return haelfte.hex(), token.hex()
     bits = hashlib.pbkdf2_hmac("sha256", passwort.encode("utf-8"),
                                bytes.fromhex(salt_hex), runden, 64)
     return bits[:32].hex(), bits[32:].hex()
@@ -77,7 +99,7 @@ def huelle_kennung(huelle: str | None) -> str | None:
     """Die Anteil-Kennung im Praefix einer Huelle — oder None (Altfassung)."""
     if not huelle:
         return None
-    m = re.match(r"^edka1:([0-9a-f]{8}):", huelle)
+    m = re.match(r"^edka[12]:([0-9a-f]{8}):", huelle)
     return m.group(1) if m else None
 
 
@@ -128,7 +150,13 @@ def hkdf_sha256(ikm: bytes, salt: bytes, info: bytes, laenge: int) -> bytes:
 
 
 def entpacken(wrap: str, schluessel_hex: str) -> str:
-    """Verpackten Inhaltsschluessel auspacken -> Inhaltsschluessel als Hex."""
+    """Verpackten Inhaltsschluessel auspacken -> Inhaltsschluessel als Hex.
+
+    Beide Fassungen: `edk2:` und `edka2:<kennung>:` sind an Zweck und Bezug
+    gebunden (`wrap`, `pw` bzw. `pw:<kennung>`) und gehen ueber die Referenz.
+    """
+    if wrap.startswith((PRAEFIX2, HUELLE_PRAEFIX2)):
+        return referenz_inhalt.huelle_oeffnen(bytes.fromhex(schluessel_hex), wrap, "pw")
     return entschluesseln(wrap, schluessel_hex)
 
 
@@ -153,8 +181,15 @@ def verschluesseln(klartext: str, schluessel_hex: str) -> str:
     return PRAEFIX + base64.b64encode(iv + ct).decode("ascii")
 
 
-def entschluesseln(chiffre: str, schluessel_hex: str) -> str:
+def entschluesseln(chiffre: str, schluessel_hex: str, zweck: str | None = None,
+                   bezug: str = "") -> str:
     """Chiffretext oeffnen — beide Huellenfassungen und der Bestand ohne Praefix.
+
+    EIN GEBUNDENER TEXT (`edk2:`) GEHT NUR AN SEINER STELLE AUF: Wer ihn
+    oeffnet, nennt `zweck` (`pat`, `kp`, `rw`) und `bezug` (bei `pat` die
+    client_ref des Einsatzes). Ohne `zweck` wirft die Funktion, statt mit
+    einem Pruefwertfehler zu antworten, der aussieht wie ein falscher
+    Schluessel.
 
     DIE KENNUNG WIRD HIER NUR ABGESCHNITTEN, NICHT AUSGEWERTET. Welcher
     Schluessel zu `edka1:<kennung>:` gehoert, entscheidet `datenschluessel()`
@@ -162,6 +197,10 @@ def entschluesseln(chiffre: str, schluessel_hex: str) -> str:
     zu vermengen hiesse, dieser Funktion das Konto und die Anteile
     mitzugeben, die sie fuer einen `pat_blob` gar nicht braucht.
     """
+    if chiffre.startswith(PRAEFIX2):
+        if zweck is None:
+            raise ValueError("Ein `edk2:`-Text ist gebunden — `zweck` und `bezug` angeben.")
+        return referenz_inhalt.oeffnen(bytes.fromhex(schluessel_hex), chiffre, zweck, bezug)[0].decode("utf-8")
     if chiffre.startswith(HUELLE_PRAEFIX):
         roh = chiffre.split(":", 2)[2]
     elif chiffre.startswith(PRAEFIX):

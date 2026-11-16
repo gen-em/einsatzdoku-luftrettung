@@ -133,7 +133,8 @@ export const wege = [
         merke(!st0.rw_oeffentlich && !!st1.rw_oeffentlich && st1.angelegt === 1 && st1.mails === 0,
           `Paar ${st0.rw_oeffentlich ? 1 : 0} → ${st1.rw_oeffentlich ? 1 : 0} (RW_STAND „${standSeite}"), `
           + `angelegt +${st1.angelegt}, Mails +${st1.mails}`);
-        merke(/^edk1:/.test(st1.rw_privat || ''), 'privater Teil ' + String(st1.rw_privat || '').slice(0, 5));
+        /* `edk2:` seit Web 25.0.0 (Weiche an, KA-14); bis dahin `edk1:`. */
+        merke(/^edk2:/.test(st1.rw_privat || ''), 'privater Teil ' + String(st1.rw_privat || '').slice(0, 5));
 
         /* 3. Zweite Anmeldung: unverändert, und RW_STAND sagt „da". */
         await s.goto(`${k.basis}/logout.php`, { waitUntil: 'domcontentloaded' });

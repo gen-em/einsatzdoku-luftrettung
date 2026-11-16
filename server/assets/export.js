@@ -68,14 +68,26 @@
         return p[2] + '.' + p[1] + '.' + p[0];
     }
 
+    /* EIN FORMATIERER JE ART UND ZEITZONE, NICHT EINER JE WERT (Nr. 569).
+     * `new Intl.DateTimeFormat` ist teuer, `format()` ist es nicht: Ein
+     * Jahresexport baute ihn je Zeitfeld jeder Zeile neu — am Messstand
+     * rund 35 s Eigenzeit fuer drei CSV-Dateien und die Dateinamen der
+     * Spuren. Das Fach haelt die wenigen, die es gibt; die Einstellungen
+     * stehen weiter an der Stelle, die sie braucht. */
+    var zeitformate = {};
+    function zeitformat(art, tz, bauen) {
+        var k = art + '|' + tz;
+        return zeitformate[k] || (zeitformate[k] = bauen());
+    }
+
     /** ISO-8601-UTC ('...Z') -> {hour, minute, ...} in der App-Zeitzone. */
     function localParts(iso, tz) {
         if (!iso) return null;
         var d = new Date(iso);
         if (isNaN(d.getTime())) return null;
-        var fmt = new Intl.DateTimeFormat('de-DE', {
+        var fmt = zeitformat('uhr', tz, function () { return new Intl.DateTimeFormat('de-DE', {
             timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false
-        });
+        }); });
         var out = {};
         fmt.formatToParts(d).forEach(function (p) { out[p.type] = p.value; });
         return out;
@@ -92,9 +104,9 @@
         if (!iso) return '';
         var d = new Date(iso);
         if (isNaN(d.getTime())) return '';
-        var fmt = new Intl.DateTimeFormat('en-CA', {
+        var fmt = zeitformat('tag', tz, function () { return new Intl.DateTimeFormat('en-CA', {
             timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit'
-        });
+        }); });
         return fmt.format(d);   // en-CA liefert 'YYYY-MM-DD'
     }
 
@@ -291,7 +303,7 @@
             if (!m.ort_huelle) { continue; }
             var innen;
             try {
-                if (!k) { k = await EdOrtsdaten.schluessel(key); }
+                if (!k) { k = await EdOrtsdaten.fuerViele(await EdOrtsdaten.schluessel(key)); }
                 innen = await EdOrtsdaten.einsatz(m, k);
             } catch (e) {
                 EdOrtsdaten.melden(e, 'einsatz', m.id);
@@ -622,10 +634,10 @@
      *  ('en-US'-Trick: als UTC formatieren und die Differenz zum echten UTC-
      *  Zeitpunkt bilden — damit stimmt der Versatz auch bei Sommerzeit). */
     function tzOffsetParts(date, tz) {
-        var dtf = new Intl.DateTimeFormat('en-US', {
+        var dtf = zeitformat('versatz', tz, function () { return new Intl.DateTimeFormat('en-US', {
             timeZone: tz, hour12: false, year: 'numeric', month: '2-digit', day: '2-digit',
             hour: '2-digit', minute: '2-digit', second: '2-digit'
-        });
+        }); });
         var p = {};
         dtf.formatToParts(date).forEach(function (x) { if (x.type !== 'literal') p[x.type] = x.value; });
         var hh = p.hour === '24' ? '00' : p.hour;
@@ -1190,14 +1202,34 @@
 
     /** Holt GPX-relevante Tracks blockweise (höchstens 25 IDs je Anfrage, siehe
      *  api/export_data.php) und baut die GPX-Dateien. Liefert außerdem, welche
-     *  mission_id/rest_id welche Datei bekommen hat (für track_datei in den CSVs). */
-    async function buildTracks(data, onProgress) {
+     *  mission_id/rest_id welche Datei bekommen hat (für track_datei in den CSVs).
+     *
+     *  MIT `archiv` (Nr. 569) GEHT JEDE GPX-DATEI SOFORT INS ARCHIV und wird
+     *  nicht aufgehoben: `files` nennt dann nur noch die Namen. Ein Jahr sind
+     *  am Messstand 8100 Dateien mit zusammen rund 320 MB Text — alle zugleich
+     *  im Speicher, bis das Packen begann. Gepackt belegen sie ein Zehntel.
+     *
+     *  DIE STÜCKE EINES BLOCKS WERDEN ZUSAMMEN GEÖFFNET, nicht eine Spur nach
+     *  der anderen: Die Rechnung läuft neben dem Hauptfaden, und er wartete
+     *  sonst je Hülle auf sie. Die Reihenfolge der Dateien bleibt die der
+     *  Kennungen. */
+    async function buildTracks(data, onProgress, archiv) {
         var genTime = new Date().toISOString();
         /* Der Schlüssel der Stücke — der Export mit GPX läuft nur
            mit Haken, die Sitzung ist also entsperrt. */
-        var k = await EdOrtsdaten.schluessel(await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER));
+        var k = await EdOrtsdaten.fuerViele(
+            await EdOrtsdaten.schluessel(await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER)));
         var files = [];
         var fileByMission = {}, fileByRest = {};
+        /* Liefert ein Versprechen und wird je Block gemeinsam abgewartet:
+           zip.js packt die Dateien eines Blocks nebeneinander und schreibt
+           sie in der Reihenfolge der Aufrufe. Mehr als ein Block (25 Dateien)
+           steht so nie ungepackt im Speicher. */
+        var ablegen = function (name, text) {
+            if (archiv) { files.push({ name: name }); return archiv.add(name, text); }
+            files.push({ name: name, content: text });
+            return Promise.resolve();
+        };
 
         var missionIds = (data.missions || []).filter(function (m) { return m.track_points > 0; }).map(function (m) { return m.id; });
         var restIds = (data.rests || []).filter(function (r) { return r.track_points > 0; }).map(function (r) { return r.id; });
@@ -1208,20 +1240,23 @@
         for (var b1 = 0; b1 < missionIds.length; b1 += 25) {
             var batch1 = missionIds.slice(b1, b1 + 25);
             var res1 = await fetchTrack('mission', batch1);
-            var offen1 = {};
+            var offen1 = await Promise.all(batch1.map(function (id) {
+                return spurPunkte(res1[String(id)], 'spur', k);
+            }));
+            var packen1 = [];
             for (var q1 = 0; q1 < batch1.length; q1++) {
-                offen1[batch1[q1]] = await spurPunkte(res1[String(batch1[q1])], 'spur', k);
-            }
-            batch1.forEach(function (id) {
-                var pts = offen1[id] || [];
-                if (!pts.length) return;
-                var m = data.missions.find(function (x) { return x.id === id; });
+                var mid = batch1[q1];
+                var pts = offen1[q1] || [];
+                offen1[q1] = null;
+                if (!pts.length) continue;
+                var m = data.missions.find(function (x) { return x.id === mid; });
                 var hhmm = (hhmmLocal(phaseAt(m, 2), APP_TZ) || '00:00').replace(':', '');
-                var relPath = 'tracks/mission_' + padId(id) + '_' + m.day + '_' + hhmm + '.gpx';
-                fileByMission[id] = relPath;   // relativer Pfad, so wie einsaetze.csv ihn braucht
-                var gpxName = 'Einsatz ' + id + ' — ' + dmyDE(m.day) + ' ' + (hhmmLocal(phaseAt(m, 2), APP_TZ) || '');
-                files.push({ name: relPath, content: buildGpx(pts, gpxName, genTime) });
-            });
+                var relPath = 'tracks/mission_' + padId(mid) + '_' + m.day + '_' + hhmm + '.gpx';
+                fileByMission[mid] = relPath;   // relativer Pfad, so wie einsaetze.csv ihn braucht
+                var gpxName = 'Einsatz ' + mid + ' — ' + dmyDE(m.day) + ' ' + (hhmmLocal(phaseAt(m, 2), APP_TZ) || '');
+                packen1.push(ablegen(relPath, buildGpx(pts, gpxName, genTime)));
+            }
+            await Promise.all(packen1);
             done += batch1.length;
             if (onProgress) { onProgress('Tracks ' + done + ' / ' + total); }
         }
@@ -1229,20 +1264,23 @@
         for (var b2 = 0; b2 < restIds.length; b2 += 25) {
             var batch2 = restIds.slice(b2, b2 + 25);
             var res2 = await fetchTrack('rest', batch2);
-            var offen2 = {};
+            var offen2 = await Promise.all(batch2.map(function (id) {
+                return spurPunkte(res2[String(id)], 'ruhe', k);
+            }));
+            var packen2 = [];
             for (var q2 = 0; q2 < batch2.length; q2++) {
-                offen2[batch2[q2]] = await spurPunkte(res2[String(batch2[q2])], 'ruhe', k);
+                var rid = batch2[q2];
+                var rpts = offen2[q2] || [];
+                offen2[q2] = null;
+                if (!rpts.length) continue;
+                var r = data.rests.find(function (x) { return x.id === rid; });
+                var rhhmm = (hhmmLocal(r.started_at, APP_TZ) || '00:00').replace(':', '');
+                var rPath = 'tracks/rest_' + padId(rid) + '_' + r.day + '_' + rhhmm + '.gpx';
+                fileByRest[rid] = rPath;
+                var rName = 'Ruhezeit ' + rid + ' — ' + dmyDE(r.day) + ' ' + (hhmmLocal(r.started_at, APP_TZ) || '');
+                packen2.push(ablegen(rPath, buildGpx(rpts, rName, genTime)));
             }
-            batch2.forEach(function (id) {
-                var pts = offen2[id] || [];
-                if (!pts.length) return;
-                var r = data.rests.find(function (x) { return x.id === id; });
-                var hhmm = (hhmmLocal(r.started_at, APP_TZ) || '00:00').replace(':', '');
-                var relPath = 'tracks/rest_' + padId(id) + '_' + r.day + '_' + hhmm + '.gpx';
-                fileByRest[id] = relPath;
-                var gpxName = 'Ruhezeit ' + id + ' — ' + dmyDE(r.day) + ' ' + (hhmmLocal(r.started_at, APP_TZ) || '');
-                files.push({ name: relPath, content: buildGpx(pts, gpxName, genTime) });
-            });
+            await Promise.all(packen2);
             done += batch2.length;
             if (onProgress) { onProgress('Tracks ' + done + ' / ' + total); }
         }
@@ -1258,7 +1296,7 @@
         (data.missions || []).forEach(function (m) { countByDay[m.day_id] = (countByDay[m.day_id] || 0) + 1; });
 
         var tracks = opts.gpx
-            ? await buildTracks(data, onProgress)
+            ? await buildTracks(data, onProgress, opts.archiv || null)
             : { files: [], fileByMission: {}, fileByRest: {} };
 
         onProgress('Einsätze werden aufbereitet…');
@@ -1286,27 +1324,45 @@
             { name: 'einsaetze.csv', content: einsaetzeCsv },
             { name: 'diensttage.csv', content: diensttageCsv },
             { name: 'ruhezeiten.csv', content: ruhezeitenCsv }
-        ].concat(tracks.files);
+        ].concat(opts.archiv ? [] : tracks.files);   // mit Archiv liegen die Spuren schon darin
 
         return { files: files, count: einsRows.length, tracks: tracks.files.length };
     }
 
-    /** Packt Dateien (Text oder Uint8Array) mit zip.js — mit Passwort
-     *  AES-256/WinZip (encryptionStrength 3), sonst unverschlüsselt (6.). */
-    async function zipAndDownload(files, password, filename) {
+    /** Ein Archiv, das Datei um Datei wächst (zip.js) — mit Passwort
+     *  AES-256/WinZip (encryptionStrength 3), sonst unverschlüsselt (6.).
+     *  `add(name, inhalt)` nimmt Text oder Uint8Array, `schliessen(name)`
+     *  schließt ab und löst den Download aus.
+     *
+     *  TEXT GEHT ALS UTF-8-BYTES HINEIN, NICHT ÜBER `zip.TextReader`
+     *  (Nr. 569). Der baut je Datei einen Blob und liest ihn scheibenweise
+     *  zurück; bei 8100 GPX-Dateien war das am Messstand die Hälfte der
+     *  Packzeit. Die Bytes sind dieselben. */
+    function zipOeffnen(password) {
         var writer = new zip.Uint8ArrayWriter();
-        var zwOpts = password ? { password: password, encryptionStrength: 3 } : {};
-        var zw = new zip.ZipWriter(writer, zwOpts);
+        var zw = new zip.ZipWriter(writer, password ? { password: password, encryptionStrength: 3 } : {});
+        var kodierer = new TextEncoder();
+        return {
+            add: function (name, inhalt) {
+                return zw.add(name, new zip.Uint8ArrayReader(
+                    (typeof inhalt === 'string') ? kodierer.encode(inhalt) : inhalt));
+            },
+            schliessen: async function (filename) {
+                await zw.close();
+                triggerDownload(await writer.getData(), filename, MIME_ZIP);
+            }
+        };
+    }
+
+    /** Packt Dateien (Text oder Uint8Array) in ein Archiv und liefert es aus.
+     *  `archiv`: ein schon geöffnetes (`zipOeffnen()`), in dem die Spuren
+     *  bereits liegen — dann kommen die Dateien dazu. */
+    async function zipAndDownload(files, password, filename, archiv) {
+        archiv = archiv || zipOeffnen(password);
         for (var i = 0; i < files.length; i++) {
-            var f = files[i];
-            var reader = (typeof f.content === 'string')
-                ? new zip.TextReader(f.content)
-                : new zip.Uint8ArrayReader(f.content);
-            await zw.add(f.name, reader);
+            await archiv.add(files[i].name, files[i].content);
         }
-        await zw.close();
-        var bytes = await writer.getData();
-        triggerDownload(bytes, filename, MIME_ZIP);
+        await archiv.schliessen(filename);
     }
 
     /* --------------------------------------------------------- Steuerung --- */
@@ -1595,12 +1651,16 @@
                     triggerDownload(bytesXlsx, geliefert, MIME_XLSX);
                 }
             } else {
+                /* Das Archiv steht VOR den Spuren: Jede GPX-Datei geht hinein,
+                   sobald sie gebaut ist (`buildTracks()`), die Tabellen
+                   danach. Scheitert der Weg, gibt es keine Datei. */
+                var archiv = zipOeffnen(pwOn ? password : null);
                 built = await buildProfilB(data, {
-                    patient: patient, gpx: gpx, von: von, bis: bis, onProgress: setState
+                    patient: patient, gpx: gpx, von: von, bis: bis, onProgress: setState, archiv: archiv
                 });
                 setState('Archiv wird ' + (pwOn ? 'verschlüsselt und ' : '') + 'gepackt…');
                 geliefert = dateiName(fmt, 'zip', patient, pwOn);
-                await zipAndDownload(built.files, pwOn ? password : null, geliefert);
+                await zipAndDownload(built.files, pwOn ? password : null, geliefert, archiv);
             }
 
             // Die Trackzahl steht bewusst mit in der Meldung: Ob ein Archiv

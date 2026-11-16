@@ -4,9 +4,12 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import org.genem.nadoku.handy.PruefServer
 import org.genem.nadoku.handy.senden.Kurvenhilfe
+import org.genem.nadoku.handy.tresor.Herkunft
+import org.genem.nadoku.handy.tresor.Herkunftsstand
 import org.genem.nadoku.handy.tresor.PruefTresorschluessel
 import org.genem.nadoku.handy.tresor.Schluesseltresor
 import org.genem.nadoku.handy.tresor.SpeicherGeraeteschluessel
+import org.genem.nadoku.handy.tresor.Zugangsdaten
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
@@ -263,5 +266,91 @@ class KopplungVergleichTest {
         server.antwortkoerper = """{"ok":true}"""
         assertTrue(dienst().trennen() is Trennergebnis.Getrennt)
         assertNull(gs.liefern())
+    }
+
+    // ---- Herkunft fehlt (seit KA-15, E-KA-80) --------------------------------
+
+    private fun bindung(): Rueckstandsbindung {
+        val kontext = ApplicationProvider.getApplicationContext<Context>()
+        kontext.getSharedPreferences("rueckstand", Context.MODE_PRIVATE).edit().clear().commit()
+        return Rueckstandsbindung(kontext)
+    }
+
+    private fun dienstMitRueckstand(b: Rueckstandsbindung?) = Kopplungsdienst(
+        HttpNetzweg(), tresor, server.basis,
+        rueckstand = { 2 }, bindung = b, hoechstePaketId = { 17L }, geraeteschluessel = gs,
+    )
+
+    /**
+     * `status` sagt `huelle: 2`, das Handy hat kein Paar: Der Tresor merkt
+     * sich trotzdem Fassung 2 — was der Server verlangt, nicht was das Handy
+     * kann. Bis KA-15 merkte er sich hier Fassung 1, und das Handy sendete
+     * ohne Herkunftsnachweis weiter.
+     */
+    @Test fun statusMitHuelle2OhnePaarMerktFassung2() {
+        tresor.speichern(Zugangsdaten("dev-1", "k1"))
+        server.status = 200
+        server.antwortkoerper = """{"zustand":"gekoppelt","kontoschluessel":"$kontoB64","huelle":2}"""
+        assertNull(gs.liefern())
+        assertEquals(kontoB64, dienst().schluesselHolen())
+        assertTrue(tresor.lesen()!!.huelle2)
+        assertEquals(Herkunftsstand.FEHLT, Herkunft.stand(tresor.lesen(), gs))
+    }
+
+    /** Ohne `huelle` in der Antwort bleibt es bei Fassung 1, mit oder ohne Paar. */
+    @Test fun statusOhneHuelleBleibtFassung1() {
+        tresor.speichern(Zugangsdaten("dev-1", "k1"))
+        server.status = 200
+        server.antwortkoerper = """{"zustand":"gekoppelt","kontoschluessel":"$kontoB64"}"""
+        assertEquals(kontoB64, dienst().schluesselHolen())
+        assertFalse(tresor.lesen()!!.huelle2)
+        assertEquals(Herkunftsstand.OHNE, Herkunft.stand(tresor.lesen(), gs))
+    }
+
+    /**
+     * Fehlt die Herkunft, sperrt der Rückstand das Trennen nicht: Er kann
+     * ohnehin nicht gehen, und „neu koppeln" führt über das Trennen. Er
+     * bleibt liegen, gebunden an den Kontoschlüssel dieser Kopplung.
+     */
+    @Test fun herkunftFehltTrenntTrotzRueckstandUndBindet() {
+        tresor.speichern(Zugangsdaten("dev-1", "k1", kontoB64, huelle2 = true))
+        val b = bindung()
+        server.status = 200
+        server.antwortkoerper = """{"ok":true}"""
+
+        assertTrue(dienstMitRueckstand(b).trennen() is Trennergebnis.Getrennt)
+        assertNull("Die Kopplung ist fort", tresor.lesen())
+        assertEquals(17L, b.gebundenBis)
+        assertEquals(Bindungsstand.GLEICH, b.stand(kontoB64))
+        assertEquals(Bindungsstand.ANDERS, b.stand("SCHLUESSEL-B"))
+    }
+
+    /** Ist das Paar da, bleibt die Sperre, wie sie war — und ebenso ohne `huelle: 2`. */
+    @Test fun rueckstandSperrtWeiterWoDieHerkunftNichtFehlt() {
+        val spk = Base64.getDecoder().decode(starten().getJSONObject("schluessel").getString("spk"))
+        beansprucht()
+        dienst().nachfragen()
+        server.antwortAus = null
+        server.status = 200
+        server.antwortkoerper = """{"ok":true,"kontoschluessel":"$kontoB64","huelle":2}"""
+        assertTrue(dienst().bestaetigen(ja = true) is Bestaetigungsergebnis.Gekoppelt)
+        assertArrayEquals(spk, gs.liefern()!!.spk)
+        val anfragen = server.anfragen.size
+        val b = bindung()
+
+        assertTrue(dienstMitRueckstand(b).trennen() is Trennergebnis.Rueckstand)
+        assertNotNull("Die Kopplung bleibt", tresor.lesen())
+        assertNotNull("und das Paar", gs.liefern())
+        assertNull(b.gebundenBis)
+        assertEquals("nichts an den Server", anfragen, server.anfragen.size)
+
+        // Ohne `huelle: 2` fehlt keine Herkunft, auch nicht ohne Paar.
+        gs.vergessen()
+        tresor.huelleSetzen(false)
+        assertTrue(dienstMitRueckstand(b).trennen() is Trennergebnis.Rueckstand)
+        // Und ohne Bindung lässt sich nichts binden: Die Sperre gilt ausnahmslos.
+        tresor.huelleSetzen(true)
+        assertTrue(dienstMitRueckstand(null).trennen() is Trennergebnis.Rueckstand)
+        assertNotNull(tresor.lesen())
     }
 }

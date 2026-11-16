@@ -77,8 +77,14 @@ const EdInhalt = (() => {
    *   (2) die Blätter des Standbuchs einen Endpunkt haben (standbuch.js),
    *   (3) jeder Verbraucher über `lesen()`/`schreiben()` geht — die Liste
    *       steht im Paketbericht KA-06b.
-   * Vorher umgelegt, schriebe der Browser Blöcke, die der Server abweist. */
-  const SCHREIBT_FASSUNG_2 = false;
+   * Vorher umgelegt, schriebe der Browser Blöcke, die der Server abweist.
+   *
+   * UMGELEGT MIT WEB 25.0.0 (KA-14, E-KA-51, -82). Seitdem schreibt jeder
+   * Weg Fassung 2, das Standbuch führt Buch, und der Anhebelauf hebt nach der
+   * Anmeldung still den Altbestand. Zurück auf `false` geht es nicht ohne
+   * Schaden: Was Fassung 2 geschrieben hat, bleibt Fassung 2, und das Standbuch
+   * erwartet sie (Runbook, Technik 13). */
+  const SCHREIBT_FASSUNG_2 = true;
 
   /** Schreibt diese Auslieferung Fassung 2? Die Weiche, für alle Dateien. */
   function schreibt2() { return SCHREIBT_FASSUNG_2; }

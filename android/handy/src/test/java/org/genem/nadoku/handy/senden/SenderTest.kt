@@ -355,6 +355,93 @@ class SenderTest {
         assertNull("bestätigt und entsorgt", puffer.paket(id))
     }
 
+    // ---- Eine Änderung, während die Anfrage unterwegs ist (Nr. 566) ---------
+
+    /**
+     * Antwortet wie der echte Server und führt bei der ERSTEN Anfrage
+     * [dazwischen] aus — nachdem der Sender den Körper gebaut hat und bevor
+     * seine Antwort eintrifft. Genau dort fällt im Dienst eine Phase.
+     */
+    private fun antworteUndAendereDazwischen(dazwischen: () -> Unit) {
+        server.status = 200
+        var erste = true
+        var gespeichert = 0L                    // wie der Server: was er hat, behält er
+        server.antwortAus = { koerper ->
+            if (erste) { erste = false; dazwischen() }
+            val o = org.json.JSONObject(koerper)
+            o.optJSONObject("track")?.let { gespeichert = maxOf(gespeichert, it.getLong("seq_from") + it.getInt("punkte")) }
+            """{"ok":true,"id":1,"stored_points":0,"next_seq":$gespeichert}"""
+        }
+    }
+
+    private fun einsatzMitPhase(ref: String): Long {
+        val id = puffer.paketAnlegen(ref, Paketzeile.ART_EINSATZ, "2026-07-16", "ad-3", "2026-07-16T07:00:00Z")
+        puffer.phaseAnhaengen(id, 3, "2026-07-16T07:00:00Z", null, null, Dienstklammer.QUELLE_HANDY)
+        return id
+    }
+
+    /**
+     * Eine Phase fällt, während der Teil-Upload eines OFFENEN Einsatzes
+     * unterwegs ist. Die Antwort gilt dem Stand mit einer Phase; die zweite
+     * muss trotzdem hinaus, im selben Lauf — ohne neuen Punkt. Bis Android
+     * 0.25.x setzte die Antwort `metadaten_bestaetigt` zurück auf 1, und die
+     * Phase wartete auf den nächsten Punkt (beim stehenden Fahrzeug: auf den
+     * Abschluss).
+     */
+    @Test fun einePhaseWaehrendDerAnfrageGehtNochHinaus() {
+        val id = einsatzMitPhase("am-566-a")
+        antworteUndAendereDazwischen {
+            puffer.phaseAnhaengen(id, 4, "2026-07-16T07:05:00Z", null, null, Dienstklammer.QUELLE_HANDY)
+        }
+        sender().sendeAlles()
+
+        assertEquals("die zweite Phase ging im selben Lauf hinaus", 2, server.anfragen.size)
+        assertEquals(1, org.json.JSONObject(server.anfragen[0].koerper).getJSONArray("phases").length())
+        assertEquals(2, server.letzterKoerper().getJSONArray("phases").length())
+        assertFalse("danach ist nichts mehr offen", puffer.hatArbeit(puffer.paket(id)!!))
+    }
+
+    /**
+     * Ein Ruhesegment wird geschlossen, während sein Teil-Upload unterwegs ist
+     * (der Einsatz beginnt). Der Abschluss ist Arbeit (F-KA-117) und darf von
+     * der Antwort auf den offenen Stand nicht verschluckt werden.
+     */
+    @Test fun einAbschlussWaehrendDerAnfrageGehtNochHinaus() {
+        val id = offenesSegment("ar-566-b")
+        puffer.punktAnhaengen(id, Stroeme.erzeuge(Stroeme.REISEFLUG).first())
+        antworteUndAendereDazwischen {
+            puffer.paketSchliessen(id, "2026-07-16T08:00:00Z", null, null)
+        }
+        val bericht = sender().sendeAlles()
+
+        assertEquals("der Abschluss ging im selben Lauf hinaus", 2, server.anfragen.size)
+        assertFalse(org.json.JSONObject(server.anfragen[0].koerper).getBoolean("final"))
+        assertTrue(server.letzterKoerper().getBoolean("final"))
+        assertEquals(1, bericht.fertigePakete)
+        assertNull("bestätigt und entsorgt", puffer.paket(id))
+    }
+
+    /**
+     * Die Uhr reicht einem ABGESCHLOSSENEN Einsatz eine Phase nach, während
+     * seine letzte Anfrage unterwegs ist. Ohne den Abgleich des Stands wäre
+     * das Paket nach der Antwort entsorgt worden — samt der nachgereichten
+     * Phase, die der Server nie gesehen hat.
+     */
+    @Test fun eineNachgereichtePhaseWirdNichtMitEntsorgt() {
+        val id = einsatzMitPhase("am-566-c")
+        puffer.paketSchliessen(id, "2026-07-16T07:30:00Z", 100, 1)
+        antworteUndAendereDazwischen {
+            puffer.phaseAnhaengen(id, 9, "2026-07-16T07:29:00Z", null, null, "uhr")
+        }
+        val bericht = sender().sendeAlles()
+
+        assertEquals("der nachgereichte Stand ging hinaus", 2, server.anfragen.size)
+        assertEquals(1, org.json.JSONObject(server.anfragen[0].koerper).getJSONArray("phases").length())
+        assertEquals(2, server.letzterKoerper().getJSONArray("phases").length())
+        assertEquals("erst nach dem zweiten Stand entsorgt", 1, bericht.fertigePakete)
+        assertNull(puffer.paket(id))
+    }
+
     /** Gebunden an DIESES Konto: Die Bindung fällt, der Rückstand geht hinaus. */
     @Test fun bindungAnDasselbeKontoSendet() {
         antworteVollstaendig()
@@ -916,6 +1003,7 @@ class SenderTest {
 
         val bericht = s.sendeAlles()
         assertTrue(bericht.spaeterErneut)
+        assertFalse("das Paar ist da — vorübergehend, kein „neu koppeln“", bericht.herkunftFehlt)
         assertEquals(0, bericht.anfragen)
         assertEquals(0, bericht.fehlerhaft)
         assertTrue("nichts ist hinausgegangen", server.anfragen.isEmpty())
@@ -928,6 +1016,167 @@ class SenderTest {
         assertEquals(1, danach.fertigePakete)
         assertEquals(2, java.util.Base64.getDecoder().decode(
             server.letzterKoerper().getJSONObject("track").getString("huelle"))[0].toInt())
+    }
+
+    // ---- Herkunft fehlt: `huelle: 2` ohne Gerätepaar (seit KA-15, E-KA-80) ----
+
+    /** Die Fassung der zuletzt gesendeten Spurhülle. */
+    private fun letzteFassung(): Int = java.util.Base64.getDecoder().decode(
+        server.letzterKoerper().getJSONObject("track").getString("huelle"))[0].toInt()
+
+    /** Was im Puffer liegt, als Text — Paket für Paket mit Bestätigungsmarke, Zustand und Punktzahl. */
+    private fun pufferbild(): String = puffer.warteschlange().joinToString("|") {
+        "${it.id}:${it.clientRef}:${it.bestaetigtSeq}:${it.final}:${puffer.punktzahl(it.id)}"
+    } + " r=${puffer.rueckstand()} a=${puffer.abgewiesen()}"
+
+    /** Ein Lauf, der wegen fehlender Herkunft nichts getan hat. */
+    private fun haeltAn(bericht: Sendebericht, vorher: String) {
+        assertTrue("der Zustand ist benannt", bericht.herkunftFehlt)
+        assertTrue("der Nachsende-Job fragt wieder", bericht.spaeterErneut)
+        assertFalse("kein 401: die Kopplung selbst gilt", bericht.pausiert)
+        assertFalse(bericht.ohneSchluessel)
+        assertFalse(bericht.sauber)
+        assertEquals(0, bericht.anfragen)
+        assertEquals(0, bericht.gesendetePunkte)
+        assertEquals(0, bericht.fehlerhaft)
+        assertTrue("nichts ist hinausgegangen — auch keine Fassung 1", server.anfragen.isEmpty())
+        assertEquals("der Puffer liegt unverändert", vorher, pufferbild())
+    }
+
+    /**
+     * Der Server hat `huelle: 2` gesagt, das Paar ist fort (nach dem Update
+     * von 0.24.0): KEINE Anfrage, keine Hülle der Fassung 1 als Ausweg, der
+     * Puffer unberührt, und der Bericht sagt „Herkunft fehlt". Nach dem
+     * Neukoppeln — ein neues gültiges Paar — sendet derselbe Sender in
+     * Fassung 2 unter der Kennung des neuen Schlüssels.
+     */
+    @Test fun huelle2OhnePaarSendetNichtsBisNeuGekoppelt() {
+        antworteVollstaendig()
+        val gs = fassung2Vorbereiten()
+        gs.vergessen()                          // die Ablage ist leer, der Merker im Tresor steht
+        assertNull(gs.liefern())
+        assertTrue(tresor.lesen()!!.huelle2)
+        val vorher = pufferbild()
+        assertTrue("es liegt etwas zum Senden", puffer.rueckstand() > 0)
+        val s = sender2(gs)
+
+        haeltAn(s.sendeAlles(), vorher)
+        haeltAn(s.sendeAlles(), vorher)         // und bleibt dabei, Lauf für Lauf
+        assertEquals(
+            org.genem.nadoku.handy.tresor.Herkunftsstand.FEHLT,
+            org.genem.nadoku.handy.tresor.Herkunft.stand(tresor.lesen(), gs),
+        )
+
+        // Neu gekoppelt: ein neues Paar wird gültig.
+        gs.beginnen()
+        gs.festlegen(Huellenoeffner.konto, ByteArray(16))
+        assertTrue(gs.uebernehmen())
+        assertEquals(
+            org.genem.nadoku.handy.tresor.Herkunftsstand.GESICHERT,
+            org.genem.nadoku.handy.tresor.Herkunft.stand(tresor.lesen(), gs),
+        )
+        val danach = s.sendeAlles()
+        assertFalse(danach.herkunftFehlt)
+        assertTrue(danach.sauber)
+        assertEquals(1, danach.fertigePakete)
+        assertEquals(0, puffer.rueckstand())
+        assertEquals(2, letzteFassung())
+        val h = java.util.Base64.getDecoder().decode(
+            server.letzterKoerper().getJSONObject("track").getString("huelle"))
+        assertEquals(Geraetehuelle.sid(gs.spk()!!).toList(), h.copyOfRange(1, 9).toList())
+        assertTrue("jede Anfrage in Fassung 2", server.anfragen.all {
+            java.util.Base64.getDecoder().decode(
+                org.json.JSONObject(it.koerper).getJSONObject("track").getString("huelle"))[0].toInt() == 2
+        })
+    }
+
+    /** Ein Sender ganz ohne Ablage für das Paar (`null`) hält bei `huelle: 2` genauso an. */
+    @Test fun huelle2OhneAblageSendetNichts() {
+        antworteVollstaendig()
+        fassung2Vorbereiten()
+        val vorher = pufferbild()
+        val s = Sender(puffer, HttpNetzweg(), tresor, server.basis, jetzt = { uhrzeit })
+        haeltAn(s.sendeAlles(), vorher)
+    }
+
+    /**
+     * Die Verwaltung nennt ein Paar, aber die Schlüsselablage gibt den
+     * Eintrag nicht her — so sieht ein Keystore aus, der „nicht vorhanden"
+     * meldet, ob der Eintrag nun fehlt oder der Dienst nur nicht antwortet.
+     * Auch dann geht nichts hinaus. Und weil die Lage nirgends abgelegt ist:
+     * Gibt die Ablage den Eintrag wieder her, sendet der nächste Lauf in
+     * Fassung 2, ohne neue Kopplung.
+     */
+    @Test fun keystoreOhneEintragHaeltAnUndHeiltVonSelbst() {
+        antworteVollstaendig()
+        val gs = fassung2Vorbereiten()
+        val name = gs.ablage.namen().single()
+        val eintrag = gs.ablage.absender(name) as org.genem.nadoku.handy.tresor.SoftwareAbsender
+        gs.ablage.loeschen(name)
+        assertNotNull("die Verwaltung nennt das Paar noch", gs.inhalt)
+        assertNull(gs.liefern())
+        val vorher = pufferbild()
+        val s = sender2(gs)
+
+        haeltAn(s.sendeAlles(), vorher)
+
+        gs.ablage.einlegen(name, eintrag)
+        val danach = s.sendeAlles()
+        assertFalse(danach.herkunftFehlt)
+        assertTrue(danach.sauber)
+        assertEquals(2, letzteFassung())
+    }
+
+    /**
+     * Ohne `huelle: 2` bleibt alles, wie es war: Fassung 1, ob ein Paar da
+     * ist oder nicht — der Server verlangt keinen Nachweis, also fehlt keiner.
+     */
+    @Test fun ohneHuelle2BleibtFassung1() {
+        antworteVollstaendig()
+        val gs = fassung2Vorbereiten()
+        tresor.huelleSetzen(false)
+        val mitPaar = sender2(gs).sendeAlles()
+        assertFalse(mitPaar.herkunftFehlt)
+        assertTrue(mitPaar.sauber)
+        assertEquals(1, mitPaar.fertigePakete)
+        assertEquals(1, letzteFassung())
+        assertEquals(
+            org.genem.nadoku.handy.tresor.Herkunftsstand.OHNE,
+            org.genem.nadoku.handy.tresor.Herkunft.stand(tresor.lesen(), gs),
+        )
+
+        einSegmentMitPunkten(10)
+        gs.vergessen()
+        val ohnePaar = sender2(gs).sendeAlles()
+        assertFalse(ohnePaar.herkunftFehlt)
+        assertTrue(ohnePaar.sauber)
+        assertEquals(1, letzteFassung())
+        assertEquals(
+            org.genem.nadoku.handy.tresor.Herkunftsstand.OHNE,
+            org.genem.nadoku.handy.tresor.Herkunft.stand(null, gs),
+        )
+    }
+
+    /**
+     * Der Merker kommt erst mit dem Nachholen des Kontoschlüssels (`status`
+     * trägt beides): Der Lauf, der ihn holt, hält schon an — er sendet nicht
+     * noch einmal mit dem Stand von davor in Fassung 1.
+     */
+    @Test fun huelle2AusDemNachholenGiltImSelbenLauf() {
+        antworteVollstaendig()
+        einSegmentMitPunkten(10)
+        tresor.speichern(Zugangsdaten("dev-pruef", "geheim-pruef"))
+        val vorher = pufferbild()
+        val s = Sender(
+            puffer, HttpNetzweg(), tresor, server.basis, jetzt = { uhrzeit },
+            schluesselHolen = {
+                tresor.huelleSetzen(true)
+                tresor.kontoschluesselSetzen(KONTOSCHLUESSEL)
+                KONTOSCHLUESSEL
+            },
+            geraeteschluessel = org.genem.nadoku.handy.tresor.SpeicherGeraeteschluessel(),
+        )
+        haeltAn(s.sendeAlles(), vorher)
     }
 
     private fun abgewiesen(ref: String, beendet: String): Long {

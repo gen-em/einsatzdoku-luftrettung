@@ -2,6 +2,8 @@ package org.genem.nadoku.handy.kopplung
 
 import org.genem.nadoku.handy.tresor.Festlegung
 import org.genem.nadoku.handy.tresor.Geraeteschluessel
+import org.genem.nadoku.handy.tresor.Herkunft
+import org.genem.nadoku.handy.tresor.Herkunftsstand
 import org.genem.nadoku.handy.tresor.Schluesseltresor
 import org.genem.nadoku.handy.tresor.Zugangsdaten
 import org.json.JSONObject
@@ -480,7 +482,12 @@ class Kopplungsdienst(
         if (antwort !is Netzantwort.Server || antwort.code != 200) return null
         val o = alsJson(antwort.koerper) ?: return null
         if (o.optString("zustand") != "gekoppelt") return null
-        tresor.huelleSetzen(o.optInt("huelle", 1) == 2 && geraeteschluessel?.liefern() != null)
+        /* WAS DER SERVER SAGT, NICHT WAS DAS HANDY KANN (seit KA-15,
+         * E-KA-80). Bis dahin stand hier „… und ein Paar ist da", und ein
+         * Handy ohne Paar merkte sich Fassung 1 — der stille Rückfall, den
+         * es nicht mehr gibt. Jetzt merkt es sich `huelle: 2` auch ohne
+         * Paar, und der Sender hält an ([org.genem.nadoku.handy.tresor.Herkunft]). */
+        tresor.huelleSetzen(o.optInt("huelle", 1) == 2)
         val ks = kontoschluesselAus(o) ?: return null
         tresor.kontoschluesselSetzen(ks)
         return ks
@@ -511,6 +518,11 @@ class Kopplungsdienst(
          * dieser Kopplung: Koppelt das Gerät wieder an dasselbe Konto, geht
          * er hinaus, an ein anderes nicht.
          *
+         * DASSELBE, WENN DIE HERKUNFT FEHLT (seit KA-15, E-KA-80): Der
+         * Sender hält dann alles zurück, der Rückstand wächst, und der
+         * einzige Weg heraus ist „neu koppeln" — also Trennen. Mit der
+         * Sperre wäre genau dieser Weg zu.
+         *
          * Besteht schon eine Bindung, darf nur getrennt werden, wenn der ganze
          * Rückstand unter ihr liegt — eine zweite Grenze mit einem zweiten
          * Schlüssel hielte die Bauform nicht. Getrennt wird nur außerhalb
@@ -519,7 +531,9 @@ class Kopplungsdienst(
         val offen = rueckstand()
         if (offen > 0) {
             val b = bindung
-            if (b == null || !b.abgemeldet) return Trennergebnis.Rueckstand(offen)
+            val gehtNichtMehr = b != null &&
+                (b.abgemeldet || Herkunft.stand(zugang, geraeteschluessel) == Herkunftsstand.FEHLT)
+            if (b == null || !gehtNichtMehr) return Trennergebnis.Rueckstand(offen)
             val alt = b.gebundenBis
             if (alt == null) {
                 b.binden(zugang.kontoschluessel, hoechstePaketId())

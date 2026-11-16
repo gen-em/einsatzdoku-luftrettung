@@ -29,7 +29,7 @@ async function versuch(mail, pw) {
   await seite.fill('input[name="email"]', mail);
   await seite.fill('input[name="password"]', pw);
   await Promise.all([
-    seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 30000 }).catch(() => {}),
+    seite.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 90000 }).catch(() => {}),
     seite.click('#loginform button[type="submit"]'),
   ]);
   /* DER ZWEITFAKTOR. Die Gegenprobe meldet sich als

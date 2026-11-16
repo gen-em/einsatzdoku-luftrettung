@@ -194,7 +194,7 @@ class HandyBildTest {
         laufendePhase: Int = Phasen.FREI,
         gesetztePhasen: List<Phasenzeile> = emptyList(),
         fristBis: String? = null,
-        herkunft: Boolean = false,
+        herkunft: org.genem.nadoku.handy.tresor.Herkunftsstand = org.genem.nadoku.handy.tresor.Herkunftsstand.OHNE,
     ): @Composable () -> Unit = {
         DienstAnsicht(
             stand = Dienststand(
@@ -399,7 +399,8 @@ class HandyBildTest {
                 aufStarten = {}, aufAntwort = {},
             )
         },
-        "bereit-herkunft" to dienst(herkunft = true),
+        "bereit-herkunft" to dienst(herkunft = org.genem.nadoku.handy.tresor.Herkunftsstand.GESICHERT),
+        "bereit-herkunft-fehlt" to dienst(herkunft = org.genem.nadoku.handy.tresor.Herkunftsstand.FEHLT, rueckstand = 3),
         "einstellungen" to {
             EinstellungenAnsicht(
                 logoWahl = LogoWahl.BODEN,

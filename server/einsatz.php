@@ -936,17 +936,109 @@ async function ortsdatenOeffnen(m){
   LADE_PHASEN.zeige('Phasen werden geöffnet …');
   try {
     await EdOrtsdaten.fuerAnsicht(m, ck);
+    /* BEFUND AN EINER ANGENOMMENEN HÜLLE (KA-11, M-KA-03 A): Die Karte
+     * erscheint, darüber die Meldung. */
+    if ((m.ort_befund || []).includes('offen-nach-schluss')) {
+      ortsMeldung('warn', 'Nach dem Abschluss kam noch ein offener Stand.',
+        'Diesen Einsatz hatte ein Gerät schon als abgeschlossen gesendet; danach kam von '
+        + (await geraetName(ck, m.ort_absender)) + ' ein Stand ohne Abschluss. Angezeigt wird dieser '
+        + 'neuere Stand. Prüfe Phasen und GPS-Daten, und schließe den Einsatz am Gerät oder hier im '
+        + 'Formular noch einmal ab.', null, true);
+    }
   } catch (e) {
     EdOrtsdaten.melden(e, 'einsatz', m.id);
-    const box = document.createElement('div');
-    box.dataset.ortsdaten = 'fehler';
-    box.innerHTML = EdHtml.meldung('fehler',
-      e && e.grund === 'kein_paar'
-        ? 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — die Ortsdaten lassen sich nicht öffnen. Einrichten: Einstellungen → Geräte.'
-        : 'Die Ortsdaten dieses Einsatzes lassen sich nicht öffnen. Die übrigen Angaben stimmen.');
-    document.getElementById('map').appendChild(box);
+    if (e && typeof EdHuelle2 !== 'undefined' && e.grund === EdHuelle2.UHRZEIT_PRUEFEN && e.hinweis) {
+      await uhrzeitHinweis(m, ck, e.hinweis);
+    } else {
+      const grund = e && e.grund;
+      const [auftakt, text] = grund === 'kein_paar'
+        ? ['', 'Für dieses Konto ist noch kein Schlüssel für Uhr und Handy eingerichtet — die Ortsdaten lassen sich nicht öffnen. Einrichten: Einstellungen → Geräte.']
+        : grund === 'zurueckgelegt'
+          /* M-KA-03 C: gleiches Gerät, kleinerer Zähler — kein Rückweg (E-KA-70). */
+          ? ['Die Ortsdaten sind älter als der Stand, den dieser Browser kennt.',
+             'Dasselbe Gerät hatte schon einen neueren Stand gesendet — jemand hat einen alten zurückgelegt. Die Ortsdaten werden nicht angezeigt; die übrigen Angaben stimmen. Sag der BetreiberIn Bescheid.']
+          : grund === 'ohne-herkunft'
+            /* M-KA-03 E. */
+            ? ['Diese Ortsdaten tragen keinen Herkunftsnachweis.',
+               'Seit der Umstellung verschließen Uhr und Handy mit ihrem Geräteschlüssel; dieser Stand kam ohne. Er wird nicht angezeigt. Koppele das Gerät neu (Einstellungen → Geräte).']
+            : ['', 'Die Ortsdaten dieses Einsatzes lassen sich nicht öffnen. Die übrigen Angaben stimmen.'];
+      ortsMeldung('fehler', auftakt, text, null, false);
+    }
   }
   LADE_KARTE.weg(); LADE_PHASEN.weg();
+}
+
+/* ---- Befunde und Rückweg (KA-11, E-KA-70, -87, Mockup M-KA-03) ----------
+ *
+ * Eine Meldung je Lage, der vorhandene Baustein `EdHtml.meldung()`; die
+ * Aktion ist sein `knopf`. `ueber`: über die Karte (sie wird gezeigt), sonst
+ * an ihre Stelle. */
+function ortsMeldung(ton, auftakt, text, knopf, ueber){
+  const box = document.createElement('div');
+  box.dataset.ortsdaten = ton === 'fehler' ? 'fehler' : 'befund';
+  box.innerHTML = EdHtml.meldung(ton, text, Object.assign({}, auftakt ? { auftakt: auftakt } : {},
+                                                     knopf ? { knopf: knopf } : {}));
+  const karte = document.getElementById('map');
+  if (ueber) { karte.parentNode.insertBefore(box, karte); } else { karte.appendChild(box); }
+  return box;
+}
+
+/* Der Name eines Geräts aus dem Gerätebuch des Kontos; die SID allein sagt
+ * niemandem etwas. Fehlt er, bleibt es bei „einem anderen Gerät". */
+async function geraetName(ck, sid){
+  if (!sid || sid === 'konto') { return 'diesem Konto'; }
+  try {
+    const g = (await (await EdStandbuch.seitenbuch(ck)).geraete())[sid];
+    if (g && g.geraet) { return g.geraet; }
+  } catch (e) { /* ohne Buch kein Name */ }
+  return 'einem anderen Gerät';
+}
+
+/* M-KA-03 B: anderes Gerät, Zähler kleiner, gleich oder schon einmal
+ * verworfen. Die Karte bleibt leer, bis entschieden ist; „Diesen Stand
+ * übernehmen" bestätigt genau diesen Hinweis (`fuerAnsicht(…, {bestaetigt})`,
+ * E-KA-88) und lädt die Ansicht neu — dann gilt der Stand und die Karte
+ * zeichnet ihn. „Nicht jetzt" lässt alles stehen; beim nächsten Öffnen kommt
+ * der Hinweis wieder. */
+async function uhrzeitHinweis(m, ck, h){
+  const dieses = await geraetName(ck, h.absender);
+  const jenes  = await geraetName(ck, h.stand_absender);
+  const zeit = s => EdFormat.uhrzeit(s, undefined, '–') + ' Uhr';
+  let auftakt, text;
+  if (h.art === 'gleich') {
+    auftakt = 'Zwei Geräte haben denselben Stand gezählt.';
+    text = 'Dieser Browser kennt einen Stand von ' + jenes + ' (' + zeit(h.o) + '); der gespeicherte kommt von '
+      + dieses + ' und trägt dieselbe Sekunde. Welcher der richtige ist, lässt sich daran nicht erkennen. '
+      + 'Bis du entscheidest, zeigt die Karte nichts.';
+  } else if (h.art === 'verworfen') {
+    auftakt = 'Ein schon verworfener Stand ist wieder da.';
+    text = 'Den Stand von ' + dieses + ' (' + zeit(h.z) + ') hattest du um '
+      + EdFormat.uhrzeit(h.vermerk && h.vermerk[2], undefined, '–') + ' Uhr zugunsten von ' + jenes
+      + ' verworfen. Uhrzeit von ' + dieses + ' prüfen. Bis du entscheidest, zeigt die Karte nichts.';
+  } else {
+    auftakt = 'Uhrzeit von ' + jenes + ' prüfen.';
+    text = 'Dieser Browser kennt schon einen Stand von ' + zeit(h.o) + ' (' + jenes + '). Der gespeicherte Stand kommt von '
+      + dieses + ' und trägt ' + zeit(h.z) + ' — älter, obwohl er später kam. Geht eine der Uhren falsch, '
+      + 'ist er trotzdem der richtige. Bis du entscheidest, zeigt die Karte nichts.';
+  }
+  const box = ortsMeldung('warn', auftakt, text,
+    '<button class="knopf knopf-primaer" type="button" data-rueckweg="uebernehmen"><span>Diesen Stand übernehmen</span></button> '
+    + '<button class="knopf knopf-leise" type="button" data-rueckweg="spaeter"><span>Nicht jetzt</span></button>', false);
+  box.querySelector('[data-rueckweg="spaeter"]').addEventListener('click', () => {
+    const a = box.querySelector('.meldung-aktion'); if (a) { a.remove(); }
+  });
+  box.querySelector('[data-rueckweg="uebernehmen"]').addEventListener('click', async (ev) => {
+    ev.currentTarget.disabled = true;
+    try {
+      await EdOrtsdaten.fuerAnsicht(m, ck, { bestaetigt: h });
+      location.reload();
+    } catch (e) {
+      box.remove();
+      ortsMeldung('fehler', '', e && e.grund === EdHuelle2.UHRZEIT_PRUEFEN
+        ? 'Der Stand hat sich inzwischen geändert. Lade die Seite neu und entscheide noch einmal.'
+        : 'Der Stand ließ sich nicht übernehmen. Die Ortsdaten bleiben verborgen; versuch es später noch einmal.', null, false);
+    }
+  });
 }
 
 /* TRANSPORTZIEL, ORTSHOEHE UND LETZTE ZIELKLINIK AUS DEM BLOB (S11-05b).

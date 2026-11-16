@@ -1743,6 +1743,26 @@ Zeit davor vorübergehend keine Karte, bis dein Browser ihre Ortsdaten im
 Hintergrund verschlossen hatte. Seit Web 23 ist das abgeschlossen; alte
 Ortsdaten im Klartext gibt es auf dem Server nicht mehr.)*
 
+**Was die Karte seit Web 25.0.0 außerdem sagen kann.** Dein Browser merkt
+sich je Einsatz, welchen Stand er zuletzt gesehen hat und von welchem
+Gerät, und hält jeden neuen dagegen:
+
+- **„Nach dem Abschluss kam noch ein offener Stand"** (gelb, Karte darunter):
+  Ein Gerät hat den Einsatz nach dem Abschluss noch einmal ohne Abschluss
+  gesendet. Prüfe Phasen und GPS-Daten und schließe ihn noch einmal ab.
+- **„Uhrzeit von ‹Gerät› prüfen"** (gelb, keine Karte): Zwei Geräte haben
+  am selben Einsatz gearbeitet, und der gespeicherte Stand ist nach der Uhr
+  seines Geräts älter als der, den dein Browser kennt — meist geht eine Uhr
+  falsch. Ist er der richtige, tippe **„Diesen Stand übernehmen"**; die
+  Seite lädt neu und zeigt ihn. **„Nicht jetzt"** lässt alles, wie es ist;
+  beim nächsten Öffnen fragt die Seite wieder.
+- **„Die Ortsdaten sind älter als der Stand, den dieser Browser kennt"**
+  (rot): Dasselbe Gerät hatte schon Neueres gesendet — jemand hat einen
+  alten Stand zurückgelegt. Es gibt keinen Weg, ihn zu übernehmen.
+- **„Diese Ortsdaten tragen keinen Herkunftsnachweis"** (rot): Der Stand
+  kam ohne Geräteschlüssel, wo dein Browser schon einen kennt. Koppele das
+  Gerät neu.
+
 **Sechs Kennzeichen seit Web 14.0.0, vorher drei.** Ein Einsatz vom Handy und
 einer von der Wear-OS-Uhr standen bis dahin beide als „Uhr" da, ein
 geschnittener als „manuell" — die Anzeige konnte es nicht besser wissen, weil
@@ -2979,6 +2999,15 @@ Datei, die die Anwendung selbst geschrieben hat, löst das nicht aus; es
 braucht eine beschädigte oder fremde Datei. Bis Web 23.0.1 blieb die Meldung
 in diesem Fall blau.
 
+**Seit Web 25.0.0 kann auch eine Aufzeichnung abgelehnt werden.** Hat eine
+Aufzeichnung eine Lücke (gelöschte Punkte), muss dein Browser sich merken,
+dass die Lücke gewollt ist; die Datei bringt dafür ihre Löschvermerke mit.
+Fehlt zu einer Lücke der Vermerk („Lücke in der Aufzeichnung ohne
+Löschvermerk“) oder lässt er sich nicht eintragen („Löschvermerk nicht im
+Standbuch“), übernimmt das Einspielen diese eine Aufzeichnung nicht und sagt
+es in der Abschlussmeldung — statt sie zu speichern und dann nicht mehr
+öffnen zu können. Alles andere wird übernommen.
+
 Ver- und Entschlüsselung passieren **in deinem Browser**; der Server sieht die
 Inhalte nie. Deshalb lässt sich ein Backup auch **in ein anderes Konto**
 einspielen: Beim Import werden die geschützten Angaben automatisch mit dem
@@ -3973,11 +4002,40 @@ gekoppelt war, koppelst du nach dem Update einmal neu** (trennen, neuen Code
 holen): Sein alter Schlüssel lag anders und wird beim ersten Start gelöscht;
 bis zur neuen Kopplung sendet es ohne Herkunftsnachweis.
 
+**„Herkunft fehlt — neu koppeln"** *(seit Android 0.26.0)*. Diese rote
+Zeile steht auf der Startseite, wenn der Server den Herkunftsnachweis
+verlangt, dem Handy aber sein Geräteschlüssel fehlt — etwa nach dem Update
+von 0.24.0. Dann sendet es nichts; die Daten bleiben im Handy. Tippe nach
+dem Dienst auf **„Neu koppeln"**: Das ist dasselbe Trennen wie in den
+Einstellungen, und es geht hier auch mit Rückstand — der Rückstand bleibt
+deinem Konto zugeordnet und geht hinaus, sobald du dasselbe Konto wieder
+koppelst.
+
 **Ein Gerät mit älterer App** schickt keinen eigenen Schlüssel. Die Rückfrage
 sagt es mit einer gelben Meldung, und der Knopf heißt **„Trotzdem
 verbinden"**: Es koppelt wie bisher, aber was es sendet, trägt keinen
 Nachweis, dass es von deinem Gerät kommt. Aktualisiere die App und koppel
 dann neu.
+
+**Seit Web 25.0.0: Geräte, die vorher gekoppelt wurden, einmal neu
+koppeln.** Erst seit dieser Fassung trägt der Browser ein Gerät beim
+Koppeln in das Gerätebuch deines Kontos ein, und nur ein eingetragenes
+Gerät bekommt vom Server die Zusage, mit Herkunftsnachweis zu senden. Ein
+Gerät, das schon vorher gekoppelt war, steht dort nicht: Es sendet weiter
+ohne Nachweis, und der Browser kann seine Daten nicht seinem Gerät
+zuordnen. Trenne es deshalb einmal (Einstellungen → Geräte, oder am Gerät)
+und kopple es neu, mit Vergleichswert. Danach steht am Handy „Herkunft
+gesichert" und an der Uhr ebenso.
+
+**„Geräte neu verbinden"** *(seit Web 25.0.0)*. Steht dieser gelbe Hinweis
+auf der Startseite und unter Einstellungen → Geräte, kann dieser Browser
+nicht mehr erkennen, welche Geräte zu deinem Konto gehören — etwa weil die
+Ablage auf dem Server beschädigt ist und du in einem Browser angemeldet bist,
+der sie nie selbst hatte. Er hat dann still von vorn angefangen. Trenne jedes
+Gerät, an dem „neu verbinden" steht, und kopple es neu; danach verschwindet
+der Hinweis. Was das Gerät vorher an Ortsdaten gesendet hat, lässt sich
+nicht mehr öffnen. Kennt dein Browser die Ablage noch, merkst du von alldem
+nichts: Er legt seine Fassung still zurück.
 
 **Fehlt der Schlüssel für Uhr und Handy, steht ganz oben eine Karte dazu**
 *(seit Web 23.7.0)*. Uhr und Handy verschließen GPS-Daten und Ortsangaben mit

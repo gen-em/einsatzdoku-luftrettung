@@ -36,5 +36,5 @@ Alle Stufen ohne Abbruch, so viele Schnitte, Löschungen und Verdichtungen wie i
 
 ## Was es nicht kann
 
-Den Browserschritt nachbauen (E-P1-10) oder auf `edka1:` umstellen (E-S10-15);
-Kacheln und Mail sieht es nicht, und der Sperrlistenschritt geht je Installation nur einmal.
+Den Browserschritt nachbauen (E-P1-10) oder auf `edka1:` umstellen (E-S10-15); es SCHREIBT Fassung 1 und `edk1:` (lesen
+kann `sitzung.py` beide Fassungen, KA-13) — die Fixture hebt `fixture/verschliessen.py`. Kacheln und Mail sieht es nicht, der Sperrlistenschritt geht je Installation nur einmal.
