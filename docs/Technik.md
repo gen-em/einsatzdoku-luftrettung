@@ -13767,7 +13767,7 @@ E-KA-83). Bis Web 24.x trug der Browser kein Gerät ins Gerätebuch ein
 `huelle: 2` — es sendet Fassung 1 ohne Herkunftsnachweis, bis es neu
 gekoppelt ist. Einen Weg „Wert nachträglich bestätigen" gibt es bewusst
 nicht. Nach dem Neukoppeln zeigt das Handy „Herkunft gesichert", die
-Garmin ebenso; ein Handy, das `huelle: 2` kennt, aber keinen Schlüssel hat,
+Uhr ebenso; ein Handy, das `huelle: 2` kennt, aber keinen Schlüssel hat,
 sendet nicht und sagt „Herkunft fehlt — neu koppeln" (E-KA-80).
 
 **Update mit Wartungsmodus (seit Web 13.2.0 der Regelweg, S5 Paket W):**

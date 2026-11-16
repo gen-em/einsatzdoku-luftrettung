@@ -8,8 +8,8 @@
  * `wege/einstellungen_profil.mjs`); die Anlage steht deshalb einmal, hier —
  * und nicht unter `wege/`, weil der Läufer dort jede Datei als Wegdatei lädt.
  *
- * DAS TOKEN ENTSTEHT WIE IM BROWSER (PBKDF2-SHA-256, 64 Byte, die zweite
- * Hälfte), gespeichert wird sein Hash. Die erste Hälfte ist die des
+ * DAS TOKEN ENTSTEHT WIE IM BROWSER (Ableitung 1: PBKDF2-SHA-256, 64 Byte,
+ * die zweite Hälfte; ab 1 200 000 Runden Ableitung 2), gespeichert wird sein Hash. Die erste Hälfte ist die des
  * Datenschlüssels; das Konto hat keinen, und keiner der Wege öffnet
  * Patientendaten.
  *
@@ -45,7 +45,13 @@ export function probekontoAnlegen(adresse, passwort, rolle, name = 'Bedienprobe'
   probekontoRaeumen(adresse);
   return Number(php(`
     $pw = ${JSON.stringify(passwort)}; $salz = bin2hex(random_bytes(16)); $iter = KDF_ITER_ZIEL;
-    $tok = bin2hex(substr(hash_pbkdf2("sha256", $pw, hex2bin($salz), $iter, 64, true), 32, 32));
+    /* Ab 1 200 000 Runden rechnet der Browser Ableitung 2 (Wurzel 32 Byte,
+       Token per HKDF, crypto.js ABLEITUNG2_AB) — seit Web 25.0.0 ist das
+       das Ziel (KA-14). Mit Ableitung 1 passte das Token nicht mehr, und
+       jeder Weg blieb auf login.php stehen. */
+    $tok = $iter >= 1200000
+        ? bin2hex(hash_hkdf("sha256", hash_pbkdf2("sha256", $pw, hex2bin($salz), $iter, 32, true), 32, "nadoku-ableitung-2|token", ""))
+        : bin2hex(substr(hash_pbkdf2("sha256", $pw, hex2bin($salz), $iter, 64, true), 32, 32));
     db()->prepare("INSERT INTO users (email, name, role, password_hash, kdf_salt, kdf_iter)
                    VALUES (?, ?, ?, ?, ?, ?)")
         ->execute([${JSON.stringify(adresse)}, ${JSON.stringify(name)}, ${JSON.stringify(rolle)},

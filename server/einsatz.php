@@ -942,7 +942,7 @@ async function ortsdatenOeffnen(m){
       ortsMeldung('warn', 'Nach dem Abschluss kam noch ein offener Stand.',
         'Diesen Einsatz hatte ein Gerät schon als abgeschlossen gesendet; danach kam von '
         + (await geraetName(ck, m.ort_absender)) + ' ein Stand ohne Abschluss. Angezeigt wird dieser '
-        + 'neuere Stand. Prüfe Phasen und Spur, und schließe den Einsatz am Gerät oder hier im '
+        + 'neuere Stand. Prüfe Phasen und GPS-Daten, und schließe den Einsatz am Gerät oder hier im '
         + 'Formular noch einmal ab.', null, true);
     }
   } catch (e) {
@@ -956,7 +956,7 @@ async function ortsdatenOeffnen(m){
         : grund === 'zurueckgelegt'
           /* M-KA-03 C: gleiches Gerät, kleinerer Zähler — kein Rückweg (E-KA-70). */
           ? ['Die Ortsdaten sind älter als der Stand, den dieser Browser kennt.',
-             'Dasselbe Gerät hatte schon einen neueren Stand gesendet — jemand hat einen alten zurückgelegt. Die Ortsdaten werden nicht angezeigt; die übrigen Angaben stimmen. Sag der Betreiberin Bescheid.']
+             'Dasselbe Gerät hatte schon einen neueren Stand gesendet — jemand hat einen alten zurückgelegt. Die Ortsdaten werden nicht angezeigt; die übrigen Angaben stimmen. Sag der BetreiberIn Bescheid.']
           : grund === 'ohne-herkunft'
             /* M-KA-03 E. */
             ? ['Diese Ortsdaten tragen keinen Herkunftsnachweis.',

@@ -1736,7 +1736,7 @@ Gerät, und hält jeden neuen dagegen:
 
 - **„Nach dem Abschluss kam noch ein offener Stand"** (gelb, Karte darunter):
   Ein Gerät hat den Einsatz nach dem Abschluss noch einmal ohne Abschluss
-  gesendet. Prüfe Phasen und Spur und schließe ihn noch einmal ab.
+  gesendet. Prüfe Phasen und GPS-Daten und schließe ihn noch einmal ab.
 - **„Uhrzeit von ‹Gerät› prüfen"** (gelb, keine Karte): Zwei Geräte haben
   am selben Einsatz gearbeitet, und der gespeicherte Stand ist nach der Uhr
   seines Geräts älter als der, den dein Browser kennt — meist geht eine Uhr

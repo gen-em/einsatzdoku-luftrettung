@@ -4,7 +4,7 @@
  * `ka06b4-anhebelauf`, in dieser Reihenfolge und am Demo-Konto. Seit
  * Web 25.0.0 trägt die ausgelieferte Fixture keinen Altbestand mehr (Format
  * 4, KA-13); der Weg setzt deshalb zuerst mit der letzten Fixture im alten
- * Format zurück (`tools/bedienprobe/daten/fixture-format3.json.gz`, Stand
+ * Format zurück (`tools/referenzdatensatz/fixture/alt/fixture-format3.json.gz`, Stand
  * e2e4d8f) — genau der Bestand, den der Lauf auf Produktiv vorfindet:
  *
  *   1. Weiche nur im Browser der Probe auf `false` gestellt: Die Startseite
@@ -53,7 +53,7 @@ export const wege = [
     async fahren(k) {
       try {
         execFileSync('php', ['-r', 'require "server/db.php"; require "server/demo_lib.php"; demo_zuruecksetzen($argv[1]);',
-                             resolve(WURZEL, 'tools/bedienprobe/daten/fixture-format3.json.gz')],
+                             resolve(WURZEL, 'tools/referenzdatensatz/fixture/alt/fixture-format3.json.gz')],
                      { cwd: WURZEL, stdio: 'ignore' });
         await k.neuAnmelden();
         await weicheStellen(k.seite, false);
