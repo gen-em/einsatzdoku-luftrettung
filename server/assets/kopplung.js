@@ -90,9 +90,11 @@
        * Merker der Startseite. */
       const imBuch = new Set(Object.values(geraete).filter(g => g.bis == null).map(g => g.geraet));
       const fehlen = JSON.parse(el.dataset.mitSchluessel || '[]').filter(id => !imBuch.has(id));
-      /* Der Platz entsteht hier, vor der ersten Gerätekarte — die Seite hat
-       * keinen eigenen dafür (nur im Ausnahmefall gebraucht). */
-      const erste = document.getElementById('k-garmin') || document.getElementById('k-android');
+      /* Der Platz entsteht hier, vor der ersten Gerätekarte mit einem Gerät —
+       * die Seite hat keinen eigenen dafür (nur im Ausnahmefall gebraucht).
+       * Gefunden über die Gerätezeile: Ein Gerät, das fehlt, hat eine. */
+      const zeile = document.querySelector('.zeile[data-geraet]');
+      const erste = zeile && zeile.closest('.karte[id^="k-"]');
       let platz = document.getElementById('geraete-neu-verbinden');
       if (!platz && erste && fehlen.length) {
         platz = document.createElement('div');
