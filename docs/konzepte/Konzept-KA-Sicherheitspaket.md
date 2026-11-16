@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 erledigt** (M-KA-03 freigegeben, E-KA-87), **KA-12 erledigt** (Handbuch und Runbook: Geräte nach dem Tag neu koppeln), **KA-09 erledigt** (Referenz Rückweg, Fable-Agent), **KA-15 erledigt** (Android 0.26.0), **KA-10 erledigt** (Browser-Kern), **KA-11 gebaut** (Anzeige in `einsatz.php`; gefahren wird sie mit umgelegter Weiche in KA-14), **KA-13 erledigt** (Demo-Fixture Format 4; lädt erst mit KA-14), **KA-14 erledigt** (Prüfstand `haupt` 74 grün, 0 rot); **alle Pakete KA-08 bis KA-15 fertig**; vor dem PR auf Wunsch der BetreiberIn Backlog **Nr. 566** (Android, erledigt), **Nr. 568** (E-KA-92, erledigt) und **Nr. 569** (Sichern und GPX schneller, Fable-Agent, erledigt); Prüfstand `haupt` 74 grün, 0 rot; **PR #190 gemergt 16.11.2026** (ging mit Konflikt auf, `main` örtlich gemergt, Prüfstand über den Merge neu; Regel seither `Pruefablauf.md` 5.3a); Lauf 219 auf Staging grün samt Stufe 2, R91 mit eigenem Konto ohne Befund (Abschnitt 9); **danach 06e** in einem Zug (E-KA-79); Garmin-Teil (Zähler am Inhalt, kein Senden ohne Herkunft) erledigt als KG-09/KG-10, Uhr 5.1.0, PR #189 gemergt; offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
+| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 erledigt** (M-KA-03 freigegeben, E-KA-87), **KA-12 erledigt** (Handbuch und Runbook: Geräte nach dem Tag neu koppeln), **KA-09 erledigt** (Referenz Rückweg, Fable-Agent), **KA-15 erledigt** (Android 0.26.0), **KA-10 erledigt** (Browser-Kern), **KA-11 gebaut** (Anzeige in `einsatz.php`; gefahren wird sie mit umgelegter Weiche in KA-14), **KA-13 erledigt** (Demo-Fixture Format 4; lädt erst mit KA-14), **KA-14 erledigt** (Prüfstand `haupt` 74 grün, 0 rot); **alle Pakete KA-08 bis KA-15 fertig**; vor dem PR auf Wunsch der BetreiberIn Backlog **Nr. 566** (Android, erledigt), **Nr. 568** (E-KA-92, erledigt) und **Nr. 569** (Sichern und GPX schneller, Fable-Agent, erledigt); Prüfstand `haupt` 74 grün, 0 rot; **PR #190 gemergt 16.11.2026** (ging mit Konflikt auf, `main` örtlich gemergt, Prüfstand über den Merge neu; Regel seither `Pruefablauf.md` 5.3a); Lauf 219 auf Staging grün samt Stufe 2, R91 mit eigenem Konto ohne Befund (Abschnitt 9); **06e in Arbeit** als KA-16 bis KA-23 (Web 26.0.0, E-KA-93 bis -97; PR wartet auf den Tag `web-v25.0.0`); Garmin-Teil (Zähler am Inhalt, kein Senden ohne Herkunft) erledigt als KG-09/KG-10, Uhr 5.1.0, PR #189 gemergt; offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
 | Erledigt | **KA-06f** (PR #187, gemergt 15.11.2026, Android 0.25.0, Web 24.19.0; Zweig `claude/amazing-keller-i2f04f`; R91 auf Staging grün, Abschnitt 9) · **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -147,6 +147,7 @@ Safari.
 | E-KA-94 | **`k` haftet beim Zusammenführen wie `f`** (Q-KA-21, F-KA-119): Ein Gerätestand nach dem Konto bleibt abgewiesen, auch wenn ein anderer Browser einen höheren Gerätestand kannte. Regel in Referenz und Vektoren, dann im Browser | 16.11.2026, BetreiberIn |
 | E-KA-95 | **Eine Lücke ohne Löschvermerk in übernommenen Altdaten bekommt einen engen Vermerk des Kontos** (Q-KA-22): Der Browser setzt beim Übernehmen einen Löschvermerk genau über die Lücke; die Leseregel bleibt | 16.11.2026, BetreiberIn |
 | E-KA-96 | **Der Garmin-Teil von 06e wird in dieser Sitzung gebaut**, nicht über KG | 16.11.2026, BetreiberIn |
+| E-KA-97 | **Das Altformat bleibt in 06e nur im Anhebelauf lesbar** — `edk1:` und Gerätehülle Fassung 1 öffnet nur noch der Lauf, der sie hebt; Anzeige, Export und alle Schreibwege verlangen Fassung 2. Sonst wäre ein Konto, das sich zwischen 25.0.0 und 26.0.0 nicht angemeldet hat, danach unlesbar. Ganz entfernt wird das Lesen mit KA-07. `edk1:` in `pat_wrap_rc` bleibt (nur ein Schlüsselwechsel hebt es) | 16.11.2026, Hauptinstanz (folgt aus E-KA-60, -79) |
 | E-KA-73 | **E-KA-69, -71 und -72 kommen als eigenes Paket KA-06f vor 06e**, in einer neuen Instanz; der Krypto-Teil (Keystore-Umsetzung von `Geraeteschluessel`, Zählerregel in Referenz und Handy) geht wieder an einen Fable-Agenten (wie E-KA-67), der Garmin-Teil von E-KA-69 an KG (E-KA-21) | 15.11.2026, BetreiberIn |
 | E-KA-66 | **Gerätebuch und „Wert stimmt“ gehen in zwei Schritten, nicht in einer Transaktion:** erst das Buch (über den vorhandenen Weg `geraetEintragen()`), dann der Vermerk am Server mit `im_buch`. Ein Gerät am Server ohne Buch-Eintrag sendete Daten, die nicht aufgehen; ein Buch-Eintrag ohne Gerät räumt der Abgleich der Geräteseite auf (`bis`). Weicht vom Entwurf 06d, Punkt 5 ab | 13.11.2026, Umsetzung |
 | E-KA-67 | **Den Anschluss des leeren Schlussstücks prüft der Browser beim Lesen (Regel `luecke`), nicht der Eingang** — der Eingang prüft Form (Fassung 2, `ts_von` = `ts_bis`). Eine Abfrage des letzten Stücks im Eingang kostete jede Anfrage und belegte nichts, was der Browser nicht ohnehin prüft. Weicht vom Entwurf 06d, Punkt 8 ab | 13.11.2026, Umsetzung |
@@ -716,6 +717,34 @@ gestartete KG-Sitzung (E-KA-86).
 
 **Auslieferung:** Tag `web-v25.0.0` und `android-v0.26.0` setzt die
 BetreiberIn; vorher die Messung am großen Bestand (KA-14).
+
+### KA-16 bis KA-23 — 06e: Altformat beenden (Web 26.0.0, E-KA-79, -93)
+
+Ein Zweig, ein gesammelter PR, am Stück; **gemergt erst nach dem Tag
+`web-v25.0.0`, dem Anhebelauf auf Produktiv und dem Neukoppeln der Geräte**
+(E-KA-93, P-KA-18, -19). Modell Opus (Abschnitt 5). **Fächerung:** keine —
+Referenz, Browser-Kern und Proben hängen aneinander, der Rest ist Prüfarbeit
+und erzählender Text. Garmin in dieser Sitzung (E-KA-96).
+**Bestandsaufnahme** (16.11.2026, Agent): rund 60 Dateien mit Treffern,
+davon rund 35 inhaltlich (Gruppen A bis H: `edk1:`, Gerätehülle Fassung 1,
+Anhebelauf und Weiche, Kopplung ohne Schlüssel, alte Sicherungen,
+Zusammenführen, Lücken, Proben).
+
+| Paket | Inhalt | Befunde, Entscheidungen | Hängt an |
+|---|---|---|---|
+| KA-16 Referenz | `k` haftet beim Zusammenführen (Vektor `konto-unter-geraet` umgedreht); Übernahme einer Hülle der Fassung 1 als Konto mit `uebernommen` und engem Vermerk über jede Lücke; ein Leser ohne Freibrief für Fassung 1 | E-KA-94, -95, -97; F-KA-119 | — |
+| KA-17 Browser-Kern | `standbuch.js`, `huelle2.js`, `ortsdaten.js` nach der Referenz; Lesen verlangt Fassung 2 und `edk2:`; das Altformat öffnet nur noch der Anhebelauf | E-KA-97 | KA-16 |
+| KA-18 Übernahme | der Anhebelauf hebt auch Gerätedaten der Fassung 1 (Einsatzhüllen, Spurstücke) und meldet, was er übernommen hat | E-KA-81, -95 | KA-17 |
+| KA-19 Stichtag | Server: Gerätehülle Fassung 1 → `400 fassung`, `edk1:` im `pat_blob` → `400`, `start` ohne `schluessel` → `400 schluessel`; Zustand F und „Trotzdem verbinden“ entfallen; eine Sicherung mit Inhalt im Altformat wird abgewiesen | E-KA-60 | KA-18 |
+| KA-20 Rückbau | Weiche, Schreibwege der Fassung 1, Zweig `'server'` in `edbak_restore()`, Fixture-Format 1–3 samt alter Fixture, `geraetehuelle_lib.php`; Proben auf Fassung 2; doppelter Hash im Standbuch (Rest Nr. 569) | E-KA-60 | KA-19 |
+| KA-21 Android | sendet nur Fassung 2; ohne `huelle: 2` oder Geräteschlüssel „neu koppeln“ | E-KA-80 | KA-19 |
+| KA-22 Uhr (Garmin) | dasselbe auf der Garmin-Uhr | E-KA-96 | KA-19 |
+| KA-23 Abschluss | Dokumente, Bedrohungsmodell, Changelog, voller Prüfstand, PR | — | alle |
+
+**Bleibt bewusst:** `edk1:` in `pat_wrap_rc` (und damit `WRAP_RC_RE`) —
+der Browser kann die Wiederherstellungshülle ohne den
+Wiederherstellungsschlüssel nicht neu verschließen; sie hebt erst ein
+Schlüsselwechsel. Das Lesen des Altformats im Anhebelauf fällt mit KA-07.
 
 ### KA-07 Modell, Texte, Abschluss
 
