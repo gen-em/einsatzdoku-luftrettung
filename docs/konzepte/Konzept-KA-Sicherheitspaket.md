@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 erledigt** (M-KA-03 freigegeben, E-KA-87), **KA-12 erledigt** (Handbuch und Runbook: Geräte nach dem Tag neu koppeln), **KA-09 erledigt** (Referenz Rückweg, Fable-Agent), **KA-15 erledigt** (Android 0.26.0), **KA-10 erledigt** (Browser-Kern), **KA-11 gebaut** (Anzeige in `einsatz.php`; gefahren wird sie mit umgelegter Weiche in KA-14), **KA-13 erledigt** (Demo-Fixture Format 4; lädt erst mit KA-14), **KA-14 erledigt** (Prüfstand `haupt` 74 grün, 0 rot); **alle Pakete KA-08 bis KA-15 fertig**; vor dem PR auf Wunsch der BetreiberIn Backlog **Nr. 566** (Android, erledigt), **Nr. 568** (E-KA-92, erledigt) und **Nr. 569** (Sichern und GPX schneller, Fable-Agent, erledigt); Prüfstand `haupt` 74 grün, 0 rot; **gesammelter PR #190 offen** — ging mit Konflikt auf (KG-09/10 kam während des Laufs auf `main`), `main` örtlich gemergt, Prüfstand über den Merge neu (Regel seither `Pruefablauf.md` 5.3a); **danach 06e** in einem Zug (E-KA-79); Garmin-Teil (Zähler am Inhalt, kein Senden ohne Herkunft) erledigt als KG-09/KG-10, Uhr 5.1.0, PR #189 gemergt; offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
+| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 erledigt** (M-KA-03 freigegeben, E-KA-87), **KA-12 erledigt** (Handbuch und Runbook: Geräte nach dem Tag neu koppeln), **KA-09 erledigt** (Referenz Rückweg, Fable-Agent), **KA-15 erledigt** (Android 0.26.0), **KA-10 erledigt** (Browser-Kern), **KA-11 gebaut** (Anzeige in `einsatz.php`; gefahren wird sie mit umgelegter Weiche in KA-14), **KA-13 erledigt** (Demo-Fixture Format 4; lädt erst mit KA-14), **KA-14 erledigt** (Prüfstand `haupt` 74 grün, 0 rot); **alle Pakete KA-08 bis KA-15 fertig**; vor dem PR auf Wunsch der BetreiberIn Backlog **Nr. 566** (Android, erledigt), **Nr. 568** (E-KA-92, erledigt) und **Nr. 569** (Sichern und GPX schneller, Fable-Agent, erledigt); Prüfstand `haupt` 74 grün, 0 rot; **PR #190 gemergt 16.11.2026** (ging mit Konflikt auf, `main` örtlich gemergt, Prüfstand über den Merge neu; Regel seither `Pruefablauf.md` 5.3a); Lauf 219 auf Staging grün samt Stufe 2, R91 mit eigenem Konto ohne Befund (Abschnitt 9); **danach 06e** in einem Zug (E-KA-79); Garmin-Teil (Zähler am Inhalt, kein Senden ohne Herkunft) erledigt als KG-09/KG-10, Uhr 5.1.0, PR #189 gemergt; offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
 | Erledigt | **KA-06f** (PR #187, gemergt 15.11.2026, Android 0.25.0, Web 24.19.0; Zweig `claude/amazing-keller-i2f04f`; R91 auf Staging grün, Abschnitt 9) · **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -980,6 +980,25 @@ keinen Gegenstand. Für 06f selbst gibt es auf Staging keinen Punkt der
 Arbeitsumgebung: Der Befund liegt hinter der Weiche, das Handy braucht ein
 Gerät (P-KA-16). Danach `staging_konten.py --wirklich`: ein Konto der Kette
 gelöscht, vier behalten.
+
+### R91 nach PR #190 — Web 25.0.0 auf Staging (16.11.2026)
+
+**Was nicht geprüft werden konnte — zuerst.** Das eigene Konto auf Staging
+hat einen manuell angelegten Einsatz ohne geschützte Angaben und kein
+gekoppeltes Gerät: Anhebelauf, Befunde und „Geräte neu verbinden“ hatten
+dort nichts zu zeigen. Das bleibt P-KA-17 bis -20 (BetreiberIn, Produktiv).
+
+| Mittel | Ergebnis | Was es belegt |
+|---|---|---|
+| Lauf 219 (`cae436c`) | grün: Auslieferung, Stufe 2 mit Kreislauf `edbak` und Rückwegprobe in drei Engines, 13 min | die Anlage nimmt Web 25.0.0, kein Schema offen |
+| Anmeldung mit eigenem Konto, Chromium, dreimal | 4,9 / 5,4 / 7,0 s samt Zweitfaktor und Netz | 1 200 000 Runden auf dem Weg der BetreiberIn |
+| Startseite, Geräteseite, Einsatz 20332, Betrieb → Status | **0** sichtbare Meldungen, **0** Konsolenfehler, Fußzeile v25.0.0 | kein Befund, kein Hinweis „Geräte neu verbinden“ ohne Anlass |
+| Prüfliste | P-PU-05 (Kopf `voll:haupt`, drei Engines, zehn Breiten), P-PR-01 (`freigabeprobe` in drei Engines grün), P-PR-02 (`nummern=0`, Bericht im Merge-Commit) bestanden, gestrichen | — |
+| `staging_konten.py --wirklich` | 1 Konto gelöscht (`umlauf-edbak@…`), 4 behalten | aufgeräumt |
+
+Erster Lauf meines Skripts meldete „gesperrt“ und „nicht lesen“: Es las
+versteckte Meldungen mit (`allInnerTexts` ohne `:visible`); nach der
+Berichtigung keine.
 
 ### Backlog Nr. 566, 568, 569 vor dem PR (16.11.2026)
 
