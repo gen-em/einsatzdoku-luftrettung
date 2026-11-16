@@ -130,6 +130,15 @@
     catch (e) { return false; }
   }
 
+  /* NUR FASSUNG 2 FÜR DAS EIGENE KONTO (06e, E-KA-97, -98). Wer ein Standbuch
+     hat (`k.ck`), liest Gerätedaten der Fassung 1 nicht mehr — der
+     Anhebelauf hat sie als Konto übernommen (`unlock.js`,
+     `geraeteUebernehmen()`); was noch dasteht, ist zurückgelegt oder kam ohne
+     Nachweis, und die Ansicht sagt `ohne-herkunft`. Ein FREMDES Paar im
+     Freigabeweg hat kein Buch und liest weiter beide: Ein Konto, das sich nie
+     wieder anmeldet, hebt niemand. */
+  const verlangt2 = (k) => !!(k && k.ck);
+
   /** Was das Standbuch zu einem Datensatz weiß — leer ohne Inhaltsschlüssel
    *  (ein fremdes Paar im Freigabeweg hat kein Buch dieses Kontos). */
   async function standbuchFuer(k, ref) {
@@ -162,16 +171,18 @@
    *  gelten zusätzlich: Sie blenden aus, sie belegen nichts. */
   async function spur2(stuecke, art, ref, sperren, k) {
     const sb = await standbuchFuer(k, ref);
-    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, false);
+    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, verlangt2(k));
     const r = await EdHuelle2.spurLesen(ls, art, ref,
       (stuecke || []).map((st) => Object.assign({}, st, { huelle: b64(st.huelle) })),
       { versatz: sb.e.d || 0, sperren: sb.e.x || [], stand: sb.e.s || null })
       .catch((e) => { e.art = art; throw e; });
-    return r.punkte.filter((p) => !gesperrt(p.ts, sperren));
+    const punkte = r.punkte.filter((p) => !gesperrt(p.ts, sperren));
+    punkte.uebernommen = r.befund.uebernommen || null;   // 06e: für die Ansicht (E-KA-81)
+    return punkte;
   }
 
   async function spur(stuecke, art, ref, sperren, k) {
-    if ((stuecke || []).some((st) => istFassung2(st.huelle))) {
+    if (verlangt2(k) || (stuecke || []).some((st) => istFassung2(st.huelle))) {
       return spur2(stuecke, art, ref, sperren, k);
     }
     const nach = new Map();
@@ -261,7 +272,7 @@
      wirft — derselbe Fehler, dazu nur `art`. */
   async function einsatz2(m, k, bestaetigt) {
     const sb = await standbuchFuer(k, m.client_ref);
-    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, false);
+    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, verlangt2(k));
     const r = await EdHuelle2.einsatzLesen(ls, m.client_ref, b64(m.ort_huelle), beginnVon(m),
                                            { versatz: sb.e.d || 0, stand: standAus(sb.e), bestaetigt: bestaetigt })
       .catch((e) => { e.art = 'einsatz'; throw e; });
@@ -281,7 +292,7 @@
    */
   async function einsatzOeffnen(m, k) {
     if (!m.ort_huelle) { return null; }
-    if (istFassung2(m.ort_huelle)) {
+    if (verlangt2(k) || istFassung2(m.ort_huelle)) {
       const { sb, r } = await einsatz2(m, k, null);
       /* DER STAND GEHT BEIM LESEN MIT (wie `patLesen()`): Ein späteres
          Zurücklegen auf eine ältere Hülle fällt dann auf. Geschrieben wird,
@@ -385,6 +396,9 @@
     const innen = auf ? auf.inhalt : null;
     m.ort_absender = auf ? auf.absender : null;
     m.ort_befund = auf ? auf.befund : [];
+    /* VOM BROWSER ÜBERNOMMEN (06e, E-KA-81, M-KA-03 D): die Einsatzhülle
+       oder ein Stück der Spur trägt das Kennzeichen. */
+    m.ort_uebernommen = (innen && innen.herkunft && innen.herkunft.uebernommen) || punkte.uebernommen || null;
     const phasen = (innen && innen.phasen) || [];
     const frei = phasen.slice();
     (m.phases || []).forEach((p, i) => {

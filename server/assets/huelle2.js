@@ -376,7 +376,7 @@ const EdHuelle2 = (() => {
         throw fehler('absender-gesperrt');
       }
       offen.push({ von: st.seq_from, bis: bis, stufe: stufe, pkt: pkt, absender: auf.absender,
-                   merker: kopf.merker, tErst: tErst, tLetzt: tLetzt });
+                   merker: kopf.merker, tErst: tErst, tLetzt: tLetzt, uebernommen: kopf.uebernommen || null });
     }
 
     const fassung1 = offen.some(x => x.absender === null);
@@ -416,7 +416,11 @@ const EdHuelle2 = (() => {
       .filter(([, p]) => !sperren.some(([von, bis]) => von <= p[3] && p[3] <= bis))
       .map(([seq, p]) => ({ seq: seq, lat: p[0], lon: p[1], ele: p[2], ts: p[3] + versatz }));
     const herkunft = [...new Set(offen.map(x => (x.absender === null ? 'fassung-1' : x.absender)))].sort();
-    return { punkte: punkte, befund: { herkunft: herkunft, schluss: schluss, fassung1: fassung1, gedeckt: ende } };
+    /* `uebernommen`: wann das Konto Altdaten der Fassung 1 übernommen hat
+       (06e, E-KA-81) — der späteste Zeitpunkt an einem Stück, sonst null. */
+    const uebernommen = offen.reduce((m, x) => (x.uebernommen && x.uebernommen > (m || 0) ? x.uebernommen : m), null);
+    return { punkte: punkte, befund: { herkunft: herkunft, schluss: schluss, fassung1: fassung1, gedeckt: ende,
+                                       uebernommen: uebernommen } };
   }
 
   /**

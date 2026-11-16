@@ -1451,6 +1451,89 @@ function spur2_lesen_viele(PDO $pdo, string $ownerType, array $ids): array
 }
 
 /**
+ * DIE UEBERNAHME DER FASSUNG 1 (06e, KA-18, E-KA-97): Welche Spuren eines
+ * Kontos tragen noch ein Stueck der Geraetehuelle Fassung 1 (Kennbyte 1)?
+ * Geliefert wie `spur2_lesen_viele()`, dazu Kennung und Abschluss — der
+ * Browser hebt sie (`EdHuelle2.spurUebernehmen()`), der Server kann es
+ * nicht. Auch aus dem Papierkorb: Eine Spur, die dort liegt, ginge nach dem
+ * Wiederherstellen sonst nicht mehr auf.
+ *
+ * @return list<array{art:string,id:int,ref:string,final:bool,stuecke:list<array<string,mixed>>}>
+ */
+function spur2_uebernahme_liste(PDO $pdo, int $userId, int $max): array
+{
+    $aus = [];
+    foreach ([['mission', 'missions'], ['rest', 'rest_segments']] as [$typ, $tabelle]) {
+        $q = $pdo->prepare("SELECT o.id, o.client_ref, o.final FROM `$tabelle` o
+                             WHERE o.user_id = ?
+                               AND EXISTS (SELECT 1 FROM track_stuecke s
+                                            WHERE s.owner_type = ? AND s.owner_id = o.id
+                                              AND SUBSTRING(s.huelle, 1, 1) = X'01')
+                             ORDER BY o.id LIMIT " . max(1, $max));
+        $q->execute([$userId, $typ]);
+        $zeilen = $q->fetchAll(PDO::FETCH_ASSOC);
+        $stuecke = spur2_lesen_viele($pdo, $typ, array_column($zeilen, 'id'));
+        foreach ($zeilen as $r) {
+            /* `pruef`: SHA-256 der Huelle, wie sie liegt — der Tausch nimmt
+             * es zurueck und tauscht nur, wenn dort noch dasselbe liegt. */
+            $liste = array_map(static fn($st) => $st + ['pruef' => hash('sha256', (string)base64_decode($st['huelle']))],
+                               $stuecke[(int)$r['id']] ?? []);
+            $aus[] = ['art' => $typ, 'id' => (int)$r['id'], 'ref' => (string)$r['client_ref'],
+                      'final' => (int)$r['final'] === 1, 'stuecke' => $liste];
+        }
+    }
+    return array_slice($aus, 0, max(1, $max));
+}
+
+/** Wie viele Spuren eines Kontos tragen noch ein Stueck der Fassung 1? */
+function spur2_uebernahme_zahl(PDO $pdo, int $userId): int
+{
+    $n = 0;
+    foreach ([['mission', 'missions'], ['rest', 'rest_segments']] as [$typ, $tabelle]) {
+        $q = $pdo->prepare("SELECT COUNT(*) FROM `$tabelle` o WHERE o.user_id = ?
+                               AND EXISTS (SELECT 1 FROM track_stuecke s
+                                            WHERE s.owner_type = ? AND s.owner_id = o.id
+                                              AND SUBSTRING(s.huelle, 1, 1) = X'01')");
+        $q->execute([$userId, $typ]);
+        $n += (int)$q->fetchColumn();
+    }
+    return $n;
+}
+
+/**
+ * Die gehobenen Huellen EINER Spur tauschen (06e, KA-18) — je Stueck nur,
+ * wenn dort noch GENAU die gelesene Huelle liegt (`alt`: das `pruef` aus
+ * `spur2_uebernahme_liste()`, SHA-256 der Bytes) und Platz, Zahl und Stufe gleich sind. Nur die Huelle
+ * wechselt; Klartext, Nummern und Zeiten bleiben. Kein Teiltausch: Passt ein
+ * Stueck nicht, bleibt die ganze Spur, wie sie war (`false`) — ein Gemisch
+ * aus gehobenen und alten Stuecken liest der Browser danach nicht mehr.
+ * Ruft der Aufrufer in seiner Transaktion.
+ *
+ * @param list<array{seq_from:int,huelle:string,alt:string}> $posten  `huelle`: Base64, schon geprueft
+ */
+function spur2_uebernahme_tauschen(PDO $pdo, int $userId, string $art, int $id, array $posten): bool
+{
+    $tabelle = $art === 'mission' ? 'missions' : ($art === 'rest' ? 'rest_segments' : null);
+    if ($tabelle === null || !$posten) { return false; }
+    $besitz = $pdo->prepare("SELECT 1 FROM `$tabelle` WHERE id = ? AND user_id = ? FOR UPDATE");
+    $besitz->execute([$id, $userId]);
+    if (!$besitz->fetchColumn()) { return false; }
+    $jetzt = gmdate('Y-m-d H:i:s');
+    $upd = $pdo->prepare('UPDATE track_stuecke SET huelle = ?, geaendert_am = ?
+                           WHERE owner_type = ? AND owner_id = ? AND seq_from = ?
+                             AND SHA2(huelle, 256) = ? AND SUBSTRING(huelle, 1, 1) = X\'01\'');
+    foreach ($posten as $p) {
+        $upd->execute([base64_decode($p['huelle'], true), $jetzt, $art, $id, (int)$p['seq_from'], $p['alt']]);
+        if ($upd->rowCount() !== 1) { throw new SpurUebernahmeStand(); }
+    }
+    return true;
+}
+
+/** Ein Stueck lag nicht mehr so da, wie es gelesen wurde — die Transaktion
+ *  des Aufrufers rollt die ganze Spur zurueck. */
+final class SpurUebernahmeStand extends RuntimeException {}
+
+/**
  * Alle Vermerke (Schnitte und Loeschvermerke) eines Kontos auf einen Zeitpunkt
  * stempeln — NUR FUER DEN DEMO-RESET (`demo_bestand_einspielen()`, Konzept RD,
  * E-RD-18, F-RD-14). Die Fixture traegt `erstellt_am` aus dem Referenzkonto;

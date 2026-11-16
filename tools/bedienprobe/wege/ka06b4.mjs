@@ -16,6 +16,10 @@
  *   3. Noch einmal geladen: Es geschieht nichts mehr (die Versionen der
  *      Blätter bleiben).
  *   4. Ein Block mit falschem `blob_alt` wird übersprungen, nicht geschrieben.
+ *   5. Die Gerätedaten der Fassung 1 (06e, KA-18): Danach nennt der Server
+ *      keine Einsatzhülle und keine Spur der Fassung 1 mehr, und ein
+ *      Einsatz mit Ortsdaten zeigt „Vom Browser übernommen am …“
+ *      (M-KA-03 D) samt Karte.
  *
  * Danach setzt der Weg das Demo-Konto zurück (`demo_zuruecksetzen()`), damit
  * die übrigen Wege den Bestand vorfinden, den sie kennen — nur örtlich —, und
@@ -42,6 +46,8 @@ async function weicheStellen(seite, an) {
 
 const stand = (k) => k.seite.evaluate(async () =>
   (await fetch('api/format_anheben.php', { credentials: 'same-origin' })).json());
+const geraete = (k) => k.seite.evaluate(async () =>
+  (await (await fetch('api/format_anheben.php?geraete=1', { credentials: 'same-origin' })).json()).offen);
 const blaetter = (k) => k.seite.evaluate(async () => (await EdStandbuch.apiTransport().stand()).blaetter);
 
 export const wege = [
@@ -59,6 +65,10 @@ export const wege = [
         await weicheStellen(k.seite, false);
         await k.gehZu(`${k.basis}/index.php`);
         const vorher = await stand(k);
+        /* Ein Einsatz, dessen Hülle noch Fassung 1 ist — er muss danach „übernommen“ tragen. */
+        const altE = await k.seite.evaluate(async () =>
+          (await (await fetch('api/format_anheben.php?geraete=1', { credentials: 'same-origin' })).json()));
+        const ansicht = altE.einsaetze.length ? altE.einsaetze[0].id : null;
         await k.seite.waitForTimeout(3000);
         await k.gehZu(`${k.basis}/index.php`);
         await k.seite.waitForTimeout(3000);
@@ -96,12 +106,29 @@ export const wege = [
           const danach = (await (await fetch('api/mission.php?id=' + m.id)).json()).pat_blob;
           return { ok: a.ok, angehoben: a.daten && a.daten.angehoben, gleich: danach === m.pat_blob };
         });
-        const ok = ausGleich && nachher.offen === 0 && !nachher.kp && !nachher.rw && zu === 16
+        /* 5. Die Gerätedaten: Vorher stand Fassung 1 da (die alte Fixture
+           verschließt serverseitig), jetzt nicht mehr. */
+        let gd = null;
+        for (let i = 0; i < 90; i++) {
+          gd = await geraete(k);
+          if (gd.einsaetze === 0 && gd.spuren === 0) { break; }
+          await k.seite.waitForTimeout(1000);
+        }
+        await k.gehZu(`${k.basis}/einsatz.php?id=${ansicht}`);
+        await k.seite.waitForTimeout(6000);
+        const d = await k.seite.evaluate(() => [...document.querySelectorAll('[data-ortsdaten]')]
+          .map((x) => x.textContent.replace(/\s+/g, ' ').trim()));
+        const mitD = d.some((t) => t.includes('Vom Browser übernommen am'));
+        const ohneFehler = !d.some((t) => t.includes('lassen sich nicht öffnen') || t.includes('keinen Herkunftsnachweis'));
+        const ok = altE.offen.einsaetze > 0 && gd.einsaetze === 0 && gd.spuren === 0 && mitD && ohneFehler
+          && ausGleich && nachher.offen === 0 && !nachher.kp && !nachher.rw && zu === 16
           && ruhig && falsch.ok && falsch.angehoben === 0 && falsch.gleich;
         return { ist: `Weiche aus: Altbestand ${vorher.offen} → ${ausGleich ? 'gleich' : 'GEÄNDERT'}; `
                     + `Weiche an: Altbestand ${nachher.offen}, kp ${nachher.kp ? 'alt' : 'neu'}, rw ${nachher.rw ? 'alt' : 'neu'}, `
                     + `${zu} von 16 Blättern zu; zweiter Lauf ${ruhig ? 'ohne Änderung' : 'ÄNDERT'}; `
-                    + `falsches blob_alt: angehoben ${falsch.angehoben}, Block ${falsch.gleich ? 'unverändert' : 'GEÄNDERT'}`,
+                    + `falsches blob_alt: angehoben ${falsch.angehoben}, Block ${falsch.gleich ? 'unverändert' : 'GEÄNDERT'}; `
+                    + `Fassung 1 vorher ${altE.offen.einsaetze} Einsätze/${altE.offen.spuren} Spuren, danach: ${gd.einsaetze} Einsätze, ${gd.spuren} Spuren; Einsatz ${ansicht}: `
+                    + `${mitD ? '„übernommen“' : 'OHNE Kennzeichen'}${ohneFehler ? '' : ', mit FEHLER'}`,
                  ok };
       } finally {
         await k.seite.unroute(/assets\/inhalt2\.js/).catch(() => {});
