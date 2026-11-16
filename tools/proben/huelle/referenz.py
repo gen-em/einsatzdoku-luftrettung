@@ -1519,7 +1519,8 @@ UHR_FAELLE2 = ("kurz", "spur-3")
 def uhr_vektoren2(v2: dict) -> str:
     """Fassung 2 als Monkey-C-Quelltext für die Probe-App (KG-03a): die Fälle
     „kurz" und „spur-3" — beide von der Uhr verschlossen — mit der ganzen
-    Hülle, dazu Kennung und Z_s der Uhr und die Kopplung. Alles aus
+    Hülle, dazu Kennung und Z_s der Uhr, die Kopplung und die Zählerfolge
+    (`zaehler`, KG-09). Alles aus
     `vektoren-2.json`, nichts neu gerechnet."""
     faelle = [f for f in v2["faelle"] if f["name"] in UHR_FAELLE2]
     if [f["name"] for f in faelle] != list(UHR_FAELLE2) or any(f["absender"] != "uhr" for f in faelle):
@@ -1557,6 +1558,15 @@ def uhr_vektoren2(v2: dict) -> str:
                    f"            :iv => {mc_bytes(f['iv_hex'])},",
                    f"            :huelle => {mc_bytes(base64.b64decode(f['huelle_b64']).hex())}",
                    "        },"]
+    # Wie ein Absender zählt (KG-09): die Schritte des Vektors `zaehler`, je
+    # Zeile Tat, Einsatz, jetzt, z der Hülle, Gerätezähler danach.
+    zf = v2["zaehler"]
+    if any(s["tat"] not in ("aendern", "verschliessen", "trennen") for s in zf["schritte"]):
+        raise ValueError("Vektoren2.mc: die Zählerfolge kennt eine Tat, die die Probe nicht spielt")
+    mc = lambda x: "null" if x is None else f'"{x}"' if isinstance(x, str) else str(x)
+    zeilen += ["    ];", f"    const ZAEHLER_LETZTES = {zf['letztes']};", "    const ZAEHLER = ["]
+    zeilen += [f"        [{', '.join(mc(s[k]) for k in ('tat', 'einsatz', 'jetzt', 'z', 'letztes'))}],"
+               for s in zf["schritte"]]
     zeilen += ["    ];", "}", ""]
     return "\n".join(zeilen)
 

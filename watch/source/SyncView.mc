@@ -233,6 +233,18 @@ class SyncView extends WatchUi.View {
              * sondern sagt, wo es hingehoert. */
             lines.add(["Verschlüsseln geht nicht", Ui.ROT]);
             lines.add(["Bitte melden", Graphics.COLOR_LT_GRAY]);
+        } else if (Uploader.hasCredentials() && Uploader.herkunftFehlt() != null) {
+            /* KEIN SENDEN OHNE HERKUNFT (KG-10, E-KA-80, Anzeige E-KG-39).
+             * Ohne Geraetepaar hilft neu koppeln -- im Dienst erst nach
+             * dessen Ende (Pair.start); ist der Selbsttest der Fassung 2
+             * gescheitert, hilft es nicht (E-KG-40). */
+            if (Uploader.herkunftFehlt() == :paar) {
+                lines.add(["Neu koppeln", Ui.ROT]);
+                lines.add(["Koppeln: " + Input.lSelectHold(), Graphics.COLOR_LT_GRAY]);
+            } else {
+                lines.add(["Verschlüsseln geht nicht", Ui.ROT]);
+                lines.add(["Bitte melden", Graphics.COLOR_LT_GRAY]);
+            }
         } else if (Uploader.fremdeZahl() > 0) {
             /* PAKETE DES BISHERIGEN KONTOS: nach einer Abmeldung an ein
              * anderes Konto gekoppelt. Sie gehen nicht hinaus; ohne diese

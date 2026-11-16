@@ -13,7 +13,10 @@
 // Trennen holte sofort einen neuen Code (KG-08); Nr. 577 -- Kopplung mit
 // Vergleichswert und Fassung 2 (KG-03b): Wert erst nach dem Offenlegen,
 // anderes Paar bricht ab, 202 wartet, abgelehnt legt kein Paar ab,
-// `huelle: 2` schaltet Fassung 2 ein, das leere Schlussstueck.
+// `huelle: 2` schaltet Fassung 2 ein, das leere Schlussstueck; Nr. 580 --
+// der Zaehler der Einsatzhuelle entstand beim Senden statt bei der
+// Aenderung, und eine Uhr mit `huelle: 2` ohne Paar oder mit gescheitertem
+// Selbsttest sendete Fassung 1 (KG-09, KG-10).
 //
 // Je Fall eine Zeile "SENDEWEG ok|FEHL <fall> <was>", am Ende
 // "SENDEWEG ENDE <faelle> <fehlschlaege>". Jeder Fall beginnt mit leerem
@@ -138,6 +141,12 @@ module SendewegProbe {
         else if (_schritt == 20) { _fall17(a); }
         else if (_schritt == 21) { _fall18(); }
         else if (_schritt == 22) { _fall19(a); }
+        else if (_schritt == 23) { _fall20(a); }
+        else if (_schritt == 24) { _fall21(); }
+        else if (_schritt == 25) { _fall22(a); }
+        else if (_schritt == 26) { _fall23(); }
+        else if (_schritt == 27) { _fall24(a); }
+        else if (_schritt == 28) { _fall25(a); }
         else {
             (_t as Timer.Timer).stop();
             System.println("SENDEWEG ENDE " + _faelle.toString() + " " + _fehl.toString());
@@ -441,5 +450,109 @@ module SendewegProbe {
             gut = r["track"] == null && Huelle._ausBase64(r["ort_huelle"] as Lang.String)[0] == 1;
         }
         _melde(gut, "fassung1-ohne-merker", "track=" + (r == null || r["track"] == null ? "fehlt" : "da"));
+    }
+
+    // ---- KG-09: der Zaehler am Inhalt, im Sendeweg ------------------------
+
+    function _gekoppelt2(a as Lang.String) as Void {
+        _sitzung("sw-z", a);
+        Pair.onOffengelegt("sw-z", 200, { "ok" => true });
+        Pair.onStatus("sw-z", 200, { "zustand" => "gekoppelt", "kontoschluessel" => a, "huelle" => 2 });
+        Huelle2._geprueft = true;
+    }
+
+    function _fall20(a as Lang.String) as Void {
+        // 20. Eine Phase gibt dem laufenden Einsatz sein z BEIM ABLEGEN, nicht
+        //     beim Senden; zwei Sendungen desselben Stands tragen dasselbe z,
+        //     und der Geraetezaehler bewegt sich dabei nicht.
+        _leer();
+        _gekoppelt2(a);
+        Model.serviceActive = true;
+        Model.setPhase(2);
+        var m = Model.mission;
+        var z0 = (m != null) ? m["z"] : null;
+        var gz0 = Storage.getValue("gz");
+        var z1 = null; var z2 = null;
+        if (m != null) {
+            Uploader._busy = false;
+            Uploader._send({ "kind" => "mission", "data" => m });
+            z1 = m["z"];
+            Uploader._busy = false;
+            Uploader._send({ "kind" => "mission", "data" => m });
+            z2 = m["z"];
+        }
+        _melde(z0 instanceof Lang.Number && z0.equals(z1) && z0.equals(z2) && z0.equals(gz0)
+               && z0.equals(Storage.getValue("gz")) && abgefangen == 2,
+               "zaehler-bei-aenderung",
+               "z=" + z0 + "/" + z1 + "/" + z2 + " gz=" + gz0 + " gesendet=" + abgefangen.toString());
+    }
+
+    function _fall21() as Void {
+        // 21. Der Abschluss aendert den Inhalt (`schluss`): groesseres z am
+        //     abgeschlossenen Paket, mit Hash abgelegt.
+        var m = Model.mission;
+        var z0 = (m != null) ? m["z"] : null;
+        Model.finishMission();
+        var p = Model.pendingMissions.size() > 0 ? Model.pendingMissions[Model.pendingMissions.size() - 1] : null;
+        var z1 = (p != null) ? p["z"] : null;
+        _melde(z0 instanceof Lang.Number && z1 instanceof Lang.Number && (z1 as Lang.Number) > (z0 as Lang.Number)
+               && p["zh"] instanceof Lang.String && p["final"] == true,
+               "zaehler-abschluss", "z=" + z0 + " -> " + z1);
+        Model.serviceActive = false;
+    }
+
+    // ---- KG-10: kein Senden ohne Herkunft (E-KA-80) -----------------------
+
+    function _fall22(a as Lang.String) as Void {
+        // 22. `huelle: 2` gehoert, Paar verloren: nichts geht hinaus, auch
+        //     nicht Fassung 1; die Sync-Seite sagt "Neu koppeln".
+        _leer();
+        _gekoppelt2(a);
+        Huelle2.paarLoeschen();
+        var m = _einsatz("m-sw-hp");
+        m["final"] = true;
+        m["endedAt"] = "2026-11-10T09:00:00Z";
+        Model.pendingMissions = [m];
+        Uploader.syncAll();
+        Uploader._busy = false;
+        Uploader._send({ "kind" => "mission", "data" => m });
+        _melde(Uploader.herkunftFehlt() == :paar && abgefangen == 0 && !Uploader._busy,
+               "ohne-paar-kein-senden", "gesendet=" + abgefangen.toString());
+    }
+
+    function _fall23() as Void {
+        // 23. ... und kann trotz Rueckstand trennen (gebunden), statt in der
+        //     Sackgasse "Erst 1 Paket senden" zu stehen (F-KG-25).
+        Pair.status = null;
+        Pair.start();
+        var st = Pair.status == null ? "leer" : Pair.status as Lang.String;
+        _melde(Pair.status == null && Model.backlogCount() == 1, "ohne-paar-trennen",
+               "status=" + st + " rueckstand=" + Model.backlogCount().toString());
+    }
+
+    function _fall24(a as Lang.String) as Void {
+        // 24. Paar da, Selbsttest der Fassung 2 gescheitert: nicht senden
+        //     (E-KG-40), statt Fassung 1.
+        _leer();
+        _gekoppelt2(a);
+        Huelle2._geprueft = false;
+        var m = _einsatz("m-sw-st");
+        m["final"] = true;
+        m["endedAt"] = "2026-11-10T09:00:00Z";
+        Model.pendingMissions = [m];
+        Uploader._send({ "kind" => "mission", "data" => m });
+        _melde(Uploader.herkunftFehlt() == :selbsttest && abgefangen == 0,
+               "selbsttest-kein-senden", "gesendet=" + abgefangen.toString());
+    }
+
+    function _fall25(a as Lang.String) as Void {
+        // 25. `status` mit `huelle: 2` an einer Uhr ohne Paar laesst den
+        //     Merker stehen (F-KG-26) -- bis Uhr 5.0.0 loeschte er ihn, und
+        //     die Uhr sendete still Fassung 1.
+        _leer();
+        _koppeln(a);
+        Pair.onSchluessel("sendeweg", 200, { "zustand" => "gekoppelt", "kontoschluessel" => a, "huelle" => 2 });
+        _melde(true.equals(Storage.getValue("h2")) && Uploader.herkunftFehlt() == :paar,
+               "status-merker-ohne-paar", "h2=" + Storage.getValue("h2"));
     }
 }

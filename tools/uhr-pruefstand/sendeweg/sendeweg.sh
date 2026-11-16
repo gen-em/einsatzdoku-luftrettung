@@ -3,7 +3,7 @@
 # laufenden Pakete, Deckel fuer next_seq, gleiche Stueckgroesse bei
 # Wiederholung.
 #
-# Anlass: Nr. 570, Nr. 577 — bis Uhr 4.3.3 liess die Uhr ein Neukoppeln im Dienst zu,
+# Anlass: Nr. 570, Nr. 577, Nr. 580 — bis Uhr 4.3.3 liess die Uhr ein Neukoppeln im Dienst zu,
 # schickte den laufenden Einsatz ohne Pruefung der Bindung, glaubte jeder
 # Quittung und liess ein unquittiertes Stueck wachsen.
 #
@@ -55,7 +55,7 @@ bash "$P" speicher-leeren >/dev/null
 melde "Starten"
 timeout 90 bash "$P" starten "$GERAET" 25 >/dev/null 2>&1 || true
 AUSGABE=""
-for _ in $(seq 1 30); do
+for _ in $(seq 1 45); do
     AUSGABE=$(bash "$P" konsole | grep '^SENDEWEG' || true)
     case "$AUSGABE" in *"SENDEWEG ENDE"*) break;; esac
     sleep 1
@@ -65,7 +65,7 @@ bash "$P" beenden >/dev/null 2>&1 || true
 printf '%s\n' "$AUSGABE" | grep -v '^SENDEWEG ENDE' | sed 's/^SENDEWEG /  /'
 pruef=$(printf '%s\n' "$AUSGABE" | grep -c '^SENDEWEG \(ok\|FEHL\)' || true)
 fehl=$(printf '%s\n' "$AUSGABE" | grep -c '^SENDEWEG FEHL' || true)
-SOLL=22
+SOLL=28
 if ! printf '%s\n' "$AUSGABE" | grep -q '^SENDEWEG ENDE'; then
     echo "  FEHL  keine ENDE-Zeile — die Probe brach nach $pruef Pruefungen ab"
     fehl=$((fehl+1))

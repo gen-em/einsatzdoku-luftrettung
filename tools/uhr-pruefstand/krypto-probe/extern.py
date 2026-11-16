@@ -14,6 +14,13 @@ ts_von und den Merker, die Punkte sind die der Beispielspur, die
 Einsatzhülle trägt Zähler, Beginn und den Inhalt von PHASEN2/REA2; bei der
 Kopplung passen Zusage und Vergleichswert zu den offengelegten Werten.
 
+Seit KG-09 (Anlass: Nr. 580, Zähler am Inhalt, E-KA-69) verschließt die Uhr
+die Einsatzhülle dreimal — offen, abgeschlossen, noch einmal abgeschlossen —,
+und je Mitschnitt kommt eine Zeile `Zählerfolge` dazu: Über die Hüllen eines
+Einsatzes in der Reihenfolge der Konsole fällt z nie, gleiches z heißt
+derselbe Inhalt in einer ANDEREN Hülle, anderer Inhalt heißt größeres z; und
+beides muss vorkommen. Ohne zwei Einsatzhüllen ist die Zeile rot.
+
 AUFRUF
     python3 extern.py <Konsolenmitschnitt> […]     # z. B. ~/.ciq-pruefstand/krypto_fenix6pro.txt
 Ohne EXTERN-Zeile ist das Ergebnis rot, nicht leer.
@@ -34,6 +41,7 @@ def pruefen(zeilen: list[str]) -> list[tuple[str, bool, str]]:
     kpub = r.sec1(konto.public_key())
     n_b = bytes.fromhex(json.loads(r.VEKTOREN2.read_text("utf-8"))["kopplung"]["n_b_hex"])
     aus = []
+    einsaetze: dict[str, list[tuple[int, dict, bytes]]] = {}
     for z in zeilen:
         t = z.split()
         if len(t) < 6 or t[0] != "EXTERN":
@@ -54,8 +62,11 @@ def pruefen(zeilen: list[str]) -> list[tuple[str, bool, str]]:
         try:
             if t[1] == "einsatz":
                 d, wer = r.einsatz_lesen(leser, t[3], huelle, int(t[5]))
-                soll = json.loads(r.einsatz_innen2(int(t[4]), r.T0, True, r.PHASEN2, r.REA2))
-                aus.append((name, d == soll and wer == eigen, f"z {d.get('z')}"))
+                soll = json.loads(r.einsatz_innen2(int(t[4]), r.T0, d.get("schluss") is True,
+                                                   r.PHASEN2, r.REA2))
+                aus.append((name, d == soll and wer == eigen, f"z {d.get('z')}, schluss {d.get('schluss')}"))
+                if d == soll and wer == eigen:
+                    einsaetze.setdefault(t[3], []).append((d["z"], d, huelle))
             else:
                 von, n = (int(x) for x in t[4].split(":"))
                 klar, wer = leser.huelle(huelle, t[1], t[3], t[4])
@@ -65,7 +76,27 @@ def pruefen(zeilen: list[str]) -> list[tuple[str, bool, str]]:
                 aus.append((name, klar == soll and wer == eigen, f"Merker {kopf['merker']}"))
         except (r.HuelleFehler, ValueError) as e:
             aus.append((name, False, f"geht nicht auf: {e}"))
+    if aus:
+        aus.append(zaehlerfolge(einsaetze))
     return aus
+
+
+def zaehlerfolge(einsaetze: dict[str, list[tuple[int, dict, bytes]]]) -> tuple[str, bool, str]:
+    """Die zwei Sätze der Zählerregel (E-KA-69), von außen: je Einsatz über
+    aufeinanderfolgende Hüllen."""
+    gleich = hoeher = 0
+    for ref, folge in einsaetze.items():
+        for (z1, d1, h1), (z2, d2, h2) in zip(folge, folge[1:]):
+            ohne1, ohne2 = dict(d1, z=0), dict(d2, z=0)
+            if z2 == z1 and ohne1 == ohne2 and h1 != h2:
+                gleich += 1
+            elif z2 > z1 and ohne1 != ohne2:
+                hoeher += 1
+            else:
+                return ("Zählerfolge", False, f"{ref}: z {z1} -> {z2}, Inhalt "
+                        f"{'gleich' if ohne1 == ohne2 else 'anders'}, Hülle {'dieselbe' if h1 == h2 else 'neu'}")
+    return ("Zählerfolge", gleich > 0 and hoeher > 0,
+            f"{gleich}× gleicher Stand mit gleichem z, {hoeher}× anderer Inhalt mit größerem z")
 
 
 def main() -> int:

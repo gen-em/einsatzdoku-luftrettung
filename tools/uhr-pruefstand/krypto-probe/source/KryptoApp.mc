@@ -47,10 +47,18 @@
 //           verschliessen: Form, Kennung, Z_s aus dem Speicher und nach
 //           einem nachgestellten Neustart aus dem Storage
 //   T-FASSUNG  500 Punkte in Fassung 1 und 2: Zeit und Speicher; Z_s neu
-//   ZAEHLER-…  der Zaehler z der Einsatzhuelle (E-KA-64): die Regel
-//           max(jetzt, letztes + 1) ohne Uhr (FOLGE), am Speicher mit der
-//           Zeit des Geraets und zweimal in derselben Sekunde (ZEIT), aus
-//           dem Stand einer Uhr vor KG-03b (ALT), ueber das Trennen (TRENNEN)
+//   ZAEHLER-…  der Zaehler z der Einsatzhuelle (E-KA-69, KG-09): z gehoert
+//           zum Inhalt. Die Regel max(jetzt, letztes + 1) ohne Uhr (FOLGE);
+//           am Speicher mit der Zeit des Geraets, Senden zaehlt nicht (ZEIT);
+//           "gz" einer Uhr vor 5.0.0 und ein Paket ohne z (ALT); ueber das
+//           Trennen (TRENNEN); die Schritte des Vektors `zaehler` der
+//           Referenz mit vorgegebenem "jetzt" (VEKTOR); jede Aenderung innen
+//           hebt z, auch `schluss` und `start` (INHALT); was nicht innen
+//           steht, hebt es nicht, und der Hash laeuft ueber die Innenform
+//           ohne das Feld z (FORM); das Paket durch den Storage, ohne oder
+//           mit verdorbenem Hash, ohne "gz" (ABLAGE); 2038 (GRENZE).
+//           EINSATZ2 verschliesst denselben Stand zweimal: gleiches z.
+//   T-INHALT  was das Zaehlen an einem grossen Einsatz kostet
 //   Zeilen, die mit EXTERN beginnen, stehen NUR auf der Konsole: Huellen
 //   mit Zufall, die die Referenz ausserhalb der Uhr oeffnet (LIESMICH).
 //   ERGEBNIS  N gut, M Fehler — am Ende und zusaetzlich als erste Zeile
@@ -295,6 +303,12 @@ module Probe {
             zsNeu();
         } else if (n == 36) {
             zaehler();
+        } else if (n == 37) {
+            zaehlerVektor();
+        } else if (n == 38) {
+            zaehlerInhalt();
+        } else if (n == 39) {
+            zaehlerZeit();
         } else {
             return false;
         }
@@ -373,20 +387,37 @@ module Probe {
     }
 
     // Die Einsatzhuelle: derselbe Inhalt wie PHASEN2 und REA2 der Referenz.
+    // Dreimal verschlossen (KG-09): offen, abgeschlossen, noch einmal
+    // abgeschlossen. Das Paket kommt ohne z (wie aus Uhr 5.0.0): Das erste
+    // Verschliessen vergibt eines, `schluss` ein groesseres, das dritte
+    // keines -- gleiches z, innen byte-gleich, eine andere Huelle. Alle drei
+    // oeffnet extern.py und prueft die Folge von aussen.
     function einsatz2() as Void {
         var d = { "startedAt" => "2026-07-17T08:31:05Z",
                   "phases" => [[4, "2026-07-17T08:51:02Z", 47.5601d, 10.7002d],
                                [5, "2026-07-17T08:52:55Z", null, null]],
                   "resus" => [{ "start" => "2026-07-17T08:55:10Z",
                                 "events" => [["adrenalin", "2026-07-17T08:58:02Z"]] }] };
-        var z1 = Huelle2.zaehlerNaechster();
-        var z2 = Huelle2.zaehlerNaechster();
-        var innen = Huelle2.einsatzInnen(d, z2, true);
-        var h = Huelle2.einsatz("probe-einsatz", d, z2, true);
-        var kopf = "{\"fassung\":2,\"z\":" + z2 + ",\"start\":1784277065,\"schluss\":true,\"phasen\":[";
-        urteil("EINSATZ2", z2 > z1 && innen.find(kopf) == 0, "z " + z2);
-        System.println("EXTERN einsatz " + Krypto.hex(Huelle2.spk() as ByteArray) + " probe-einsatz "
-                       + z2 + " 1784277065 " + h);
+        var jetzt = Time.now().value();
+        var a = Huelle2.einsatz("probe-einsatz", d, false);
+        var za = d["z"] as Number;
+        var b = Huelle2.einsatz("probe-einsatz", d, true);
+        var zb = d["z"] as Number;
+        var innenB = (Huelle2.einsatzInnen(d, true, null))[0] as String;
+        var c = Huelle2.einsatz("probe-einsatz", d, true);
+        var zc = d["z"] as Number;
+        var innenC = Huelle2.einsatzInnen(d, true, null);
+        var kopf = "{\"fassung\":2,\"z\":" + zb + ",\"start\":1784277065,\"schluss\":true,\"phasen\":[";
+        var ok = a[1] == true && b[1] == true && c[1] == false && innenC[1] == false
+                 && za >= jetzt && zb > za && zc == zb
+                 && innenB.find(kopf) == 0 && innenB.equals(innenC[0] as String)
+                 && !(b[0] as String).equals(c[0] as String)
+                 && zb == Storage.getValue(Huelle2.ABLAGE_ZAEHLER);
+        urteil("EINSATZ2", ok, "z " + za + " +" + (zb - za) + " +" + (zc - zb));
+        var vorn = "EXTERN einsatz " + Krypto.hex(Huelle2.spk() as ByteArray) + " probe-einsatz ";
+        System.println(vorn + za + " 1784277065 " + a[0]);
+        System.println(vorn + zb + " 1784277065 " + b[0]);
+        System.println(vorn + zc + " 1784277065 " + c[0]);
     }
 
     // Ein Neustart, nachgestellt: Was im Speicher lag, ist fort; Paar und Z_s
@@ -432,15 +463,50 @@ module Probe {
         Huelle.schluesselLoeschen();
     }
 
-    // Der Zaehler z der Einsatzhuelle (E-KA-64, KG-03b): Unix-Sekunde des
-    // Verschliessens, lokal streng steigend. Laeuft NACH zsNeu(): Das Paar
-    // ist dort schon geloescht, und der Schritt stellt "gz" selbst um. Am
-    // Ende steht der hoechste Stand wieder im Speicher -- die Probe darf den
-    // Zaehler des Simulators nicht zuruecklegen.
+    // ---- Der Zaehler z der Einsatzhuelle (E-KA-69, KG-09) ------------------
+    //
+    // z gehoert zum INHALT: vergeben, wenn er sich aendert (Vergleich ueber
+    // den SHA-256 ohne z), abgelegt mit dem Paket. Die Schritte laufen NACH
+    // zsNeu(): Das Paar ist dort schon geloescht, und verschlossen wird hier
+    // nichts -- gemessen wird an der Innenform. Wer "gz" umstellt, stellt den
+    // Stand danach zurueck: Die Probe darf den Zaehler des Simulators nicht
+    // zuruecklegen.
+
+    // Ein Paket, wie Model.mc es fuehrt -- ohne z, wie aus Uhr 5.0.0.
+    function paket() as Dictionary {
+        return { "ref" => "m-probe", "startedAt" => "2026-07-17T08:31:05Z", "endedAt" => null,
+                 "phases" => [], "resus" => [], "final" => false };
+    }
+
+    // Sekunden nach 08:31:05 als Zeitstempel (bis 1734).
+    function iso(sek as Number) as String {
+        var t = 31 * 60 + 5 + sek;
+        return "2026-07-17T08:" + (t / 60).format("%02d") + ":" + (t % 60).format("%02d") + "Z";
+    }
+
+    function phaseDazu(d as Dictionary, i as Number) as Void {
+        (d["phases"] as Array).add([2 + i % 8, iso(i * 7), 47.5601d + i * 0.0001d, 10.7002d, "08:31"]);
+    }
+
+    function phase(d as Dictionary, i as Number) as Array {
+        return (d["phases"] as Array)[i] as Array;
+    }
+
+    function sitzung(d as Dictionary) as Dictionary {
+        return (d["resus"] as Array)[0] as Dictionary;
+    }
+
+    function gz() as Object or Null { return Storage.getValue(Huelle2.ABLAGE_ZAEHLER); }
+
+    function gzSetzen(w as Object or Null) as Void {
+        if (w instanceof Number) { Storage.setValue(Huelle2.ABLAGE_ZAEHLER, w); }
+        else { Storage.deleteValue(Huelle2.ABLAGE_ZAEHLER); }
+    }
+
+    // Die Regel ohne Uhr; dann am Speicher mit der Zeit des Geraets.
     function zaehler() as Void {
         var T = 1794300000;
         var M = Huelle2.Z_MAX;
-        // Die Regel ohne Uhr und Speicher: was sich am Geraet nicht stellen laesst.
         var ok = Huelle2.zaehlerFolge(null, T) == T              // kein Vorgaenger
                  && Huelle2.zaehlerFolge(5, T) == T              // alter +1-Zaehler
                  && Huelle2.zaehlerFolge(T, T) == T + 1          // dieselbe Sekunde
@@ -454,22 +520,205 @@ module Probe {
                  && Huelle2.zaehlerFolge(M, 100) == M;           // bleiben, kein Umlauf
         urteil("ZAEHLER-FOLGE", ok, "");
 
-        // Am Speicher, mit der Zeit des Geraets.
+        // Zwei Pakete in derselben Sekunde: ein Zaehler fuer alle Einsaetze.
         var jetzt = Time.now().value();
-        var z1 = Huelle2.zaehlerNaechster();
-        var z2 = Huelle2.zaehlerNaechster();        // dieselbe Sekunde
-        urteil("ZAEHLER-ZEIT", z1 >= jetzt && z2 > z1, "z " + z1 + ", jetzt " + jetzt + ", dann +" + (z2 - z1));
+        var a = paket(), b = paket();
+        phaseDazu(a, 0);
+        phaseDazu(b, 1);
+        var na = Huelle2.inhaltZaehlen(a, false, null);
+        var nb = Huelle2.inhaltZaehlen(b, false, null);
+        var za = a["z"] as Number, zb = b["z"] as Number;
+        // Senden zaehlt nicht: derselbe Stand, dasselbe z, dieselben Bytes.
+        var i1 = Huelle2.einsatzInnen(a, false, null);
+        var i2 = Huelle2.einsatzInnen(a, false, null);
+        urteil("ZAEHLER-ZEIT", na && nb && za >= jetzt && zb > za && i1[1] == false && i2[1] == false
+                               && a["z"] == za && (i1[0] as String).equals(i2[0] as String)
+                               && gz() == zb,
+               "z " + za + ", jetzt " + jetzt + ", dann +" + (zb - za));
 
-        Storage.setValue(Huelle2.ABLAGE_ZAEHLER, 5);            // Stand einer Uhr vor KG-03b
-        var z3 = Huelle2.zaehlerNaechster();
-        urteil("ZAEHLER-ALT", z3 >= jetzt, "5 -> " + z3);
-        var hoch = (z3 > z2) ? z3 : z2;
-        Storage.setValue(Huelle2.ABLAGE_ZAEHLER, hoch);
+        // Bestand: "gz" einer Uhr vor 5.0.0 (+1-Zaehler) und ein Paket aus
+        // 5.0.0 ohne z. Das erste Zaehlen vergibt, das zweite nicht.
+        gzSetzen(5);
+        var c = paket();
+        phaseDazu(c, 2);
+        var n1 = Huelle2.inhaltZaehlen(c, false, null);
+        var zc = c["z"] as Number;
+        var n2 = Huelle2.inhaltZaehlen(c, false, null);
+        urteil("ZAEHLER-ALT", n1 && !n2 && zc >= jetzt && c["z"] == zc && c["zh"] instanceof String, "5 -> " + zc);
+        var hoch = (zc > zb) ? zc : zb;
+        gzSetzen(hoch);
 
+        // Trennen: "gz" bleibt, das z des Pakets bleibt; die naechste
+        // Aenderung liegt darueber.
         Huelle2.paarLoeschen();
-        var bleibt = Storage.getValue(Huelle2.ABLAGE_ZAEHLER);
-        var z4 = Huelle2.zaehlerNaechster();
-        urteil("ZAEHLER-TRENNEN", bleibt instanceof Number && bleibt == hoch && z4 > hoch, "z " + z4);
+        var bleibt = gz();
+        var n3 = Huelle2.inhaltZaehlen(c, false, null);
+        phaseDazu(c, 3);
+        var n4 = Huelle2.inhaltZaehlen(c, false, null);
+        urteil("ZAEHLER-TRENNEN", bleibt instanceof Number && bleibt == hoch && !n3 && n4
+                                  && (c["z"] as Number) > hoch, "z " + c["z"]);
+    }
+
+    // Die Schritte des Vektors `zaehler` der Referenz (Vektoren2.ZAEHLER):
+    // EIN Geraet, drei Einsaetze, vorgegebenes "jetzt". "aendern" haengt
+    // eine Phase an und zaehlt; "verschliessen" bildet die Innenform;
+    // "trennen" loescht das Paar. Je Schritt z und Geraetezaehler gegen den
+    // Vektor -- und ueber alle Schritte die zwei Saetze der Regel: gleiches z
+    // => innen byte-gleich, anderer Inhalt => groesseres z.
+    function zaehlerVektor() as Void {
+        var sichern = gz();
+        gzSetzen(Vektoren2.ZAEHLER_LETZTES >= 1 ? Vektoren2.ZAEHLER_LETZTES : null);
+        var pakete = {} as Dictionary<String, Dictionary>;
+        var gesehen = {} as Dictionary<Number, String>;      // z -> innen
+        var ok = true;
+        var wo = "";
+        var hoechstes = 0;
+        var n = Vektoren2.ZAEHLER.size();
+        for (var i = 0; i < n; i++) {
+            var s = Vektoren2.ZAEHLER[i] as Array;
+            var tat = s[0] as String;
+            var gut = true;
+            if (tat.equals("trennen")) {
+                Huelle2.paarLoeschen();
+                gut = s[3] == null;
+            } else {
+                var name = s[1] as String;
+                var d = pakete[name];
+                if (d == null) { d = paket(); pakete[name] = d; }
+                var jetzt = s[2] as Number;
+                if (tat.equals("aendern")) {
+                    phaseDazu(d, i);
+                    gut = Huelle2.inhaltZaehlen(d, false, jetzt) && (d["z"] as Number) > hoechstes;
+                    hoechstes = d["z"] as Number;
+                }
+                var r = Huelle2.einsatzInnen(d, false, jetzt);
+                var z = d["z"] as Number;
+                var innen = r[0] as String;
+                var alt = gesehen[z];
+                gut = gut && r[1] == false && z == s[3]
+                      && innen.find("{\"fassung\":2,\"z\":" + z + ",\"start\":1784277065,") == 0
+                      && (alt == null ? tat.equals("aendern") : (tat.equals("verschliessen") && innen.equals(alt)));
+                gesehen[z] = innen;
+            }
+            gut = gut && gz() == s[4];
+            if (!gut) { ok = false; wo += " " + i; }
+        }
+        urteil("ZAEHLER-VEKTOR", ok && n >= 12, ok ? "(" + n + " Schritte)" : "Schritt" + wo);
+        gzSetzen(sichern);
+    }
+
+    // Was den Inhalt aendert und was nicht, mit vorgegebenem "jetzt"; die
+    // Form, ueber die der Hash laeuft; das Paket durch den Storage.
+    function zaehlerInhalt() as Void {
+        var sichern = gz();
+        var T = 1794300000;
+        gzSetzen(T - 100);
+        var d = paket();
+        phaseDazu(d, 0);
+        phaseDazu(d, 1);
+        var ok = Huelle2.inhaltZaehlen(d, false, T) && d["z"] == T;
+        var z = T;
+        var wo = "";
+        // Jede dieser Aenderungen steht innen: jedes Mal ein groesseres z --
+        // auch wenn die Uhr inzwischen zurueckgestellt ist (jetzt = T - 50).
+        for (var k = 0; k < 8; k++) {
+            var schluss = k >= 6;
+            if (k == 0) { phaseDazu(d, 2); }                                             // Phase dazu
+            else if (k == 1) { phase(d, 0)[2] = 47.5602d; }                              // Koordinate
+            else if (k == 2) { phase(d, 1)[1] = iso(9); }                                // Zeit einer Phase
+            else if (k == 3) { (d["resus"] as Array).add({ "start" => iso(40), "startLocal" => "08:31",
+                                                           "events" => [] }); }          // Rea beginnt
+            else if (k == 4) { (sitzung(d)["events"] as Array)
+                                   .add(["adrenalin", iso(55), "08:32"]); }              // Rea-Ereignis
+            else if (k == 5) { var ev = (sitzung(d)["events"] as Array)[0] as Array;
+                               ev[0] = "defi"; }                                         // dessen Art
+            else if (k == 6) { d["final"] = true; }                                      // schluss
+            else { d["startedAt"] = "2026-07-17T08:31:04Z"; }                            // start
+            var h1 = Huelle2.inhaltHash(d, schluss);
+            var neu = Huelle2.inhaltZaehlen(d, schluss, T - 50);
+            var nochmal = Huelle2.inhaltZaehlen(d, schluss, T + 999);
+            if (!(neu && !nochmal && d["z"] == z + 1 && gz() == z + 1
+                  && (d["zh"] as String).equals(Huelle.base64(h1)))) { ok = false; wo += " " + k; }
+            z = d["z"] as Number;
+        }
+        urteil("ZAEHLER-INHALT", ok, ok ? "(8 Aenderungen)" : "Aenderung" + wo);
+
+        // Was NICHT innen steht, zaehlt nicht.
+        d["endedAt"] = iso(900);
+        d["dist"] = 4711;
+        d["asc"] = 12;
+        d["day"] = "2026-07-17";
+        phase(d, 0)[4] = "10:31";
+        sitzung(d)["startLocal"] = "10:31";
+        var still = !Huelle2.inhaltZaehlen(d, true, T + 999) && d["z"] == z && gz() == z;
+
+        // Die Form: Innen ohne das Feld z ist, worueber der Hash laeuft.
+        var innen = (Huelle2.einsatzInnen(d, true, T + 999))[0] as String;
+        var feld = "\"z\":" + z + ",";
+        var p = innen.find(feld);
+        var form = p == 13
+                   && Krypto.gleich(Huelle2.sha256(Krypto.text(innen.substring(0, 13) as String
+                          + (innen.substring(13 + feld.length(), innen.length()) as String))),
+                      Huelle2.inhaltHash(d, true))
+                   && !Krypto.gleich(Huelle2.inhaltHash(d, true), Huelle2.inhaltHash(d, false));
+        urteil("ZAEHLER-FORM", still && form, "(" + innen.length() + " Z.)");
+
+        // Das Paket durch den Storage, wie Model.save()/load(): dasselbe z,
+        // dieselben Bytes -- der Hash haelt den Weg durch die Ablage aus.
+        Storage.setValue("probe_paket", d as Dictionary<Storage.KeyType, Storage.ValueType>);
+        var e = Storage.getValue("probe_paket") as Dictionary;
+        Storage.deleteValue("probe_paket");
+        var r = Huelle2.einsatzInnen(e, true, T + 999);
+        var ablage = r[1] == false && e["z"] == z && innen.equals(r[0] as String) && gz() == z;
+        // Ohne "zh", mit verdorbenem "zh", mit Unsinn als z: wie geaendert.
+        e.remove("zh");
+        ablage = ablage && Huelle2.inhaltZaehlen(e, true, T - 50) && e["z"] == z + 1;
+        e["zh"] = "AAAA";
+        ablage = ablage && Huelle2.inhaltZaehlen(e, true, T - 50) && e["z"] == z + 2;
+        e["z"] = "x";
+        ablage = ablage && Huelle2.inhaltZaehlen(e, true, T - 50) && e["z"] == z + 3;
+        // "gz" verloren, das Paket nicht: Die naechste Aenderung liegt ueber
+        // dem z des Pakets, nicht bei der (zurueckgestellten) Zeit.
+        gzSetzen(null);
+        phaseDazu(e, 5);
+        ablage = ablage && Huelle2.inhaltZaehlen(e, true, T - 50) && e["z"] == z + 4 && gz() == z + 4;
+        urteil("ZAEHLER-ABLAGE", ablage, "z " + e["z"]);
+
+        // Die Grenze 2038: stehen bleiben, nie negativ.
+        gzSetzen(Huelle2.Z_MAX - 1);
+        var g = paket();
+        phaseDazu(g, 0);
+        var grenze = Huelle2.inhaltZaehlen(g, false, 100) && g["z"] == Huelle2.Z_MAX;
+        phaseDazu(g, 1);
+        grenze = grenze && Huelle2.inhaltZaehlen(g, false, 100) && g["z"] == Huelle2.Z_MAX
+                 && gz() == Huelle2.Z_MAX;
+        urteil("ZAEHLER-GRENZE", grenze, "");
+        gzSetzen(sichern);
+    }
+
+    // Was das Zaehlen kostet: ein grosser Einsatz (12 Phasen, 3 Sitzungen
+    // zu 40 Ereignissen), einmal mit Aenderung, einmal ohne -- so oft laeuft
+    // es je Ablegen des Zustands. Meldung, kein Urteil.
+    function zaehlerZeit() as Void {
+        var sichern = gz();
+        var d = paket();
+        for (var i = 0; i < 12; i++) { phaseDazu(d, i); }
+        for (var j = 0; j < 3; j++) {
+            var ev = [];
+            for (var k = 0; k < 40; k++) { ev.add(["kompression", iso(200 + j * 400 + k * 9), "08:40"]); }
+            (d["resus"] as Array).add({ "start" => iso(190 + j * 400), "startLocal" => "08:34", "events" => ev });
+        }
+        var vor = System.getSystemStats().usedMemory;
+        var t0 = System.getTimer();
+        Huelle2.inhaltZaehlen(d, false, 1794300000);
+        var t1 = System.getTimer();
+        Huelle2.inhaltZaehlen(d, false, 1794300000);
+        var t2 = System.getTimer();
+        var innen = (Huelle2.einsatzInnen(d, false, 1794300000))[0] as String;
+        melde("T-INHALT 12 Ph., 120 Er.");
+        melde("zaehlen " + (t1 - t0) + " ms, gleich " + (t2 - t1) + " ms");
+        melde(innen.length() + " Z. +" + ((System.getSystemStats().usedMemory - vor) / 1024) + " kB");
+        gzSetzen(sichern);
     }
 
     // Das dauerhafte Paar (KG-02). Meldungen, kein Urteil: Ein erster Lauf

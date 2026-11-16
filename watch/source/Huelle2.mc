@@ -13,9 +13,9 @@
 // fluechtiger oeffentlicher Schluessel · IV · AES-256-CBC · HMAC-SHA256.
 // Weicht diese Datei davon ab, ist diese Datei falsch.
 //
-// NOCH NICHT IM SENDEWEG. Uploader, Pair und Model benutzen dieses Modul
-// nicht; die App sendet Fassung 1, bis der Server Fassung 2 annimmt
-// (KG-03b). Gemessen ist es in der Krypto-Probe
+// IM SENDEWEG SEIT UHR 5.0.0 (KG-03b): Pair koppelt mit Geraetepaar und
+// Vergleichswert, Uploader verschliesst in Fassung 2, Model zaehlt den
+// Inhalt der Einsaetze (KG-09). Gemessen ist der Kern in der Krypto-Probe
 // (tools/uhr-pruefstand/krypto-probe/), die genau diese Datei uebersetzt,
 // byte-gleich gegen die Vektoren der Referenz.
 //
@@ -53,8 +53,9 @@ module Huelle2 {
      *   gzs    Kennung des Kontoschluessels (8 Byte) und Z_s (32 Byte) --
      *          gilt nur, solange die Kennung zum abgelegten Kontoschluessel
      *          passt
-     *   gz     der Zaehler der Einsatzhuellen: die Unix-Sekunde des letzten
-     *          Verschliessens oder mehr (zaehlerNaechster(), E-KA-64)
+     *   gz     der Geraetezaehler der Einsatzhuellen: das zuletzt vergebene
+     *          z -- die Unix-Sekunde der letzten Aenderung an einem Einsatz
+     *          oder mehr (inhaltZaehlen(), E-KA-69)
      *   kpruef2  Vermerk des Selbsttests, wie "kpruef" */
     const ABLAGE_PAAR = "gpaar";
     const ABLAGE_ZS = "gzs";
@@ -301,53 +302,92 @@ module Huelle2 {
                  "huelle" => verschliessen(innen, art, ref, seq.toString() + ":0") };
     }
 
-    /* DER ZAEHLER `z` DER EINSATZHUELLE (E-KA-64, KG-03b).
+    /* DER ZAEHLER `z` DER EINSATZHUELLE (E-KA-69, -74; KG-09, E-KG-38).
      *
-     * DIE REGEL. z = Unix-Sekunde des Verschliessens, lokal streng steigend:
-     *     z = max(jetzt, letztes z + 1)
-     * EIN Zaehler fuer alle Einsaetze dieser Uhr, abgelegt unter "gz"; er
-     * steigt mit jedem Verschliessen, also auch je Einsatz, braucht keinen
-     * Platz im Einsatzpuffer und uebersteht das Trennen (paarLoeschen()).
-     * Die Referenz verlangt je Einsatz z >= o (einsatz_lesen() in
-     * tools/proben/huelle/referenz.py: z < o ist `zurueckgelegt`, z < 1 ist
-     * `innen`) -- nicht o + 1. Bis KG-03b zaehlte er +1 ab 1; das trug auf
-     * EINER Uhr, aber nicht ueber einen Geraetewechsel: Ein zweites Geraet
-     * mit kleinerem Zaehler fiele als `zurueckgelegt` durch (Q-KA-13). Mit
-     * der Sekunde steigt er auch ueber Geraete hinweg, solange deren Uhren
-     * nicht weiter auseinandergehen als der Abstand zweier Uebergaben.
+     * WOFUER. Der Browser des Kontos merkt sich je Einsatz den Zaehler der
+     * zuletzt abgenommenen Huelle und weist eine mit kleinerem ab
+     * (`zurueckgelegt`; z < 1 ist `innen` -- einsatz_lesen() in
+     * tools/proben/huelle/referenz.py). Verlangt ist z >= o, nicht o + 1.
      *
-     * 1. WOHER "JETZT" KOMMT. Time.now().value() -- dieselbe Quelle wie
-     *    Util.epochNow(); hier unmittelbar, weil die Krypto-Probe diesen
-     *    Kern ohne Util.mc uebersetzt. Es ist die Zeit der Uhr, nicht des
-     *    Servers. SPRINGT SIE ZURUECK (Zuruecksetzen, Zeitzone von Hand),
-     *    traegt "letztes z + 1": Der Zaehler laeuft der Uhr dann voraus und
-     *    zaehlt +1, bis die Zeit ihn wieder einholt. IST SIE UNPLAUSIBEL
-     *    KLEIN (Uhr ohne Zeit) oder null/negativ, gilt dasselbe, und ohne
-     *    Vorgaenger ist z = 1 -- nie kleiner, die Referenz weist z < 1 ab.
-     *    Lokal haelt die Regel also immer. WAS SIE NICHT TRAEGT: Eine Uhr,
-     *    deren Zeit einmal weit VORAUS lag, behaelt den hohen Stand; und
-     *    eine Uhr ohne Zeit liefert kleine Zahlen. Beides stoert erst den
-     *    Geraetewechsel (das andere Geraet faellt als `zurueckgelegt`
-     *    durch bzw. diese Uhr), nie die Folge dieser Uhr selbst.
-     * 2. BESTEHENDER SPEICHER. Eine Uhr mit "gz" = kleine Zahl aus dem
-     *    alten +1-Zaehler springt beim naechsten Verschliessen auf jetzt
-     *    (max greift) -- groesser als jeder Stand, den der Server von ihr
-     *    kennt. Kein Umzug, kein Fassungsmerker. Was unter "gz" keine Zahl
-     *    >= 1 ist, zaehlt als "kein Vorgaenger".
-     * 3. ZAHLENBEREICH. Lang.Number, 32 Bit mit Vorzeichen: traegt bis
-     *    2147483647 = 19.01.2038. Long braechte hier nichts, denn
-     *    Time.now().value() ist selbst eine Number -- die Grenze liegt in
-     *    der Plattform, nicht in diesem Zaehler. Das Format verlangt nur
-     *    eine ganze JSON-Zahl >= 1 ("z":<zahl>, ohne Anfuehrungszeichen,
-     *    ohne Komma); Referenz (Python) und Browser (2^53) lesen jede
-     *    Number und spaeter auch jeden Long unveraendert. An der Grenze
-     *    BLEIBT der Zaehler stehen, statt ins Negative umzulaufen: gleiches
-     *    z nimmt die Referenz an (z >= o), ein negatives nie.
+     * DIE REGEL. `z` GEHOERT ZUM INHALT, NICHT ZUM VERSCHLIESSEN. Inhalt
+     * ist alles, was innen steht ausser z selbst: Phasen samt Koordinaten,
+     * Reanimation, `schluss`, `start`. Aendert er sich, vergibt die Uhr
+     *     z = max(jetzt, gz + 1)
+     * aus dem EINEN Geraetezaehler `gz` (Storage "gz", fuer alle Einsaetze,
+     * ueberdauert Neustart und Trennen -- paarLoeschen() laesst ihn stehen)
+     * und legt z MIT DEM PAKET ab: im Einsatz-Dictionary unter "z", daneben
+     * unter "zh" den SHA-256 des Inhalts ohne z (Base64, wie alles im
+     * Storage dieses Moduls). Jede Huelle, die danach aus diesem Paket
+     * entsteht, traegt dasselbe z, wie oft und wann auch gesendet wird.
+     * Zwei Saetze, an denen das gemessen wird (Vektor `zaehler` der
+     * Referenz, Krypto-Probe ZAEHLER-…):
+     *     gleiches z     => innen byte-gleich
+     *     anderer Inhalt => groesseres z, ueber alle Einsaetze dieser Uhr
      *
-     * zaehlerFolge() ist die Regel ohne Uhr und Speicher, damit die Probe
-     * auch die Faelle messen kann, die sich am Geraet nicht stellen lassen
-     * (Zeit springt zurueck, keine Zeit, Grenze). */
+     * DER BRUCH ZU E-KA-64 (Uhr 5.0.0). Bis KG-09 war z die Sekunde des
+     * VERSCHLIESSENS, je Anfrage neu: Jeder Sendeversuch hob den Zaehler,
+     * und eine Uhr, die nach einer Uebergabe ihren alten, unveraenderten
+     * Stand nachsandte, gewann gegen den Abschluss des anderen Geraets.
+     * Jetzt traegt der alte Stand den alten Zaehler und faellt durch.
+     *
+     * WORAN DIE AENDERUNG ERKANNT WIRD: am Hash, nicht an einem Merker
+     * (E-KG-38). inhaltZaehlen() bildet die Innenform ohne z -- dieselben
+     * Bytes wie einsatzInnen() ohne das Feld `"z":<zahl>,` --, vergleicht
+     * ihren SHA-256 mit "zh" und vergibt nur bei Abweichung. Wer es ruft,
+     * muss also nicht wissen, OB sich etwas geaendert hat; und einsatz()
+     * prueft vor jedem Verschliessen selbst noch einmal: Nie geht ein Inhalt
+     * unter einem z hinaus, das zu einem anderen gehoerte, auch wenn ein
+     * Aufrufer das Zaehlen vergisst. Was nicht innen steht (endedAt,
+     * Strecke, Anstieg, Anzeigezeiten), aendert z nicht.
+     *
+     * WANN z ENTSTEHT, entscheidet der Aufrufer: Gezaehlt beim AENDERN, ist
+     * z die Sekunde der Aenderung (so meint es die Referenz). Gezaehlt erst
+     * beim Verschliessen, ist es die Sekunde des ERSTEN Sendens dieses
+     * Stands -- beide Saetze halten, aber ein lange liegender Stand bekaeme
+     * einen jungen Zaehler. EIN PAKET AUS UHR 5.0.0 traegt weder "z" noch
+     * "zh" und bekommt beides beim ersten Zaehlen; sein z liegt ueber jedem,
+     * das diese Uhr je gesendet hat (gz).
+     *
+     * ABGELEGT, BEVOR IHN JEMAND BENUTZT. `gz` steht im Storage, bevor z im
+     * Paket steht: Ein Absturz danach kostet eine Zahl, nie vergibt die Uhr
+     * dieselbe ein zweites Mal fuer anderen Inhalt. Das PAKET legt der
+     * Aufrufer ab (die Funktionen melden `neu`). Geht das verloren, bekommt
+     * derselbe Inhalt beim naechsten Mal ein groesseres z -- das kostet die
+     * Schaerfe der Regel, nicht ihre Richtung. Ein Paket, dessen z ueber
+     * `gz` liegt (Speicher teils verloren), hebt `gz` mit.
+     *
+     * "JETZT" ist Time.now().value(), die Zeit der Uhr (hier unmittelbar,
+     * weil die Krypto-Probe diesen Kern ohne Util.mc uebersetzt). SPRINGT
+     * SIE ZURUECK, traegt gz + 1, bis die Zeit den Zaehler einholt. FEHLT
+     * SIE (null, negativ, unplausibel klein), gilt dasselbe, und ohne
+     * Vorgaenger ist z = 1, nie kleiner. Was unter "gz" keine Zahl >= 1 ist,
+     * zaehlt als "kein Vorgaenger"; ein alter +1-Stand (vor Uhr 5.0.0)
+     * springt ohne Umzug auf die Sekunde. ZAHLENBEREICH: Lang.Number,
+     * 32 Bit mit Vorzeichen, bis 2147483647 = 19.01.2038 -- die Grenze der
+     * Plattform (Time.now().value() ist selbst eine Number). An ihr BLEIBT
+     * der Zaehler stehen, statt ins Negative umzulaufen; dort, und nur
+     * dort, gilt "anderer Inhalt => groesseres z" nicht mehr.
+     *
+     * WAS DIE REGEL NICHT TRAEGT -- vier Grenzen (Kopf der Referenz); alle
+     * stoeren erst den Geraetewechsel, nie die Folge dieser Uhr:
+     * 1. VORAUSLAUFENDE UHR. Lag die Zeit einmal weit voraus, bleibt der
+     *    hohe Stand; ein anderes Geraet faellt an diesem Einsatz durch, bis
+     *    seine Zeit ihn ueberholt. Nichts an der Uhr senkt ihn.
+     * 2. NACHGEHENDE UHR. Geht die Zeit nach oder fehlt sie, liegt das z
+     *    einer ECHTEN Aenderung unter dem Stand des anderen Geraets, und
+     *    diese Uhr faellt durch, obwohl niemand etwas zurueckgelegt hat.
+     * 3. GLEICHSTAND (F-KA-112). z >= o nimmt gleiches z an -- es muss.
+     *    Ueber Geraete hinweg sagt Gleichstand nichts.
+     * 4. UHRZEIT, NICHT REIHENFOLGE. z belegt "spaeter geaendert", nicht
+     *    "vollstaendiger".
+     *
+     * zaehlerFolge() ist die Regel ohne Uhr und Speicher, und Zaehlen wie
+     * Innenform nehmen ein `jetzt` entgegen (null = die Zeit der Uhr),
+     * damit die Probe auch misst, was sich am Geraet nicht stellen laesst. */
     const Z_MAX = 2147483647;
+    const PAKET_Z = "z";        // Schluessel im Einsatz-Dictionary (Model.mc)
+    const PAKET_HASH = "zh";
+    const INNEN_KOPF = "{\"fassung\":2,";
 
     function zaehlerFolge(alt as Lang.Object or Null, jetzt as Lang.Number) as Lang.Number {
         var n = 1;
@@ -358,29 +398,74 @@ module Huelle2 {
         return (jetzt > n) ? jetzt : n;
     }
 
-    /* Der naechste Zaehlerstand fuer eine Einsatzhuelle -- und abgelegt,
-     * BEVOR ihn jemand benutzt: Ein Absturz danach kostet eine Zahl, keinen
-     * Ruecklauf. */
-    function zaehlerNaechster() as Lang.Number {
-        var n = zaehlerFolge(Storage.getValue(ABLAGE_ZAEHLER), Time.now().value());
-        Storage.setValue(ABLAGE_ZAEHLER, n);
-        return n;
+    /* Die Innenform hinter dem Kopf und OHNE z:
+     * "start":…,"schluss":…,"phasen":[...],"rea":[...]} -- der Inhalt. */
+    function _inhaltRest(d as Lang.Dictionary, schluss as Lang.Boolean) as Lang.String {
+        var beginn = Huelle._sekunden(d["startedAt"] as Lang.String);
+        return "\"start\":" + beginn.toString() + ",\"schluss\":" + (schluss ? "true" : "false") + ","
+               + Huelle.einsatzRumpf(d, beginn);
+    }
+
+    function _restHash(rest as Lang.String) as Lang.ByteArray {
+        var h = new Cryptography.Hash({:algorithm => Cryptography.HASH_SHA256});
+        h.update(Huelle.text(INNEN_KOPF));
+        h.update(Huelle.text(rest));
+        return h.digest();
+    }
+
+    /* SHA-256 des Inhalts ohne z: ueber {"fassung":2,"start":…,"schluss":…,
+     * "phasen":[...],"rea":[...]} -- einsatzInnen() ohne das Feld z. Rein:
+     * liest nur. `schluss` gehoert zum Inhalt. */
+    function inhaltHash(d as Lang.Dictionary, schluss as Lang.Boolean) as Lang.ByteArray {
+        return _restHash(_inhaltRest(d, schluss));
+    }
+
+    /* Vergleichen und, nur bei Abweichung, zaehlen. true: z wurde vergeben. */
+    function _zaehlen(d as Lang.Dictionary, rest as Lang.String, jetzt as Lang.Number or Null) as Lang.Boolean {
+        var h = Huelle.base64(_restHash(rest));
+        var z = d[PAKET_Z];
+        var alt = d[PAKET_HASH];
+        var gilt = z instanceof Lang.Number && (z as Lang.Number) >= 1;
+        if (gilt && alt instanceof Lang.String && (alt as Lang.String).equals(h)) { return false; }
+        var g = Storage.getValue(ABLAGE_ZAEHLER) as Lang.Object or Null;
+        if (gilt && !(g instanceof Lang.Number && (g as Lang.Number) >= (z as Lang.Number))) { g = z as Lang.Number; }
+        var n = zaehlerFolge(g, (jetzt != null) ? jetzt : Time.now().value());
+        Storage.setValue(ABLAGE_ZAEHLER, n);    // zuerst der Geraetezaehler
+        d[PAKET_Z] = n;
+        d[PAKET_HASH] = h;
+        return true;
+    }
+
+    /* DAS ZAEHLEN: Hat sich der Inhalt des Einsatzes `d` geaendert, seit
+     * sein z vergeben wurde? Dann ein neues aus `gz`, abgelegt in `gz` und
+     * in `d` ("z", "zh"). Gibt true zurueck, wenn `d` sich dabei geaendert
+     * hat -- der Aufrufer legt das Paket dann ab. Der Zaehler steht danach
+     * in d["z"]. `schluss`: Der Einsatz ist abgeschlossen (d["final"]) --
+     * derselbe Wert wie beim Verschliessen, sonst zaehlt das Senden neu.
+     * `jetzt`: null, ausser in der Probe. */
+    function inhaltZaehlen(d as Lang.Dictionary, schluss as Lang.Boolean,
+                           jetzt as Lang.Number or Null) as Lang.Boolean {
+        return _zaehlen(d, _inhaltRest(d, schluss), jetzt);
     }
 
     /* Die Einsatzhuelle innen: {"fassung":2,"z","start","schluss",
      * "phasen":[...],"rea":[...]} -- die Schluessel in dieser Reihenfolge.
-     * `z`: der Zaehler; `start`: started_at als absolute Zeit, auf die sich
-     * alle t beziehen; `schluss`: die Huelle des abgeschlossenen Einsatzes. */
-    function einsatzInnen(d as Lang.Dictionary, z as Lang.Number, schluss as Lang.Boolean) as Lang.String {
-        var beginn = Huelle._sekunden(d["startedAt"] as Lang.String);
-        return "{\"fassung\":2,\"z\":" + z.toString() + ",\"start\":" + beginn.toString()
-               + ",\"schluss\":" + (schluss ? "true" : "false") + ","
-               + Huelle.einsatzRumpf(d, beginn);
+     * `z`: der Zaehler des Pakets; `start`: started_at als absolute Zeit,
+     * auf die sich alle t beziehen; `schluss`: die Huelle des
+     * abgeschlossenen Einsatzes. ZAEHLT VORHER (inhaltZaehlen()) und gibt
+     * [innen as String, neu as Boolean] zurueck; `neu`: `d` hat ein neues z
+     * bekommen und ist abzulegen. */
+    function einsatzInnen(d as Lang.Dictionary, schluss as Lang.Boolean,
+                          jetzt as Lang.Number or Null) as Lang.Array {
+        var rest = _inhaltRest(d, schluss);
+        var neu = _zaehlen(d, rest, jetzt);
+        return [INNEN_KOPF + "\"z\":" + (d[PAKET_Z] as Lang.Number).toString() + "," + rest, neu];
     }
 
-    function einsatz(ref as Lang.String, d as Lang.Dictionary, z as Lang.Number,
-                     schluss as Lang.Boolean) as Lang.String {
-        return verschliessen(Huelle.text(einsatzInnen(d, z, schluss)), "einsatz", ref, "");
+    /* Die Einsatzhuelle: [huelle as String, neu as Boolean]. */
+    function einsatz(ref as Lang.String, d as Lang.Dictionary, schluss as Lang.Boolean) as Lang.Array {
+        var i = einsatzInnen(d, schluss, null);
+        return [verschliessen(Huelle.text(i[0] as Lang.String), "einsatz", ref, ""), i[1]];
     }
 
     // ---- Die Kopplung: Zusage und Vergleichswert --------------------------

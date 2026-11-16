@@ -11367,3 +11367,13 @@ zutreffen.
      nach `huelle: 2`, Zähler nach E-KA-64. *Abnahme:* Probe sendeweg rot
      gegen Uhr 4.6.0, Rundlauf mit Wert gegen die Referenz. Erledigt
      14.11.2026 mit Uhr 5.0.0 (Schritt 28, KG-03b).
+580. **Die Garmin-Uhr zählte die Einsatzhülle beim Senden und fiel ohne Gerätepaar auf Fassung 1 zurück.** · gehört zu: 28 · Stand: erledigt · seit 15.11.2026
+     *Aufgenommen 15.11.2026 mit KG-09 und KG-10 (Konzept KG; Konzept KA,
+     E-KA-69, -74, -80, -86).* Jedes Verschließen hob `z`, auch für einen
+     unveränderten Stand, und ein nach der Übergabe nachgesendeter alter
+     Stand gewann. Eine Uhr mit `huelle: 2` ohne Paar oder mit gescheitertem
+     Selbsttest sendete still ohne Herkunftsnachweis. *Weg:* `z` bei der
+     Änderung des Inhalts (SHA-256 im Paket), kein Senden ohne Herkunft,
+     „Neu koppeln“ mit gebundenem Trennen. *Abnahme:* Krypto-Probe 32 gut,
+     sendeweg 28 grün, drei Gegenproben rot. Erledigt 16.11.2026 mit
+     Uhr 5.1.0 (Schritt 28, KG-09, KG-10).

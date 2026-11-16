@@ -356,7 +356,11 @@ module Pair {
          * nicht. */
         var offen = Model.backlogCount();
         var gebundenTrennen = false;
-        if (offen > 0 && Uploader.angehalten() && !Uploader.gebunden()) {
+        /* Dasselbe gilt seit KG-10, wenn der Uhr das Geraetepaar fehlt:
+         * Sie sendet dann nicht (E-KA-80), und ohne Trennen kaeme sie nie
+         * zum Neukoppeln, das der Hinweis verlangt (F-KG-25). */
+        if (offen > 0 && (Uploader.angehalten() || Uploader.herkunftFehlt() == :paar)
+            && !Uploader.gebunden()) {
             gebundenTrennen = true;
         } else if (offen > 0) {
             status = "Erst " + offen.toString()
@@ -439,10 +443,14 @@ module Pair {
             Uploader.abgemeldet = false;
             Uploader.abmeldungVergessen();
             /* `huelle: 2` lernt eine Uhr hier wieder, deren Merker verloren
-             * ging (Vertrag 1a.7) -- nur mit eigenem Paar. Fehlt das Feld,
-             * sendet sie Fassung 1. */
-            if (dict["huelle"] instanceof Lang.Number && (dict["huelle"] as Lang.Number) == 2
-                && Huelle2.hatPaar()) {
+             * ging (Vertrag 1a.7). Fehlt das Feld, sendet sie Fassung 1.
+             * SEIT KG-10 AUCH OHNE EIGENES PAAR: Bis Uhr 5.0.0 loeschte
+             * diese Stelle den Merker, wenn das Paar fehlte, und die Uhr
+             * sendete still Fassung 1 -- ohne Herkunftsnachweis, obwohl der
+             * Server das Geraet mit Schluessel kennt (F-KG-26). Jetzt steht
+             * der Merker, die Uhr sendet nicht und sagt "Neu koppeln"
+             * (Uploader.herkunftFehlt(), E-KA-80). */
+            if (dict["huelle"] instanceof Lang.Number && (dict["huelle"] as Lang.Number) == 2) {
                 Storage.setValue(ABLAGE_HUELLE2, true);
             } else {
                 Storage.deleteValue(ABLAGE_HUELLE2);
@@ -1161,11 +1169,12 @@ module Pair {
         /* DAS GERAETEPAAR DIESER KOPPLUNG ABLEGEN -- nur wenn N_g offengelegt
          * ist; sonst hat das Web es nie bestaetigt. Fassung 2 sendet die Uhr
          * nur, wenn der Server `huelle: 2` sagt (Vertrag 1a.7). */
-        var h2 = false;
-        if (_mitSchluessel && _ngOffen && Huelle2.kopplungUebernehmen()) {
-            h2 = (dict != null && dict["huelle"] instanceof Lang.Number
+        if (_mitSchluessel && _ngOffen) { Huelle2.kopplungUebernehmen(); }
+        /* Der Merker folgt dem SERVER, nicht dem Gelingen der Ablage (seit
+         * KG-10): Sagt er `huelle: 2` und liegt kein Paar ab, sendet die Uhr
+         * nicht und sagt "Neu koppeln" (E-KA-80) -- statt still Fassung 1. */
+        var h2 = (dict != null && dict["huelle"] instanceof Lang.Number
                   && (dict["huelle"] as Lang.Number) == 2);
-        }
         if (h2) { Storage.setValue(ABLAGE_HUELLE2, true); }
         else { Storage.deleteValue(ABLAGE_HUELLE2); }
         var ks = (dict != null) ? dict["kontoschluessel"] : null;

@@ -117,6 +117,18 @@ module Model {
      * dort ein Array) und Uploader.mc (der Sendekoerper). Es waren die vier
      * letzten Meldungen der strengen Pruefung. */
     function save() as Void {
+        /* DER ZAEHLER DES LAUFENDEN EINSATZES (KG-09, E-KA-69): Hat sich
+         * sein Inhalt geaendert -- Phase, Koordinate, Reanimation --, bekommt
+         * er hier ein neues `z`, die Sekunde der Aenderung, und das z liegt
+         * im SELBEN Schreibvorgang wie die Aenderung. Erst beim Senden zu
+         * zaehlen hiesse: Ein lange nicht gesendeter Stand bekaeme einen
+         * jungen Zaehler und gewaenne gegen eine spaetere Aenderung am
+         * anderen Geraet. Scheitert das Zaehlen (Speicher), geht die
+         * Aufzeichnung vor: Das Senden zaehlt dann nach (Huelle2.einsatz). */
+        var m = mission;
+        if (m != null) {
+            try { Huelle2.inhaltZaehlen(m, false, null); } catch (e) { }
+        }
         Storage.setValue(Const.K_STATE, {
             "svc" => serviceActive, "day" => day, "ph" => phase,
             "mis" => mission, "rest" => restSegment,
@@ -259,6 +271,10 @@ module Model {
         m["dist"] = Track.distanceM.toNumber();
         m["asc"]  = Track.ascentM.toNumber();
         m["final"] = true;
+        /* Der Abschluss aendert den Inhalt (`schluss`): neues z. Hier und
+         * nicht in save(), weil m ab der naechsten Zeile in pendingMissions
+         * steht, nicht mehr in `mission` (KG-09). */
+        try { Huelle2.inhaltZaehlen(m, true, null); } catch (e) { }
         dayMissions += 1;                  // zaehlt erst mit bestaetigtem Ende
         Track.endMissionTrack();
         pendingMissions.add(m);

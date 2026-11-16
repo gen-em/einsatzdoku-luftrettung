@@ -14,6 +14,28 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Uhr 5.1.0] — unveröffentlicht
+
+Schritt 28, Pakete KG-09 und KG-10 (Backlog Nr. 580).
+
+### Geändert
+
+- **Uhr — der Zähler der Einsatzhülle gehört zum Inhalt, nicht zum
+  Senden.** Bisher hob jedes Verschließen den Zähler, und eine Uhr, die
+  nach einer Übergabe einen alten, unveränderten Stand nachsandte, gewann
+  gegen den neueren Stand des anderen Geräts. Jetzt bekommt ein Einsatz
+  sein `z` in dem Augenblick, in dem sich Phasen, Reanimation oder
+  Abschluss ändern, und jede Hülle desselben Stands trägt dasselbe `z`.
+  Erkannt wird die Änderung über eine Prüfsumme des Inhalts im Paket,
+  damit die Uhr keinen zweiten Text speichern muss.
+- **Uhr — ohne Herkunftsnachweis sendet die Uhr nicht mehr.** Eine Uhr, die
+  bei der Kopplung `huelle: 2` gehört hat, aber ihr Gerätepaar verloren
+  hat oder deren Selbsttest scheitert, schickte bisher still das alte
+  Format ohne Herkunftsnachweis. Jetzt behält sie die Daten und sagt auf
+  der Sync-Seite „Neu koppeln“ bzw. „Verschlüsseln geht nicht“. Damit das
+  Neukoppeln trotz Rückstand geht, trennt sie wie eine abgemeldete Uhr: Die
+  Pakete bleiben gebunden und gehen nur an dasselbe Konto.
+
 ## [Web 24.19.0] — unveröffentlicht
 
 Schritt 28 (KA), Paket KA-06f.
