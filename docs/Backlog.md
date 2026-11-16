@@ -793,19 +793,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      neuen Befund, Prüffälle grün.
 <!-- -->
 
-566. **Eine Phase während einer laufenden Anfrage wartet bis zur nächsten Änderung.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 15.11.2026
-     *Aufgenommen 15.11.2026 aus KA-06f-3 (Fable-Agent), gelesen, nicht
-     gemessen.* Fällt am Handy eine Phase, während eine Anfrage desselben
-     Pakets unterwegs ist, setzt deren Antwort `metadaten_bestaetigt` in
-     `Puffer.bestaetigungMerken()` wieder auf 1 — die neue Phase hat dann
-     keine Arbeit mehr und geht erst mit dem nächsten Punkt oder der
-     nächsten Änderung hinaus. Im Dienst fällt fast jede Sekunde ein Punkt,
-     daher selten spürbar; beim stehenden Fahrzeug nicht. *Weg:* nur
-     bestätigen, wenn der Stand noch derselbe ist (für Einsätze der Zähler
-     `z` des Pakets, für Ruhesegmente eine Änderungsnummer). *Abnahme:* ein
-     Prüffall, der die Phase zwischen Senden und Antwort setzt.
-<!-- -->
-
 567. **Der Einspiellauf des Demo-Bestands schreibt noch Fassung 1.** · gehört zu: 28 · Stand: offen · seit 15.11.2026
      *Aufgenommen 15.11.2026 aus KA-13 (E-KA-90).* `einspielen.py` koppelt
      das Demo-Gerät ohne Vergleichswert und sendet Gerätehüllen der
@@ -817,20 +804,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      dem Stichtag aus 06e. *Abnahme:* voller Einspiellauf, `erzeugen.php`
      und `verschliessen.py` ohne Befund, Fixture byte-gleich zur heutigen
      oder begründet anders.
-<!-- -->
-
-568. **Ein Gerätebuch, das nicht aufgeht, sperrt jede Kopplung.** · gehört zu: 28 · Stand: offen · seit 16.11.2026
-     *Aufgenommen 16.11.2026 aus KA-14 (F-KA-125).* Liegt auf dem Server
-     ein Gerätebuch, das der Browser nicht öffnen kann (beschädigt oder von
-     jemandem mit Schreibzugriff eingesetzt), scheitert `geraetEintragen()`
-     bei jeder Kopplung mit „Das Gerät ließ sich nicht eintragen. Hol am
-     Gerät einen neuen Code.“ — ein neuer Code hilft nicht, und
-     `zurueckschreiben()` wirkt nur, wenn die Version auf dem Server
-     niedriger ist. *Weg:* eigener Grund und Meldung („Gerätebuch auf dem
-     Server ist beschädigt“) mit einem bewussten Neuanfang des Buchs aus
-     dem Stand dieses Browsers; Bedrohungsmodell prüfen (wer den Server
-     beschreibt, sperrt so Kopplungen — Verfügbarkeit, keine Zusage).
-     *Abnahme:* Bedienprobe mit eingesetztem Zufallsbuch.
 <!-- -->
 
 569. **Sichern und GPX-Export sind mit der Weiche deutlich langsamer.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 16.11.2026

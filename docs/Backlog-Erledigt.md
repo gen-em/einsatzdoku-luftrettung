@@ -11367,3 +11367,33 @@ zutreffen.
      nach `huelle: 2`, Zähler nach E-KA-64. *Abnahme:* Probe sendeweg rot
      gegen Uhr 4.6.0, Rundlauf mit Wert gegen die Referenz. Erledigt
      14.11.2026 mit Uhr 5.0.0 (Schritt 28, KG-03b).
+
+566. **Eine Phase während einer laufenden Anfrage wartet bis zur nächsten Änderung.** · gehört zu: nächste Backlog-Runde · Stand: erledigt · seit 15.11.2026
+     *Aufgenommen 15.11.2026 aus KA-06f-3 (Fable-Agent), gelesen, nicht
+     gemessen.* Fällt am Handy eine Phase, während eine Anfrage desselben
+     Pakets unterwegs ist, setzt deren Antwort `metadaten_bestaetigt` in
+     `Puffer.bestaetigungMerken()` wieder auf 1 — die neue Phase hat dann
+     keine Arbeit mehr und geht erst mit dem nächsten Punkt oder der
+     nächsten Änderung hinaus. Im Dienst fällt fast jede Sekunde ein Punkt,
+     daher selten spürbar; beim stehenden Fahrzeug nicht. *Weg:* nur
+     bestätigen, wenn der Stand noch derselbe ist (für Einsätze der Zähler
+     `z` des Pakets, für Ruhesegmente eine Änderungsnummer). *Abnahme:* ein
+     Prüffall, der die Phase zwischen Senden und Antwort setzt.
+     Erledigt mit Android 0.26.0 (Puffer-Schema 4, `paket.aenderung`): Eine
+     Bestätigung gilt nur für den gesendeten Stand.
+
+568. **Ein Gerätebuch, das nicht aufgeht, sperrt jede Kopplung.** · gehört zu: 28 · Stand: erledigt · seit 16.11.2026
+     *Aufgenommen 16.11.2026 aus KA-14 (F-KA-125).* Liegt auf dem Server
+     ein Gerätebuch, das der Browser nicht öffnen kann (beschädigt oder von
+     jemandem mit Schreibzugriff eingesetzt), scheitert `geraetEintragen()`
+     bei jeder Kopplung mit „Das Gerät ließ sich nicht eintragen. Hol am
+     Gerät einen neuen Code.“ — ein neuer Code hilft nicht, und
+     `zurueckschreiben()` wirkt nur, wenn die Version auf dem Server
+     niedriger ist. *Weg:* eigener Grund und Meldung („Gerätebuch auf dem
+     Server ist beschädigt“) mit einem bewussten Neuanfang des Buchs aus
+     dem Stand dieses Browsers; Bedrohungsmodell prüfen (wer den Server
+     beschreibt, sperrt so Kopplungen — Verfügbarkeit, keine Zusage).
+     *Abnahme:* Bedienprobe mit eingesetztem Zufallsbuch.
+     Erledigt mit Web 25.0.0 (E-KA-92, Mockup M-KA-04): Der Browser legt
+     seine Fassung still zurück oder fängt leer an und bittet, die Geräte
+     neu zu verbinden.
