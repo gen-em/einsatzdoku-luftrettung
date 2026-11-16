@@ -73,9 +73,30 @@ const EdHuelle2 = (() => {
     new Uint8Array(await crypto.subtle.digest('SHA-256', verbinde(...teile)));
   const bytes = h => (typeof h === 'string' ? T.fromB64(h) : h);
 
+  /* JE SEITE GEMERKT, NIE ABGELEGT (Nr. 569). Was sich je Absender nicht
+   * ändert, wird einmal gerechnet statt je Hülle — ein Export öffnet
+   * Tausende: die Kennung (`sidFach`), der importierte statische Schlüssel
+   * und Z_s (`zsFach`). Alle Fächer hängen am GANZEN öffentlichen Schlüssel
+   * (65 Byte, hex), nie an der Kennung oder an der Reihenfolge der Aufrufe:
+   * Ein Fach, das beim Wechsel des Absenders den alten Wert lieferte, ließe
+   * jede Hülle des zweiten mit `pruefwert` scheitern — die Hüllenprobe
+   * öffnet deshalb Konto und Gerät im Wechsel. Sie leben im Speicher der
+   * Seite und verschwinden mit ihr; in eine Ablage geht davon nichts. */
+  const FACH_HOECHSTENS = 64;
+  const sidFach = new Map();
+
   /** Die Kennung eines Absenders: 8 Byte aus seinem statischen Schlüssel. */
-  async function sid(spk) {
-    return (await sha256(ABSENDER_INFO, spk)).slice(0, SID_LAENGE);
+  function sid(spk) {
+    const k = T.toHex(spk);
+    if (!sidFach.has(k)) {
+      if (sidFach.size >= FACH_HOECHSTENS) { sidFach.clear(); }
+      const v = sha256(ABSENDER_INFO, spk).then(h => h.slice(0, SID_LAENGE));
+      v.catch(() => sidFach.delete(k));
+      sidFach.set(k, v);
+    }
+    /* Eine Abschrift: Wer die Kennung bekommt, darf sie ändern, ohne das
+       Fach zu treffen. */
+    return sidFach.get(k).then(h => h.slice());
   }
 
   /* Z_s IST JE PAAR (ABSENDER, KONTO) FEST. Gemerkt wird es am privaten
@@ -83,8 +104,11 @@ const EdHuelle2 = (() => {
    * verschwindet. Ohne das Fach kostete jede Hülle zwei ECDH statt einer;
    * eine Spur mit 300 Stücken eines Geräts rechnet so Z_s einmal. */
   const zsFach = new WeakMap();
-  async function ecdh(privat, pubRoh) {
-    const pub = await T.ghOeffentlich(pubRoh);
+  /* `pub` ist der schon importierte Schlüssel, wo der Aufrufer ihn hat
+     (`oeffnen2()` prüft EPK ohnehin, bevor es rechnet) — sonst wird er
+     hier importiert. Zweimal importieren hieß je Hülle ein Aufruf mehr. */
+  async function ecdh(privat, pubRoh, pub) {
+    pub = pub || await T.ghOeffentlich(pubRoh);
     return new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: pub }, privat, 256));
   }
   function statisch(privat, pubRoh) {
@@ -142,18 +166,21 @@ const EdHuelle2 = (() => {
   async function oeffnen2(huelle, kontoPriv, kontoPub, absenderSpk, art, ref, platz) {
     if (huelle.length < KOPF2 + 16 + TAG || (huelle.length - KOPF2 - TAG) % 16) { throw fehler('laenge'); }
     if (huelle[0] !== FASSUNG2) { throw fehler('fassung'); }
+    /* `s`, `epk` und `iv` sind Abschriften (klein, und `s` geht an den
+       Aufrufer zurück); Chiffretext und Prüfwert sind Sichten auf die Hülle —
+       eine Spur am Stück kopierte sonst jedes Byte dreimal. */
     const s = huelle.slice(1, 9), epk = huelle.slice(9, 74), iv = huelle.slice(74, KOPF2);
-    const ct = huelle.slice(KOPF2, huelle.length - TAG), tag = huelle.slice(huelle.length - TAG);
+    const ct = huelle.subarray(KOPF2, huelle.length - TAG), tag = huelle.subarray(huelle.length - TAG);
     const spk = absenderSpk(s);
     if (!spk) { throw fehler('absender'); }
-    await T.ghOeffentlich(epk);                    // wirft `schluessel`
+    const epkSchluessel = await T.ghOeffentlich(epk);   // wirft `schluessel`
     let zE, zS;
     try {
-      zE = await ecdh(kontoPriv, epk);
+      zE = await ecdh(kontoPriv, epk, epkSchluessel);
       zS = await statisch(kontoPriv, spk);
     } catch (e) { throw fehler('schluessel'); }
     const k = await ableiten2(zE, zS, epk, kontoPub, spk);
-    const soll = await T.ghHmac(k.kMac, verbinde(huelle.slice(0, huelle.length - TAG),
+    const soll = await T.ghHmac(k.kMac, verbinde(huelle.subarray(0, huelle.length - TAG),
                                                  EdCrypto.geraetehuelleBindung(art, ref, platz)));
     let d = 0;
     for (let i = 0; i < TAG; i++) { d |= soll[i] ^ tag[i]; }      // feste Zeit

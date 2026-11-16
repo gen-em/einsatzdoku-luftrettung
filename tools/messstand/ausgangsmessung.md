@@ -623,6 +623,45 @@ Vorseite frei wird — das war die Zahl vom 13.10.2026.
 
 ---
 
+## Sichern und GPX-Export 16.11.2026 — vorher und nachher (Nr. 569)
+
+**Zuerst, was nicht gemessen ist:** der Stand VOR der Weiche auf dieser
+Maschine. „Rund 45–58 s" und „rund 70 s" stammen aus den Tabellen oben, von
+anderen Tagen, einem anderen Wirt und einem Bestand nach dem Wartungslauf
+(Sicherung 12 MB statt heute 36 MB). Vorher und nachher hier sind derselbe
+Bestand (5 088 Einsätze, Web 25.0.0, Weiche an), derselbe Tag, Drossel 6×,
+Eichlauf 692 und 700 ms; je ein Lauf, `messen.py --schritte browser --nur
+Backup,GPX`. Der mit AES gepackte Export ist nicht geöffnet worden (kein
+Werkzeug dafür im Container); der unverschlüsselte ist geprüft.
+
+| Messung | vorher | nachher |
+|---|---|---|
+| Backup erstellen | 117,4 s · Halde 100 MB · Krypto 143 639 | **98,1 s** · 67 MB · 113 784 |
+| GPX Jahr 2026 (8100 Spuren), Passwort an | 223,6 s · Halde 364 MB · Krypto 114 401 | **116,6 s** · 84 MB · 90 719 |
+| GPX Jahr 2026, Passwort aus | 221,3 s · Halde 411 MB | **114,5 s** · 88 MB |
+
+**Wo die Zeit lag** (CPU-Profil, `--profil`, Eigenzeit unter Drossel):
+
+- **Die Rechnung an der Hülle war es nicht.** Z_s wurde schon je Absender
+  einmal gerechnet; Fassung 2 kostete je Hülle neun Aufrufe von
+  `crypto.subtle` statt acht (EPK zweimal importiert) und liegt jetzt bei
+  acht, wie Fassung 1.
+- **GPX-Export, 251 s im Profil:** `zip.TextReader` (Blob bauen,
+  scheibenweise zurücklesen) rund 48 s; `Intl.DateTimeFormat`, je Zeitfeld
+  neu gebaut, rund 35 s; Base64 der Stücke über `Uint8Array.from(atob(), fn)`
+  14 s; die Kennung des Kontos je Hülle neu (`seitenbuch()`, 15 635-mal
+  AES-GCM und SHA-256). Die Halde waren die 8100 GPX-Texte, alle zugleich.
+- **Sichern, 137 s im Profil:** dasselbe Base64 19 s, die Kennung des
+  Kontos 19 678-mal; der Rest ist die Hülle selbst und das Versiegeln.
+
+**Was bleibt.** Je Datensatz rechnet `EdStandbuch.eintrag()` zweimal SHA-256
+über dieselbe Kennung, und `patOeffnen()` holt das Buch je Block neu — im
+Backup gehen rund 49 000 von 173 000 Aufrufen auf das Standbuch, gut die
+Hälfte davon doppelt gerechnet. Beim Export liegen noch rund 105 s
+im Abschnitt der Spuren: Öffnen, `toISOString()` je Punkt, Packen.
+
+---
+
 ## Wiederholen
 
 ```

@@ -11,6 +11,8 @@
  * Zeichenwege der Seiten brauchen deshalb keine eigene Fassung.
  *
  *   EdOrtsdaten.schluessel(ck)            privater und öffentlicher Teil
+ *   EdOrtsdaten.fuerViele(k)              dasselbe Paar mit dem Standbuch
+ *                                         daran — für Export und Sicherung
  *   EdOrtsdaten.spur(stuecke, art, ref, sperren, k)
  *                                         Punkte {seq, lat, lon, ele, ts}
  *   EdOrtsdaten.einsatz(m, k)             die Einsatzhülle, geöffnet, oder null
@@ -54,7 +56,12 @@
   'use strict';
 
   const HOEHE_UNBEKANNT = -32768;
-  const b64 = (t) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
+  /* DIE SCHLEIFE AUS `crypto.js`, NICHT `Uint8Array.from(atob(t), fn)`
+     (Nr. 569). Die kurze Form stand hier bis Web 25.0.0 und ruft je Zeichen
+     eine Funktion: Am Messstand waren das beim Sichern 17 s und beim
+     GPX-Export 13 s Eigenzeit — mehr als jede einzelne Rechnung an der
+     Hülle. Dieselbe Lehre steht seit dem Messstand an `fromB64` selbst. */
+  const b64 = EdCrypto.teile.fromB64;
 
   /** Ein Fehler mit benanntem Grund, damit die Seite sagen kann, was fehlt. */
   function fehler(grund, text) {
@@ -127,8 +134,27 @@
    *  (ein fremdes Paar im Freigabeweg hat kein Buch dieses Kontos). */
   async function standbuchFuer(k, ref) {
     if (!k.ck || typeof EdStandbuch === 'undefined') { return { buch: null, e: {} }; }
-    const buch = await EdStandbuch.seitenbuch(k.ck);
+    const buch = k.buch || await EdStandbuch.seitenbuch(k.ck);
     return { buch: buch, e: await buch.eintrag(ref) };
+  }
+
+  /**
+   * EIN PAAR FÜR VIELE HÜLLEN (Nr. 569) — für Export und Sicherung, die
+   * Tausende am Stück öffnen. `seitenbuch(ck)` liefert je Inhaltsschlüssel
+   * dasselbe Buch, rechnet dafür aber bei jedem Aufruf die Kennung des
+   * Kontos neu (AES-GCM und SHA-256); je Hülle gefragt waren das am
+   * Messstand 15 635 Aufrufe für einen Export. Hier wird das Buch EINMAL
+   * geholt und reist am Paar mit (`k.buch`) — im Speicher der Seite, so
+   * lange wie das Paar. Die Einzelansichten rufen das nicht und fragen je
+   * Hülle wie bisher. Lässt sich das Buch nicht holen, bleibt das Paar
+   * ohne, und jede Hülle meldet ihren Fehler selbst.
+   * @returns {Promise<object>} dasselbe `k`
+   */
+  async function fuerViele(k) {
+    if (k && k.ck && !k.buch && typeof EdStandbuch !== 'undefined') {
+      try { k.buch = await EdStandbuch.seitenbuch(k.ck); } catch (e) { /* je Hülle, wie bisher */ }
+    }
+    return k;
   }
 
   /** Eine Spur mit mindestens einer Hülle der Fassung 2 — über `EdHuelle2`,
@@ -754,7 +780,7 @@
     return { priv: await crypto.subtle.importKey('pkcs8', der, alg, false, ['deriveBits']), pub: pub };
   }
 
-  window.EdOrtsdaten = { schluessel: schluessel, spur: spur, einsatz: einsatz,
+  window.EdOrtsdaten = { schluessel: schluessel, fuerViele: fuerViele, spur: spur, einsatz: einsatz,
                          einsatzOeffnen: einsatzOeffnen, einsatzUebernehmen: einsatzUebernehmen,
                          fuerAnsicht: fuerAnsicht, melden: melden,
                          einsatzZeiten: einsatzZeiten, einsatzInnen: einsatzInnen,

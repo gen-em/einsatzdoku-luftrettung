@@ -11397,3 +11397,18 @@ zutreffen.
      Erledigt mit Web 25.0.0 (E-KA-92, Mockup M-KA-04): Der Browser legt
      seine Fassung still zurück oder fängt leer an und bittet, die Geräte
      neu zu verbinden.
+
+569. **Sichern und GPX-Export sind mit der Weiche deutlich langsamer.** · gehört zu: nächste Backlog-Runde · Stand: erledigt · seit 16.11.2026
+     *Aufgenommen 16.11.2026 aus KA-14 (F-KA-124).* Am Messstand (5 088
+     Einsätze, CPU-Drossel 6×): Backup 120,75 s statt rund 45–58 s, GPX
+     über einen Zeitraum 224,56 s statt rund 70 s; GPX braucht 114 401
+     Krypto-Aufrufe. Das Standbuch ist es nach der Behebung nicht mehr
+     (0 × 409); vermutlich die Gerätehülle der Fassung 2 je Stück (zwei
+     ECDH statt einer). Beide bleiben unter der Zielzahl; die Halde
+     steigt beim GPX-Export auf 364 bis 411 MB. *Weg:* messen,
+     wo die Zeit liegt (Krypto-Aufrufe je Stück), dann Z_s je Absender
+     zwischenspeichern, wo es nicht schadet. *Abnahme:* Messstand mit
+     Zahl je Schritt.
+     Erledigt mit Web 25.0.0: GPX-Export 222 → 116 s, Sicherung 117 → 98 s
+     am Messstand; die Zeit lag an Base64, Zeitformatierern und dem
+     Zurücklesen des Archivs, nicht an der Weiche.

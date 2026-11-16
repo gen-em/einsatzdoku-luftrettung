@@ -4139,7 +4139,10 @@ ui_seite_start(['titel' => 'Einstellungen',
            Hülle oder ein Stück es braucht; ein Konto ohne beides sichert wie
            bisher, auch ohne Paar. */
         let paar = null;
-        const paarHolen = async () => (paar = paar || await EdOrtsdaten.schluessel(key));
+        /* `fuerViele()`: Das Standbuch reist am Paar mit, statt je Hülle
+           neu geholt zu werden (Nr. 569). */
+        const paarHolen = async () => (paar = paar
+          || await EdOrtsdaten.fuerViele(await EdOrtsdaten.schluessel(key)));
         /* Zeitpunkte der Datei: SQL-Form in UTC, wie die Spalten sie tragen. */
         const sqlZeit = (t) => new Date(t * 1000).toISOString().slice(0, 19).replace('T', ' ');
         const sqlSek = (z) => Math.floor(Date.parse(String(z).replace(' ', 'T') + 'Z') / 1000);
@@ -4368,19 +4371,38 @@ ui_seite_start(['titel' => 'Einstellungen',
                    Einsatz mit (`schnitte`) und sperren nach dem Einspielen
                    dieselben Punkte wieder; die Zahl im Kern zählt sie mit. */
                 const spuren = (a.daten && a.daten.spuren) || {};
-                for (const [idText, s] of Object.entries(spuren)) {
+                /* DIE SPUREN EINES BLOCKS ZUSAMMEN ÖFFNEN (Nr. 569), nicht
+                   eine nach der anderen: Die Rechnung an der Hülle läuft
+                   neben dem Hauptfaden, und er wartete sonst je Hülle auf
+                   sie. Ausgewertet wird danach in der Reihenfolge der
+                   Antwort — Meldungen und Einträge stehen wie bisher. */
+                const liste = Object.entries(spuren);
+                /* Das Paar einmal vorweg — fehlt es, trägt jede Spur des
+                   Blocks diesen Fehler, wie zuvor je Spur. */
+                let paarJetzt = null, paarFehler = null;
+                if (liste.some(([, s]) => s.stuecke && s.stuecke.length)) {
+                  try { paarJetzt = await paarHolen(); } catch (e) { paarFehler = e; }
+                }
+                const geoeffnet = await Promise.all(liste.map(([, s]) =>
+                  ((s.stuecke && s.stuecke.length)
+                    ? (paarFehler ? Promise.reject(paarFehler)
+                        : EdOrtsdaten.spur(s.stuecke, art === 'rest' ? 'ruhe' : 'spur', s.ref, [], paarJetzt))
+                        .then((offen) => ({ offen: offen }), (e) => ({ fehler: e }))
+                    : null)));
+                for (let nr = 0; nr < liste.length; nr++) {
+                  const [idText, s] = liste[nr];
                   const id = Number(idText);
                   const nach = new Map();
                   if (s.stuecke && s.stuecke.length) {
-                    let offen;
-                    try {
-                      offen = await EdOrtsdaten.spur(s.stuecke, art === 'rest' ? 'ruhe' : 'spur',
-                                                     s.ref, [], await paarHolen());
-                    } catch (e) {
+                    const auf = geoeffnet[nr];
+                    geoeffnet[nr] = null;
+                    if (auf.fehler) {
+                      const e = auf.fehler;
                       EdOrtsdaten.melden(e, art === 'rest' ? 'ruhe' : 'spur', id);
                       fehlerhaft.push(`${art} ${id}: ${e.message}`);
                       continue;
                     }
+                    const offen = auf.offen;
                     for (const p of offen) {
                       if (!nach.has(p.seq)) { nach.set(p.seq, [p.seq, p.lat, p.lon, p.ele, p.ts]); }
                     }

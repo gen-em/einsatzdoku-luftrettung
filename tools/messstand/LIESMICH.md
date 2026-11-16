@@ -11,7 +11,7 @@ cd tools/messstand && python3 messen.py --frisch   # --schritte · --einsaetze
 ```
 
 Sieben Schritte: `konto` `bestand` `einspielen` `browser` `server`
-`statistik` `protokoll`. `--schritte server` fährt einen einzelnen.
+`statistik` `protokoll`. `--schritte server` fährt einen einzelnen. Seit Nr. 569 (**Anlass: Nr. 569**) im Schritt `browser`: `--nur Backup,GPX` misst nur die Wege, deren Name einen dieser Teile trägt — der Rest steht als **ausgelassen** in Ausgabe und Protokoll, ein solcher Lauf ist kein Messprotokoll des Bestands —, und `--profil <Ordner>` schreibt je Schritt ein CPU-Profil und nennt die Funktionen mit der meisten Eigenzeit (das Profil kostet selbst Zeit: keine Vergleichszahl). Die Zerlegung zählt die Krypto-Aufrufe seither je Art; `digest` und `sign` stehen daneben, weil die Zahl sie nie enthielt.
 
 ## Was es misst
 

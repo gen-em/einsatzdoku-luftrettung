@@ -10435,6 +10435,20 @@ Jeder Abgleich warf, und ein neues Gerät ließ sich nicht eintragen
 Dazu nimmt der Eingang das **leere Schlussstück** (`punkte` 0, nur Fassung
 2, `ts_von` = `ts_bis`); den Anschluss prüft der Browser beim Lesen.
 
+**Viele Hüllen am Stück** (seit Web 25.0.0, Backlog Nr. 569). Export und
+Sicherung öffnen Tausende Hüllen. `huelle2.js` merkt sich je öffentlichem
+Absenderschlüssel Kennung und Z_s im Speicher der Seite (`sidFach`,
+höchstens 64; `zsFach`) und importiert EPK einmal; `EdOrtsdaten.fuerViele(k)`
+hängt das Standbuch einmal ans Paar (`k.buch`), statt es je Hülle neu zu
+holen — die Einzelansichten fragen weiter je Hülle. `export.js` packt jede
+GPX-Datei gleich nach dem Öffnen (die Spuren eines Blocks gemeinsam) und
+baut je Art und Zeitzone einen Formatierer; die Sicherung öffnet die Spuren
+eines Blocks gemeinsam. Am Messstand (5 088 Einsätze, Drossel 6×) fiel der
+GPX-Export von 222 s auf 116 s, die Sicherung von 117 s auf 98 s
+(`tools/messstand/ausgangsmessung.md`). Gelegen hat die Zeit nicht an der
+Rechnung der Fassung 2, sondern an Base64, Zeitformatierern und dem
+Zurücklesen des Archivs.
+
 **Das Standbuch unter Last** (seit Web 25.0.0, KA-14, F-KA-122, -124):
 `standbuch.js` schreibt je Blatt eines nach dem anderen (eine Reihe in
 `schreibe()`); das Lesen einer Hülle schreibt gesammelt fort

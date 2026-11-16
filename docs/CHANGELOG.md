@@ -48,6 +48,15 @@ Schritt 28 (KA), Pakete KA-08 bis KA-14.
   legt er seine Fassung still zurück; sonst fängt er leer an und bittet auf
   Startseite und Geräteseite, die Geräte einmal neu zu koppeln.
 
+### Behoben
+
+- **Web — GPX-Export und Sicherung sind wieder schnell.** Mit dem neuen
+  Format dauerte ein großer Export fast doppelt so lange und hielt alle
+  Spuren auf einmal im Speicher. Die Zeit lag nicht an der Verschlüsselung,
+  sondern an Umwandlungen, die je Hülle und je Zeitangabe neu gerechnet
+  wurden; jetzt geschieht das einmal, und jede Spur geht sofort ins Archiv.
+  Die Spuren stehen deshalb vorn im Archiv, die Tabellen am Ende.
+
 ## [Android 0.26.0] — unveröffentlicht
 
 Schritt 28 (KA), Paket KA-15.
