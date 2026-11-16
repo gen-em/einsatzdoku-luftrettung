@@ -203,19 +203,23 @@ if ($aktion === 'start') {
     $key   = bin2hex(random_bytes(24));
 
     /* ---- Der Geraeteschluessel (KA-06d) --------------------------------
-     * Fehlt der Block, koppelt das Geraet wie bisher, ohne Herkunft. Kommt
-     * er in falscher Form, ist das ein Fehler der App, kein Raten — 400 ohne
-     * Zaehlen. Ohne die Spalten (Migration steht aus) wird er ueberlesen. */
+     * Kommt er in falscher Form, ist das ein Fehler der App, kein Raten —
+     * 400 ohne Zaehlen. SEIT WEB 26.0.0 IST ER PFLICHT (06e, KA-19, E-KA-60):
+     * Ein Geraet ohne Schluessel koennte nur Fassung 1 senden, und die nimmt
+     * der Eingang nicht mehr an — es bekaeme ein Konto, in das es nichts
+     * liefern kann. `grund: fehlt` sagt der App, dass sie zu alt ist.
+     * Bis Web 25.x koppelte ein solches Geraet wie bisher, ohne Herkunft. */
     $schluessel = pair_schluessel_lesen(is_array($b) ? ($b['schluessel'] ?? null) : null);
     if ($schluessel === false) {
         antworten(400, ['error' => 'schluessel']);
     }
+    if ($schluessel === null) {
+        antworten(400, ['error' => 'schluessel', 'grund' => 'fehlt']);
+    }
 
     try {
         $code = pair_sitzung_anlegen($pdo, $devId, geraet_schluessel_hash($key), $geraet);
-        if ($schluessel !== null && pair_herkunft_bereit($pdo)) {
-            pair_schluessel_setzen($pdo, $devId, $schluessel);
-        }
+        pair_schluessel_setzen($pdo, $devId, $schluessel);
     } catch (Throwable $ex) {
         system_melden('pair', 'Kopplungssitzung konnte nicht angelegt werden', $ex);
         antworten(500, ['error' => 'server']);

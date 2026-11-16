@@ -821,6 +821,13 @@ function pruef_pat_blob($wert, string $feld = 'Patientenblock', ?Pruefliste $p =
         }
         return $s;
     }
+    /* Das alte Format (`edk1:` oder ohne Kennung) nimmt seit Web 26.0.0 kein
+     * Schreibweg mehr an — derselbe Stichtag wie fuer die Geraetehuelle,
+     * dieselbe Ausnahme (`huelle_fassung1_zulassen()`). */
+    if (!huelle_fassung1_zulassen()) {
+        $p?->melde($feld, 'altes Format (edk1) wird seit Web 26.0.0 nicht mehr angenommen');
+        return null;
+    }
     if (!preg_match(PAT_BLOB_RE, $s)) {
         $laenge = strlen($s);
         $grund = $laenge < PAT_BLOB_MIN
@@ -832,6 +839,24 @@ function pruef_pat_blob($wert, string $feld = 'Patientenblock', ?Pruefliste $p =
         return null;
     }
     return $s;
+}
+
+/**
+ * DER STICHTAG DER FASSUNG 1 (06e, KA-19, E-KA-60, -99). Seit Web 26.0.0
+ * nimmt kein Schreibweg eine Geraetehuelle der Fassung 1 und keinen
+ * Patientenblock im alten Format (`edk1:`) an — weder ein
+ * Geraet (`ingest.php`, `400 payload`) noch der Browser. EINE Ausnahme, eng
+ * und nur fuer die Dauer des Aufrufs: `edbak_restore()` im Zweig `'server'`
+ * (Demo-Reset aus einer Fixture bis Format 3), die Testquelle der Uebernahme
+ * bis KA-07. Liefert den vorigen Wert, damit der Aufrufer ihn in `finally`
+ * zuruecksetzt; ohne Argument nur lesen.
+ */
+function huelle_fassung1_zulassen(?bool $setzen = null): bool
+{
+    static $zugelassen = false;
+    $vorher = $zugelassen;
+    if ($setzen !== null) { $zugelassen = $setzen; }
+    return $vorher;
 }
 
 /**
@@ -860,6 +885,10 @@ function pruef_huelle($wert, int $maxByte, string $feld = 'Huelle', ?Pruefliste 
      * Browser schreibt Fassung 2 erst mit umgelegter Weiche; die Form steht
      * schon hier, damit die Schreibwege des Browsers sie durchlassen. */
     $fassung = ord($roh[0]);
+    if ($fassung === 1 && !huelle_fassung1_zulassen()) {
+        $p?->melde($feld, 'Fassung 1 ohne Herkunftsnachweis wird seit Web 26.0.0 nicht mehr angenommen — Gerät neu koppeln');
+        return null;
+    }
     if ($fassung !== 1 && $fassung !== 2) { $p?->melde($feld, 'unbekannte Fassung ' . $fassung); return null; }
     $kopf = $fassung === 2 ? 90 : 82;
     if ($fassung === 2 && $n < 138) { $p?->melde($feld, 'kuerzer als 138 Byte'); return null; }
@@ -880,7 +909,7 @@ function pruef_huelle($wert, int $maxByte, string $feld = 'Huelle', ?Pruefliste 
  * Browser rechnen kann — ob die Huelle wirklich von diesem Schluessel
  * stammt, zeigt erst das Oeffnen. Hier faellt nur auf, was ein Geraet nie
  * senden duerfte: Fassung 2 ohne Herkunft, oder unter fremdem Namen. Fassung 1
- * geht durch bis zum Stichtag (06e).
+ * weist seit Web 26.0.0 schon `pruef_huelle()` ab (Stichtag, 06e).
  */
 function pruef_huelle_absender(string $roh, ?string $spkB64, bool $herkunft, string $feld,
                                ?Pruefliste $p = null): bool

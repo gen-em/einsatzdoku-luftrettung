@@ -793,7 +793,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            . 'Sync-Seite → Gerät koppeln.';
                 } elseif ($action === 'koppeln_pruefen') {
                     $koppelSitzung = $sitzung;
-                } elseif (($sitzung['spk'] ?? null) !== null && kp_zustand($userId)['stand'] !== 'da') {
+                } elseif (($sitzung['spk'] ?? null) === null) {
+                    /* Seit Web 26.0.0 nur mit Geraeteschluessel (06e, KA-19). */
+                    $koppelSitzung = $sitzung;
+                    $error = 'Dieses Gerät hat eine ältere App und schickt keinen Geräteschlüssel. '
+                           . 'Aktualisiere die App und hol am Gerät einen neuen Code.';
+                } elseif (kp_zustand($userId)['stand'] !== 'da') {
                     $error = 'Richte zuerst das Schlüsselpaar des Kontos ein (oben auf dieser Seite) — '
                            . 'ohne es lässt sich der Vergleichswert nicht rechnen. Dann am Gerät '
                            . 'einen neuen Code holen.';
@@ -4807,6 +4812,20 @@ ui_seite_start(['titel' => 'Einstellungen',
         }
         impState.textContent = 'Datei wird geöffnet…';
         const fassung4 = await fassung4Oeffnen(pw, bytes);
+        /* NUR SICHERUNGEN AB WEB 26.0.0 (06e, KA-19, E-KA-60, -100). Davor
+           trugen sie Gerätedaten ohne Herkunftsnachweis (Fassung 1) und
+           Blöcke im alten Format; beides nimmt der Server nicht mehr an, und
+           ein halbes Einspielen wäre schlimmer als keines. Gefragt wird die
+           Fassung, die die Datei geschrieben hat. */
+        const geschrieben = String(fassung4.manifest.web_version || '');
+        if (!(Number(geschrieben.split('.')[0]) >= 26)) {
+          await fassung4.schliessen();
+          melde(impState, `Dieses Backup stammt aus Web ${geschrieben || 'unbekannt'}. Seit Web 26.0.0 `
+                        + 'lassen sich nur noch Sicherungen einspielen, die mit Web 26 oder später '
+                        + 'angelegt wurden — ältere tragen Daten im alten Format. Lege nach dem Update '
+                        + 'eine neue Sicherung an. Es wurde nichts geändert.', 'fehler');
+          return;
+        }
         impState.textContent = `Backup vom ${(fassung4.manifest.erzeugt_am || '')
           .slice(0, 10)} mit ${fassung4.eintragsteile.length} Eintrags- und `
           + `${fassung4.spurteile.length} Spurteilen — Kopf wird geöffnet…`;
@@ -5612,15 +5631,14 @@ ui_seite_start(['titel' => 'Einstellungen',
              <strong>Gleich zeigen dieser Browser und das Gerät dieselbe sechsstellige
              Zahl</strong> — die vergleichst du; erst dann sagst du am Gerät Ja.</p>
         <?php else: ?>
-          <p class="feld-hinweis">Ist das dein Gerät und stimmt der Code, verbinde es —
-             erst dein Ja am Gerät schließt die Kopplung ab; ist es dir unbekannt,
-             brich ab.</p>
-          <?php /* ZUSTAND F (M-KA-01, E-KA-63): Eine aeltere App schickt
-                   keinen Geraeteschluessel. Bis zum Stichtag aus 06e koppelt
-                   sie weiter — gesagt wird es trotzdem. */ ?>
+          <?php /* SEIT WEB 26.0.0 KEIN ZUSTAND F MEHR (06e, KA-19): `start`
+                   weist ein Gerät ohne Geräteschlüssel ab. Eine Sitzung ohne
+                   Schlüssel kann nur noch aus der Zeit vor dem Update stammen
+                   (höchstens die Frist von zehn Minuten) — verbunden wird sie
+                   nicht mehr. Bis Web 25.x stand hier „Trotzdem verbinden“. */ ?>
           <?= ui_meldung_markup('warn', 'Dieses Gerät hat eine ältere App und schickt keinen '
-              . 'Geräteschlüssel. Was es sendet, trägt keinen Herkunftsnachweis. Aktualisiere '
-              . 'die App und koppel dann neu.') ?>
+              . 'Geräteschlüssel; koppeln lässt es sich so nicht mehr. Aktualisiere die App '
+              . 'und hol am Gerät einen neuen Code.') ?>
         <?php endif; ?>
         <?php if ($koppelSitzung['geraet_art'] === null && $koppelSitzung['geraet_teil'] === null): ?>
           <?php /* Ohne Selbstauskunft steht hier „Gerät unbekannt" — und dann
@@ -5642,8 +5660,9 @@ ui_seite_start(['titel' => 'Einstellungen',
           <input type="hidden" name="code" value="<?= e((string)$koppelSitzung['code']) ?>">
           <?php if ($ksHerkunft): ?><input type="hidden" name="n_b" value=""><?php endif; ?>
           <div class="listen-form-fuss">
-            <?= ui_knopf(['text' => $ksHerkunft ? 'Mit meinem Konto verbinden' : 'Trotzdem verbinden',
-                          'art' => 'primaer']) ?>
+            <?php if ($ksHerkunft): ?>
+              <?= ui_knopf(['text' => 'Mit meinem Konto verbinden', 'art' => 'primaer']) ?>
+            <?php endif; ?>
             <?= ui_knopf(['text' => 'Abbrechen', 'art' => 'leise',
                           'href' => 'einstellungen.php?t=geraete#koppeln']) ?>
           </div>
