@@ -240,7 +240,7 @@ class EinsatzzaehlerTest {
         puffer.punktAnhaengen(ids["a"]!!, Rohpunkt(47.56, 10.70, 800.0, jetzt)); aufnehmen("a Punkt (kein Inhalt der Hülle)")
         phase(ids["a"]!!, 3, breite = null); aufnehmen("a Phase 3 ohne Ort")
         phase(ids["a"]!!, 3); aufnehmen("a Phase 3 noch einmal, dieselbe Sekunde möglich")
-        puffer.bestaetigungMerken(ids["a"]!!, 1); aufnehmen("a bestätigt (Buchführung)")
+        puffer.bestaetigungMerken(ids["a"]!!, 1, puffer.paket(ids["a"]!!)!!.aenderung); aufnehmen("a bestätigt (Buchführung)")
         puffer.paketSchliessen(ids["a"]!!, iso(jetzt), 1200, 30); aufnehmen("a abgeschlossen")
         ids["b"] = einsatzAnlegen("am-b"); aufnehmen("b entsteht")
         puffer.paketSchliessen(ids["a"]!!, iso(jetzt + 60), 1300, 31); aufnehmen("a noch einmal geschlossen (ohne Wirkung)")

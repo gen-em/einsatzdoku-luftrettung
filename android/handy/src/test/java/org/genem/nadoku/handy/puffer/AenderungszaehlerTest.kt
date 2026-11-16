@@ -66,7 +66,7 @@ class AenderungszaehlerTest {
             dienstRef = null, begonnenAt = "2026-09-04T07:02:00Z",
         )
         schritt("Schließen") { puffer.paketSchliessen(zweites, "2026-09-04T19:02:00Z", 0, 0) }
-        schritt("Bestätigen") { puffer.bestaetigungMerken(zweites, 0) }
+        schritt("Bestätigen") { puffer.bestaetigungMerken(zweites, 0, puffer.paket(zweites)!!.aenderung) }
         schritt("Entsorgen") { puffer.paketEntsorgen(zweites) }
         assertEquals(0, puffer.rueckstand())
     }

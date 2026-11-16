@@ -355,6 +355,93 @@ class SenderTest {
         assertNull("bestätigt und entsorgt", puffer.paket(id))
     }
 
+    // ---- Eine Änderung, während die Anfrage unterwegs ist (Nr. 566) ---------
+
+    /**
+     * Antwortet wie der echte Server und führt bei der ERSTEN Anfrage
+     * [dazwischen] aus — nachdem der Sender den Körper gebaut hat und bevor
+     * seine Antwort eintrifft. Genau dort fällt im Dienst eine Phase.
+     */
+    private fun antworteUndAendereDazwischen(dazwischen: () -> Unit) {
+        server.status = 200
+        var erste = true
+        var gespeichert = 0L                    // wie der Server: was er hat, behält er
+        server.antwortAus = { koerper ->
+            if (erste) { erste = false; dazwischen() }
+            val o = org.json.JSONObject(koerper)
+            o.optJSONObject("track")?.let { gespeichert = maxOf(gespeichert, it.getLong("seq_from") + it.getInt("punkte")) }
+            """{"ok":true,"id":1,"stored_points":0,"next_seq":$gespeichert}"""
+        }
+    }
+
+    private fun einsatzMitPhase(ref: String): Long {
+        val id = puffer.paketAnlegen(ref, Paketzeile.ART_EINSATZ, "2026-07-16", "ad-3", "2026-07-16T07:00:00Z")
+        puffer.phaseAnhaengen(id, 3, "2026-07-16T07:00:00Z", null, null, Dienstklammer.QUELLE_HANDY)
+        return id
+    }
+
+    /**
+     * Eine Phase fällt, während der Teil-Upload eines OFFENEN Einsatzes
+     * unterwegs ist. Die Antwort gilt dem Stand mit einer Phase; die zweite
+     * muss trotzdem hinaus, im selben Lauf — ohne neuen Punkt. Bis Android
+     * 0.25.x setzte die Antwort `metadaten_bestaetigt` zurück auf 1, und die
+     * Phase wartete auf den nächsten Punkt (beim stehenden Fahrzeug: auf den
+     * Abschluss).
+     */
+    @Test fun einePhaseWaehrendDerAnfrageGehtNochHinaus() {
+        val id = einsatzMitPhase("am-566-a")
+        antworteUndAendereDazwischen {
+            puffer.phaseAnhaengen(id, 4, "2026-07-16T07:05:00Z", null, null, Dienstklammer.QUELLE_HANDY)
+        }
+        sender().sendeAlles()
+
+        assertEquals("die zweite Phase ging im selben Lauf hinaus", 2, server.anfragen.size)
+        assertEquals(1, org.json.JSONObject(server.anfragen[0].koerper).getJSONArray("phases").length())
+        assertEquals(2, server.letzterKoerper().getJSONArray("phases").length())
+        assertFalse("danach ist nichts mehr offen", puffer.hatArbeit(puffer.paket(id)!!))
+    }
+
+    /**
+     * Ein Ruhesegment wird geschlossen, während sein Teil-Upload unterwegs ist
+     * (der Einsatz beginnt). Der Abschluss ist Arbeit (F-KA-117) und darf von
+     * der Antwort auf den offenen Stand nicht verschluckt werden.
+     */
+    @Test fun einAbschlussWaehrendDerAnfrageGehtNochHinaus() {
+        val id = offenesSegment("ar-566-b")
+        puffer.punktAnhaengen(id, Stroeme.erzeuge(Stroeme.REISEFLUG).first())
+        antworteUndAendereDazwischen {
+            puffer.paketSchliessen(id, "2026-07-16T08:00:00Z", null, null)
+        }
+        val bericht = sender().sendeAlles()
+
+        assertEquals("der Abschluss ging im selben Lauf hinaus", 2, server.anfragen.size)
+        assertFalse(org.json.JSONObject(server.anfragen[0].koerper).getBoolean("final"))
+        assertTrue(server.letzterKoerper().getBoolean("final"))
+        assertEquals(1, bericht.fertigePakete)
+        assertNull("bestätigt und entsorgt", puffer.paket(id))
+    }
+
+    /**
+     * Die Uhr reicht einem ABGESCHLOSSENEN Einsatz eine Phase nach, während
+     * seine letzte Anfrage unterwegs ist. Ohne den Abgleich des Stands wäre
+     * das Paket nach der Antwort entsorgt worden — samt der nachgereichten
+     * Phase, die der Server nie gesehen hat.
+     */
+    @Test fun eineNachgereichtePhaseWirdNichtMitEntsorgt() {
+        val id = einsatzMitPhase("am-566-c")
+        puffer.paketSchliessen(id, "2026-07-16T07:30:00Z", 100, 1)
+        antworteUndAendereDazwischen {
+            puffer.phaseAnhaengen(id, 9, "2026-07-16T07:29:00Z", null, null, "uhr")
+        }
+        val bericht = sender().sendeAlles()
+
+        assertEquals("der nachgereichte Stand ging hinaus", 2, server.anfragen.size)
+        assertEquals(1, org.json.JSONObject(server.anfragen[0].koerper).getJSONArray("phases").length())
+        assertEquals(2, server.letzterKoerper().getJSONArray("phases").length())
+        assertEquals("erst nach dem zweiten Stand entsorgt", 1, bericht.fertigePakete)
+        assertNull(puffer.paket(id))
+    }
+
     /** Gebunden an DIESES Konto: Die Bindung fällt, der Rückstand geht hinaus. */
     @Test fun bindungAnDasselbeKontoSendet() {
         antworteVollstaendig()

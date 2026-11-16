@@ -371,13 +371,21 @@ class Sender(
                  * wäre danach entsorgt. Liegt beim Server schon mehr, kostet
                  * die Deckelung nur Wiederholungen, die er übergeht. */
                 val bestaetigt = minOf(antwort.naechsteSeq, seqVon + punkte.size)
-                puffer.bestaetigungMerken(paket.id, bestaetigt)
+                /* BESTÄTIGT IST DER STAND, DEN DIESE ANFRAGE TRUG (Nr. 566):
+                 * `paket.aenderung` stammt aus derselben Lesung wie Körper und
+                 * Phasen. Fiel seither eine Phase oder der Abschluss, bleibt
+                 * das Paket sendepflichtig, und der nächste Durchgang dieser
+                 * Schleife schickt den neuen Stand. */
+                val gleicherStand = puffer.bestaetigungMerken(paket.id, bestaetigt, paket.aenderung)
                 var fertig = 0
                 /* AUFRÄUMEN ERST NACH `final` UND VOLLSTÄNDIGER BESTÄTIGUNG.
                  * `next_seq` ist die erste NICHT gespeicherte Nummer — sie
-                 * muss also die Punktzahl erreichen, nicht überschreiten. */
-                if (paket.final && bestaetigt >= puffer.punktzahl(paket.id)) {
-                    puffer.paketEntsorgen(paket.id)
+                 * muss also die Punktzahl erreichen, nicht überschreiten.
+                 * Und nur, wenn der Stand noch derselbe ist — `paketEntsorgen`
+                 * prüft es in seiner Transaktion noch einmal. */
+                if (paket.final && gleicherStand && bestaetigt >= puffer.punktzahl(paket.id) &&
+                    puffer.paketEntsorgen(paket.id, paket.aenderung)
+                ) {
                     fertig = 1
                 }
                 Sendebericht(
