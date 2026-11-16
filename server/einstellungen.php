@@ -3729,9 +3729,37 @@ ui_seite_start(['titel' => 'Einstellungen',
       rwRef(r);
     }
 
+    /* DIE GESPERRTEN ZEITRÄUME DER DATEI, je Kennung der Aufzeichnung
+       (KA-14, F-KA-122): Löschvermerke am Ruhesegment (`loeschungen`) und
+       die Quellen der Schnitte am Einsatz (`schnitte`). Der Server legt sie
+       als Sperrvermerke an; mit der Weiche an braucht sie zusätzlich das
+       Standbuch, sonst geht eine Spur mit Lücke nicht mehr auf (`luecke`).
+       `rwSpurteil()` trägt dort die ein, die eine Lücke decken, bevor es die
+       Stücke sendet. */
+    function rwSperrenMerken(teil, z) {
+      const dazu = (ref, von, bis) => {
+        von = Number(von); bis = Number(bis);
+        if (typeof ref !== 'string' || ref === '' || !Number.isSafeInteger(von)
+            || !Number.isSafeInteger(bis) || bis < von) { return; }
+        if (!z.sperren.has(ref)) { z.sperren.set(ref, []); }
+        z.sperren.get(ref).push([von, bis]);
+      };
+      for (const m of (teil.missions || [])) {
+        for (const c of (Array.isArray(m.schnitte) ? m.schnitte : [])) {
+          if (c && typeof c === 'object') { dazu(c.quelle_ref, c.von_ts, c.bis_ts); }
+        }
+      }
+      for (const r of (teil.rest_segments || [])) {
+        for (const l of (Array.isArray(r.loeschungen) ? r.loeschungen : [])) {
+          if (l && typeof l === 'object') { dazu(r.client_ref, l.von_ts, l.bis_ts); }
+        }
+      }
+    }
+
     async function rwEintraege(teil, z) {
       for (const m of (teil.missions || [])) { await rwEinsatz(m, z); }
       for (const r of (teil.rest_segments || [])) { await rwRuhe(r); }
+      rwSperrenMerken(teil, z);
     }
 
     /**
@@ -3771,6 +3799,20 @@ ui_seite_start(['titel' => 'Einstellungen',
         }
         happen = []; groesse = 0;
       };
+      /* ERST BAUEN, DANN DAS STANDBUCH, DANN SENDEN (KA-14, F-KA-122).
+         Eine Lücke in der Folge der Stücke gilt in Fassung 2 nur mit einem
+         Vermerk im Standbuch, sonst geht die Spur mit `luecke` nicht mehr
+         auf. Deshalb zuerst alle Stücke dieses Teils bauen und ihre Lücken
+         bestimmen; jede Lücke braucht einen Vermerk aus der Datei, der sie
+         deckt (`rwSperrenMerken()`), und nur DER geht ins Standbuch — ein
+         Vermerk ohne Lücke sperrte Punkte, die die Datei mit Absicht
+         trägt (die Quelle eines Schnitts behält ihre Punkte). Je Blatt ein
+         Schreiben. Hat eine Lücke keinen Vermerk oder scheitert das
+         Schreiben, geht diese Spur NICHT hinaus und steht als abgelehnt in
+         der Meldung — eingespielt ginge sie nicht auf, und die Meldung
+         sagte trotzdem „übernommen". Mit der Weiche aus gibt es keine
+         Regel für Lücken und nichts zu vermerken. */
+      const gebaut = [], vermerke = [];
       for (const e of (teil.spuren || [])) {
         const ziel = karte[String(e.spur_ref)];
         if (!ziel) { z.ohneZiel++; continue; }
@@ -3789,6 +3831,44 @@ ui_seite_start(['titel' => 'Einstellungen',
           }
         } catch (err) {
           z.abgelehnt.push(`${ziel.art} ${ziel.id}: ${err.message}`);
+          continue;
+        }
+        /* Eine Fassung-1-Hülle darunter (eine Kontosicherung, wie sie
+           liegt): Dann prüft auch der Leser keine Lücken. */
+        const fassung1 = stuecke.some((st) => {
+          try { return atob(String(st.huelle || '').slice(0, 4)).charCodeAt(0) !== 2; }
+          catch (x) { return true; }
+        });
+        if (EdInhalt.schreibt2() && !fassung1) {
+          const luecken = rwLuecken(stuecke);
+          const da = z.sperren.get(ziel.ref) || [];
+          const noetig = [];
+          let offen = false;
+          for (const [tVor, tNach] of luecken) {
+            const deckt = da.filter(([von, bis]) => (tNach === null || von < tNach) && (tVor === null || bis > tVor));
+            if (!deckt.length) { offen = true; break; }
+            for (const v of deckt) { if (!noetig.includes(v)) { noetig.push(v); } }
+          }
+          if (offen) {
+            z.abgelehnt.push(`${ziel.art} ${ziel.id}: Lücke in der Aufzeichnung ohne Löschvermerk`);
+            continue;
+          }
+          if (noetig.length) { vermerke.push({ ref: ziel.ref, sperren: noetig }); }
+        }
+        gebaut.push({ ziel: ziel, stufe: stufe, stuecke: stuecke });
+      }
+      const vermerkFehler = new Map();
+      try {
+        const f = await EdOrtsdaten.sperrenVermerkenViele(vermerke);
+        if (f) { for (const [r, err] of f) { vermerkFehler.set(r, err); } }
+      } catch (err) {
+        for (const x of vermerke) { vermerkFehler.set(x.ref, err); }
+      }
+      for (const { ziel, stufe, stuecke } of gebaut) {
+        if (vermerkFehler.has(ziel.ref)) {
+          const err = vermerkFehler.get(ziel.ref);
+          z.abgelehnt.push(`${ziel.art} ${ziel.id}: Löschvermerk nicht im Standbuch (`
+                           + `${(err && (err.grund || err.message)) || 'unbekannt'})`);
           continue;
         }
         /* Bis Web 22.7.0 kam `fortsetzung` auch aus der Datei: Eine
@@ -3812,8 +3892,28 @@ ui_seite_start(['titel' => 'Einstellungen',
       }
       await senden();
     }
+    /** Die Lücken in der Folge der Stücke, wie `EdHuelle2.spurLesen()` sie
+        sieht: Nummern, die kein Stück deckt, ab 0 — je Lücke [Zeit des
+        letzten Punkts davor (null am Anfang), Zeit des ersten danach].
+        Klartextzeit; die Vermerke der Datei sind es auch. */
+    function rwLuecken(stuecke) {
+      const liste = (stuecke || []).map((st) => ({
+        von: Number(st.seq_from),
+        bis: Number(st.seq_from) + ((Number(st.stufe) || 1) >= 2 ? Number(st.n_original) : Number(st.punkte)),
+        tErst: Number(st.punkte) ? Number(st.ts_von) : null,
+        tLetzt: Number(st.punkte) ? Number(st.ts_bis) : null,
+      })).sort((a, b) => (a.von - b.von) || (b.bis - a.bis));
+      const aus = [];
+      let ende = 0, tEnde = null;
+      for (const x of liste) {
+        if (x.von > ende) { aus.push([tEnde, x.tErst]); }
+        if (x.bis > ende) { ende = x.bis; tEnde = x.tLetzt !== null ? x.tLetzt : tEnde; }
+      }
+      return aus;
+    }
     const rwZaehler = () => ({ verschlossen: 0, mitgebracht: 0, geschrieben: 0,
-                               uebersprungen: 0, abgelehnt: [], ohneZiel: 0 });
+                               uebersprungen: 0, abgelehnt: [], ohneZiel: 0,
+                               sperren: new Map() });
     /* Der Satz zu den Ortsdaten in der Abschlussmeldung. */
     const rwText = (z, mitgebrachtNennen) => (mitgebrachtNennen && z.mitgebracht
         ? ` ${z.mitgebracht} Einsätze brachten Orte und Reanimation verschlüsselt mit, weil `
@@ -5127,6 +5227,7 @@ ui_seite_start(['titel' => 'Einstellungen',
                das Standbuch — samt Blatt in derselben Anfrage. */
           }
           for (const r of (teil.rest_segments || [])) { await rwRuhe(r); }
+          rwSperrenMerken(teil, rz);
         };
         /* Ein Eintragsteil senden: die geschützten Angaben unter dem EIGENEN
            Schlüssel verschließen (`EdStandbuch.patSchreibenViele()`, KA-06b-3)

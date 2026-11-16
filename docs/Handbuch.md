@@ -2986,6 +2986,15 @@ Datei, die die Anwendung selbst geschrieben hat, löst das nicht aus; es
 braucht eine beschädigte oder fremde Datei. Bis Web 23.0.1 blieb die Meldung
 in diesem Fall blau.
 
+**Seit Web 25.0.0 kann auch eine Aufzeichnung abgelehnt werden.** Hat eine
+Aufzeichnung eine Lücke (gelöschte Punkte), muss dein Browser sich merken,
+dass die Lücke gewollt ist; die Datei bringt dafür ihre Löschvermerke mit.
+Fehlt zu einer Lücke der Vermerk („Lücke in der Aufzeichnung ohne
+Löschvermerk“) oder lässt er sich nicht eintragen („Löschvermerk nicht im
+Standbuch“), übernimmt das Einspielen diese eine Aufzeichnung nicht und sagt
+es in der Abschlussmeldung — statt sie zu speichern und dann nicht mehr
+öffnen zu können. Alles andere wird übernommen.
+
 Ver- und Entschlüsselung passieren **in deinem Browser**; der Server sieht die
 Inhalte nie. Deshalb lässt sich ein Backup auch **in ein anderes Konto**
 einspielen: Beim Import werden die geschützten Angaben automatisch mit dem

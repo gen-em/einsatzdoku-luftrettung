@@ -8,12 +8,23 @@
  *
  *   - `ka06d-kopplung-wert`: Das Gerät legt N_g offen, die Seite zeigt
  *     dieselbe Zahl, die das Gerät selbst rechnet; „Wert stimmt“ und das Ja
- *     des Geräts legen das Gerät an, mit `spk`. Weiche wie ausgeliefert:
- *     ohne Gerätebuch, also ohne `huelle`.
- *   - `ka06d-kopplung-buch`: dasselbe mit der Weiche nur im Browser der
- *     Probe umgelegt (wie `ka06b3.mjs`): das Gerät steht danach im
- *     Gerätebuch, `status` sagt `huelle: 2`; nach dem Entkoppeln trägt der
- *     Abgleich der Geräteseite `bis` ein.
+ *     des Geräts legen das Gerät an, mit `spk`. Weiche wie ausgeliefert —
+ *     seit Web 25.0.0 an (KA-14): Das Gerät steht danach im Gerätebuch, und
+ *     `status` sagt `huelle: 2`. Bis Web 24.x stand hier „ohne huelle“.
+ *   - `ka06d-kopplung-buch`: dasselbe, mit der Weiche im Browser der Probe
+ *     umgelegt (wie `ka06b3.mjs`; seit Web 25.0.0 ohne Wirkung, die Weiche
+ *     steht schon) und mit dem Entkoppeln: Danach trägt der Abgleich der
+ *     Geräteseite `bis` ein.
+ *
+ * DAS STANDBUCH VORHER UND NACHHER LEEREN, AUF BEIDEN SEITEN (KA-14,
+ * F-KA-125). `ka06b2-standbuch` legt im Prüfkonto Texte in der Form eines
+ * Blatts ab, die nicht aufgehen — auch als Gerätebuch. Ein solches Buch
+ * übernimmt der Browser zu Recht nicht, und das erste Eintragen eines Geräts
+ * scheiterte daran („Das Gerät ließ sich nicht eintragen“): im vollen Lauf
+ * rot, allein gefahren grün. Geleert wird die Abschrift auf dem Server UND
+ * die Ablage im Browser (`nadoku-stand`); nur die eine Seite zu leeren
+ * hinterließe einen Anker ohne Blatt, und der nächste Weg mit Gerätebuch
+ * liefe in `blatt-version`.
  *   - `ka06d-kopplung-anders`: „Wert ist anders“ — `status` des Geräts sagt
  *     `abgelehnt`/`wert`, das Ja bekommt 409, kein Gerät.
  *   - `ka06d-kopplung-zusage`: Das Gerät legt ein anderes N_g offen, als es
@@ -103,6 +114,18 @@ const aufraeumen = () => execFileSync('mariadb', ['nadoku', '-e',
  * Recht nicht auf. Nur örtlich. */
 const buchLeeren = () => execFileSync('mariadb', ['nadoku', '-e',
   `DELETE FROM stand_blaetter WHERE user_id = ${PRUEFKONTO};`], { cwd: WURZEL, stdio: 'ignore' });
+/* Beide Seiten (Kopf dieser Datei): die Abschrift und die Ablage des
+ * Browsers. Das Löschen der Ablage wartet, bis die Seite ihre Verbindung
+ * schließt — deshalb danach eine neue Seite; jedes spätere Öffnen der
+ * Datenbank steht hinter dem Löschen an. */
+async function standbuchFrisch(k) {
+  buchLeeren();
+  await k.seite.evaluate(() => new Promise((ok) => {
+    const r = indexedDB.deleteDatabase('nadoku-stand');
+    r.onsuccess = r.onerror = r.onblocked = () => ok();
+  }));
+  await k.gehZu(`${k.basis}/index.php`);
+}
 
 async function koppelnMitWert(k) {
   const g = await bisZumWert(k);
@@ -122,15 +145,25 @@ export const wege = [
   {
     name: 'ka06d-kopplung-wert',
     paket: 'KA-06', punkt: 'F-KA-17', rolle: 'admin',
-    soll: 'gleiche Zahl auf Seite und Gerät; Wert stimmt + Ja → Gerät gekoppelt, ohne huelle (Weiche aus)',
+    soll: 'gleiche Zahl auf Seite und Gerät; Wert stimmt + Ja → Gerät gekoppelt, im Gerätebuch, huelle 2 '
+        + '(Weiche wie ausgeliefert, an)',
     async fahren(k) {
+      await standbuchFrisch(k);
       try {
         const e = await koppelnMitWert(k);
+        const imBuch = await k.seite.evaluate(async (spk) => {
+          const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+          const g = await (await EdStandbuch.seitenbuch(ck)).geraete();
+          return Object.values(g).some((x) => EdCrypto.teile.toB64(x.spk) === spk && x.bis == null);
+        }, b64(e.g.spk));
         const ok = e.g.offen.status === 200 && e.gezeigt === e.g.wert && e.ja.status === 200
-          && e.st.d.zustand === 'gekoppelt' && !('huelle' in e.st.d);
+          && e.st.d.zustand === 'gekoppelt' && e.st.d.huelle === 2 && imBuch;
         return { ist: `offenlegen ${e.g.offen.status}, Seite ${e.gezeigt}, Gerät ${e.g.wert}, Ja ${e.ja.status}, `
-                    + `status ${JSON.stringify(e.st.d)}`, ok };
-      } finally { aufraeumen(); }
+                    + `status ${JSON.stringify(e.st.d)}; Gerätebuch ${imBuch ? 'trägt es' : 'trägt es NICHT'}`, ok };
+      } finally {
+        aufraeumen();
+        await standbuchFrisch(k).catch(() => buchLeeren());
+      }
     },
   },
   {
@@ -138,7 +171,7 @@ export const wege = [
     paket: 'KA-06', punkt: 'F-KA-04', rolle: 'admin',
     soll: 'mit der Weiche an: Gerät im Gerätebuch, status huelle 2',
     async fahren(k) {
-      buchLeeren();
+      await standbuchFrisch(k);
       await weicheAn(k.seite);
       try {
         const e = await koppelnMitWert(k);
@@ -171,7 +204,7 @@ export const wege = [
       } finally {
         await k.seite.unroute(/assets\/inhalt2\.js/).catch(() => {});
         aufraeumen();
-        buchLeeren();
+        await standbuchFrisch(k).catch(() => buchLeeren());
       }
     },
   },

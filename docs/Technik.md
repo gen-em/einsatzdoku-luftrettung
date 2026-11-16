@@ -10420,6 +10420,26 @@ gekoppelt sind (F-KA-103, E-KA-83; Runbook 13).
 Dazu nimmt der Eingang das **leere Schlussstück** (`punkte` 0, nur Fassung
 2, `ts_von` = `ts_bis`); den Anschluss prüft der Browser beim Lesen.
 
+**Das Standbuch unter Last** (seit Web 25.0.0, KA-14, F-KA-122, -124):
+`standbuch.js` schreibt je Blatt eines nach dem anderen (eine Reihe in
+`schreibe()`); das Lesen einer Hülle schreibt gesammelt fort
+(`fortschreibenGesammelt()`: sammelt, bis 300 ms nichts dazukommt, höchstens
+2 s, dann ein Schreiben je Blatt; `festschreiben()` sofort;
+`fortschreibenViele()` mit Fehler je Posten). Ganz verzichten lässt es sich
+nicht: Auch ein Export nimmt eine Hülle als gültig, und das Standbuch muss
+danach `o`, `k`/`a` und `f` kennen (E-KA-70, -88). Vorher schrieb jede
+gelesene Hülle sofort und ungewartet — beim Sichern 239 Antworten 409, am
+Messstand hing der GPX-Export. **Das Einspielen** (`einstellungen.php`,
+`rwSpurteil()`) baut erst alle Stücke einer Spur, bestimmt die Lücken
+(`rwLuecken()`, dieselbe Regel wie der Leser) und trägt **nur die
+Löschvermerke, die eine Lücke decken**, gesammelt ins Standbuch ein
+(`EdOrtsdaten.sperrenVermerkenViele()`), bevor es sendet; eine Lücke ohne
+Vermerk oder ein gescheitertes Eintragen lehnt die Spur ab und meldet es.
+Die Quellen eines Schnitts bekommen mit Absicht keinen Vermerk — er sperrte
+die Punkte, die die Quelle behält. Vorher schrieb das Einspielen eine
+solche Spur und meldete „übernommen“; geöffnet wurde sie danach mit
+`luecke` nicht mehr.
+
 **Der Demo-Bestand** (seit Web 25.0.0, KA-13, E-KA-90, -91): Fixture
 Format 4, gebaut von `tools/referenzdatensatz/fixture/verschliessen.py` über
 die Referenz — Gerätehüllen Fassung 2 von zwei Demo-Geräten mit festem

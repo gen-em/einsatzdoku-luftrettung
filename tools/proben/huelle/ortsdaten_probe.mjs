@@ -5,6 +5,8 @@
  * Fortschreiben, Hinweis, Bestätigung und Befunde über `EdOrtsdaten` maß
  * niemand. Diese Probe fährt sie mit umgelegter Weiche (nur in dieser Seite)
  * gegen die Fälle `rueckweg` aus `vektoren-2.json`, Standbuch im Speicher.
+ * Seit KA-14 dazu das gesammelte Fortschreiben beim Lesen und das
+ * Fortschreiben vieler Einträge (F-KA-122, -124).
  * Aufruf: node ortsdaten_probe.mjs [--motor chromium|firefox|webkit]
  */
 import { readFileSync } from 'node:fs';
@@ -52,7 +54,12 @@ const erg = await s.evaluate(async ([v2, vi]) => {
   const fall = (n) => v2.rueckweg.einsaetze.find((f) => f.name === n);
   const M = (f) => ({ ort_huelle: f.huelle_b64, client_ref: f.client_ref, started_ts: f.started_ts });
   const standVon = async (b, ref) => { const e = await b.eintrag(ref); const a = {}; for (const f of ['o', 'k', 'a', 'f', 'u']) { if (e[f] != null) { a[f] = e[f]; } } return a; };
-  const ruhe = () => new Promise((r) => setTimeout(r, 150));
+  /* Das Fortschreiben beim Lesen läuft gesammelt (KA-14, F-KA-124):
+     `festschreiben()` schreibt, was wartet, und wartet darauf. */
+  const ruhe = async () => {
+    if (buchJetzt && buchJetzt.festschreiben) { await buchJetzt.festschreiben(); }
+    await new Promise((r) => setTimeout(r, 150));
+  };
 
   /* 1. Hinweis kommt unverändert an; bestätigen schreibt den Stand der Referenz. */
   const fh = fall('anderer-absender-kleiner'), fb = fall('anderer-absender-kleiner-bestaetigt');
@@ -136,6 +143,37 @@ const erg = await s.evaluate(async ([v2, vi]) => {
   catch (e) { melde(e.message === 'netz', 'Übernehmen ohne Netz: wirft, gilt nicht'); }
   tr.ablegen = ablegen;
   melde(gleich(await standVon(a, fh.client_ref), fh.stand), 'Übernehmen ohne Netz: Stand im Browser unverändert');
+
+  /* 7. Gesammelt fortschreiben (KA-14, F-KA-124): Ein Export liest Tausende
+     Hüllen; je Blatt EIN Schreiben, kein Konflikt, keiner geht verloren. */
+  tr = EdStandbuch.speicherTransport();
+  a = await neu(tr);
+  let abgelegt = 0, konflikte = 0;
+  const ab7 = tr.ablegen;
+  tr.ablegen = async (wer, x) => { abgelegt++; const r = await ab7(wer, x); if (!r.ok) { konflikte++; } return r; };
+  const refs = Array.from({ length: 200 }, (_, i) => 'sammel-' + i);
+  const zusagen = refs.map((ref, i) => a.fortschreibenGesammelt(ref, (e) => { e.p = i + 1; }));
+  await a.festschreiben();
+  const versionen = await Promise.all(zusagen);
+  const blaetter = new Set(await Promise.all(refs.map((r) => EdStandbuch.blattNr(r))));
+  const zweiter = await neu(tr);
+  let alle = true;
+  for (const [i, ref] of refs.entries()) { if ((await zweiter.eintrag(ref)).p !== i + 1) { alle = false; } }
+  melde(abgelegt === blaetter.size && konflikte === 0 && alle && versionen.every(Number.isInteger),
+        `gesammelt: 200 Einträge in ${abgelegt} Schreiben (${blaetter.size} Blätter), ${konflikte} Konflikte, `
+        + `${alle ? 'alle' : 'NICHT alle'} in der Abschrift`);
+  tr.ablegen = ab7;
+
+  /* 8. Viele auf einmal, einer wirft: die übrigen stehen, er hat seinen Fehler (Einspielen, F-KA-122). */
+  const r8 = await a.fortschreibenViele([
+    { ref: 'viele-0', aendern: (e) => { e.x = [[1, 2]]; } },
+    { ref: 'viele-1', aendern: () => { throw Object.assign(new Error('mit Absicht'), { grund: 'probe' }); } },
+    { ref: 'viele-2', aendern: (e) => { e.x = [[3, 4]]; } }]);
+  const z8 = await neu(tr);
+  melde(!r8[0].fehler && r8[1].fehler && r8[1].fehler.grund === 'probe' && !r8[2].fehler
+        && gleich((await z8.eintrag('viele-0')).x, [[1, 2]]) && gleich(await z8.eintrag('viele-1'), {})
+        && gleich((await z8.eintrag('viele-2')).x, [[3, 4]]),
+        'fortschreibenViele: zwei geschrieben, der werfende mit seinem Fehler und ohne Eintrag');
   return { zeilen, rot };
 }, [v2, vi]);
 await browser.close();

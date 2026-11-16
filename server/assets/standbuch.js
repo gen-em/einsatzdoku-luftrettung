@@ -110,6 +110,10 @@ const EdStandbuch = (() => {
   const STAND_INFO = te.encode('nadoku-stand-1');
   const BLAETTER = 16;
   const BUCH = 'buch';
+  /* Eine Änderung, die nichts ändert (`naechste()`): kein Schreiben. */
+  const UNVERAENDERT = Symbol('unveraendert');
+  /* Sammeln beim Lesen (`fortschreibenGesammelt()`), in Millisekunden. */
+  const SAMMELN_RUHE = 300, SAMMELN_HOECHSTENS = 2000;
 
   /* ---- Blatt und Kennung eines Datensatzes ----------------------------- */
 
@@ -445,6 +449,10 @@ const EdStandbuch = (() => {
     const id = wer => o.konto + '|' + wer;
     const zustand = new Map();       // wer → Versprechen auf { version, d, offen }
     const schlange = new Map();      // wer → das letzte Schreiben in die Ablage
+    const reihe = new Map();         // wer → das letzte Schreiben an den Server
+    const wartend = new Map();       // wer → gesammelte Änderungen (`fortschreibenGesammelt()`)
+    const anmeldungen = new Set();   // Blattnummern, die noch gerechnet werden
+    let uhr = null, sammelnSeit = 0;
     const jetzt = () => (o.jetzt ? o.jetzt() : Math.floor(Date.now() / 1000));
     const leer = wer => (wer === BUCH ? { fassung: 1, geraete: [] } : { fassung: 1, t: 0, zu: false, e: {} });
     const klon = d => JSON.parse(JSON.stringify(d));
@@ -596,11 +604,14 @@ const EdStandbuch = (() => {
                blatt_hinkt: erg.blatt_hinkt };
     }
 
-    /* Die nächste Fassung eines Blatts: Änderung anwenden, Version + 1. */
+    /* Die nächste Fassung eines Blatts: Änderung anwenden, Version + 1.
+     * Liefert `aendern` UNVERAENDERT, gibt es nichts zu schreiben (`nichts`). */
     async function naechste(wer, aendern) {
       const z = await lade(wer);
       const d = klon(z.d);
-      if (aendern) { await aendern(d); }
+      if (aendern && (await aendern(d)) === UNVERAENDERT) {
+        return { wer: wer, nichts: true, version: z.version };
+      }
       if (wer !== BUCH) {
         d.t = jetzt();
         for (const k of Object.keys(d.e)) { d.e[k] = eintragOrdnen(d.e[k]); }
@@ -616,8 +627,21 @@ const EdStandbuch = (() => {
      * kein Zufall mehr, und der Aufrufer erfährt es. */
     async function schreibe(wer, aendern) {
       if (!EdInhalt.schreibt2()) { return null; }
+      /* EIN SCHREIBEN JE BLATT ZUR ZEIT (KA-14, F-KA-122, -124). Zwei
+       * Schreibvorgänge dieser Seite am selben Blatt gingen sonst von
+       * derselben Version aus, und der zweite liefe sicher in ein 409 —
+       * beim Öffnen vieler Einsätze waren das Hunderte, jeder mit Übernehmen
+       * und neuem Versiegeln, und nach vier Versuchen blieb es liegen. */
+      const vorher = reihe.get(wer) || Promise.resolve();
+      const dran = vorher.catch(() => {}).then(() => schreibeJetzt(wer, aendern));
+      reihe.set(wer, dran.catch(() => {}));
+      return dran;
+    }
+
+    async function schreibeJetzt(wer, aendern) {
       for (let versuch = 0; versuch < 4; versuch++) {
         const n = await naechste(wer, aendern);
+        if (n.nichts) { return n.version; }
         const a = await transport.ablegen(wer, { version_alt: n.version_alt, version: n.version, text: n.text });
         if (a.ok) {
           await merke(wer, { version: n.version, d: n.d, offen: false });
@@ -650,6 +674,102 @@ const EdStandbuch = (() => {
      */
     async function fortschreiben(ref, aendern) {
       return schreibe(await blattNr(ref), amEintrag(ref, aendern));
+    }
+
+    /* Viele Änderungen an EINEM Blatt in einem Schreiben. Jede für sich:
+     * Wirft eine, bleibt ihr Eintrag, wie er war, und die übrigen gehen
+     * trotzdem — ihr Fehler steht danach an ihr (`x.fehler`). Ändert keine
+     * etwas, wird nichts gesendet. */
+    function schreibeSammlung(wer, xs) {
+      return schreibe(wer, async (d) => {
+        let geaendert = false;
+        for (const x of xs) {
+          const vor = JSON.stringify(d.e[await kennung(x.ref)] || null);
+          try { await amEintrag(x.ref, x.aendern)(d); x.fehler = null; }
+          catch (e) { x.fehler = e; continue; }
+          if (JSON.stringify(d.e[await kennung(x.ref)] || null) !== vor) { geaendert = true; }
+        }
+        return geaendert ? undefined : UNVERAENDERT;
+      });
+    }
+
+    /**
+     * VIELE EINTRÄGE FORTSCHREIBEN, je Blatt EIN Schreiben (Einspielen:
+     * Löschvermerke vieler Aufzeichnungen). Gewartet wird auf alle.
+     * @param liste  [{ ref, aendern(e) }]
+     * @returns {Promise<Array|null>} je Posten { ref, version, fehler } —
+     *          `fehler` gesetzt, wenn GENAU DIESER Eintrag nicht geschrieben
+     *          ist; null, solange die Weiche aus steht
+     */
+    async function fortschreibenViele(liste) {
+      if (!EdInhalt.schreibt2()) { return null; }
+      const je = new Map();
+      const aus = liste.map(x => ({ ref: x.ref, aendern: x.aendern, version: null, fehler: null }));
+      for (const x of aus) {
+        const wer = await blattNr(x.ref);
+        if (!je.has(wer)) { je.set(wer, []); }
+        je.get(wer).push(x);
+      }
+      await Promise.all([...je].map(([wer, xs]) => schreibeSammlung(wer, xs).then(
+        (v) => { for (const x of xs) { if (!x.fehler) { x.version = v; } } },
+        (e) => { for (const x of xs) { x.fehler = e; } })));
+      return aus.map(x => ({ ref: x.ref, version: x.version, fehler: x.fehler }));
+    }
+
+    /**
+     * FORTSCHREIBEN, GESAMMELT — für das, was beim LESEN anfällt (KA-14,
+     * F-KA-124). Wer eine Einsatzhülle öffnet, deren Stand das Buch noch
+     * nicht kennt, trägt ihn ein; ein Export oder eine Liste öffnet aber
+     * Tausende. Einzeln geschrieben hieß das ein Schreiben je Einsatz, alle
+     * zugleich auf 16 Blättern, und eine Flut von 409. Gesammelt wird, bis
+     * `SAMMELN_RUHE` lang nichts dazukam, höchstens `SAMMELN_HOECHSTENS`;
+     * dann je Blatt ein Schreiben mit allen Änderungen. Das Versprechen
+     * erfüllt sich mit der Version, sobald der Eintrag steht — wer nicht
+     * wartet, verliert nichts: Was nicht ankam, steht beim nächsten Lesen
+     * wieder an. `festschreiben()` schreibt sofort, was wartet.
+     *
+     * WARUM ÜBERHAUPT SCHREIBEN, WENN NUR GELESEN WIRD (E-KA-70, -88): Das
+     * Buch soll wissen, welche Hülle dieser Browser schon als gültig
+     * genommen hat (`o`), von wem (`k`/`a`) und ob sie abgeschlossen war
+     * (`f`). Ein Export nimmt sie genauso als gültig wie die Einzelansicht
+     * — legte der Server danach die ältere zurück, fiele es sonst nicht
+     * auf, und der Hinweis „Uhrzeit prüfen" entschiede gegen einen Stand,
+     * den der Browser längst gesehen hat.
+     */
+    async function fortschreibenGesammelt(ref, aendern) {
+      if (!EdInhalt.schreibt2()) { return null; }
+      /* Die Blattnummer kommt asynchron; bis sie da ist, zählt der Posten
+         als angemeldet, damit `festschreiben()` ihn nicht übersieht. */
+      const nr = blattNr(ref);
+      anmeldungen.add(nr);
+      let wer;
+      try { wer = await nr; } finally { anmeldungen.delete(nr); }
+      return new Promise((ok, nein) => {
+        if (!wartend.has(wer)) { wartend.set(wer, []); }
+        wartend.get(wer).push({ ref: ref, aendern: aendern, ok: ok, nein: nein });
+        const t = Date.now();
+        if (!sammelnSeit) { sammelnSeit = t; }
+        if (uhr) { clearTimeout(uhr); }
+        const warten = Math.max(0, Math.min(SAMMELN_RUHE, sammelnSeit + SAMMELN_HOECHSTENS - t));
+        uhr = setTimeout(() => { abarbeiten(); }, warten);
+      });
+    }
+
+    function abarbeiten() {
+      if (uhr) { clearTimeout(uhr); uhr = null; }
+      sammelnSeit = 0;
+      const jetzt = [...wartend];
+      wartend.clear();
+      return Promise.all(jetzt.map(([wer, xs]) => schreibeSammlung(wer, xs).then(
+        (v) => { for (const x of xs) { if (x.fehler) { x.nein(x.fehler); } else { x.ok(v); } } },
+        (e) => { for (const x of xs) { x.nein(e); } })));
+    }
+
+    /** Was gesammelt wartet, jetzt schreiben; wartet auf alle Schreiben. */
+    async function festschreiben() {
+      await Promise.all([...anmeldungen].map(p => p.catch(() => {})));
+      await abarbeiten();
+      await Promise.all([...reihe.values()]);
     }
 
     /**
@@ -793,7 +913,8 @@ const EdStandbuch = (() => {
     }
 
     return { abgleichen, eintrag, blattZu, patLesen: patLesenHier, naechsterZaehler,
-             fortschreiben, vormerken, vormerkenViele, nachtragen, schliessen, alleZu, blattZuNr,
+             fortschreiben, fortschreibenViele, fortschreibenGesammelt, festschreiben,
+             vormerken, vormerkenViele, nachtragen, schliessen, alleZu, blattZuNr,
              /* 409 `blatt` aus einer Sammelanfrage: das Blatt des Servers übernehmen */
              blattUebernehmen: uebernehmen,
              geraete, geraetEintragen, geraetAustragen, zurueckschreiben,
@@ -876,8 +997,9 @@ const EdStandbuch = (() => {
    * @param o       { ohne: Set } Kennungen, die kein Blatt bekommen (der
    *                Server hat sie übersprungen, 409 `uebersprungen`)
    * @returns {Promise<{texte: string[], blaetter: Array|null, bestaetigen}>}
-   *   `blaetter` ist null, solange die Weiche aus steht — dann geht KEIN
-   *   Feld mit, und `texte` sind `edk1:` wie aus `EdCrypto.encrypt()`.
+   *   `blaetter` ist null, solange die Weiche aus steht, und wenn kein
+   *   Blatt etwas hebt (alle in `ohne`) — dann geht KEIN Feld mit; bei
+   *   Weiche aus sind `texte` `edk1:` wie aus `EdCrypto.encrypt()`.
    *   Ein Blatt trägt neben `wer`, `version_alt`, `version`, `text` die
    *   Kennungen, deren Zähler es hebt (`refs`): Daran prüft der Server, dass
    *   er jeden dieser Blöcke wirklich geschrieben hat — ein Blatt, das einem
@@ -903,10 +1025,14 @@ const EdStandbuch = (() => {
     const vm = await buch.vormerkenViele(posten
       .map((p, i) => ({ ref: p.ref, aendern: (e) => { e.p = z[i]; } }))
       .filter(x => !ohne.has(x.ref)));
+    /* KEIN LEERES FELD (KA-14, F-KA-123): Hat der Server alle Einsätze
+       übersprungen (zweites Einspielen), hebt kein Blatt etwas. `[]` ginge
+       als Feld mit — ein leeres Array ist in JS wahr —, und der Server weist
+       eine leere Liste mit 400 `blaetter` ab. Dann geht keins mit. */
     return {
       texte: texte,
-      blaetter: vm.map(b => ({ wer: b.wer, version_alt: b.version_alt, version: b.version,
-                               text: b.text, refs: b.refs })),
+      blaetter: vm.length ? vm.map(b => ({ wer: b.wer, version_alt: b.version_alt, version: b.version,
+                                           text: b.text, refs: b.refs })) : null,
       bestaetigen: async () => { for (const b of vm) { await b.bestaetigen(); } },
     };
   }

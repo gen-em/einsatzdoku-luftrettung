@@ -88,6 +88,21 @@ await kontext.route('**/api/wartungslauf.php', (r) => r.fulfill({ status: 200,
 const seite = await kontext.newPage();
 const konsole = [];
 seite.on('console', m => { if (m.type() === 'error') konsole.push(m.text()); });
+/* DAS ERWARTETE 409 (KA-14, F-KA-123): Beim zweiten Einspielen (Schritt 5)
+ * ist der Einsatz schon da; mit der Weiche an meldet der Server das mit
+ * 409 `blatt`/`uebersprungen`, und die Seite sendet ohne dessen Zähler
+ * noch einmal (E-KA-58). Das ist der Vertrag, kein Fehler — der Browser
+ * schreibt ihn trotzdem als Konsolenfehler. Gezählt wird jedes solche 409
+ * an der Antwort selbst; so viele 409-Zeilen fallen am Ende heraus, und
+ * keine mehr. */
+let erwartet409 = 0;
+seite.on('response', async (r) => {
+  if (r.status() !== 409 || !/api\/backup_eintraege_restore\.php/.test(r.url())) { return; }
+  try {
+    const d = await r.json();
+    if (d && d.error === 'blatt' && d.grund === 'uebersprungen') { erwartet409++; }
+  } catch (e) { /* kein JSON: kein erwartetes 409 */ }
+});
 seite.on('pageerror', e => konsole.push('pageerror: ' + e.message));
 
 try {
@@ -243,7 +258,7 @@ try {
   await seite.unroute('**/api/adminbackup_freigabe.php', nurVermerk);
   /* Der abgebrochene POST steht als Konsolenfehler da — er ist der Fall,
    * den dieser Schritt baut, kein Fehler der Anwendung. */
-  konsole.length = 0;
+  konsole.length = 0; erwartet409 = 0;
   await seite.reload({ waitUntil: 'domcontentloaded' });
   await seite.waitForTimeout(1500);
   pruefe(await seite.locator('#freigabebtn').isVisible(),
@@ -282,7 +297,8 @@ try {
     try {
       /* Aus der Ablage (IndexedDB), nicht aus dem Tab. */
       const k = await EdOrtsdaten.schluessel((await EdCrypto.inhaltLesen()).schluessel);
-      const innen = await EdOrtsdaten.einsatz({ ort_huelle: n.ort_huelle, client_ref: n.client_ref }, k);
+      const innen = await EdOrtsdaten.einsatz({ ort_huelle: n.ort_huelle, client_ref: n.client_ref,
+                                                started_at: n.started_at }, k);
       const punkte = await EdOrtsdaten.spur(n.stuecke, 'spur', n.client_ref, [], k);
       return { lat: innen.phasen[0].lat, rea: innen.rea.length, punkte: punkte.length };
     } catch (e) { return { fehler: String(e.message || e) }; }
@@ -292,20 +308,29 @@ try {
          ort.fehler || `Phase 4 bei ${ort.lat}, ${ort.rea} Reanimation, ${ort.punkte} Punkte`);
 
   /* ---- 6. Und der Klartext ist derselbe --------------------------------- */
-  const klarZurueck = await seite.evaluate(async (blob) => {
+  /* Über das Standbuch, wie jeder Leseweg der Anwendung: Seit Web 25.0.0
+   * ist der Block `edk2:`, und `EdCrypto.decrypt()` weist ihn ab
+   * (`gebunden`, E-KA-52 (8); KA-14, F-KA-126). */
+  const klarZurueck = await seite.evaluate(async (n) => {
     const eintrag = await EdCrypto.inhaltLesen();
     const ck = eintrag && eintrag.schluessel;
     if (!ck) { return { fehler: 'Inhaltsschlüssel in dieser Sitzung nicht verfügbar' }; }
-    try { return { klar: JSON.parse(await EdCrypto.decrypt(ck, blob)) }; }
+    try { return { klar: JSON.parse(await EdStandbuch.patOeffnen(ck, n.pat_blob, n.client_ref)) }; }
     catch (e) { return { fehler: String(e.message || e) }; }
-  }, nach.pat_blob);
+  }, nach);
   pruefe(klarZurueck.klar
          && klarZurueck.klar.diag === KLARTEXT.diag
          && klarZurueck.klar.alter === KLARTEXT.alter,
          'Er öffnet sich mit dem Schlüssel DIESES Kontos, mit demselben Klartext',
          klarZurueck.klar ? JSON.stringify(klarZurueck.klar) : String(klarZurueck.fehler));
 
-  pruefe(konsole.length === 0, 'Keine Konsolenfehler', konsole.slice(0, 2).join(' · '));
+  const uebrig = konsole.slice();
+  for (let i = 0; i < erwartet409; i++) {
+    const j = uebrig.findIndex(t => /status of 409/.test(t));
+    if (j >= 0) { uebrig.splice(j, 1); }
+  }
+  pruefe(uebrig.length === 0, 'Keine Konsolenfehler',
+         uebrig.length ? uebrig.slice(0, 2).join(' · ') : `${erwartet409} erwartete 409 „uebersprungen“`);
 } finally {
   await browser.close();
   try { execFileSync('php', [join(HIER, 'vorbereiten.php'), 'aufraeumen', '{}']); } catch (e) {}

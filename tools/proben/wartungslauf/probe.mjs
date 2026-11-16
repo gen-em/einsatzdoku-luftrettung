@@ -244,7 +244,8 @@ print(json.dumps({"pk": pk, "st": st, "p": P}))`], { cwd: WURZEL, encoding: 'utf
   const blob = await s.evaluate(async (mid) => {
     const m = await (await fetch('api/mission.php?id=' + mid)).json();
     const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
-    return m.pat_blob ? JSON.parse(await EdCrypto.decrypt(ck, m.pat_blob)) : null;
+    /* Über das Standbuch: seit Web 25.0.0 ist der Block `edk2:` (KA-14). */
+    return m.pat_blob ? JSON.parse(await EdStandbuch.patOeffnen(ck, m.pat_blob, m.client_ref)) : null;
   }, mid);
   const naechster = einsatzPunkte.reduce((b, p) => Math.abs(p[3] - phase5) < Math.abs(b[3] - phase5) ? p : b);
   const hoeheSoll = Math.round(naechster[2]);

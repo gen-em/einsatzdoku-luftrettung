@@ -35,6 +35,10 @@
  *                                         ein gepacktes Stück der Stufe 2/3
  *   EdOrtsdaten.schluesselAus(pkcs8)      ein FREMDES Paar aus seinem privaten
  *                                         Teil (Freigabe)
+ *   EdOrtsdaten.sperreVermerken(ref, von, bis)   ein gesperrter Zeitraum ins
+ *                                         Standbuch (Schneiden, Löschen; still)
+ *   EdOrtsdaten.sperrenVermerkenViele(liste, o)  dasselbe für viele, gewartet
+ *                                         und mit Fehlern (Einspielen)
  *
  * REGELN BEIM ÖFFNEN: Punkt i eines Stücks der
  * Stufe 1 hat die Sequenznummer `seq_from + i`; ein Stück der Stufe 2 oder 3
@@ -267,7 +271,11 @@
         if (neu && JSON.stringify(neu) !== JSON.stringify(alt)) {
           /* Auf einer Abschrift: Das Fortschreiben läuft der Rückgabe nach
              und darf deren `befund` nicht mehr ändern. */
-          sb.buch.fortschreiben(m.client_ref, abnehmen(Object.assign({}, r), null, null)).catch(() => {});
+          /* GESAMMELT (KA-14, F-KA-124): Ein Export öffnet Tausende Hüllen,
+             und je Hülle ein Schreiben war eine Flut von 409 auf 16
+             Blättern. `fortschreibenGesammelt()` schreibt je Blatt einmal. */
+          sb.buch.fortschreibenGesammelt(m.client_ref, abnehmen(Object.assign({}, r), null, null))
+            .catch(() => {});
         }
       }
       return r;
@@ -596,11 +604,47 @@
       const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
       if (!ck) { return null; }
       const buch = await EdStandbuch.seitenbuch(ck);
-      return await buch.fortschreiben(ref, (e) => {
-        const d = e.d || 0;
-        e.x = (e.x || []).concat([[von - d, bis - d]]);
-      });
+      return await buch.fortschreiben(ref, sperrenDazu([[von, bis]]));
     } catch (e) { return null; }
+  }
+
+  /* Die Änderung am Eintrag: Vermerke in der Zeit der Hülle (Klartext minus
+     Versatz) dazu; ein Vermerk, der schon steht, nicht noch einmal. */
+  const sperrenDazu = (liste) => (e) => {
+    const d = e.d || 0;
+    const x = (e.x || []).slice();
+    for (const [von, bis] of liste) {
+      const v = [von - d, bis - d];
+      if (!x.some((y) => y[0] === v[0] && y[1] === v[1])) { x.push(v); }
+    }
+    if (x.length) { e.x = x; }
+  };
+
+  /**
+   * GESPERRTE ZEITRÄUME VIELER AUFZEICHNUNGEN INS STANDBUCH — für das
+   * Einspielen einer Sicherung (KA-14, F-KA-122). Eine eingespielte Spur
+   * verschließt das Konto neu; eine Lücke, die ein Löschen oder Schneiden
+   * hinterlassen hat, gilt in Fassung 2 nur mit einem Vermerk im Standbuch
+   * (`luecke` sonst). Die Vermerke reisen in der Datei mit (`loeschungen`
+   * am Ruhesegment, `schnitte` am Einsatz) und gehen hier hinein, BEVOR die
+   * Stücke gesendet werden. Anders als `sperreVermerken()` NICHT still:
+   * Wer hier einen Fehler bekommt, darf die Spur nicht als übernommen
+   * melden — sie ginge nicht mehr auf.
+   * @param liste  [{ ref, sperren: [[von, bis], …] }] in Klartextzeit
+   * @param o      { ck } wie `stueckeBauen()`
+   * @returns {Promise<Map|null>} ref → Fehler (nur die gescheiterten); null
+   *          mit der Weiche aus (dann braucht es keine)
+   */
+  async function sperrenVermerkenViele(liste, o) {
+    if (!EdInhalt.schreibt2()) { return null; }
+    const posten = (liste || []).filter((x) => x && x.ref && x.sperren && x.sperren.length);
+    const aus = new Map();
+    if (!posten.length) { return aus; }
+    const k = await schreibpaar(o);
+    const buch = await EdStandbuch.seitenbuch(k.ck);
+    const r = await buch.fortschreibenViele(posten.map((x) => ({ ref: x.ref, aendern: sperrenDazu(x.sperren) })));
+    for (const x of r) { if (x.fehler) { aus.set(x.ref, x.fehler); } }
+    return aus;
   }
 
   async function stueckeBauen(punkte, art, ref, o) {
@@ -716,5 +760,6 @@
                          einsatzZeiten: einsatzZeiten, einsatzInnen: einsatzInnen,
                          einsatzVerschliessen: einsatzVerschliessen, ortshoehe: ortshoehe,
                          stueckeBauen: stueckeBauen, gepacktBauen: gepacktBauen,
-                         schluesselAus: schluesselAus, sperreVermerken: sperreVermerken };
+                         schluesselAus: schluesselAus, sperreVermerken: sperreVermerken,
+                         sperrenVermerkenViele: sperrenVermerkenViele };
 })();

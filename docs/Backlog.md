@@ -817,3 +817,29 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      dem Stichtag aus 06e. *Abnahme:* voller Einspiellauf, `erzeugen.php`
      und `verschliessen.py` ohne Befund, Fixture byte-gleich zur heutigen
      oder begründet anders.
+<!-- -->
+
+568. **Ein Gerätebuch, das nicht aufgeht, sperrt jede Kopplung.** · gehört zu: 28 · Stand: offen · seit 16.11.2026
+     *Aufgenommen 16.11.2026 aus KA-14 (F-KA-125).* Liegt auf dem Server
+     ein Gerätebuch, das der Browser nicht öffnen kann (beschädigt oder von
+     jemandem mit Schreibzugriff eingesetzt), scheitert `geraetEintragen()`
+     bei jeder Kopplung mit „Das Gerät ließ sich nicht eintragen. Hol am
+     Gerät einen neuen Code.“ — ein neuer Code hilft nicht, und
+     `zurueckschreiben()` wirkt nur, wenn die Version auf dem Server
+     niedriger ist. *Weg:* eigener Grund und Meldung („Gerätebuch auf dem
+     Server ist beschädigt“) mit einem bewussten Neuanfang des Buchs aus
+     dem Stand dieses Browsers; Bedrohungsmodell prüfen (wer den Server
+     beschreibt, sperrt so Kopplungen — Verfügbarkeit, keine Zusage).
+     *Abnahme:* Bedienprobe mit eingesetztem Zufallsbuch.
+<!-- -->
+
+569. **Sichern und GPX-Export sind mit der Weiche deutlich langsamer.** · gehört zu: nächste Backlog-Runde · Stand: offen · seit 16.11.2026
+     *Aufgenommen 16.11.2026 aus KA-14 (F-KA-124).* Am Messstand (5 088
+     Einsätze, CPU-Drossel 6×): Backup 120,75 s statt rund 45–58 s, GPX
+     über einen Zeitraum 224,56 s statt rund 70 s; GPX braucht 114 401
+     Krypto-Aufrufe. Das Standbuch ist es nach der Behebung nicht mehr
+     (0 × 409); vermutlich die Gerätehülle der Fassung 2 je Stück (zwei
+     ECDH statt einer). Beide bleiben unter der Zielzahl. *Weg:* messen,
+     wo die Zeit liegt (Krypto-Aufrufe je Stück), dann Z_s je Absender
+     zwischenspeichern, wo es nicht schadet. *Abnahme:* Messstand mit
+     Zahl je Schritt.
