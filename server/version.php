@@ -8993,4 +8993,4 @@ declare(strict_types=1);
  *   liegt in Fassung 2. Hauptnummer, weil sich das Format der Daten aendert
  *   und nicht zurueckkehrt. KEIN SCHEMA — `update.php` ist nicht noetig;
  *   nach dem Tag die Geraete neu koppeln (Runbook 13). */
-const WEB_VERSION = '25.0.0';
+const WEB_VERSION = '26.0.0';
