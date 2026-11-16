@@ -420,6 +420,95 @@ const EdHuelle2 = (() => {
   }
 
   /**
+   * EINE SPUR DER FASSUNG 1 ALS KONTO NEU VERSCHLIESSEN (06e, E-KA-95, -97).
+   * Nur der Anhebelauf ruft das — er ist der letzte Leser der Fassung 1, und
+   * `ls` ist dort ein Leser ohne `verlangt2`. Referenz: `spur_uebernehmen()`.
+   *
+   * Jedes Stück der Fassung 1 wird geöffnet und als Fassung 2 vom Konto
+   * verschlossen, mit Merker UEBERNOMMEN und `o.jetzt` — derselbe Platz,
+   * dieselbe Nutzlast. Stücke der Fassung 2 bleiben. Ist die Aufzeichnung
+   * `abgeschlossen` und fehlt SCHLUSS am Ende, bekommt ihn das übernommene
+   * Stück, das bis ans Ende reicht. Jede Lücke ohne belegten Löschvermerk
+   * bekommt einen ENGEN Vermerk [t_vor + 1, t_nach − 1] (Zeit der Hülle):
+   * Er erklärt die Lücke und blendet keinen Punkt aus; ist sie dafür zu eng,
+   * wirft das `luecke`.
+   * @param o  { jetzt, versatz, sperren, abgeschlossen }
+   * @returns {Promise<{stuecke: object[], vermerke: number[][]}>}  die
+   *          Stücke mit neuer `huelle` (Uint8Array), sonst unverändert
+   */
+  async function spurUebernehmen(ls, k, art, ref, stuecke, o) {
+    o = o || {};
+    const versatz = o.versatz || 0, sperren = o.sperren || [];
+    const offen = [];
+    for (const st of stuecke || []) {
+      const stufe = st.stufe || 1, platz = platzVon(st);
+      const auf = await ls.huelle(st.huelle, art, ref, platz);
+      const alt = auf.absender === null;
+      const kopf = alt ? { ts_von: st.ts_von - versatz, merker: 0, nutzlast: auf.klar } : spurInnen2Lesen(auf.klar);
+      let zeiten, bis;
+      if (stufe >= 2) {
+        zeiten = st.punkte ? (await gepacktLesen(kopf.nutzlast, st.punkte, kopf.ts_von)).map(p => p[3]) : [];
+        bis = st.seq_from + st.n_original;
+      } else {
+        if (kopf.nutzlast.length !== 14 * st.punkte) { throw fehler('innen'); }
+        const dv = new DataView(kopf.nutzlast.buffer, kopf.nutzlast.byteOffset, kopf.nutzlast.byteLength);
+        zeiten = [];
+        for (let i = 0; i < st.punkte; i++) { zeiten.push(kopf.ts_von + dv.getUint32(i * 14 + 10)); }
+        bis = st.seq_from + st.punkte;
+      }
+      offen.push({ st: st, platz: platz, klar: auf.klar, alt: alt, ts: kopf.ts_von, von: st.seq_from, bis: bis,
+                   schluss: !!(kopf.merker & M_SCHLUSS),
+                   tErst: zeiten.length ? Math.min.apply(null, zeiten) : null,
+                   tLetzt: zeiten.length ? Math.max.apply(null, zeiten) : null });
+    }
+    const folge = offen.slice().sort((a, b) => (a.von - b.von) || (b.bis - a.bis));
+    const vermerke = [];
+    let ende = 0, tEnde = null;
+    for (const x of folge) {
+      if (x.von > ende && !ueberdeckt(sperren.concat(vermerke), tEnde, x.tErst)) {
+        if (tEnde === null || x.tErst === null || x.tErst - tEnde < 2) { throw fehler('luecke'); }
+        vermerke.push([tEnde + 1, x.tErst - 1]);
+      }
+      if (x.bis > ende) {
+        ende = x.bis;
+        tEnde = x.tLetzt !== null ? x.tLetzt : tEnde;
+      }
+    }
+    let schlussFehlt = !!o.abgeschlossen && !offen.some(x => x.schluss && x.bis === ende);
+    const neu = [];
+    for (const x of offen) {
+      if (!x.alt) { neu.push(x.st); continue; }
+      const schluss = schlussFehlt && x.bis === ende;
+      if (schluss) { schlussFehlt = false; }
+      const h = await verschliessen2(spurInnen2(x.ts, x.klar, { schluss: schluss, uebernommen: o.jetzt }),
+                                     k.pub, { privat: k.priv, spk: k.pub }, art, ref, x.platz);
+      neu.push(Object.assign({}, x.st, { huelle: h }));
+    }
+    return { stuecke: neu, vermerke: vermerke };
+  }
+
+  /**
+   * EINE EINSATZHÜLLE DER FASSUNG 1 ALS KONTO NEU VERSCHLIESSEN (06e,
+   * E-KA-97). `o.z`: der nächste Zähler des Kontos; `o.schluss`: das
+   * Klartextkennzeichen des abgeschlossenen Einsatzes (Fassung 1 kannte
+   * beides nicht); `start` = Klartextbeginn − `o.versatz`. Die Herkunft sagt,
+   * dass das Konto übernommen hat. Referenz: `einsatz_uebernehmen()`.
+   * @returns {Promise<Uint8Array>}
+   */
+  async function einsatzUebernehmen(ls, k, ref, huelle, startedTs, o) {
+    const auf = await ls.huelle(huelle, 'einsatz', ref, '');
+    if (auf.absender !== null) { throw fehler('innen'); }
+    let d;
+    try { d = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(auf.klar)); }
+    catch (e) { throw fehler('innen'); }
+    if (d === null || typeof d !== 'object' || d.fassung !== 1) { throw fehler('innen'); }
+    return verschliessen2(
+      einsatzInnen2(o.z, startedTs - (o.versatz || 0), !!o.schluss, d.phasen || [], d.rea || [],
+                    { von: [], uebernommen: o.jetzt }),
+      k.pub, { privat: k.priv, spk: k.pub }, 'einsatz', ref, '');
+  }
+
+  /**
    * DIE EINSATZHÜLLE ÖFFNEN und gegen Klartextbeginn und Standbuch halten.
    * @param startedTs  der Klartextbeginn des Einsatzes
    * @param o  `versatz`, `stand` und `bestaetigt`. `stand` ist der Eintrag
@@ -668,7 +757,7 @@ const EdHuelle2 = (() => {
     return String(zahl).padStart(6, '0');
   }
 
-  return { sid, leser, spurLesen, einsatzLesen, einsatzHinweis, einsatzBefunde, standNachAbnahme,
+  return { sid, leser, spurLesen, einsatzLesen, spurUebernehmen, einsatzUebernehmen, einsatzHinweis, einsatzBefunde, standNachAbnahme,
            hinweisGleich, hinweisFehler, STANDFELDER,
            UHRZEIT_PRUEFEN, STAND_UEBERNOMMEN, OFFEN_NACH_SCHLUSS,
            stueckSchreiben, einsatzSchreiben,

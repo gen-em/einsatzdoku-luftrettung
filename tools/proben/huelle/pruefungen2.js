@@ -296,6 +296,36 @@ window.hpFassung2 = async (v2, vi, weicheAn) => {
     if (f.grund) { await scheitert(`2/Folge ${f.name}`, f.grund, lesen); }
     else { await pruefe(`2/Folge ${f.name}`, async () => gleich(await lesen(), f.erwartet)); }
   }
+  /* Die Übernahme der Fassung 1 (06e, E-KA-95, -97): Die Seite hebt mit
+   * einem Leser ohne `verlangt2`, gelesen wird danach MIT — wie im
+   * Anhebelauf und danach in jeder Ansicht. Verglichen wird das Gelesene und
+   * die Vermerke; die Hüllen entstehen bei jedem Lauf neu. */
+  const ueb = v2.uebernahme || { spuren: [], einsaetze: [] };
+  for (const f of ueb.spuren) {
+    const heben = async () => {
+      const erg = await EdHuelle2.spurUebernehmen(await leser('standard', false), k, f.art, f.client_ref,
+        f.stuecke.map((x) => Object.assign({}, x, { huelle: x.huelle_b64 })),
+        { jetzt: ueb.jetzt, versatz: f.versatz, sperren: f.sperren, abgeschlossen: f.abgeschlossen });
+      const gl = await EdHuelle2.spurLesen(await leser('standard', true), f.art, f.client_ref, erg.stuecke,
+        { versatz: f.versatz, sperren: f.sperren.concat(erg.vermerke), abgeschlossen: f.abgeschlossen });
+      const p = gl.punkte;
+      return { punkte: p.length, erste_zeit: p[0].ts, letzte_zeit: p[p.length - 1].ts,
+               herkunft: gl.befund.herkunft, schluss: gl.befund.schluss, vermerke: erg.vermerke };
+    };
+    if (f.grund) { await scheitert(`2/Übernahme ${f.name}`, f.grund, heben); }
+    else { await pruefe(`2/Übernahme ${f.name}`, async () => gleich(await heben(), f.erwartet)); }
+  }
+  for (const f of ueb.einsaetze) {
+    await pruefe(`2/Übernahme Einsatz ${f.name}`, async () => {
+      const h = await EdHuelle2.einsatzUebernehmen(await leser('standard', false), k, f.client_ref, f.huelle_b64,
+        f.started_ts, { z: f.z, jetzt: ueb.jetzt, schluss: f.schluss, versatz: f.versatz });
+      const o = await EdHuelle2.einsatzLesen(await leser('standard', true), f.client_ref, h, f.started_ts,
+        { versatz: f.versatz });
+      return gleich({ z: o.inhalt.z, absender: o.absender,
+                      uebernommen: (o.inhalt.herkunft || {}).uebernommen,
+                      stand: EdHuelle2.standNachAbnahme(o.inhalt, o.absender, null) }, f.erwartet);
+    });
+  }
   for (const f of v2.einsaetze) {
     const lesen = async () => {
       const o = await EdHuelle2.einsatzLesen(await leser(f.buch), f.client_ref, f.huelle_b64, f.started_ts,

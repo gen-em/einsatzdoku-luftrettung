@@ -164,16 +164,17 @@ const EdStandbuch = (() => {
    * zweiten Browsers höbe ihn still wieder an. Die Regel, in dieser Folge:
    *   1. Führt genau EINE Seite den Stand der anderen als verworfen (ein
    *      Vermerk für deren `a` mit z_v ≥ deren `o`), gewinnt sie mit `o`, `a`.
-   *   2. Sonst der höhere `o`; bei Gleichstand `k`, dann die Seite mit `a`,
-   *      dann die kleinere SID.
+   *   2. Sonst die Seite mit `k`, auch gegen einen höheren `o` — `k` HAFTET
+   *      wie `f` (E-KA-94): Ein Gerätestand, den nur der andere Browser
+   *      kannte, kam nach dem Konto und bleibt abgewiesen. Haben beide oder
+   *      keine `k`, der höhere `o`; dann die Seite mit `a`, dann die
+   *      kleinere SID.
    *   3. `f`: einer hat es. `u`: beide vereinigt, je Absender der höhere z_v
    *      (bei Gleichstand das spätere t), ohne den Absender des Siegers; mit
    *      `k` am Sieger entfallen `a` und `u`.
    * Symmetrisch: (x, y) und (y, x) ergeben dasselbe.
-   *
-   * WAS DIE REGEL NICHT TUT (F-KA-119): Ein höherer GERÄTEstand gewinnt
-   * gegen einen niedrigeren KONTOstand, und `k` geht dabei verloren — so
-   * sagt es die Referenz (Vektor „konto-unter-geraet").
+   * Bis Web 25.x gewann der höhere `o`, und `k` ging verloren (F-KA-119):
+   * Danach kam ein Gerät nach dem Konto wieder durch.
    */
   function standZusammenfuehren(x, y) {
     x = x || {}; y = y || {};
@@ -184,9 +185,9 @@ const EdStandbuch = (() => {
       return !!v && v[0] >= t.o;
     };
     const gehtVor = (s, t) => {
+      if (!!s.k !== !!t.k) { return !!s.k; }        // `k` haftet (E-KA-94)
       const so = s.o || 0, to = t.o || 0;
       if (so !== to) { return so > to; }
-      if (!!s.k !== !!t.k) { return !!s.k; }
       const sa = s.k ? '' : (s.a || ''), ta = t.k ? '' : (t.a || '');
       if (!!sa !== !!ta) { return !!sa; }
       return sa <= ta;
