@@ -14,7 +14,7 @@ python3 tools/proben/huelle/referenz_inhalt.py erzeugen   # ebenso, für edk2
 ## Was es misst
 
 `referenz.py` ist die Referenz der Gerätehülle (Format im Kopf): Fassung 1 →
-`vektoren.json`, `Vektoren.mc`; Fassung 2 (Herkunft, Zeit, Zähler samt Rückweg, Stückfolge,
+`vektoren.json`, `Vektoren.mc`; Fassung 2 (Herkunft, Zeit, Zähler samt Rückweg, Stückfolge, Übernahme der Fassung 1,
 Vergleichswert der Kopplung) → `vektoren-2.json`, `Vektoren2.mc`, `HuelleVektor2.mc`. `referenz_inhalt.py`: `edk2:`,
 Standbuch, Gerätebuch, Ableitung → `vektoren-inhalt.json`. Jede Gegenlage
 (vertauscht, zurückgelegt, Zeit verschoben, Stück entfernt, ohne Geräteschlüssel)

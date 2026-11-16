@@ -1510,6 +1510,268 @@
       }
     }
   ],
+  "uebernahme": {
+    "jetzt": 1786869065,
+    "spuren": [
+      {
+        "name": "ganz",
+        "art": "spur",
+        "client_ref": "w-20261111-0002",
+        "stuecke": [
+          {
+            "seq_from": 0,
+            "punkte": 3,
+            "stufe": 1,
+            "ts_von": 1784277065,
+            "huelle_b64": "AQRcfikhWDADbn/9+iQvuQcyxWkwIg0imTM7yTOBFq47BwzCdx1rXdYrJznanCCWsNGFFZb1Biy5x4lRakGdH7t4N2AVrWoCobgtYep3bNJ0DauMPWm3fmQ5VJVlfmR57hnAyP4ulfnxiOUBKd6Ql04SMcp3mh5BkqktM8pR8qxGIFbTA2mPMlJX2NUaceOtuh+3nVei43aze99k4cqQ4K7K"
+          },
+          {
+            "seq_from": 3,
+            "punkte": 3,
+            "stufe": 1,
+            "ts_von": 1784277080,
+            "huelle_b64": "AQQizJwIOLAPoVMDpbdGIFSqrbJewz4/vi/iFkcaMznsf2edEfgYhy3iqSUeJxi6cYGQWDZdQdBpynOlqmsmKZ37RjycD58HuNJh5YscPMbjsUAxt7jPTqFf7QtE1nj0psQ1c4xwsvV3dYaYD/vbmW88pNDM84wZTSdlcF64GvlsmrpYGR6kHbmWUeNa0kWjaA7pba+2InuvJIYpe39EL1W3"
+          },
+          {
+            "seq_from": 6,
+            "punkte": 2,
+            "stufe": 1,
+            "ts_von": 1784277095,
+            "huelle_b64": "AQQrW7P4+fAx8UbDnQU+GG1Y5AZ0lXG8qFYS2Jqt8P6PBYfVnjrUo8ncxUq9p/LlVIrun0STjLWpqkGI9ZFNYGBDG8pA40vO1RdX9yxXv/fpz7dBxxAMXV56boZoRfbOTtemZiPkx83lvgzbJK7McM3x9Jc7CHSUfIOzhjIUdc20sOMtIXzMIQBbgX+dRC9qjRw="
+          }
+        ],
+        "abgeschlossen": true,
+        "versatz": 0,
+        "sperren": [],
+        "erwartet": {
+          "punkte": 8,
+          "erste_zeit": 1784277065,
+          "letzte_zeit": 1784277100,
+          "herkunft": [
+            "konto"
+          ],
+          "schluss": true,
+          "vermerke": []
+        }
+      },
+      {
+        "name": "laeuft-noch",
+        "art": "spur",
+        "client_ref": "w-20261111-0002",
+        "stuecke": [
+          {
+            "seq_from": 0,
+            "punkte": 3,
+            "stufe": 1,
+            "ts_von": 1784277065,
+            "huelle_b64": "AQRcfikhWDADbn/9+iQvuQcyxWkwIg0imTM7yTOBFq47BwzCdx1rXdYrJznanCCWsNGFFZb1Biy5x4lRakGdH7t4N2AVrWoCobgtYep3bNJ0DauMPWm3fmQ5VJVlfmR57hnAyP4ulfnxiOUBKd6Ql04SMcp3mh5BkqktM8pR8qxGIFbTA2mPMlJX2NUaceOtuh+3nVei43aze99k4cqQ4K7K"
+          },
+          {
+            "seq_from": 3,
+            "punkte": 3,
+            "stufe": 1,
+            "ts_von": 1784277080,
+            "huelle_b64": "AQQizJwIOLAPoVMDpbdGIFSqrbJewz4/vi/iFkcaMznsf2edEfgYhy3iqSUeJxi6cYGQWDZdQdBpynOlqmsmKZ37RjycD58HuNJh5YscPMbjsUAxt7jPTqFf7QtE1nj0psQ1c4xwsvV3dYaYD/vbmW88pNDM84wZTSdlcF64GvlsmrpYGR6kHbmWUeNa0kWjaA7pba+2InuvJIYpe39EL1W3"
+          }
+        ],
+        "abgeschlossen": false,
+        "versatz": 0,
+        "sperren": [],
+        "erwartet": {
+          "punkte": 6,
+          "erste_zeit": 1784277065,
+          "letzte_zeit": 1784277090,
+          "herkunft": [
+            "konto"
+          ],
+          "schluss": false,
+          "vermerke": []
+        }
+      },
+      {
+        "name": "luecke-eng-vermerkt",
+        "art": "spur",
+        "client_ref": "w-20261111-0002",
+        "stuecke": [
+          {
+            "seq_from": 0,
+            "punkte": 3,
+            "stufe": 1,
+            "ts_von": 1784277065,
+            "huelle_b64": "AQRcfikhWDADbn/9+iQvuQcyxWkwIg0imTM7yTOBFq47BwzCdx1rXdYrJznanCCWsNGFFZb1Biy5x4lRakGdH7t4N2AVrWoCobgtYep3bNJ0DauMPWm3fmQ5VJVlfmR57hnAyP4ulfnxiOUBKd6Ql04SMcp3mh5BkqktM8pR8qxGIFbTA2mPMlJX2NUaceOtuh+3nVei43aze99k4cqQ4K7K"
+          },
+          {
+            "seq_from": 6,
+            "punkte": 2,
+            "stufe": 1,
+            "ts_von": 1784277095,
+            "huelle_b64": "AQQrW7P4+fAx8UbDnQU+GG1Y5AZ0lXG8qFYS2Jqt8P6PBYfVnjrUo8ncxUq9p/LlVIrun0STjLWpqkGI9ZFNYGBDG8pA40vO1RdX9yxXv/fpz7dBxxAMXV56boZoRfbOTtemZiPkx83lvgzbJK7McM3x9Jc7CHSUfIOzhjIUdc20sOMtIXzMIQBbgX+dRC9qjRw="
+          }
+        ],
+        "abgeschlossen": true,
+        "versatz": 0,
+        "sperren": [],
+        "erwartet": {
+          "punkte": 5,
+          "erste_zeit": 1784277065,
+          "letzte_zeit": 1784277100,
+          "herkunft": [
+            "konto"
+          ],
+          "schluss": true,
+          "vermerke": [
+            [
+              1784277076,
+              1784277094
+            ]
+          ]
+        }
+      },
+      {
+        "name": "luecke-schon-vermerkt",
+        "art": "spur",
+        "client_ref": "w-20261111-0002",
+        "stuecke": [
+          {
+            "seq_from": 0,
+            "punkte": 3,
+            "stufe": 1,
+            "ts_von": 1784277065,
+            "huelle_b64": "AQRcfikhWDADbn/9+iQvuQcyxWkwIg0imTM7yTOBFq47BwzCdx1rXdYrJznanCCWsNGFFZb1Biy5x4lRakGdH7t4N2AVrWoCobgtYep3bNJ0DauMPWm3fmQ5VJVlfmR57hnAyP4ulfnxiOUBKd6Ql04SMcp3mh5BkqktM8pR8qxGIFbTA2mPMlJX2NUaceOtuh+3nVei43aze99k4cqQ4K7K"
+          },
+          {
+            "seq_from": 6,
+            "punkte": 2,
+            "stufe": 1,
+            "ts_von": 1784277095,
+            "huelle_b64": "AQQrW7P4+fAx8UbDnQU+GG1Y5AZ0lXG8qFYS2Jqt8P6PBYfVnjrUo8ncxUq9p/LlVIrun0STjLWpqkGI9ZFNYGBDG8pA40vO1RdX9yxXv/fpz7dBxxAMXV56boZoRfbOTtemZiPkx83lvgzbJK7McM3x9Jc7CHSUfIOzhjIUdc20sOMtIXzMIQBbgX+dRC9qjRw="
+          }
+        ],
+        "abgeschlossen": true,
+        "versatz": 0,
+        "sperren": [
+          [
+            1784277080,
+            1784277090
+          ]
+        ],
+        "erwartet": {
+          "punkte": 5,
+          "erste_zeit": 1784277065,
+          "letzte_zeit": 1784277100,
+          "herkunft": [
+            "konto"
+          ],
+          "schluss": true,
+          "vermerke": []
+        }
+      },
+      {
+        "name": "gemischt-mit-geraet",
+        "art": "spur",
+        "client_ref": "w-20261111-0002",
+        "stuecke": [
+          {
+            "seq_from": 0,
+            "punkte": 3,
+            "stufe": 1,
+            "ts_von": 1784277065,
+            "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+          },
+          {
+            "seq_from": 3,
+            "punkte": 3,
+            "stufe": 1,
+            "ts_von": 1784277080,
+            "huelle_b64": "AQQizJwIOLAPoVMDpbdGIFSqrbJewz4/vi/iFkcaMznsf2edEfgYhy3iqSUeJxi6cYGQWDZdQdBpynOlqmsmKZ37RjycD58HuNJh5YscPMbjsUAxt7jPTqFf7QtE1nj0psQ1c4xwsvV3dYaYD/vbmW88pNDM84wZTSdlcF64GvlsmrpYGR6kHbmWUeNa0kWjaA7pba+2InuvJIYpe39EL1W3"
+          },
+          {
+            "seq_from": 6,
+            "punkte": 2,
+            "stufe": 1,
+            "ts_von": 1784277095,
+            "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+          }
+        ],
+        "abgeschlossen": true,
+        "versatz": 0,
+        "sperren": [],
+        "erwartet": {
+          "punkte": 8,
+          "erste_zeit": 1784277065,
+          "letzte_zeit": 1784277100,
+          "herkunft": [
+            "a499c9fb45a4f71c",
+            "konto"
+          ],
+          "schluss": true,
+          "vermerke": []
+        }
+      },
+      {
+        "name": "umdatiert-belegt",
+        "art": "spur",
+        "client_ref": "w-20261111-0002",
+        "stuecke": [
+          {
+            "seq_from": 0,
+            "punkte": 3,
+            "stufe": 1,
+            "ts_von": 1784363465,
+            "huelle_b64": "AQRcfikhWDADbn/9+iQvuQcyxWkwIg0imTM7yTOBFq47BwzCdx1rXdYrJznanCCWsNGFFZb1Biy5x4lRakGdH7t4N2AVrWoCobgtYep3bNJ0DauMPWm3fmQ5VJVlfmR57hnAyP4ulfnxiOUBKd6Ql04SMcp3mh5BkqktM8pR8qxGIFbTA2mPMlJX2NUaceOtuh+3nVei43aze99k4cqQ4K7K"
+          },
+          {
+            "seq_from": 3,
+            "punkte": 3,
+            "stufe": 1,
+            "ts_von": 1784363480,
+            "huelle_b64": "AQQizJwIOLAPoVMDpbdGIFSqrbJewz4/vi/iFkcaMznsf2edEfgYhy3iqSUeJxi6cYGQWDZdQdBpynOlqmsmKZ37RjycD58HuNJh5YscPMbjsUAxt7jPTqFf7QtE1nj0psQ1c4xwsvV3dYaYD/vbmW88pNDM84wZTSdlcF64GvlsmrpYGR6kHbmWUeNa0kWjaA7pba+2InuvJIYpe39EL1W3"
+          },
+          {
+            "seq_from": 6,
+            "punkte": 2,
+            "stufe": 1,
+            "ts_von": 1784363495,
+            "huelle_b64": "AQQrW7P4+fAx8UbDnQU+GG1Y5AZ0lXG8qFYS2Jqt8P6PBYfVnjrUo8ncxUq9p/LlVIrun0STjLWpqkGI9ZFNYGBDG8pA40vO1RdX9yxXv/fpz7dBxxAMXV56boZoRfbOTtemZiPkx83lvgzbJK7McM3x9Jc7CHSUfIOzhjIUdc20sOMtIXzMIQBbgX+dRC9qjRw="
+          }
+        ],
+        "abgeschlossen": true,
+        "versatz": 86400,
+        "sperren": [],
+        "erwartet": {
+          "punkte": 8,
+          "erste_zeit": 1784363465,
+          "letzte_zeit": 1784363500,
+          "herkunft": [
+            "konto"
+          ],
+          "schluss": true,
+          "vermerke": []
+        }
+      }
+    ],
+    "einsaetze": [
+      {
+        "name": "fassung-1",
+        "client_ref": "m-20261111-0004",
+        "started_ts": 1784277065,
+        "versatz": 0,
+        "z": 7,
+        "schluss": true,
+        "huelle_b64": "AQQa3bI9h7bmvHr9xzoS8I/dLr9RhxRk8o4uthxUN0Ugl+w6cG3AtyMDeKkGGOVnPQpkBg0TA/YXc+Wc8NEvEWMOMEb0ZboCMYMzQRjV3XPX3O3Gv8qrnIX0N+L5MZjTN6DbDtEs4ygZqB/aklSsH6gFHNndNEXMX975PRHLODYefnAvGnydPRdeyMYN7DyY7pgmA5Ylg34ZWmKThFmekCsyMqdx42lf3iFpqsIS4MgGHyW1SiHaQjW2N+D9HYyJC9s8IZk+aEVU+VFafzKP+C6xWtvjIkcMHi8/g03yagz+wTsBGuX3bBceQ9gRl4kJgHieYS4Qm/7v3qpoOoLHUMqvC3u9/BzPCqYpDQ/VLAmv3YSwtARt93lvogxlAgVdSeKq1lBrTLqYcq4BCY4V1SEj",
+        "erwartet": {
+          "z": 7,
+          "absender": "konto",
+          "uebernommen": 1786869065,
+          "stand": {
+            "o": 7,
+            "k": 1,
+            "f": 1
+          }
+        }
+      }
+    ]
+  },
   "kopplung": {
     "konto_hex": "0482a159c5275ab66f5e8040402858faa31bd98b6023c73fdd3efea64955ac34e07736aaa8b3e1179e92b7b8e3a5c63098c44813f834d231eff9a6e899ce0595e5",
     "spk_hex": "048993dd1e4c02f98d7bd665f217c2b1e3a536f92a9de0254a16218e9b0e8f96c556aa5f59dd96a133dce13f79f2016bff28cdf2b3cc6f35db8ca44d0cd024d3b0",
@@ -1851,9 +2113,31 @@
           "a": "a499c9fb45a4f71c"
         },
         "erwartet": {
-          "o": 5,
-          "a": "a499c9fb45a4f71c",
+          "o": 3,
+          "k": 1,
           "f": 1
+        }
+      },
+      {
+        "name": "konto-unter-geraet-mit-vermerk",
+        "x": {
+          "o": 3,
+          "k": 1
+        },
+        "y": {
+          "o": 9,
+          "a": "a499c9fb45a4f71c",
+          "u": [
+            [
+              5,
+              "5eb5678b49bd5225",
+              1784284265
+            ]
+          ]
+        },
+        "erwartet": {
+          "o": 3,
+          "k": 1
         }
       },
       {

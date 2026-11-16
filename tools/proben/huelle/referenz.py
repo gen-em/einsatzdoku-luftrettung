@@ -314,8 +314,12 @@ einen bewusst gesenkten Stand still wieder an. Die Regel, in dieser Folge:
     1. Führt genau EINE Seite den Stand der anderen als verworfen (ein
        Vermerk für deren `a` mit z_v ≥ deren `o`), gewinnt sie mit `o`
        und `a`.
-    2. Sonst gewinnt der höhere `o`; bei Gleichstand `k`, dann die Seite
-       mit `a`, dann die kleinere SID.
+    2. Sonst gewinnt die Seite mit `k` — auch gegen einen höheren `o`
+       (E-KA-94): `k` HAFTET wie `f`. Ein Gerätestand, den nur der andere
+       Browser kannte, kam nach dem Konto und bleibt hart abgewiesen; mit
+       dem höheren `o` am Kontostand wäre auch die eigene Hülle des Kontos
+       zurückgelegt. Haben beide oder keine `k`, gewinnt der höhere `o`;
+       bei Gleichstand die Seite mit `a`, dann die kleinere SID.
     3. `f`: einer hat es. `u`: beide vereinigt, je Absender der höhere z_v
        (bei Gleichstand das spätere t), ohne den Absender des Siegers; mit
        `k` am Sieger entfallen `a` und `u`.
@@ -983,6 +987,98 @@ def einsatz_lesen(leser: Leser, ref: str, huelle: bytes, started_ts: int, *, ver
     return d, absender
 
 
+# ------------------------------------------- Übernahme der Fassung 1 (06e)
+
+def spur_uebernehmen(leser: Leser, art: str, ref: str, stuecke: list[dict], *, jetzt: int,
+                     versatz: int = 0, sperren: tuple = (),
+                     abgeschlossen: bool = False) -> tuple[list[dict], list[tuple[int, int]]]:
+    """Eine Spur mit Stücken der Fassung 1 als KONTO neu verschließen (E-KA-97,
+    -95). Nur der Anhebelauf ruft das; er ist der letzte Leser der Fassung 1.
+
+    Jedes Stück der Fassung 1 wird geöffnet und als Fassung 2 vom Konto
+    verschlossen, mit Merker UEBERNOMMEN und `jetzt` — derselbe Platz,
+    dieselbe Nutzlast, `ts_von` der Hülle = Klartext − `versatz`. Stücke der
+    Fassung 2 bleiben, wie sie sind. Ist die Aufzeichnung `abgeschlossen` und
+    trägt kein übernommenes Stück am Ende schon SCHLUSS, bekommt es das
+    Stück, das bis ans Ende der Deckung reicht (Fassung 1 kannte den Merker
+    nicht). Jede LÜCKE in der Deckung, die kein belegter Löschvermerk
+    erklärt, bekommt einen ENGEN Vermerk (t_vor + 1, t_nach − 1) in der Zeit
+    der Hülle: Er erklärt die Lücke und blendet keinen Punkt aus. Ist sie dafür
+    zu eng (t_nach − t_vor < 2), wirft das `luecke` — die Spur bleibt, wie sie
+    war, und wird gemeldet.
+
+    Gibt die neuen Stücke (Klartextfelder wie zuvor, `huelle` neu) und die
+    neuen Vermerke zurück; die Spur liest danach `spur_lesen()` mit
+    `verlangt2`, `sperren` + Vermerke."""
+    offen = []
+    for st in stuecke:
+        stufe = st.get("stufe", 1)
+        platz = (platz_gepackt(st["seq_from"], st["punkte"], stufe, st["n_original"])
+                 if stufe >= 2 else f"{st['seq_from']}:{st['punkte']}")
+        klar, absender = leser.huelle(st["huelle"], art, ref, platz)
+        alt = absender is None
+        kopf = ({"ts_von": st["ts_von"] - versatz, "merker": 0, "nutzlast": klar} if alt
+                else spur_innen2_lesen(klar))
+        if stufe >= 2:
+            zeiten = ([p[3] for p in gepackt_lesen(kopf["nutzlast"], st["punkte"], kopf["ts_von"])]
+                      if st["punkte"] else [])
+            bis = st["seq_from"] + st["n_original"]
+        else:
+            if len(kopf["nutzlast"]) != 14 * st["punkte"]:
+                raise HuelleFehler("innen")
+            zeiten = [kopf["ts_von"] + struct.unpack(">I", kopf["nutzlast"][14 * i + 10:14 * i + 14])[0]
+                      for i in range(st["punkte"])]
+            bis = st["seq_from"] + st["punkte"]
+        offen.append({"st": st, "platz": platz, "klar": klar, "alt": alt, "ts": kopf["ts_von"],
+                      "von": st["seq_from"], "bis": bis, "schluss": bool(kopf["merker"] & M_SCHLUSS),
+                      "t_erst": min(zeiten, default=None), "t_letzt": max(zeiten, default=None)})
+    folge = sorted(offen, key=lambda o: (o["von"], -o["bis"]))
+    vermerke: list[tuple[int, int]] = []
+    ende, t_ende = 0, None
+    for o in folge:
+        if o["von"] > ende and not _ueberdeckt(tuple(sperren) + tuple(vermerke), t_ende, o["t_erst"]):
+            if t_ende is None or o["t_erst"] is None or o["t_erst"] - t_ende < 2:
+                raise HuelleFehler("luecke")
+            vermerke.append((t_ende + 1, o["t_erst"] - 1))
+        if o["bis"] > ende:
+            ende = o["bis"]
+            t_ende = o["t_letzt"] if o["t_letzt"] is not None else t_ende
+    schluss_fehlt = abgeschlossen and not any(o["schluss"] and o["bis"] == ende for o in offen)
+    neu = []
+    for o in offen:
+        if not o["alt"]:
+            neu.append(o["st"])
+            continue
+        schluss = schluss_fehlt and o["bis"] == ende
+        schluss_fehlt = schluss_fehlt and not schluss
+        innen = spur_innen2(o["ts"], o["klar"], schluss=schluss, uebernommen=jetzt)
+        h = verschliessen2(innen, leser.pub, leser.priv, art, ref, o["platz"])
+        neu.append(dict({k: w for k, w in o["st"].items() if k not in ("huelle", "huelle_b64")}, huelle=h))
+    return neu, vermerke
+
+
+def einsatz_uebernehmen(leser: Leser, ref: str, huelle: bytes, started_ts: int, *, z: int,
+                        jetzt: int, schluss: bool, versatz: int = 0) -> bytes:
+    """Eine Einsatzhülle der Fassung 1 als KONTO neu verschließen (E-KA-97).
+    `z` ist der nächste Zähler des Kontos, `schluss` das Klartextkennzeichen
+    des abgeschlossenen Einsatzes (Fassung 1 kannte beides nicht), `start` =
+    Klartextbeginn − `versatz`. Die Herkunft sagt, dass das Konto übernommen
+    hat: `{"von": [], "uebernommen": jetzt}`. Wirft `innen` für alles, was
+    keine Hülle der Fassung 1 ist."""
+    klar, absender = leser.huelle(huelle, "einsatz", ref, "")
+    if absender is not None:
+        raise HuelleFehler("innen")
+    try:
+        d = json.loads(klar.decode("utf-8"))
+    except ValueError as f:
+        raise HuelleFehler("innen") from f
+    if not isinstance(d, dict) or d.get("fassung") != 1:
+        raise HuelleFehler("innen")
+    innen = einsatz_innen2(z, started_ts - versatz, schluss, d.get("phasen") or [], d.get("rea") or [],
+                           {"von": [], "uebernommen": jetzt})
+    return verschliessen2(innen, leser.pub, leser.priv, "einsatz", ref, "")
+
+
 OFFEN_NACH_SCHLUSS = "offen-nach-schluss"
 UHRZEIT_PRUEFEN = "uhrzeit-pruefen"           # der Grund von `HuelleHinweis`
 STAND_UEBERNOMMEN = "stand-uebernommen"
@@ -1105,11 +1201,11 @@ def stand_zusammenfuehren(x: dict | None, y: dict | None) -> dict:
     x, y = x or {}, y or {}
 
     def geht_vor(s: dict, t: dict) -> bool:
+        if bool(s.get("k")) != bool(t.get("k")):
+            return bool(s.get("k"))                   # `k` haftet (E-KA-94)
         so, to = s.get("o") or 0, t.get("o") or 0
         if so != to:
             return so > to
-        if bool(s.get("k")) != bool(t.get("k")):
-            return bool(s.get("k"))
         sa = "" if s.get("k") else s.get("a") or ""
         ta = "" if t.get("k") else t.get("a") or ""
         if bool(sa) != bool(ta):
@@ -1433,6 +1529,38 @@ def vektoren2_bauen() -> dict:
     alt = [stueck("f1-a", 0, 3, fassung=1), stueck("f1-b", 3, 3, fassung=1), stueck("f1-c", 6, 2, fassung=1)]
     folge("fassung-1-geduldet", alt, gut(8, T0, T0 + 35, ["fassung-1"], schluss=False, fassung1=True))
     folge("fassung-1-wo-2-verlangt", alt, "ohne-herkunft", verlangt2=True)
+
+    # --- Übernahme der Fassung 1 durch das Konto (06e, E-KA-95, -97): Die
+    # Hüllen entstehen bei jedem Lauf neu (frischer EPK); verglichen wird,
+    # was danach mit `verlangt2` gelesen wird, und die Vermerke.
+    T_UEB = T0 + 30 * 86400
+    ueb = {"jetzt": T_UEB, "spuren": [], "einsaetze": []}
+
+    def uebernahme(name, stuecke, erwartet, *, abgeschlossen=True, versatz=0, sperren=()):
+        f = {"name": name, "art": "spur", "client_ref": REF_A, "stuecke": stuecke,
+             "abgeschlossen": abgeschlossen, "versatz": versatz, "sperren": [list(x) for x in sperren]}
+        f.update({"grund": erwartet} if isinstance(erwartet, str) else {"erwartet": erwartet})
+        ueb["spuren"].append(f)
+
+    def gelesen(n, erste, letzte, herkunft, vermerke, schluss=True):
+        return {"punkte": n, "erste_zeit": erste, "letzte_zeit": letzte, "herkunft": herkunft,
+                "schluss": schluss, "vermerke": [list(x) for x in vermerke]}
+
+    uebernahme("ganz", alt, gelesen(8, T0, T0 + 35, [KONTO], []))
+    uebernahme("laeuft-noch", alt[:2], gelesen(6, T0, T0 + 25, [KONTO], [], schluss=False),
+               abgeschlossen=False)
+    uebernahme("luecke-eng-vermerkt", [alt[0], alt[2]],
+               gelesen(5, T0, T0 + 35, [KONTO], [(T0 + 11, T0 + 29)]))
+    uebernahme("luecke-schon-vermerkt", [alt[0], alt[2]],
+               gelesen(5, T0, T0 + 35, [KONTO], []), sperren=[(T0 + 15, T0 + 25)])
+    uebernahme("gemischt-mit-geraet", [A, alt[1], C], gelesen(8, T0, T0 + 35, sorted([KONTO, uhr]), []))
+    uebernahme("umdatiert-belegt", [verschoben(x, 86400) for x in alt],
+               gelesen(8, T0 + 86400, T0 + 86435, [KONTO], []), versatz=86400)
+    ueb["einsaetze"].append({"name": "fassung-1", "client_ref": "m-20261111-0004", "started_ts": T0,
+                             "versatz": 0, "z": 7, "schluss": True, "huelle_b64": None,
+                             "erwartet": {"z": 7, "absender": KONTO, "uebernommen": T_UEB,
+                                          "stand": {"o": 7, "k": 1, "f": 1}}})
+    aus["uebernahme"] = ueb
     folge("gepackt-vom-konto", [P], gut(8, T0, T0 + 35, [KONTO]), stand=(8, 2))
     folge("zurueckgelegt-auf-geraetestuecke", [A, B, C], "zurueckgelegt", stand=(8, 2))
     folge("zurueckgelegt-kuerzer", [A, B], "zurueckgelegt", abgeschlossen=False, stand=(8, 1))
@@ -1446,6 +1574,8 @@ def vektoren2_bauen() -> dict:
     eu = b64(_zu("e-uhr", "uhr", konto, "einsatz", REF_E, "", einsatz_innen2(3, T0 + 60, True, PHASEN2, REA2)))
     e1 = b64(_zu1("e-fassung1", kpub, "einsatz", REF_E, "",
                   json.dumps({"fassung": 1, "phasen": PHASEN2, "rea": REA2}, separators=(",", ":")).encode()))
+
+    aus["uebernahme"]["einsaetze"][0]["huelle_b64"] = e1
 
     def einsatz(name, huelle_b64, erwartet, *, started_ts=T0, versatz=0, stand=None, ref=REF_E,
                 buch="standard"):
@@ -1720,7 +1850,8 @@ def vektoren2_bauen() -> dict:
     fuehre("rueckkehr-gegen-die-erste-bestaetigung", nach_best,
            {"o": z_handy, "a": H, "f": 1, "u": [[z_nachgang, U, t_best2]]})
     fuehre("gleichstand-konto-gewinnt", {"o": 4, "a": U}, {"o": 4, "k": 1})
-    fuehre("konto-unter-geraet", {"o": 3, "k": 1, "f": 1}, {"o": 5, "a": U})
+    fuehre("konto-unter-geraet", {"o": 3, "k": 1, "f": 1}, {"o": 5, "a": U})   # k haftet: o 3
+    fuehre("konto-unter-geraet-mit-vermerk", {"o": 3, "k": 1}, {"o": 9, "a": U, "u": [[5, H, t_best]]})
     fuehre("konto-loescht-vermerke", {"o": 9, "k": 1}, {"o": 5, "a": U, "u": [[9, H, t_best]]})
     fuehre("altblatt-und-blatt-mit-a", {"o": z_uhr, "f": 1}, {"o": z_uhr, "a": U})
     fuehre("gleichstand-zwei-geraete-kleinere-sid", {"o": z_uhr, "a": U}, {"o": z_uhr, "a": H})
@@ -1785,6 +1916,45 @@ def pruefen2(v: dict) -> list[str]:
         except HuelleFehler as e:
             if str(e) != f.get("grund"):
                 fehler.append(f"2/Folge {f['name']}: Grund {e}, erwartet {f.get('grund', 'geht auf')}")
+    ueb = v.get("uebernahme") or {}
+    for f in ueb.get("spuren", []):
+        stuecke = [dict(s, huelle=base64.b64decode(s["huelle_b64"])) for s in f["stuecke"]]
+        sperren = tuple(map(tuple, f["sperren"]))
+        try:
+            neu, verm = spur_uebernehmen(_leser(v), f["art"], f["client_ref"], stuecke, jetzt=ueb["jetzt"],
+                                         versatz=f["versatz"], sperren=sperren,
+                                         abgeschlossen=f["abgeschlossen"])
+            pkt, bef = spur_lesen(_leser(v, verlangt2=True), f["art"], f["client_ref"], neu,
+                                  versatz=f["versatz"], sperren=sperren + tuple(verm),
+                                  abgeschlossen=f["abgeschlossen"])
+            ist = {"punkte": len(pkt), "erste_zeit": pkt[0][4], "letzte_zeit": pkt[-1][4],
+                   "herkunft": bef["herkunft"], "schluss": bef["schluss"], "vermerke": [list(x) for x in verm]}
+            for alt_, n_ in zip(stuecke, neu):
+                if alt_["huelle"][:1] == bytes([FASSUNG]):
+                    klar, wer = _leser(v, verlangt2=True).huelle(n_["huelle"], f["art"], f["client_ref"],
+                                                                 f"{n_['seq_from']}:{n_['punkte']}")
+                    if wer != KONTO or spur_innen2_lesen(klar)["uebernommen"] != ueb["jetzt"]:
+                        fehler.append(f"2/Übernahme {f['name']}: Stück {n_['seq_from']} ohne Kennzeichen")
+            if "grund" in f:
+                fehler.append(f"2/Übernahme {f['name']}: ging auf, erwartet {f['grund']}")
+            elif ist != f["erwartet"]:
+                fehler.append(f"2/Übernahme {f['name']}: {ist}, erwartet {f['erwartet']}")
+        except HuelleFehler as e:
+            if str(e) != f.get("grund"):
+                fehler.append(f"2/Übernahme {f['name']}: Grund {e}, erwartet {f.get('grund', 'geht auf')}")
+    for f in ueb.get("einsaetze", []):
+        try:
+            h = einsatz_uebernehmen(_leser(v), f["client_ref"], base64.b64decode(f["huelle_b64"]),
+                                    f["started_ts"], z=f["z"], jetzt=ueb["jetzt"], schluss=f["schluss"],
+                                    versatz=f["versatz"])
+            d, wer = einsatz_lesen(_leser(v, verlangt2=True), f["client_ref"], h, f["started_ts"],
+                                   versatz=f["versatz"])
+            ist = {"z": d["z"], "absender": wer, "uebernommen": (d.get("herkunft") or {}).get("uebernommen"),
+                   "stand": stand_nach_abnahme(d, wer, None)}
+            if ist != f["erwartet"]:
+                fehler.append(f"2/Übernahme Einsatz {f['name']}: {ist}, erwartet {f['erwartet']}")
+        except HuelleFehler as e:
+            fehler.append(f"2/Übernahme Einsatz {f['name']}: Grund {e}")
     for f in v["einsaetze"]:
         try:
             d, wer = einsatz_lesen(_leser(v, f["buch"]), f["client_ref"], base64.b64decode(f["huelle_b64"]),
@@ -1920,7 +2090,9 @@ def zahlen2(v: dict) -> str:
            + sum("grund" in f for f in rueck) - hinweise)
     gut = (len(v["faelle"]) + len(v["gepackt"]) + sum("grund" not in f for f in v["folgen"])
            + sum("grund" not in f for f in v["einsaetze"]) + 1 + (1 if v.get("zaehler") else 0)
-           + sum("grund" not in f for f in rueck) + (1 if rw.get("zusammenfuehren") else 0))
+           + sum("grund" not in f for f in rueck) + (1 if rw.get("zusammenfuehren") else 0)
+           + len((v.get("uebernahme") or {}).get("spuren", []))
+           + len((v.get("uebernahme") or {}).get("einsaetze", [])))
     # + 1 die Kopplung, + 1 die Zählerfolge (E-KA-69), + 1 das Zusammenführen
     # (KA-09) — je als EIN Fall. Ein Hinweis ist weder geöffnet noch
     # abgewiesen und steht für sich.
