@@ -637,6 +637,26 @@ Bericht kam in einen Folge-Commit über denselben Baum (F-SR-14). Berührt ist d
 beim Merge von PR #80 in PK-05 (`5671d24`). Wer doch „Update branch" gedrückt hat, holt den Commit
 herunter und fährt ab Schritt 2 mit einem eigenen Commit darüber.
 
+### 5.3a Vor dem letzten Prüfstand — erst `main` hereinholen
+
+*Seit dem 16.11.2026, Anordnung der BetreiberIn nach PR #190.* Der volle
+Prüfstand, dessen Bericht in den PR geht, misst einen Baum; holt der Zweig
+`main` erst danach herein, ist der Bericht verbraucht, und ein zweiter Lauf
+über Stunden folgt (PR #190: KG-09/10 kam während des Laufs auf `main`, der
+PR hatte gleich nach dem Öffnen einen Konflikt). Deshalb gilt, **in dieser
+Reihenfolge**:
+
+1. **Vor dem Start des Prüfstands:** `git fetch origin main`. Liegt `main`
+   vor dem Zweig (`git log --oneline HEAD..origin/main` nicht leer), erst
+   nach 5.3 Schritt 1 mergen, Konflikte lösen, dann messen — der Bericht
+   gehört dann in den Merge-Commit (5.3 Schritt 3).
+2. **Vor dem Öffnen des PR:** noch einmal `git fetch origin main`. Ist
+   `main` während des Laufs weitergegangen, den PR **nicht** öffnen, sondern
+   der BetreiberIn sagen, dass ein Merge und ein weiterer Lauf nötig sind.
+
+Ein PR, der mit Konflikt aufgeht, startet auf GitHub Läufe über einen Baum,
+der so nie gemergt wird.
+
 ### 5.4 Der ererbte Bericht
 
 *Seit PU-10 (E-PU-13, -18).* Nach einer Berichtigung maß ein Zweig in

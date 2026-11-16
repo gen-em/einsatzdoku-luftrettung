@@ -672,6 +672,12 @@ Satz zur Sache — bei einem Konzept beginnt sie mit dem Paket (Abschnitt 7).
 R62) — das deployt nichts, solange es nicht `main` ist, und andere Instanzen
 sehen Stand und laufendes Paket.
 
+**Vor dem letzten Prüfstand und vor dem Öffnen eines PR wird `main`
+hereingeholt** (BetreiberIn, 16.11.2026; `docs/Pruefablauf.md` 5.3a): erst
+`git fetch origin main`, liegt `main` vorn, mergen und Konflikte lösen,
+dann messen; vor dem Öffnen noch einmal nachsehen. Ein PR, der mit Konflikt
+aufgeht, kostet einen zweiten vollen Lauf.
+
 **Eine Instanz mergt nie.** Sie öffnet am Ende der Phase einen Pull Request;
 die Betreiberin mergt ihn. Auf `main` kommt eine Phase einmal, am Ende, nach
 ausdrücklicher Bestätigung — und ein Push dorthin ist seit dem 21.09.2026

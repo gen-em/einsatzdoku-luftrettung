@@ -187,7 +187,20 @@ Abschnitt 2.2 gibt es erst im laufenden Dienst.
 > Verschlüsselung vor dem ersten Senden gegen einen festen Prüfwert gerechnet,
 > und er stimmte nicht. Sie sendet dann nichts, weil niemand ihre Daten
 > öffnen könnte. Neu koppeln hilft hier nicht — bitte melden, mit
-> Uhrenmodell und Firmware.
+> Uhrenmodell und Firmware. Seit Uhr 5.1.0 steht dieselbe Meldung, wenn
+> der Selbsttest der neuen Verschlüsselung mit Herkunftsnachweis scheitert;
+> bis dahin sendete die Uhr dann still im alten Format.
+>
+> „**Neu koppeln**" mit „**Koppeln: START halten**" darunter *(seit
+> Uhr 5.1.0)* heißt: Die Uhr ist mit Herkunftsnachweis gekoppelt, hat aber
+> ihr Geräteschlüsselpaar verloren — etwa weil ihr Speicher verloren ging.
+> Ohne es kann sie nicht belegen, dass die Daten von ihr kommen, und sendet
+> deshalb nichts; sie **behält alles**. **Lang START** (Venu: *Action
+> halten*) fragt „Trennen?", auch
+> wenn noch Pakete warten: Sie bleiben dann an dein Konto gebunden und
+> gehen nach dem Neukoppeln nur dorthin. Danach koppelst du mit einem
+> zweiten Halten neu. Während eines Dienstes geht das nicht — erst den
+> Dienst beenden.
 
 ### 2.2 Die Oberflächen
 
