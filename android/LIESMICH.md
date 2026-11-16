@@ -222,7 +222,10 @@ Senden), `./gradlew --offline build` im Container, 15.11.2026 —
 `BUILD SUCCESSFUL in 4m 35s`:** Lint **0** Fehler (Handy 6 Warnungen),
 Prüffälle je Bauart Handy **398** (neu 5 in `SenderTest`, 4 in
 `KopplungVergleichTest`), 15 übersprungen, Uhr **75**, **0** Fehlschläge;
-Bilderlauf neu `bereit-herkunft-fehlt` (M-KA-03 F).
+Bilderlauf neu `bereit-herkunft-fehlt` (M-KA-03 F). **Nachgezogen mit
+Backlog Nr. 566** (16.11.2026): Puffer-Schema **4** (Spalte
+`paket.aenderung`), Prüffälle Handy **402**, 15 übersprungen, Uhr **75**,
+**0** Fehlschläge.
 
 **Stand Android 0.25.0 (Schritt 28, KA-06f: Geräteschlüssel im Keystore,
 Zähler am Inhalt, `minSdk` 31), `./gradlew --offline build` im Container,

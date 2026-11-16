@@ -41,6 +41,12 @@ Schritt 28 (KA), Pakete KA-08 bis KA-14.
   Herkunftsnachweis, steht eine Meldung an der Karte. Weicht nur die Uhr
   eines zweiten Geräts ab, lässt sich der Stand bewusst übernehmen; ein
   Stand, den dasselbe Gerät schon überholt hatte, bleibt verborgen.
+- **Web — „Geräte neu verbinden", wenn die Geräteliste nicht mehr aufgeht.**
+  Lag auf dem Server eine verschlossene Geräteliste, die der Browser nicht
+  öffnen konnte, ließ sich kein Gerät mehr koppeln, und niemand sah, warum.
+  Jetzt übernimmt der Browser nichts vom Server: Kennt er die Liste selbst,
+  legt er seine Fassung still zurück; sonst fängt er leer an und bittet auf
+  Startseite und Geräteseite, die Geräte einmal neu zu koppeln.
 
 ## [Android 0.26.0] — unveröffentlicht
 
@@ -55,6 +61,14 @@ Schritt 28 (KA), Paket KA-15.
   Jetzt bleiben die Daten im Handy, die Startseite sagt, was zu tun ist, und
   „Neu koppeln" ist auch mit Rückstand erlaubt; der Rückstand bleibt dem
   Konto zugeordnet.
+
+### Behoben
+
+- **Android — eine Phase, die während des Sendens dazukam, wartete.** Die
+  Antwort des Servers bestätigte das ganze Paket, auch eine Phase, die erst
+  während der Anfrage gespeichert worden war; sie ging erst mit der nächsten
+  Änderung hinaus, eine späte letzte Phase nie. Jetzt gilt eine Bestätigung
+  nur für den Stand, der gesendet wurde.
 
 ## [Web 24.19.0] — unveröffentlicht
 

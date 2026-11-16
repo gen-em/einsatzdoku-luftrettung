@@ -82,6 +82,36 @@
         const g = geraete[sid];
         if (g.bis == null && !da.has(g.geraet)) { await buch.geraetAustragen(sid); }
       }
+      /* „GERÄTE NEU VERBINDEN“ (Backlog Nr. 568, E-KA-92, M-KA-04 A): ein
+       * gekoppeltes Gerät mit Schlüssel, das nicht (mehr) im Gerätebuch
+       * dieses Browsers steht — nach einem neu angelegten Buch, oder in einem
+       * Browser, der die Kopplung nie gesehen hat. Seine Daten öffnen sich
+       * hier erst nach einer neuen Kopplung. Steht keines aus, fällt der
+       * Merker der Startseite. */
+      const imBuch = new Set(Object.values(geraete).filter(g => g.bis == null).map(g => g.geraet));
+      const fehlen = JSON.parse(el.dataset.mitSchluessel || '[]').filter(id => !imBuch.has(id));
+      /* Der Platz entsteht hier, vor der ersten Gerätekarte — die Seite hat
+       * keinen eigenen dafür (nur im Ausnahmefall gebraucht). */
+      const erste = document.getElementById('k-garmin') || document.getElementById('k-android');
+      let platz = document.getElementById('geraete-neu-verbinden');
+      if (!platz && erste && fehlen.length) {
+        platz = document.createElement('div');
+        platz.id = 'geraete-neu-verbinden';
+        erste.parentNode.insertBefore(platz, erste);
+      }
+      if (fehlen.length && platz) {
+        platz.innerHTML = EdHtml.meldung('warn', 'Deine Uhr und dein Handy müssen einmal neu gekoppelt '
+          + 'werden, damit dieser Browser ihre Daten zuordnen kann. Trenne jedes Gerät und kopple es neu; '
+          + 'was es danach sendet, erscheint wieder mit Karte. Ortsdaten, die vorher kamen, lassen sich '
+          + 'nicht mehr öffnen.', { auftakt: 'Geräte neu verbinden.' });
+        platz.hidden = false;
+        for (const id of fehlen) {
+          const k = document.querySelector('.zeile[data-geraet="' + CSS.escape(id) + '"] .zeile-klein');
+          if (k) { k.textContent = 'neu verbinden · ' + k.textContent; }
+        }
+      } else if (!fehlen.length) {
+        await EdStandbuch.neuVerbundenQuittieren(ck);
+      }
     } catch (e) {
       /* still — beim nächsten Laden wieder */
     }

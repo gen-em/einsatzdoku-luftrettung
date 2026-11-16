@@ -110,6 +110,9 @@ const EdStandbuch = (() => {
   const STAND_INFO = te.encode('nadoku-stand-1');
   const BLAETTER = 16;
   const BUCH = 'buch';
+  /* Merker „Geräte neu verbinden“ je Konto (localStorage, nur Komfort:
+   * fehlt er, sagt es die Geräteseite trotzdem — sie rechnet selbst). */
+  const NEU_VERBINDEN = 'nadoku-geraete-neu-verbinden:';
   /* Eine Änderung, die nichts ändert (`naechste()`): kein Schreiben. */
   const UNVERAENDERT = Symbol('unveraendert');
   /* Sammeln beim Lesen (`fortschreibenGesammelt()`), in Millisekunden. */
@@ -569,6 +572,16 @@ const EdStandbuch = (() => {
           if (!srv) { throw fehler('blatt-version'); }
           await uebernehmen(wer, srv);
         } catch (e) {
+          /* EIN GERÄTEBUCH, DAS NICHT AUFGEHT, REPARIERT DIESER BROWSER SELBST
+           * (Backlog Nr. 568, E-KA-92) — sonst sperrte es jede Kopplung. */
+          if (wer === BUCH && buchUnlesbar(e)) {
+            try {
+              const art = await buchReparieren();
+              befunde.push({ wer: wer, grund: art === 'neu' ? 'buch-neu' : 'buch-zurueckgeschrieben',
+                             hier: hier.version, dort: dort });
+              continue;
+            } catch (e2) { /* fällt unten als Befund durch */ }
+          }
           befunde.push({ wer: wer, grund: e.grund || 'transport', hier: hier.version, dort: dort });
         }
       }
@@ -648,7 +661,12 @@ const EdStandbuch = (() => {
           return n.version;
         }
         if (!a.text) { throw fehler('blatt-version'); }
-        await uebernehmen(wer, { version: a.version, text: a.text });
+        try {
+          await uebernehmen(wer, { version: a.version, text: a.text });
+        } catch (e) {
+          if (wer !== BUCH || !buchUnlesbar(e)) { throw e; }
+          await buchReparieren();                 // Nr. 568: dann noch einmal
+        }
       }
       const e = fehler('konflikt');
       e.wer = wer;
@@ -856,6 +874,40 @@ const EdStandbuch = (() => {
 
     /* ---- Das Gerätebuch ------------------------------------------------ */
 
+    /** Geht das Buch des Servers nicht auf (und nicht nur, weil es älter ist
+     *  oder das Netz fehlt)? Dann ist es beschädigt oder ersetzt. */
+    function buchUnlesbar(e) {
+      const g = e && e.grund;
+      return !!g && !['transport', 'buch-zurueckgelegt', 'blatt-zurueckgelegt', 'blatt-version',
+                      'konflikt'].includes(g);
+    }
+
+    /**
+     * DAS GERÄTEBUCH REPARIEREN (Backlog Nr. 568, E-KA-92, Mockup M-KA-04).
+     * Hat dieser Browser eine eigene Fassung, legt er sie mit einer Version
+     * über der des Servers zurück ('zurueck') — still. Hat er keine, legt er
+     * ein neues, LEERES Buch an ('neu'): Nichts kommt vom Server, denn das
+     * Buch ist gerade der Schutz dagegen, dass jemand, der den Server
+     * beschreibt, einen Geräteschlüssel unterschiebt. Dann müssen die
+     * Geräte neu gekoppelt werden; die Geräteseite sagt es („Geräte neu
+     * verbinden“), und ein Merker in der Ablage dieses Browsers lässt es die
+     * Startseite sagen, bis die Geräteseite keinen Rückstand mehr sieht.
+     */
+    async function buchReparieren() {
+      const hier = await lade(BUCH);
+      const s = await transport.stand();
+      const dort = s.buch || 0;
+      const neu = hier.version === 0;
+      const d = neu ? leer(BUCH) : hier.d;
+      const version = Math.max(dort, hier.version) + 1;
+      const a = await transport.ablegen(BUCH, { version_alt: dort, version: version,
+                                                text: await versiegeln(BUCH, version, d) });
+      if (!a.ok) { throw fehler('konflikt'); }
+      await merke(BUCH, { version: version, d: d, offen: false });
+      if (neu) { try { localStorage.setItem(NEU_VERBINDEN + o.konto, String(jetzt())); } catch (e) { /* egal */ } }
+      return neu ? 'neu' : 'zurueck';
+    }
+
     /** Die bestätigten Geräte, in der Form für `EdHuelle2.leser()`. */
     async function geraete() {
       const z = await lade(BUCH);
@@ -913,6 +965,7 @@ const EdStandbuch = (() => {
     }
 
     return { abgleichen, eintrag, blattZu, patLesen: patLesenHier, naechsterZaehler,
+             buchReparieren,
              fortschreiben, fortschreibenViele, fortschreibenGesammelt, festschreiben,
              vormerken, vormerkenViele, nachtragen, schliessen, alleZu, blattZuNr,
              /* 409 `blatt` aus einer Sammelanfrage: das Blatt des Servers übernehmen */
@@ -961,6 +1014,15 @@ const EdStandbuch = (() => {
    * die Befunde stehen in `buch.befunde` (der Knopf „zurückschreiben" kommt
    * mit E-KA-50 und braucht ein Mockup).
    */
+  /** Steht für dieses Konto „Geräte neu verbinden“ an (Merker aus
+   *  `buchReparieren()`)? Und: der Merker fällt, wenn nichts mehr fehlt. */
+  async function neuVerbinden(ck) {
+    try { return localStorage.getItem(NEU_VERBINDEN + await kontoKennung(ck)) !== null; } catch (e) { return false; }
+  }
+  async function neuVerbundenQuittieren(ck) {
+    try { localStorage.removeItem(NEU_VERBINDEN + await kontoKennung(ck)); } catch (e) { /* egal */ }
+  }
+
   async function seitenbuch(ck) {
     const konto = await kontoKennung(ck);
     if (!buecher.has(konto)) {
@@ -1072,6 +1134,6 @@ const EdStandbuch = (() => {
            geraetebuchBauen, geraetebuchOeffnen,
            oeffnen, ablage, speicherTransport, apiTransport,
            /* für die Verbraucher (KA-06b-3) */
-           seitenbuch, kontoKennung, patOeffnen, patVerschliessenViele, patSchreibenViele,
+           seitenbuch, kontoKennung, neuVerbinden, neuVerbundenQuittieren, patOeffnen, patVerschliessenViele, patSchreibenViele,
            BLAETTER, BUCH };
 })();

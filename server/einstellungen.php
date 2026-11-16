@@ -5715,6 +5715,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           <input type="hidden" name="id" value="<?= $did ?>">
         </form>
         <?php ui_zeile([
+            'attr'  => ' data-geraet="' . e((string)$d['device_id']) . '"',
             'text'  => (string)($d['label'] ?? '') !== '' ? (string)$d['label'] : (string)$d['device_id'],
             'klein' => $klein,
             /* ZWEI PLAKETTEN, BEIDE NUR IM AUSNAHMEFALL: „neu"
@@ -5796,8 +5797,20 @@ ui_seite_start(['titel' => 'Einstellungen',
              Bedienprobe `ka06d-kopplung-buch`). */
           $gKrypto = pair_herkunft_bereit(db()) && $kpGer !== 'fehlt'; ?>
     <?php if ($gKrypto): ?>
+      <?php /* Nr. 568: welche gekoppelten Geräte einen Geräteschlüssel haben
+               (`herkunft` 1) — nur die gehören ins Gerätebuch, und nur
+               sie müssen nach einem neu angelegten Buch neu gekoppelt werden.
+               Vor `update.php` fehlt die Spalte; dann ist die Liste leer. */
+            $gMitSchluessel = [];
+            try {
+                $stH = db()->prepare('SELECT device_id FROM devices WHERE user_id = ? AND herkunft = 1
+                                      AND spk IS NOT NULL AND active = 1');
+                $stH->execute([$userId]);
+                $gMitSchluessel = $stH->fetchAll(PDO::FETCH_COLUMN);
+            } catch (PDOException $ex) { $gMitSchluessel = []; } ?>
       <div hidden id="geraetebuch-abgleich"
-           data-geraete="<?= e(json_encode(array_column($devices, 'device_id'))) ?>"></div>
+           data-geraete="<?= e(json_encode(array_column($devices, 'device_id'))) ?>"
+           data-mit-schluessel="<?= e(json_encode($gMitSchluessel)) ?>"></div>
       <?php ui_krypto_bootstrap(['einzug' => '      ']); ?>
     <?php endif; ?>
     <?php if ($gKrypto || $koppelWarten !== null || $koppelSitzung !== null): ?>

@@ -10417,6 +10417,21 @@ bestätigt war) bekommt `bis` beim nächsten Laden der Geräteseite —
 still, mit einem Schlüssel, der ohne Nachfrage da ist. **Geräte von vor
 Web 25.0.0** stehen in keinem Gerätebuch und senden Fassung 1, bis sie neu
 gekoppelt sind (F-KA-103, E-KA-83; Runbook 13).
+
+**Ein Gerätebuch, das nicht aufgeht** (seit Web 25.0.0, Backlog Nr. 568,
+E-KA-92, Mockup M-KA-04). Wirft das Öffnen des Buchs vom Server etwas
+anderes als Transport, Zurücklegen oder Konflikt (`buchUnlesbar()`), repariert
+`buchReparieren()` es, ohne etwas vom Server zu übernehmen: Hat der Browser
+eine eigene Fassung, legt er sie mit einer Version über der des Servers
+zurück, still. Hat er keine, legt er ein leeres Buch an und setzt den Merker
+`nadoku-geraete-neu-verbinden:<Kennung>` in `localStorage`. Die Startseite
+zeigt dann „Geräte neu verbinden“ (`#geraete-neu-verbinden`), die Geräteseite
+zeigt den Hinweis und die Kleinzeile „neu verbinden“, solange ein Gerät mit
+`herkunft = 1` und `spk` nicht im Buch steht (`data-mit-schluessel`); fehlt
+keines mehr, quittiert sie den Merker. Vorher blieb ein solches Konto stehen:
+Jeder Abgleich warf, und ein neues Gerät ließ sich nicht eintragen
+(F-KA-125). Nachweis: Bedienprobe `geraetebuch-unlesbar-neu`,
+`-zurueck`.
 Dazu nimmt der Eingang das **leere Schlussstück** (`punkte` 0, nur Fassung
 2, `ts_von` = `ts_bis`); den Anschluss prüft der Browser beim Lesen.
 
@@ -11289,6 +11304,13 @@ bekommt seinen Zähler beim ersten Verschließen; lässt sich die Zählerdatei
 nicht schreiben, sendet der Lauf nichts (`Zaehlerausfall`). Bis 0.24.x
 stieg `z` mit jeder Anfrage (E-KA-64), und ein nach einer Übergabe
 nachgesendeter alter Stand gewann.
+**Bestätigt wird nur, was gesendet wurde** (seit Android 0.26.0, Puffer-Schema
+4, Backlog Nr. 566): Jede Änderung eines Pakets zählt `paket.aenderung`
+hoch; der Sender merkt sich den Stand, den er verschlossen hat, und
+`bestaetigungMerken()` bzw. `paketEntsorgen()` greifen nur, wenn das Paket
+seither unverändert ist. Vorher galt die Antwort des Servers für das ganze
+Paket, und eine Phase, die während der Anfrage dazukam, blieb unbestätigt
+liegen, bis sich das Paket wieder änderte — eine späte letzte Phase nie.
 SCHLUSS steht am letzten Stück eines abgeschlossenen Pakets, und ist dann
 kein Punkt mehr offen, geht `schlussstueck2()` mit null Punkten. Den Merker
 LÜCKE setzt das Handy nicht — die Referenz lässt ihn nur dem Konto.

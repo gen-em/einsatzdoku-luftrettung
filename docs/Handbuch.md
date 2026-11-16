@@ -4014,6 +4014,16 @@ zuordnen. Trenne es deshalb einmal (Einstellungen → Geräte, oder am Gerät)
 und kopple es neu, mit Vergleichswert. Danach steht am Handy „Herkunft
 gesichert" und an der Uhr ebenso.
 
+**„Geräte neu verbinden"** *(seit Web 25.0.0)*. Steht dieser gelbe Hinweis
+auf der Startseite und unter Einstellungen → Geräte, kann dieser Browser
+nicht mehr erkennen, welche Geräte zu deinem Konto gehören — etwa weil die
+Ablage auf dem Server beschädigt ist und du in einem Browser angemeldet bist,
+der sie nie selbst hatte. Er hat dann still von vorn angefangen. Trenne jedes
+Gerät, an dem „neu verbinden" steht, und kopple es neu; danach verschwindet
+der Hinweis. Was das Gerät vorher an Ortsdaten gesendet hat, lässt sich
+nicht mehr öffnen. Kennt dein Browser die Ablage noch, merkst du von alldem
+nichts: Er legt seine Fassung still zurück.
+
 **Fehlt der Schlüssel für Uhr und Handy, steht ganz oben eine Karte dazu**
 *(seit Web 23.7.0)*. Uhr und Handy verschließen GPS-Daten und Ortsangaben mit
 dem Schlüsselpaar deines Kontos. Es entsteht still nach der Anmeldung; klappt
