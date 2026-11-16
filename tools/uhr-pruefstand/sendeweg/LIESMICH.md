@@ -2,9 +2,9 @@
 
 Eine **Prüffassung** der Garmin-App (Kopie unter `$CIQ_BASIS/sendeweg-app`)
 hält jede Anfrage vor dem Absenden an und spielt die Antworten des Servers
-selbst vor. **Anlass: Nr. 570, 573, 575, 577** — Kopplung im Dienst, laufende
-Pakete, `next_seq`, Wiederholungsstück; 401/403 ohne Fehlerfeld, Frist;
-Dienst ohne Kopplung, Trennen; Kopplung mit Vergleichswert, Fassung 2.
+selbst vor. **Anlass: Nr. 570, 573, 575, 577, 580** — Kopplung im Dienst, laufende Pakete,
+`next_seq`, Wiederholungsstück; 401/403 ohne Fehlerfeld, Frist; Dienst ohne Kopplung,
+Trennen; Vergleichswert, Fassung 2; Zähler am Inhalt, kein Senden ohne Herkunft.
 
 ## Aufruf
 
@@ -15,7 +15,7 @@ SENDEWEG_WATCH=<verzeichnis> bash tools/uhr-pruefstand/sendeweg/sendeweg.sh   # 
 
 ## Was es misst
 
-22 Prüfungen in 19 Fällen, je Fall mit leerem Speicher: `Pair.start()` im Dienst
+28 Prüfungen in 25 Fällen, je Fall mit leerem Speicher: `Pair.start()` im Dienst
 (ungekoppelt, gekoppelt; Gegenprobe: Schlüssel holen bleibt erlaubt), ein
 laufender Einsatz nach Verlust der Zugangsdaten und Kopplung mit anderem
 Schlüssel, ein Stück nach verlorener Antwort, eine Quittung über das
@@ -23,7 +23,9 @@ Gesendete hinaus, eine Antwort ohne `next_seq`; seit KG-06 401 und 403 ohne
 Fehlerfeld, 401 `auth` (Gegenprobe), die abgelaufene Frist mit letztem Versuch;
 seit KG-08 kurz START ungekoppelt und `Pair.onTrennen(200)` ohne neue Sitzung;
 seit KG-03b Wert erst nach `offenlegen`, anderes Paar, 202, abgelehnt,
-`huelle: 2`, leeres Schlussstück in Fassung 2, Gegenprobe Fassung 1.
+`huelle: 2`, leeres Schlussstück in Fassung 2, Gegenprobe Fassung 1; seit KG-09/-10
+`z` beim Ablegen, gleich über zwei Sendungen, höher beim Abschluss; ohne Paar oder
+Selbsttest kein Senden, Trennen trotz Rückstand, Merker aus `status` bleibt.
 
 ## Was es braucht
 
@@ -31,8 +33,7 @@ Uhr-Prüfstand mit Simulator (`pruefstand.sh aufbau`, `Xvfb`). Keinen Server (`1
 
 ## Erwartete Zahl
 
-`Sendeweg: 22 Pruefungen, 0 Fehlschlaege`, rund 1 min. Gegen Uhr 4.6.0 übersetzt die Probe nicht
-(Schnittstelle von KG-03b fehlt); mit 15 Prüfungen gegen 4.5.2 zwei rot (KG-08).
+`Sendeweg: 28 Pruefungen, 0 Fehlschlaege`, rund 1 min. Gegen Uhr 5.0.0 übersetzt sie nicht; drei eingebaute Fehler (KG-09/-10) je 1 bis 3 rot.
 
 ## Was es nicht kann
 

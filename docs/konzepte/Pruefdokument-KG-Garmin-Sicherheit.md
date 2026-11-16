@@ -2,11 +2,11 @@
 
 Teil von KG-04, angelegt am 11.11.2026 für KG-01, KG-05, KG-02 und KG-06
 (Uhr 4.5.1, PR #168), seit KG-07 für Uhr 4.5.2, seit KG-08 für Uhr 4.6.0
-und seit KG-03b für Uhr 5.0.0. Was maschinell gemessen wurde, steht mit Mittel und
+seit KG-03b für Uhr 5.0.0 und seit KG-09/KG-10 für Uhr 5.1.0. Was maschinell gemessen wurde, steht mit Mittel und
 Zahl im Prüfprotokoll von `Konzept-KG-Garmin-Sicherheit.md` und im
 Prüfbericht der Commits.
 
-**Gerät:** Fenix 6 Pro mit Uhr 5.0.0, gekoppelt an das eigene Konto, Telefon
+**Gerät:** Fenix 6 Pro mit Uhr 5.1.0, gekoppelt an das eigene Konto, Telefon
 in Reichweite. Punkt 14 braucht die Venu 3s, Punkt 16 VS Code mit SDK;
 Punkte 9 und 13 zusätzlich auf der FR 945, an der F-KG-18 gemeldet wurde.
 
@@ -46,6 +46,17 @@ Punkte 9 und 13 zusätzlich auf der FR 945, an der F-KG-18 gemeldet wurde.
   zeigt nur Punkt 21. Ebenso, ob die echte Uhr ein Gerätepaar dauerhaft
   hält (KG-02 hat es im Simulator gemessen, P-KG-16) und ob der Zähler bei
   einer Uhr mit falscher Uhrzeit trägt.
+- **„Neu koppeln“ an einer echten Uhr** (KG-10). Der Zustand entsteht nur,
+  wenn der Uhr das Gerätepaar verloren geht, während Kopplung und Merker
+  bleiben; am Gerät lässt er sich ohne eine Prüffassung nicht herstellen.
+  Belegt ist er nur durch `sendeweg` im Simulator (Fälle 22 bis 25).
+- **Was das Zählen des Inhalts auf einer echten Uhr kostet** (KG-09).
+  Bei jeder Änderung eines laufenden Einsatzes rechnet die Uhr Innenform
+  und SHA-256; im Simulator 10 bis 13 ms bei 120 Rea-Ereignissen. Auf der
+  Fenix ist das nicht gemessen; P-KG-04 achtet darauf.
+- **Ob ein Firmware-Update die Prüfsumme liegender Pakete ändert**
+  (F-KG-29). Dann bekäme ein schon gezählter Stand einmalig ein neues `z`.
+  Nachstellen lässt es sich nicht.
 - **Die Venu 3s nur in Punkt 14.** Die Probe `rea` drückt UP und DOWN, und
   die Venu hat beide nicht.
 
@@ -67,7 +78,7 @@ Punkte 9 und 13 zusätzlich auf der FR 945, an der F-KG-18 gemeldet wurde.
 | Nr. | Bedienweg | Erwartet | Gescheitert, wenn |
 |---|---|---|---|
 | **P-KG-03** | Dienst beginnen, Einsatz beginnen, auf die Rea-Seite, kurz START (Rea beginnt). Dann je einmal **kurz UP** und **kurz DOWN**, mit 15 s Abstand. Danach lang START → Übersicht | Die Seite bleibt die Rea-Seite. Die Übersicht zeigt genau ein Adrenalin und eine Defibrillation | die Seite wechselt; oder etwa 1 s später kommt eine weitere Vibration und ein zweiter Eintrag (F-KG-01) |
-| **P-KG-04** | Rea läuft: **kurz START** zweimal kurz hintereinander, nach 7 s ein drittes Mal (Sperre seit Uhr 4.6.0 5 s) | Erster und dritter Druck je Rhythmuskontrolle mit **2 kurzen Pulsen**, der zweite tut nichts. Der Countdown springt beim ersten und dritten auf 2:00 | der zweite Druck schreibt einen Eintrag (Sperre); oder der Countdown springt nicht |
+| **P-KG-04** | Rea läuft: **kurz START** zweimal kurz hintereinander, nach 7 s ein drittes Mal (Sperre seit Uhr 4.6.0 5 s) | Erster und dritter Druck je Rhythmuskontrolle mit **2 kurzen Pulsen**, der zweite tut nichts. Der Countdown springt beim ersten und dritten auf 2:00 | der zweite Druck schreibt einen Eintrag (Sperre); oder der Countdown springt nicht; oder die Bedienung stockt spürbar nach einem Druck — seit Uhr 5.1.0 rechnet jede Buchung die Prüfsumme des Einsatzes (KG-09) |
 | **P-KG-05** | Rea läuft: **DOWN** (Defibrillation) | 2 kurze Pulse, beide spürbar, Countdown auf 2:00 | nur ein Puls spürbar, oder einer ist abgeschnitten (F-KG-02) |
 | **P-KG-06** | Rea läuft: **UP** (Adrenalin) | 1 kurzer Puls | zwei Pulse oder keiner |
 | **P-KG-07** | Rea läuft, nichts drücken, Countdown ablaufen lassen | Bei 0:30 **1 × 2 s**, bei 0:10 **2 × 2 s**, bei 0:00 **3 × 2 s**; die drei sind am Gefühl zu unterscheiden. Bei 0:00 bleibt der Countdown rot stehen | ein Muster fehlt; die langen Pulse sind spürbar kürzer als 2 s; 1, 2 und 3 lassen sich nicht unterscheiden |

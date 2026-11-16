@@ -425,6 +425,12 @@ module Uploader {
          * rechnet zwei Schluesselvereinbarungen mehr; im selben Aufruf wie
          * die erste Huelle loeste das den Waechter der Laufzeit aus
          * (Huelle2.bereit). Der naechste Anlass sendet. */
+        /* KEIN SENDEN OHNE HERKUNFT (KG-10, E-KA-80, -86): Hat die Uhr
+         * `huelle: 2` gehoert, aber kein gueltiges Geraetepaar, oder ist
+         * der Selbsttest der Fassung 2 gescheitert, geht nichts hinaus --
+         * auch nicht Fassung 1. Die Daten bleiben gepuffert; die Sync-Seite
+         * sagt, was zu tun ist. */
+        if (herkunftFehlt() != null) { return; }
         if (Pair.huelle2Gewuenscht() && Huelle2._geprueft == null) {
             Huelle2.bereit();
             return;
@@ -548,6 +554,10 @@ module Uploader {
          * Anfrage ohne Huelle quittierte der Server, und die Uhr raeumte
          * Punkte, die nie angekommen sind. Ohne Punkte faellt `track` weg --
          * der Server antwortet dann mit seiner eigenen Marke (Vertrag 3.1). */
+        if (herkunftFehlt() != null) {          // zweiter Riegel (KG-10)
+            _busy = false;
+            return;
+        }
         try {
             if (fassung2()) {
                 _verschliessen2(body, d, ref, seqFrom, flat, offenGesamt, istEinsatz);
@@ -624,14 +634,30 @@ module Uploader {
             opts, cb.method(:onResponse));
     }
 
+    /* FEHLT DER HERKUNFTSNACHWEIS? (seit KG-10, E-KA-80, -86, E-KG-40)
+     *
+     * null = nein. :paar = der Server hat bei der Kopplung `huelle: 2`
+     * gesagt, aber die Uhr hat kein gueltiges Geraetepaar mehr (Speicher
+     * verloren oder verdorben) -- neu koppeln hilft. :selbsttest = das Paar
+     * ist da, aber der Selbsttest der Fassung 2 ist gescheitert -- neu
+     * koppeln hilft nicht. In beiden Faellen sendet die Uhr NICHT; bis
+     * Uhr 5.0.0 fiel sie auf Fassung 1 zurueck, also auf Daten ohne
+     * Herkunftsnachweis. Eine Uhr, deren Kopplung nie `huelle: 2` gehoert
+     * hat, ist nicht betroffen (E-KG-34, -41). */
+    function herkunftFehlt() as Lang.Symbol or Null {
+        if (!true.equals(Storage.getValue(Pair.ABLAGE_HUELLE2))) { return null; }
+        if (Huelle2._abgelegt() == null) { return :paar; }
+        if (false.equals(Huelle2._geprueft)) { return :selbsttest; }
+        return null;
+    }
+
     /* SENDET DIESE UHR FASSUNG 2? (seit Uhr 5.0.0, KG-03b, Vertrag 1a.7, 3.4)
      *
      * Nur wenn der Server bei der Kopplung `huelle: 2` gesagt hat, die Uhr
      * ihr Geraetepaar hat UND der Selbsttest der Fassung 2 bestanden ist.
-     * Sonst Fassung 1 -- der Server nimmt sie bis zum Stichtag (KA-06e).
-     * Scheitert der Selbsttest, ist Fassung 1 der ehrlichere Weg: Eine
-     * Huelle, die niemand oeffnen kann, ist schlimmer als eine ohne
-     * Herkunftsnachweis. */
+     * Ohne den Merker Fassung 1 -- der Server nimmt sie bis zum Stichtag
+     * (KA-06e). MIT dem Merker, aber ohne Paar oder Selbsttest, sendet die
+     * Uhr gar nicht (herkunftFehlt(), KG-10). */
     function fassung2() as Lang.Boolean {
         return Pair.huelle2Gewuenscht() && true.equals(Huelle2._geprueft);
     }
@@ -659,7 +685,13 @@ module Uploader {
             body["track"] = Huelle2.schlussstueck(art, ref, seqFrom, ts);
         }
         if (istEinsatz) {
-            body["ort_huelle"] = Huelle2.einsatz(ref, d, Huelle2.zaehlerNaechster(), abgeschlossen);
+            /* Das z kommt aus dem Paket (KG-09). Zaehlt einsatz() hier neu
+             * -- ein Paket aus Uhr 5.0.0 ohne z oder ein Haken, der nicht
+             * zaehlen konnte --, wird das Paket mit seinem z abgelegt, damit
+             * jede Wiederholung dasselbe z traegt. */
+            var e = Huelle2.einsatz(ref, d, abgeschlossen);
+            body["ort_huelle"] = e[0];
+            if (e[1] == true) { Model.save(); }
         }
     }
 

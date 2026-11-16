@@ -15,9 +15,9 @@ derselbe Code und dieselbe Instanz.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026; seit 15.11.2026 Zweig `claude/kg-zaehler-inhalt` (KG-09, KG-10, ein PR), Backlog-Spanne 580–589 (vorher `claude/vigilant-cray-9riw34`, 570–579) |
-| In Arbeit | **KG-09** (Zähler am Inhalt, E-KA-69, -74; im Konzept KA als „KG-05" beauftragt, die Nummer ist hier vergeben) — **Halt vor dem Krypto-Kern** (Fable-Agent, E-KG-42). Danach **KG-10** (E-KA-80 an der Uhr). Weiter offen: die **Gerätetests der BetreiberIn** (Rest von KG-04, Prüfdokument) |
+| In Arbeit | **KG-09 und KG-10 gebaut** (Uhr 5.1.0), Prüfstand und PR stehen aus. Weiter offen: die **Gerätetests der BetreiberIn** (Rest von KG-04, Prüfdokument) |
 | Erledigt | **KG-01, KG-05, KG-02, KG-06, KG-04 (Teil: Prüfdokument)** — PR #168, Uhr 4.5.1. **KG-07, KG-03a** — PR #173, Uhr 4.5.2. **KG-08** — PR #178, Uhr 4.6.0. **KG-03b** — PR #181, Uhr 5.0.0. Alle gemergt |
-| Hakt | Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05). Den Abschluss im Rahmenplan schreibt KG nicht (Grenze) — er gehört zum Abschluss von Schritt 28 |
+| Hakt | Außerhalb der Grenzen berührt: `tools/pruefstand/pruefablauf.json` und die erzeugte Tabelle in `docs/Pruefablauf.md` 4 (F-KG-05); seit KG-09 `tools/proben/huelle/referenz.py` (Erzeuger der `.mc`-Vektoren, wie in KG-03a). Im Konzept KA (Abschnitt 11) heißt KG-09 noch „KG-05“ — Verweis nachzutragen durch KA. Den Abschluss im Rahmenplan schreibt KG nicht (Grenze) — er gehört zum Abschluss von Schritt 28 |
 | Gelesen gegen | Commit `0be2092` · Uhr 4.3.3; die vier Befunde von KG-01 am 10.11.2026 an der heutigen Stelle bestätigt (Abschnitt 4) |
 
 **Grenzen (Auftrag):** KG fasst `watch/`, `tools/uhr-pruefstand/`, die
@@ -362,6 +362,37 @@ mit Wert und spielt die Webseite nach (N_b, „Wert stimmt" über
 hält den Wert der Uhr gegen `referenz.kopplung_wert` und öffnet Fassung 2
 mit `referenz.oeffnen2` (`rundlauf/fassung2.py`).
 
+## 5f. KG-09 und KG-10 — Zähler am Inhalt, kein Senden ohne Herkunft (15./16.11.2026, Uhr 5.1.0)
+
+Auftrag der BetreiberIn über die KA-Instanz (Konzept KA Abschnitt 11,
+E-KA-69, -74, -80, -86); Entscheidungen E-KG-37 bis -42.
+
+**KG-09, Kern (Fable-Agent, E-KG-42):** `Huelle2.inhaltHash(d, schluss)`
+= SHA-256 der Innenform ohne das Feld `"z":…,`; `inhaltZaehlen(d, schluss,
+jetzt)` vergleicht ihn mit `d["zh"]` (Base64) und vergibt bei Abweichung
+`zaehlerFolge(gz, jetzt)` = `max(jetzt, gz + 1)`, legt erst `gz`, dann
+`d["z"]` und `d["zh"]` ab und meldet `true`; `einsatzInnen()` und
+`einsatz()` zählen selbst noch einmal und geben `[Text, neu]` zurück.
+`zaehlerNaechster()` ist fort. Der Vektor `zaehler` liegt in der Probe
+(`Vektoren2.mc`), nicht in der ausgelieferten `HuelleVektor2.mc`
+(Kompilat, F-KG-17).
+
+**KG-09, Einbau (Hauptinstanz):** `Model.save()` zählt den laufenden
+Einsatz vor dem Ablegen, `_finishMission()` das abgeschlossene Paket
+(mit `schluss`), beide in `try`, damit die Aufzeichnung vorgeht;
+`_verschliessen2()` legt das Paket ab, wenn das Verschließen nachzählen
+musste. Der Haken läuft auch an einer Uhr der Fassung 1 (Antwort auf
+Punkt 6 des Agenten): Koppelt sie später mit Wert, tragen ihre liegenden
+Einsätze schon das `z` ihrer Änderung (F-KG-27).
+
+**KG-10:** `Uploader.herkunftFehlt()` → `:paar` (Merker `h2`, kein gültiges
+Paar nach `Huelle2._abgelegt()`) oder `:selbsttest` (Selbsttest der Fassung 2
+gescheitert, E-KG-40); `syncAll()` und `_send()` senden dann nicht. Die
+Sync-Seite zeigt „Neu koppeln / Koppeln: ‹Taste halten›" bzw. „Verschlüsseln
+geht nicht / Bitte melden" (E-KG-39). `Pair.start()` trennt bei `:paar` trotz
+Rückstand gebunden (F-KG-25); der Merker folgt dem Server, in `onSchluessel`
+und beim Abschluss der Kopplung (F-KG-26).
+
 ## 6. Befunde der Umsetzung
 
 | Nr. | Befund | Beleg | Stand |
@@ -389,6 +420,11 @@ mit `referenz.oeffnen2` (`rundlauf/fassung2.py`).
 | F-KG-22 | **Die Zählerregel E-KA-64 trägt nur, solange die Uhren der Geräte stimmen** — fünf Punkte des Fable-Agenten (Abschnitt 5e); dazu: Der Kopf der Referenz spricht von „je Absender", die Prüfung ist je Einsatz, und ein Fall mit zwei Absendern fehlt | Fable-Agent, 14.11.2026 | an KA übergeben, dort F-KA-108 (KA-06c, Fable-Gegenprüfung); bis dahin gilt die Regel wie gebaut |
 | F-KG-23 | **Die Sendeweg-Probe schickte `offenlegen` wirklich ab** (an `127.0.0.1:1`); die Antwort 404 kam in derselben Sitzung an und beendete sie, bevor der nächste Fall lief. Die Probe setzt jetzt `_ngLaeuft` vorab und spielt die Antwort selbst | `sendeweg.sh`, 14.11.2026 | behoben in der Probe |
 | F-KG-24 | **Der Rundlauf der alten Kopplung übersetzte nicht:** `sed` ersetzte den Aufruf von `Huelle2.kopplungBeginnen()` durch `k = null`, und die Typprüfung meldete den Zugriff auf `k[:spk]` darunter als Zugriff auf null. Der Schalter läuft jetzt über `Rundlauf.alteKopplung()` | Prüfstand, erster Lauf über KG-03b (`uhr-rundlauf` rot nach 5 s) | behoben in der Probe |
+| F-KG-25 | **E-KA-80 hätte an der Uhr eine Sackgasse gebaut:** Eine Uhr, die mangels Gerätepaar nicht sendet, behält einen Rückstand, und mit Rückstand verweigert `Pair.start()` das Trennen — das Neukoppeln, das der Hinweis verlangt, war nicht erreichbar | `Pair.mc` gelesen, 15.11.2026; Probe `sendeweg` Fall 23 (Gegenprobe: „Erst 1 Paket senden") | behoben in KG-10: Trennen wie „abgemeldet", der Rückstand bleibt an den Kontoschlüssel gebunden; der BetreiberIn gemeldet |
+| F-KG-26 | **`pair.php status` löschte den Merker `huelle: 2` an einer Uhr ohne Paar** (`Pair.onSchluessel`), ebenso der Abschluss der Kopplung, wenn das Paar nicht abgelegt werden konnte. Die Uhr sendete dann still Fassung 1 — genau der Rückfall, den E-KA-80 ausschließt | `Pair.mc` gelesen, 15.11.2026; Probe `sendeweg` Fall 25 (Gegenprobe rot) | behoben in KG-10: Der Merker folgt dem Server |
+| F-KG-27 | **Wann `z` entsteht, entscheidet der Haken, nicht der Kern.** Zählte nur das Senden, bekäme ein lange offline liegender Stand einen jungen Zähler. Deshalb zählt `Model.save()` den laufenden Einsatz und `_finishMission()` den Abschluss; das Verschließen zählt nur nach (Pakete aus 5.0.0) | Fable-Agent, 15.11.2026; `sendeweg` Fall 20 (Gegenprobe ohne Haken rot: `z=null` vor dem Senden) | gebaut in KG-09 |
+| F-KG-28 | **Die Referenz kennt keinen Hash und kein „zurück zum alten Stand".** Eine Änderung, die den Inhalt auf einen früheren Stand zurückführt, bekommt an der Uhr ein neues `z` — die sichere Richtung. Uhr und Referenz sind innen JSON-gleich, nicht byte-gleich (`%.7f` gegen `47.5601`); der Messsatz „gleiches z ⇒ innen byte-gleich" gilt je Absender und ist an der Uhr gegen sich selbst gemessen | Fable-Agent, 15.11.2026 | Hinweis |
+| F-KG-29 | **Die Prüfsumme hängt an der Formatierung der Firmware** (`%.7f`, `Gregorian.moment`). Formatiert ein Update anders, bekommen liegende Pakete einmalig ein neues `z`; ein Absturz zwischen Zählen und Ablegen ebenso. Beides verletzt keine Regel (anderes `z` nur nach oben). An `Z_MAX` (19.01.2038) steht der Zähler, und „anderer Inhalt ⇒ größeres z" gilt nicht mehr | Fable-Agent, 15.11.2026 | Hinweis; Prüfdokument 1 |
 | F-KG-07 | **Alle Fälle der Probe in einem Aufruf lösen den Watchdog aus** (mehrere Verschließungen am Stück, `Code Executed Too Long` in `Huelle.umgedreht()`). Die Probe läuft deshalb je Fall in einem eigenen Takt. Die App selbst verschließt je Antwort ein Stück und ist davon nicht betroffen — auf einer echten Uhr gemessen ist das aber nicht | Simulator fenix6pro, 10.11.2026 | Probe angepasst |
 
 **Gerätebeobachtungen stehen in `docs/Geraete-Eingabe.md` 2 und 6**, nicht
@@ -537,4 +573,21 @@ Prüfstand (`uhr-stufe1` übersetzt die App).
 | Prüfstand `pruefen.sh`, erster Lauf | Stufe klein, 12 Proben und 25 Riegel, darunter `uhr-krypto`, `huellenprobe`, `uhr-stufe1` | 35 grün, **1 rot**: `uhr-rundlauf` übersetzte die alte Kopplung nicht (F-KG-24) |
 | `rundlauf.sh --nachholen fenix6pro` nach der Behebung | alte Kopplung, Fassung 1 | 12 von 12 |
 | Prüfstand `pruefen.sh`, zweiter Lauf | dasselbe über den endgültigen Baum | Bericht in der Commit-Nachricht von KG-03b |
+
+### KG-09 und KG-10 (15./16.11.2026, Uhr 5.1.0)
+
+**Nicht geprüft:** keine echte Uhr; nicht gegen Staging; der Rundlauf
+gegen die örtliche Anlage nur im Prüfstand; `kryptoreihe` über 99 Geräte
+nur im Prüfstand; die Gegenprobe des Kerns nur auf fenix6pro.
+
+| Mittel | Was es misst | Ergebnis |
+|---|---|---|
+| `kryptoprobe` (Fable-Agent) | 32 Urteile je Gerät, davon 9 zum Zähler (neu: `ZAEHLER-VEKTOR`, `-INHALT`, `-FORM`, `-ABLAGE`, `-GRENZE`) | fenix6pro, fr945, venu3s je **32 gut, 0 Fehler**; `extern.py` 27 Hüllen, 0 Fehler |
+| Gegenprobe Kern (Agent, fenix6pro) | sechs eingebaute Fehler (z je Verschließen, Vergleich ohne `schluss`, z nicht im Paket, Trennen löscht `gz`, `gz` nicht abgelegt, Hash ohne Rea) | je **2 bis 8 rot** bzw. Absturz der Probe |
+| `referenz.py pruefen` / `--selbstprobe` (Agent) | Referenz unberührt | 6/8/0 und 32/40/0 · 28/0 |
+| Kompilat `-r` (Agent) | Zuwachs des Kerns | fenix6pro 97 244 → 97 836 B (+592), venu3s +496 |
+| `sendeweg.sh fenix6pro` | 28 Prüfungen, davon 6 neu (Fälle 20 bis 25) | **28 von 28 grün** (zweiter Lauf; im ersten fehlte die ENDE-Zeile, weil das Skript nur 30 s wartete) |
+| `SENDEWEG_WATCH`, drei eingebaute Fehler | Haken in `Model.save()` fort; Paarprüfung in `herkunftFehlt()` fort; alter Merker in `onSchluessel` | **1, 3 und 1 rot** |
+| Prüfstand `pruefen.sh`, erster Lauf | Stufe klein, 25 Riegel und 11 Proben, darunter `uhr-krypto`, `uhr-stufe1`, `uhr-rundlauf`, `uhr-sendeweg`, `uhr-syncseite`, `uhr-rea` | **34 grün, 0 rot**, 1 Hinweis: `bestand` — `sendeweg/LIESMICH.md` 45 Zeilen statt höchstens 40; auf 40 gekürzt (ein Zwischenstand mit 42 fiel in `bestand.py` auf, der zweite Lauf wurde dafür abgebrochen) |
+| Prüfstand `pruefen.sh`, zweiter Lauf | dasselbe über den endgültigen Baum | Bericht in der Commit-Nachricht von KG-09/KG-10 |
 
