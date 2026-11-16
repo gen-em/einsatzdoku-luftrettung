@@ -1776,6 +1776,7 @@ try {
  * ====================================================================== */
 echo "\n  Teil 14 — Ortsdaten nur verschlossen (S11-06)\n";
 require_once $server . '/geraetehuelle_lib.php';
+require_once __DIR__ . '/../huelle/geraet.php';   // Fassung 2 vom Probegerät (Stichtag, 06e)
 $uid14 = $konto('probe-s11-06@example.invalid');
 try {
     $tag14 = ['id' => 990, 'day' => '2026-07-10', 'kind' => 'ground',
@@ -1816,9 +1817,9 @@ try {
      * (`spur_ref` -> `edbak_spuren_schreiben()`). Eine Nutzlast 7 mit
      * `spur_stuecke` im Eintrag nimmt er nicht. */
     $sec14 = base64_decode((string)kp_fuer_geraet($pdo, $uid14));
-    $huelle = base64_encode(gh_einsatz_verschliessen($sec14, 'b-m1', 1783584000,
+    $huelle = base64_encode(gh2_probe_einsatz_verschliessen($sec14, 'b-m1', 1783584000,
         [['phase' => 4, 'ts' => 1783584600, 'lat' => 47.1, 'lon' => 11.1]], []));
-    $st = gh_stuecke_bauen($sec14, 'spur', 'b-m1', [[0, 47.1, 11.1, 700.0, 1783584000],
+    $st = gh2_probe_stuecke_bauen($sec14, 'spur', 'b-m1', [[0, 47.1, 11.1, 700.0, 1783584000],
                                                    [1, 47.2, 11.2, 705.0, 1783584060]]);
     $st = array_map(static fn($x) => ['huelle' => base64_encode($x['huelle'])] + $x, $st);
     $s14 = edbak_restore($uid14, ['version' => 13, 'days' => [$tag14], 'rest_segments' => [],
@@ -1883,7 +1884,7 @@ try {
     $sag('(6) Ein SPUR1-Blob wird abgelehnt', ($e1['abgelehnt'][0]['grund'] ?? '') === 'klartext',
          json_encode($e1['abgelehnt'], JSON_UNESCAPED_UNICODE));
     $mid2 = (int)$m14['id'];
-    $st2 = gh_stuecke_bauen($sec14, 'spur', 'b-m1', [[5, 47.5, 11.5, null, 1783584300]]);
+    $st2 = gh2_probe_stuecke_bauen($sec14, 'spur', 'b-m1', [[5, 47.5, 11.5, null, 1783584300]]);
     $st2 = array_map(static fn($x) => ['huelle' => base64_encode($x['huelle'])] + $x, $st2);
     $e2 = edbak_spuren_schreiben($pdo, $uid14, [['owner_type' => 'mission', 'owner_id' => $mid2,
                                                 'stuecke' => $st2, 'fortsetzung' => true]]);

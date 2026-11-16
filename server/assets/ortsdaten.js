@@ -648,6 +648,27 @@
     } catch (e) { return null; }
   }
 
+  /**
+   * EINEN GESPERRTEN ZEITRAUM WIEDER AUS DEM STANDBUCH — für „Schnitt
+   * zurücknehmen" (06e, F-KA-128). Der Schnitt hatte ihn vermerkt
+   * (`sperreVermerken()`); bleibt der Vermerk stehen, zeigt eine Spur der
+   * Fassung 2 die zurückgekehrten Punkte nicht. Ausgetragen wird nur genau
+   * dieser Zeitraum. Still wie das Vermerken.
+   */
+  async function sperreAufheben(ref, von, bis) {
+    if (!EdInhalt.schreibt2() || typeof PAT_WRAP === 'undefined') { return null; }
+    try {
+      const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+      if (!ck) { return null; }
+      const buch = await EdStandbuch.seitenbuch(ck);
+      return await buch.fortschreiben(ref, (e) => {
+        const d = e.d || 0;
+        const x = (e.x || []).filter((y) => !(y[0] === von - d && y[1] === bis - d));
+        if (x.length) { e.x = x; } else { delete e.x; }
+      });
+    } catch (e) { return null; }
+  }
+
   /* Die Änderung am Eintrag: Vermerke in der Zeit der Hülle (Klartext minus
      Versatz) dazu; ein Vermerk, der schon steht, nicht noch einmal. */
   const sperrenDazu = (liste) => (e) => {
@@ -800,6 +821,6 @@
                          einsatzZeiten: einsatzZeiten, einsatzInnen: einsatzInnen,
                          einsatzVerschliessen: einsatzVerschliessen, ortshoehe: ortshoehe,
                          stueckeBauen: stueckeBauen, gepacktBauen: gepacktBauen,
-                         schluesselAus: schluesselAus, sperreVermerken: sperreVermerken,
+                         schluesselAus: schluesselAus, sperreVermerken: sperreVermerken, sperreAufheben: sperreAufheben,
                          sperrenVermerkenViele: sperrenVermerkenViele };
 })();

@@ -2356,6 +2356,21 @@ function edbak_erinnerung(): array
  */
 function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId): array
 {
+    /* DER STICHTAG GILT HIER NICHT (06e, E-KA-99): Das Paket trägt, was die
+     * Anlage gespeichert hatte, unverändert. Ein Konto, das sich seit Web
+     * 25.0.0 nicht angemeldet hat, hat dort noch Gerätedaten der Fassung 1;
+     * die hebt seine nächste Anmeldung. Abgewiesen würden sie verloren. */
+    $vorher = huelle_fassung1_zulassen(true);
+    try {
+        return edbak_paket_einspielen_lauf($kennung, $datei, $zielUserId);
+    } finally {
+        huelle_fassung1_zulassen($vorher);
+    }
+}
+
+/** Der Lauf von `edbak_paket_einspielen()` — nur von dort aufgerufen. */
+function edbak_paket_einspielen_lauf(string $kennung, string $datei, int $zielUserId): array
+{
     if (!edbak_kennung_gueltig($kennung) || edbak_paket_fassung($datei) !== 2) {
         return [false, 'Das ist kein mehrteiliges Backup-Paket.', null];
     }

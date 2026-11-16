@@ -942,7 +942,7 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
      * kein Schreibweg mehr an — nur der Demo-Reset aus einer Fixture bis
      * Format 3 (`'server'`) verschließt sie selbst, und er ist die
      * Testquelle der Übernahme, bis KA-07 beides entfernt. */
-    $vorher = huelle_fassung1_zulassen($ortsdaten === 'server');
+    $vorher = huelle_fassung1_zulassen($ortsdaten === 'server' || huelle_fassung1_zulassen());
     try {
         return edbak_restore_lauf($userId, $data, $dayMap, $ortsdaten, $blobZiel, $offenZurueck);
     } finally {

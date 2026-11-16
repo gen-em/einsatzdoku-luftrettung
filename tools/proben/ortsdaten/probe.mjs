@@ -178,6 +178,18 @@ try {
   const devId = 'dev-ortsdaten', devKey = randomBytes(24).toString('hex');
   php(`db()->prepare("INSERT INTO devices (user_id, device_id, api_key_hash, label, active, geraet_art, geraet_modell)
        VALUES (?,?,?,?,1,'uhr','fēnix 6 Pro')")->execute([${id}, '${devId}', geraet_schluessel_hash('${devKey}'), 'Ortsdatenprobe']);`);
+  /* SEIT WEB 26.0.0 NUR FASSUNG 2 (Stichtag, 06e): festes Probegerät aus
+     `huelle/geraet.php`, am Server bestätigt, im Gerätebuch eingetragen —
+     ohne Nebenwirkung über `EdKeyGuard` (`ensureContentKey()` stieße
+     Kontopaar und Rückweg ein zweites Mal an). */
+  const spkB64 = execFileSync('php', ['-r', 'require "server/db.php"; require_once "tools/proben/huelle/geraet.php"; '
+    + `gh_probe_herkunft(db(), ${id}, '${devId}'); echo base64_encode(gh_probe_geraet()["sec1"]);`],
+    { cwd: WURZEL, encoding: 'utf8' }).trim();
+  await s.evaluate(async ([spk, d]) => {
+    const ck = await EdKeyGuard.contentKey(PAT_WRAP);
+    const buch = await EdStandbuch.seitenbuch(ck);
+    await buch.geraetEintragen({ spk: Uint8Array.from(atob(spk), (c) => c.charCodeAt(0)), geraet: d, seit: 0 });
+  }, [spkB64, devId]);
   const pakete = JSON.parse(execFileSync('php', [join(WURZEL, 'tools/proben/huelle/geraet_cli.php')],
     { input: JSON.stringify({ sec1, pakete: [einsatz, nachtrag, ruhe, ruhe2] }), encoding: 'utf8' }));
   const antworten = [];
@@ -203,14 +215,17 @@ try {
   await s.goto(`${BASIS}/suche.php`, { waitUntil: 'networkidle' });
   const r = await s.evaluate(async ([mid, dayId]) => {
     const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
-    const priv = await EdKontopaar.privat(ck);
-    const pub = EdKontopaar.oeffentlich();
+    /* SEIT WEB 26.0.0 FASSUNG 2 (Stichtag, 06e): geöffnet mit dem Leser der
+       Ansicht, der das Gerät aus dem Gerätebuch kennt; innen der Kopf, dann
+       die Nutzlast wie bisher. */
+    const k = { priv: await EdKontopaar.privat(ck), pub: EdKontopaar.oeffentlich(), ck: ck };
+    const ls = await EdHuelle2.leser(k, await (await EdStandbuch.seitenbuch(ck)).geraete(), true);
     const b64 = t => Uint8Array.from(atob(t), c => c.charCodeAt(0));
     const spur = async (stuecke, art, ref) => {
       const aus = [];
       for (const st of stuecke) {
-        const innen = await EdCrypto.geraetehuelleOeffnen(b64(st.huelle), priv, pub, art, ref,
-                                                         `${st.seq_from}:${st.punkte}`);
+        const innen = EdHuelle2.spurInnen2Lesen((await ls.huelle(b64(st.huelle), art, ref,
+                                                                 `${st.seq_from}:${st.punkte}`)).klar).nutzlast;
         const dv = new DataView(innen.buffer, innen.byteOffset, innen.byteLength);
         for (let i = 0; i < st.punkte; i++) {
           const h = dv.getInt16(i * 14 + 8);
@@ -223,9 +238,9 @@ try {
     const m = await (await fetch('api/mission.php?id=' + mid)).json();
     const punkteM = await spur(m.spur_stuecke, 'spur', m.client_ref);
     const ort = JSON.parse(new TextDecoder().decode(
-      await EdCrypto.geraetehuelleOeffnen(b64(m.ort_huelle), priv, pub, 'einsatz', m.client_ref, '')));
+      (await ls.huelle(b64(m.ort_huelle), 'einsatz', m.client_ref, '')).klar));
     let fremd = null;
-    try { await EdCrypto.geraetehuelleOeffnen(b64(m.spur_stuecke[0].huelle), priv, pub, 'spur', 'm-anders', '0:5'); }
+    try { await ls.huelle(b64(m.spur_stuecke[0].huelle), 'spur', 'm-anders', '0:5'); }
     catch (e) { fremd = e.grund; }
     const d = await (await fetch('api/day.php?d=' + dayId)).json();
     const seg = (d.rest_segments || []).find(x => x.client_ref === 'r-ortsdaten-1') || {};
