@@ -5628,9 +5628,12 @@ ui_seite_start(['titel' => 'Einstellungen',
                      . ' · Kennung ' . geraet_kennung_kurz((string)$koppelSitzung['device_id'])]); ?>
         <?php $ksHerkunft = ($koppelSitzung['spk'] ?? null) !== null; ?>
         <?php if ($ksHerkunft): ?>
-          <p class="feld-hinweis">Ist das dein Gerät und stimmt der Code, verbinde es.
-             <strong>Gleich zeigen dieser Browser und das Gerät dieselbe sechsstellige
-             Zahl</strong> — die vergleichst du; erst dann sagst du am Gerät Ja.</p>
+          <?php /* EIN SATZ (Seitenregel Nr. 530, F-KA-133). Bis Web 26.0.0
+                   standen hier zwei; der Bilderlauf koppelte bis dahin ein
+                   Gerät ohne Schlüssel und sah diesen Zweig nie. */ ?>
+          <p class="feld-hinweis">Ist das dein Gerät und stimmt der Code, verbinde es —
+             <strong>gleich zeigen dieser Browser und das Gerät dieselbe sechsstellige
+             Zahl</strong>, die vergleichst du, und erst dann sagst du am Gerät Ja.</p>
         <?php else: ?>
           <?php /* SEIT WEB 26.0.0 KEIN ZUSTAND F MEHR (06e, KA-19): `start`
                    weist ein Gerät ohne Geräteschlüssel ab. Eine Sitzung ohne

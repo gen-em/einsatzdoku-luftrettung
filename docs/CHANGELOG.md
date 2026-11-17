@@ -45,6 +45,9 @@ Schritt 28 (KA), 06e: Pakete KA-16 bis KA-23.
   Sicherung der Ruhespur, weil das Lesen jeden Vermerk des Browsers
   ausblendete. Ein Vermerk erklärt jetzt nur Lücken; ausgeblendet wird, was
   der Server als geschnitten führt, und das nur in der Ansicht.
+- **Web — der Hinweis beim Koppeln mit Vergleichswert hatte zwei Sätze.**
+  Die Seitenregel erlaubt einen; der Bilderlauf koppelte bisher ein Gerät
+  ohne Schlüssel und sah diesen Hinweis nie.
 - **Web — ein zurückgenommener Schnitt ließ seine Punkte verborgen.** Der
   Vermerk des Schnitts blieb stehen; jetzt geht er mit der Rücknahme.
 

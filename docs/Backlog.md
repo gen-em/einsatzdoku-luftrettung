@@ -804,3 +804,14 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      dem Stichtag aus 06e. *Abnahme:* voller Einspiellauf, `erzeugen.php`
      und `verschliessen.py` ohne Befund, Fixture byte-gleich zur heutigen
      oder begründet anders.
+<!-- -->
+
+592. **Der Handlauf der Kopplung kennt den Vergleichswert nicht.** · gehört zu: 28 · Stand: offen · seit 17.11.2026
+     *Aufgenommen 17.11.2026 aus 06e (F-KA-133).* `tools/proben/kopplung/
+     rundlauf.mjs` (von Hand, kein Prüfstand ruft ihn) startet seit 06e
+     mit Geräteschlüssel, weil `pair.php` ohne ihn abweist. Danach sagt
+     er aber nur `bestaetigen` Ja, ohne N_g offenzulegen und ohne „Wert
+     stimmt" im Browser — der Server antwortet 202 `wartet`, und der Lauf
+     kommt nicht ans Ende. *Weg:* den Weg aus `tools/proben/kopplung/
+     probe.php` (Zusage, Offenlegen, Vergleichswert) übernehmen.
+     *Abnahme:* ein Handlauf bis zum gekoppelten Gerät und Trennen.
