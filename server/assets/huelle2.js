@@ -412,8 +412,11 @@ const EdHuelle2 = (() => {
         if (x.von + i >= marke && !nach.has(x.von + i)) { nach.set(x.von + i, p); }
       });
     }
+    /* KEIN AUSBLENDEN HIER (06e, F-KA-130): Die Vermerke des Standbuchs
+       ERKLÄREN Lücken, sie blenden nichts aus. Ausblenden tut der Aufrufer
+       mit den Sperren des Klartexts, wie in Fassung 1 — sonst verlöre die
+       Sicherung (Aufruf ohne Sperren) jeden geschnittenen Punkt. */
     const punkte = [...nach.entries()].sort((a, b) => a[0] - b[0])
-      .filter(([, p]) => !sperren.some(([von, bis]) => von <= p[3] && p[3] <= bis))
       .map(([seq, p]) => ({ seq: seq, lat: p[0], lon: p[1], ele: p[2], ts: p[3] + versatz }));
     const herkunft = [...new Set(offen.map(x => (x.absender === null ? 'fassung-1' : x.absender)))].sort();
     /* `uebernommen`: wann das Konto Altdaten der Fassung 1 übernommen hat

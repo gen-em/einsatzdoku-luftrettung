@@ -1168,7 +1168,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 16 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
-| `server.svg` | Tabler Icons „server" (MIT) | 21 |
+| `server.svg` | Tabler Icons „server" (MIT) | 24 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 25 |
 | `sonne.svg` | Tabler Icons „sun" (MIT) | 2 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |

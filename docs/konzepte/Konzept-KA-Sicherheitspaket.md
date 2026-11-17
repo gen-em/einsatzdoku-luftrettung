@@ -1040,8 +1040,11 @@ ist (t_nach − t_vor < 2), kommt in keinem Vektor vor.
 | Hüllenprobe `probe.sh` (Chromium, Firefox) | **343 / 0** (vorher 39 + 279 + 304 mit Weiche aus/an); Ortsdaten 19/0 | ohne `k`-Haftung und ohne Vermerk je Engine 4 rot | Browser-Kern nach der Referenz, Weiche zurückgebaut |
 | Bedienprobe `ka06b4-anhebelauf` | Fassung 1 vorher 101 Einsätze / 223 Spuren, danach **0 / 0**; Einsatz „übernommen“, ohne Fehler | erster Lauf rot (Bindung mit Tabellenart): 223 Spuren blieben | KA-18 an echtem Altbestand |
 | Bedienprobe `umdatieren-versatz`, `-ohne-versatz` | vor und zurück gut, Spur da | ohne `umdatieren.js`: Fehlermeldung | F-KA-129 |
+| F-KA-130 | **Eine Sicherung verliert geschnittene Punkte** (gefunden vom Kreislauf `edbak` in 06e, nachdem E-KA-100 die alte Referenzsicherung abwies und sie neu erzeugt werden musste): `EdHuelle2.spurLesen()` blendete die Vermerke des Standbuchs (`x`) aus, nicht nur die Sperren des Klartexts. Die Sicherung ruft ohne Sperren, um alle Punkte zu bekommen — und verlor jeden Punkt, den ein Schnitt aus einer Ruhespur genommen hatte (Referenz: zwei Ruhespuren, 65 und 208 Punkte, eine davon ganz). Die neue Referenzsicherung war damit selbst schon falsch (`n` 324, Punkte 259). Seit KA-06b-3 | **behoben (06e):** Der Leser blendet nichts mehr aus, Vermerke erklären nur Lücken (JS und `referenz.py`); Vektor `vermerk-ueber-vorhandenem` (Backlog Nr. 591), Referenzsicherung neu erzeugt, Kreislauf 345 356 Vergleiche, 0 unerklärt |
 | Bedienprobe `ka06b3`, `ka06d` (4) | grün ohne Weiche | — | Rückbau der Weiche |
 | Proben ingest / wiederherstellung / verbindung / wartungslauf / gpx / ortsdaten / kopplung | **100/0, 149/0, 27/0, 34/0 + 24/0, 48/0, 58/0, 106/0** — als Gerät jetzt Fassung 2 (`geraet.php`: festes Probegerät, `gh2_probe_*`) | neue Fälle: Fassung 1 → 400 (ingest), `start` ohne Schlüssel → 400 (kopplung 43), Konto ohne Paar beansprucht nicht (K1) | Stichtag am Server, Proben umgestellt |
+| Kreislauf `edbak --frisch` (neue Referenzsicherung, E-KA-100) | **345 356** Vergleiche, **0** unerklärt, 22 erwartet | erste Referenz mit dem Fehler erzeugt: 5 unerklärt, 222 statt 223 Spuren | F-KA-130 |
+| Hüllenprobe nach F-KA-130 | **344 / 0** (Vektor `vermerk-ueber-vorhandenem`) | ohne die Änderung liefert der Leser 5 statt 8 Punkte | F-KA-130 |
 | `php referenz` PHP-Hülle gegen Python | `gh2_probe_verschliessen()` geht mit `referenz.oeffnen2()` auf, SID stimmt | — | die Gerätehilfe der Proben schreibt richtige Fassung 2 |
 
 **Probleme und Lösungen.** (1) Die Spuren gingen zuerst nicht auf:
@@ -1049,7 +1052,7 @@ gebunden mit `mission`/`rest` statt `spur`/`ruhe`. (2) F-KA-128 und F-KA-129
 gefunden und behoben (Abschnitt 10). (3) Die alte Fixture ist die einzige
 Testquelle der Übernahme; sie bleibt mit dem Zweig `'server'` bis KA-07
 (E-KA-99). (4) Ein Adminpaket kann Fassung 1 legitim tragen — zugelassen
-(E-KA-99). (5) Der Container startete dreimal neu; jedes Mal die Startfolge
+(E-KA-99). (5) F-KA-130 gefunden und behoben: Die alte Referenzsicherung (Web 23.8) wies E-KA-100 ab; die neu erzeugte trug schon den Fehler. (6) Der Container startete dreimal neu; jedes Mal die Startfolge
 (`dockerd`, `hochfahren.sh`, `plattform.sh alles`).
 
 ### 06e: KA-21 Android 0.27.0 und KA-22 Uhr 6.0.0 (17.11.2026, je ein Agent)

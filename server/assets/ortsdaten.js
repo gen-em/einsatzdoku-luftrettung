@@ -167,8 +167,10 @@
   }
 
   /** Eine Spur mit mindestens einer Hülle der Fassung 2 — über `EdHuelle2`,
-   *  mit den Regeln für Folge, Zeit und Herkunft. Die Sperren des Klartexts
-   *  gelten zusätzlich: Sie blenden aus, sie belegen nichts. */
+   *  mit den Regeln für Folge, Zeit und Herkunft. Ausgeblendet wird NUR mit
+   *  den Sperren des Klartexts (`sperren` des Aufrufers, leer = alle Punkte,
+   *  etwa für die Sicherung); die Vermerke des Standbuchs erklären Lücken
+   *  und blenden nichts aus (06e, F-KA-130). */
   async function spur2(stuecke, art, ref, sperren, k) {
     const sb = await standbuchFuer(k, ref);
     const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, verlangt2(k));

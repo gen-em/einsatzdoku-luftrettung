@@ -126,7 +126,7 @@ if (isset($b['einsaetze']) || isset($b['spur'])) {
     $posten = [];
     foreach (is_array($b['einsaetze'] ?? null) ? $b['einsaetze'] : [] as $e) {
         $h = is_array($e) ? fa_huelle2($e['huelle'] ?? null, GH_EINSATZ_MAX_BYTE) : null;
-        if ($h === null || (int)($e['id'] ?? 0) <= 0 || !preg_match('/^[0-9a-f]{64}$/', (string)($e['alt'] ?? ''))) {
+        if ($h === null || (int)($e['id'] ?? 0) <= 0 || !preg_match('/^[0-9a-f]{64}\z/', (string)($e['alt'] ?? ''))) {
             json_out(['error' => 'format', 'feld' => 'einsaetze'], 400);
         }
         $posten[] = ['id' => (int)$e['id'], 'huelle' => base64_decode($h, true), 'alt' => (string)$e['alt']];
@@ -142,7 +142,7 @@ if (isset($b['einsaetze']) || isset($b['spur'])) {
         $stuecke = [];
         foreach ($sp['stuecke'] as $x) {
             $h = is_array($x) ? fa_huelle2($x['huelle'] ?? null, GH_GEPACKT_MAX_BYTE) : null;
-            if ($h === null || !is_int($x['seq_from'] ?? null) || !preg_match('/^[0-9a-f]{64}$/', (string)($x['alt'] ?? ''))) {
+            if ($h === null || !is_int($x['seq_from'] ?? null) || !preg_match('/^[0-9a-f]{64}\z/', (string)($x['alt'] ?? ''))) {
                 json_out(['error' => 'format', 'feld' => 'stuecke'], 400);
             }
             $stuecke[] = ['seq_from' => $x['seq_from'], 'huelle' => $h, 'alt' => (string)$x['alt']];

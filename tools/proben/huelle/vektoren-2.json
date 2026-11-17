@@ -845,6 +845,55 @@
       }
     },
     {
+      "name": "vermerk-ueber-vorhandenem",
+      "art": "spur",
+      "client_ref": "w-20261111-0002",
+      "stuecke": [
+        {
+          "seq_from": 0,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277065,
+          "huelle_b64": "AqSZyftFpPccBGhgoFB9O/Ks54HxDYsS8EJEXCu/Yq8cxDrIW9PAfM0jMglphA6S/yJx537/5WhPo0RxFCBw0BLU7Qv1au2RNu82ph+pr1NuVc0yGFyYjfytb8xm3Oo5D7bNxWDa2jOWt+9PRXj/chbIweG3RZ17uDawBF4jhtCEEdZ/3+Yy1VMW0TglGqfJ/7qKD++V+6juvPhCBAqvM1Qb3MkPu6bTk7IBxm3A8WgXUt7JEEO8hGF3"
+        },
+        {
+          "seq_from": 3,
+          "punkte": 3,
+          "stufe": 1,
+          "ts_von": 1784277080,
+          "huelle_b64": "AqSZyftFpPccBPT8MTwKSIjcIUFH4jevSqTkcMWyRL++3grgIB72TXUvfhy+741+UAEbMWSN5FZohn02CrqsAUP9obXw4myUXjOL9t7N0SAeXERE1zC0BGuuZbbUNtQPTI74aoIuhEavuy3KhO+NX0e5LI9QWBmdAmNiUo4GLSyvnECyzCw9DxJDQ7z779UcGLGMrloVPkHUbBb8lTbJFpfeJ+y370eE2FSl8dHziBj+cU8e+ZFOY/li"
+        },
+        {
+          "seq_from": 6,
+          "punkte": 2,
+          "stufe": 1,
+          "ts_von": 1784277095,
+          "huelle_b64": "AqSZyftFpPccBGUaN8OVtAl1qH6GsLfKhboHozXBEPCSapWzUPSk5hLNvwYiWMkwKK78cQsdWGJEeBEfMt/kIEtonEzoCWF7378P0Bm19rqGk20vskF4GK6VioLS2JC5VxKOOifR9mS/RQgFi6Qf0o4hXmAkYnNRauMoORi/rOOFrTj0y448+Yf+dNoNKhfdqNj95muTGS7ABtF/Tg+Rbmv3bNdTTueDiH0="
+        }
+      ],
+      "abgeschlossen": true,
+      "versatz": 0,
+      "sperren": [
+        [
+          1784277080,
+          1784277090
+        ]
+      ],
+      "stand": null,
+      "buch": "standard",
+      "verlangt2": false,
+      "erwartet": {
+        "punkte": 8,
+        "erste_zeit": 1784277065,
+        "letzte_zeit": 1784277100,
+        "herkunft": [
+          "a499c9fb45a4f71c"
+        ],
+        "schluss": true,
+        "fassung1": false
+      }
+    },
+    {
       "name": "vertauscht",
       "art": "spur",
       "client_ref": "w-20261111-0002",

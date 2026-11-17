@@ -945,8 +945,9 @@ def spur_lesen(leser: Leser, art: str, ref: str, stuecke: list[dict], *, versatz
             for i, p in enumerate(o["pkt"]):
                 if o["von"] + i >= marke:
                     nach.setdefault(o["von"] + i, p)
-    punkte = [(n, la, lo, h, t + versatz) for n, (la, lo, h, t) in sorted(nach.items())
-              if not any(von <= t <= bis for von, bis in sperren)]
+    # Kein Ausblenden (06e, F-KA-130): Vermerke erklären Lücken; ausblenden
+    # tut der Aufrufer mit den Sperren des Klartexts.
+    punkte = [(n, la, lo, h, t + versatz) for n, (la, lo, h, t) in sorted(nach.items())]
     herkunft = sorted({("fassung-1" if o["absender"] is None else o["absender"]) for o in offen})
     return punkte, {"herkunft": herkunft, "schluss": schluss, "fassung1": fassung1, "gedeckt": ende}
 
@@ -1518,6 +1519,9 @@ def vektoren2_bauen() -> dict:
     folge("luecke-mit-loeschvermerk", [A, C], gut(5, T0, T0 + 35, [uhr]), sperren=[(T0 + 15, T0 + 25)])
     folge("ende-mit-loeschvermerk", [A, B], gut(6, T0, T0 + 25, [uhr], schluss=False),
           sperren=[(T0 + 30, T0 + 600)])
+    # Ein Vermerk über VORHANDENEN Punkten blendet nichts aus — er erklärt nur
+    # Lücken; die Sicherung braucht jeden Punkt (06e, F-KA-130, Anlass Nr. 591).
+    folge("vermerk-ueber-vorhandenem", [A, B, C], gut(8, T0, T0 + 35, [uhr]), sperren=[(T0 + 15, T0 + 25)])
     folge("vertauscht", [A, stueck("f-b-fremd", 3, 3, ref=REF_B), C], "pruefwert")
     folge("fremdes-geraet", [A, stueck("f-b-geraet", 3, 3, wer="fremd"), C], "absender")
     folge("ohne-geraeteschluessel",

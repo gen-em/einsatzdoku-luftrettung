@@ -10506,8 +10506,13 @@ Messstand hing der GPX-Export. **Das Einspielen** (`einstellungen.php`,
 Löschvermerke, die eine Lücke decken**, gesammelt ins Standbuch ein
 (`EdOrtsdaten.sperrenVermerkenViele()`), bevor es sendet; eine Lücke ohne
 Vermerk oder ein gescheitertes Eintragen lehnt die Spur ab und meldet es.
-Die Quellen eines Schnitts bekommen mit Absicht keinen Vermerk — er sperrte
-die Punkte, die die Quelle behält. Vorher schrieb das Einspielen eine
+Die Quellen eines Schnitts bekommen mit Absicht keinen Vermerk. **Ein
+Vermerk erklärt eine Lücke, er blendet nichts aus** (seit Web 26.0.0,
+F-KA-130): `EdHuelle2.spurLesen()` liefert jeden vorhandenen Punkt, und
+ausgeblendet wird nur mit den Sperren des Klartexts, die der Aufrufer
+übergibt — wie in Fassung 1. Bis dahin blendete der Leser auch die
+Standbuch-Vermerke aus, und eine Sicherung verlor jeden Punkt, den ein
+Schnitt aus einer Ruhespur genommen hatte. Vorher schrieb das Einspielen eine
 solche Spur und meldete „übernommen“; geöffnet wurde sie danach mit
 `luecke` nicht mehr.
 

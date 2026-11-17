@@ -11437,3 +11437,14 @@ zutreffen.
      Erledigt mit Web 26.0.0 (KA-20, E-KA-101): assets/umdatieren.js belegt
      den Versatz aus dem Browser; die Schreibwege des Kontos schreiben die
      Hüllenzeit mit d.
+
+591. **Eine Sicherung verliert Punkte, die ein Schnitt aus einer Ruhespur genommen hat.** · gehört zu: 28 · Stand: erledigt · seit 17.11.2026
+     *Aufgenommen 17.11.2026 aus 06e (F-KA-130).* Der Leser der Fassung 2
+     blendete die Vermerke des Standbuchs aus, nicht nur die Sperren des
+     Klartexts; die Sicherung liest ohne Sperren und verlor so die Punkte
+     der Schnittquellen. Gefunden vom Kreislauf `edbak` mit der neu
+     erzeugten Referenzsicherung. *Weg:* Vermerke erklären nur Lücken,
+     ausgeblendet wird mit den Sperren des Aufrufers. *Abnahme:* Vektor
+     `vermerk-ueber-vorhandenem` in `tools/proben/huelle/referenz.py`,
+     Kreislauf ohne unerklärte Abweichung.
+     Erledigt mit Web 26.0.0 (06e, F-KA-130).

@@ -3810,8 +3810,9 @@ ui_seite_start(['titel' => 'Einstellungen',
          auf. Deshalb zuerst alle Stücke dieses Teils bauen und ihre Lücken
          bestimmen; jede Lücke braucht einen Vermerk aus der Datei, der sie
          deckt (`rwSperrenMerken()`), und nur DER geht ins Standbuch — ein
-         Vermerk ohne Lücke sperrte Punkte, die die Datei mit Absicht
-         trägt (die Quelle eines Schnitts behält ihre Punkte). Je Blatt ein
+         Vermerk ohne Lücke braucht niemand (die Quelle eines Schnitts
+         behält ihre Punkte; seit F-KA-130 blendet ein Vermerk sie auch
+         nicht mehr aus). Je Blatt ein
          Schreiben. Hat eine Lücke keinen Vermerk oder scheitert das
          Schreiben, geht diese Spur NICHT hinaus und steht als abgelehnt in
          der Meldung — eingespielt ginge sie nicht auf, und die Meldung
