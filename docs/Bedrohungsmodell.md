@@ -307,8 +307,8 @@ Kontoschlüssel zu seinem privaten Teil passt. Wer den Server beschreibt,
 trifft je Versuch mit eins zu einer Million — sichtbar als falsche Zahl.
 **Grenzen:** (1) nur, wenn die Person wirklich vergleicht; (2) die Geräte
 rechnen es seit Uhr 5.0.0 (KG-03b) und Android 0.24.0 (KA-06c) — eine
-ältere App koppelt bis zum Stichtag aus 06e weiter ohne, mit Warnung; (3) ein schon
-gekoppeltes Gerät bleibt beim ungeprüften Schlüssel, bis es neu koppelt.)*
+ältere App koppelt seit Web 26.0.0 (06e) gar nicht mehr (`400 schluessel`); (3) ein schon
+gekoppeltes Gerät bleibt beim ungeprüften Schlüssel, bis es neu koppelt — seit Android 0.27.0 und Uhr 6.0.0 sendet es bis dahin nichts.)*
 
 **6.4 Kann die Garmin es?** *(Beantwortet: ja — Krypto-Probe S11-02 auf drei
 Uhren im Simulator und einer echten Uhr, seit Uhr 4.0.0 in der App, mit
