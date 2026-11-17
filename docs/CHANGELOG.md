@@ -43,6 +43,18 @@ Schritt 28 (KA), 06e: Pakete KA-16 bis KA-23.
 - **Web — ein zurückgenommener Schnitt ließ seine Punkte verborgen.** Der
   Vermerk des Schnitts blieb stehen; jetzt geht er mit der Rücknahme.
 
+## [Uhr 6.0.0] — unveröffentlicht
+
+Schritt 28 (KA), 06e: Paket KA-22.
+
+### Geändert
+
+- **Uhr — die Garmin-Uhr sendet nur noch mit Herkunftsnachweis.** Eine Uhr
+  aus einer Kopplung von vor Web 25 schickte bisher weiter Daten ohne
+  Nachweis, die der Server seit Web 26 abweist. Jetzt zeigt sie „Neu
+  koppeln“ und behält die Daten; ohne Geräteschlüssel beginnt sie keine
+  Kopplung, und eine Kopplung ohne Vergleichswert bricht sie ab.
+
 ## [Android 0.27.0] — unveröffentlicht
 
 Schritt 28 (KA), 06e: Paket KA-21.

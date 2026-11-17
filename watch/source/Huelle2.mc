@@ -103,10 +103,12 @@ module Huelle2 {
      * wird beim ersten Aufruf je App-Fassung und Firmware; wie in Huelle.mc
      * bleibt nur ein gutes Ergebnis im Storage.
      *
-     * Huelle.bereit() ruft das NICHT: Solange die App Fassung 1 sendet,
-     * soll ein Fehlschlag hier das Senden nicht aufhalten und der erste
-     * Start nichts kosten. KG-03b fragt hier, bevor es Fassung 2 sendet --
-     * in einem eigenen Schritt, nicht im selben wie die erste Huelle. */
+     * Huelle.bereit() ruft das NICHT: Der erste Start soll nichts kosten.
+     * Uploader.syncAll() fragt hier, bevor es Fassung 2 sendet -- in einem
+     * eigenen Schritt, nicht im selben wie die erste Huelle. Seit Uhr 6.0.0
+     * (KA-22) sendet die Uhr nur noch Fassung 2; ein Fehlschlag hier haelt
+     * das Senden ganz auf (Uploader.herkunftFehlt(), :selbsttest). Bis
+     * Uhr 5.0.0 fiel sie auf Fassung 1 zurueck. */
     function bereit() as Lang.Boolean {
         if (!Huelle.bereit()) { return false; }
         var g = _geprueft;

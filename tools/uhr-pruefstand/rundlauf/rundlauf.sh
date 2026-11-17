@@ -17,11 +17,21 @@
 #      START bestaetigen
 #   4. warten, bis beide Pakete angekommen sind, dann pruefen.php
 #
+# KOPPELN IMMER MIT VERGLEICHSWERT (seit Uhr 6.0.0, KA-22): Seit Web 26.0.0
+# weist pair.php ein `start` ohne Geraeteschluessel ab, und der Eingang nimmt
+# keine Fassung 1 mehr an. Jede Art koppelt deshalb wie die Webseite
+# (koppeln2: N_b setzen, Wert gegen die Referenz, "Wert stimmt") und sendet
+# Fassung 2. Bis Uhr 5.1.0 koppelten die Arten --nachholen, --reaktivieren,
+# --neukoppeln und --fremdkonto die Uhr ohne Geraeteschluessel und massen
+# Fassung 1 (E-KG-36).
+#
 # ZWEITE ART: --nachholen. Das Demo-Konto steht beim
 # Koppeln OHNE oeffentlichen Schluessel da (die Spalte wird fuer diesen
 # Augenblick geleert und danach — auch bei Abbruch — zurueckgeschrieben). Die
-# Uhr koppelt, sagt „Gekoppelt, kein Schlüssel", sendet nicht; dann steht der
-# Schluessel wieder, START halten holt ihn, und erst danach gehen die Pakete.
+# Uhr bekommt N_b ohne Kontoschluessel, sagt „Konto ohne Schlüssel", sagt
+# Nein und koppelt nicht; nichts kommt an. Dann steht der Schluessel wieder,
+# START halten koppelt neu, und erst danach gehen die Pakete. Bis Uhr 5.1.0
+# koppelte sie ohne Schluessel und holte ihn nach.
 #
 # DRITTE ART: --schrumpfen. Zwei geparkte Pakete
 # vor dem Einsatz; waehrend seiner letzten Anfrage verwirft die Prueffassung
@@ -30,28 +40,29 @@
 # entfernte die Antwort den Eintrag ueber einen veralteten Listenplatz und
 # brach ab.
 #
-# VIERTE ART: --reaktivieren (Anlass: Nr. 431). Wie --nachholen
-# gekoppelt, ohne Schluessel, also ohne Senden. Dann wird das Geraet in der
-# Datenbank deaktiviert und der Schluessel zurueckgegeben; START halten fragt
-# nach ihm und bekommt 403 `device_disabled` (seit Web 24.12.1 gibt pair.php
-# einer deaktivierten Uhr keinen, F-KA-27), die Sync-Seite sagt "Gerät im Web
-# deaktiviert" und es kommt nichts an. Das Geraet wird wieder aktiviert — und
+# VIERTE ART: --reaktivieren (Anlass: Nr. 431). Gekoppelt; die Prueffassung
+# haelt das Senden 30 s an (Rundlauf.halten()), und in der Zeit wird das
+# Geraet in der Datenbank deaktiviert. Der Upload bekommt 403
+# `device_disabled`, die Sync-Seite sagt "Gerät im Web deaktiviert" und es
+# kommt nichts an. Das Geraet wird wieder aktiviert — und
 # es kommt WEITER nichts an, weil die Marke im Speicher liegt. Erst das
-# erneute Oeffnen der Sync-Seite fragt einmal nach (seit Uhr 4.5.0 zuerst
-# nach dem Schluessel, dann senden), und dann gehen die Pakete. Bis Uhr 4.1.1 halfen nur ein Neustart der App
-# oder ein neues Koppeln (und das sperrte der Rueckstand).
+# erneute Oeffnen der Sync-Seite fragt einmal nach, und dann gehen die
+# Pakete. Bis Uhr 4.1.1 halfen nur ein Neustart der App
+# oder ein neues Koppeln (und das sperrte der Rueckstand). Bis Uhr 5.1.0
+# koppelte diese Art ohne Schluessel, und START halten holte ihn gegen das
+# deaktivierte Geraet (403); eine Uhr ohne Schluessel nach der Kopplung gibt
+# es mit dem Vergleichswert nicht mehr.
 #
 # FUENFTE UND SECHSTE ART: --neukoppeln und --fremdkonto (Anlass: Nr. 431,
-# Teil 2). Wie --nachholen gekoppelt, dann wird das Geraet in der Datenbank
-# erst deaktiviert — START halten holt den Schluessel, der Upload bekommt
-# 403 — und dann GELOESCHT (wie im Web); zwei Pakete offen. Noch einmal
-# START halten: Die Uhr fragt, ob
+# Teil 2). Gekoppelt, das Senden 30 s angehalten, in der Zeit das Geraet
+# GELOESCHT (wie im Web); der Upload bekommt 401, zwei Pakete offen. Noch
+# einmal START halten: Die Uhr fragt, ob
 # sie trotz Rueckstand trennen darf, und bindet den Rueckstand an den
 # bisherigen Kontoschluessel. Seit Uhr 4.6.0 bleibt sie danach getrennt
-# (kein Code binnen 8 s, KG-08); ein zweites START halten koppelt neu. --neukoppeln: an dasselbe
-# Konto -> dieselben Pakete kommen an (pruefen.php). Seit KG-05 holt die Uhr
-# den Schluessel bei AKTIVEM Geraet, und die Prueffassung haelt danach das
-# Senden 30 s an (Rundlauf.halten()); in der Zeit wird geloescht. --fremdkonto: das
+# (kein Code binnen 8 s, KG-08); ein zweites START halten koppelt neu, wieder
+# mit Vergleichswert. --neukoppeln: an dasselbe
+# Konto -> dieselben Pakete kommen an (pruefen.php, Fassung 2 mit dem
+# Geraeteschluessel der ZWEITEN Kopplung). --fremdkonto: das
 # Demo-Konto traegt fuer diese Kopplung einen ANDEREN (gueltig versiegelten)
 # Schluessel -> nichts kommt an, die Sync-Seite nennt die Pakete des alten
 # Kontos, kurz START verwirft sie nach Rueckfrage.
@@ -72,22 +83,17 @@ SCHRUMPFEN=0
 [ "${1:-}" = "--nachholen" ] && { NACHHOLEN=1; shift; }
 [ "${1:-}" = "--schrumpfen" ] && { SCHRUMPFEN=1; shift; }
 REAKTIVIEREN=0
-[ "${1:-}" = "--reaktivieren" ] && { REAKTIVIEREN=1; NACHHOLEN=1; shift; }
+[ "${1:-}" = "--reaktivieren" ] && { REAKTIVIEREN=1; shift; }
 NEUKOPPELN=0
 FREMD=0
-[ "${1:-}" = "--neukoppeln" ] && { NEUKOPPELN=1; NACHHOLEN=1; shift; }
-[ "${1:-}" = "--fremdkonto" ] && { NEUKOPPELN=1; FREMD=1; NACHHOLEN=1; shift; }
+[ "${1:-}" = "--neukoppeln" ] && { NEUKOPPELN=1; shift; }
+[ "${1:-}" = "--fremdkonto" ] && { NEUKOPPELN=1; FREMD=1; shift; }
 JA_TASTE="${RUNDLAUF_JA_TASTE:-Return}"   # welche Taste in WatchUi.Confirmation "Ja" waehlt
-# FASSUNG 2 (seit Uhr 5.0.0, KG-03b, Nr. 577): Ohne ART und mit --schrumpfen
-# koppelt die Uhr mit Vergleichswert; das Skript spielt die Webseite nach
-# (N_b setzen, "Wert stimmt" ueber dieselben Funktionen wie
+# FASSUNG 2 (seit Uhr 5.0.0, KG-03b, Nr. 577; fuer alle Arten seit Uhr 6.0.0,
+# KA-22): Die Uhr koppelt mit Vergleichswert; das Skript spielt die Webseite
+# nach (N_b setzen, "Wert stimmt" ueber dieselben Funktionen wie
 # api/kopplung_wert.php), haelt den Wert der Uhr gegen die Referenz und
-# laesst pruefen.php Fassung 2 oeffnen. Die Arten der NACHHOLEN-Familie
-# messen Uhren mit ALTER Kopplung (ohne Geraeteschluessel, Fassung 1) --
-# die gibt es bis zum Stichtag weiter; die Prueffassung schickt dort keinen
-# Schluessel bei `start`.
-FASSUNG2=1
-[ "$NACHHOLEN" = 1 ] && FASSUNG2=0
+# laesst pruefen.php Fassung 2 oeffnen.
 export RUNDLAUF_LAUF=0
 GERAET="${1:-fenix6pro}"
 BASIS="${CIQ_BASIS:-$HOME/.ciq-pruefstand}"
@@ -143,23 +149,16 @@ sed "s/m-rundlauf-0001/$EINSATZ/; s/r-rundlauf-0001/$RUHE/" \
 sed -i 's|<property id="serverUrl" type="string">[^<]*</property>|<property id="serverUrl" type="string">127.0.0.1:8443</property>|' \
     "$APP/resources/settings/properties.xml"
 sed -i 's|        Track.restore();|        Track.restore();\n        Rundlauf.fuellen();|' "$APP/source/NAdokuApp.mc"
-if [ "$NEUKOPPELN" = 1 ]; then
+if [ "$NEUKOPPELN" = 1 ] || [ "$REAKTIVIEREN" = 1 ]; then
     sed -i 's|const HALTEN = false;|const HALTEN = true; |' "$APP/source/Rundlauf.mc"
     sed -i 's|^    function _send(job as Lang.Dictionary) as Void {$|&\n        if (Rundlauf.halten()) { _busy = false; return; }|' "$APP/source/Uploader.mc"
     grep -q 'const HALTEN = true;' "$APP/source/Rundlauf.mc" || fehler "Schalter HALTEN nicht gesetzt"
     grep -q 'Rundlauf.halten()' "$APP/source/Uploader.mc" || fehler "Haken halten() nicht eingesetzt"
 fi
 grep -q 'Rundlauf.fuellen' "$APP/source/NAdokuApp.mc" || fehler "Einhaengen in NAdokuApp.onStart gescheitert"
-if [ "$FASSUNG2" = 1 ]; then
-    # Der Wert, den die Uhr zeigt, in die Konsole (gegen die Referenz).
-    sed -i 's|^        _wert = r\[:wert\] as Lang.String;$|&\n        Toybox.System.println("RL-WERT " + _wert);|' "$APP/source/Pair.mc"
-    grep -q 'RL-WERT' "$APP/source/Pair.mc" || fehler "Haken RL-WERT nicht eingesetzt"
-else
-    # Ueber eine Funktion, nicht `k = null`: Mit einer Konstanten sieht die
-    # Typpruefung den Zugriff auf null weiter unten und bricht ab (F-KG-24).
-    sed -i 's|^        try { k = Huelle2.kopplungBeginnen(); } catch (e) { k = null; }$|        try { k = Rundlauf.alteKopplung() ? null : Huelle2.kopplungBeginnen(); } catch (e) { k = null; }|' "$APP/source/Pair.mc"
-    grep -q 'Rundlauf.alteKopplung()' "$APP/source/Pair.mc" || fehler "Alte Kopplung nicht eingestellt"
-fi
+# Der Wert, den die Uhr zeigt, in die Konsole (gegen die Referenz).
+sed -i 's|^        _wert = r\[:wert\] as Lang.String;$|&\n        Toybox.System.println("RL-WERT " + _wert);|' "$APP/source/Pair.mc"
+grep -q 'RL-WERT' "$APP/source/Pair.mc" || fehler "Haken RL-WERT nicht eingesetzt"
 if [ "$SCHRUMPFEN" = 1 ]; then
     sed -i 's|const SCHRUMPFEN = false;|const SCHRUMPFEN = true;|' "$APP/source/Rundlauf.mc"
     # Haken 1 nach dem Absenden, Haken 2 nach jeder angenommenen Antwort.
@@ -204,108 +203,134 @@ for _ in $(seq 1 30); do
 done
 [ -n "$SITZUNG" ] || fehler "Keine Kopplungssitzung — kam der Langdruck an? ($ABBILD/1-sync.png)"
 bash "$P" abbild "$ABBILD/2-code.png" >/dev/null
+# KOPPELN WIE DIE WEBSEITE (koppeln2 <sitzung> <bildpraefix>): N_b setzen,
+# auf das Offenlegen von N_g warten, den Wert der Uhr gegen die Referenz
+# halten, auf der Uhr bestaetigen, "Wert stimmt" wie api/kopplung_wert.php,
+# das Geraet mit Herkunft und eigenem Schluessel. Drei Pruefungen je Aufruf;
+# setzt SPK (der Geraeteschluessel dieser Kopplung, fuer pruefen.php).
+f2_pruef=0
+f2_fehl=0
+SPK=
+koppeln2() {
+    local sitz="$1" bild="$2" nb ng kpub wsoll wuhr ja dev erg hk vor
+    SPK=$(sql "SELECT spk FROM pair_sessions WHERE id = $sitz")
+    [ -n "$SPK" ] && [ "$SPK" != "NULL" ] || fehler "Die Uhr hat bei start keinen Geraeteschluessel geschickt"
+    vor=$( { bash "$P" konsole | grep -c '^RL-WERT ' || true; } )
+    nb=$(openssl rand -base64 16)
+    sql "UPDATE pair_sessions SET user_id = $DEMO, n_b = '$nb' WHERE id = $sitz"
+    melde "Sitzung $sitz dem Demo-Konto zugeordnet, N_b gesetzt (wie der Browser)"
+    ng=
+    for _ in $(seq 1 30); do
+        ng=$(sql "SELECT n_g FROM pair_sessions WHERE id = $sitz")
+        [ -n "$ng" ] && [ "$ng" != "NULL" ] && break; ng=; sleep 1
+    done
+    [ -n "$ng" ] || fehler "Die Uhr hat N_g nicht offengelegt"
+    kpub=$(cd "$WURZEL/server" && php -r 'require "db.php"; require_once "kontopaar_lib.php";
+        echo kp_fuer_geraet(db(), (int)$argv[1]) ?? "";' -- "$DEMO")
+    wsoll=$(python3 -I "$WURZEL/tools/uhr-pruefstand/rundlauf/fassung2.py" wert "$kpub" "$SPK" "$ng" "$nb")
+    wuhr=
+    for _ in $(seq 1 12); do
+        if [ "$( { bash "$P" konsole | grep -c '^RL-WERT ' || true; } )" -gt "$vor" ]; then
+            wuhr=$( { bash "$P" konsole | grep '^RL-WERT ' || true; } | tail -1 | awk '{print $2}')
+            break
+        fi
+        sleep 0.5
+    done
+    sleep 3
+    bash "$P" abbild "$ABBILD/$bild-wert.png" >/dev/null
+    f2_pruef=$((f2_pruef+1))
+    if [ -n "$wuhr" ] && [ "$wuhr" = "$wsoll" ]; then echo "  ok    Vergleichswert der Uhr gleich der Referenz: $wuhr"
+    else echo "  FEHL  Vergleichswert: Uhr ${wuhr:-keiner}, Referenz $wsoll"; f2_fehl=$((f2_fehl+1)); fi
+    bash "$P" taste Return            # START auf dem Wert: die Rueckfrage
+    sleep 3
+    bash "$P" abbild "$ABBILD/$bild-rueckfrage.png" >/dev/null
+    bash "$P" taste "$JA_TASTE"
+    ja=
+    for _ in $(seq 1 20); do
+        ja=$(sql "SELECT geraet_ja FROM pair_sessions WHERE id = $sitz")
+        [ "$ja" = 1 ] && break; sleep 1
+    done
+    sleep 3
+    bash "$P" abbild "$ABBILD/$bild-warte-auf-web.png" >/dev/null
+    f2_pruef=$((f2_pruef+1))
+    if [ "$ja" = 1 ]; then echo "  ok    Ja vermerkt, die Uhr wartet auf das Web"
+    else echo "  FEHL  kein Ja vermerkt ($ABBILD/$bild-rueckfrage.png)"; f2_fehl=$((f2_fehl+1)); fi
+    dev=$(sql "SELECT device_id FROM pair_sessions WHERE id = $sitz")
+    erg=$(cd "$WURZEL/server" && php -r 'require "db.php"; require_once "kopplung_lib.php";
+        $pdo = db();
+        if (pair_wert_melden($pdo, $argv[1], (int)$argv[2], true, "", true) !== "ok") { echo "zustand"; exit; }
+        $s = pair_sitzung_nach_kennung($pdo, $argv[1]);
+        if ($s === null || !pair_abschlussreif($s)) { echo "wartet"; exit; }
+        echo pair_abschliessen($pdo, (int)$s["id"])["ergebnis"];' -- "$dev" "$DEMO")
+    melde "Wert stimmt (wie api/kopplung_wert.php): $erg"
+    hk=
+    for _ in $(seq 1 20); do
+        hk=$(sql "SELECT CONCAT(herkunft, ':', spk = '$SPK') FROM devices WHERE user_id = $DEMO AND id > $GERAET_VOR ORDER BY id DESC LIMIT 1")
+        [ -n "$hk" ] && break; sleep 1
+    done
+    f2_pruef=$((f2_pruef+1))
+    if [ "$hk" = "1:1" ]; then echo "  ok    Geraet angelegt mit Herkunft und eigenem Geraeteschluessel"
+    else echo "  FEHL  Geraet: herkunft:spk-gleich = ${hk:-keins}"; f2_fehl=$((f2_fehl+1)); fi
+    sleep 6
+    bash "$P" abbild "$ABBILD/$bild-gekoppelt.png" >/dev/null
+}
+
+# --nachholen: das Konto ohne Schluessel beansprucht die Sitzung.
+k_fehl=0
 if [ "$NACHHOLEN" = 1 ]; then
     KP_ALT="0x$(sql "SELECT HEX(kp_oeffentlich) FROM users WHERE id = $DEMO")"
     [ "$KP_ALT" != "0x" ] && [ "$KP_ALT" != "0xNULL" ] || fehler "Demo-Konto hat keinen Schluessel, den man wegnehmen koennte"
     sql "UPDATE users SET kp_oeffentlich = NULL WHERE id = $DEMO"
     melde "Schluessel des Demo-Kontos voruebergehend geleert"
-fi
-f2_fehl=0
-if [ "$FASSUNG2" = 1 ]; then
-    SPK=$(sql "SELECT spk FROM pair_sessions WHERE id = $SITZUNG")
-    [ -n "$SPK" ] && [ "$SPK" != "NULL" ] || fehler "Die Uhr hat bei start keinen Geraeteschluessel geschickt"
-    NB=$(openssl rand -base64 16)
-    sql "UPDATE pair_sessions SET user_id = $DEMO, n_b = '$NB' WHERE id = $SITZUNG"
-    melde "Sitzung $SITZUNG dem Demo-Konto zugeordnet, N_b gesetzt (wie der Browser)"
-    NG=
-    for _ in $(seq 1 30); do
-        NG=$(sql "SELECT n_g FROM pair_sessions WHERE id = $SITZUNG")
-        [ -n "$NG" ] && [ "$NG" != "NULL" ] && break; NG=; sleep 1
-    done
-    [ -n "$NG" ] || fehler "Die Uhr hat N_g nicht offengelegt"
-    KPUB=$(cd "$WURZEL/server" && php -r 'require "db.php"; require_once "kontopaar_lib.php";
-        echo kp_fuer_geraet(db(), (int)$argv[1]) ?? "";' -- "$DEMO")
-    WSOLL=$(python3 -I "$WURZEL/tools/uhr-pruefstand/rundlauf/fassung2.py" wert "$KPUB" "$SPK" "$NG" "$NB")
-    WUHR=
-    for _ in $(seq 1 12); do
-        WUHR=$( { bash "$P" konsole | grep '^RL-WERT ' || true; } | tail -1 | awk '{print $2}')
-        [ -n "$WUHR" ] && break; sleep 0.5
-    done
-    sleep 3
-    bash "$P" abbild "$ABBILD/3-wert.png" >/dev/null
-    if [ -n "$WUHR" ] && [ "$WUHR" = "$WSOLL" ]; then echo "  ok    Vergleichswert der Uhr gleich der Referenz: $WUHR"
-    else echo "  FEHL  Vergleichswert: Uhr ${WUHR:-keiner}, Referenz $WSOLL"; f2_fehl=$((f2_fehl+1)); fi
-    bash "$P" taste Return            # START auf dem Wert: die Rueckfrage
-    sleep 3
-    bash "$P" abbild "$ABBILD/3-rueckfrage.png" >/dev/null
-    bash "$P" taste "$JA_TASTE"
-    JA=
+    # Wie der Browser (N_b), aber an pair_sitzung_beanspruchen() vorbei:
+    # Die Seite fragt das Kontopaar vorher (F-KA-108). Gemessen wird, was
+    # die Uhr tut, wenn es trotzdem so kommt.
+    sql "UPDATE pair_sessions SET user_id = $DEMO, n_b = '$(openssl rand -base64 16)' WHERE id = $SITZUNG"
+    WEG=
     for _ in $(seq 1 20); do
-        JA=$(sql "SELECT geraet_ja FROM pair_sessions WHERE id = $SITZUNG")
-        [ "$JA" = 1 ] && break; sleep 1
+        WEG=$(sql "SELECT COUNT(*) FROM pair_sessions WHERE id = $SITZUNG")
+        [ "$WEG" = 0 ] && break; sleep 1
     done
-    sleep 3
-    bash "$P" abbild "$ABBILD/3c-warte-auf-web.png" >/dev/null
-    if [ "$JA" = 1 ]; then echo "  ok    Ja vermerkt, die Uhr wartet auf das Web"
-    else echo "  FEHL  kein Ja vermerkt ($ABBILD/3-rueckfrage.png)"; f2_fehl=$((f2_fehl+1)); fi
-    DEV=$(sql "SELECT device_id FROM pair_sessions WHERE id = $SITZUNG")
-    ERG=$(cd "$WURZEL/server" && php -r 'require "db.php"; require_once "kopplung_lib.php";
-        $pdo = db();
-        if (pair_wert_melden($pdo, $argv[1], (int)$argv[2], true, "", true) !== "ok") { echo "zustand"; exit; }
-        $s = pair_sitzung_nach_kennung($pdo, $argv[1]);
-        if ($s === null || !pair_abschlussreif($s)) { echo "wartet"; exit; }
-        echo pair_abschliessen($pdo, (int)$s["id"])["ergebnis"];' -- "$DEV" "$DEMO")
-    melde "Wert stimmt (wie api/kopplung_wert.php): $ERG"
-    HK=
-    for _ in $(seq 1 20); do
-        HK=$(sql "SELECT CONCAT(herkunft, ':', spk = '$SPK') FROM devices WHERE user_id = $DEMO AND id > $GERAET_VOR ORDER BY id DESC LIMIT 1")
-        [ -n "$HK" ] && break; sleep 1
-    done
-    if [ "$HK" = "1:1" ]; then echo "  ok    Geraet angelegt mit Herkunft und eigenem Geraeteschluessel"
-    else echo "  FEHL  Geraet: herkunft:spk-gleich = ${HK:-keins}"; f2_fehl=$((f2_fehl+1)); fi
-    sleep 6
-    bash "$P" abbild "$ABBILD/3d-gekoppelt.png" >/dev/null
-else
-    sql "UPDATE pair_sessions SET user_id = $DEMO WHERE id = $SITZUNG"
-    melde "Sitzung $SITZUNG dem Demo-Konto zugeordnet"
-    sleep 9
-    bash "$P" abbild "$ABBILD/3-rueckfrage.png" >/dev/null
-    bash "$P" taste Return
-fi
-if [ "$NACHHOLEN" = 1 ]; then
-    sleep 12
-    bash "$P" abbild "$ABBILD/3a-kein-schluessel.png" >/dev/null
+    sleep 2
+    bash "$P" abbild "$ABBILD/3a-konto-ohne-schluessel.png" >/dev/null
+    if [ "$WEG" = 0 ]; then echo "  ok    Konto ohne Schluessel: die Uhr sagt Nein (Sitzung verworfen)"
+    else echo "  FEHL  Konto ohne Schluessel: Sitzung steht noch ($ABBILD/3a-konto-ohne-schluessel.png)"; k_fehl=$((k_fehl+1)); fi
+    NG=$(sql "SELECT COUNT(*) FROM devices WHERE user_id = $DEMO AND id > $GERAET_VOR")
     VOR=$(sql "SELECT COUNT(*) FROM missions WHERE user_id=$DEMO AND client_ref='$EINSATZ'")
-    [ "$VOR" = 0 ] || fehler "Ohne Schluessel ist trotzdem ein Einsatz angekommen"
-    if [ "$NEUKOPPELN" = 1 ]; then
-        GID=$(sql "SELECT MAX(id) FROM devices WHERE user_id = $DEMO AND id > $GERAET_VOR")
-        [ -n "$GID" ] && [ "$GID" != "NULL" ] || fehler "Kein neues Geraet nach dem Koppeln"
-        # Die Uhr soll den Schluessel HABEN, bevor das Geraet geht — sonst
-        # waere die Bindung "unbekannt" und gaelte richtig als anderes
-        # Konto, und der Lauf maesse den falschen Fall. Bis Web 24.12.0
-        # wurde dafuer deaktiviert; seit pair.php eine deaktivierte Uhr
-        # abweist (F-KA-27), haelt die Prueffassung das Senden an.
-        melde "Geraet $GID bleibt aktiv; die Prueffassung haelt das Senden an"
-    fi
-    if [ "$REAKTIVIEREN" = 1 ]; then
-        GID=$(sql "SELECT MAX(id) FROM devices WHERE user_id = $DEMO AND id > $GERAET_VOR")
-        [ -n "$GID" ] && [ "$GID" != "NULL" ] || fehler "Kein neues Geraet nach dem Koppeln"
-        sql "UPDATE devices SET active = 0 WHERE id = $GID"
-        melde "Geraet $GID deaktiviert"
-    fi
-    melde "Ohne Schluessel nichts gesendet (0 Einsaetze) — Schluessel zurueck, START halten"
+    if [ "$NG" = 0 ] && [ "$VOR" = 0 ]; then echo "  ok    kein Geraet angelegt, nichts angekommen"
+    else echo "  FEHL  Geraete $NG, Einsaetze $VOR — ohne Kontoschluessel gekoppelt?"; k_fehl=$((k_fehl+1)); fi
     sql "UPDATE users SET kp_oeffentlich = $KP_ALT WHERE id = $DEMO"; KP_ALT=
-    # Die Bestaetigung hat die Sync-Seite verlassen? Erst ansehen, dann halten.
+    melde "Schluessel zurueck — START halten: neu koppeln"
+    VORHER=$(sql "SELECT COALESCE(MAX(id),0) FROM pair_sessions")
     halten Return
-    sleep 4
-    bash "$P" abbild "$ABBILD/3b-geholt.png" >/dev/null
+    SITZUNG=
+    for _ in $(seq 1 30); do
+        SITZUNG=$(sql "SELECT id FROM pair_sessions WHERE id > $VORHER AND user_id IS NULL ORDER BY id DESC LIMIT 1")
+        [ -n "$SITZUNG" ] && break; sleep 1
+    done
+    [ -n "$SITZUNG" ] || fehler "Keine zweite Kopplungssitzung ($ABBILD/3a-konto-ohne-schluessel.png)"
 fi
-if [ "$NEUKOPPELN" = 1 ]; then
-    n_fehl=0
+koppeln2 "$SITZUNG" 3
+if [ "$NEUKOPPELN" = 1 ] || [ "$REAKTIVIEREN" = 1 ]; then
+    GID=$(sql "SELECT MAX(id) FROM devices WHERE user_id = $DEMO AND id > $GERAET_VOR")
+    [ -n "$GID" ] && [ "$GID" != "NULL" ] || fehler "Kein neues Geraet nach dem Koppeln"
+    # Die Uhr hat den Schluessel aus der Kopplung; die Prueffassung haelt
+    # das Senden danach 30 s an (Rundlauf.halten()), damit das Geraet
+    # geht, BEVOR etwas angekommen ist.
     for _ in $(seq 1 20); do
         bash "$P" konsole | grep -q 'RL-HALT' && break; sleep 1
     done
-    bash "$P" konsole | grep -q 'RL-HALT' || fehler "Die Uhr hat keinen Schluessel geholt (kein RL-HALT in der Konsole)"
+    bash "$P" konsole | grep -q 'RL-HALT' || fehler "Die Uhr haelt nicht an (kein RL-HALT in der Konsole)"
+    VOR=$(sql "SELECT COUNT(*) FROM missions WHERE user_id=$DEMO AND client_ref='$EINSATZ'")
+    [ "$VOR" = 0 ] || fehler "Vor dem Anhalten ist schon ein Einsatz angekommen"
+fi
+if [ "$REAKTIVIEREN" = 1 ]; then
+    sql "UPDATE devices SET active = 0 WHERE id = $GID"
+    melde "Geraet $GID deaktiviert — warten, bis die Uhr sendet und 403 bekommt"
+    sleep 38
+fi
+if [ "$NEUKOPPELN" = 1 ]; then
+    n_fehl=0
     sql "DELETE FROM devices WHERE id = $GID"
     melde "Geraet $GID geloescht (wie im Web) — warten, bis die Uhr sendet und 401 bekommt"
     sleep 38
@@ -345,9 +370,7 @@ if [ "$NEUKOPPELN" = 1 ]; then
         sql "UPDATE users SET kp_oeffentlich = '$ANDERER' WHERE id = $DEMO"
         melde "Demo-Konto traegt fuer diese Kopplung einen anderen Schluessel"
     fi
-    sql "UPDATE pair_sessions SET user_id = $DEMO WHERE id = $SITZ2"
-    sleep 9
-    bash "$P" taste Return
+    koppeln2 "$SITZ2" 7
     if [ "$FREMD" = 1 ]; then
         sleep 15
         bash "$P" abbild "$ABBILD/6-fremd.png" >/dev/null
@@ -362,14 +385,14 @@ if [ "$NEUKOPPELN" = 1 ]; then
         N=$(sql "SELECT COUNT(*) FROM missions WHERE user_id=$DEMO AND client_ref='$EINSATZ'")
         if [ "$N" = 0 ]; then echo "  ok    nach dem Verwerfen weiter nichts angekommen"
         else echo "  FEHL  nach dem Verwerfen angekommen"; n_fehl=$((n_fehl+1)); fi
+        echo "Kopplung mit Vergleichswert: $f2_pruef Pruefungen, $f2_fehl Fehlschlaege"
         echo "Fremdkonto: 4 Pruefungen, $n_fehl Fehlschlaege (Bilder 6-fremd, 6b-verworfen ansehen)"
-        [ "$n_fehl" = 0 ] || exit 1
+        [ "$n_fehl" = 0 ] && [ "$f2_fehl" = 0 ] || exit 1
         exit 0
     fi
 fi
 if [ "$REAKTIVIEREN" = 1 ]; then
     r_fehl=0
-    sleep 10
     bash "$P" abbild "$ABBILD/3c-deaktiviert.png" >/dev/null
     N=$(sql "SELECT COUNT(*) FROM missions WHERE user_id=$DEMO AND client_ref='$EINSATZ'")
     if [ "$N" = 0 ]; then echo "  ok    deaktiviert: nichts angekommen"
@@ -394,13 +417,13 @@ done
 sleep 4
 bash "$P" abbild "$ABBILD/4-gesendet.png" >/dev/null
 melde "Gegenpruefung"
-if [ "$FASSUNG2" = 1 ]; then
-    echo "Kopplung mit Vergleichswert: 3 Pruefungen, $f2_fehl Fehlschlaege"
-    [ "$f2_fehl" = 0 ] || exit 1
-    php "$WURZEL/tools/uhr-pruefstand/rundlauf/pruefen.php" "$EINSATZ" "$RUHE" 2 "$SPK"
-else
-    php "$WURZEL/tools/uhr-pruefstand/rundlauf/pruefen.php" "$EINSATZ" "$RUHE"
+echo "Kopplung mit Vergleichswert: $f2_pruef Pruefungen, $f2_fehl Fehlschlaege"
+[ "$f2_fehl" = 0 ] || exit 1
+if [ "$NACHHOLEN" = 1 ]; then
+    echo "Konto ohne Schluessel: 2 Pruefungen, $k_fehl Fehlschlaege"
+    [ "$k_fehl" = 0 ] || exit 1
 fi
+php "$WURZEL/tools/uhr-pruefstand/rundlauf/pruefen.php" "$EINSATZ" "$RUHE" 2 "$SPK"
 if [ "$SCHRUMPFEN" = 1 ]; then
     melde "Schrumpfen (F-R17-52): was meldet die Uhr?"
     KONSOLE=$(bash "$P" konsole)

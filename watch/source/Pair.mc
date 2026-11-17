@@ -255,9 +255,15 @@ module Pair {
      * Schluessel sehen -- das ersetzt das Vertrauen in den Server, der beide
      * Schluessel nur weiterreicht.
      *
-     * Ohne Paar (Geraet gibt den privaten Teil nicht her) oder ohne
-     * Antwortfelder (Server ohne die Migration) gilt der alte Weg: Rueckfrage
-     * mit der Adresse, Fassung 1. */
+     * NUR NOCH DIESER WEG (seit Uhr 6.0.0, KA-22). Seit Web 26.0.0 weist
+     * `pair.php` ein `start` ohne Block `schluessel` mit
+     * `400 {"error":"schluessel","grund":"fehlt"}` ab, und der Eingang nimmt
+     * keine Huelle der Fassung 1 mehr an. Bis Uhr 5.1.0 stand hier: Ohne
+     * Paar (Geraet gibt den privaten Teil nicht her) oder ohne
+     * Antwortfelder (Server ohne die Migration) gilt der alte Weg --
+     * Rueckfrage mit der Adresse, Fassung 1. Jetzt bricht die Uhr in beiden
+     * Faellen ab (sitzungStarten(), onStatus()): Eine Kopplung, ueber die
+     * nichts gesendet werden kann, ist schlechter als keine. */
     var _mitSchluessel as Lang.Boolean = false;
     var _ngOffen as Lang.Boolean = false;      // offenlegen hat 200 bekommen
     var _ngLaeuft as Lang.Boolean = false;     // offenlegen ist unterwegs
@@ -443,7 +449,9 @@ module Pair {
             Uploader.abgemeldet = false;
             Uploader.abmeldungVergessen();
             /* `huelle: 2` lernt eine Uhr hier wieder, deren Merker verloren
-             * ging (Vertrag 1a.7). Fehlt das Feld, sendet sie Fassung 1.
+             * ging (Vertrag 1a.7). Fehlt das Feld, sendet sie nicht und sagt
+             * "Neu koppeln" (seit Uhr 6.0.0, KA-22; bis Uhr 5.1.0 sendete sie
+             * dann Fassung 1, die der Server seit Web 26.0.0 abweist).
              * SEIT KG-10 AUCH OHNE EIGENES PAAR: Bis Uhr 5.0.0 loeschte
              * diese Stelle den Merker, wenn das Paar fehlte, und die Uhr
              * sendete still Fassung 1 -- ohne Herkunftsnachweis, obwohl der
@@ -654,6 +662,26 @@ module Pair {
             return;
         }
         _sitzungVergessen();
+        /* Ein NEUES Geraetepaar je Kopplung (Huelle2.kopplungBeginnen); es
+         * bleibt im Arbeitsspeicher, bis die Kopplung angenommen ist.
+         *
+         * OHNE PAAR KEIN START (seit Uhr 6.0.0, KA-22). Bis Uhr 5.1.0 ging
+         * `start` dann ohne `schluessel` hinaus, und die Uhr koppelte fuer
+         * Fassung 1. Seit Web 26.0.0 antwortet der Server darauf 400, und
+         * Fassung 1 nimmt er nicht mehr an. Gibt das Geraet kein Paar her,
+         * hilft auch ein zweiter Versuch nicht -- deshalb dieselben Zeilen
+         * wie beim gescheiterten Selbsttest auf der Sync-Seite, ohne
+         * Anfrage. */
+        var k = null;
+        try { k = Huelle2.kopplungBeginnen(); } catch (e) { k = null; }
+        if (k == null) {
+            status = "Verschlüsseln geht nicht";
+            statusHint = "Bitte melden";
+            statusKind = :error;
+            WatchUi.requestUpdate();
+            return;
+        }
+        _mitSchluessel = true;
         status = "Hole Code…";
         statusHint = null;
         statusKind = :busy;
@@ -662,17 +690,10 @@ module Pair {
         _lauf += 1;
         var cb = new PairStartCb(_lauf);
         var rumpf = { "aktion" => "start", "geraet" => _geraeteInfo() };
-        /* Ein NEUES Geraetepaar je Kopplung (Huelle2.kopplungBeginnen); es
-         * bleibt im Arbeitsspeicher, bis die Kopplung angenommen ist. */
-        var k = null;
-        try { k = Huelle2.kopplungBeginnen(); } catch (e) { k = null; }
-        _mitSchluessel = (k != null);
-        if (k != null) {
-            rumpf["schluessel"] = {
-                "spk"    => Huelle.base64(k[:spk] as Lang.ByteArray),
-                "zusage" => Huelle.base64(k[:zusage] as Lang.ByteArray)
-            };
-        }
+        rumpf["schluessel"] = {
+            "spk"    => Huelle.base64(k[:spk] as Lang.ByteArray),
+            "zusage" => Huelle.base64(k[:zusage] as Lang.ByteArray)
+        };
         Communications.makeWebRequest(
             base + "pair.php",
             rumpf as Lang.Dictionary<Lang.Object, Lang.Object>,
@@ -744,6 +765,14 @@ module Pair {
             // 429 aus dem Topf pair_start — Warten hilft, Wiederholen nicht.
             z1 = "Zu viele Versuche";
             z2 = "Später noch einmal";
+        } else if (fehler != null && fehler.equals("schluessel")) {
+            /* 400 `schluessel` (seit Web 26.0.0, KA-22): Der Server hat den
+             * Geraeteschluessel nicht angenommen -- `grund: fehlt`, wenn er
+             * gar nicht ankam, sonst in falscher Form. Beides ist ein Fehler
+             * dieser Uhr, kein Zustand, den Wiederholen behebt; deshalb
+             * dieselben Zeilen wie ohne Paar (sitzungStarten()). */
+            z1 = "Verschlüsseln geht nicht";
+            z2 = "Bitte melden";
         } else if (fehler != null && fehler.equals("zu_viele_sitzungen")) {
             /* 429 aus der Sitzungsobergrenze. Das ist KEIN Vorwurf an diese
              * Uhr — der Server haelt gerade so viele offene Sitzungen, wie er
@@ -859,8 +888,9 @@ module Pair {
                 _abgelehnt(dict);
                 return;
             }
-            if (zustand.equals("beansprucht") && _mitSchluessel && dict != null) {
-                if (dict["kontoschluessel"] instanceof Lang.String && dict["n_b"] instanceof Lang.String) {
+            if (zustand.equals("beansprucht")) {
+                if (_mitSchluessel && dict != null
+                    && dict["kontoschluessel"] instanceof Lang.String && dict["n_b"] instanceof Lang.String) {
                     _vergleichen(dict as Lang.Dictionary);
                     return;
                 }
@@ -868,27 +898,20 @@ module Pair {
                  * Schluesselpaar. Ohne ihn gibt es keinen Wert, und der alte
                  * Weg ginge auch nicht -- der Server zaehlt das Ja eines
                  * Geraets mit Schluessel erst nach dem Offenlegen. */
-                if (dict["n_b"] instanceof Lang.String) {
+                if (dict != null && dict["n_b"] instanceof Lang.String) {
                     bestaetigen("nein");
                     _sitzungBeenden("Konto ohne Schlüssel", "Erst im Web anmelden", :error);
                     return;
                 }
                 /* Kein N_b: Der Server kennt den Vergleichswert nicht (ohne
-                 * Migration ueberliest er den Block, Vertrag 1a.7; mit ihr
-                 * setzt er N_b beim Beanspruchen). Dann der alte Weg. */
-                Huelle2.kopplungVerwerfen();
-                _mitSchluessel = false;
-            }
-            if (zustand.equals("beansprucht")) {
-                /* Ein Konto hat den Code eingetragen. Jetzt das zweite Tor:
-                 * Die Abfrage haelt an, solange der Dialog steht — eine
-                 * Antwort, die waehrenddessen eintraefe, haette keinen Platz,
-                 * an dem sie etwas aendern duerfte. */
-                _abfragen = false;
-                var konto = (dict != null && dict["konto"] instanceof Lang.String)
-                            ? dict["konto"] as Lang.String : "diesem Konto";
-                WatchUi.pushView(new WatchUi.Confirmation("Mit " + konto + " koppeln?"),
-                                 new KoppelnDelegate(), WatchUi.SLIDE_LEFT);
+                 * Migration ueberliest er den Block, Vertrag 1a.7). Bis
+                 * Uhr 5.1.0 ging es dann den alten Weg -- Rueckfrage "Mit …
+                 * koppeln?" und Fassung 1. Seit Uhr 6.0.0 (KA-22) gibt es
+                 * ihn nicht mehr: Die Kopplung braucht den Vergleichswert,
+                 * sonst saehe der Server ein Geraet, das nichts senden kann.
+                 * Nein sagen und abbrechen, wie beim Konto ohne Schluessel. */
+                bestaetigen("nein");
+                _sitzungBeenden("Kopplung abgebrochen", "Bitte melden", :error);
                 return;
             }
             if (zustand.equals("gekoppelt")) {
@@ -1172,7 +1195,8 @@ module Pair {
         if (_mitSchluessel && _ngOffen) { Huelle2.kopplungUebernehmen(); }
         /* Der Merker folgt dem SERVER, nicht dem Gelingen der Ablage (seit
          * KG-10): Sagt er `huelle: 2` und liegt kein Paar ab, sendet die Uhr
-         * nicht und sagt "Neu koppeln" (E-KA-80) -- statt still Fassung 1. */
+         * nicht und sagt "Neu koppeln" (E-KA-80) -- statt still Fassung 1.
+         * Sagt er es nicht, ebenso (seit Uhr 6.0.0, KA-22). */
         var h2 = (dict != null && dict["huelle"] instanceof Lang.Number
                   && (dict["huelle"] as Lang.Number) == 2);
         if (h2) { Storage.setValue(ABLAGE_HUELLE2, true); }
