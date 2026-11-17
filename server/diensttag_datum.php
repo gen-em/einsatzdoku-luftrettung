@@ -30,6 +30,21 @@ if ($tag['deleted_at'] !== null) {
 }
 
 $umfang = tz_tag_umfang($userId, $dayId);
+
+/* DER VERSATZ IM STANDBUCH (06e, F-KA-129, V-KA-05). Das Umdatieren
+ * verschiebt die Klartextzeiten; die Hüllen der Fassung 2 tragen ihre Zeit
+ * absolut und gehen danach nur auf, wenn das Standbuch den Versatz BELEGT.
+ * Belegen kann ihn nur der Browser: Er merkt sich beim Absenden Tag, altes
+ * und neues Datum und die Kennungen aller Datensätze dieses Tages (auch im
+ * Papierkorb), und die Startseite trägt den Versatz ein, den er SELBST
+ * rechnet (`assets/umdatieren.js`). Der Server nennt hier nur die Kennungen. */
+$refs = [];
+foreach (['missions', 'rest_segments'] as $tabelle) {
+    $q = db()->prepare("SELECT client_ref FROM `$tabelle` WHERE user_id = ? AND day_id = ?
+                         AND client_ref IS NOT NULL AND client_ref <> ''");
+    $q->execute([$userId, $dayId]);
+    foreach ($q->fetchAll(PDO::FETCH_COLUMN) as $r) { $refs[] = (string)$r; }
+}
 $fehler = null;
 $ziel   = post_datum('ziel');
 
@@ -112,6 +127,9 @@ ui_seite_start(['titel' => 'Datum des Diensttags ändern']);
              forms.js vom Absenden nie erfuhr. confirm.js sagt deshalb ab.
              Diese Seite ist die einzige mit beiden Attributen. */ ?>
     <form method="post" action="diensttag_datum.php" id="datumform" data-dirty-track
+          data-umdatieren-alt="<?= e((string)$tag['day']) ?>"
+          data-umdatieren-tz="<?= e((string)konfig('app.timezone', 'Europe/Berlin')) ?>"
+          data-umdatieren-refs="<?= e(json_encode($refs)) ?>"
           data-confirm="Das Datum dieses Diensttags wird geändert. Alle Zeitstempel wandern mit. Fortfahren?"
           data-confirm-titel="Datum des Diensttags ändern"
           data-confirm-ok="Datum ändern" data-confirm-tone="danger">
@@ -147,4 +165,4 @@ ui_seite_start(['titel' => 'Datum des Diensttags ändern']);
   <?php ui_karte_ende(true); ?>
 
 <?php ui_geruest_ende(); ?>
-<?php ui_seite_ende(['skripte' => ['assets/forms.js']]); ?>
+<?php ui_seite_ende(['skripte' => ['assets/forms.js', 'assets/umdatieren.js']]); ?>

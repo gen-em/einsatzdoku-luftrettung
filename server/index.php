@@ -646,6 +646,9 @@ ui_seite_start(['titel' => 'Tagesübersicht', 'karte' => true,
 <?php ui_krypto_bootstrap(['csrf' => true, 'keycheck' => $rueckfrageZeigen]); ?>
 <script src="<?= asset('assets/ortsdaten.js') ?>"></script>
 <script src="<?= asset('assets/wartungslauf.js') ?>"></script>
+<?php /* Nach dem Umdatieren eines Diensttags den Versatz ins Standbuch
+         (06e, F-KA-129) — nur mit dem Merker dieses Tabs. */ ?>
+<script src="<?= asset('assets/umdatieren.js') ?>"></script>
 <script<?= kopf_nonce_attr() ?>>
 /* Nr. 568: der Merker aus `EdStandbuch.buchReparieren()` — nur dieser Browser
  * weiß, dass er ein leeres Gerätebuch angelegt hat. Still: ohne Schlüssel

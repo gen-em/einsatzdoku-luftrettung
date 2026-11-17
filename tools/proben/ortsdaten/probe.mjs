@@ -780,6 +780,14 @@ try {
       .map(p => p.ts);
   }, mid);
   php(`require_once "server/spur_lib.php"; spur_zeit_verschieben(db(), 'mission', [${mid}], 3600);`);
+  /* Seit Web 26.0.0 (F-KA-129) belegt der Browser den Versatz im Standbuch —
+     hier von Hand, wie `assets/umdatieren.js` es nach dem Umdatieren tut. */
+  const versatz = (dd) => s.evaluate(async ([mid, dd]) => {
+    const m = await (await fetch('api/mission.php?id=' + mid)).json();
+    const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+    await (await EdStandbuch.seitenbuch(ck)).fortschreiben(m.client_ref, (e) => { e.d = (e.d || 0) + dd; if (!e.d) { delete e.d; } });
+  }, [mid, dd]);
+  await versatz(3600);
   const minZ = php(`require_once "server/spur_lib.php"; echo spur_min_ts(db(), 'mission', [${mid}]);`);
   const nachZ = await s.evaluate(async (mid) => {
     const m = await (await fetch('api/mission.php?id=' + mid)).json();
@@ -788,6 +796,7 @@ try {
       .map(p => p.ts);
   }, mid);
   php(`require_once "server/spur_lib.php"; spur_zeit_verschieben(db(), 'mission', [${mid}], -3600);`);
+  await versatz(-3600);
   pruefe(vorZ.length === 10 && nachZ.length === 10 && nachZ.every((t, i) => t === vorZ[i] + 3600)
          && Number(minZ) === vorZ[0] + 3600,
          '15 Zeitverschiebung: Stücke um +3600 s, Hülle geht auf, spur_min_ts sieht sie',

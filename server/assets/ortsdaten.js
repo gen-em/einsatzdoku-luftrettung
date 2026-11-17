@@ -708,9 +708,20 @@
     return aus;
   }
 
+  /* DER VERSATZ BEIM SCHREIBEN (F-KA-129, V-KA-05). Ist ein Datensatz
+     umdatiert worden, steht `d` im Standbuch, und der Leser verlangt
+     Klartextzeit − Hüllenzeit = d. Was das Konto danach verschließt, trägt
+     deshalb die Zeit der Hülle (Klartext − d) — sonst scheiterte seine eigene
+     Hülle an `zeit`. Ohne Standbuch (Weiche aus, fremdes Paar) 0. */
+  async function versatzFuer(k, ref) {
+    if (!k || !k.ck || !ref) { return 0; }
+    try { return (await standbuchFuer(k, ref)).e.d || 0; } catch (e) { return 0; }
+  }
+
   async function stueckeBauen(punkte, art, ref, o) {
     o = o || {};
     const k = await schreibpaar(o);
+    const d = await versatzFuer(k, ref);
     const liste = punkte.map((p, i) => Object.assign({}, p, { seq: o.neu ? i : p.seq }));
     const gruppen = [];
     for (const p of liste) {
@@ -733,7 +744,7 @@
       /* Fassung 2: absolute Zeit im Kopf; SCHLUSS trägt, wer es verlangt
          (`o.schluss`, das letzte Stück einer abgeschlossenen Aufzeichnung). */
       const h = await EdHuelle2.stueckSchreiben(k, art, ref, platz,
-        { tsVon: tsVon, schluss: !!(o.schluss && g === gruppen[gruppen.length - 1]) }, innen);
+        { tsVon: tsVon - d, schluss: !!(o.schluss && g === gruppen[gruppen.length - 1]) }, innen);
       aus.push({ seq_from: g[0].seq, punkte: g.length, ts_von: tsVon,
                  ts_bis: Math.max.apply(null, g.map((p) => p.ts)), huelle: zuB64(h) });
     }
@@ -769,8 +780,9 @@
     const innen = new Uint8Array(await new Response(strom).arrayBuffer());
     const st = { seq_from: o.seqFrom, punkte: n, n_original: o.nOriginal, stufe: o.stufe, ts_von: tsVon,
                  ts_bis: Math.max.apply(null, punkte.map((p) => p.ts)) };
+    const d = await versatzFuer(k, ref);
     st.huelle = zuB64(await EdHuelle2.stueckSchreiben(k, art, ref, platzGepackt(st),
-                                                      { tsVon: tsVon, schluss: !!o.schluss }, innen));
+                                                      { tsVon: tsVon - d, schluss: !!o.schluss }, innen));
     return st;
   }
 
@@ -792,7 +804,7 @@
          abgeschlossen (`f`), bleibt er es, auch wenn das Formular nichts
          davon weiß — sonst meldete der Browser seine eigene Hülle als
          `offen-nach-schluss`. */
-      kopf = { z: (sb.e.o || 0) + 1, start: o.start, schluss: !!o.schluss || !!sb.e.f };
+      kopf = { z: (sb.e.o || 0) + 1, start: o.start - (sb.e.d || 0), schluss: !!o.schluss || !!sb.e.f };
     }
     return zuB64(await EdHuelle2.einsatzSchreiben(k, ref, kopf, innen));
   }
