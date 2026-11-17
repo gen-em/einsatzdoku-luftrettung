@@ -726,9 +726,13 @@ BetreiberIn; vorher die Messung am großen Bestand (KA-14).
 
 Ein Zweig, ein gesammelter PR, am Stück; **gemergt erst nach dem Tag
 `web-v25.0.0`, dem Anhebelauf auf Produktiv und dem Neukoppeln der Geräte**
-(E-KA-93, P-KA-18, -19). Modell Opus (Abschnitt 5). **Fächerung:** keine —
-Referenz, Browser-Kern und Proben hängen aneinander, der Rest ist Prüfarbeit
-und erzählender Text. Garmin in dieser Sitzung (E-KA-96).
+(E-KA-93, P-KA-18, -19). Modell Opus (Abschnitt 5). **Fächerung:** KA-16
+bis KA-20 seriell (Referenz, Browser-Kern und Proben hängen aneinander);
+**KA-21 (Android) und KA-22 (Garmin) je an einen Agenten**, nebeneinander und
+neben der Dokumentation — getrennte Verzeichnisse, eigener Bau, keine
+Prüfarbeit gegen die örtliche Anlage (geändert 17.11.2026, Hauptinstanz,
+nachdem sich zeigte, dass alle Sendeprüffälle beider Apps umzustellen sind).
+Garmin in dieser Sitzung (E-KA-96).
 **Bestandsaufnahme** (16.11.2026, Agent): rund 60 Dateien mit Treffern,
 davon rund 35 inhaltlich (Gruppen A bis H: `edk1:`, Gerätehülle Fassung 1,
 Anhebelauf und Weiche, Kopplung ohne Schlüssel, alte Sicherungen,
