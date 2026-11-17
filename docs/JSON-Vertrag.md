@@ -470,9 +470,11 @@ die Reihenfolge. Alle Werte sind **Base64** mit Auffüllung.
 
 1. **`start`** trägt zusätzlich
    `"schluessel": {"spk": "<65 Byte SEC1, 0x04 vorn>", "zusage": "<32 Byte>"}`.
-   Falsche Form → `400 {"error":"schluessel"}`, keine Sitzung. Ohne den
-   Block koppelt das Gerät wie bisher (Fassung 1, ohne Herkunft — bis zum
-   Stichtag aus KA-06e). Ohne die Migration überliest der Server den Block.
+   Falsche Form → `400 {"error":"schluessel"}`, keine Sitzung. **Seit Web
+   26.0.0 ist der Block Pflicht** (Stichtag, 06e): ohne ihn
+   `400 {"error":"schluessel","grund":"fehlt"}`, keine Sitzung — die App
+   ist zu alt. Bis Web 25.x koppelte ein Gerät ohne den Block wie bisher
+   (Fassung 1, ohne Herkunft).
 2. Die Person tippt den Code; der Browser zieht **N_b** (16 Byte) erst,
    nachdem er SPK und Zusage gesehen hat, und schickt sie beim Verbinden.
 3. **`status`** im Zustand `beansprucht` trägt dann zusätzlich
@@ -502,8 +504,9 @@ die Reihenfolge. Alle Werte sind **Base64** mit Auffüllung.
 **`"huelle": 2`** steht in den Antworten an ein gekoppeltes Gerät (`status`,
 `bestaetigen`), wenn es einen Geräteschlüssel hat **und** der Browser ihn
 nach „Wert stimmt" ins Gerätebuch eingetragen hat. Nur dann sendet es
-Fassung 2 (3.4); fehlt das Feld — alter Server, oder die Weiche des Browsers
-stand bei der Kopplung aus (bis Web 24.x) —, sendet es Fassung 1. Auch
+Fassung 2 (3.4). **Fehlt das Feld, sendet es seit Web 26.0.0 nichts** und
+verlangt eine neue Kopplung (Android 0.27.0, Uhr 6.0.0); bis dahin sendete
+es Fassung 1. Auch
 `status` eines schon gekoppelten Geräts trägt es; so lernt ein Gerät, dessen
 Speicher geleert wurde, es wieder. **Hat ein Gerät `huelle: 2` gehört, aber
 kein gültiges Gerätepaar** (Speicher geleert, Update von Android 0.24.0),
@@ -792,6 +795,10 @@ Web 24.18.0 (KA-06d), wenn der Server `huelle: 2` gesagt hat** (1a.7), und
 nur unter seiner eigenen Absenderkennung: den ersten 8 Byte von
 `SHA-256("nadoku-absender-1" ‖ SPK)`. Fassung 2 von einem Gerät ohne
 bestätigten Geräteschlüssel oder unter fremder Kennung → `400 payload`.
+**Fassung 1 (Kennbyte `0x01`) nimmt der Eingang seit Web 26.0.0 nicht mehr
+an** (Stichtag, 06e) → `400 payload` mit dem Grund „Fassung 1 ohne
+Herkunftsnachweis wird seit Web 26.0.0 nicht mehr angenommen — Gerät neu
+koppeln“.
 
 **Das leere Schlussstück** (nur Fassung 2): Ist beim Abschluss einer
 Aufzeichnung kein Punkt mehr offen, schickt das Gerät ein Stück mit

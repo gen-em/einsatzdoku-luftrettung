@@ -8993,4 +8993,18 @@ declare(strict_types=1);
  *   liegt in Fassung 2. Hauptnummer, weil sich das Format der Daten aendert
  *   und nicht zurueckkehrt. KEIN SCHEMA — `update.php` ist nicht noetig;
  *   nach dem Tag die Geraete neu koppeln (Runbook 13). */
+/* 26.0.0 IST DIE HAUPTNUMMER DES STICHTAGS (Schritt 28, Konzept KA, 06e,
+ *   KA-16 bis KA-23; E-KA-60, -79, -93 bis -101). Das alte Format wird nicht
+ *   mehr angenommen: Kein Schreibweg nimmt eine Geraetehuelle der Fassung 1
+ *   oder einen Block `edk1:` an, eine Kopplung braucht den Geraeteschluessel,
+ *   und eine Sicherung von vor Web 26 laesst sich nicht mehr einspielen.
+ *   Was Geraete frueher ohne Herkunftsnachweis geschickt haben, hebt der
+ *   Anhebelauf als Konto, mit dem Kennzeichen „vom Browser uebernommen“; er
+ *   ist der letzte Leser des alten Formats (bis KA-07). Die Weiche ist
+ *   zurueckgebaut. Dazu zwei Fehler, die seit Web 25 bestanden: Das
+ *   Umdatieren eines Diensttags belegt jetzt den Versatz im Standbuch
+ *   (F-KA-129), und „Schnitt zuruecknehmen“ traegt seinen Vermerk aus
+ *   (F-KA-128). Hauptnummer, weil ein Format endet. KEIN SCHEMA;
+ *   ausgeliefert erst nach dem Tag von 25.0.0, dem Anhebelauf auf Produktiv
+ *   und dem Neukoppeln der Geraete (E-KA-93). */
 const WEB_VERSION = '26.0.0';

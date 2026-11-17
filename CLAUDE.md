@@ -421,7 +421,9 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   liest, schreibt oder löscht, zeigt oder hinterlässt früher oder später
   eine halbe Spur, und zwar ohne Fehlermeldung. Es gibt genau einen Weg:
   `spur2_lesen()`, `spur2_lesen_viele()`, `spur2_stueck_schreiben()`,
-  `spur2_stand()`, `spur2_faellig()`, `spur2_wartung_tauschen()`, `spur_min_ts()`,
+  `spur2_stand()`, `spur2_faellig()`, `spur2_wartung_tauschen()`,
+  `spur2_uebernahme_liste()`, `spur2_uebernahme_zahl()`,
+  `spur2_uebernahme_tauschen()` (seit Web 26.0.0, 06e), `spur_min_ts()`,
   `spur_zahlen()`, `spur_stand()`, `spur_naechste_seq()`,
   `spur_loeschen()`, `spur_zeit_verschieben()`. Ein neuer Verbraucher, der
   daran vorbeigeht, ist ein Fehler. Format und Begründung:

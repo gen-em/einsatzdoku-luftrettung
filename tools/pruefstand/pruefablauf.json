@@ -1100,6 +1100,8 @@
         "tools/proben/ortsdaten/**",
         "tools/proben/huelle/geraet.php",
         "tools/proben/huelle/geraet_cli.php",
+        "server/assets/umdatieren.js",
+        "server/diensttag_datum.php",
         "server/einstellungen.php",
         "server/admin_sicherungen.php",
         "server/admin_user.php",

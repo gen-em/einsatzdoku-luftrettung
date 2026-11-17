@@ -14,6 +14,35 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 26.0.0] — unveröffentlicht
+
+Schritt 28 (KA), 06e: Pakete KA-16 bis KA-23.
+
+### Geändert
+
+- **Web — das alte Format wird nicht mehr angenommen.** Daten ohne
+  Herkunftsnachweis ließen sich bis hierher weiter einspielen und vom Server
+  unterschieben. Jetzt nimmt kein Schreibweg sie mehr an, eine Kopplung
+  verlangt den Geräteschlüssel, und eine Sicherung von vor Web 26 lässt sich
+  nicht mehr einspielen — nach dem Update also gleich eine neue anlegen.
+- **Web — alte Gerätedaten werden still übernommen.** Was Uhr und Handy
+  früher ohne Nachweis geschickt haben, verschließt der Browser nach der
+  Anmeldung neu, und die Einsatzansicht sagt „Vom Browser übernommen am …“.
+  Eine Lücke in einer solchen Spur bekommt einen engen Löschvermerk, statt
+  die ganze Spur unlesbar zu machen.
+- **Web — zwei Browser einigen sich zugunsten des Kontos.** Kannte ein
+  Browser einen Gerätestand, der nach einer Änderung im Konto kam, gewann
+  bisher der höhere Zähler; jetzt bleibt die Änderung des Kontos stehen.
+
+### Behoben
+
+- **Web — nach dem Umdatieren eines Diensttags fehlten die Ortsdaten.**
+  Spur, Phasenorte und Reanimation der seit Web 25 gesendeten Einsätze
+  gingen danach nicht mehr auf, weil niemand den Versatz vermerkte. Jetzt
+  rechnet der Browser ihn selbst aus und trägt ihn ein.
+- **Web — ein zurückgenommener Schnitt ließ seine Punkte verborgen.** Der
+  Vermerk des Schnitts blieb stehen; jetzt geht er mit der Rücknahme.
+
 ## [Web 25.0.0] — unveröffentlicht
 
 Schritt 28 (KA), Pakete KA-08 bis KA-14.

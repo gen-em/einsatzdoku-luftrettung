@@ -15,9 +15,21 @@ mit Grund ab (E-S11-85, Backlog Nr. 46). Die Entscheidung vom 31.08.2026
 hatte das für NaDoku 1.0 vorgesehen; S11-12 hat es vorgezogen, weil es keine
 alten Sicherungen mehr gibt.
 
+**Seit Web 26.0.0 (06e, E-KA-60, -100) nur noch Dateien, die Web 26 oder
+später geschrieben hat** — gefragt wird `web_version` im Manifest. Davor
+trugen die Dateien Gerätedaten ohne Herkunftsnachweis (Gerätehülle Fassung 1)
+und Blöcke `edk1:`, die kein Schreibweg mehr annimmt; der Browser weist die
+Datei mit Grund ab, bevor er etwas sendet, und der Server weist dieselben
+Inhalte an jedem Schreibweg ab (`pruef_huelle()`, `pruef_pat_blob()`). Die
+Nutzlast bleibt 13; geändert hat sich nur, was darin stehen darf. Ein
+**Adminpaket** (Konto-Sicherung der Verwaltung) reicht gespeicherte
+Chiffretexte unverändert durch und darf Fassung 1 weiter tragen: Ein Konto,
+das sich seit Web 25 nicht angemeldet hat, hat dort noch welche, und seine
+nächste Anmeldung hebt sie (E-KA-99).
+
 | Fassung | Gestalt | geschrieben | gelesen |
 |---|---|---|---|
-| **4** | ZIP mit versiegelten Teilen (`PK`-Magie) | seit Web 11.0.0 | ja, seit Web 23 nur Nutzlast 13 |
+| **4** | ZIP mit versiegelten Teilen (`PK`-Magie) | seit Web 11.0.0 | ja, seit Web 23 nur Nutzlast 13, seit Web 26 nur aus Web 26 und später |
 | 3 | eine versiegelte Datei (`EDBAK2`, Kopf mit Rundenzahl) | Web 5.0.0 – 10.3.0 | bis Web 22.7.0 |
 | 2 | eine versiegelte Datei ohne Rundenzahl im Kopf | bis Web 4.7.0 | bis Web 22.7.0 |
 

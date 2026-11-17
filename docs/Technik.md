@@ -452,6 +452,9 @@ Daten erst nach Server-Bestätigung.
 │   │                       (P5c/AP2); ohne Skript rollt sie trotzdem
 │   ├── assets/listenkopf.js  Das Auswahlfeld im Listenkopf schickt sofort
 │   │                       ab und verbirgt den Knopf „Filtern“ (P5c/AP2)
+│   ├── assets/umdatieren.js  Nach dem Umdatieren eines Diensttags den
+│   │                       Versatz ins Standbuch, selbst gerechnet (seit
+│   │                       Web 26.0.0, F-KA-129, 4.42)
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
 │   │                       gelöschtes Konto, Passwortwechsel); dazu seit
 │   │                       Web 20.28.0 flash_setzen()/flash_holen() — die
@@ -3761,6 +3764,7 @@ Browser:
 | Rückweg der Fassung 4 (`api/backup_spuren_restore.php`, `edbak_spuren_schreiben()`) | `spur2_stueck_schreiben()` | — |
 | Umdatierung (`tageszuordnung_lib.php`) | `spur_min_ts()`, `spur_zeit_verschieben()` | — |
 | Wartungslauf (`api/wartungslauf.php`) | `spur2_faellig()`, `spur2_wartung_tauschen()` | Stücke |
+| Übernahme der Fassung 1 (`api/format_anheben.php`, seit Web 26.0.0) | `spur2_uebernahme_liste()`, `spur2_uebernahme_zahl()`, `spur2_uebernahme_tauschen()` | Stücke mit Prüfsumme; Tausch nur der Hülle, ganz oder gar nicht |
 
 Dazu die Schreib- und Löschseite: `spur_naechste_seq()` liefert die
 Fortsetzungsmarke der Uhr (`ingest.php`, über `spur2_stand()`),
@@ -10314,12 +10318,50 @@ denen ein Angriff scheitert, stehen in `tools/proben/huelle/referenz.py`
 
 | Datei | Hält |
 |---|---|
-| `inhalt2.js` (`EdInhalt`) | `edk2:` schreiben und lesen — AES-256-GCM mit Zusatzdaten aus Zweck und Bezug, Zähler und Größenklasse innen; die Hüllen `edka2:`; **die Weiche** `SCHREIBT_FASSUNG_2` |
+| `inhalt2.js` (`EdInhalt`) | `edk2:` schreiben und lesen — AES-256-GCM mit Zusatzdaten aus Zweck und Bezug, Zähler und Größenklasse innen; die Hüllen `edka2:` (bis Web 25.x dazu die Weiche `SCHREIBT_FASSUNG_2`, seit 26.0.0 zurückgebaut) |
 | `huelle2.js` (`EdHuelle2`) | Gerätehülle Fassung 2 öffnen (Herkunft über den Geräteschlüssel, Stückfolge, absolute Zeiten) und als Absender „Konto" schreiben; Zusage und Vergleichswert der Kopplung |
 | `standbuch.js` (`EdStandbuch`) | Zählerstand je Datensatz in 16 Blättern und das Gerätebuch, Ablage in IndexedDB `nadoku-stand`, Abschrift auf dem Server über einen austauschbaren Transport; `zurueckschreiben()` nach einem zurückgesetzten Server |
 | `crypto.js` | Ableitung 2 (ein PBKDF2-Block, Hälfte und Token per HKDF) ab 1 200 000 Runden (`ABLEITUNG2_AB`); `huelleOeffnen()` für `edka2:` |
 
-**Die Weiche steht seit Web 25.0.0 an** (KA-14, E-KA-82). Gelesen werden
+**Der Stichtag (seit Web 26.0.0, 06e, KA-16 bis KA-23, E-KA-60, -93 bis
+-101).** Kein Schreibweg nimmt mehr eine Gerätehülle der Fassung 1 oder einen
+Block `edk1:` an (`pruef_huelle()`, `pruef_pat_blob()` → 400); die einzige
+Ausnahme schaltet `huelle_fassung1_zulassen()` für die Dauer eines Aufrufs:
+`edbak_restore()` im Zweig `'server'` (Demo-Reset aus Fixture bis Format 3,
+die Testquelle der Übernahme) und `edbak_paket_einspielen()` (ein Adminpaket
+reicht gespeicherte Chiffretexte unverändert durch). `pair.php start` ohne
+`schluessel` ist `400 {error: schluessel, grund: fehlt}`; Zustand F der
+Kopplung entfällt. Eine Sicherung von vor Web 26 weist der Browser ab
+(`manifest.web_version`). Die eigene Ansicht verlangt Fassung 2
+(`verlangt2` = das Paar trägt `ck`, E-KA-98); nur der Freigabeweg mit fremdem
+Paar liest weiter beide. Die Weiche ist zurückgebaut.
+
+**Die Übernahme (seit Web 26.0.0, KA-18, E-KA-95, -97).** Der Anhebelauf
+(`unlock.js`, `geraeteUebernehmen()`) ist der letzte Leser der Fassung 1: Er
+holt über `api/format_anheben.php?geraete=1` Einsatzhüllen und Spuren mit
+Kennbyte 1 (`spur2_uebernahme_liste()`), verschließt sie als Konto mit dem
+Merker bzw. Feld `uebernommen` (`EdHuelle2.spurUebernehmen()`,
+`einsatzUebernehmen()`, Referenz `spur_uebernehmen()`, `einsatz_uebernehmen()`),
+öffnet sie mit `verlangt2` wieder, setzt für jede Lücke einen engen
+Löschvermerk `[t_vor + 1, t_nach − 1]` ins Standbuch und tauscht erst dann —
+der Server nur, wo noch genau die gelesene Hülle liegt, eine Spur ganz oder
+gar nicht (`spur2_uebernahme_tauschen()`). Die Einsatzansicht zeigt
+„Vom Browser übernommen am …“ (M-KA-03 D). `k` haftet beim Zusammenführen
+zweier Blätter (E-KA-94, F-KA-119). Das Lesen der Fassung 1 im Lauf, die alte
+Fixture und `geraetehuelle_lib.php` fallen mit KA-07 (E-KA-99).
+
+**Der Versatz beim Umdatieren (seit Web 26.0.0, F-KA-129, V-KA-05).**
+`diensttag_datum.php` nennt die Kennungen des Tages; `assets/umdatieren.js`
+merkt sich beim Absenden Tag, Daten, Zeitzone und Kennungen
+(`sessionStorage`, zehn Minuten), rechnet auf der Startseite mit
+`?umdatiert=1` den Versatz SELBST (Differenz der Ortsmitternächte, wie
+`tz_tag_datum_aendern()`) und trägt `d += Versatz` je Kennung ein. Belegt ist
+er damit vom Browser, nicht vom Server. Was das Konto danach verschließt,
+trägt die Hüllenzeit Klartext − `d` (`versatzFuer()` in `ortsdaten.js`).
+„Schnitt zurücknehmen“ trägt den Vermerk des Schnitts aus
+(`EdOrtsdaten.sperreAufheben()`, F-KA-128).
+
+**Die Weiche stand von Web 25.0.0 bis 25.x an** (KA-14, E-KA-82). Gelesen werden
 beide Fassungen; geschrieben wird nur noch Fassung 2, das Standbuch führt
 Buch, und der Anhebelauf hebt den Altbestand nach der Anmeldung. Bis
 Web 24.x stand sie aus, damit Server, Geräte und Anhebelauf zuerst

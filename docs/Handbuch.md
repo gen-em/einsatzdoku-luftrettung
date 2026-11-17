@@ -1762,6 +1762,11 @@ Gerät, und hält jeden neuen dagegen:
 - **„Diese Ortsdaten tragen keinen Herkunftsnachweis"** (rot): Der Stand
   kam ohne Geräteschlüssel, wo dein Browser schon einen kennt. Koppele das
   Gerät neu.
+- **„Vom Browser übernommen am …"** (blau, Karte darunter) *(seit Web
+  26.0.0)*: Diese Ortsdaten hat ein Gerät mit einer älteren App geschickt,
+  das seine Herkunft noch nicht belegen konnte. Dein Browser hat sie nach
+  der Anmeldung geprüft und neu verschlossen; dass sie wirklich von deinem
+  Gerät stammen, ist damit nicht belegt. Zu tun ist nichts.
 
 **Sechs Kennzeichen seit Web 14.0.0, vorher drei.** Ein Einsatz vom Handy und
 einer von der Wear-OS-Uhr standen bis dahin beide als „Uhr" da, ein
@@ -1908,6 +1913,15 @@ Ruhesegmente und Trackpunkte, und ob Einträge aus dem Papierkorb dabei sind
 (die wandern mit). Danach kommt die übliche Rückfrage. Alles davon geschieht
 **gemeinsam oder gar nicht** — bricht etwas ab, steht der Tag unverändert am
 alten Datum.
+
+**Die Ortsdaten wandern über deinen Browser mit** *(seit Web 26.0.0)*. Orte,
+Reanimation und GPS-Daten liegen verschlüsselt mit ihrer Zeit; dass sie jetzt
+an einem anderen Datum stehen, vermerkt dein Browser, wenn er nach dem
+Umdatieren die Übersicht des Tages öffnet — im selben Tab, innerhalb von
+zehn Minuten. Schließt du den Tab vorher, gehen die Ortsdaten dieses Tages
+nicht auf; sie sind nicht verloren: Datiere den Tag zurück und noch einmal
+vor. (In Web 25 fehlte das ganz, und nach dem Umdatieren gingen sie nicht
+mehr auf.)
 
 **Ein belegtes Zieldatum ist kein Hindernis mehr.** Bis Web 5.10.0 wurde die
 Änderung abgelehnt, wenn dort schon ein Tag stand — der Kalendertag war der
@@ -2974,8 +2988,11 @@ Meldung nicht: Das entscheidet die Einstellung deines Browsers — meist der
 Download-Ordner, bei entsprechender Einstellung fragt er nach. Dasselbe gilt
 für den Datenexport unter **Einstellungen → „Export"**.
 
-**Welche Backups sich einspielen lassen:** seit Web 23 nur noch eines ab
-Web 22.5.0 (siehe unten, „Orte, Reanimation und GPS-Daten"). Umgekehrt lässt
+**Welche Backups sich einspielen lassen:** **seit Web 26.0.0 nur noch eines,
+das mit Web 26 oder später angelegt wurde** — ältere tragen Daten im alten
+Format, das die Anwendung nicht mehr annimmt; die Seite sagt das, und es
+wird nichts geändert. Lege deshalb **gleich nach dem Update eine neue
+Sicherung** an. (Von Web 23 bis 25 galt: ab Web 22.5.0, siehe unten.) Umgekehrt lässt
 sich eine neuere Datei in einer älteren Installation nicht öffnen — sie sagt
 das aber deutlich, statt „Passwort falsch" zu melden.
 Wählst du versehentlich ein *einzelnes Teil* aus (etwa weil du die Datei
@@ -4011,11 +4028,11 @@ Einstellungen, und es geht hier auch mit Rückstand — der Rückstand bleibt
 deinem Konto zugeordnet und geht hinaus, sobald du dasselbe Konto wieder
 koppelst.
 
-**Ein Gerät mit älterer App** schickt keinen eigenen Schlüssel. Die Rückfrage
-sagt es mit einer gelben Meldung, und der Knopf heißt **„Trotzdem
-verbinden"**: Es koppelt wie bisher, aber was es sendet, trägt keinen
-Nachweis, dass es von deinem Gerät kommt. Aktualisiere die App und koppel
-dann neu.
+**Ein Gerät mit älterer App** schickt keinen eigenen Schlüssel und lässt
+sich **seit Web 26.0.0 nicht mehr koppeln**: Die Rückfrage sagt es mit einer
+gelben Meldung, einen Knopf zum Verbinden gibt es dann nicht. Aktualisiere
+die App und hol am Gerät einen neuen Code. (Bis Web 25 hieß der Knopf
+„Trotzdem verbinden", und das Gerät sendete ohne Herkunftsnachweis.)
 
 **Seit Web 25.0.0: Geräte, die vorher gekoppelt wurden, einmal neu
 koppeln.** Erst seit dieser Fassung trägt der Browser ein Gerät beim
