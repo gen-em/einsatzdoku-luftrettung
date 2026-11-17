@@ -120,9 +120,21 @@ const EdStandbuch = (() => {
 
   /* ---- Blatt und Kennung eines Datensatzes ----------------------------- */
 
-  async function hash(ref) {
-    return new Uint8Array(await crypto.subtle.digest('SHA-256',
-      T.ghVerbinde(STAND_INFO, te.encode(String(ref)))));
+  /* JE KENNUNG EINMAL GERECHNET (Rest von Nr. 569). `eintrag()` fragte
+     `blattNr()` und `kennung()` und rechnete denselben Hash zweimal; eine
+     Sicherung tut das Tausende Male. Gemerkt im Speicher der Seite,
+     höchstens 4096 Kennungen — der Hash ist öffentlich (keine Geheimnisse). */
+  const hashFach = new Map();
+  function hash(ref) {
+    const k = String(ref);
+    let v = hashFach.get(k);
+    if (!v) {
+      if (hashFach.size >= 4096) { hashFach.clear(); }
+      v = crypto.subtle.digest('SHA-256', T.ghVerbinde(STAND_INFO, te.encode(k))).then((b) => new Uint8Array(b));
+      v.catch(() => hashFach.delete(k));
+      hashFach.set(k, v);
+    }
+    return v;
   }
   const nrAus = h => h[0] >> 4;
   const kennungAus = h => btoa(String.fromCharCode(...h.slice(1, 10)))
@@ -991,7 +1003,21 @@ const EdStandbuch = (() => {
   const buecher = new Map();          // Kennung → Versprechen auf das Buch
 
   /** Die Kennung des Kontos für die Ablage — aus dem Inhaltsschlüssel. */
-  async function kontoKennung(ck) {
+  /* Je Inhaltsschlüssel einmal (Rest von Nr. 569): `patOeffnen()` fragt sie je
+     Block über `seitenbuch()`. Ein `CryptoKey` hängt in einer WeakMap, ein
+     Schlüssel als Text in einer Map — beides nur im Speicher der Seite. */
+  const kennungFach = new WeakMap(), kennungFachText = new Map();
+  function kontoKennung(ck) {
+    const fach = (ck && typeof ck === 'object') ? kennungFach : kennungFachText;
+    let v = fach.get(ck);
+    if (!v) {
+      v = kontoKennungRechnen(ck);
+      v.catch(() => fach.delete(ck));
+      fach.set(ck, v);
+    }
+    return v;
+  }
+  async function kontoKennungRechnen(ck) {
     const key = await T.aesSchluessel(ck, ['encrypt']);
     const tag = await crypto.subtle.encrypt(
       { name: 'AES-GCM', iv: new Uint8Array(12), additionalData: KONTO_AAD }, key, new Uint8Array(0));
