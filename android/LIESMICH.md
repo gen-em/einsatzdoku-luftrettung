@@ -9,7 +9,7 @@ Phasenknöpfe.
 Grundlage ist `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
 gebaut wird, steht in `docs/JSON-Vertrag.md` und ist die führende Quelle.
 
-> **Stand: Android 0.26.0 (Schritt 28, KA-15, 15.11.2026; ohne Geräteschlüssel kein Senden, „neu koppeln“).** Das Handy
+> **Stand: Android 0.27.0 (Schritt 28, KA-21, 17.11.2026; nur noch Fassung 2, ohne `huelle: 2` oder Geräteschlüssel „neu koppeln“).** Das Handy
 > koppelt sich mit Vergleichswert, zeichnet auf, dokumentiert Phasen und
 > Einsätze und sendet alles nach dem JSON-Vertrag — Spur und Phasenorte
 > verschlossen (S11-09), mit Herkunftsnachweis in Fassung 2 (KA-06c); der
@@ -216,6 +216,24 @@ Die drei Zählungen (Web, Uhr, Android) bleiben getrennt.
 Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
+
+**Stand Android 0.27.0 (Schritt 28, KA-21: nur noch Fassung 2),
+`./gradlew --offline build` im Container, 17.11.2026 — `BUILD SUCCESSFUL in
+5m 2s`:** Lint **0** Fehler (Handy 6 Warnungen, Uhr keine), Prüffälle je
+Bauart Handy **406** (vorher 402; neu in `SenderTest`
+`nurOhneKopplungIstDieHerkunftOhne` und `nachgeholtesHuelle2SendetImSelbenLauf`,
+in `KopplungVergleichTest` `keystoreVerweigertDasPaarKeinStart` und
+`schluesselFehltIstEinFehler`; ersetzt, weil ihre Lage entfiel:
+`ohneHuelle2BleibtFassung1`, `fassung1VergibtNichtsBeimSenden`,
+`ohneGeraeteschluesselKeinBlock`; in `SendekoerperTest` zwei
+Fassung-1-Prüfungen gestrichen, alle Vertragsfälle laufen in Fassung 2), 15 übersprungen, Uhr **75**, **0** Fehlschläge.
+Gegenprobe: Mit der alten Regel in `Herkunft.stand()` (ohne `huelle: 2` →
+`OHNE`) werden 5 Fälle rot, mit der alten Bedingung im Sender 2. **Offen:**
+Die drei Rundlaufklassen koppeln über `Kopplungshilfe` ohne Geräteschlüssel
+und ohne den Schritt „Wert stimmt“ im Browser; seit 0.27.0 bricht ihr
+`start` vor der Anfrage ab (gegen Web 26.0.0 schlüge er ohnehin mit
+`400 schluessel` fehl). Ohne `-Pnadoku.rundlauf` überspringen sie sich und
+sind in den Zahlen oben nicht gemessen.
 
 **Stand Android 0.26.0 (Schritt 28, KA-15: ohne Geräteschlüssel kein
 Senden), `./gradlew --offline build` im Container, 15.11.2026 —

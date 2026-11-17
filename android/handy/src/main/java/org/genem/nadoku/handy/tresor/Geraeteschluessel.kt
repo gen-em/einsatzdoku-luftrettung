@@ -149,8 +149,8 @@ interface Geraeteschluessel {
 
     /**
      * Der Absender zum gültigen Paar, oder `null`: Dieses Handy hat keines.
-     * Dann sendet es Fassung 1 — oder, wo der Server `huelle: 2` gesagt hat,
-     * gar nicht (seit KA-15, E-KA-80; [Herkunft]).
+     * Dann sendet es gar nicht (seit KA-15, E-KA-80, wo der Server
+     * `huelle: 2` gesagt hat; seit 0.27.0 ohne Ausnahme, KA-21; [Herkunft]).
      */
     fun liefern(): Absender?
 
@@ -277,8 +277,8 @@ abstract class AbgelegterGeraeteschluessel(
             Inhalt(eintragAus(o.optJSONObject(FELD_GUELTIG)), v)
         } catch (e: Exception) {
             /* UNLESBAR IST WIE NICHT VORHANDEN, wie im Schluesseltresor. Das
-             * Handy sendet dann Fassung 1 oder — mit `huelle: 2` — nichts,
-             * bis es neu koppelt ([Herkunft]); eine halbe
+             * Handy sendet dann nichts, bis es neu koppelt ([Herkunft]);
+             * eine halbe
              * Verwaltung zu benutzen wäre schlimmer als keine. Nicht
              * protokolliert: Der Text der Ausnahme könnte `N_g` tragen. */
             Inhalt(null, null)

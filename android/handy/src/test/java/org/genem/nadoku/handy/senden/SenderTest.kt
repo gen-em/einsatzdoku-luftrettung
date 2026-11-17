@@ -47,6 +47,14 @@ class SenderTest {
     private lateinit var tresordatei: File
     private var uhrzeit: Instant = Instant.parse("2026-07-16T05:00:00Z")
 
+    /**
+     * Das gültige Gerätepaar der Grundkopplung. Seit Android 0.27.0 (KA-21)
+     * sendet der Sender nur in Fassung 2: Jeder Fall, der etwas hinausgehen
+     * sehen will, braucht `huelle: 2` im Tresor UND ein Paar. Bis dahin lief
+     * die Grundkopplung ohne beides und sendete Fassung 1.
+     */
+    private lateinit var gs: org.genem.nadoku.handy.tresor.SpeicherGeraeteschluessel
+
     private class Merkzaehler(var wert: Long = 0) : Kennungen.Zaehlerspeicher {
         override fun lies() = wert
         override fun schreib(wert: Long) { this.wert = wert }
@@ -60,7 +68,15 @@ class SenderTest {
         tresordatei = File(kontext.filesDir, "sendepruefung.bin")
         tresordatei.delete()
         tresor = Schluesseltresor(tresordatei, PruefTresorschluessel())
-        tresor.speichern(Zugangsdaten("dev-pruef", "geheim-pruef", KONTOSCHLUESSEL))
+        tresor.speichern(Zugangsdaten("dev-pruef", "geheim-pruef", KONTOSCHLUESSEL, huelle2 = true))
+        gs = gueltigesPaar()
+    }
+
+    /** Ein Gerätepaar, das eine Kopplung mit Vergleichswert hinterlassen hätte. */
+    private fun gueltigesPaar() = org.genem.nadoku.handy.tresor.SpeicherGeraeteschluessel().also {
+        it.beginnen()
+        it.festlegen(Huellenoeffner.konto, ByteArray(16))
+        assertTrue(it.uebernehmen())
     }
 
     @After fun abbauen() {
@@ -73,7 +89,7 @@ class SenderTest {
     private fun sender() = Sender(
         puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor,
         basis = server.basis,
-        jetzt = { uhrzeit },
+        jetzt = { uhrzeit }, geraeteschluessel = gs,
     )
 
     /* EIN Zähler für den ganzen Prüffall, nicht einer je Klammer.
@@ -217,7 +233,7 @@ class SenderTest {
         val adresse = server.basis
         server.close()                                  // die Gegenstelle ist fort
 
-        val s = Sender(puffer, HttpNetzweg(), tresor, adresse)
+        val s = Sender(puffer, HttpNetzweg(), tresor, adresse, geraeteschluessel = gs)
         val bericht = s.sendeAlles()
 
         assertTrue("Es muss später erneut versucht werden", bericht.spaeterErneut)
@@ -312,7 +328,7 @@ class SenderTest {
 
     private fun senderMit(b: org.genem.nadoku.handy.kopplung.Rueckstandsbindung) = Sender(
         puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor,
-        basis = server.basis, jetzt = { uhrzeit }, bindung = b,
+        basis = server.basis, jetzt = { uhrzeit }, bindung = b, geraeteschluessel = gs,
     )
 
     private fun abgeschlossenesSegment(ref: String): Long {
@@ -350,7 +366,13 @@ class SenderTest {
         val k = server.letzterKoerper()
         assertTrue(k.getBoolean("final"))
         assertEquals("2026-07-16T08:00:00Z", k.getString("ended_at"))
-        assertFalse("ohne Punkt kein Stück", k.has("track"))
+        /* Seit 0.27.0 (KA-21) ist jede Anfrage Fassung 2, und dort trägt der
+         * Abschluss ohne offenen Punkt das leere Schlussstück (Vertrag 3.4).
+         * Bis dahin lief dieser Fall in Fassung 1 und ging ohne `track`. */
+        val t = k.getJSONObject("track")
+        assertEquals("das leere Schlussstück", 0, t.getInt("punkte"))
+        assertEquals(1L, t.getLong("seq_from"))
+        assertEquals(2, java.util.Base64.getDecoder().decode(t.getString("huelle"))[0].toInt())
         assertEquals(1, bericht.fertigePakete)
         assertNull("bestätigt und entsorgt", puffer.paket(id))
     }
@@ -872,10 +894,10 @@ class SenderTest {
     @Test fun ohneKontoschluesselWirdErNachgeholt() {
         antworteVollstaendig()
         einSegmentMitPunkten(10)
-        tresor.speichern(Zugangsdaten("dev-pruef", "geheim-pruef"))
+        tresor.speichern(Zugangsdaten("dev-pruef", "geheim-pruef", huelle2 = true))
         var geholt = 0
         val s = Sender(puffer, HttpNetzweg(), tresor, server.basis, jetzt = { uhrzeit },
-            schluesselHolen = { geholt++; KONTOSCHLUESSEL })
+            schluesselHolen = { geholt++; KONTOSCHLUESSEL }, geraeteschluessel = gs)
         val bericht = s.sendeAlles()
         assertEquals(1, geholt)
         assertTrue(bericht.anfragen > 0)
@@ -891,9 +913,9 @@ class SenderTest {
     @Test fun ohneKontoschluesselGehtNichtsHinaus() {
         antworteVollstaendig()
         einSegmentMitPunkten(10)
-        tresor.speichern(Zugangsdaten("dev-pruef", "geheim-pruef"))
+        tresor.speichern(Zugangsdaten("dev-pruef", "geheim-pruef", huelle2 = true))
         val s = Sender(puffer, HttpNetzweg(), tresor, server.basis, jetzt = { uhrzeit },
-            schluesselHolen = { null })
+            schluesselHolen = { null }, geraeteschluessel = gs)
         val bericht = s.sendeAlles()
         assertEquals(0, bericht.anfragen)
         assertTrue(bericht.ohneSchluessel)
@@ -1128,39 +1150,65 @@ class SenderTest {
     }
 
     /**
-     * Ohne `huelle: 2` bleibt alles, wie es war: Fassung 1, ob ein Paar da
-     * ist oder nicht — der Server verlangt keinen Nachweis, also fehlt keiner.
+     * Ohne `huelle: 2` geht seit Android 0.27.0 nichts hinaus (KA-21,
+     * E-KA-60), ob ein Paar da ist oder nicht: Der Server nimmt Fassung 1
+     * nicht mehr an, und eine Kopplung, der er nie `huelle: 2` gesagt hat,
+     * kann keine Fassung 2 senden. Ersetzt `ohneHuelle2BleibtFassung1` —
+     * die Lage, die er prüfte (Fassung 1 ohne `huelle: 2`), gibt es nicht
+     * mehr.
      */
-    @Test fun ohneHuelle2BleibtFassung1() {
+    @Test fun gekoppeltOhneHuelle2SendetNichts() {
         antworteVollstaendig()
         val gs = fassung2Vorbereiten()
         tresor.huelleSetzen(false)
-        val mitPaar = sender2(gs).sendeAlles()
-        assertFalse(mitPaar.herkunftFehlt)
-        assertTrue(mitPaar.sauber)
-        assertEquals(1, mitPaar.fertigePakete)
-        assertEquals(1, letzteFassung())
+        assertNotNull("das Paar ist da", gs.liefern())
+        val vorher = pufferbild()
+        val s = sender2(gs)
+
+        haeltAn(s.sendeAlles(), vorher)
         assertEquals(
-            org.genem.nadoku.handy.tresor.Herkunftsstand.OHNE,
+            org.genem.nadoku.handy.tresor.Herkunftsstand.FEHLT,
             org.genem.nadoku.handy.tresor.Herkunft.stand(tresor.lesen(), gs),
         )
 
-        einSegmentMitPunkten(10)
         gs.vergessen()
-        val ohnePaar = sender2(gs).sendeAlles()
-        assertFalse(ohnePaar.herkunftFehlt)
-        assertTrue(ohnePaar.sauber)
-        assertEquals(1, letzteFassung())
+        haeltAn(s.sendeAlles(), vorher)
+        assertEquals(
+            org.genem.nadoku.handy.tresor.Herkunftsstand.FEHLT,
+            org.genem.nadoku.handy.tresor.Herkunft.stand(tresor.lesen(), gs),
+        )
+        assertEquals(
+            org.genem.nadoku.handy.tresor.Herkunftsstand.FEHLT,
+            org.genem.nadoku.handy.tresor.Herkunft.stand(tresor.lesen(), null),
+        )
+    }
+
+    /** Nicht gekoppelt ist die einzige Lage, die [org.genem.nadoku.handy.tresor.Herkunftsstand.OHNE] heißt. */
+    @Test fun nurOhneKopplungIstDieHerkunftOhne() {
         assertEquals(
             org.genem.nadoku.handy.tresor.Herkunftsstand.OHNE,
             org.genem.nadoku.handy.tresor.Herkunft.stand(null, gs),
+        )
+        assertEquals(
+            org.genem.nadoku.handy.tresor.Herkunftsstand.OHNE,
+            org.genem.nadoku.handy.tresor.Herkunft.stand(null, null),
+        )
+        assertEquals(
+            org.genem.nadoku.handy.tresor.Herkunftsstand.FEHLT,
+            org.genem.nadoku.handy.tresor.Herkunft.stand(Zugangsdaten("dev-pruef", "geheim-pruef", KONTOSCHLUESSEL), gs),
+        )
+        assertEquals(
+            org.genem.nadoku.handy.tresor.Herkunftsstand.GESICHERT,
+            org.genem.nadoku.handy.tresor.Herkunft.stand(tresor.lesen(), gs),
         )
     }
 
     /**
      * Der Merker kommt erst mit dem Nachholen des Kontoschlüssels (`status`
-     * trägt beides): Der Lauf, der ihn holt, hält schon an — er sendet nicht
-     * noch einmal mit dem Stand von davor in Fassung 1.
+     * trägt beides): Ohne Paar hält der Lauf, der ihn holt, an. Bis 0.26.0
+     * hieß das „er sendet nicht noch einmal in Fassung 1"; seit 0.27.0 hielte
+     * er ohnehin an, und der zweite Teil belegt deshalb die andere Richtung
+     * (unten).
      */
     @Test fun huelle2AusDemNachholenGiltImSelbenLauf() {
         antworteVollstaendig()
@@ -1177,6 +1225,31 @@ class SenderTest {
             geraeteschluessel = org.genem.nadoku.handy.tresor.SpeicherGeraeteschluessel(),
         )
         haeltAn(s.sendeAlles(), vorher)
+    }
+
+    /**
+     * Mit Paar sendet der Lauf, der `huelle: 2` erst holt, im SELBEN Lauf in
+     * Fassung 2 — er liest den Tresor nach dem Nachholen neu. Mit dem Stand
+     * von davor (ohne `huelle: 2`) hielte er seit 0.27.0 an und wartete auf
+     * den nächsten Lauf.
+     */
+    @Test fun nachgeholtesHuelle2SendetImSelbenLauf() {
+        antworteVollstaendig()
+        einSegmentMitPunkten(10)
+        tresor.speichern(Zugangsdaten("dev-pruef", "geheim-pruef"))
+        val s = Sender(
+            puffer, HttpNetzweg(), tresor, server.basis, jetzt = { uhrzeit },
+            schluesselHolen = {
+                tresor.huelleSetzen(true)
+                tresor.kontoschluesselSetzen(KONTOSCHLUESSEL)
+                KONTOSCHLUESSEL
+            },
+            geraeteschluessel = gs,
+        )
+        val bericht = s.sendeAlles()
+        assertFalse(bericht.herkunftFehlt)
+        assertTrue(bericht.anfragen > 0)
+        assertEquals(2, letzteFassung())
     }
 
     private fun abgewiesen(ref: String, beendet: String): Long {

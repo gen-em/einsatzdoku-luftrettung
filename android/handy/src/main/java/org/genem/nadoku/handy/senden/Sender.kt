@@ -60,11 +60,13 @@ data class Sendebericht(
      */
     val fremderRueckstand: Int = 0,
     /**
-     * Der Server verlangt Fassung 2 (`huelle: 2`), aber dieses Handy hat
-     * kein gültiges Gerätepaar (seit KA-15, E-KA-80;
+     * Dieses Handy kann seine Herkunft nicht belegen: Der Server hat bei der
+     * Kopplung nie `huelle: 2` gesagt (seit 0.27.0, KA-21), oder es fehlt
+     * das gültige Gerätepaar (seit KA-15, E-KA-80;
      * [org.genem.nadoku.handy.tresor.Herkunft]). Es ist NICHTS gesendet —
-     * auch keine Hülle der Fassung 1 —, und der Puffer ist unberührt. Der
-     * Weg heraus ist eine neue Kopplung.
+     * eine Hülle der Fassung 1 nimmt der Server seit Web 26.0.0 nicht mehr
+     * an —, und der Puffer ist unberührt. Der Weg heraus ist eine neue
+     * Kopplung.
      *
      * Der Lauf gilt zugleich als [spaeterErneut], wie bei [ohneSchluessel]:
      * Ob das Paar fehlt oder der Keystore es nur gerade nicht hergibt, weiß
@@ -143,10 +145,11 @@ class Sender(
      */
     private val bindung: Rueckstandsbindung? = null,
     /**
-     * Der Geräteschlüssel für Fassung 2 (seit KA-06c). Hat der Server
-     * `huelle: 2` gesagt, wird in Fassung 2 gesendet — oder gar nicht: Ohne
-     * gültiges Paar geht seit KA-15 nichts hinaus (E-KA-80; bis dahin
-     * Fassung 1 als Rückfall). Ohne `huelle: 2` Fassung 1 wie bisher. Den
+     * Der Geräteschlüssel für Fassung 2 (seit KA-06c). Gesendet wird nur in
+     * Fassung 2 — oder gar nicht: Ohne gültiges Paar geht seit KA-15 nichts
+     * hinaus (E-KA-80; bis dahin Fassung 1 als Rückfall), ohne `huelle: 2`
+     * seit 0.27.0 ebenso nichts (KA-21; bis dahin Fassung 1). `null` heißt
+     * also: Dieser Sender sendet nichts. Den
      * Zähler der Einsatzhülle bekommt der Sender nicht mehr (bis KA-06f:
      * `zaehler`, je Anfrage ein neuer, E-KA-64) — er liegt beim Paket im
      * Puffer (E-KA-69).
@@ -244,19 +247,24 @@ class Sender(
 
         /* NACH DEM NACHHOLEN NEU LESEN: `status` trägt auch `huelle: 2`, und
          * der Kopplungsdienst legt es im selben Zug in den Tresor. Mit dem
-         * Stand von davor ginge dieser Lauf noch in Fassung 1 hinaus, obwohl
-         * der Server gerade Fassung 2 verlangt hat. */
+         * Stand von davor hielte dieser Lauf an (bis 0.26.0: ginge er in
+         * Fassung 1 hinaus), obwohl der Server gerade Fassung 2 zugesagt hat. */
         val zugang = if (gelesen.kontoschluessel == null) tresor.lesen() ?: gelesen else gelesen
 
-        /* OHNE HERKUNFTSNACHWEIS GEHT NICHTS HINAUS, WO ER VERLANGT IST
-         * (seit KA-15, E-KA-80). Bis dahin fiel der Sender hier still auf
-         * Fassung 1 zurück — nach dem Update von 0.24.0, das die alte Ablage
-         * des Geräteschlüssels löschte, oder wenn der Keystore keinen
-         * Eintrag liefert. Vor der Bindung und vor jedem Griff in den
-         * Puffer: Dieser Lauf ändert nichts, was liegt. Die Regel selbst
-         * steht in [Herkunft], für Sender, Ansicht und Trennen dieselbe. */
+        /* OHNE HERKUNFTSNACHWEIS GEHT NICHTS HINAUS (seit KA-15, E-KA-80,
+         * und seit 0.27.0 ohne Ausnahme, KA-21). Bis KA-15 fiel der Sender
+         * hier still auf Fassung 1 zurück — nach dem Update von 0.24.0, das
+         * die alte Ablage des Geräteschlüssels löschte, oder wenn der
+         * Keystore keinen Eintrag liefert —, und bis 0.26.0 sendete eine
+         * Kopplung ohne `huelle: 2` Fassung 1 wie eh und je. Seit Web 26.0.0
+         * nimmt der Server Fassung 1 nicht mehr an (E-KA-60): Jede solche
+         * Anfrage käme als `400` zurück, und das Paket läge danach als
+         * „abgewiesen" im Puffer, statt nach einer neuen Kopplung
+         * hinauszugehen. Vor der Bindung und vor jedem Griff in den Puffer:
+         * Dieser Lauf ändert nichts, was liegt. Die Regel selbst steht in
+         * [Herkunft], für Sender, Ansicht und Trennen dieselbe. */
         val paar = if (zugang.huelle2) geraeteschluessel?.liefern() else null
-        if (zugang.huelle2 && paar == null) {
+        if (!zugang.huelle2 || paar == null) {
             return Sendebericht(spaeterErneut = true, herkunftFehlt = true, geraeumt = geraeumt)
         }
 
@@ -284,7 +292,7 @@ class Sender(
             "X-Api-Key" to zugang.schluessel,
         )
 
-        val fassung2 = paar?.let { Fassung2(it, { jetzt().epochSecond }) }
+        val fassung2 = Fassung2(paar, { jetzt().epochSecond })
 
         var bericht = Sendebericht(geraeumt = geraeumt, fremderRueckstand = fremd)
         /* Eine Obergrenze für die Anfragen eines Laufs. Sie ist kein Zaun
@@ -310,7 +318,7 @@ class Sender(
         adresse: String,
         kopfzeilen: Map<String, String>,
         kontoschluessel: ByteArray,
-        fassung2: Fassung2? = null,
+        fassung2: Fassung2,
     ): Sendebericht {
         /* DER EINSATZ AUS EINEM AUGENBLICK (seit KA-06f, E-KA-69): Paket,
          * Zähler und Phasen kommen zusammen aus dem Puffer, nicht das Paket
@@ -318,12 +326,12 @@ class Sender(
          * Phase, die dazwischen fiele, stünde sonst unter dem Zähler des
          * Stands davor. Fehlt dem Einsatz der Zähler (Bestand aus Schema 2,
          * oder der Gerätezähler war bei der Änderung nicht ablegbar), wird
-         * er hier EINMAL vergeben und abgelegt — nur für Fassung 2. */
+         * er hier EINMAL vergeben und abgelegt. */
         val paket: Paketzeile
         val phasen: List<Phaseneintrag>
         if (gereiht.art == Paketzeile.ART_EINSATZ) {
             val stand = try {
-                puffer.einsatzstand(gereiht.id, zaehlerSichern = fassung2 != null)
+                puffer.einsatzstand(gereiht.id, zaehlerSichern = true)
             } catch (e: Zaehlerausfall) {
                 /* KEIN ZÄHLER, KEINE HÜLLE: Der Gerätezähler lässt sich nicht
                  * ablegen. Nichts geht hinaus, nichts wird vermerkt, der
@@ -347,8 +355,8 @@ class Sender(
         } catch (e: org.genem.nadoku.handy.tresor.Schluesselausfall) {
             /* DER KEYSTORE HAT DIE VEREINBARUNG VERWEIGERT (seit KA-06f): Der
              * Geräteschlüssel rechnet in einem Dienst des Systems, und der
-             * kann ausfallen. Dann geht NICHTS hinaus — keine Anfrage, keine
-             * Hülle der Fassung 1 als Ausweg, kein Vermerk am Paket — und der
+             * kann ausfallen. Dann geht NICHTS hinaus — keine Anfrage, kein
+             * Ausweg ohne Herkunft, kein Vermerk am Paket — und der
              * Lauf endet als „später erneut". Ohne diesen Zweig beendete die
              * Ausnahme den Sendefaden und mit ihm den Prozess, an dem die
              * Aufzeichnung hängt. */

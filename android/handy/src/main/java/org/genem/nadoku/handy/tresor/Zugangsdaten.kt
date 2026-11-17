@@ -30,8 +30,9 @@ data class Zugangsdaten(
      * Hat der Server `"huelle": 2` gesagt (JSON-Vertrag 1a.7)? Nur dann
      * verschließt das Handy in Fassung 2, mit seinem Geräteschlüssel als
      * Absender (seit KA-06c). `false` bei jeder alten Kopplung und bei einer
-     * neuen, bei der die Weiche des Browsers aus stand — dann bleibt es bei
-     * Fassung 1, bis der Server es anders sagt.
+     * neuen, bei der die Weiche des Browsers aus stand — bis 0.26.0 blieb
+     * es dann bei Fassung 1; seit 0.27.0 sendet das Handy dann nichts und
+     * zeigt „neu koppeln" (KA-21, [Herkunft]).
      */
     val huelle2: Boolean = false,
 ) {

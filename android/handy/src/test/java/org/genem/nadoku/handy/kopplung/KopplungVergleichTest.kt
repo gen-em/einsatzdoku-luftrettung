@@ -111,10 +111,42 @@ class KopplungVergleichTest {
         assertNotNull("der Versuch liegt", gs.schwebend())
     }
 
-    @Test fun ohneGeraeteschluesselKeinBlock() {
+    /**
+     * Ohne Geräteschlüssel kein Start (seit Android 0.27.0, KA-21): Seit
+     * Web 26.0.0 weist der Server `start` ohne Block `schluessel` ab, und
+     * eine Kopplung ohne Paar könnte nichts senden. Es geht keine Anfrage
+     * hinaus, und im Tresor schwebt nichts. Ersetzt `ohneGeraeteschluesselKeinBlock`
+     * (bis 0.26.0: Start ohne Block).
+     */
+    @Test fun ohneGeraeteschluesselKeinStart() {
         server.antwortkoerper = """{"code":"AB3K7Q","device_id":"dev-3f9a","api_key":"8c1e","frist_s":600}"""
-        Kopplungsdienst(HttpNetzweg(), tresor, server.basis).starten(geraet)
-        assertFalse(server.letzterKoerper().has("schluessel"))
+        val e = Kopplungsdienst(HttpNetzweg(), tresor, server.basis).starten(geraet)
+        assertEquals(Sitzungsergebnis.Abgewiesen(Abweisung.UNBEKANNT), e)
+        assertTrue("keine Anfrage", server.anfragen.isEmpty())
+        assertNull("nichts schwebt", tresor.lesen())
+    }
+
+    /** Verweigert der Keystore das neue Paar, endet der Start ebenso — ohne Anfrage, ohne Absturz. */
+    @Test fun keystoreVerweigertDasPaarKeinStart() {
+        server.antwortkoerper = """{"code":"AB3K7Q","device_id":"dev-3f9a","api_key":"8c1e","frist_s":600}"""
+        val verweigert = object : org.genem.nadoku.handy.tresor.Geraeteschluessel by gs {
+            override fun beginnen(): org.genem.nadoku.handy.tresor.Kopplungsbeginn =
+                throw IllegalStateException("Keystore")
+        }
+        val e = Kopplungsdienst(HttpNetzweg(), tresor, server.basis, geraeteschluessel = verweigert).starten(geraet)
+        assertEquals(Sitzungsergebnis.Abgewiesen(Abweisung.UNBEKANNT), e)
+        assertTrue("keine Anfrage", server.anfragen.isEmpty())
+        assertNull(tresor.lesen())
+    }
+
+    /** `400 schluessel`, Grund `fehlt` (Web 26.0.0): ein Fehler, keine Sitzung. */
+    @Test fun schluesselFehltIstEinFehler() {
+        server.status = 400
+        server.antwortkoerper = """{"error":"schluessel","grund":"fehlt"}"""
+        val e = dienst().starten(geraet)
+        assertTrue(e is Sitzungsergebnis.Abgewiesen)
+        assertEquals(Abweisung.UNBEKANNT, (e as Sitzungsergebnis.Abgewiesen).art)
+        assertNull("nichts schwebt", tresor.lesen())
     }
 
     /**
@@ -227,8 +259,12 @@ class KopplungVergleichTest {
         assertArrayEquals(spk, gs.liefern()!!.spk)
     }
 
-    /** Ohne `huelle` (Weiche des Browsers aus): gekoppelt, aber Fassung 1 und kein Paar. */
-    @Test fun jaOhneHuelleBleibtFassung1() {
+    /**
+     * Ohne `huelle` (Weiche des Browsers aus, ein Server vor 25.0.0):
+     * gekoppelt, aber kein Paar — und seit 0.27.0 (KA-21) heißt das
+     * „Herkunft fehlt", nicht mehr Fassung 1.
+     */
+    @Test fun jaOhneHuelleHerkunftFehlt() {
         starten()
         beansprucht()
         dienst().nachfragen()
@@ -238,6 +274,7 @@ class KopplungVergleichTest {
         assertTrue(dienst().bestaetigen(ja = true) is Bestaetigungsergebnis.Gekoppelt)
         assertFalse(tresor.lesen()!!.huelle2)
         assertNull(gs.liefern())
+        assertEquals(Herkunftsstand.FEHLT, Herkunft.stand(tresor.lesen(), gs))
     }
 
     /** Der Fall der verlorenen Antwort: `status` sagt `gekoppelt` mit `huelle: 2`. */
@@ -297,14 +334,18 @@ class KopplungVergleichTest {
         assertEquals(Herkunftsstand.FEHLT, Herkunft.stand(tresor.lesen(), gs))
     }
 
-    /** Ohne `huelle` in der Antwort bleibt es bei Fassung 1, mit oder ohne Paar. */
-    @Test fun statusOhneHuelleBleibtFassung1() {
+    /**
+     * Ohne `huelle` in der Antwort merkt sich der Tresor kein Fassung 2 —
+     * und die Herkunft fehlt (seit 0.27.0, KA-21; bis dahin: Fassung 1,
+     * [Herkunftsstand.OHNE]).
+     */
+    @Test fun statusOhneHuelleHerkunftFehlt() {
         tresor.speichern(Zugangsdaten("dev-1", "k1"))
         server.status = 200
         server.antwortkoerper = """{"zustand":"gekoppelt","kontoschluessel":"$kontoB64"}"""
         assertEquals(kontoB64, dienst().schluesselHolen())
         assertFalse(tresor.lesen()!!.huelle2)
-        assertEquals(Herkunftsstand.OHNE, Herkunft.stand(tresor.lesen(), gs))
+        assertEquals(Herkunftsstand.FEHLT, Herkunft.stand(tresor.lesen(), gs))
     }
 
     /**
@@ -325,7 +366,11 @@ class KopplungVergleichTest {
         assertEquals(Bindungsstand.ANDERS, b.stand("SCHLUESSEL-B"))
     }
 
-    /** Ist das Paar da, bleibt die Sperre, wie sie war — und ebenso ohne `huelle: 2`. */
+    /**
+     * Ist das Paar da, bleibt die Sperre, wie sie war. Ohne `huelle: 2`
+     * fehlt die Herkunft seit 0.27.0 (KA-21) und das Trennen geht trotz
+     * Rückstand, gebunden (bis dahin: Sperre wie mit Paar).
+     */
     @Test fun rueckstandSperrtWeiterWoDieHerkunftNichtFehlt() {
         val spk = Base64.getDecoder().decode(starten().getJSONObject("schluessel").getString("spk"))
         beansprucht()
@@ -344,13 +389,17 @@ class KopplungVergleichTest {
         assertNull(b.gebundenBis)
         assertEquals("nichts an den Server", anfragen, server.anfragen.size)
 
-        // Ohne `huelle: 2` fehlt keine Herkunft, auch nicht ohne Paar.
+        // Ohne Bindung lässt sich nichts binden: Die Sperre gilt ausnahmslos.
         gs.vergessen()
-        tresor.huelleSetzen(false)
-        assertTrue(dienstMitRueckstand(b).trennen() is Trennergebnis.Rueckstand)
-        // Und ohne Bindung lässt sich nichts binden: Die Sperre gilt ausnahmslos.
-        tresor.huelleSetzen(true)
         assertTrue(dienstMitRueckstand(null).trennen() is Trennergebnis.Rueckstand)
         assertNotNull(tresor.lesen())
+
+        // Ohne `huelle: 2` fehlt die Herkunft, mit Paar oder ohne: trennen und binden.
+        tresor.huelleSetzen(false)
+        server.antwortkoerper = """{"ok":true}"""
+        assertEquals(Herkunftsstand.FEHLT, Herkunft.stand(tresor.lesen(), gs))
+        assertTrue(dienstMitRueckstand(b).trennen() is Trennergebnis.Getrennt)
+        assertNull("Die Kopplung ist fort", tresor.lesen())
+        assertEquals(17L, b.gebundenBis)
     }
 }

@@ -4022,7 +4022,8 @@ bis zur neuen Kopplung sendet es ohne Herkunftsnachweis.
 **„Herkunft fehlt — neu koppeln"** *(seit Android 0.26.0)*. Diese rote
 Zeile steht auf der Startseite, wenn der Server den Herkunftsnachweis
 verlangt, dem Handy aber sein Geräteschlüssel fehlt — etwa nach dem Update
-von 0.24.0. Dann sendet es nichts; die Daten bleiben im Handy. Tippe nach
+von 0.24.0 oder, **seit Android 0.27.0**, bei jeder Kopplung von vor Web 25
+(der Server nimmt Daten ohne Nachweis seit Web 26 nicht mehr an). Dann sendet es nichts; die Daten bleiben im Handy. Tippe nach
 dem Dienst auf **„Neu koppeln"**: Das ist dasselbe Trennen wie in den
 Einstellungen, und es geht hier auch mit Rückstand — der Rückstand bleibt
 deinem Konto zugeordnet und geht hinaus, sobald du dasselbe Konto wieder

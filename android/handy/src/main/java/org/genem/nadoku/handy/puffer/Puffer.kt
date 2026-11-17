@@ -439,8 +439,9 @@ class Puffer(
      *
      * @param zaehlerSichern Wird für Fassung 2 verschlossen? Dann bekommt ein
      *   Einsatz ohne Zähler hier einen — einmal, abgelegt, bevor er
-     *   zurückgegeben wird; die nächste Anfrage liest denselben. Für
-     *   Fassung 1 bleibt die Spalte, wie sie ist.
+     *   zurückgegeben wird; die nächste Anfrage liest denselben. `false`
+     *   lässt die Spalte, wie sie ist — das war der Weg der Fassung 1;
+     *   seit 0.27.0 ruft der [Sender] nur noch mit `true` (KA-21).
      * @return `null`, wenn es das Paket nicht mehr gibt
      * @throws Zaehlerausfall wenn ein Zähler fällig ist und sich nicht
      *   ablegen lässt — dann darf keine Hülle entstehen

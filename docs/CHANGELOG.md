@@ -43,6 +43,18 @@ Schritt 28 (KA), 06e: Pakete KA-16 bis KA-23.
 - **Web — ein zurückgenommener Schnitt ließ seine Punkte verborgen.** Der
   Vermerk des Schnitts blieb stehen; jetzt geht er mit der Rücknahme.
 
+## [Android 0.27.0] — unveröffentlicht
+
+Schritt 28 (KA), 06e: Paket KA-21.
+
+### Geändert
+
+- **Android — das Handy sendet nur noch mit Herkunftsnachweis.** Ein Handy,
+  das vor Web 25 gekoppelt war, sendete bisher weiter Daten ohne Nachweis,
+  die der Server seit Web 26 abweist. Jetzt zeigt es „Herkunft fehlt — neu
+  koppeln“, behält die Daten und lässt sich trotz Rückstand neu koppeln;
+  ohne Geräteschlüssel beginnt es gar keine Kopplung mehr.
+
 ## [Web 25.0.0] — unveröffentlicht
 
 Schritt 28 (KA), Pakete KA-08 bis KA-14.

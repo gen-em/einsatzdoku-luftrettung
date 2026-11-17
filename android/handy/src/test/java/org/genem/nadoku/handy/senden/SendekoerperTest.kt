@@ -39,13 +39,24 @@ class SendekoerperTest {
         ByteArray(h.length / 2) { h.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
     }
 
+    /*
+     * DER ABSENDER IST PFLICHT (seit Android 0.27.0, KA-21): `baue()` nimmt
+     * kein `fassung2 = null` mehr, und jeder Körper ist Fassung 2. Bis dahin
+     * liefen die Vertragsfälle oben ohne Absender, also in Fassung 1.
+     */
+    private val geraet = org.genem.nadoku.handy.tresor.SoftwareAbsender.erzeugen()
+    private val abschluss = java.time.Instant.parse("2026-07-16T06:00:00Z").epochSecond
+    private fun f2() = Fassung2(geraet) { 1_800_000_000L }
+    private fun auf(b64: String, art: String, ref: String, platz: String): ByteArray =
+        Huellenoeffner.oeffnen2(java.util.Base64.getDecoder().decode(b64), geraet.spk, art, ref, platz)
+
     private val punkte = listOf(
         Rohpunkt(47.72611, 10.31862, 712.0, 1_784_279_465),
         Rohpunkt(47.72640, 10.31901, null, 1_784_279_475),
     )
 
     @Test fun ruhesegment() {
-        val o = Sendekoerper.baue(segment(), seqVon = 240, punkte = punkte, kontoschluessel = ks)
+        val o = Sendekoerper.baue(segment(), seqVon = 240, punkte = punkte, kontoschluessel = ks, fassung2 = f2())
         assertEquals("rest_segment", o.getString("kind"))
         assertEquals("ar-2-0000300004", o.getString("client_ref"))
         assertEquals("2026-07-16", o.getString("day"))
@@ -57,16 +68,16 @@ class SendekoerperTest {
 
     /** `ended_at` ist null, solange `final` false ist (Vertrag 3). */
     @Test fun endeIstNullSolangeNichtAbgeschlossen() {
-        assertTrue(Sendekoerper.baue(segment(final = false), 0, punkte, kontoschluessel = ks).isNull("ended_at"))
+        assertTrue(Sendekoerper.baue(segment(final = false), 0, punkte, kontoschluessel = ks, fassung2 = f2()).isNull("ended_at"))
         assertEquals(
             "2026-07-16T06:00:00Z",
-            Sendekoerper.baue(segment(final = true), 0, punkte, kontoschluessel = ks).getString("ended_at"),
+            Sendekoerper.baue(segment(final = true), 0, punkte, kontoschluessel = ks, fassung2 = f2()).getString("ended_at"),
         )
     }
 
     /** Ohne Dienstkennung geht das Feld gar nicht mit — die Rückfallebene greift. */
     @Test fun ohneDienstkennungFehltDasFeld() {
-        assertFalse(Sendekoerper.baue(segment(dienstRef = null), 0, punkte, kontoschluessel = ks).has("day_ref"))
+        assertFalse(Sendekoerper.baue(segment(dienstRef = null), 0, punkte, kontoschluessel = ks, fassung2 = f2()).has("day_ref"))
     }
 
     /**
@@ -76,26 +87,28 @@ class SendekoerperTest {
      * abwiese.
      */
     @Test fun spurIstEinVerschlossenesStueck() {
-        val t = Sendekoerper.baue(segment(), 7, punkte, kontoschluessel = ks).getJSONObject("track")
+        val t = Sendekoerper.baue(segment(), 7, punkte, kontoschluessel = ks, fassung2 = f2()).getJSONObject("track")
         assertFalse(t.has("points"))
         assertEquals(7, t.getInt("seq_from"))
         assertEquals(2, t.getInt("punkte"))
         assertEquals(1_784_279_465L, t.getLong("ts_von"))
         assertEquals(1_784_279_475L, t.getLong("ts_bis"))
         val h = java.util.Base64.getDecoder().decode(t.getString("huelle"))
-        // Kennbyte, EPK, IV, 2×14 Byte gepolstert auf 32, Prüfwort
-        assertEquals(1 + 65 + 16 + 32 + 32, h.size)
-        assertEquals(1, h[0].toInt())
+        // Kennbyte, SID, EPK, IV, Kopf und 2×14 Byte gepolstert auf 16, Prüfwort
+        // (bis 0.26.0 Fassung 1: ohne SID und ohne Kopf, 1 + 65 + 16 + 32 + 32)
+        val ct = ((Geraetehuelle.SPUR_KOPF2 + 2 * 14) / 16 + 1) * 16
+        assertEquals(1 + 8 + 65 + 16 + ct + 32, h.size)
+        assertEquals(2, h[0].toInt())
     }
 
     /** Ohne Punkte kein `track` — ein Stück hat 1 bis 2000 (Vertrag 3.2). */
     @Test fun ohnePunkteKeinStueck() {
-        assertFalse(Sendekoerper.baue(segment(), 0, emptyList(), kontoschluessel = ks).has("track"))
+        assertFalse(Sendekoerper.baue(segment(), 0, emptyList(), kontoschluessel = ks, fassung2 = f2()).has("track"))
     }
 
     @Test fun einsatzTraegtKennzahlenUndPhasen() {
         val o = Sendekoerper.baue(
-            einsatz(), 0, punkte, kontoschluessel = ks,
+            einsatz(), 0, punkte, kontoschluessel = ks, fassung2 = f2(),
             phasen = listOf(
                 Phaseneintrag(2, "2026-07-16T08:31:05Z", 47.7261, 10.3186),
                 Phaseneintrag(4, "2026-07-16T08:51:02Z", null, null),
@@ -121,14 +134,14 @@ class SendekoerperTest {
      * und nur das ist wahr.
      */
     @Test fun reanimationWirdGarNichtErwaehnt() {
-        val o = Sendekoerper.baue(einsatz(), 0, punkte, kontoschluessel = ks)
+        val o = Sendekoerper.baue(einsatz(), 0, punkte, kontoschluessel = ks, fassung2 = f2())
         assertFalse(o.has("resus_sessions"))
         assertFalse(o.has("resus"))
     }
 
     /** Ein Ruhesegment trägt keine Phasen und keine Kennzahlen. */
     @Test fun ruhesegmentTraegtKeinePhasen() {
-        val o = Sendekoerper.baue(segment(), 0, punkte, kontoschluessel = ks)
+        val o = Sendekoerper.baue(segment(), 0, punkte, kontoschluessel = ks, fassung2 = f2())
         assertFalse(o.has("phases"))
         assertFalse(o.has("distance_m"))
         assertFalse(o.has("ort_huelle"))
@@ -139,7 +152,7 @@ class SendekoerperTest {
         val viele = (0 until Sender.CHUNK_PUNKTE).map {
             Rohpunkt(47.72611 + it * 0.0001, 10.31862 + it * 0.0001, 712.0 + it, 1_784_279_465L + it)
         }
-        val bytes = Sendekoerper.baue(segment(), 0, viele, kontoschluessel = ks).toString().toByteArray(Charsets.UTF_8).size
+        val bytes = Sendekoerper.baue(segment(), 0, viele, kontoschluessel = ks, fassung2 = f2()).toString().toByteArray(Charsets.UTF_8).size
         println("Körper mit ${Sender.CHUNK_PUNKTE} Punkten: $bytes Bytes " +
             "(Grenze ${Sender.HOECHSTE_KOERPERGROESSE})")
         assertTrue(
@@ -150,11 +163,6 @@ class SendekoerperTest {
 
     // ---- Fassung 2 (seit KA-06c) ------------------------------------------
 
-    private val geraet = org.genem.nadoku.handy.tresor.SoftwareAbsender.erzeugen()
-    private val abschluss = java.time.Instant.parse("2026-07-16T06:00:00Z").epochSecond
-    private fun f2() = Fassung2(geraet) { 1_800_000_000L }
-    private fun auf(b64: String, art: String, ref: String, platz: String): ByteArray =
-        Huellenoeffner.oeffnen2(java.util.Base64.getDecoder().decode(b64), geraet.spk, art, ref, platz)
 
     /**
      * Ein abgeschlossener Einsatz, letztes Stück: Die Einsatzhülle trägt den
@@ -206,15 +214,15 @@ class SendekoerperTest {
     }
 
     /**
-     * Ein Einsatz ohne Zähler bekommt in Fassung 2 KEINE Hülle — der
-     * Baustein erfindet keinen. Fassung 1 kennt keinen Zähler und baut
-     * weiter; ein Ruhesegment braucht nie einen.
+     * Ein Einsatz ohne Zähler bekommt KEINE Hülle — der Baustein erfindet
+     * keinen; ein Ruhesegment braucht nie einen. (Bis 0.26.0 stand hier
+     * auch, dass Fassung 1 ohne Zähler weiterbaut — die Lage gibt es nicht
+     * mehr.)
      */
     @Test fun fassung2OhneZaehlerKeineHuelle() {
         assertTrue(runCatching {
             Sendekoerper.baue(einsatz(zaehler = null), 0, punkte, emptyList(), Huellenoeffner.konto, f2(), true)
         }.exceptionOrNull() is IllegalStateException)
-        assertTrue(Sendekoerper.baue(einsatz(zaehler = null), 0, punkte, emptyList(), ks).has("ort_huelle"))
         assertTrue(Sendekoerper.baue(segment(final = true), 0, punkte, emptyList(), Huellenoeffner.konto, f2(), true).has("track"))
     }
 
@@ -235,9 +243,12 @@ class SendekoerperTest {
         assertEquals(1, innen[8].toInt())
     }
 
-    /** Fassung 1 kennt kein Schlussstück; ein laufendes Paket ohne Punkte hat in beiden Fassungen keins. */
-    @Test fun keinSchlussstueckOhneFassung2OderOhneAbschluss() {
-        assertFalse(Sendekoerper.baue(segment(final = true), 240, emptyList(), kontoschluessel = ks).has("track"))
+    /**
+     * Ein laufendes Paket ohne Punkte hat kein Schlussstück. (Bis 0.26.0
+     * prüfte dieser Fall auch, dass Fassung 1 keins kennt — die Lage gibt es
+     * nicht mehr; ohne Absender lässt sich kein Körper bauen.)
+     */
+    @Test fun keinSchlussstueckOhneAbschluss() {
         assertFalse(
             Sendekoerper.baue(segment(final = false), 240, emptyList(), emptyList(), Huellenoeffner.konto, f2(), true)
                 .has("track"),

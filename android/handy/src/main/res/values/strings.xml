@@ -50,7 +50,7 @@
     <string name="sync_herkunft">Herkunft gesichert</string>
     <!-- KA-15, E-KA-80, M-KA-03 F -->
     <string name="sync_herkunft_fehlt">Herkunft fehlt — neu koppeln</string>
-    <string name="herkunft_fehlt_hinweis">Der Server verlangt Daten mit Herkunftsnachweis, aber diesem Handy fehlt sein Geräteschlüssel (etwa nach dem Update von 0.24.0). Bis du neu koppelst, sendet es nichts; die Daten bleiben gespeichert.</string>
+    <string name="herkunft_fehlt_hinweis">Der Server nimmt nur noch Daten mit Herkunftsnachweis an, aber diesem Handy fehlt dafür sein Geräteschlüssel (etwa bei einer älteren Kopplung oder nach dem Update von 0.24.0). Bis du neu koppelst, sendet es nichts; die Daten bleiben gespeichert.</string>
     <string name="neu_koppeln">Neu koppeln</string>
 
     <!-- ==== Kopplung (JSON-Vertrag 1a) ================================== -->
