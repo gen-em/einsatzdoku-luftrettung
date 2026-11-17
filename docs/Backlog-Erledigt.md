@@ -11423,3 +11423,17 @@ zutreffen.
      „Neu koppeln“ mit gebundenem Trennen. *Abnahme:* Krypto-Probe 32 gut,
      sendeweg 28 grün, drei Gegenproben rot. Erledigt 16.11.2026 mit
      Uhr 5.1.0 (Schritt 28, KG-09, KG-10).
+
+590. **Nach dem Umdatieren eines Diensttags gehen die Ortsdaten der Fassung 2 nicht mehr auf.** · gehört zu: 28 · Stand: erledigt · seit 17.11.2026
+     *Aufgenommen 17.11.2026 aus KA-20 (F-KA-129).* V-KA-05 sieht die
+     Umdatierung als belegten Versatz im Standbuch vor; gebaut war nur das
+     Lesen. `diensttag_datum.php` verschiebt die Klartextzeiten, und jede
+     Hülle der Fassung 2 an diesem Tag scheitert an `zeit` — seit Web
+     25.0.0. *Weg:* Der Browser merkt sich beim Absenden Tag, Daten und
+     Kennungen, rechnet den Versatz selbst und trägt ihn ein
+     (`assets/umdatieren.js`); die Schreibwege des Kontos schreiben die
+     Hüllenzeit mit `d`. *Abnahme:* Bedienprobe `umdatieren-versatz` und
+     die Gegenprobe ohne Skript.
+     Erledigt mit Web 26.0.0 (KA-20, E-KA-101): assets/umdatieren.js belegt
+     den Versatz aus dem Browser; die Schreibwege des Kontos schreiben die
+     Hüllenzeit mit d.

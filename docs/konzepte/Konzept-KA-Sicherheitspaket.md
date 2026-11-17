@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 erledigt** (M-KA-03 freigegeben, E-KA-87), **KA-12 erledigt** (Handbuch und Runbook: Geräte nach dem Tag neu koppeln), **KA-09 erledigt** (Referenz Rückweg, Fable-Agent), **KA-15 erledigt** (Android 0.26.0), **KA-10 erledigt** (Browser-Kern), **KA-11 gebaut** (Anzeige in `einsatz.php`; gefahren wird sie mit umgelegter Weiche in KA-14), **KA-13 erledigt** (Demo-Fixture Format 4; lädt erst mit KA-14), **KA-14 erledigt** (Prüfstand `haupt` 74 grün, 0 rot); **alle Pakete KA-08 bis KA-15 fertig**; vor dem PR auf Wunsch der BetreiberIn Backlog **Nr. 566** (Android, erledigt), **Nr. 568** (E-KA-92, erledigt) und **Nr. 569** (Sichern und GPX schneller, Fable-Agent, erledigt); Prüfstand `haupt` 74 grün, 0 rot; **PR #190 gemergt 16.11.2026** (ging mit Konflikt auf, `main` örtlich gemergt, Prüfstand über den Merge neu; Regel seither `Pruefablauf.md` 5.3a); Lauf 219 auf Staging grün samt Stufe 2, R91 mit eigenem Konto ohne Befund (Abschnitt 9); **06e in Arbeit** als KA-16 bis KA-23 (Web 26.0.0, E-KA-93 bis -101; PR wartet auf den Tag `web-v25.0.0`): KA-16 bis KA-20 erledigt (Referenz, Browser-Kern, Übernahme, Stichtag, Rückbau der Weiche, Proben, F-KA-128, -129); KA-21 (Android 0.27.0) und KA-22 (Uhr 6.0.0) bei je einem Agenten; KA-23 Dokumente begonnen; Garmin-Teil (Zähler am Inhalt, kein Senden ohne Herkunft) erledigt als KG-09/KG-10, Uhr 5.1.0, PR #189 gemergt; offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
+| In Arbeit | **Web 25.0.0, das Umlegen der Weiche** (Abschnitt 5, „KA-08 bis KA-15“, E-KA-82 bis -86), Zweig `claude/amazing-keller-i2f04f`, ein gesammelter PR am Ende: **KA-08 erledigt** (M-KA-03 freigegeben, E-KA-87), **KA-12 erledigt** (Handbuch und Runbook: Geräte nach dem Tag neu koppeln), **KA-09 erledigt** (Referenz Rückweg, Fable-Agent), **KA-15 erledigt** (Android 0.26.0), **KA-10 erledigt** (Browser-Kern), **KA-11 gebaut** (Anzeige in `einsatz.php`; gefahren wird sie mit umgelegter Weiche in KA-14), **KA-13 erledigt** (Demo-Fixture Format 4; lädt erst mit KA-14), **KA-14 erledigt** (Prüfstand `haupt` 74 grün, 0 rot); **alle Pakete KA-08 bis KA-15 fertig**; vor dem PR auf Wunsch der BetreiberIn Backlog **Nr. 566** (Android, erledigt), **Nr. 568** (E-KA-92, erledigt) und **Nr. 569** (Sichern und GPX schneller, Fable-Agent, erledigt); Prüfstand `haupt` 74 grün, 0 rot; **PR #190 gemergt 16.11.2026** (ging mit Konflikt auf, `main` örtlich gemergt, Prüfstand über den Merge neu; Regel seither `Pruefablauf.md` 5.3a); Lauf 219 auf Staging grün samt Stufe 2, R91 mit eigenem Konto ohne Befund (Abschnitt 9); **06e in Arbeit** als KA-16 bis KA-23 (Web 26.0.0, E-KA-93 bis -101; PR wartet auf den Tag `web-v25.0.0`): KA-16 bis KA-20 erledigt (Referenz, Browser-Kern, Übernahme, Stichtag, Rückbau der Weiche, Proben, F-KA-128, -129); KA-21 (Android 0.27.0) und KA-22 (Uhr 6.0.0) erledigt (je ein Agent); KA-23: Dokumente geschrieben, voller Prüfstand und PR folgen; Garmin-Teil (Zähler am Inhalt, kein Senden ohne Herkunft) erledigt als KG-09/KG-10, Uhr 5.1.0, PR #189 gemergt; offen bei der BetreiberIn P-KA-16 (Handy am Gerät ab Android 12, nach `android-v0.25.0`) |
 | Erledigt | **KA-06f** (PR #187, gemergt 15.11.2026, Android 0.25.0, Web 24.19.0; Zweig `claude/amazing-keller-i2f04f`; R91 auf Staging grün, Abschnitt 9) · **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -1051,6 +1051,31 @@ Testquelle der Übernahme; sie bleibt mit dem Zweig `'server'` bis KA-07
 (E-KA-99). (4) Ein Adminpaket kann Fassung 1 legitim tragen — zugelassen
 (E-KA-99). (5) Der Container startete dreimal neu; jedes Mal die Startfolge
 (`dockerd`, `hochfahren.sh`, `plattform.sh alles`).
+
+### 06e: KA-21 Android 0.27.0 und KA-22 Uhr 6.0.0 (17.11.2026, je ein Agent)
+
+**Was nicht geprüft werden konnte — zuerst.** (1) Kein echtes Handy, keine
+echte Garmin — Robolectric und Simulator. (2) Die Rundlaufklassen des Handys
+gegen eine örtliche Anlage (`-Pnadoku.rundlauf`) koppeln noch ohne
+Geräteschlüssel und sind nicht gemessen; gegen Web 26 wären sie rot (offen,
+`android/LIESMICH.md`). (3) `uhr-rea` nicht gefahren (Cpr, Input unberührt).
+
+| Mittel | Ergebnis | Gegenprobe | Was es belegt |
+|---|---|---|---|
+| `./gradlew --offline build` | Handy **406** Prüffälle je Bauart (15 übersprungen), Uhr 75, **0** rot, Lint 0 Fehler | Regel in `Herkunft.kt` zurück: 5 rot; Sender ohne `huelle2`-Bedingung: 2 rot | KA-21: gekoppelt ohne `huelle: 2` ist FEHLT, nichts geht hinaus; Kopplung nur mit Schlüssel |
+| Uhr Stufe I / `kryptoreihe` / `kryptoprobe` / `extern.py` | 99/0 · 99/0 · 3 Geräte je 32/0 · 27/0 | — | übersetzt für alle Geräte, Hülle unverändert |
+| `sendeweg fenix6pro` | **31** Prüfungen, 0 Fehlschläge (neu 26 bis 28, 19 umgedeutet) | `Uploader.mc` aus HEAD: 1 rot; `Pair.mc` aus HEAD: 3 rot | KA-22: kein Senden ohne Merker, kein `start` ohne Paar, `400 schluessel`, beansprucht ohne N_b bricht ab |
+| `rundlauf` alle fünf Arten, `syncseite` | grün (je 2/0 bis 15/0); Syncseite 24/0 | — | Kopplung mit Vergleichswert, Senden in Fassung 2 bis in den Browser |
+
+**Probleme und Lösungen.** (1) `pruefen.php` des Rundlaufs öffnete die
+Schlüsselhülle des Demo-Kontos nur als `edk1:` (seit KA-13 `edk2:`) — kein
+Rundlauf lief; jetzt `edk2:` mit Rückfall. (2) Ein `git stash` des
+Garmin-Agenten nahm für Sekunden die Arbeit des Android-Agenten weg und gab
+sie zurück — nichts verloren, der Android-Stand war danach vollständig
+(nachgesehen). (3) Der Hinweistext „Herkunft fehlt“ am Handy nennt jetzt
+auch ältere Kopplungen und weicht damit vom Wortlaut in M-KA-03 F ab.
+(4) Nach der Abmeldefrist versucht eine Uhr ohne Herkunft keinen letzten
+Versand mehr; verworfen wird wie bisher.
 
 ### R91 nach PR #190 — Web 25.0.0 auf Staging (16.11.2026)
 

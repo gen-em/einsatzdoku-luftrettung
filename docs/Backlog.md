@@ -804,15 +804,3 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      dem Stichtag aus 06e. *Abnahme:* voller Einspiellauf, `erzeugen.php`
      und `verschliessen.py` ohne Befund, Fixture byte-gleich zur heutigen
      oder begründet anders.
-<!-- -->
-
-590. **Nach dem Umdatieren eines Diensttags gehen die Ortsdaten der Fassung 2 nicht mehr auf.** · gehört zu: 28 · Stand: in Arbeit · seit 17.11.2026
-     *Aufgenommen 17.11.2026 aus KA-20 (F-KA-129).* V-KA-05 sieht die
-     Umdatierung als belegten Versatz im Standbuch vor; gebaut war nur das
-     Lesen. `diensttag_datum.php` verschiebt die Klartextzeiten, und jede
-     Hülle der Fassung 2 an diesem Tag scheitert an `zeit` — seit Web
-     25.0.0. *Weg:* Der Browser merkt sich beim Absenden Tag, Daten und
-     Kennungen, rechnet den Versatz selbst und trägt ihn ein
-     (`assets/umdatieren.js`); die Schreibwege des Kontos schreiben die
-     Hüllenzeit mit `d`. *Abnahme:* Bedienprobe `umdatieren-versatz` und
-     die Gegenprobe ohne Skript.
