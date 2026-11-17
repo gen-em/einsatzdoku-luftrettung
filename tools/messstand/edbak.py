@@ -67,6 +67,22 @@ RUNDEN_VORGABE = 320000
 AAD_MARKE = "EDBAK4"
 
 
+def _web_version() -> str:
+    """Die Fassung aus `server/version.php` — sie steht im Manifest.
+
+    Seit Web 26.0.0 weist das Einspielen jede Sicherung ab, deren
+    `web_version` unter 26 liegt (E-KA-100). Bis dahin schrieb dieses
+    Werkzeug „messstand" hinein, und der Messstand scheiterte an der ersten
+    Datei (06e). Der Inhalt ist Punktklartext, den der Browser beim
+    Einspielen selbst verschließt — er trägt kein altes Format."""
+    import re
+    quelle = (pathlib.Path(__file__).resolve().parents[2] / "server" / "version.php").read_text("utf-8")
+    m = re.search(r"^const WEB_VERSION = '([0-9.]+)';", quelle, re.M)
+    if not m:
+        raise RuntimeError("WEB_VERSION in server/version.php nicht gefunden")
+    return m.group(1)
+
+
 def _teil_versiegeln(schluessel: bytes, salt: bytes, runden: int, roh: bytes,
                      aad_text: str) -> bytes:
     """Ein Teil der Fassung 4 — wie `sealTeil()` in `assets/crypto.js`:
@@ -117,7 +133,7 @@ def schreiben_edbak_v4(kopf: dict, eintragsteile: list, spurteile: list, passwor
         spuren = sum(len(t.get("spuren", [])) for t in spurteile)
         punkte = sum(len(s.get("punkte", [])) for t in spurteile for s in t.get("spuren", []))
         manifest = {"format": "einsatzdoku-backup-manifest", "fassung": 4, "kennung": kennung,
-                    "erzeugt_am": kopf.get("created_at"), "web_version": "messstand",
+                    "erzeugt_am": kopf.get("created_at"), "web_version": _web_version(),
                     "nutzlast": kopf.get("version"), "teile": teile,
                     "eintragsteile": len(eintragsteile),
                     "eintraege": kopf.get("eintraege_gesamt"), "spurteile": len(spurteile),
