@@ -487,8 +487,9 @@ die Reihenfolge. Alle Werte sind **Base64** mit Auffüllung.
    nach einer Ablehnung → `409 {"error":"zustand"}`. Nach dem Abschluss
    (Antwort verloren) → `200`. Danach rechnet das Gerät den Wert und zeigt
    ihn mit der maskierten Adresse.
-5. **`bestaetigen` mit `ja`** zählt erst nach dem Offenlegen (davor
-   `409 {"error":"zustand"}`). Hat die Webseite den Wert noch nicht
+5. **`bestaetigen` mit `ja`** zählt erst nach dem Offenlegen (davor, und
+   seit Web 26.0.0 an einer Sitzung ohne Geräteschlüssel,
+   `409 {"error":"zustand"}`; bis Web 25.x schloss dort das Ja allein ab). Hat die Webseite den Wert noch nicht
    bestätigt: `202 {"wartet":"browser"}` — das Ja ist vermerkt, das Gerät
    fragt mit `status` nach. Hat sie es schon: `200` wie bisher. Im Web
    abgelehnt: `409 {"error":"abgelehnt","grund":"wert"|"zusage"}`.

@@ -25,6 +25,9 @@ Schritt 28 (KA), 06e: Pakete KA-16 bis KA-23.
   unterschieben. Jetzt nimmt kein Schreibweg sie mehr an, eine Kopplung
   verlangt den Geräteschlüssel, und eine Sicherung von vor Web 26 lässt sich
   nicht mehr einspielen — nach dem Update also gleich eine neue anlegen.
+- **Web — die Koppelseite kennt nur noch den Weg mit Vergleichswert.** Ältere
+  Apps gibt es nicht mehr, also auch keinen Hinweis mehr für ein Gerät ohne
+  Schlüssel oder ohne Angaben über sich.
 - **Web — alte Gerätedaten werden still übernommen.** Was Uhr und Handy
   früher ohne Nachweis geschickt haben, verschließt der Browser nach der
   Anmeldung neu, und die Einsatzansicht sagt „Vom Browser übernommen am …“.

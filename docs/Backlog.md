@@ -812,6 +812,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      mit Geräteschlüssel, weil `pair.php` ohne ihn abweist. Danach sagt
      er aber nur `bestaetigen` Ja, ohne N_g offenzulegen und ohne „Wert
      stimmt" im Browser — der Server antwortet 202 `wartet`, und der Lauf
-     kommt nicht ans Ende. *Weg:* den Weg aus `tools/proben/kopplung/
+     kommt nicht ans Ende; seine Texte des Wegs ohne Vergleichswert gibt
+     es seit E-KA-102 nicht mehr. *Weg:* den Weg aus `tools/proben/kopplung/
      probe.php` (Zusage, Offenlegen, Vergleichswert) übernehmen.
      *Abnahme:* ein Handlauf bis zum gekoppelten Gerät und Trennen.

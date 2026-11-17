@@ -134,7 +134,6 @@
   const FEHLER_MAX = 3;
 
   /* ---- 2. bis 4. Der Vergleichswert ---------------------------------- */
-  const herkunft = kasten.dataset.herkunft === '1';
   const karte = kasten.closest('.karte');
   const titel = karte ? karte.querySelector('.karte-titel') : null;
   let wertGezeigt = false;
@@ -341,9 +340,9 @@
       case 'wartet':
         rest = parseInt(antwort.rest_s, 10) || 0;
         if (anzeige) { anzeige.textContent = restText(rest); }
-        if (herkunft && antwort.wert_ok) {
+        if (antwort.wert_ok) {
           schritt('geraet');
-        } else if (herkunft && antwort.n_g && !wertGezeigt) {
+        } else if (antwort.n_g && !wertGezeigt) {
           await wertZeigen(antwort.n_g);
           if (!laeuft) { return; }
         }

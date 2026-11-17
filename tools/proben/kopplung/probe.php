@@ -709,6 +709,18 @@ pruefe(!$ohne && ($st['daten']['zustand'] ?? '') === 'offen' && !isset($st['date
        '48  Konto ohne Paar: Beanspruchen mit Geraeteschluessel scheitert, Sitzung offen; mit Paar beansprucht (F-KA-108)',
        "{$st['roh']} / {$st2['roh']}");
 
+/* E-KA-102: Eine Sitzung OHNE Geraeteschluessel — nur von vor Web 26.0.0
+ * denkbar, hier per SQL nachgestellt: beansprucht, ohne `spk`. Das Ja
+ * schliesst nicht ab, es entsteht kein Geraet. Gegen Web 25.x rot: Dort
+ * genuegte an einer solchen Sitzung das Ja allein. */
+$y = anfrage(['aktion' => 'start', 'schluessel' => $schluessel]);
+$yd = (string)$y['daten']['device_id']; $yk = (string)$y['daten']['api_key']; $angelegt[] = $yd;
+$pdo->prepare('UPDATE pair_sessions SET spk = NULL, zusage = NULL, user_id = ? WHERE device_id = ?')
+    ->execute([$uid, $yd]);
+$jy = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $yd, $yk);
+pruefe($jy['code'] === 409 && ($jy['daten']['error'] ?? '') === 'zustand' && geraet($pdo, $yd) === null,
+       '49  Sitzung ohne Geraeteschluessel: Ja -> 409 zustand, kein Geraet (E-KA-102)', "HTTP {$jy['code']} {$jy['roh']}");
+
 /* ======================================================================
  * Teil 8 — Fassung 2 am Eingang (44 bis 47). Der Server prueft nur die
  * Form: Kennbyte, SID im Kopf, 0x04, Laenge. Die Huellen hier haben genau

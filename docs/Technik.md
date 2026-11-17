@@ -10331,7 +10331,10 @@ Ausnahme schaltet `huelle_fassung1_zulassen()` für die Dauer eines Aufrufs:
 die Testquelle der Übernahme) und `edbak_paket_einspielen()` (ein Adminpaket
 reicht gespeicherte Chiffretexte unverändert durch). `pair.php start` ohne
 `schluessel` ist `400 {error: schluessel, grund: fehlt}`; Zustand F der
-Kopplung entfällt. Eine Sicherung von vor Web 26 weist der Browser ab
+Kopplung entfällt, ebenso das Warten ohne Vergleichswert (Bild D) und die
+Warnung für ein Gerät ohne Selbstauskunft. Eine Sitzung ohne `spk` (nur von
+vor dem Update) gilt in `einstellungen.php` als unbekannter Code; es gibt
+keine älteren Geräte mehr (BetreiberIn, 17.11.2026). Eine Sicherung von vor Web 26 weist der Browser ab
 (`manifest.web_version`). Die eigene Ansicht verlangt Fassung 2
 (`verlangt2` = das Paar trägt `ck`, E-KA-98); nur der Freigabeweg mit fremdem
 Paar liest weiter beide. Die Weiche ist zurückgebaut.

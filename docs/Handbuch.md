@@ -3978,13 +3978,14 @@ Abschnitt 2.2 von der Uhr aus beschreibt:
    („Uhr" oder „Handy") und das Modell, das es selbst gemeldet hat, dazu den
    Code in zwei Dreiergruppen und die gekürzte Gerätekennung. Erst **„Verbinden"** ordnet die Sitzung deinem
    Konto zu; daneben steht leise **„Abbrechen"**.
-3. **Ein Wartezustand.** Jetzt ist das Gerät am Zug: Es fragt zurück, ob es zu
-   deinem Konto gehören soll, und **erst dieses Ja legt es an**. Die Seite
+3. **Ein Wartezustand** mit Vergleichswert (unten). Dann ist das Gerät am
+   Zug: Es fragt zurück, ob es zu deinem Konto gehören soll, und **erst
+   dieses Ja legt es an**. Die Seite
    lädt von selbst nach, sobald es soweit ist — du musst nichts neu laden.
    Bis dahin läuft die Restzeit mit, und du kannst den Vorgang hier abbrechen.
 
-**Mit Vergleichswert** *(seit Web 24.18.0)*. Ein Gerät mit neuer App schickt
-beim Koppeln einen eigenen Schlüssel mit. Dann zeigen nach dem Verbinden
+**Mit Vergleichswert** *(seit Web 24.18.0, seit Web 26.0.0 der einzige
+Weg)*. Das Gerät schickt beim Koppeln einen eigenen Schlüssel mit. Dann zeigen nach dem Verbinden
 **dieser Browser und das Gerät dieselbe sechsstellige Zahl** — die Karte
 heißt „Vergleichswert prüfen" und wartet zuerst ein paar Sekunden auf das
 Gerät. Stimmt die Zahl Ziffer für Ziffer, tippst du **„Wert stimmt"** und
@@ -4030,10 +4031,9 @@ deinem Konto zugeordnet und geht hinaus, sobald du dasselbe Konto wieder
 koppelst.
 
 **Ein Gerät mit älterer App** schickt keinen eigenen Schlüssel und lässt
-sich **seit Web 26.0.0 nicht mehr koppeln**: Die Rückfrage sagt es mit einer
-gelben Meldung, einen Knopf zum Verbinden gibt es dann nicht. Aktualisiere
-die App und hol am Gerät einen neuen Code. (Bis Web 25 hieß der Knopf
-„Trotzdem verbinden", und das Gerät sendete ohne Herkunftsnachweis.)
+sich **seit Web 26.0.0 nicht mehr koppeln**: Es bekommt schon keinen Code.
+Aktualisiere die App. (Bis Web 25 hieß der Knopf „Trotzdem verbinden", und
+das Gerät sendete ohne Herkunftsnachweis.)
 
 **Seit Web 25.0.0: Geräte, die vorher gekoppelt wurden, einmal neu
 koppeln.** Erst seit dieser Fassung trägt der Browser ein Gerät beim

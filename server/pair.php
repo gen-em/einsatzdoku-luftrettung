@@ -316,16 +316,19 @@ if ($sitzung !== null) {
     if (($sitzung['abgelehnt'] ?? null) !== null) {
         antworten(409, ['error' => 'abgelehnt', 'grund' => (string)$sitzung['abgelehnt']]);
     }
-    /* MIT GERAETESCHLUESSEL zaehlt das Ja erst nach dem Offenlegen, und es
-     * schliesst nur ab, wenn das Web den Wert schon bestaetigt hat. Sonst
-     * wird es vermerkt; das Web schliesst ab, wenn „Wert stimmt“ kommt. */
-    if (($sitzung['spk'] ?? null) !== null) {
-        if (($sitzung['n_g'] ?? null) === null) { antworten(409, ['error' => 'zustand']); }
-        $pdo->prepare('UPDATE pair_sessions SET geraet_ja = 1 WHERE id = ?')->execute([$sid]);
-        $sitzung['geraet_ja'] = 1;
-        if ((int)$sitzung['wert_ok'] !== 1) {
-            antworten(202, ['wartet' => 'browser']);
-        }
+    /* Das Ja zaehlt erst nach dem Offenlegen, und es schliesst nur ab, wenn
+     * das Web den Wert schon bestaetigt hat. Sonst wird es vermerkt; das Web
+     * schliesst ab, wenn „Wert stimmt“ kommt. EINE SITZUNG OHNE
+     * GERAETESCHLUESSEL schliesst seit Web 26.0.0 nicht mehr ab (06e,
+     * E-KA-102): Sie kann nur von vor dem Update stammen, und bis dahin
+     * genuegte dort das Ja allein. */
+    if (($sitzung['spk'] ?? null) === null || ($sitzung['n_g'] ?? null) === null) {
+        antworten(409, ['error' => 'zustand']);
+    }
+    $pdo->prepare('UPDATE pair_sessions SET geraet_ja = 1 WHERE id = ?')->execute([$sid]);
+    $sitzung['geraet_ja'] = 1;
+    if ((int)$sitzung['wert_ok'] !== 1) {
+        antworten(202, ['wartet' => 'browser']);
     }
 
     /* ---- Das Geraet entsteht: eine Transaktion (kopplung_lib.php) -------

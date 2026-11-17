@@ -266,7 +266,8 @@ function pair_sitzung_beanspruchen(PDO $pdo, string $code, int $userId, ?string 
  * ABGESCHLOSSEN wird eine Sitzung mit Geräteschlüssel erst, wenn BEIDE
  * zugestimmt haben: das Gerät (Ja) und die Webseite („Wert stimmt“). Wer
  * zuletzt kommt, legt das Gerät an (`pair_abschliessen()`). Eine Sitzung
- * ohne Geräteschlüssel (ältere App) schließt wie bisher mit dem Ja.
+ * ohne Geräteschlüssel schließt seit Web 26.0.0 nicht mehr ab (`pair.php`,
+ * E-KA-102); bis dahin genügte dort das Ja (ältere App).
  *
  * BIS DIE MIGRATION `2026_11_13_kopplung_herkunft` GELAUFEN IST, gibt es
  * die Spalten nicht; `pair_herkunft_bereit()` sagt es, und dann koppelt
