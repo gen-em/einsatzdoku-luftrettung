@@ -69,8 +69,7 @@
   /* ---- Abgleich des Gerätebuchs -------------------------------------- */
   (async () => {
     const el = document.getElementById('geraetebuch-abgleich');
-    if (!el || typeof EdInhalt === 'undefined' || !EdInhalt.schreibt2()
-        || typeof PAT_WRAP === 'undefined') { return; }
+    if (!el || typeof EdInhalt === 'undefined' || typeof PAT_WRAP === 'undefined') { return; }
     try {
       const da = new Set(JSON.parse(el.dataset.geraete || '[]'));
       if (kasten && kasten.dataset.geraet) { da.add(kasten.dataset.geraet); }
@@ -231,12 +230,9 @@
           /* ERST DAS BUCH, DANN DER SERVER: Ein Gerät, das der Server
            * anlegt, ohne im Buch zu stehen, sendete Daten, die nicht
            * aufgehen; ein Eintrag ohne Gerät räumt der Abgleich auf. */
-          let imBuch = false;
-          if (EdInhalt.schreibt2()) {
-            const buch = await EdStandbuch.seitenbuch(gemerkt.ck);
-            imBuch = (await buch.geraetEintragen({ spk: gemerkt.spk, geraet: kasten.dataset.geraet,
-                                                    seit: Math.floor(Date.now() / 1000) })) !== null;
-          }
+          const buch = await EdStandbuch.seitenbuch(gemerkt.ck);
+          const imBuch = (await buch.geraetEintragen({ spk: gemerkt.spk, geraet: kasten.dataset.geraet,
+                                                      seit: Math.floor(Date.now() / 1000) })) !== null;
           const a = await melden({ antwort: 'ja', im_buch: imBuch });
           if (!a.ok) {
             fehlerZeigen(a.daten && a.daten.meldung ? a.daten.meldung

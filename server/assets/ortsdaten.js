@@ -618,7 +618,6 @@
     await paarBereit();
     const pub = (typeof EdKontopaar !== 'undefined') ? EdKontopaar.oeffentlich() : null;
     if (!pub) { throw fehler('kein_paar', 'Für dieses Konto ist noch kein Schlüsselpaar eingerichtet.'); }
-    if (!EdInhalt.schreibt2()) { return { pub: pub, priv: null }; }
     /* Ohne `o.ck` der Inhaltsschlüssel der Seite — jeder Schreibweg steht auf
        einer Seite mit dem Rüstzeug (`PAT_WRAP`). */
     const ck = (o && o.ck) || ((typeof EdUnlock !== 'undefined' && typeof PAT_WRAP !== 'undefined')
@@ -639,7 +638,7 @@
    * den Schnitt stehen; die Lücke fällt dann beim Lesen auf.
    */
   async function sperreVermerken(ref, von, bis) {
-    if (!EdInhalt.schreibt2() || typeof PAT_WRAP === 'undefined') { return null; }
+    if (typeof PAT_WRAP === 'undefined') { return null; }
     try {
       const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
       if (!ck) { return null; }
@@ -656,7 +655,7 @@
    * dieser Zeitraum. Still wie das Vermerken.
    */
   async function sperreAufheben(ref, von, bis) {
-    if (!EdInhalt.schreibt2() || typeof PAT_WRAP === 'undefined') { return null; }
+    if (typeof PAT_WRAP === 'undefined') { return null; }
     try {
       const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
       if (!ck) { return null; }
@@ -697,7 +696,6 @@
    *          mit der Weiche aus (dann braucht es keine)
    */
   async function sperrenVermerkenViele(liste, o) {
-    if (!EdInhalt.schreibt2()) { return null; }
     const posten = (liste || []).filter((x) => x && x.ref && x.sperren && x.sperren.length);
     const aus = new Map();
     if (!posten.length) { return aus; }
@@ -795,7 +793,7 @@
     o = o || {};
     const k = await schreibpaar(o);
     let kopf = null;
-    if (EdInhalt.schreibt2()) {
+    {
       if (!Number.isSafeInteger(o.start)) {
         throw fehler('beginn', 'Zum Verschließen fehlt der Beginn des Einsatzes.');
       }

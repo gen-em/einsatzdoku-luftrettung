@@ -73,16 +73,10 @@ async function pair(k, rumpf, g) {
   return { status: a.status(), d };
 }
 
-const WEICHE = /const SCHREIBT_FASSUNG_2 = (?:true|false);/;
-async function weicheAn(seite) {
-  await seite.route(/assets\/inhalt2\.js/, async (route) => {
-    const antwort = await route.fetch();
-    const kopf = Object.assign({}, antwort.headers(), { 'cache-control': 'no-store' });
-    delete kopf['content-length']; delete kopf['content-encoding'];
-    await route.fulfill({ status: antwort.status(), headers: kopf,
-      body: (await antwort.text()).replace(WEICHE, 'const SCHREIBT_FASSUNG_2 = true;') });
-  });
-}
+/* Die Weiche ist seit Web 26.0.0 zurückgebaut (06e, KA-20); bis dahin legte
+ * diese Funktion sie im Browser der Probe um. Sie bleibt als leerer Schritt,
+ * damit der Weg unverändert lesbar bleibt. */
+async function weicheAn() { /* nichts mehr umzulegen */ }
 
 /** Start am Gerät, Code im Web, verbinden, bis zum Offenlegen. */
 async function bisZumWert(k, nGOffen) {

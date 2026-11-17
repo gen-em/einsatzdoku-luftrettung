@@ -43,9 +43,9 @@
  * Was aufgeht, trägt seinen ABSENDER: null (Fassung 1 — „ohne
  * Herkunftsnachweis"), 'konto' oder die SID des Geräts (hex).
  *
- * DIE SCHREIBWEGE STEHEN HINTER DER WEICHE (`EdInhalt.schreibt2()`,
- * inhalt2.js): `stueckSchreiben()` und `einsatzSchreiben()` schreiben
- * Fassung 1, solange sie aus steht.
+ * DIE SCHREIBWEGE schreiben seit Web 26.0.0 nur Fassung 2 (die Weiche ist
+ * zurückgebaut, 06e); Fassung 1 öffnet nur noch der Anhebelauf über einen
+ * Leser ohne `verlangt2` (E-KA-97).
  *
  * Braucht: EdCrypto (crypto.js), EdInhalt (inhalt2.js). Legt `EdHuelle2` an.
  */
@@ -685,30 +685,22 @@ const EdHuelle2 = (() => {
    * (`EdOrtsdaten.schluessel(ck)`), nicht nur den öffentlichen Teil. */
 
   /**
-   * Ein Spurstück schreiben. Weiche aus: Fassung 1, innen nur die Nutzlast
-   * (`kopf` wird nicht geschrieben). Weiche an: Fassung 2 mit Kopf.
+   * Ein Spurstück schreiben: Fassung 2 mit Kopf, Absender das Konto.
    * @param kopf  { tsVon, schluss, luecke, herkunft, uebernommen }
    * @returns {Promise<Uint8Array>}
    */
   async function stueckSchreiben(k, art, ref, platz, kopf, nutzlast) {
-    if (!EdInhalt.schreibt2()) {
-      return EdCrypto.geraetehuelleVerschliessen(nutzlast, k.pub, art, ref, platz);
-    }
     return verschliessen2(spurInnen2(kopf.tsVon, nutzlast, kopf), k.pub,
                           { privat: k.priv, spk: k.pub }, art, ref, platz);
   }
 
   /**
-   * Die Einsatzhülle schreiben. Weiche aus: Fassung 1 mit `innen1` (die
-   * Form aus `EdOrtsdaten.einsatzInnen()`), unverändert. Weiche an:
-   * Fassung 2 — `kopf` trägt { z, start, schluss, herkunft }, Phasen und
-   * Reanimation kommen aus `innen1`.
+   * Die Einsatzhülle schreiben: Fassung 2 — `kopf` trägt { z, start,
+   * schluss, herkunft }, Phasen und Reanimation kommen aus `innen1` (die
+   * Form aus `EdOrtsdaten.einsatzInnen()`).
    * @returns {Promise<Uint8Array>}
    */
   async function einsatzSchreiben(k, ref, kopf, innen1) {
-    if (!EdInhalt.schreibt2()) {
-      return EdCrypto.geraetehuelleVerschliessen(te.encode(JSON.stringify(innen1)), k.pub, 'einsatz', ref, '');
-    }
     return verschliessen2(
       einsatzInnen2(kopf.z, kopf.start, kopf.schluss, innen1.phasen || [], innen1.rea || [], kopf.herkunft),
       k.pub, { privat: k.priv, spk: k.pub }, 'einsatz', ref, '');

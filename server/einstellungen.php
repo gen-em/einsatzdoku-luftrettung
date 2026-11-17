@@ -3844,7 +3844,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           try { return atob(String(st.huelle || '').slice(0, 4)).charCodeAt(0) !== 2; }
           catch (x) { return true; }
         });
-        if (EdInhalt.schreibt2() && !fassung1) {
+        if (!fassung1) {
           const luecken = rwLuecken(stuecke);
           const da = z.sperren.get(ziel.ref) || [];
           const noetig = [];

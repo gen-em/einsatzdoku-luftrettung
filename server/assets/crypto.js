@@ -21,8 +21,7 @@
  * SEIT KA-06b (Fassung 2, Nr. 563) steht das GEBUNDENE Format in eigenen
  * Dateien, damit diese hier lesbar bleibt:
  *   inhalt2.js    `edk2:` — Chiffretexte mit Zweck, Bezug, Zähler und Polster,
- *                 die Schlüsselhüllen `edka2:`, und DIE WEICHE, die das
- *                 Schreiben der Fassung 2 einschaltet (`EdInhalt.schreibt2()`)
+ *                 die Schlüsselhüllen `edka2:` (seit Web 26.0.0 ohne Weiche)
  *   standbuch.js  der Zählerstand gegen das Zurücklegen, das Gerätebuch
  *   huelle2.js    die Gerätehülle Fassung 2 (Herkunft), die Leseregeln, der
  *                 Vergleichswert der Kopplung
@@ -494,14 +493,9 @@ const EdCrypto = (() => {
    * er stellt nur nicht um.
    */
   async function huelleBauen(dkHex, ckHex, kennung) {
-    /* DIE WEICHE (inhalt2.js, `SCHREIBT_FASSUNG_2`): Steht sie an, entsteht
-     * die gebundene Hülle `edka2:<k>:` bzw. `edk2:` — sonst wie bisher. */
-    if (typeof EdInhalt !== 'undefined' && EdInhalt.schreibt2()) {
-      return EdInhalt.huelleBauen(dkHex, ckHex, 'pw', kennung || null);
-    }
-    const roh = await encrypt(dkHex, ckHex);        // liefert `edk1:` + base64
-    if (!kennung) { return roh; }
-    return HUELLE_PRAEFIX + kennung + ':' + roh.slice(CHIFFRE_PRAEFIX.length);
+    /* Seit Web 26.0.0 nur noch die gebundene Hülle `edka2:<k>:` bzw.
+     * `edk2:` (06e, KA-20; bis Web 25.x hinter der Weiche, davor `edk1:`). */
+    return EdInhalt.huelleBauen(dkHex, ckHex, 'pw', kennung || null);
   }
 
   /* ---- Wiederherstellungsschlüssel ------------------------------------ */

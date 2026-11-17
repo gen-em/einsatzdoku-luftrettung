@@ -443,11 +443,8 @@ const EdStandbuch = (() => {
    * Browser dann mehr weiß als die Abschrift, merkt er als `offen` und
    * trägt es nach (`nachtragen()`). `d` und `x` sind keine Zähler; sie
    * kommen aus dem neueren Blatt.
-   *
-   * SOLANGE DIE WEICHE AUS STEHT (`EdInhalt.schreibt2()`), schreibt das Buch
-   * NICHTS an den Server: `fortschreiben()`, `vormerken()`, `nachtragen()`
-   * und die Gerätewege liefern null, ohne zu senden. Lesen und Vergleichen
-   * gehen. */
+   * (Bis Web 25.x schrieb das Buch mit ausgeschalteter Weiche nichts an
+   * den Server; die Weiche ist seit Web 26.0.0 zurückgebaut.) */
   function oeffnen(o) {
     const ck = o.schluessel, transport = o.transport, lager = o.ablage || ablage();
     const id = wer => o.konto + '|' + wer;
@@ -640,7 +637,6 @@ const EdStandbuch = (() => {
      * nicht den eigenen Stand darüberlegen. Vier Versuche; danach ist es
      * kein Zufall mehr, und der Aufrufer erfährt es. */
     async function schreibe(wer, aendern) {
-      if (!EdInhalt.schreibt2()) { return null; }
       /* EIN SCHREIBEN JE BLATT ZUR ZEIT (KA-14, F-KA-122, -124). Zwei
        * Schreibvorgänge dieser Seite am selben Blatt gingen sonst von
        * derselben Version aus, und der zweite liefe sicher in ein 409 —
@@ -721,7 +717,6 @@ const EdStandbuch = (() => {
      *          ist; null, solange die Weiche aus steht
      */
     async function fortschreibenViele(liste) {
-      if (!EdInhalt.schreibt2()) { return null; }
       const je = new Map();
       const aus = liste.map(x => ({ ref: x.ref, aendern: x.aendern, version: null, fehler: null }));
       for (const x of aus) {
@@ -756,7 +751,6 @@ const EdStandbuch = (() => {
      * den der Browser längst gesehen hat.
      */
     async function fortschreibenGesammelt(ref, aendern) {
-      if (!EdInhalt.schreibt2()) { return null; }
       /* Die Blattnummer kommt asynchron; bis sie da ist, zählt der Posten
          als angemeldet, damit `festschreiben()` ihn nicht übersieht. */
       const nr = blattNr(ref);
@@ -803,7 +797,6 @@ const EdStandbuch = (() => {
      * @returns null, solange die Weiche aus steht
      */
     async function vormerken(ref, aendern) {
-      if (!EdInhalt.schreibt2()) { return null; }
       const wer = await blattNr(ref);
       const n = await naechste(wer, amEintrag(ref, aendern));
       return {
@@ -827,7 +820,6 @@ const EdStandbuch = (() => {
      *          text, refs, bestaetigen() }; null, solange die Weiche aus steht
      */
     async function vormerkenViele(liste) {
-      if (!EdInhalt.schreibt2()) { return null; }
       const je = new Map();
       for (const x of liste) {
         const wer = await blattNr(x.ref);
@@ -852,7 +844,6 @@ const EdStandbuch = (() => {
     /** Alles ablegen, was dieser Browser mehr weiß als die Abschrift.
      *  @returns {Promise<Array|null>} die geschriebenen Blätter */
     async function nachtragen() {
-      if (!EdInhalt.schreibt2()) { return null; }
       const aus = [];
       for (let nr = 0; nr < BLAETTER; nr++) {
         if ((await lade(nr)).offen) { await schreibe(nr, null); aus.push(nr); }
@@ -954,7 +945,6 @@ const EdStandbuch = (() => {
      * der Weg, auf dem ein Befund `blatt-zurueckgelegt` verschwindet.
      */
     async function zurueckschreiben(wer) {
-      if (!EdInhalt.schreibt2()) { return null; }
       const z = await lade(wer);
       const srv = await transport.holen(wer);
       const version = z.version + 1;
@@ -1030,10 +1020,8 @@ const EdStandbuch = (() => {
       const v = (async () => {
         const buch = oeffnen({ konto: konto, schluessel: ck, transport: apiTransport() });
         buch.befunde = [];
-        if (EdInhalt.schreibt2()) {
-          try { buch.befunde = await buch.abgleichen(); }
-          catch (e) { buch.befunde = [{ wer: null, grund: e.grund || 'transport' }]; }
-        }
+        try { buch.befunde = await buch.abgleichen(); }
+        catch (e) { buch.befunde = [{ wer: null, grund: e.grund || 'transport' }]; }
         return buch;
       })();
       v.catch(() => buecher.delete(konto));
@@ -1048,9 +1036,6 @@ const EdStandbuch = (() => {
    * @returns {Promise<string>} der Klartext (JSON)
    */
   async function patOeffnen(ck, text, ref) {
-    if (!EdInhalt.istGebunden(text) && !EdInhalt.schreibt2()) {
-      return EdCrypto.decrypt(ck, text);
-    }
     return (await (await seitenbuch(ck)).patLesen(text, ref)).text;
   }
 
@@ -1060,9 +1045,8 @@ const EdStandbuch = (() => {
    * @param o       { ohne: Set } Kennungen, die kein Blatt bekommen (der
    *                Server hat sie übersprungen, 409 `uebersprungen`)
    * @returns {Promise<{texte: string[], blaetter: Array|null, bestaetigen}>}
-   *   `blaetter` ist null, solange die Weiche aus steht, und wenn kein
-   *   Blatt etwas hebt (alle in `ohne`) — dann geht KEIN Feld mit; bei
-   *   Weiche aus sind `texte` `edk1:` wie aus `EdCrypto.encrypt()`.
+   *   `blaetter` ist null, wenn kein Blatt etwas hebt (alle in `ohne`) —
+   *   dann geht KEIN Feld mit.
    *   Ein Blatt trägt neben `wer`, `version_alt`, `version`, `text` die
    *   Kennungen, deren Zähler es hebt (`refs`): Daran prüft der Server, dass
    *   er jeden dieser Blöcke wirklich geschrieben hat — ein Blatt, das einem
@@ -1070,11 +1054,6 @@ const EdStandbuch = (() => {
    */
   async function patVerschliessenViele(ck, posten, o) {
     o = o || {};
-    if (!EdInhalt.schreibt2()) {
-      const texte = [];
-      for (const p of posten) { texte.push(await EdInhalt.schreiben(ck, 'pat', p.ref, p.klartext, 0)); }
-      return { texte: texte, blaetter: null, bestaetigen: async () => {} };
-    }
     const buch = await seitenbuch(ck);
     try { await buch.abgleichen(); } catch (e) { /* mit dem eigenen Stand weiter */ }
     const z = [];

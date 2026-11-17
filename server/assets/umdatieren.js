@@ -66,7 +66,7 @@
   const m = lesen();
   if (!m || Number(q.get('d')) !== m.d || Math.floor(Date.now() / 1000) - m.t > FRIST) { return; }
   (async () => {
-    if (typeof EdStandbuch === 'undefined' || typeof PAT_WRAP === 'undefined' || !EdInhalt.schreibt2()) { return; }
+    if (typeof EdStandbuch === 'undefined' || typeof PAT_WRAP === 'undefined') { return; }
     const von = EdFormat.ortszeitZuEpoch(m.alt, '00:00', 0, m.tz);
     const bis = EdFormat.ortszeitZuEpoch(m.ziel, '00:00', 0, m.tz);
     if (von === null || bis === null) { schreiben(null); return; }

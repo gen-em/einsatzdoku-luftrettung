@@ -290,8 +290,7 @@ const EdUnlock = (() => {
      *               (Altbestand) oder die eines vorherigen Anteils
      *               (Rotation). Dann bleibt die Hälfte, und nur der
      *               Datenschlüssel wechselt.
-     *   FORMAT      Die Weiche steht an (`EdInhalt.schreibt2()`, inhalt2.js),
-     *               und die Hülle ist noch Fassung 1. Dann bleibt der
+     *   FORMAT      Die Hülle ist noch Fassung 1. Dann bleibt der
      *               Datenschlüssel, und nur die Hülle wird gebunden neu
      *               gebaut (`edka2:`) — `huelleBauen()` tut das von selbst.
      *
@@ -308,8 +307,7 @@ const EdUnlock = (() => {
      * hin. Das deckt drei Lagen mit derselben Zeile ab: `fehlt` (es gibt
      * keinen), `abweichend` (es wird keiner herausgegeben) und `demo` (das
      * Demo-Konto bleibt auf `edk1:`). */
-    const formatHeben = typeof EdInhalt !== 'undefined' && EdInhalt.schreibt2()
-                        && !EdCrypto.huelleGebunden(wrap);
+    const formatHeben = typeof EdInhalt !== 'undefined' && !EdCrypto.huelleGebunden(wrap);
     const huelleUmstellen = !!(wrap && kennung
                                && (EdCrypto.huelleKennung(wrap) !== kennung || formatHeben));
     const neuIter = rundenAnheben ? ziel : kdfIter;
@@ -467,8 +465,8 @@ const EdUnlock = (() => {
    *
    * DER ALTBESTAND ZIEHT STILL IN DAS GEBUNDENE FORMAT UM — Patientenblöcke
    * (`edk1:` → `edk2:` mit Zähler und Blatt) und die privaten Teile von
-   * Kontopaar und Rückweg. NUR MIT UMGELEGTER WEICHE (`EdInhalt.schreibt2()`);
-   * steht sie aus, geschieht nichts, und es geht keine Anfrage hinaus.
+   * Kontopaar und Rückweg. Seit Web 26.0.0 der einzige Leser des alten
+   * Formats (E-KA-97); KA-07 baut ihn zurück.
    *
    * NICHTS WIRD GESCHRIEBEN, WAS NICHT WIEDER AUFGEHT. Je Block: den alten
    * öffnen, den neuen bauen, den neuen öffnen und mit dem Klartext
@@ -484,7 +482,7 @@ const EdUnlock = (() => {
   let formatLief = false;
 
   async function formatAnheben(ck) {
-    if (formatLief || !ck || typeof EdInhalt === 'undefined' || !EdInhalt.schreibt2()) { return; }
+    if (formatLief || !ck || typeof EdInhalt === 'undefined') { return; }
     formatLief = true;
     try {
       const holen = async () => {

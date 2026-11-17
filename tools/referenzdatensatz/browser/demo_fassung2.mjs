@@ -84,24 +84,10 @@ const SOLL = {
   geraete: new Set(fx.geraete.map((g) => g.device_id)),
 };
 
-/* ---- Browser, Weiche an -------------------------------------------------- */
-const WEICHE = /const SCHREIBT_FASSUNG_2 = false;/;
+/* ---- Browser (die Weiche ist seit Web 26.0.0 zurückgebaut, 06e) --------- */
 const browser = await starten(PW, MOTOR);
 const kontext = await kontextMachen(browser, { basis, optionen: { viewport: { width: 1400, height: 1000 } } });
-let weicheGesehen = '';
-await kontext.route(/assets\/inhalt2\.js/, async (route) => {
-  const antwort = await route.fetch();
-  const text = await antwort.text();
-  /* Liegt die Weiche schon um (nach KA-14), bleibt die Datei, wie sie ist. */
-  weicheGesehen = WEICHE.test(text) ? 'in der Probe umgelegt' : 'ausgeliefert';
-  if (!WEICHE.test(text) && !/const SCHREIBT_FASSUNG_2 = true;/.test(text)) {
-    throw new Error('Weiche in inhalt2.js nicht gefunden');
-  }
-  const kopf = Object.assign({}, antwort.headers(), { 'cache-control': 'no-store' });
-  delete kopf['content-length']; delete kopf['content-encoding'];
-  await route.fulfill({ status: antwort.status(), headers: kopf,
-                        body: text.replace(WEICHE, 'const SCHREIBT_FASSUNG_2 = true;') });
-});
+const weicheGesehen = 'zurückgebaut (Web 26)';
 const seite = await kontext.newPage();
 const posts = [];
 seite.on('request', (r) => {
@@ -132,7 +118,7 @@ async function allesOeffnen() {
     && typeof EdUnlock !== 'undefined', null, { timeout: 30000 });
   return seite.evaluate(async (tagIds) => {
     const holen = async (u) => (await fetch(u, { credentials: 'same-origin' })).json();
-    const aus = { einsaetze: [], ruhe: [], weiche: EdInhalt.schreibt2(), buch: {}, befundeBuch: [] };
+    const aus = { einsaetze: [], ruhe: [], weiche: true, buch: {}, befundeBuch: [] };
     const fassung = (h) => { try { return atob(h.slice(0, 4)).charCodeAt(0); } catch (e) { return 0; } };
     let ck = null, k = null;
     for (const d of tagIds) {
