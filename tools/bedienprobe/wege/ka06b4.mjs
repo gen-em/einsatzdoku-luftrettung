@@ -123,6 +123,11 @@ export const wege = [
       } finally {
         execFileSync('php', ['-r', 'require "server/db.php"; require "server/demo_lib.php"; demo_zuruecksetzen();'],
                      { cwd: WURZEL, stdio: 'ignore' });
+        /* Die Mengenbremse der Demo-Anmeldung leeren (F-KA-132): Mit den
+         * Wegen in `umdatieren.mjs` riss die Grenze von 20 je Stunde über
+         * drei Engines. */
+        execFileSync('php', ['tools/referenzdatensatz/browser/demo_zustand.php', 'bremse'],
+                     { cwd: WURZEL, stdio: 'ignore' });
         /* DER RESET BEENDET DIE SITZUNG (`session_epoch`), aber die Seite
          * merkt es erst an einer Anfrage im Hintergrund und leitet DANN zur
          * Anmeldung um — nach der Wache in `gehZu()`. In Firefox und WebKit

@@ -12,7 +12,11 @@
  *   `umdatieren-ohne-versatz`  Gegenprobe: dasselbe mit gesperrtem
  *        `umdatieren.js` → der Einsatz meldet „lassen sich nicht öffnen“.
  *
- * Danach setzt jeder Weg das Demo-Konto zurück (nur örtlich).
+ * Danach setzt jeder Weg das Demo-Konto zurück (nur örtlich) und leert die
+ * Mengenbremse der Demo-Anmeldung (`demo_zustand.php bremse`): Die beiden
+ * Wege melden zusammen viermal neu an, und mit den drei Engines riss das
+ * die Grenze von 20 je Stunde — der Rest des WebKit-Laufs, Bilderlauf und
+ * Barrierefreiheit scheiterten an der Anmeldung (F-KA-132).
  *
  * Anlass: Nr. 590.
  */
@@ -21,8 +25,11 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const WURZEL = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
-const reset = () => execFileSync('php', ['-r', 'require "server/db.php"; require "server/demo_lib.php"; demo_zuruecksetzen();'],
-                                 { cwd: WURZEL, stdio: 'ignore' });
+const ZUSTAND = 'tools/referenzdatensatz/browser/demo_zustand.php';
+const reset = () => {
+  execFileSync('php', [ZUSTAND, 'reset'], { cwd: WURZEL, stdio: 'ignore' });
+  execFileSync('php', [ZUSTAND, 'bremse'], { cwd: WURZEL, stdio: 'ignore' });
+};
 
 /* Ein Einsatz mit Hülle und Spur und sein Diensttag. */
 const waehlen = (k) => k.seite.evaluate(async () => {
