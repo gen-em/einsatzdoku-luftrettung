@@ -97,15 +97,41 @@ function anfrage(?array $koerper, ?string $devId = null, ?string $key = null,
     return ['code' => $code, 'daten' => is_array($d) ? $d : [], 'roh' => $roh, 'dauer' => $dauer];
 }
 
-/** `start` mit Block; merkt sich die Sitzung fuer das Aufraeumen. */
+/** `start` mit Block; merkt sich die Sitzung fuer das Aufraeumen.
+ *  SEIT WEB 26.0.0 MIT GERAETESCHLUESSEL (Stichtag, 06e): Jede Sitzung
+ *  schickt ein eigenes Paar und die Zusage; N_g merkt sich die Probe fuer
+ *  `beanspruchen()`. */
 $angelegt = [];   // device_ids aller Sitzungen, die diese Probe angelegt hat
+$nonces = [];     // device_id => N_g (roh)
 function start(mixed $geraet = null): array {
-    global $angelegt;
+    global $angelegt, $nonces;
     $k = ['aktion' => 'start'];
     if ($geraet !== null) { $k['geraet'] = $geraet; }
+    $spk = gh_probe_geraet()['sec1'];   // das Probegeraet: dann nimmt ingest.php seine Huellen
+    $nG = random_bytes(16);
+    $k['schluessel'] = ['spk' => base64_encode($spk),
+                        'zusage' => base64_encode(hash('sha256', 'nadoku-kopplung-zusage-1' . $nG . $spk, true))];
     $a = anfrage($k);
-    if (isset($a['daten']['device_id'])) { $angelegt[] = (string)$a['daten']['device_id']; }
+    if (isset($a['daten']['device_id'])) {
+        $angelegt[] = (string)$a['daten']['device_id'];
+        $nonces[(string)$a['daten']['device_id']] = $nG;
+    }
     return $a;
+}
+
+/** Beanspruchen wie der Browser — mit N_b —, dann das, was Geraet und
+ *  Browser danach tun: N_g offenlegen und „Wert stimmt“ (in das Geraetebuch
+ *  eingetragen). Danach schliesst das Ja des Geraets ab. `$vollstaendig`
+ *  false: nur beanspruchen (wie bis Web 25.x der Aufruf allein). */
+function beanspruchen(PDO $pdo, string $code, int $uid, bool $vollstaendig = true): bool {
+    global $nonces;
+    $s = pair_sitzung_nach_code($pdo, $code);
+    if (!pair_sitzung_beanspruchen($pdo, $code, $uid, base64_encode(random_bytes(16)))) { return false; }
+    if (!$vollstaendig || $s === null) { return true; }
+    $dev = (string)$s['device_id'];
+    pair_offenlegen($pdo, (int)$s['id'], base64_encode($nonces[$dev] ?? random_bytes(16)));
+    pair_wert_melden($pdo, $dev, $uid, true, '', true);
+    return true;
 }
 
 /* ---- Datenbank-Handgriffe ---------------------------------------------- */
@@ -224,6 +250,28 @@ pruefe($f['code'] === 400 && ($f['daten']['error'] ?? '') === 'aktion',
 pruefe(versuche($pdo, 'pair') === 0, '5/6 zaehlen NICHT im Topf pair (E-S5-17)',
        'versuche ' . versuche($pdo, 'pair'));
 
+/* ---- Der Kontoschluessel — VOR der ersten Kopplung -------------------------
+ * Seit Web 26.0.0 (Stichtag, 06e) koppelt nur ein Geraet mit Schluessel,
+ * und das nur an ein Konto mit Paar (F-KA-108). Bis dahin stand dieser
+ * Block hinter der ersten Kopplung, und K1 mass ein Ja ohne Paar.
+ * Ein P-256-Paar aus openssl; abgelegt ueber `kp_ablegen()` (versiegelt).
+ * Erwartet: `status` und `bestaetigen` liefern ihn als 65 Byte SEC1. Ein
+ * Siegel, das zu einem ANDEREN Konto gehoert (umgehaengt), und ein
+ * unversiegelter Wert liefern null — und landen im Reiter System. */
+$kpPaar = static function (): string {
+    $k = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+    $pem = (string)openssl_pkey_get_details($k)['key'];
+    return preg_replace('/-----[^-]+-----|\s/', '', $pem);
+};
+$kpA = $kpPaar(); $kpB = $kpPaar();
+pruefe(kp_oeffentlich_pruefen($kpA) === null && kp_sec1($kpA) !== null,
+       'K2  openssl-SPKI ist ein P-256-Schluessel, SEC1 65 Byte', (string)strlen((string)base64_decode((string)kp_sec1($kpA))));
+pruefe(kp_ablegen($pdo, $uid, $kpA, 'edk1:' . base64_encode(random_bytes(48))) === true
+       && kp_ablegen($pdo, $uid, $kpB, 'edk1:' . base64_encode(random_bytes(48))) === false,
+       'K3  ablegen einmal ja, ein zweites Paar nein (kein Ersetzen)');
+$roh = (string)$pdo->query("SELECT kp_oeffentlich FROM users WHERE id = $uid")->fetchColumn();
+pruefe(sk_versiegelt($roh) && !str_contains($roh, substr($kpA, 30, 40)),
+       'K4  in der Datenbank steht das Siegel, nicht der Schluessel');
 /* ======================================================================
  * Teil 2 — status und bestaetigen am Weg zum Geraet (7 bis 16, 31, 32, 26)
  * ====================================================================== */
@@ -252,13 +300,15 @@ $j = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $dev, $key);
 pruefe($j['code'] === 409 && ($j['daten']['error'] ?? '') === 'nicht_beansprucht' && sitzung($pdo, $dev) !== null,
        '10  ja im Zustand offen -> 409 nicht_beansprucht, Sitzung bleibt', $j['roh']);
 
-pruefe(pair_sitzung_beanspruchen($pdo, $code, $uid) === true,
+pruefe(beanspruchen($pdo, $code, $uid2, false) === false && pair_sitzung_nach_code($pdo, $code) !== null,
+       'K1  Konto ohne Schluesselpaar beansprucht ein Geraet mit Schluessel nicht (F-KA-108), Sitzung bleibt');
+pruefe(beanspruchen($pdo, $code, $uid) === true,
        '8   Beanspruchen (Bibliothek, Muster des Web-Klicks) -> rowCount 1');
 $st = anfrage(['aktion' => 'status'], $dev, $key);
 pruefe($st['code'] === 200 && ($st['daten']['zustand'] ?? '') === 'beansprucht'
        && ($st['daten']['konto'] ?? '') === 'ko***@probe.pruefung' && ($st['daten']['rest_s'] ?? 0) > 0,
        '8   status beansprucht, konto maskiert (E-S5-21)', $st['roh']);
-pruefe(pair_sitzung_beanspruchen($pdo, $code, $uid2) === false,
+pruefe(beanspruchen($pdo, $code, $uid2) === false,
        '9   zweite Beanspruchung desselben Codes -> rowCount 0');
 pruefe(pair_sitzung_nach_code($pdo, $code) === null,
        '9   nach Code ist die beanspruchte Sitzung nicht mehr zu finden');
@@ -279,8 +329,8 @@ $sysVorher = (int)$pdo->query("SELECT COALESCE(MAX(id), 0) FROM protokoll_ereign
 $j = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $dev, $key);
 pruefe($j['code'] === 200 && ($j['daten']['ok'] ?? false) === true,
        '11  ja beansprucht -> 200 ok', $j['roh']);
-pruefe(array_key_exists('kontoschluessel', $j['daten'] ?? []) && $j['daten']['kontoschluessel'] === null,
-       'K1  ja ohne Paar des Kontos -> kontoschluessel null (S11-03)', $j['roh']);
+pruefe(($j['daten']['kontoschluessel'] ?? null) === kp_sec1($kpA),
+       '11  ja -> kontoschluessel = SEC1 des Kontos', $j['roh']);
 $gz = geraet($pdo, $dev);
 pruefe($gz !== null && (int)$gz['user_id'] === $uid && $gz['api_key_hash'] === hash('sha256', $key)
        && $gz['label'] === 'Uhr' && $gz['geraet_art'] === 'uhr' && $gz['geraet_modell'] === 'Venu 3S'
@@ -309,25 +359,6 @@ $st = anfrage(['aktion' => 'status'], $dev, $key);
 pruefe($st['code'] === 200 && ($st['daten']['zustand'] ?? '') === 'gekoppelt',
        '13  status nach Anlage -> gekoppelt', $st['roh']);
 
-/* ---- Der Kontoschluessel -------------------------------------------------
- * Ein P-256-Paar aus openssl; abgelegt ueber `kp_ablegen()` (versiegelt).
- * Erwartet: `status` und `bestaetigen` liefern ihn als 65 Byte SEC1. Ein
- * Siegel, das zu einem ANDEREN Konto gehoert (umgehaengt), und ein
- * unversiegelter Wert liefern null — und landen im Reiter System. */
-$kpPaar = static function (): string {
-    $k = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
-    $pem = (string)openssl_pkey_get_details($k)['key'];
-    return preg_replace('/-----[^-]+-----|\s/', '', $pem);
-};
-$kpA = $kpPaar(); $kpB = $kpPaar();
-pruefe(kp_oeffentlich_pruefen($kpA) === null && kp_sec1($kpA) !== null,
-       'K2  openssl-SPKI ist ein P-256-Schluessel, SEC1 65 Byte', (string)strlen((string)base64_decode((string)kp_sec1($kpA))));
-pruefe(kp_ablegen($pdo, $uid, $kpA, 'edk1:' . base64_encode(random_bytes(48))) === true
-       && kp_ablegen($pdo, $uid, $kpB, 'edk1:' . base64_encode(random_bytes(48))) === false,
-       'K3  ablegen einmal ja, ein zweites Paar nein (kein Ersetzen)');
-$roh = (string)$pdo->query("SELECT kp_oeffentlich FROM users WHERE id = $uid")->fetchColumn();
-pruefe(sk_versiegelt($roh) && !str_contains($roh, substr($kpA, 30, 40)),
-       'K4  in der Datenbank steht das Siegel, nicht der Schluessel');
 $st = anfrage(['aktion' => 'status'], $dev, $key);
 pruefe($st['code'] === 200 && ($st['daten']['kontoschluessel'] ?? null) === kp_sec1($kpA)
        && strlen((string)base64_decode((string)$st['daten']['kontoschluessel'])) === 65,
@@ -354,8 +385,8 @@ $kpZahl = (int)$kpMeld->fetchColumn();
 pruefe($kpZahl >= 2, 'K9  beide Faelle im Reiter System gemeldet', "$kpZahl Eintraege");
 $pdo->prepare("DELETE FROM protokoll_ereignisse WHERE reiter = 'system' AND id > ? AND text LIKE 'kontopaar:%'")
     ->execute([$sysVorKp]);
-$pdo->prepare('UPDATE users SET kp_oeffentlich = NULL, kp_privat = NULL, kp_seit = NULL WHERE id = ?')
-    ->execute([$uid]);
+$pdo->prepare('UPDATE users SET kp_oeffentlich = ? WHERE id = ?')
+    ->execute([sk_versiegeln($kpA, kp_zweck($uid)), $uid]);   // das Paar bleibt: jede weitere Kopplung braucht es
 $n = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'nein'], $dev, $key);
 pruefe($n['code'] === 200 && geraet($pdo, $dev) !== null,
        'E48 nein mit Geraetezugang -> 200, Geraet bleibt (E-S5-48)');
@@ -415,7 +446,7 @@ pruefe($tr['code'] === 200 && sitzung($pdo, (string)$s4b['device_id']) === null,
        'E49 trennen mit schwebenden Zugangsdaten wirkt wie nein (E-S5-49)', $tr['roh']);
 
 $s5 = start(['art' => 'uhr', 'teil' => '006-B4261-00'])['daten'];
-pair_sitzung_beanspruchen($pdo, (string)$s5['code'], $uid);
+beanspruchen($pdo, (string)$s5['code'], $uid);
 $n = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'nein'], $s5['device_id'], $s5['api_key']);
 pruefe($n['code'] === 200 && sitzung($pdo, (string)$s5['device_id']) === null
        && geraet($pdo, (string)$s5['device_id']) === null,
@@ -436,7 +467,7 @@ pruefe($st['code'] === 410 && ($st['daten']['error'] ?? '') === 'abgelaufen',
 pruefe($st['dauer'] < 0.30, '17  ... ohne Verzoegerung (E-S5-31)', sprintf('%.3f s', $st['dauer']));
 $j = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $s6['device_id'], $s6['api_key']);
 pruefe($j['code'] === 410, '17  ja nach elf Minuten -> 410');
-pruefe(pair_sitzung_beanspruchen($pdo, (string)$s6['code'], $uid) === false,
+pruefe(beanspruchen($pdo, (string)$s6['code'], $uid) === false,
        '17  Beanspruchen nach elf Minuten -> rowCount 0');
 pruefe(sitzung($pdo, (string)$s6['device_id']) !== null,
        '17  die verfallene Zeile bleibt bis zum Aufraeumen liegen (E-S5-11)');
@@ -450,7 +481,7 @@ pruefe($n['code'] === 200 && sitzung($pdo, (string)$s6['device_id']) === null,
  * ====================================================================== */
 echo "\n  Teil 4 — Geraetelimit\n";
 $s7 = start(['art' => 'uhr', 'teil' => '006-B4261-00'])['daten'];
-pair_sitzung_beanspruchen($pdo, (string)$s7['code'], $uid);
+beanspruchen($pdo, (string)$s7['code'], $uid);
 for ($i = 1; $i <= MAX_GERAETE; $i++) {
     $gid = 'dev-kopplungsprobe-limit-' . $i;
     $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label) VALUES (?,?,?,?)')
@@ -652,16 +683,12 @@ $gz = geraet($pdo, $ud);
 pruefe($j['code'] === 200 && !isset($j['daten']['huelle']) && $gz !== null && (int)$gz['herkunft'] === 0,
        '42  „Wert stimmt“ ohne Geraetebuch, dann Ja -> 200 ohne huelle, herkunft 0', $j['roh']);
 
-/* Aeltere App: ohne Schluessel wie bisher — Ja genuegt, ohne huelle. */
+/* Aeltere App ohne Schluessel: seit Web 26.0.0 abgewiesen (Stichtag, 06e).
+ * Bis Web 25.x koppelte sie wie bisher, ohne huelle. */
 $v = anfrage(['aktion' => 'start']);
-$vd = (string)$v['daten']['device_id']; $vk = (string)$v['daten']['api_key']; $angelegt[] = $vd;
-pair_sitzung_beanspruchen($pdo, (string)$v['daten']['code'], $uid, $b64(16));
-$st = anfrage(['aktion' => 'status'], $vd, $vk);
-$j = anfrage(['aktion' => 'bestaetigen', 'antwort' => 'ja'], $vd, $vk);
-$gz = geraet($pdo, $vd);
-pruefe(!isset($st['daten']['n_b']) && $j['code'] === 200 && !isset($j['daten']['huelle'])
-       && $gz !== null && $gz['spk'] === null,
-       '43  ohne Schluessel: status ohne n_b, Ja 200 ohne huelle, Geraet ohne spk', $j['roh']);
+pruefe($v['code'] === 400 && ($v['daten']['error'] ?? '') === 'schluessel'
+       && ($v['daten']['grund'] ?? '') === 'fehlt' && !isset($v['daten']['device_id']),
+       '43  start ohne Schluessel -> 400 schluessel/fehlt, keine Sitzung (Stichtag)', "HTTP {$v['code']} {$v['roh']}");
 
 /* F-KA-108: Ein Geraet mit Schluessel an einem Konto OHNE brauchbares Paar —
  * das Beanspruchen scheitert in der Bibliothek, fuer jeden Weg, der es ruft;
@@ -775,7 +802,8 @@ pruefe($zahl === $katalog,
        $zahl . ' von ' . $katalog);
 
 $s11 = start()['daten'];
-pair_sitzung_beanspruchen($pdo, (string)$s11['code'], $uid2);
+kp_ablegen($pdo, $uid2, $kpB, 'edk1:' . base64_encode(random_bytes(48)));   // beanspruchen verlangt ein Paar
+beanspruchen($pdo, (string)$s11['code'], $uid2, false);
 $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$uid2]);
 pruefe(sitzung($pdo, (string)$s11['device_id']) === null,
        '34  Kontoloeschung mit beanspruchter Sitzung -> Sitzung weg (FK CASCADE)');
