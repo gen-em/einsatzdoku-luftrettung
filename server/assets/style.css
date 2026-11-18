@@ -644,7 +644,10 @@
   --schleier:rgba(26,46,77,.55);       /* Dunkelblau, halbdurchsichtig */
   --schatten:0 2px 8px rgba(26,5,0,.10);
   --schatten-hoch:0 8px 28px rgba(26,5,0,.22);
-  --schatten-karte:var(--schatten);    /* dunkel 0 2px 8px rgba(0,0,0,.35), ruhende Karte im Rahmen */
+  --schatten-karte:var(--schatten);    /* ruhende Karte im Rahmen; dunkel --schatten-dunkel */
+  /* Auf blau 900 ist Asphalt mit 10 % unsichtbar; dunkel braucht der
+   * Schatten Schwarz und mehr Deckung (Web 26.0.0, Variante C). */
+  --schatten-dunkel:0 2px 8px rgba(0,0,0,.35);
   /* Auf der dunklen Kopfleiste: eine gedämpfte Fassung von Weiß für Hover
    * und Nebenangaben. Ein eigener Hexwert wäre hier falsch — die Fläche
    * darunter ist Dunkelblau, und der Ton soll mit ihr zusammen entstehen. */
@@ -692,7 +695,7 @@
     --genem-flaeche-abgesetzt: var(--genem-blau-700);
     --genem-flaeche-innenkarte: var(--genem-dunkelblau);
     --genem-flaeche-rahmen: var(--genem-blau-900);
-    --schatten-karte: 0 2px 8px rgba(0,0,0,.35);
+    --schatten-karte: var(--schatten-dunkel);
     --genem-linie: var(--genem-blau-700);
     --genem-linie-stark: var(--genem-blau-300);
     --genem-text-standard: var(--genem-schnee);
@@ -728,7 +731,7 @@
   --genem-flaeche-abgesetzt: var(--genem-blau-700);
   --genem-flaeche-innenkarte: var(--genem-dunkelblau);
   --genem-flaeche-rahmen: var(--genem-blau-900);
-  --schatten-karte: 0 2px 8px rgba(0,0,0,.35);
+  --schatten-karte: var(--schatten-dunkel);
   --genem-linie: var(--genem-blau-700);
   --genem-linie-stark: var(--genem-blau-300);
   --genem-text-standard: var(--genem-schnee);
