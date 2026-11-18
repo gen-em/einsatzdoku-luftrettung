@@ -30,6 +30,15 @@ const reset = () => {
   execFileSync('php', [ZUSTAND, 'reset'], { cwd: WURZEL, stdio: 'ignore' });
   execFileSync('php', [ZUSTAND, 'bremse'], { cwd: WURZEL, stdio: 'ignore' });
 };
+/* ERST DIE SEITE VERLASSEN, DANN ZURÜCKSETZEN UND ANMELDEN (F-KA-135). Der
+ * Reset beendet die Sitzung; die offene Seite merkt es an einer Anfrage im
+ * Hintergrund und leitet auf `login.php?ende=abgemeldet` — in WebKit mitten
+ * in die Neuanmeldung hinein („interrupted by another navigation"). */
+const frisch = async (k) => {
+  await k.seite.goto('about:blank').catch(() => {});
+  reset();
+  await k.neuAnmelden();
+};
 
 /* Ein Einsatz mit Hülle und Spur und sein Diensttag. */
 const waehlen = (k) => k.seite.evaluate(async () => {
@@ -69,7 +78,7 @@ export const wege = [
     soll: 'nach dem Umdatieren (vor und zurück) öffnet der Einsatz ohne Fehler, mit Spur',
     async fahren(k) {
       try {
-        reset(); await k.neuAnmelden();
+        await frisch(k);
         await k.gehZu(`${k.basis}/index.php`);
         const w = await waehlen(k);
         if (!w) { return { ist: 'kein Einsatz mit Hülle und Spur im Demo-Bestand', ok: false }; }
@@ -81,7 +90,7 @@ export const wege = [
         const ok = !vorher.fehler && !vor.fehler && !zurueck.fehler && vor.spur > 0 && zurueck.spur > 0;
         return { ist: `Einsatz ${w.mid}: vorher ${vorher.fehler ? 'FEHLER' : 'gut'}; einen Tag vor ${vor.fehler ? 'FEHLER' : 'gut'} `
                     + `(Spur ${vor.spur}); zurück ${zurueck.fehler ? 'FEHLER' : 'gut'} (Spur ${zurueck.spur})`, ok };
-      } finally { reset(); await k.neuAnmelden(); }
+      } finally { await frisch(k); }
     },
   },
   {
@@ -90,7 +99,7 @@ export const wege = [
     soll: 'Gegenprobe: ohne umdatieren.js meldet der umdatierte Einsatz „lassen sich nicht öffnen“',
     async fahren(k) {
       try {
-        reset(); await k.neuAnmelden();
+        await frisch(k);
         await k.seite.route(/assets\/umdatieren\.js/, (r) => r.fulfill({ status: 200, contentType: 'text/javascript', body: '' }));
         await k.gehZu(`${k.basis}/index.php`);
         const w = await waehlen(k);
@@ -101,7 +110,7 @@ export const wege = [
                  ok: vor.fehler };
       } finally {
         await k.seite.unroute(/assets\/umdatieren\.js/).catch(() => {});
-        reset(); await k.neuAnmelden();
+        await frisch(k);
       }
     },
   },
