@@ -727,7 +727,7 @@ auseinanderlaufen kann.
 | `--schleier` | `rgba(26,46,77,.55)` | 2 | Dunkelblau, halbdurchsichtig |
 | `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 8 |  |
 | `--schatten-hoch` | `0 8px 28px rgba(26,5,0,.22)` | 3 |  |
-| `--schatten-karte` | `var(--schatten)` | 1 | dunkel: eigener Wert, s. o. |
+| `--schatten-karte` | `var(--schatten)` | 1 | dunkel 0 2px 8px rgba(0,0,0,.35), ruhende Karte im Rahmen |
 | `--auf-dunkel-leise` | `rgba(255,255,255,.55)` | 2 |  |
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 3 |  |
 | `--auf-dunkel-strich` | `rgba(255,255,255,.35)` | 1 |  |
