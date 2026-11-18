@@ -25,6 +25,11 @@ Schritt 28 (KA), 06e: Pakete KA-16 bis KA-23.
   unterschieben. Jetzt nimmt kein Schreibweg sie mehr an, eine Kopplung
   verlangt den Geräteschlüssel, und eine Sicherung von vor Web 26 lässt sich
   nicht mehr einspielen — nach dem Update also gleich eine neue anlegen.
+- **Web — Karten heben sich vom Rahmen ab, der Fuß steht am Fensterboden.**
+  Rahmen und Karten hatten dieselbe Fläche, und nur eine feine Linie trennte
+  sie; jetzt liegen die Karten hell weiß mit leichtem Schatten darauf. Dunkel
+  sinkt stattdessen der Rahmen ab, weil eine hellere Karte so hell wäre wie
+  ihre Trennlinien. Auf kurzen Seiten stand die Fußzeile mitten im Fenster.
 - **Web — die Koppelseite kennt nur noch den Weg mit Vergleichswert.** Ältere
   Apps gibt es nicht mehr, also auch keinen Hinweis mehr für ein Gerät ohne
   Schlüssel oder ohne Angaben über sich.

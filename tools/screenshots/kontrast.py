@@ -120,6 +120,18 @@ def kontrast(a, b):
 PAARE = [
     ('Text auf Karte',                    'text',          'flaeche-karte',     4.5, 'Fliesstext'),
     ('Text auf Seite',                    'text',          'flaeche-seite',     4.5, 'Fliesstext ausserhalb von Karten'),
+    # Die Karte in der Rahmenkarte und der Rahmen selbst (Web 26.0.0,
+    # Variante C): hell Weiss auf neutral 75, dunkel Dunkelblau auf blau 900.
+    ('Text auf Innenkarte',               'text',          'flaeche-innenkarte', 4.5, 'Fliesstext in Karten im Rahmen'),
+    ('Titel auf Innenkarte',              'text-titel',    'flaeche-innenkarte', 4.5, 'Kartentitel, Symbole'),
+    ('Gedaempft auf Innenkarte',          'gedaempft',     'flaeche-innenkarte', 4.5, 'Kleinzeile, Feldnamen'),
+    ('Link auf Innenkarte',               'text-link',     'flaeche-innenkarte', 4.5, 'Bearbeiten, Nachtragen'),
+    ('Fehlertext auf Innenkarte',         'fehler-text',   'flaeche-innenkarte', 4.5, 'Fehler am Feld'),
+    ('Linie stark auf Innenkarte',        'linie-stark',   'flaeche-innenkarte', 3.0, 'Rand von Bedienelementen'),
+    ('Fokus auf Innenkarte',              'fokus',         'flaeche-innenkarte', 3.0, 'Fokusring'),
+    ('Text auf Rahmen',                   'text',          'flaeche-rahmen',     4.5, 'Leiste, Seitentitel'),
+    ('Gedaempft auf Rahmen',              'gedaempft',     'flaeche-rahmen',     4.5, 'Unterzeile des Seitentitels'),
+    ('Link auf Rahmen',                   'text-link',     'flaeche-rahmen',     4.5, 'Dienstag anlegen, Papierkorb'),
     ('Text auf abgesetzt',                'text',          'flaeche-abgesetzt', 4.5, 'Fliesstext unter dem Zeiger, Tabellenkopf'),
     ('Text im Feld',                      'text',          'flaeche-feld',      4.5, 'Eingabefeld'),
     ('Titel auf Karte',                   'text-titel',    'flaeche-karte',     4.5, 'Titel, Symbole'),
@@ -194,6 +206,10 @@ AUSNAHMEN = [
      'Trennlinie zwischen Zeilen und Rand einer Karte — Zierrat, kein '
      'Bedienelement. WCAG 1.4.11 nimmt rein dekorative Begrenzungen aus. Wo eine '
      'Linie ein Bedienelement begrenzt, steht --linie-stark.'),
+    ('Linie auf Rahmen', 'linie', 'flaeche-rahmen',
+     'Rand der Rahmenkarte und der Leistenspalte — Zierrat wie „Linie auf Karte".'),
+    ('Linie auf Innenkarte', 'linie', 'flaeche-innenkarte',
+     'Kopf- und Zeilenlinien der Karte im Rahmen — Zierrat wie „Linie auf Karte".'),
     ('Linie auf abgesetzt', 'linie', 'flaeche-abgesetzt',
      'Rahmen von Codeblock, <pre> im Handbuch, Vorschlagsgruppe und neutraler '
      'Plakette — Zierrat, kein Bedienelement; dieselbe Lage wie „Linie auf Karte".'),

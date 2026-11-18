@@ -246,6 +246,8 @@
   --genem-flaeche-standard: var(--genem-schnee);
   --genem-flaeche-karte: var(--genem-neutral-75);
   --genem-flaeche-abgesetzt: var(--genem-rauch);
+  --genem-flaeche-innenkarte: var(--genem-weiss);
+  --genem-flaeche-rahmen: var(--genem-neutral-75);
   --genem-linie: var(--genem-neutral-200);
   --genem-linie-stark: var(--genem-neutral-600);
   --genem-text-sekundaer: var(--genem-neutral-600);
@@ -302,6 +304,14 @@
   --flaeche-karte:var(--genem-flaeche-karte);
   --flaeche-abgesetzt:var(--genem-flaeche-abgesetzt);
   --flaeche-feld:var(--genem-flaeche-standard);
+  /* DIE KARTEN AUF DEM RAHMEN (Web 26.0.0, Variante C, BetreiberIn
+   * 18.11.2026): Hell liegen sie weiß mit leichtem Schatten auf dem Rahmen
+   * in neutral 75 — bis dahin hatten beide dieselbe Fläche, und nur die
+   * Linie trennte sie. Dunkel kehrt es sich um: Die Karte bleibt
+   * Dunkelblau, der Rahmen sinkt auf blau 900. Eine Karte in blau 700 wäre
+   * so hell wie die Linie, und Kopf- und Zeilenlinien verschwänden. */
+  --flaeche-innenkarte:var(--genem-flaeche-innenkarte);
+  --flaeche-rahmen:var(--genem-flaeche-rahmen);
   /* Dunkle Markenfläche hinter der Anmeldung — im Dark Mode blau 900, damit
    * die Karte darauf (dann Dunkelblau) nicht in ihr verschwindet. */
   --flaeche-marke:var(--genem-dunkelblau);
@@ -634,6 +644,7 @@
   --schleier:rgba(26,46,77,.55);       /* Dunkelblau, halbdurchsichtig */
   --schatten:0 2px 8px rgba(26,5,0,.10);
   --schatten-hoch:0 8px 28px rgba(26,5,0,.22);
+  --schatten-karte:var(--schatten);    /* dunkel 0 2px 8px rgba(0,0,0,.35), ruhende Karte im Rahmen */
   /* Auf der dunklen Kopfleiste: eine gedämpfte Fassung von Weiß für Hover
    * und Nebenangaben. Ein eigener Hexwert wäre hier falsch — die Fläche
    * darunter ist Dunkelblau, und der Ton soll mit ihr zusammen entstehen. */
@@ -679,6 +690,9 @@
     --genem-flaeche-standard: var(--genem-blau-900);
     --genem-flaeche-karte: var(--genem-dunkelblau);
     --genem-flaeche-abgesetzt: var(--genem-blau-700);
+    --genem-flaeche-innenkarte: var(--genem-dunkelblau);
+    --genem-flaeche-rahmen: var(--genem-blau-900);
+    --schatten-karte: 0 2px 8px rgba(0,0,0,.35);
     --genem-linie: var(--genem-blau-700);
     --genem-linie-stark: var(--genem-blau-300);
     --genem-text-standard: var(--genem-schnee);
@@ -712,6 +726,9 @@
   --genem-flaeche-standard: var(--genem-blau-900);
   --genem-flaeche-karte: var(--genem-dunkelblau);
   --genem-flaeche-abgesetzt: var(--genem-blau-700);
+  --genem-flaeche-innenkarte: var(--genem-dunkelblau);
+  --genem-flaeche-rahmen: var(--genem-blau-900);
+  --schatten-karte: 0 2px 8px rgba(0,0,0,.35);
   --genem-linie: var(--genem-blau-700);
   --genem-linie-stark: var(--genem-blau-300);
   --genem-text-standard: var(--genem-schnee);
@@ -795,6 +812,9 @@
     --flaeche-karte:var(--genem-schnee);
     --flaeche-abgesetzt:var(--genem-rauch);
     --flaeche-feld:var(--genem-schnee);
+    --flaeche-innenkarte:var(--genem-schnee);
+    --flaeche-rahmen:var(--genem-schnee);
+    --schatten-karte:none;
     --text:var(--genem-asphalt);
     --text-titel:var(--genem-dunkelblau);
     --gedaempft:var(--genem-neutral-600);
@@ -842,6 +862,9 @@
     --flaeche-karte:var(--genem-neutral-75);
     --flaeche-abgesetzt:var(--genem-rauch);
     --flaeche-feld:var(--genem-schnee);
+    --flaeche-innenkarte:var(--genem-neutral-75);
+    --flaeche-rahmen:var(--genem-neutral-75);
+    --schatten-karte:none;
     --text:var(--genem-asphalt);
     --text-titel:var(--genem-dunkelblau);
     --gedaempft:var(--genem-neutral-600);
@@ -1264,9 +1287,12 @@ img,svg,video{max-width:100%;height:auto}
  * Klasse, und Karten bleiben Karten (E-OF-36, -38). Meldungen sind keine
  * `.karte` und bleiben farbige Kästen. Gilt in jeder Breite. */
 .rahmenkarte,.leiste-spalte{display:contents}
+/* Die Karten im Rahmen heben sich ab (Web 26.0.0, Variante C): eigene
+ * Fläche und leichter Schatten. Abschnitte (darunter) bleiben flach. */
+.rahmenkarte .karte{background:var(--flaeche-innenkarte);box-shadow:var(--schatten-karte)}
 .rahmenkarte-abschnitte .karte{
   border:0;border-top:var(--strich) solid var(--linie);border-radius:0;
-  background:transparent;margin:0;
+  background:transparent;margin:0;box-shadow:none;
 }
 .rahmenkarte-abschnitte .karte-kopf{padding:var(--abstand-4) 0 var(--abstand-2);border-bottom:0}
 .rahmenkarte-abschnitte .karte-klappbar[open] > .karte-kopf{border-bottom:0}
@@ -1485,6 +1511,16 @@ input[type=radio].wahlkarte-box{position:absolute;opacity:0;width:0;height:0;min
  *
  * DIE VERSION IN --auf-dunkel-leise, wie sie auf der Anmeldung immer stand:
  * Sie ist eine Auskunft zum Abtippen, aber nicht die Botschaft der Zeile. */
+/* DER FUSS AM FENSTERBODEN (Web 26.0.0, BetreiberIn 18.11.2026): Auf
+ * einer kurzen Seite stand er mitten im Fenster, darunter leere Fläche. Die
+ * Seite wird ein senkrechter Stapel, der Rahmen wächst, der Fuß rückt nach
+ * unten; auf einer langen Seite ändert sich nichts. `:has()` hält es an
+ * den Seiten mit diesem Fuß — Blätter, Installation und Anmeldung haben
+ * ihren eigenen Aufbau. `width:100%`, weil ein Flex-Kind mit
+ * `margin:0 auto` sonst auf seinen Inhalt schrumpfte. */
+body:has(> .fuss-seite){display:flex;flex-direction:column}
+body:has(> .fuss-seite) > .rahmen{width:100%;flex:1 0 auto}
+body:has(> .fuss-seite) > .fuss-seite{margin-top:auto}
 .fuss-seite{
   background:var(--dunkelblau);color:var(--auf-dunkel);
   padding:var(--abstand-4) var(--abstand-3);
@@ -2988,7 +3024,7 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
   .rahmen:has(> .rahmenkarte){padding:var(--abstand-4) var(--abstand-3)}
   .rahmenkarte{
     display:flex;align-items:stretch;flex:1 1 auto;min-width:0;
-    background:var(--flaeche-karte);
+    background:var(--flaeche-rahmen);
     border:var(--strich) solid var(--linie);border-radius:var(--radius-gross);
     overflow:clip;
   }
@@ -2999,7 +3035,7 @@ pre{overflow-x:auto;background:var(--flaeche-abgesetzt);padding:var(--abstand-3)
      am Fensterboden. */
   .leiste-spalte{
     display:block;flex:0 0 auto;
-    background:var(--flaeche-karte);
+    background:var(--flaeche-rahmen);
     border-right:var(--strich) solid var(--linie);
   }
   .leiste-spalte > .leiste{
