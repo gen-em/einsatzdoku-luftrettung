@@ -9,8 +9,8 @@
  *
  *   öffentlicher Teil  SPKI, Base64            → users.rw_oeffentlich
  *   privater Teil      PKCS8, Base64, verpackt → users.rw_privat
- *                      mit dem INHALTSSCHLÜSSEL (`EdCrypto.encrypt(ck, …)`,
- *                      Kennung `edk1:`)
+ *                      mit dem INHALTSSCHLÜSSEL (`EdInhalt.schreiben(ck,
+ *                      'rw', …)`, Kennung `edk2:`)
  *
  * Beim Rückweg läuft es rückwärts: Der Wiederherstellungsschlüssel
  * öffnet die Wiederherstellungs-Hülle und liefert den Inhaltsschlüssel, der
@@ -21,7 +21,7 @@
  * `encrypt()` UND NICHT `huelleBauen()`: Der private Teil hängt am
  * Inhaltsschlüssel, nicht am Server-Anteil. Er muss mit dem
  * Wiederherstellungsschlüssel ALLEIN aufgehen, wie `pat_wrap_rc`; der Server
- * weist `edka1:` hier ab (`RW_PRIVAT_RE`).
+ * weist `edka2:` hier ab (`RW_PRIVAT_RE`).
  *
  * ===========================================================================
  * DREI AUFRUFER
@@ -68,8 +68,7 @@
                                                true, ['sign', 'verify']);
     const spki  = base64(await crypto.subtle.exportKey('spki', kp.publicKey));
     const pkcs8 = base64(await crypto.subtle.exportKey('pkcs8', kp.privateKey));
-    /* Zweck `rw`, ohne Bezug (KA-06b-3): mit der Weiche an `edk2:`, sonst
-       `edk1:` wie bisher — nie am Anteil. */
+    /* Zweck `rw`, ohne Bezug (KA-06b-3): `edk2:` — nie am Anteil. */
     return { oeffentlich: spki, privat: await EdInhalt.schreiben(ck, 'rw', '', pkcs8, 0) };
   }
 

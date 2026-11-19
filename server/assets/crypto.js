@@ -25,8 +25,10 @@
  *   standbuch.js  der Zählerstand gegen das Zurücklegen, das Gerätebuch
  *   huelle2.js    die Gerätehülle Fassung 2 (Herkunft), die Leseregeln, der
  *                 Vergleichswert der Kopplung
- * Hier bleiben: die Ableitung aus dem Passwort (beide Fassungen), Fassung 1
- * von Chiffretext, Hülle und Gerätehülle, die Ablage, der Backup-Container.
+ * Hier bleiben: die Ableitung aus dem Passwort (beide Fassungen), die
+ * Ableitung des Datenschlüssels, die Bausteine der Gerätehülle, die Ablage,
+ * der Backup-Container. Die erste Fassung von Chiffretext, Hülle und
+ * Gerätehülle stand bis Web 26.x hier; seit KA-07 liest sie niemand mehr.
  */
 'use strict';
 const EdCrypto = (() => {
@@ -254,18 +256,21 @@ const EdCrypto = (() => {
    * fuenf Jahren nachrechnen muesste, ob sie traegt.
    *
    * KEIN VORGABEWERT FUER `anteile`, DIESELBE HALTUNG WIE BEI DER RUNDENZAHL.
-   * Wer eine `edka1:`-Huelle oeffnen will und keinen Anteil hat, bekommt
+   * Wer eine `edka2:`-Huelle oeffnen will und keinen Anteil hat, bekommt
    * einen Fehler — keinen Rueckfall auf die Haelfte. Ein Rueckfall ergaebe
    * einen Schluessel, der nicht passt, und der Fehlschlag saehe aus wie ein
    * falsches Passwort. Genau diese Verwechslung darf nicht entstehen.
    */
-  const HUELLE_PRAEFIX = 'edka1:';
+  /* Das Etikett der Ableitung. Es heißt `edka1|dk`, weil es mit der ersten
+   * Hülle entstand; es ist KEIN Format, sondern die feste Info der HKDF, und
+   * an ihm hängen alle Datenschlüssel — auch die der `edka2:`-Hüllen.
+   * Geändert, ginge keine Hülle mehr auf. */
   const HKDF_INFO = 'edka1|dk';
 
-  /** Die Anteil-Kennung im Praefix einer Huelle — oder null (ohne Anteil).
-   *  Beide Fassungen: `edka1:<k>:` und, gebunden, `edka2:<k>:` (inhalt2.js). */
+  /** Die Anteil-Kennung im Praefix einer Huelle (`edka2:<k>:`) — oder null
+   *  (ohne Anteil). */
   function huelleKennung(huelle) {
-    const m = /^edka[12]:([0-9a-f]{8}):/.exec(String(huelle == null ? '' : huelle));
+    const m = /^edka2:([0-9a-f]{8}):/.exec(String(huelle == null ? '' : huelle));
     return m ? m[1] : null;
   }
 
@@ -380,108 +385,35 @@ const EdCrypto = (() => {
   }
 
   // Klartext (String) -> base64(iv || ciphertext)
-  /* ---- Formatkennung vor dem Chiffretext -------------------------------
+  /* ---- Bis Web 26.x: `edk1:` ------------------------------------------
    *
-   * Ein Chiffretext nur aus Zufallswert und Nutzdaten trüge keine Angabe
-   * darüber, mit welchem Verfahren er entstanden ist. Wird das
-   * Verfahren je gewechselt — und irgendwann wird es das —, gibt es kein
-   * Merkmal, an dem sich alt von neu unterscheiden ließe. Man müsste raten
-   * und am Fehlschlag erkennen, dass man falsch geraten hat; ein
-   * Fehlschlag beim Entschlüsseln sieht aber genauso aus wie ein falscher
-   * Schlüssel.
-   *
-   * WARUM EIN TEXTPRÄFIX UND KEIN KENNUNGSBYTE
-   * Ein Byte INNERHALB der Daten wäre von einem Zufallswert nur durch
-   * Ausprobieren zu unterscheiden — man müsste beide Deutungen durchrechnen.
-   * Der Doppelpunkt gehört nicht zum base64-Zeichenvorrat; die Kennung ist
-   * damit auf den ersten Blick zu erkennen, auch in der Datenbankspalte.
-   *
-   * BEIM LESEN GROSSZÜGIG: Kein Präfix heißt erste Fassung. Es gibt keine
-   * Umstellung des Bestands — der Server kann sie nicht entschlüsseln und die
-   * Kennung deshalb nicht nachtragen. Beide Formen stehen dauerhaft
-   * nebeneinander; ein Datensatz bekommt die Kennung, wenn er das nächste Mal
-   * gespeichert wird.
-   */
-  const CHIFFRE_PRAEFIX = 'edk1:';
+   * Hier standen `encrypt()` und `decrypt()` der ersten Fassung (AES-GCM ohne
+   * Zusatzdaten, `edk1:` oder ganz ohne Kennung). Seit Web 25 schrieb sie
+   * niemand mehr, seit KA-07 (Web 27.0.0) liest sie niemand mehr: Auf keiner
+   * Anlage liegt noch ein solcher Text (E-KA-104, gemessen 19.11.2026). Jeder
+   * Inhalt geht über `EdInhalt` (inhalt2.js, `edk2:`), gebunden an Zweck und
+   * Bezug. */
 
-  async function encrypt(keyHex, plaintext) {
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const key = await aesKey(keyHex, ['encrypt']);
-    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv },
-      key, te.encode(plaintext));
-    const out = new Uint8Array(iv.length + ct.byteLength);
-    out.set(iv); out.set(new Uint8Array(ct), iv.length);
-    return CHIFFRE_PRAEFIX + toB64(out);
-  }
+  /* ---- Schlüsselhüllen: öffnen und bauen ------------------------------- */
 
-  // [edk1:]base64(iv || ciphertext) -> Klartext; wirft bei falschem Schlüssel
-  async function decrypt(keyHex, blob) {
-    let text = String(blob == null ? '' : blob);
-    const doppelpunkt = text.indexOf(':');
-    if (doppelpunkt >= 0) {
-      const kennung = text.slice(0, doppelpunkt + 1);
-      if (kennung === 'edk2:' || kennung === 'edka2:') {
-        /* Fassung 2 ist an Zweck und Bezug GEBUNDEN, und beides kennt diese
-         * Funktion nicht. Sie rät nicht: Wer hier ankommt, ist ein
-         * Verbraucher, der noch nicht über `EdInhalt.lesen()` (inhalt2.js)
-         * liest — das soll beim Entwickeln auffallen und nicht wie ein
-         * falscher Schlüssel aussehen. */
-        const f = new Error('Dieser Datensatz ist gebunden verschlüsselt (' + kennung
-                          + ') und lässt sich an dieser Stelle noch nicht öffnen.');
-        f.grund = 'gebunden';
-        throw f;
-      }
-      if (kennung !== CHIFFRE_PRAEFIX) {
-        /* Eine Kennung, die diese Fassung nicht kennt. Die Meldung sagt das
-         * auch — sonst sucht jemand den Fehler beim Schlüssel und findet ihn
-         * nie. Derselbe Gedanke wie beim Backup-Container. */
-        throw new Error('Dieser Datensatz wurde mit einer neueren Fassung des '
-                      + 'Programms verschlüsselt (' + kennung + '). Bitte die '
-                      + 'Anwendung aktualisieren.');
-      }
-      text = text.slice(doppelpunkt + 1);
-    }
-    const raw = fromB64(text);
-    const key = await aesKey(keyHex, ['decrypt']);
-    const pt = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: raw.slice(0, 12) }, key, raw.slice(12));
-    return td.decode(pt);
-  }
-
-  /* ---- Schlüsselhüllen: öffnen und bauen -------------------------------
-   *
-   * WARUM DAFUER ZWEI EIGENE FUNKTIONEN UND NICHT `decrypt`/`encrypt`.
-   * `decrypt()` liest die Kennung als FASSUNG DES VERFAHRENS und weist alles
-   * ausser `edk1:` mit „neuere Programmfassung" ab. Eine Huelle traegt aber
-   * zwei verschiedene Dinge im Praefix: die Fassung UND die Kennung des
-   * Anteils. Beides in `decrypt()` zu vermengen hiesse, jedem
-   * Huellenwechsel eine Fehlermeldung mitzugeben — und die `pat_blob`-Seite
-   * mit einer Kennung zu belasten, die dort nie vorkommt.
-   *
-   * Die Trennung ist zugleich die Antwort auf die Frage, WO die Kennung
-   * ueberhaupt hingehoert: an die Huelle, nicht an den Datensatz. `encrypt()`
-   * und `decrypt()` kennen deshalb keine Anteil-Kennung.
-   */
-
-  /** Eine Huelle oeffnen — beide Fassungen und der Bestand ohne Praefix. */
+  /** Eine Huelle oeffnen (`edk2:`, `edka2:<k>:`) — inhalt2.js; dort ist die
+   *  Anteil-Kennung Teil der Zusatzdaten, und eine umetikettierte Hülle bricht
+   *  am Prüfwert. Diese Funktion öffnet NUR die Hülle unter dem
+   *  Datenschlüssel (Art „pw"); die Wiederherstellungshülle geht über
+   *  `EdInhalt.huelleOeffnen(rk, wrap, 'rc')`. Eine Hülle der ersten Fassung
+   *  (`edka1:`, `edk1:`, ohne Kennung) öffnet seit Web 27.0.0 nichts mehr. */
   async function huelleOeffnen(dkHex, huelle) {
     const text = String(huelle == null ? '' : huelle);
-    /* FASSUNG 2 (`edk2:`, `edka2:<k>:`) öffnet inhalt2.js — dort ist die
-     * Anteil-Kennung Teil der Zusatzdaten, und eine umetikettierte Hülle
-     * bricht am Prüfwert. Diese Funktion öffnet NUR die Hülle unter dem
-     * Datenschlüssel (Art „pw"); die Wiederherstellungshülle geht über
-     * `EdInhalt.huelleOeffnen(rk, wrap, 'rc')`. */
-    if (huelleGebunden(text)) {
-      if (typeof EdInhalt === 'undefined') {
-        throw new Error('Diese Schlüsselhülle ist gebunden (Fassung 2); inhalt2.js ist nicht geladen.');
-      }
-      return EdInhalt.huelleOeffnen(dkHex, text, 'pw');
+    if (!huelleGebunden(text)) {
+      const f = new Error('Diese Schlüsselhülle hat das alte Format, das seit Web 27.0.0 '
+                        + 'nicht mehr gelesen wird.');
+      f.grund = 'altformat';
+      throw f;
     }
-    /* Die Kennung wird hier nur ABGESCHNITTEN. Welcher Schluessel zu ihr
-     * gehoert, hat `datenschluessel()` eine Ebene darueber entschieden. */
-    return decrypt(dkHex, text.startsWith(HUELLE_PRAEFIX)
-      ? text.slice(text.indexOf(':', HUELLE_PRAEFIX.length) + 1)
-      : text);
+    if (typeof EdInhalt === 'undefined') {
+      throw new Error('Diese Schlüsselhülle ist gebunden; inhalt2.js ist nicht geladen.');
+    }
+    return EdInhalt.huelleOeffnen(dkHex, text, 'pw');
   }
 
   /**
@@ -489,8 +421,7 @@ const EdCrypto = (() => {
    *
    * `kennung` ist ANTEIL_KENNUNG aus der Seite: der Anteil, mit dem NEUE
    * Huellen entstehen. Ist sie null (kein Anteil ausgeliefert, oder
-   * Demo-Konto), entsteht die Altfassung `edk1:` — der Weg bricht dann nicht,
-   * er stellt nur nicht um.
+   * Demo-Konto), entsteht `edk2:` ohne Kennung.
    */
   async function huelleBauen(dkHex, ckHex, kennung) {
     /* Seit Web 26.0.0 nur noch die gebundene Hülle `edka2:<k>:` bzw.
@@ -1177,33 +1108,23 @@ const EdCrypto = (() => {
   }
 
   /* ======================================================================
-   * DIE GERÄTEHÜLLE, Fassung 1
+   * DIE GERÄTEHÜLLE — die gemeinsamen Bausteine
    * ======================================================================
    *
    * Uhr, Handy und Browser verschließen Spur, Phasenkoordinaten und
    * Reanimation mit dem ÖFFENTLICHEN Schlüssel des Kontos; nur der Browser
-   * öffnet mit dem privaten. Das Format steht im Kopf von
-   * `tools/proben/huelle/referenz.py` und nur dort; die Hüllenprobe hält
-   * diese Funktionen gegen dessen Vektoren (byte-gleich).
-   *
-   *   Kennbyte 0x01 · EPK 65 Byte (SEC1) · IV 16 · AES-256-CBC (PKCS#7)
-   *   · HMAC-SHA256 über Kopf, Chiffretext und Bindung
-   *   Z = ECDH (X-Koordinate), HKDF-SHA256(salt = EPK,
-   *   info = "nadoku-huelle-1" ‖ Empfänger) → k_enc ‖ k_mac
+   * öffnet mit dem privaten. Verschließen und Öffnen der Fassung 2 stehen in
+   * `huelle2.js`; hier bleiben die Bausteine, die sie von hier nimmt: Fehler,
+   * Verbinden, Bindung, öffentlicher Schlüssel, HMAC. Das Format steht im
+   * Kopf von `tools/proben/huelle/referenz.py` und nur dort.
    *
    * NICHT VERWECHSELN mit `huelleOeffnen()`/`huelleBauen()` darüber: Das ist
    * die Hülle des Inhaltsschlüssels unter dem Datenschlüssel. Diese
    * hier heißt deshalb durchweg „Gerätehülle“.
    *
-   * ERST PRÜFEN, DANN ENTSCHLÜSSELN: `geraetehuelleOeffnen()` vergleicht den
-   * Prüfwert in fester Zeit, bevor es AES anfasst. Ein Fehler trägt `.grund`
-   * ('laenge', 'fassung', 'schluessel', 'pruefwert', 'polsterung',
-   * 'bindung-zu-lang') — die Ansicht nennt ihn am Einsatz.
+   * Bis Web 26.x stand hier auch die Fassung 1 (Kennbyte 0x01, Info
+   * „nadoku-huelle-1", ohne Absender) — seit KA-07 liest sie niemand mehr.
    */
-  const GH_FASSUNG = 1;
-  const GH_KOPF = 1 + 65 + 16;
-  const GH_TAG = 32;
-  const GH_INFO = te.encode('nadoku-huelle-1');
 
   function ghFehler(grund) {
     const e = new Error('Gerätehülle geht nicht auf: ' + grund);
@@ -1237,68 +1158,11 @@ const EdCrypto = (() => {
     } catch (e) { throw ghFehler('schluessel'); }
   }
 
-  async function ghAbleiten(privKey, pubKey, epk, empfPub) {
-    const z = new Uint8Array(await crypto.subtle.deriveBits({ name: 'ECDH', public: pubKey }, privKey, 256));
-    const ikm = await crypto.subtle.importKey('raw', z, 'HKDF', false, ['deriveBits']);
-    const okm = new Uint8Array(await crypto.subtle.deriveBits(
-      { name: 'HKDF', hash: 'SHA-256', salt: epk, info: ghVerbinde(GH_INFO, empfPub) }, ikm, 512));
-    return { z, kEnc: okm.slice(0, 32), kMac: okm.slice(32) };
-  }
-
   async function ghHmac(k, daten) {
     const key = await crypto.subtle.importKey('raw', k, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
     return new Uint8Array(await crypto.subtle.sign('HMAC', key, daten));
   }
 
-  /**
-   * Verschließen mit dem öffentlichen Schlüssel des Kontos (SEC1, 65 Byte).
-   * `fest` NUR für Prüfvektoren: { privat: CryptoKey (ECDH), epk, iv }.
-   * @returns {Promise<Uint8Array>} die Hülle
-   */
-  async function geraetehuelleVerschliessen(klar, empfPub, art, ref, platz, fest) {
-    const empf = await ghOeffentlich(empfPub);
-    let eph, epk;
-    if (fest) {
-      eph = fest.privat;
-      epk = fest.epk;
-    } else {
-      const paar = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveBits']);
-      eph = paar.privateKey;
-      epk = new Uint8Array(await crypto.subtle.exportKey('raw', paar.publicKey));
-    }
-    const iv = fest ? fest.iv : crypto.getRandomValues(new Uint8Array(16));
-    const k = await ghAbleiten(eph, empf, epk, empfPub);
-    const aes = await crypto.subtle.importKey('raw', k.kEnc, 'AES-CBC', false, ['encrypt']);
-    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-CBC', iv }, aes, klar));
-    const kopf = ghVerbinde(new Uint8Array([GH_FASSUNG]), epk, iv);
-    const tag = await ghHmac(k.kMac, ghVerbinde(kopf, ct, geraetehuelleBindung(art, ref, platz)));
-    return ghVerbinde(kopf, ct, tag);
-  }
-
-  /**
-   * Öffnen mit dem privaten Schlüssel des Kontos (CryptoKey, ECDH) und dem
-   * öffentlichen (SEC1). Erst der Prüfwert, dann AES. Wirft mit `.grund`.
-   * @returns {Promise<Uint8Array>} der Klartext
-   */
-  async function geraetehuelleOeffnen(huelle, privKey, empfPub, art, ref, platz) {
-    if (huelle.length < GH_KOPF + 16 + GH_TAG || (huelle.length - GH_KOPF - GH_TAG) % 16) {
-      throw ghFehler('laenge');
-    }
-    if (huelle[0] !== GH_FASSUNG) { throw ghFehler('fassung'); }
-    const epk = huelle.slice(1, 66), iv = huelle.slice(66, GH_KOPF);
-    const ct = huelle.slice(GH_KOPF, huelle.length - GH_TAG);
-    const tag = huelle.slice(huelle.length - GH_TAG);
-    const k = await ghAbleiten(privKey, await ghOeffentlich(epk), epk, empfPub);
-    const soll = await ghHmac(k.kMac, ghVerbinde(huelle.slice(0, huelle.length - GH_TAG),
-                                                 geraetehuelleBindung(art, ref, platz)));
-    let d = 0;
-    for (let i = 0; i < GH_TAG; i++) { d |= soll[i] ^ tag[i]; }   // feste Zeit
-    if (d) { throw ghFehler('pruefwert'); }
-    const aes = await crypto.subtle.importKey('raw', k.kEnc, 'AES-CBC', false, ['decrypt']);
-    try {
-      return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-CBC', iv }, aes, ct));
-    } catch (e) { throw ghFehler('polsterung'); }
-  }
 
   /** Der öffentliche Teil als 65 Byte SEC1 aus SPKI (Base64) — die letzten
    *  65 Byte; für P-256 ist das der Punkt. Null, wenn es keiner ist. */
@@ -1311,17 +1175,15 @@ const EdCrypto = (() => {
   }
 
   return { deriveKeys, ableitungFassung, ABLEITUNG2_AB,
-           anmeldeTokens, encrypt, decrypt, randomHex,
+           anmeldeTokens, randomHex,
            /* Server-Anteil und Hüllen */
            datenschluessel, datenschluesselZu,
            huelleOeffnen, huelleBauen, huelleKennung, huelleGebunden,
-           HUELLE_PRAEFIX,
            newRecoveryCode, recoveryKeyHex,
            pruefeRecoveryCode, recoveryCodeMeldung, RC_CHARS, RC_LEN,
            contentKeyCheck, wrapFingerprint,
            /* Ablage des Inhaltsschlüssels — gelesen von keyguard.js */
            inhaltAblegen, inhaltLesen, inhaltAnfassen, inhaltLoeschen, clearSession,
-           CHIFFRE_PRAEFIX,
            merkeAbleitungen, holeAbleitungen, vergissAbleitungen,
            isBackupFile,
            /* Containerfassung 4 */
@@ -1329,8 +1191,7 @@ const EdCrypto = (() => {
            sealTeil, openTeil, sealTeilJson, openTeilJson, teilKopf,
            toB64Gross, fromB64Gross, sha256Hex, dateiArt,
            /* Gerätehülle */
-           geraetehuelleVerschliessen, geraetehuelleOeffnen, geraetehuelleBindung,
-           geraetehuelleAbleiten: ghAbleiten,
+           geraetehuelleBindung,
            spkiZuSec1,
            /* Werkzeug für inhalt2.js, standbuch.js und huelle2.js — dieselben
             * Helfer, nicht drei Abschriften: das Schlüsselfach (`aesKey`), Hex

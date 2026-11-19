@@ -5,7 +5,7 @@
  * Leseregeln für Spur und Einsatzhülle und rechnet Zusage und Vergleichswert
  * der Kopplung. Format und Prüfvektoren stehen im Kopf von
  * `tools/proben/huelle/referenz.py` und nur dort; die Hüllenprobe hält diese
- * Datei byte-gleich dagegen. Fassung 1 bleibt in crypto.js.
+ * Datei byte-gleich dagegen. Fassung 1 stand bis Web 26.x in crypto.js.
  *
  * WAS DAS PROBLEM WAR (Audit KA, F-KA-12, Nr. 563). Eine Hülle der Fassung 1
  * baut, wer den öffentlichen Kontoschlüssel kennt — der Server, jedes
@@ -34,18 +34,19 @@
  *
  * FEHLER tragen `.grund`:
  *   an der Hülle   laenge, fassung, absender, schluessel, pruefwert,
- *                  polsterung, ohne-herkunft (Fassung 1, wo 2 verlangt ist)
+ *                  polsterung, ohne-herkunft (Fassung 1)
  *   an der Folge   luecke, ohne-schluss, zeit, zurueckgelegt,
  *                  absender-gesperrt, innen
  *   am Stand       uhrzeit-pruefen (ein Hinweis, mit `.hinweis` und
  *                  `.inhalt` — siehe `einsatzLesen()`), bestaetigung
  *   Kopplung       laenge, zusage
- * Was aufgeht, trägt seinen ABSENDER: null (Fassung 1 — „ohne
- * Herkunftsnachweis"), 'konto' oder die SID des Geräts (hex).
+ * Was aufgeht, trägt seinen ABSENDER: 'konto' oder die SID des Geräts (hex).
  *
- * DIE SCHREIBWEGE schreiben seit Web 26.0.0 nur Fassung 2 (die Weiche ist
- * zurückgebaut, 06e); Fassung 1 öffnet nur noch der Anhebelauf über einen
- * Leser ohne `verlangt2` (E-KA-97).
+ * NUR FASSUNG 2. Die Schreibwege schreiben sie seit Web 26.0.0; seit Web
+ * 27.0.0 (KA-07) öffnet auch niemand mehr Fassung 1 (`ohne-herkunft`) — auf
+ * keiner Anlage liegt noch eine (E-KA-104). Bis dahin hob der Anhebelauf sie
+ * mit `spurUebernehmen()` und `einsatzUebernehmen()`; was er gehoben
+ * hat, trägt weiter den Merker „übernommen“ und wird so angezeigt.
  *
  * Braucht: EdCrypto (crypto.js), EdInhalt (inhalt2.js). Legt `EdHuelle2` an.
  */
@@ -259,10 +260,8 @@ const EdHuelle2 = (() => {
    * @param k        { priv: CryptoKey, pub: Uint8Array(65) } — das Kontopaar
    * @param geraete  das Gerätebuch: { <sid hex>: { spk: Uint8Array, bis: number|null } }
    *                 (`EdStandbuch`, `geraete()`)
-   * @param verlangt2  Fassung 1 gilt nicht mehr (nach dem Stichtag, oder wo
-   *                 das Standbuch schon einen Stand der Fassung 2 kennt)
    */
-  async function leser(k, geraete, verlangt2) {
+  async function leser(k, geraete) {
     const kontoSid = await sid(k.pub);
     geraete = geraete || {};
     const spkZu = s => {
@@ -271,14 +270,10 @@ const EdHuelle2 = (() => {
       return g ? g.spk : null;
     };
     return {
-      /** Klartext und Absender: null (Fassung 1), 'konto' oder die SID (hex). */
+      /** Klartext und Absender: 'konto' oder die SID (hex). */
       async huelle(h, art, ref, platz) {
         h = bytes(h);
-        if (h[0] === FASSUNG1) {
-          if (verlangt2) { throw fehler('ohne-herkunft'); }
-          return { klar: await EdCrypto.geraetehuelleOeffnen(h, k.priv, k.pub, art, ref, platz || ''),
-                   absender: null };
-        }
+        if (h[0] === FASSUNG1) { throw fehler('ohne-herkunft'); }
         const o = await oeffnen2(h, k.priv, k.pub, spkZu, art, ref, platz || '');
         return { klar: o.klar, absender: gleich(o.sid, kontoSid) ? KONTO : T.toHex(o.sid) };
       },
@@ -332,8 +327,7 @@ const EdHuelle2 = (() => {
    *           `abgeschlossen` (das Klartextkennzeichen `final`)
    * @returns {Promise<{punkte: Array, befund: object}>} Punkte
    *          {seq, lat, lon, ele, ts} (ts mit Versatz); Befund `herkunft`
-   *          (wer verschlossen hat; 'fassung-1' heißt ohne Nachweis),
-   *          `schluss`, `fassung1`, `gedeckt`
+   *          (wer verschlossen hat), `schluss`, `gedeckt`
    */
   async function spurLesen(ls, art, ref, stuecke, o) {
     o = o || {};
@@ -342,16 +336,11 @@ const EdHuelle2 = (() => {
     for (const st of stuecke || []) {
       const stufe = st.stufe || 1;
       const auf = await ls.huelle(st.huelle, art, ref, platzVon(st));
-      let kopf;
-      if (auf.absender === null) {                       // Fassung 1
-        kopf = { ts_von: st.ts_von - versatz, merker: 0, herkunft: [], nutzlast: auf.klar };
-      } else {
-        kopf = spurInnen2Lesen(auf.klar);
-        if (st.ts_von - kopf.ts_von !== versatz) { throw fehler('zeit'); }
-        if (auf.absender !== KONTO
-            && (stufe >= 2 || kopf.herkunft.length || (kopf.merker & (M_LUECKE | M_UEBERNOMMEN)))) {
-          throw fehler('innen');                         // ein Gerät gibt sich als Konto aus
-        }
+      const kopf = spurInnen2Lesen(auf.klar);
+      if (st.ts_von - kopf.ts_von !== versatz) { throw fehler('zeit'); }
+      if (auf.absender !== KONTO
+          && (stufe >= 2 || kopf.herkunft.length || (kopf.merker & (M_LUECKE | M_UEBERNOMMEN)))) {
+        throw fehler('innen');                           // ein Gerät gibt sich als Konto aus
       }
       let pkt, bis;
       if (stufe >= 2) {
@@ -371,7 +360,7 @@ const EdHuelle2 = (() => {
       const zeiten = pkt.map(p => p[3]);
       const tErst = zeiten.length ? Math.min.apply(null, zeiten) : null;
       const tLetzt = zeiten.length ? Math.max.apply(null, zeiten) : null;
-      if (auf.absender !== null && auf.absender !== KONTO
+      if (auf.absender !== KONTO
           && ls.gesperrt(auf.absender, tLetzt === null ? kopf.ts_von : tLetzt)) {
         throw fehler('absender-gesperrt');
       }
@@ -379,11 +368,10 @@ const EdHuelle2 = (() => {
                    merker: kopf.merker, tErst: tErst, tLetzt: tLetzt, uebernommen: kopf.uebernommen || null });
     }
 
-    const fassung1 = offen.some(x => x.absender === null);
     offen.sort((a, b) => (a.von - b.von) || (b.bis - a.bis));
     let ende = 0, tEnde = null;
     for (const x of offen) {
-      if (x.von > ende && !fassung1 && !ueberdeckt(sperren, tEnde, x.tErst)) { throw fehler('luecke'); }
+      if (x.von > ende && !ueberdeckt(sperren, tEnde, x.tErst)) { throw fehler('luecke'); }
       if (x.bis > ende) {
         ende = x.bis;
         tEnde = x.tLetzt !== null ? x.tLetzt : tEnde;
@@ -393,7 +381,7 @@ const EdHuelle2 = (() => {
     const schluss = offen.some(x => (x.merker & M_SCHLUSS) && x.bis === ende);
     const hoechste = offen.reduce((m, x) => Math.max(m, x.stufe), 0);
     if (o.stand && (ende < o.stand[0] || hoechste < o.stand[1])) { throw fehler('zurueckgelegt'); }
-    if (o.abgeschlossen && !schluss && !fassung1 && !ueberdeckt(sperren, tEnde, null)) {
+    if (o.abgeschlossen && !schluss && !ueberdeckt(sperren, tEnde, null)) {
       throw fehler('ohne-schluss');
     }
 
@@ -418,101 +406,12 @@ const EdHuelle2 = (() => {
        Sicherung (Aufruf ohne Sperren) jeden geschnittenen Punkt. */
     const punkte = [...nach.entries()].sort((a, b) => a[0] - b[0])
       .map(([seq, p]) => ({ seq: seq, lat: p[0], lon: p[1], ele: p[2], ts: p[3] + versatz }));
-    const herkunft = [...new Set(offen.map(x => (x.absender === null ? 'fassung-1' : x.absender)))].sort();
+    const herkunft = [...new Set(offen.map(x => x.absender))].sort();
     /* `uebernommen`: wann das Konto Altdaten der Fassung 1 übernommen hat
        (06e, E-KA-81) — der späteste Zeitpunkt an einem Stück, sonst null. */
     const uebernommen = offen.reduce((m, x) => (x.uebernommen && x.uebernommen > (m || 0) ? x.uebernommen : m), null);
-    return { punkte: punkte, befund: { herkunft: herkunft, schluss: schluss, fassung1: fassung1, gedeckt: ende,
+    return { punkte: punkte, befund: { herkunft: herkunft, schluss: schluss, gedeckt: ende,
                                        uebernommen: uebernommen } };
-  }
-
-  /**
-   * EINE SPUR DER FASSUNG 1 ALS KONTO NEU VERSCHLIESSEN (06e, E-KA-95, -97).
-   * Nur der Anhebelauf ruft das — er ist der letzte Leser der Fassung 1, und
-   * `ls` ist dort ein Leser ohne `verlangt2`. Referenz: `spur_uebernehmen()`.
-   *
-   * Jedes Stück der Fassung 1 wird geöffnet und als Fassung 2 vom Konto
-   * verschlossen, mit Merker UEBERNOMMEN und `o.jetzt` — derselbe Platz,
-   * dieselbe Nutzlast. Stücke der Fassung 2 bleiben. Ist die Aufzeichnung
-   * `abgeschlossen` und fehlt SCHLUSS am Ende, bekommt ihn das übernommene
-   * Stück, das bis ans Ende reicht. Jede Lücke ohne belegten Löschvermerk
-   * bekommt einen ENGEN Vermerk [t_vor + 1, t_nach − 1] (Zeit der Hülle):
-   * Er erklärt die Lücke und blendet keinen Punkt aus; ist sie dafür zu eng,
-   * wirft das `luecke`.
-   * @param o  { jetzt, versatz, sperren, abgeschlossen }
-   * @returns {Promise<{stuecke: object[], vermerke: number[][]}>}  die
-   *          Stücke mit neuer `huelle` (Uint8Array), sonst unverändert
-   */
-  async function spurUebernehmen(ls, k, art, ref, stuecke, o) {
-    o = o || {};
-    const versatz = o.versatz || 0, sperren = o.sperren || [];
-    const offen = [];
-    for (const st of stuecke || []) {
-      const stufe = st.stufe || 1, platz = platzVon(st);
-      const auf = await ls.huelle(st.huelle, art, ref, platz);
-      const alt = auf.absender === null;
-      const kopf = alt ? { ts_von: st.ts_von - versatz, merker: 0, nutzlast: auf.klar } : spurInnen2Lesen(auf.klar);
-      let zeiten, bis;
-      if (stufe >= 2) {
-        zeiten = st.punkte ? (await gepacktLesen(kopf.nutzlast, st.punkte, kopf.ts_von)).map(p => p[3]) : [];
-        bis = st.seq_from + st.n_original;
-      } else {
-        if (kopf.nutzlast.length !== 14 * st.punkte) { throw fehler('innen'); }
-        const dv = new DataView(kopf.nutzlast.buffer, kopf.nutzlast.byteOffset, kopf.nutzlast.byteLength);
-        zeiten = [];
-        for (let i = 0; i < st.punkte; i++) { zeiten.push(kopf.ts_von + dv.getUint32(i * 14 + 10)); }
-        bis = st.seq_from + st.punkte;
-      }
-      offen.push({ st: st, platz: platz, klar: auf.klar, alt: alt, ts: kopf.ts_von, von: st.seq_from, bis: bis,
-                   schluss: !!(kopf.merker & M_SCHLUSS),
-                   tErst: zeiten.length ? Math.min.apply(null, zeiten) : null,
-                   tLetzt: zeiten.length ? Math.max.apply(null, zeiten) : null });
-    }
-    const folge = offen.slice().sort((a, b) => (a.von - b.von) || (b.bis - a.bis));
-    const vermerke = [];
-    let ende = 0, tEnde = null;
-    for (const x of folge) {
-      if (x.von > ende && !ueberdeckt(sperren.concat(vermerke), tEnde, x.tErst)) {
-        if (tEnde === null || x.tErst === null || x.tErst - tEnde < 2) { throw fehler('luecke'); }
-        vermerke.push([tEnde + 1, x.tErst - 1]);
-      }
-      if (x.bis > ende) {
-        ende = x.bis;
-        tEnde = x.tLetzt !== null ? x.tLetzt : tEnde;
-      }
-    }
-    let schlussFehlt = !!o.abgeschlossen && !offen.some(x => x.schluss && x.bis === ende);
-    const neu = [];
-    for (const x of offen) {
-      if (!x.alt) { neu.push(x.st); continue; }
-      const schluss = schlussFehlt && x.bis === ende;
-      if (schluss) { schlussFehlt = false; }
-      const h = await verschliessen2(spurInnen2(x.ts, x.klar, { schluss: schluss, uebernommen: o.jetzt }),
-                                     k.pub, { privat: k.priv, spk: k.pub }, art, ref, x.platz);
-      neu.push(Object.assign({}, x.st, { huelle: h }));
-    }
-    return { stuecke: neu, vermerke: vermerke };
-  }
-
-  /**
-   * EINE EINSATZHÜLLE DER FASSUNG 1 ALS KONTO NEU VERSCHLIESSEN (06e,
-   * E-KA-97). `o.z`: der nächste Zähler des Kontos; `o.schluss`: das
-   * Klartextkennzeichen des abgeschlossenen Einsatzes (Fassung 1 kannte
-   * beides nicht); `start` = Klartextbeginn − `o.versatz`. Die Herkunft sagt,
-   * dass das Konto übernommen hat. Referenz: `einsatz_uebernehmen()`.
-   * @returns {Promise<Uint8Array>}
-   */
-  async function einsatzUebernehmen(ls, k, ref, huelle, startedTs, o) {
-    const auf = await ls.huelle(huelle, 'einsatz', ref, '');
-    if (auf.absender !== null) { throw fehler('innen'); }
-    let d;
-    try { d = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(auf.klar)); }
-    catch (e) { throw fehler('innen'); }
-    if (d === null || typeof d !== 'object' || d.fassung !== 1) { throw fehler('innen'); }
-    return verschliessen2(
-      einsatzInnen2(o.z, startedTs - (o.versatz || 0), !!o.schluss, d.phasen || [], d.rea || [],
-                    { von: [], uebernommen: o.jetzt }),
-      k.pub, { privat: k.priv, spk: k.pub }, 'einsatz', ref, '');
   }
 
   /**
@@ -523,7 +422,7 @@ const EdHuelle2 = (() => {
    *           `k` (1: sie kam vom Konto), `a` (sonst: die SID des Geräts,
    *           hex), `f` (1: eine mit `schluss: true` war schon abgenommen),
    *           `u` (Vermerke [[z_v, sid, t], …] über verworfene Stände)
-   * @returns {Promise<{inhalt: object, absender: string|null, befund: string[]}>}
+   * @returns {Promise<{inhalt: object, absender: string, befund: string[]}>}
    *
    * DER HINWEIS (KA-09/-10, E-KA-70, -88). Zwischen zwei GERÄTEN ist ein
    * kleinerer oder gleicher Zähler — oder einer, den ein Vermerk als
@@ -548,10 +447,6 @@ const EdHuelle2 = (() => {
     let d;
     try { d = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(auf.klar)); }
     catch (e) { throw fehler('innen'); }
-    if (auf.absender === null) {
-      if (stand && stand.o) { throw fehler('zurueckgelegt'); }   // Fassung 1 nach einer abgenommenen Fassung 2
-      return { inhalt: d, absender: null, befund: [] };
-    }
     if (d === null || typeof d !== 'object' || Array.isArray(d) || d.fassung !== 2
         || !Number.isSafeInteger(d.z) || d.z < 1 || !Number.isSafeInteger(d.start)) {
       throw fehler('innen');
@@ -756,7 +651,7 @@ const EdHuelle2 = (() => {
     return String(zahl).padStart(6, '0');
   }
 
-  return { sid, leser, spurLesen, einsatzLesen, spurUebernehmen, einsatzUebernehmen, einsatzHinweis, einsatzBefunde, standNachAbnahme,
+  return { sid, leser, spurLesen, einsatzLesen, einsatzHinweis, einsatzBefunde, standNachAbnahme,
            hinweisGleich, hinweisFehler, STANDFELDER,
            UHRZEIT_PRUEFEN, STAND_UEBERNOMMEN, OFFEN_NACH_SCHLUSS,
            stueckSchreiben, einsatzSchreiben,

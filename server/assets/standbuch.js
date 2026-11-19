@@ -35,7 +35,8 @@
  *       s  [gedeckt bis, Stufe] der abgenommenen Spur
  *       d  Versatz in Sekunden (Umdatierung): Klartextzeit − Zeit in der Hülle
  *       x  Löschvermerke [[von, bis], …] in der Zeit der Hülle
- *     zu   der Anhebelauf ist durch: Fassung 1 in diesem Blatt ist ein Befund
+ *     zu   bis Web 26.x: der Anhebelauf war durch (wird gelesen und
+ *          ignoriert; Fassung 1 ist seit Web 27.0.0 überall `altformat`)
  *     Gerätebuch = edk2, Zweck "geraete", Bezug leer, Z = seine Version
  *              { "fassung": 1, "geraete": [ { sid, spk, geraet, seit, bis } ] }
  *
@@ -43,9 +44,8 @@
  *   blatt-zurueckgelegt  der Server liefert ein Blatt mit kleinerer Version,
  *                        als dieser Browser schon gesehen hat (der Anker)
  *   buch-zurueckgelegt   dasselbe am Gerätebuch
- *   zurueckgelegt        Z des Blocks < p — oder Fassung 1, wo schon ein
- *                        Zähler steht
- *   altformat            Fassung 1 in einem Blatt mit "zu"
+ *   zurueckgelegt        Z des Blocks < p
+ *   altformat            ein Block der ersten Fassung (`edk1:`, seit Web 27.0.0)
  *   Z > p oder kein Eintrag ist KEIN Fehler: Das Blatt hinkt (ein verlorener
  *   Schreibvorgang), der Browser trägt nach. Fälschen kann das niemand — ein
  *   höheres Z entsteht nur mit dem Schlüssel.
@@ -256,22 +256,17 @@ const EdStandbuch = (() => {
   }
 
   /**
-   * EINEN PATIENTENBLOCK GEGEN SEIN (schon geöffnetes) BLATT LESEN — beide
-   * Fassungen. `blatt` darf null sein (es gibt noch keins).
+   * EINEN PATIENTENBLOCK GEGEN SEIN (schon geöffnetes) BLATT LESEN.
+   * `blatt` darf null sein (es gibt noch keins). Ein Block der ersten Fassung
+   * (`edk1:`) ist seit Web 27.0.0 `altformat` (KA-07).
    * @returns {Promise<{nutzlast: Uint8Array, z: number, gebunden: boolean,
    *                    blatt_hinkt: boolean}>}
-   *   `gebunden: false`  Fassung 1 — Altbestand, an nichts gebunden
    *   `blatt_hinkt`      der Block ist weiter als das Blatt: nachtragen
    */
   async function patLesen(schluessel, text, ref, blatt) {
     const eintrag = ((blatt && blatt.e) || {})[await kennung(ref)] || {};
     const stand = eintrag.p || 0;
-    if (!EdInhalt.istGebunden(text)) {
-      const klar = await EdInhalt.oeffnen1Bytes(schluessel, text);
-      if (stand) { throw fehler('zurueckgelegt'); }        // Fassung 1, wo schon Fassung 2 lag
-      if (blatt && blatt.zu) { throw fehler('altformat'); }
-      return { nutzlast: klar, z: 0, gebunden: false, blatt_hinkt: false };
-    }
+    if (!EdInhalt.istGebunden(text)) { throw fehler('altformat'); }
     const o = await EdInhalt.oeffnenBytes(schluessel, text, 'pat', ref);
     if (o.z < stand) { throw fehler('zurueckgelegt'); }
     return { nutzlast: o.nutzlast, z: o.z, gebunden: true, blatt_hinkt: o.z > stand };
@@ -863,19 +858,6 @@ const EdStandbuch = (() => {
       return aus;
     }
 
-    /** Der Anhebelauf ist für dieses Blatt durch: Fassung 1 ist dort von
-     *  nun an ein Befund (`altformat`). Nicht umkehrbar. */
-    function schliessen(nr) { return schreibe(nr, (d) => { d.zu = true; }); }
-
-    /** Ist dieses eine Blatt geschlossen (Anhebelauf, KA-06b-4)? */
-    async function blattZuNr(nr) { return !!(await lade(nr)).d.zu; }
-
-    /** Sind alle 16 Blätter geschlossen? Dann ist Altformat überall ein Befund. */
-    async function alleZu() {
-      for (let nr = 0; nr < BLAETTER; nr++) { if (!(await lade(nr)).d.zu) { return false; } }
-      return true;
-    }
-
     /* ---- Das Gerätebuch ------------------------------------------------ */
 
     /** Geht das Buch des Servers nicht auf (und nicht nur, weil es älter ist
@@ -970,7 +952,7 @@ const EdStandbuch = (() => {
     return { abgleichen, eintrag, blattZu, patLesen: patLesenHier, naechsterZaehler,
              buchReparieren,
              fortschreiben, fortschreibenViele, fortschreibenGesammelt, festschreiben,
-             vormerken, vormerkenViele, nachtragen, schliessen, alleZu, blattZuNr,
+             vormerken, vormerkenViele, nachtragen,
              /* 409 `blatt` aus einer Sammelanfrage: das Blatt des Servers übernehmen */
              blattUebernehmen: uebernehmen,
              geraete, geraetEintragen, geraetAustragen, zurueckschreiben,
@@ -995,10 +977,7 @@ const EdStandbuch = (() => {
    * nachsieht, findet keinen Anker und glaubt der Abschrift. Die feste Nonce
    * ist hier unbedenklich: Sie verschließt genau eine Nachricht (die leere,
    * unter diesen Zusatzdaten), und das Ergebnis verlässt den Browser nicht.
-   *
-   * SOLANGE DIE WEICHE AUS STEHT, fasst ein Leseweg das Buch nur für einen
-   * gebundenen Block an — Fassung 1 geht wie bisher über `EdCrypto.decrypt()`,
-   * ohne Ablage und ohne Anfrage —, und kein Schreibweg sendet ein Blatt. */
+   */
   const KONTO_AAD = te.encode('nadoku-stand-konto-1');
   const buecher = new Map();          // Kennung → Versprechen auf das Buch
 
