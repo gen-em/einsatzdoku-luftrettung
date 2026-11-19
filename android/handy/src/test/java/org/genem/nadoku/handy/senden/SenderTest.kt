@@ -1265,12 +1265,9 @@ class SenderTest {
     private companion object {
         const val DATENBANK = "sendepruefung.db"
 
-        /** Der Empfänger der Referenzvektoren, Base64 (`tools/proben/huelle/vektoren.json`). */
+        /** Das Konto der Referenzvektoren, Base64 (`tools/proben/huelle/vektoren-2.json`; bis 0.27.0 aus `vektoren.json`, derselbe Schlüssel). */
         val KONTOSCHLUESSEL: String by lazy {
-            val h = org.json.JSONObject(File("../../tools/proben/huelle/vektoren.json").readText())
-                .getJSONObject("empfaenger").getString("oeffentlich_hex")
-            java.util.Base64.getEncoder().encodeToString(
-                ByteArray(h.length / 2) { h.substring(it * 2, it * 2 + 2).toInt(16).toByte() })
+            java.util.Base64.getEncoder().encodeToString(Huellenoeffner.konto)
         }
     }
 }

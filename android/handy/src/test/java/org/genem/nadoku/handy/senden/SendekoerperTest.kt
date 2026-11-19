@@ -32,12 +32,8 @@ class SendekoerperTest {
         zaehler = zaehler,
     )
 
-    /** Der Empfänger der Referenzvektoren (`tools/proben/huelle/vektoren.json`). */
-    private val ks: ByteArray by lazy {
-        val h = org.json.JSONObject(java.io.File("../../tools/proben/huelle/vektoren.json").readText())
-            .getJSONObject("empfaenger").getString("oeffentlich_hex")
-        ByteArray(h.length / 2) { h.substring(it * 2, it * 2 + 2).toInt(16).toByte() }
-    }
+    /** Das Konto der Referenzvektoren (`tools/proben/huelle/vektoren-2.json`; bis 0.27.0 aus `vektoren.json`, derselbe Schlüssel). */
+    private val ks: ByteArray get() = Huellenoeffner.konto
 
     /*
      * DER ABSENDER IST PFLICHT (seit Android 0.27.0, KA-21): `baue()` nimmt

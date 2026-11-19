@@ -9,7 +9,7 @@ Phasenknöpfe.
 Grundlage ist `docs/konzepte/Konzept-S4-Handy-Uhr-Client.md`; der Vertrag, gegen den
 gebaut wird, steht in `docs/JSON-Vertrag.md` und ist die führende Quelle.
 
-> **Stand: Android 0.27.0 (Schritt 28, KA-21, 17.11.2026; nur noch Fassung 2, ohne `huelle: 2` oder Geräteschlüssel „neu koppeln“).** Das Handy
+> **Stand: Android 0.27.1 (Schritt 28, KA-27, 19.11.2026; nur noch Fassung 2, die Fassung 1 ist aus dem Quelltext gestrichen; ohne `huelle: 2` oder Geräteschlüssel „neu koppeln“).** Das Handy
 > koppelt sich mit Vergleichswert, zeichnet auf, dokumentiert Phasen und
 > Einsätze und sendet alles nach dem JSON-Vertrag — Spur und Phasenorte
 > verschlossen (S11-09), mit Herkunftsnachweis in Fassung 2 (KA-06c); der
@@ -216,6 +216,22 @@ Die drei Zählungen (Web, Uhr, Android) bleiben getrennt.
 Die Fälle **räumen hinter sich auf**: *(Zeile 105–108 unverändert)*
 
 ### Was der Baulauf heute meldet
+
+**Stand Android 0.27.1 (Schritt 28, KA-27: Fassung 1 gestrichen),
+`./gradlew --offline --max-workers=1 :handy:testDebugUnitTest
+:handy:compileDebugAndroidTestKotlin` im Container, 19.11.2026 — `BUILD
+SUCCESSFUL in 2m 30s`:** Prüffälle Handy (Debug) **402** (vorher 406;
+`GeraetehuelleTest` verliert die vier Fälle der Fassung 1 —
+`alleFaelleByteGleich`, `spurInnenWieReferenz`, `echteHuelleGehtAuf`,
+`einsatzInnen` —, die Innenform eines Spurstücks hält
+`Geraetehuelle2Test.spurstueckAusPunkten` gegen `vektoren-2.json`), 15
+übersprungen, **0** Fehlschläge. `GeraetehuelleGeraetTest` prüft jetzt die
+acht Fälle der Fassung 2 auf dem Telefon statt der sechs alten; übersetzt,
+im Emulator **nicht** gelaufen. **Nicht gemessen:** der volle
+`./gradlew --offline build` (Lint, Release-Bauart, Uhr-Modul) — ein erster
+Lauf brach mit `Unable to load Robolectric native runtime library` und
+`Java heap space` ab, weil das Dateisystem des Containers voll war (272 MB
+frei); das Uhr-Modul ist in diesem Paket unberührt.
 
 **Stand Android 0.27.0 (Schritt 28, KA-21: nur noch Fassung 2),
 `./gradlew --offline build` im Container, 17.11.2026 — `BUILD SUCCESSFUL in

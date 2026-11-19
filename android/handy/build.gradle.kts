@@ -153,9 +153,12 @@ android {
     // nimmt Kotlin-Dateien aus einem `java`-Verzeichnis nicht an.
     sourceSets["main"].kotlin.directories += "../gemeinsam/quelle"
     sourceSets["main"].res.directories += "../gemeinsam/res"
-    // Die Prüfvektoren der Gerätehülle für den instrumentierten Fall
-    // (`GeraetehuelleGeraetTest`): gelesen an Ort und Stelle, nicht
-    // kopiert — sie liegen nur im Test-APK, nie in der App.
+    // Die Prüfvektoren der Gerätehülle (`vektoren-2.json`) für die
+    // instrumentierten Fälle (`GeraetehuelleGeraetTest`,
+    // `GeraeteschluesselGeraetTest`): gelesen an Ort und Stelle, nicht
+    // kopiert — sie liegen nur im Test-APK, nie in der App. Bis 0.27.0
+    // las `GeraetehuelleGeraetTest` von hier auch `vektoren.json`
+    // (Fassung 1, KA-27).
     sourceSets["androidTest"].assets.directories += "../../tools/proben/huelle"
 
     lint {

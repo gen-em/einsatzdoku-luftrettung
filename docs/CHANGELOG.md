@@ -71,6 +71,21 @@ Schritt 28 (KA), 06e: Paket KA-22.
   koppeln“ und behält die Daten; ohne Geräteschlüssel beginnt sie keine
   Kopplung, und eine Kopplung ohne Vergleichswert bricht sie ab.
 
+## [Android 0.27.1] — unveröffentlicht
+
+Schritt 28 (KA), KA-07: Paket KA-27.
+
+### Entfernt
+
+- **Android — die Gerätehülle der Fassung 1 ist aus dem Quelltext
+  gestrichen.** Seit 0.27.0 sendete das Handy sie nicht mehr, weil der
+  Server sie seit Web 26 abweist; ihre Funktionen standen nur noch als
+  Referenz zu Vektoren, die mit KA-07 ebenfalls fallen. Toter Code, der eine
+  Verschlüsselung ohne Herkunftsnachweis bereithält, lädt dazu ein, ihn
+  wieder aufzurufen. Die Prüffälle der Fassung 2 bleiben, und der
+  Gerätetest auf dem Telefon prüft jetzt deren acht Vektoren statt der
+  sechs alten.
+
 ## [Android 0.27.0] — unveröffentlicht
 
 Schritt 28 (KA), 06e: Paket KA-21.
