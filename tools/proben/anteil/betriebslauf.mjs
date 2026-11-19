@@ -456,7 +456,7 @@ try {
   const huelle = () => php(`$s=db()->prepare("SELECT LEFT(pat_wrap_pw,15) FROM users `
     + `WHERE id=?"); $s->execute([${uid}]); echo (string)$s->fetchColumn();`).trim();
   let gewartet = 0;
-  while (huelle() !== 'edka1:' + neuKennung + ':' && gewartet < 30000) {
+  while (huelle() !== 'edka2:' + neuKennung + ':' && gewartet < 30000) {
     await tabU.waitForTimeout(500); gewartet += 500;
   }
   const huelleNachher = huelle();
@@ -467,7 +467,7 @@ try {
   console.log(`  gemessen: ${JSON.stringify(vorZahl)} → ${JSON.stringify(nachZahl)}`
     + `  (Hülle des Kontos: ${huelleNachher}, nach ${gewartet} ms)`);
   pruefe('die Hülle des Kontos trägt jetzt die neue Kennung',
-         huelleNachher, 'edka1:' + neuKennung + ':');
+         huelleNachher, 'edka2:' + neuKennung + ':');
   pruefe('eine Zahl ist von alt nach neu gewandert',
          nachZahl && vorZahl
            && nachZahl[0] === vorZahl[0] + 1 && nachZahl[1] === vorZahl[1] - 1, true);
@@ -480,8 +480,8 @@ try {
   const neuK = neuKennung;
   const wrapsVorher = php(`$r=db()->query("SELECT id,pat_wrap_pw FROM users `
     + `WHERE pat_wrap_pw IS NOT NULL"); echo json_encode($r->fetchAll(PDO::FETCH_ASSOC));`);
-  php(`db()->exec("UPDATE users SET pat_wrap_pw = CONCAT('edka1:${neuK}:', `
-    + `SUBSTRING(pat_wrap_pw, 16)) WHERE pat_wrap_pw LIKE 'edka1:%'");`);
+  php(`db()->exec("UPDATE users SET pat_wrap_pw = CONCAT('edka2:${neuK}:', `
+    + `SUBSTRING(pat_wrap_pw, 16)) WHERE pat_wrap_pw LIKE 'edka2:%'");`);
   await oeffne('/betrieb_server.php');
   const ka6 = await text();
   pruefe('jetzt wird „Alten Anteil entfernen" angeboten',
@@ -499,8 +499,8 @@ try {
 
   /* VORBEREITUNG FÜR 8b, und sie muss VOR dem Neuanfang geschehen: Nur ein
    * Konto, dessen Hülle am JETZIGEN Anteil hängt, ist vom Neuanfang
-   * betroffen. Das Admin-Konto steht nach `endpunkt.py` auf `edk1:` — und
-   * eine `edk1:`-Hülle hängt an keinem Anteil und merkt vom Neuanfang
+   * betroffen. Das Admin-Konto steht nach `endpunkt.py` auf `edk2:` — und
+   * eine `edk2:`-Hülle hängt an keinem Anteil und merkt vom Neuanfang
    * nichts. Gemessen wird an ihm und nicht an `umlauf-csv@`, weil nur von
    * ihm der Wiederherstellungsschlüssel bekannt ist. */
   const rcDa = existsSync(RC_DATEI);
@@ -508,7 +508,7 @@ try {
   const PROBETEXT = 'Probeblock des Betriebslaufs — S10/AP3';
   if (rcDa) {
     spawnSync('python3', [WURZEL + '/tools/proben/anteil/huelle_stellen.py',
-                          ADMIN, ADMIN_PW, 'edka1'], { encoding: 'utf8' });
+                          ADMIN, ADMIN_PW, 'edka2'], { encoding: 'utf8' });
     const tabV = await tabAnmelden(ADMIN, ADMIN_PW);
     /* EIN ECHTER CHIFFRETEXT, gebaut mit demselben `EdCrypto.encrypt()`, das
      * jeden `pat_blob` baut. Nach dem Reset wird er wieder geöffnet — das
@@ -520,8 +520,8 @@ try {
     }, PROBETEXT);
     await tabV.close(); await tabV.context().close();
     if (v) { ckVorher = v.ck; probe = v.chiffre; }
-    pruefe('Vorbereitung 8b: Hülle des Admin-Kontos auf edka1: gestellt',
-           adminHuelle().slice(0, 6), 'edka1:');
+    pruefe('Vorbereitung 8b: Hülle des Admin-Kontos auf edka2: gestellt',
+           adminHuelle().slice(0, 6), 'edka2:');
     pruefe('Vorbereitung 8b: Inhaltsschlüssel und Probeblock geholt',
            ckVorher !== null && probe !== null, true);
   } else {
@@ -644,10 +644,10 @@ try {
     await tabR.close();
     const huelleNach = adminHuelle();
     pruefe('die neue Hülle hängt am NEUEN Anteil',
-           huelleNach, 'edka1:' + marke('kdf_anteil_kennung') + ':');
+           huelleNach, 'edka2:' + marke('kdf_anteil_kennung') + ':');
     pruefe('pat_key_check ist UNVERÄNDERT',
            adminFeld('pat_key_check'), String(adminVorher.pat_key_check));
-    if (huelleNach !== 'edka1:' + marke('kdf_anteil_kennung') + ':') {
+    if (huelleNach !== 'edka2:' + marke('kdf_anteil_kennung') + ':') {
       console.log('  Seite nach dem Reset: ' + seiteNach);
     }
 

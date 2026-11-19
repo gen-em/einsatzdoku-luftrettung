@@ -10,7 +10,7 @@
  *
  * SIE STELLT IHRE EIGENE VORAUSSETZUNG HER. Die Umstellung lässt sich je
  * Konto genau EINMAL beobachten; danach ist sie gelaufen. Der Lauf setzt die
- * Hülle des Prüfkontos deshalb vorher auf `edk1:` zurück
+ * Hülle des Prüfkontos deshalb vorher auf `edk2:` zurück
  * (`huelle_stellen.py`) — sonst misst der zweite Aufruf etwas anderes als der
  * erste, und das Prüfmittel bestätigte sich selbst.
  *
@@ -42,7 +42,7 @@ const WURZEL = decodeURIComponent(new URL('../../../', import.meta.url).pathname
 const BASIS = 'https://127.0.0.1:8443';
 /* Das ADMIN-Konto hat 0 Einsätze (der Referenzbestand liegt im Demo- und in
  * den beiden Umlauf-Konten). Gemessen wird deshalb an `umlauf-csv@…`: Es
- * trägt 83 Einsätze, steht auf `edk1:` und ist damit der einzige Bestand, an
+ * trägt 83 Einsätze, steht auf `edk2:` und ist damit der einzige Bestand, an
  * dem sich „vorher lesbar / nachher lesbar" überhaupt zeigen lässt. */
 const KONTO = 'umlauf-csv@example.invalid', KONTO_PW = 'umlaufpruefung2026';
 const motor = motorWahl(process.argv.slice(2));
@@ -178,10 +178,10 @@ async function anmelden(mail, pass) {
 
 console.log(`Umstellungslauf — Motor ${motor}`);
 
-/* ---- Voraussetzung herstellen: die Hülle zurück auf `edk1:` ------------- */
+/* ---- Voraussetzung herstellen: die Hülle zurück auf `edk2:` ------------- */
 {
   const r = spawnSync('python3',
-    ['tools/proben/anteil/huelle_stellen.py', KONTO, KONTO_PW, 'edk1'],
+    ['tools/proben/anteil/huelle_stellen.py', KONTO, KONTO_PW, 'edk2'],
     { cwd: WURZEL, encoding: 'utf8' });
   process.stdout.write('  ' + (r.stdout || r.stderr || '').trim() + '\n');
   if (r.status !== 0) {
@@ -192,13 +192,22 @@ console.log(`Umstellungslauf — Motor ${motor}`);
 }
 
 /* ---- 1. Erstes Anmelden: die Umstellung läuft still -------------------- */
-console.log('\n1. Erstes Anmelden (Hülle ist edk1:)');
+console.log('\n1. Erstes Anmelden (Hülle ist edk2:)');
 upgrades = [];
+/* AUF DIE UMSTELLUNG WARTEN. Die Startseite nach der Anmeldung löst das
+ * Vormerkfach schon auf und ruft `kdf_upgrade.php`; ein sofortiger Wechsel
+ * auf die nächste Seite brach die Anfrage im Browser ab, der Server stellte
+ * trotzdem um — und die nächste Seite trug eine Hülle, an die der Schlüssel
+ * nicht gebunden war (Dialog). Das war ein Wettlauf der Probe, nicht der
+ * Anwendung (gefunden in KA-07). */
+const umgestellt = seite.waitForResponse((r) => r.url().includes('kdf_upgrade.php'), { timeout: 30000 })
+  .catch(() => null);
 {
   const fehler = await anmelden(KONTO, KONTO_PW);
   if (fehler) { console.error('  Anmeldung abgewiesen: ' + fehler); await browser.close(); process.exit(2); }
 }
-// Eine Seite, die den Inhaltsschlüssel braucht — sie löst das Vormerkfach auf.
+await umgestellt;
+// Eine Seite, die den Inhaltsschlüssel braucht.
 await oeffne(seite, '/suche.php');
 await seite.waitForTimeout(1500);
 pruefe('kdf_upgrade.php wurde gerufen', upgrades.length >= 1, true);
@@ -210,7 +219,7 @@ console.log(`  (dazu ${umfeld.length} Fehler des Prüfstands: Kartenkacheln von 
   + `beides Eigenschaften des Containers, nicht der Seite)`);
 
 /* ---- 2. Zweites Anmelden: nichts mehr zu tun --------------------------- */
-console.log('\n2. Zweites Anmelden (Hülle ist jetzt edka1:)');
+console.log('\n2. Zweites Anmelden (Hülle ist jetzt edka2:)');
 upgrades = [];
 {
   const fehler = await anmelden(KONTO, KONTO_PW);
@@ -232,6 +241,11 @@ await seite.waitForTimeout(1500);
 const lesbar = await seite.evaluate(async () => {
   const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
   if (!ck) { return { ck: false }; }
+  /* Über das Standbuch, wie jeder Leseweg der Anwendung: Der Block ist
+   * `edk2:` und an die client_ref gebunden (bis KA-07 `EdCrypto.decrypt()`,
+   * das es seit Web 27 nicht mehr gibt). */
+  const eintrag = await EdCrypto.inhaltLesen();
+  const schluessel = eintrag && eintrag.schluessel;
   const r = await fetch('api/suchindex.php', { credentials: 'same-origin' });
   const j = await r.json().catch(() => null);
   const liste = (j && (j.missions || j.eintraege || j.items)) || [];
@@ -240,7 +254,7 @@ const lesbar = await seite.evaluate(async () => {
     const blob = m.pat_blob || m.blob;
     if (!blob) { continue; }
     mitBlob++;
-    try { JSON.parse(await EdCrypto.decrypt(ck, blob)); geoeffnet++; } catch (e) {}
+    try { JSON.parse(await EdStandbuch.patOeffnen(schluessel, blob, m.client_ref)); geoeffnet++; } catch (e) {}
   }
   return { ck: true, schluessel: Object.keys(j || {}), gesamt: liste.length,
            mitBlob, geoeffnet };
@@ -278,11 +292,16 @@ console.log(`  ${dauer.n} Ableitungen in ${dauer.gesamt.toFixed(1)} ms `
 pruefe('unter 5 ms je Ableitung', dauer.median < 5, true);
 
 /* ---- 5. Entsperrdialog in einem neuen Tab ------------------------------ */
-console.log('\n5. Entsperrdialog öffnet die edka1:-Hülle');
-const tab = await ctx.newPage();
-await tab.addInitScript(() => {
-  try { sessionStorage.clear(); } catch (e) {}
-});
+console.log('\n5. Entsperrdialog öffnet die edka2:-Hülle');
+/* EIN BROWSER OHNE SCHLÜSSELABLAGE, mit derselben Anmeldung. Seit Web 23.4.0
+ * liegt der Inhaltsschlüssel in IndexedDB für alle Tabs (R17-25); ein neuer
+ * Tab im selben Kontext braucht keinen Dialog, und dieser Schritt maß bis
+ * KA-07 deshalb „0 Dialoge" als Fehler. `storageState()` trägt Cookies und
+ * localStorage, IndexedDB nur auf Verlangen — also genau: angemeldet, aber
+ * ohne Schlüssel. */
+const ohneAblage = await browser.newContext({ ignoreHTTPSErrors: istOertlich(BASIS),
+                                              storageState: await ctx.storageState() });
+const tab = await ohneAblage.newPage();
 await oeffne(tab, '/suche.php');
 await tab.waitForTimeout(800);
 const dlg = tab.locator('dialog.dialog');
@@ -302,8 +321,9 @@ if (await dlg.count()) {
  * (gemessen 14.09.2026). Das sah aus wie ein Fehler der Anmeldung und war
  * einer des Prüfmittels. */
 await tab.close();
+await ohneAblage.close();
 
-/* ---- 6. Demo-Konto bleibt auf edk1: ------------------------------------ */
+/* ---- 6. Demo-Konto bleibt auf edk2: ------------------------------------ */
 console.log('\n6. Demo-Konto');
 upgrades = [];
 const demoFehler = await anmelden('demo@gen-em.org', 'nadokudemo0815');
@@ -328,7 +348,7 @@ const demoStand = await seite.evaluate(() => ({
 }));
 pruefe('ANTEIL_STAND ist demo', demoStand.stand, 'demo');
 pruefe('KONTO_ANTEILE ist null', demoStand.anteile, null);
-pruefe('die Hülle bleibt edk1:', demoStand.wrap, 'edk1:');
+pruefe('die Hülle bleibt edk2:', demoStand.wrap, 'edk2:');
 pruefe('der Endpunkt meldet uebersprungen (200)',
        upgrades.every(s => s === 200), true);
 pruefe('kein Entsperrdialog', await seite.locator('dialog.dialog').count(), 0);
