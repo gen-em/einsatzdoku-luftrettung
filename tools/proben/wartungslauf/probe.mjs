@@ -205,7 +205,7 @@ k = ec.generate_private_key(ec.SECP256R1())
 pk = base64.b64encode(k.private_bytes(serialization.Encoding.DER, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())).decode()
 P = [{"lat": 47.1234567, "lon": 10.7654321, "ele": None, "ts": 1000}, {"lat": -89.9999999, "lon": 179.9999999, "ele": -412, "ts": 1001},
      {"lat": 0.0000001, "lon": -0.0000001, "ele": 5000, "ts": 1061}, {"lat": 47.5, "lon": 10.5, "ele": 712, "ts": 4000000}]
-st = ortsdaten.gepackt_bauen(P, "spur", "r-format", referenz.sec1(k.public_key()), 3, 7, 40)
+st = ortsdaten.gepackt_bauen(P, "spur", "r-format", k, 3, 0, 40)   # Fassung 2, Absender das Konto, lückenlos ab 0 (seit KA-07; bis dahin ab 7, die Fassung 1 kannte keine Lücke)
 print(json.dumps({"pk": pk, "st": st, "p": P}))`], { cwd: WURZEL, encoding: 'utf8' }));
   const a1 = await s.evaluate(async ([pk, st]) => {
     const kk = await EdOrtsdaten.schluesselAus(Uint8Array.from(atob(pk), c => c.charCodeAt(0)));

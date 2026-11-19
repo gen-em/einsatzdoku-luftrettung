@@ -14,12 +14,10 @@ python3 tools/uhr-pruefstand/krypto-probe/extern.py ~/.ciq-pruefstand/krypto_<ge
 Echte Uhr: „Build for Device", `.prg` nach `GARMIN/APPS/`; Update: `FASSUNG` heben.
 ## Was es misst
 
-Schritte im Kopf von `source/KryptoApp.mc`: die Bausteine einer eigenen
-Rechnung (`Krypto.mc`: Paar, ECDH samt Byteordnung, HKDF, AES, HMAC, Hülle)
-gegen die Fälle der Fassung 2 in `Vektoren2.mc` — bis KA-28 gegen Fassung 1
-(`Vektoren.mc`, entfallen); `KURVE`, `SIGNATUR`, `GERAETEPAAR`, `T-STATISCH`
-(KG-02). Seit KG-03a übersetzt sie den Kern der App mit (`Huelle.mc`,
-`Huelle2.mc`): Selbsttest der Byteordnung (`APP-BEREIT`, seit KA-28 an Z_s),
+Schritte im Kopf von `source/KryptoApp.mc`: eigene Rechnung (`Krypto.mc`: Paar,
+ECDH samt Byteordnung, HKDF, AES, HMAC) gegen `Vektoren2.mc` (bis KA-28 Fassung 1);
+`KURVE`, `SIGNATUR`, `GERAETEPAAR`, `T-STATISCH` (KG-02). Seit KG-03a mit dem Kern der
+App (`Huelle.mc`, `Huelle2.mc`): Selbsttest (`APP-BEREIT`, seit KA-28 an Z_s),
 Kennung, Z_s, Hüllen „kurz" und „spur-3" byte-gleich, Kopf, Zusage,
 Vergleichswert, Kopplungsablauf. Seit KG-09 der Zähler `z` am Inhalt (E-KA-69,
 `ZAEHLER-…`): Regel, Speicher, Altbestand, Trennen, Vektor `zaehler`, Inhalt,
@@ -32,7 +30,7 @@ Den Uhr-Prüfstand (`aufbau`); für die echte Uhr eine Arbeitsstation mit SDK.
 
 ## Erwartete Zahl
 
-`kryptoprobe` → je Gerät **ERGEBNIS 29 gut, 0 Fehler**, **3 von 3** (seit KA-28; bis dahin 32 mit `APP-HUELLE` ×2 und `APP-INNEN` der Fassung 1).
+`kryptoprobe` → je Gerät **ERGEBNIS 29 gut, 0 Fehler**, **3 von 3** (seit KA-28; vorher 32).
 `extern.py` → **27 Hüllen und Kopplungen, 0 Fehler**. `kryptoreihe` → **99/0**.
 
 ## Was es nicht kann

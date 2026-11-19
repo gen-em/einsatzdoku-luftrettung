@@ -16,15 +16,11 @@ python3 tools/proben/huelle/referenz_inhalt.py erzeugen   # ebenso, für edk2
 `referenz.py` ist die Referenz der Gerätehülle (Format im Kopf): Fassung 2 (Herkunft, Zeit,
 Zähler samt Rückweg, Stückfolge, Vergleichswert der Kopplung) → `vektoren-2.json`,
 `Vektoren2.mc`, `HuelleVektor2.mc`. `referenz_inhalt.py`: `edk2:`, Standbuch, Gerätebuch,
-Ableitung → `vektoren-inhalt.json`. Jede Gegenlage (vertauscht, zurückgelegt, Zeit
-verschoben, Stück entfernt, ohne Geräteschlüssel) scheitert mit benanntem Grund — auch
-die erste Fassung (Kennbyte 1 → `ohne-herkunft`, `edk1:`/`edka1:` → `kennung` bzw.
-`altformat`): Seit KA-07 öffnet sie kein Leser mehr; gebaut wird sie nur als Gegenlage
-(`vektoren.json` und die Übernahme sind entfallen). `probe.mjs` misst die Seite mit
-`pruefungen2.js` (`crypto.js`, `inhalt2.js`, `huelle2.js`, `standbuch.js`);
-`--bestand <Ordner>` misst einen älteren Stand. `probe_server.php`: die Gerätehilfe in
-PHP gegen die Referenz, beide Richtungen. Die Uhr: `pruefstand.sh kryptoprobe`.
-`geraet.php`, `*_cli.php`: Gerätehilfe.
+Ableitung → `vektoren-inhalt.json`. Jede Gegenlage scheitert mit benanntem Grund, auch die
+erste Fassung (`ohne-herkunft`, `kennung`, `altformat`) — seit KA-07 nur noch als Gegenlage
+gebaut. `probe.mjs` misst die Seite mit `pruefungen2.js`; `--bestand <Ordner>` einen älteren
+Stand. `probe_server.php`: die Gerätehilfe in PHP gegen die Referenz. `geraet.php`,
+`*_cli.php`: Gerätehilfe der Proben. Die Uhr: `pruefstand.sh kryptoprobe`.
 
 ## Was es braucht
 
@@ -35,12 +31,9 @@ Python mit `cryptography`, Node mit Playwright und einen Browser aus
 
 ## Erwartete Zahl
 
-`referenz.py`: Selbstprobe **45 Fälle, 0 Fehlschläge** · Fassung 2 **46 geöffnet,
-52 Gegenlagen, 5 Hinweise**, 0 Abweichungen. `referenz_inhalt.py`: **29 Fälle,
-0 Fehlschläge** · **24 geöffnet, 34 Gegenlagen**. PHP **18** · Browser **302 Prüfungen**,
-0 Abweichungen, 0 ausgenommen · `ortsdaten_probe.mjs` **21 Prüfungen**, 0 Abweichungen
-(19.11.2026, KA-26; bis dahin mit Fassung 1: Selbstprobe 48, Fassung 2 55/50, Inhalt
-26/28, Server 22, Browser 606).
+`referenz.py`: Selbstprobe **45/0** · Fassung 2 **46 geöffnet, 52 Gegenlagen, 5 Hinweise**.
+`referenz_inhalt.py`: **29/0** · **24 geöffnet, 34 Gegenlagen**. PHP **18** · Browser **302**,
+0 ausgenommen · `ortsdaten_probe.mjs` **21** — je 0 Abweichungen (19.11.2026, KA-26).
 
 ## Was es nicht kann
 
