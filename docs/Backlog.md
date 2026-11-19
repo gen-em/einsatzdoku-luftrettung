@@ -845,3 +845,17 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      Neue Darstellung, also erst Mockup und Freigabe (`docs/Design.md`).
      *Abnahme:* Bilderlauf mit je einem gesperrten, eingeladenen und
      wartenden Konto; Kontrast der neuen Töne.
+<!-- -->
+
+595. **Das Demo-Konto zählt bei den Konto-Backups mit und erzeugt Warnungen.** · gehört zu: 13 · Stand: offen · seit 19.11.2026
+     *Aufgenommen 19.11.2026 von der BetreiberIn.* Das Demo-Konto setzt
+     sich alle 30 Minuten aus der Fixture zurück; eine Sicherung davon ist
+     wertlos, eine Warnung über sie Rauschen. Ausgenommen ist es heute an
+     keiner Stelle: der automatische Lauf (`edbak_auftrag_starten()`), die
+     Zahlen „überfällig“ und „nie“ (`edbak_stand_zaehlen()`: Kacheln,
+     Reiterzahl, Status), die Erinnerungsmail (`edbak_faellige_konten()`)
+     und die Plakette in Kontenliste und Kontoseite. *Weg (BetreiberIn,
+     19.11.2026: ganz heraus):* über `demo_id()` an allen vier Stellen
+     ausnehmen; statt der Plakette ein neutrales „Demo — wird nicht
+     gesichert“, kein Knopf „Konto-Backup erzeugen“. *Abnahme:* Probe mit
+     Demo-Konto ohne Backup — Zahlen 0, keine Mail, kein Paket.
