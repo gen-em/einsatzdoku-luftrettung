@@ -1,13 +1,13 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 248 (16.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 249 (19.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `cae436c`, PR #190, gemessen 16.11.2026): Web 25.0.0 ·
-Uhr 5.1.0 · Android 0.26.0; auf Staging; Produktiv Web 24.11.0 (Tag `web-v24.11.0`, Lauf 193), Uhr 5.1.0 · Android 0.21.0.
-**Läuft:** 28 (KA) — Umsetzung; KA-01 bis KA-06d, 06f und die Weiche (KA-08 bis KA-15, Web 25.0.0, Android 0.26.0) erledigt, Garmin-Teil mit KG-09/10 (Uhr 5.1.0); offen 06e (E-KA-79) (R92).
-**Als Nächstes:** Tags `web-v25.0.0` und `android-v0.26.0` (Betreiberin), dann 06e; danach 13 (P7).
+**Stand `origin/main`** (Commit `bbed45e`, PR #192, gemessen 19.11.2026): Web 26.0.0 ·
+Uhr 6.0.0 · Android 0.27.0; auf Staging (Lauf 223); Produktiv Web 25.0.0 · Android 0.26.0 (Tags vom 17.11.2026), Uhr 5.1.0.
+**Läuft:** 28 (KA) — Umsetzung; KA-01 bis KA-06d, 06f, die Weiche (KA-08 bis KA-15) und 06e (KA-16 bis KA-23, Web 26.0.0, Android 0.27.0, Uhr 6.0.0) erledigt; offen KA-07 (R92).
+**Als Nächstes:** Tags `web-v26.0.0`, `android-v0.27.0`, `uhr-v6.0.0` (Betreiberin), dann KA-07; danach 13 (P7).
 **Offene PRs:** keine.
 **Fällig bei der Betreiberin:** 44 Posten (Abschnitt 6.1). **`update.php`:** auf Staging nichts offen (Betreiberin, 12.11.2026, nach KA-06b-2); auf Produktiv seit dem Tag `web-v24.11.0` fällig, falls noch nicht aufgerufen (Migration `2026_11_07_darstellung`).
 
