@@ -317,8 +317,24 @@ class Sitzung:
         wrap = self.konstante(html, "PAT_WRAP")
         self.wrap = wrap
         self.data_key = krypto.datenschluessel(self.haelfte, wrap, self.anteile)
+        # EINE UNLESBARE HUELLE HAELT DIE ANMELDUNG NICHT AUF. Seit Web 27.0.0
+        # (KA-07) oeffnet niemand mehr eine Huelle im alten Format, und ein
+        # Konto, das sich unter Web 25/26 nie im Browser angemeldet hat, traegt
+        # noch eine — so das Pruefkonto der Kette auf Staging nach dem Merge
+        # (Lauf 229: der Kreislauf scheiterte schon beim Anmelden der
+        # Verwaltung, die nur Konten anlegt und loescht). Die Sitzung steht
+        # dann ohne Inhaltsschluessel, `huelle_fehler` nennt den Grund, und
+        # jeder Weg, der den Schluessel braucht, scheitert dort mit eigener
+        # Meldung. Die Konsole sagt es, statt still weiterzulaufen.
+        self.huelle_fehler = None
         if wrap:
-            self.inhaltsschluessel = krypto.entpacken(wrap, self.data_key)
+            try:
+                self.inhaltsschluessel = krypto.entpacken(wrap, self.data_key)
+            except krypto.referenz_inhalt.InhaltFehler as f:
+                self.huelle_fehler = str(f)
+                print(f"  Hinweis: Die Schluesselhuelle von {email} geht nicht auf ({f}, "
+                      f"Praefix {wrap.split(':')[0]}:) — angemeldet ohne Inhaltsschluessel.",
+                      file=sys.stderr)
         return self
 
     def _code_schicken(self, antwort: requests.Response,
