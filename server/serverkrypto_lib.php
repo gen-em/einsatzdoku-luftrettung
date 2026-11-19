@@ -105,7 +105,7 @@ require_once __DIR__ . '/konfig_lib.php';
  * auf die Ursache.
  */
 
-/* Kennung des Formats, wie `edk1:` im Browser (crypto.js). Sie steht vorn,
+/* Kennung des Formats, wie `edk2:` im Browser (inhalt2.js). Sie steht vorn,
  * damit ein Feld in der Datenbank auf einen Blick als versiegelt zu erkennen
  * ist — und damit eine spätere zweite Fassung neben der ersten existieren
  * kann, ohne dass geraten werden muss. */

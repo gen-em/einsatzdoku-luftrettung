@@ -510,13 +510,13 @@ try {
     spawnSync('python3', [WURZEL + '/tools/proben/anteil/huelle_stellen.py',
                           ADMIN, ADMIN_PW, 'edka2'], { encoding: 'utf8' });
     const tabV = await tabAnmelden(ADMIN, ADMIN_PW);
-    /* EIN ECHTER CHIFFRETEXT, gebaut mit demselben `EdCrypto.encrypt()`, das
-     * jeden `pat_blob` baut. Nach dem Reset wird er wieder geöffnet — das
+    /* EIN ECHTER CHIFFRETEXT, gebaut mit demselben `EdInhalt.schreiben()`, das
+     * jeden `pat_blob` baut (bis KA-07 `EdCrypto.encrypt()`). Nach dem Reset wird er wieder geöffnet — das
      * ist die Zusage „kein Datenverlust", als Zahl statt als Satz. */
     const v = await tabV.evaluate(async (txt) => {
       const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
       if (!ck) { return null; }
-      return { ck, chiffre: await EdCrypto.encrypt(ck, txt) };
+      return { ck, chiffre: await EdInhalt.schreiben(ck, 'pat', 'betriebslauf', txt, 1) };
     }, PROBETEXT);
     await tabV.close(); await tabV.context().close();
     if (v) { ckVorher = v.ck; probe = v.chiffre; }
@@ -660,7 +660,7 @@ try {
       const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
       if (!ck) { return { ck: null }; }
       let klar = null;
-      try { klar = await EdCrypto.decrypt(ck, c); } catch (e) { klar = 'FEHLER: ' + e.message; }
+      try { klar = (await EdInhalt.lesen(ck, c, 'pat', 'betriebslauf')).text; } catch (e) { klar = 'FEHLER: ' + (e.grund || e.message); }
       return { ck, klar, dialoge: document.querySelectorAll('dialog[open]').length };
     }, probe);
     await tabD.close(); await tabD.context().close();

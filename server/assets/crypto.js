@@ -384,7 +384,6 @@ const EdCrypto = (() => {
     return versprechen;
   }
 
-  // Klartext (String) -> base64(iv || ciphertext)
   /* ---- Bis Web 26.x: `edk1:` ------------------------------------------
    *
    * Hier standen `encrypt()` und `decrypt()` der ersten Fassung (AES-GCM ohne

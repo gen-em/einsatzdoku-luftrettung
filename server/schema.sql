@@ -87,7 +87,7 @@ CREATE TABLE users (
   totp_schritt   BIGINT UNSIGNED NULL,
   -- RUECKWEG BEIM ZWEITFAKTOR. Der oeffentliche Teil
   -- eines ECDSA-Paars (P-256, SPKI in Base64) und der private als Chiffretext
-  -- unter dem Inhaltsschluessel (`edk1:`, nie `edka1:`) — ein Abzug kann
+  -- unter dem Inhaltsschluessel (`edk2:`, nie `edka2:`) — ein Abzug kann
   -- damit pruefen, aber nicht signieren. `rw_seit`: wann es entstand.
   rw_oeffentlich VARCHAR(255) NULL,
   rw_privat      TEXT NULL,
@@ -95,7 +95,7 @@ CREATE TABLE users (
   -- SCHLUESSELPAAR DES KONTOS. ECDH auf P-256 fuer
   -- die Geraetehuelle: der oeffentliche Teil (SPKI, Base64) VERSIEGELT mit dem
   -- Serverschluessel (Zweck `kontopaar|<id>`), der private als Chiffretext
-  -- unter dem Inhaltsschluessel (`edk1:`, nie `edka1:`). `kp_seit`: wann es
+  -- unter dem Inhaltsschluessel (`edk2:`, nie `edka2:`). `kp_seit`: wann es
   -- entstand.
   kp_oeffentlich TEXT NULL,
   kp_privat      TEXT NULL,
