@@ -9007,4 +9007,4 @@ declare(strict_types=1);
  *   (F-KA-128). Hauptnummer, weil ein Format endet. KEIN SCHEMA;
  *   ausgeliefert erst nach dem Tag von 25.0.0, dem Anhebelauf auf Produktiv
  *   und dem Neukoppeln der Geraete (E-KA-93). */
-const WEB_VERSION = '26.0.0';
+const WEB_VERSION = '27.0.0';

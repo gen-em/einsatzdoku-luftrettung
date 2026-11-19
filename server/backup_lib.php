@@ -1590,45 +1590,11 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
         /* Kein `$stueckeSchreiben`: Der Browserweg nimmt nur Nutzlast 13,
          * deren Spuren ueber `api/backup_spuren_restore.php` kommen. */
 
-        /* EINE PUNKTLISTE IN NUTZLAST 8 IST EIN WIDERSPRUCH — UND WIRD GESAGT
-         *
-         * Nutzlast 8 sagt zu, dass die Punkte NICHT im Eintrag stehen,
-         * sondern als Blob in eigenen Teilen nachkommen. Der Zweig darueber
-         * entscheidet deshalb an der Fassung und nicht am Vorhandensein eines
-         * `track`-Feldes — mit gutem Grund: Eine Spur ohne Punkte saehe
-         * genauso aus wie ein Verweis.
-         *
-         * Die Kehrseite hat gefehlt. Traegt eine Datei Nutzlast 8 UND
-         * Punktlisten, wurden die Punkte hier stillschweigend uebergangen:
-         * Der Eintrag entstand ohne Spur, und die Meldung lautete „fertig".
-         * Gefunden beim Aufbau eines Pruefbestands — der
-         * Vervielfaeltiger des Messstands erbte die Fassung
-         * aus der Referenz und schrieb `version: 8` in eine einteilige Datei
-         * mit `track`-Listen. Ergebnis eines Laufs: 164 Einsaetze angelegt,
-         * 91 208 Punkte verloren, ohne ein Wort.
-         *
-         * Eine solche Datei schreibt diese Anwendung nicht — sie kann nur von
-         * Hand oder aus einem Werkzeug kommen. Abgewiesen wird sie trotzdem
-         * nicht: Der uebrige Bestand ist brauchbar, und ihn wegen der Spuren
-         * zu verweigern hiesse, aus einem Teilverlust einen Totalverlust zu
-         * machen. Gemeldet wird er ueber die gemeinsame Pruefschicht, also
-         * dort, wo die Nutzerin die Ablehnungen ohnehin liest. */
-        /* DIE MELDUNG NENNT DIE FASSUNG NICHT MEHR ALS ZAHL.
-         * Sie lautete woertlich „Die Datei nennt Nutzlast 8 …", und mit
-         * Nutzlast 9 waere sie schlicht falsch gewesen. Sie nennt jetzt die
-         * EIGENSCHAFT statt der Zahl — die gilt fuer 8, 9 und jede weitere
-         * Fassung ohne Punktlisten. Wer den Wortlaut aendert, aendert
-         * `tools/proben/wiederherstellung/` mit: Teil 7 sucht diesen Text
-         * als Zeichenkette, und die beiden stehen weit auseinander. */
-        $spurWiderspruch = function (string $typ, array $eintrag) use ($pruef, $nutzlast): void {
-            $liste = $eintrag['track'] ?? null;
-            if (is_array($liste) && $liste) {
-                $pruef->melde($typ . '.track',
-                    'Die Datei nennt Nutzlast ' . $nutzlast . ' und traegt die Punkte '
-                  . 'trotzdem im Eintrag. Ab Nutzlast 8 kommen sie als eigene Teile — '
-                  . 'diese Punkte wurden NICHT uebernommen');
-            }
-        };
+        /* Bis Web 26 stand hier `$spurWiderspruch`: Eine Datei, die
+         * Nutzlast 8 oder hoeher nannte und trotzdem Punktlisten im Eintrag
+         * trug, bekam eine Meldung statt der Punkte. Seit KA-07 weist
+         * `edbak_klartext_fund()` jede Punktliste vor dem ersten Schreiben ab,
+         * und die Meldung konnte nicht mehr entstehen. */
         $FIELDS = require __DIR__ . '/mission_fields.php';
         /* WELCHE SPALTEN AUS DER DATEI UEBERNOMMEN WERDEN.
          *
@@ -1991,8 +1957,6 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                 $spurKarte[(int)$m['spur_ref']] = ['art' => 'mission', 'id' => $mid,
                                                    'ref' => $werte['client_ref']];
             }
-            $spurWiderspruch('mission', $m);
-
 
             $stats['missions']++;
             if ($mGeloescht) { $stats['papierkorb']['einsaetze']++; }
@@ -2097,7 +2061,6 @@ function edbak_restore(int $userId, array $data, ?array $dayMap = null,
             if (isset($r['spur_ref'])) {
                 $spurKarte[(int)$r['spur_ref']] = ['art' => 'rest', 'id' => $rid, 'ref' => $rRef];
             }
-            $spurWiderspruch('rest', $r);
             $stats['rests']++;
             if ($rGeloescht) { $stats['papierkorb']['ruhezeiten']++; }
         }

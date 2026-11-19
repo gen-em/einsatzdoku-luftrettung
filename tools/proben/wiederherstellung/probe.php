@@ -116,13 +116,14 @@ $sag = function (string $was, bool $ok, string $ist) use (&$fehler, &$gesamt) {
  * zurueck, das es nicht mehr gibt; gezaehlt am 27.09.2026: 6 von 6 Vermerken
  * der Anlage, einer je Pruefstandslauf. `konto_loeschen()` ist der Weg der
  * Verwaltung und raeumt Spur und Sperrliste mit ab. */
+/* Ein Patientenblock der Fassung 2 in der Form, die `pruef_pat_blob()`
+ * verlangt: Groessenklasse 512, Inhalt beliebig — die Probe oeffnet ihn nie. */
+define('PROBE_PAT_BLOB', 'edk2:' . base64_encode(str_repeat("\0", 512 + 28)));
 $kontoWeg = function (int $uid): void {
     konto_loeschen($uid, true, 'probe');
 };
-/* JEDES PROBEKONTO BEKOMMT EIN SCHLUESSELPAAR. Der Server-Weg
- * (`'server'`, nur noch der Demo-Reset) verschliesst Orte,
- * Reanimation und Spur mit dem oeffentlichen Schluessel des Kontos und weist
- * ein Konto ohne Paar ab. Der private Teil ist hier ein
+/* JEDES PROBEKONTO BEKOMMT EIN SCHLUESSELPAAR — Teil 14 verschliesst
+ * mit dem oeffentlichen Teil wie ein Geraet. Der private Teil ist hier ein
  * Platzhalter — die Probe oeffnet nichts. */
 $konto = function (string $mail) use ($pdo, $kontoWeg): int {
     $alt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
@@ -133,18 +134,19 @@ $konto = function (string $mail) use ($pdo, $kontoWeg): int {
     $id = (int)$pdo->lastInsertId();
     $k = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
     $spki = preg_replace('/-----[^-]+-----|\s+/', '', (string)openssl_pkey_get_details($k)['key']);
-    kp_ablegen($pdo, $id, $spki, 'edk1:' . str_repeat('QUJD', 16));
+    kp_ablegen($pdo, $id, $spki, 'edk2:' . str_repeat('QUJD', 16));
     return $id;
 };
-/* DER SERVER-WEG, wie ihn der Demo-Reset nimmt. Diese Probe misst die
- * Einspiellogik — Papierkorb,
- * Wiedererkennung, Pruefschicht — an Dateien der Nutzlast 7 mit Klartext und
- * nimmt deshalb den Weg, der ihn annimmt und verschliesst. Er braucht
- * den Rueckruf fuer den Blob; hier laesst er den Blob, wie er ist
- * — Transportziel und Hoehe stehen in keiner der Dateien. */
-$blobGleich = static fn(?string $blob, array $zusatz): ?string => $blob;
-$restore = fn(int $uid, array $daten, ?array $karte = null): array
-    => edbak_restore($uid, $daten, $karte, 'server', $blobGleich);
+/* DER EINE WEG. Diese Probe misst die Einspiellogik — Papierkorb,
+ * Wiedererkennung, Pruefschicht — an Dateien ohne Ortsdaten. Sie wurden fuer
+ * Nutzlast 7 bis 12 geschrieben; `edbak_restore()` nimmt seit Web 23 nur
+ * Nutzlast 13, und seit KA-07 (Web 27) gibt es den Server-Weg nicht mehr,
+ * der aeltere annahm. Die Huelle hebt die Nummer an — am Aufbau dieser
+ * Dateien aendert Nutzlast 13 nichts, solange sie keinen Klartext tragen. */
+$restore = static function (int $uid, array $daten, ?array $karte = null, bool $offen = false): array {
+    $daten['version'] = max((int)($daten['version'] ?? 0), EDBAK_NUTZLAST);
+    return edbak_restore($uid, $daten, $karte, $offen);
+};
 $weg = function (int $uid) use ($kontoWeg): void {
     $kontoWeg($uid);
 };
@@ -264,32 +266,29 @@ $weg($uid);
  * ankommen — genau das war einmal nicht so: Beide Faelle loesten eine
  * Ausnahme aus, die ueber die Transaktion den ganzen Lauf zurueckrollte.
  * ====================================================================== */
-echo "\n  Teil 2 — kaputte Datei kostet nur sich selbst (Nr. 31 / Nr. 35)\n";
+echo "\n  Teil 2 — kaputte Datei kostet nur sich selbst (Nr. 31)\n";
+/* Bis Web 26 trugen q-m1, q-m2 und q-r1 Spurlisten im Klartext, und der
+ * Server-Weg verwarf doppelte Punktnummern (Nr. 35). Den Weg gibt es seit
+ * KA-07 nicht mehr; Punkte kommen verschlossen ueber die Spurteile, und
+ * doppelte Nummern prueft `pruef_spurstueck()`. */
 $uid = $konto('probe-robust@example.invalid');
-
-$spur = fn(array $seqs) => array_map(
-    fn($s, $i) => [$s, 47.5 + $i / 1000, 11.5 + $i / 1000, 700, 1750000000 + $i],
-    $seqs, array_keys($seqs));
 
 $hin = true; $meldung = '';
 try {
     $stats = $restore($uid, [
-      'version' => 7,
+      'version' => 13,
       'days' => [[
          'id' => 910, 'day' => '2026-07-02',
          'started_at' => '2026-07-02 05:00:00', 'ended_at' => '2026-07-02 17:00:00',
          'kind' => 'air', 'vehicle_name' => 'Probe 1', 'base_name' => 'Probenstation',
       ]],
       'missions' => [
-        // Spur mit Wiedergaenger: 1, 2, 1, 3 -> drei Punkte, eine Meldung.
         ['client_ref' => 'q-m1', 'day_id' => 910, 'started_at' => '2026-07-02 06:00:00',
-         'ended_at' => '2026-07-02 07:00:00', 'track' => $spur([1, 2, 1, 3])],
-        ['client_ref' => 'q-m2', 'day_id' => 910, 'started_at' => '2026-07-02 08:00:00',
-         'ended_at' => '2026-07-02 09:00:00', 'track' => $spur([1, 2])],
+         'ended_at' => '2026-07-02 07:00:00'],
       ],
       'rest_segments' => [
         ['client_ref' => 'q-r1', 'day_id' => 910, 'started_at' => '2026-07-02 12:00:00',
-         'ended_at' => '2026-07-02 12:30:00', 'track' => $spur([5, 5, 6])],
+         'ended_at' => '2026-07-02 12:30:00'],
         // Unbrauchbarer Zeitwert: Die Spalte ist DATETIME NOT NULL.
         ['client_ref' => 'q-r2', 'day_id' => 910, 'started_at' => 'kein Datum',
          'ended_at' => '2026-07-02 13:30:00'],
@@ -300,36 +299,13 @@ try {
     $stats = [];
 }
 
-$sag('Der Lauf ueberlebt die kaputten Stellen ueberhaupt',
+$sag('Der Lauf ueberlebt die kaputte Stelle ueberhaupt',
      $hin, $hin ? 'keine Ausnahme' : $meldung);
-/* UEBER `spur_zahlen()`: Seit dem Verschliessen liegen die Punkte
- * in Stuecken, nicht mehr in `track_points`; die Zahl zaehlt beide. */
-$punkte = function (string $typ, string $ref) use ($pdo, &$uid): int {
-    $tab = $typ === 'mission' ? 'missions' : 'rest_segments';
-    $st = $pdo->prepare("SELECT id FROM $tab WHERE user_id = ? AND client_ref = ?");
-    $st->execute([$uid, $ref]);
-    $id = (int)$st->fetchColumn();
-    return $id ? (int)(spur_zahlen($pdo, $typ, [$id])[$id] ?? 0) : 0;
-};
-$sag('q-m1: von 1,2,1,3 kommen drei Punkte an (Nr. 35)',
-     $hin && $punkte('mission', 'q-m1') === 3,
-     'Punkte=' . ($hin ? $punkte('mission', 'q-m1') : '—'));
-$sag('q-m2 (heile Spur) ist unversehrt angekommen',
-     $hin && $punkte('mission', 'q-m2') === 2,
-     'Punkte=' . ($hin ? $punkte('mission', 'q-m2') : '—'));
-$sag('q-r1: von 5,5,6 kommen zwei Punkte an (Nr. 35, Ruhesegment)',
-     $hin && $punkte('rest', 'q-r1') === 2,
-     'Punkte=' . ($hin ? $punkte('rest', 'q-r1') : '—'));
 $sag('q-r2 (unbrauchbare Zeit) wurde uebersprungen, nicht geschrieben (Nr. 31)',
      $hin && (int)($stats['rests_skipped'] ?? -1) === 1
-          && (int)($stats['rests'] ?? -1) === 1,
-     'rests=' . ($stats['rests'] ?? '—') . ' rests_skipped=' . ($stats['rests_skipped'] ?? '—'));
-$sag('Die doppelten Nummern stehen in der Ablehnungsliste, nicht nur im Nichts',
-     $hin && ($stats['rejected']['mission.track.seq: Nummer doppelt'] ?? 0) === 1
-          && ($stats['rejected']['rest.track.seq: Nummer doppelt'] ?? 0) === 1,
-     'rejected=' . json_encode(array_intersect_key((array)($stats['rejected'] ?? []),
-        ['mission.track.seq: Nummer doppelt' => 1, 'rest.track.seq: Nummer doppelt' => 1]),
-        JSON_UNESCAPED_SLASHES));
+          && (int)($stats['rests'] ?? -1) === 1 && (int)($stats['missions'] ?? -1) === 1,
+     'missions=' . ($stats['missions'] ?? '—') . ' rests=' . ($stats['rests'] ?? '—')
+     . ' rests_skipped=' . ($stats['rests_skipped'] ?? '—'));
 $weg($uid);
 
 /* ==========================================================================
@@ -618,28 +594,6 @@ $sag('WIEDERAUFNAHME: und liefert dieselbe Spurkarte',
      $karte2 === null ? 'keine' : (count($karte2) . ' Eintraege, gleich: '
        . ($karte2 == $karte ? 'ja' : 'NEIN')));
 
-/* Nutzlast 7 bekommt KEINE Karte — sie traegt ihre Punkte selbst. */
-$uid7 = $konto('probe-nutzlast7@example.invalid');
-$stats7 = $restore($uid7, [
-  'version' => 7,
-  'days' => [['id' => 950, 'day' => '2026-07-06', 'kind' => 'ground',
-              'vehicle_name' => 'Probe 7', 'base_name' => 'Probenstation']],
-  'missions' => [['client_ref' => 'a-m1', 'day_id' => 950,
-                  'started_at' => '2026-07-06 06:00:00',
-                  'ended_at' => '2026-07-06 07:00:00',
-                  'track' => [[0, 47.1, 11.1, 700.0, 1783000000]]]],
-  'rest_segments' => [],
-]);
-$sag('Nutzlast 7 bekommt keine Spurkarte (sie traegt ihre Punkte selbst)',
-     !isset($stats7['spur_karte']),
-     isset($stats7['spur_karte']) ? 'es gibt eine' : 'keine — richtig');
-$sag('und ihre Punkte kommen weiterhin an',
-     spur_zahlen($pdo, 'mission', [(int)$pdo->query("SELECT id FROM missions
-        WHERE user_id = $uid7 AND client_ref = 'a-m1'")->fetchColumn()])[
-        (int)$pdo->query("SELECT id FROM missions
-        WHERE user_id = $uid7 AND client_ref = 'a-m1'")->fetchColumn()] === 1,
-     'Punkte in der Datenbank');
-$weg($uid7);
 $weg($uid);
 
 /* ---- Die Zahl, die den Fehler ausgeloest hat, an beiden Orten ---------- */
@@ -680,66 +634,9 @@ $sag('Der Browser zaehlt nach, wie viele Eintraege ein Fenster brachte',
      (bool)preg_match('/statt \$\{soll\} Eintr/u', $browser),
      'Schranke gegen ein zu kurz geliefertes Fenster');
 
-/* ---- Der Widerspruch: Nutzlast 8 MIT Punktlisten -----------------------
- *
- * WOFUER. Nutzlast 8 sagt zu, dass die Punkte in eigenen Teilen nachkommen.
- * Traegt eine Datei beides — Fassung 8 UND `track`-Listen —, wurden die
- * Punkte einmal stillschweigend uebergangen: Der Eintrag entstand
- * ohne Spur, die Meldung lautete „fertig".
- *
- * Gefunden beim Aufbau eines Pruefbestands: Der Vervielfaeltiger des
- * Messstands erbte die Fassung aus der Referenz und schrieb
- * `version: 8` in eine einteilige Datei. Ein Lauf legte 164 Einsaetze an und
- * verlor 91 208 Punkte.
- *
- * Diese Pruefung haelt beides fest: dass die Punkte weiterhin NICHT
- * geschrieben werden (die Fassung entscheidet, nicht das Feld) und dass es
- * GESAGT wird. */
-echo "\n  Teil 7 — Nutzlast 8 mit Punktlisten faellt auf (S2/AP6, F-S2-E)\n";
-$uid8 = $konto('probe-widerspruch@example.invalid');
-$stats8 = $restore($uid8, [
-  'version' => 8,
-  'days' => [['id' => 960, 'day' => '2026-07-07', 'kind' => 'ground',
-              'vehicle_name' => 'Probe 8w', 'base_name' => 'Probenstation']],
-  'missions' => [['client_ref' => 'w-m1', 'day_id' => 960,
-                  'started_at' => '2026-07-07 06:00:00',
-                  'ended_at' => '2026-07-07 07:00:00',
-                  'track' => [[0, 47.1, 11.1, 700.0, 1783000000],
-                              [1, 47.2, 11.2, 705.0, 1783000060]]]],
-  'rest_segments' => [['client_ref' => 'w-r1', 'day_id' => 960,
-                       'started_at' => '2026-07-07 08:00:00',
-                       'ended_at' => '2026-07-07 09:00:00',
-                       'track' => [[0, 47.3, 11.3, 710.0, 1783000120]]]],
-]);
-$mid8 = (int)$pdo->query("SELECT id FROM missions
-    WHERE user_id = $uid8 AND client_ref = 'w-m1'")->fetchColumn();
-$sag('Der Eintrag entsteht trotzdem — ein Teilverlust wird kein Totalverlust',
-     ($stats8['missions'] ?? 0) === 1 && ($stats8['rests'] ?? 0) === 1,
-     'Einsaetze ' . ($stats8['missions'] ?? '—') . ', Ruhesegmente '
-     . ($stats8['rests'] ?? '—'));
-$sag('Die Punkte werden NICHT geschrieben (die Fassung entscheidet)',
-     $mid8 > 0 && (spur_zahlen($pdo, 'mission', [$mid8])[$mid8] ?? 0) === 0,
-     'Punkte in der Datenbank: '
-     . ($mid8 > 0 ? (spur_zahlen($pdo, 'mission', [$mid8])[$mid8] ?? 0) : '—'));
-$abgelehnt = $stats8['rejected'] ?? [];
-$treffer = [];
-foreach ($abgelehnt as $grund => $zahl) {
-    /* GESUCHT WIRD DIE EIGENSCHAFT, NICHT DIE ZAHL.
-     * Bis dahin stand hier `str_contains($grund, 'Nutzlast 8')` — der einzige
-     * faktische Gleichheitsvergleich gegen die 8 im ganzen Repositorium, und
-     * zwar als Zeichenkettensuche 1200 Zeilen und zwei Verzeichnisse von der
-     * Meldung entfernt, die er sucht. Mit Nutzlast 9 haette er nichts mehr
-     * gefunden, und der Teil waere still gruen geblieben. */
-    if (str_contains((string)$grund, 'trotzdem im Eintrag')) { $treffer[(string)$grund] = $zahl; }
-}
-$sag('...und es wird GESAGT, je Art einmal',
-     count($treffer) === 2 && array_sum($treffer) === 2,
-     $treffer ? json_encode($treffer, JSON_UNESCAPED_UNICODE) : 'KEINE Meldung');
-$sag('GEGENPROBE: Nutzlast 8 OHNE Punktlisten meldet nichts dergleichen',
-     !array_filter(array_keys((array)($stats['rejected'] ?? [])),
-                   fn($g) => str_contains((string)$g, 'trotzdem im Eintrag')),
-     'aus Teil 5, dieselbe Fassung, aber mit spur_ref');
-$weg($uid8);
+/* Teil 7 — „Nutzlast 8 mit Punktlisten faellt auf" (F-S2-E) — entfiel mit
+ * KA-07: Eine Punktliste im Eintrag weist `edbak_klartext_fund()` jetzt vor
+ * dem ersten Schreiben ab, die Meldung kann nicht mehr entstehen. */
 
 /* ==========================================================================
  * Teil 8 — Das Adminpaket: Rundlauf und Siegel (Fassung 3)
@@ -765,31 +662,44 @@ $kennung = bin2hex(random_bytes(8));
 $pdo->prepare('UPDATE users SET account_key = ?, pat_key_check = ? WHERE id = ?')
     ->execute([$kennung, str_repeat('a', 32), $quelle]);
 
-/* Bestand ueber den regulaeren Rueckweg anlegen — Nutzlast 7 mit Punkten. */
-$restore($quelle, [
-  'version' => 7,
+/* Bestand ueber den regulaeren Rueckweg anlegen — Nutzlast 13, die Spuren
+ * danach als Stuecke der Fassung 2, wie sie ein Geraet baut (seit KA-07; bis
+ * dahin Nutzlast 7 mit Punktlisten ueber den Server-Weg). */
+require_once __DIR__ . '/../huelle/geraet.php';
+$st6 = $restore($quelle, [
+  'version' => 13,
   'days' => [['id' => 970, 'day' => '2026-07-08', 'kind' => 'ground',
               'vehicle_name' => 'Probe A6', 'base_name' => 'Probenstation']],
   'missions' => [
     ['client_ref' => 'a-m1', 'day_id' => 970, 'started_at' => '2026-07-08 06:00:00',
           /* Ein Chiffretext in der Form, die validate_lib.php verlangt
-      * (`edk1:` plus mindestens 40 base64-Zeichen). Inhalt beliebig — er
+      * (`edk2:` plus base64). Inhalt beliebig — er
       * wird hier nie geoeffnet, und genau das ist der Punkt: Die Sperre
       * haengt daran, DASS er da ist, nicht daran, was drinsteht. */
      'ended_at' => '2026-07-08 07:00:00',
-     'pat_blob' => 'edk1:' . str_repeat('QUJD', 16),
-     'track' => [[0, 47.10, 11.10, 700.0, 1783100000],
-                 [1, 47.11, 11.11, 705.0, 1783100060],
-                 [2, 47.12, 11.12, 710.0, 1783100120]]],
+     'pat_blob' => PROBE_PAT_BLOB, 'spur_ref' => 1, 'n' => 3],
     ['client_ref' => 'a-m2', 'day_id' => 970, 'started_at' => '2026-07-08 08:00:00',
      'ended_at' => '2026-07-08 09:00:00'],                       // ohne Spur
   ],
   'rest_segments' => [
     ['client_ref' => 'a-r1', 'day_id' => 970, 'started_at' => '2026-07-08 10:00:00',
-     'ended_at' => '2026-07-08 11:00:00',
-     'track' => [[0, 47.20, 11.20, 600.0, 1783103000],
-                 [1, 47.21, 11.21, 605.0, 1783103060]]],
+     'ended_at' => '2026-07-08 11:00:00', 'spur_ref' => 2, 'n' => 2],
   ],
+]);
+$sec6 = base64_decode((string)kp_fuer_geraet($pdo, $quelle));
+$stuecke6 = static function (string $art, string $ref, array $punkte) use ($sec6): array {
+    return array_map(static fn($x) => ['huelle' => base64_encode($x['huelle'])] + $x,
+                     gh2_probe_stuecke_bauen($sec6, 'spur', $ref, $punkte));
+};
+$karte6 = $st6['spur_karte'] ?? [];
+edbak_spuren_schreiben($pdo, $quelle, [
+    ['owner_type' => 'mission', 'owner_id' => (int)($karte6[1]['id'] ?? 0),
+     'stuecke' => $stuecke6('mission', 'a-m1', [[0, 47.10, 11.10, 700.0, 1783100000],
+                                               [1, 47.11, 11.11, 705.0, 1783100060],
+                                               [2, 47.12, 11.12, 710.0, 1783100120]])],
+    ['owner_type' => 'rest', 'owner_id' => (int)($karte6[2]['id'] ?? 0),
+     'stuecke' => $stuecke6('rest', 'a-r1', [[0, 47.20, 11.20, 600.0, 1783103000],
+                                            [1, 47.21, 11.21, 605.0, 1783103060]])],
 ]);
 
 [$ok6, $grund6, $info6] = edbak_sicherung_erzeugen($quelle);
@@ -1581,8 +1491,8 @@ if ($anteilVorher === null || ($standVorher['stand'] ?? '') !== 'bereit') {
          . 'erst `Server-Anteil anlegen` auf Betrieb -> Servereinstellungen');
 } else {
     $uid12 = $konto('probe-anteilweg@example.invalid');
-    $huelleNeu = 'edka1:' . $standVorher['kennung'] . ':' . str_repeat('QUJD', 16);
-    $huelleRc  = 'edk1:' . str_repeat('WFla', 16);
+    $huelleNeu = 'edka2:' . $standVorher['kennung'] . ':' . str_repeat('QUJD', 16);
+    $huelleRc  = 'edk2:' . str_repeat('WFla', 16);
     /* `account_key` wie in Teil 8: Ohne Kontokennung legt
      * `edbak_sicherung_erzeugen()` kein Paket an — die Kennung ist der
      * Ordnername der Ablage und geht in den Siegelzweck ein. */
@@ -1610,7 +1520,7 @@ if ($anteilVorher === null || ($standVorher['stand'] ?? '') !== 'bereit') {
          * Fehlschlag sähe aus wie ein falsches Passwort (das ist die ganze
          * Begründung der Zustandsmaschine). */
         $grund12 = huelle_pw_pruefen($huelleNeu);
-        $sag('(3) Die `edka1:`-Huelle wird abgewiesen — MIT Begruendung',
+        $sag('(3) Die `edka2:`-Huelle wird abgewiesen — MIT Begruendung',
              is_string($grund12) && str_contains($grund12, 'Server-Anteil'),
              is_string($grund12) ? mb_substr($grund12, 0, 52) . '…' : 'null (durchgelassen!)');
 
@@ -1629,9 +1539,7 @@ if ($anteilVorher === null || ($standVorher['stand'] ?? '') !== 'bereit') {
           'missions' => [
             ['client_ref' => 'anteil-1', 'day_id' => 9120,
              'started_at' => '2026-07-20 06:00:00', 'ended_at' => '2026-07-20 07:00:00',
-             'pat_blob' => 'edk1:' . str_repeat('QUJD', 16),
-             'track' => [[0, 47.30, 11.30, 500.0, 1784000000],
-                         [1, 47.31, 11.31, 505.0, 1784000060]]],
+             'pat_blob' => PROBE_PAT_BLOB],
           ],
         ]);
         $g12 = $pdo->prepare('SELECT pat_blob FROM missions WHERE user_id = ? AND client_ref = ?');
@@ -1639,16 +1547,12 @@ if ($anteilVorher === null || ($standVorher['stand'] ?? '') !== 'bereit') {
         $blob12 = $g12->fetchColumn();
         $mid12 = (int)$pdo->query('SELECT id FROM missions WHERE user_id = ' . $uid12
                                   . " AND client_ref = 'anteil-1'")->fetchColumn();
-        /* Die Spur wird ueber `spur_lib.php` gezaehlt und nicht per SQL —
-         * sie liegt in verschlossenen Stuecken (`track_stuecke`),
-         * und wer die Tabelle unmittelbar
-         * liest, zaehlt frueher oder spaeter eine halbe Spur (CLAUDE.md 4). */
-        $punkte12 = spur_zahlen($pdo, 'mission', [$mid12])[$mid12] ?? 0;
+        /* Bis KA-07 trug der Einsatz hier eine Spur im Klartext; die kommt
+         * seither ueber die Spurteile und haengt nicht am Anteil. */
         $sag('(5) Ein Backup laesst sich TROTZDEM einspielen',
-             (int)($st12['missions'] ?? 0) === 1 && $punkte12 === 2
-               && $blob12 === 'edk1:' . str_repeat('QUJD', 16),
-             (int)($st12['missions'] ?? 0) . ' Einsatz, ' . $punkte12
-             . ' Spurpunkte, Chiffretext unveraendert');
+             (int)($st12['missions'] ?? 0) === 1
+               && $blob12 === PROBE_PAT_BLOB,
+             (int)($st12['missions'] ?? 0) . ' Einsatz, Chiffretext unveraendert');
 
         /* Der Rueckweg schreibt Einsaetze, keine Schluessel. Ruehrte er die
          * Huelle an, waere aus „Anteil weg" ein Datenverlust geworden. */
@@ -1767,15 +1671,13 @@ try {
 /* ==========================================================================
  * Teil 14 — Ortsdaten nur verschlossen
  *
- * WOFUER. Der Rueckweg nimmt Orte, Reanimation und Spur auf zwei
- * Arten an: Der Browserweg ('browser', auch die Verwaltung)
- * verlangt sie verschlossen und weist Klartext ab, bevor etwas liegt; der
- * Server-Weg ('server', nur der Demo-Reset) verschliesst sie selbst und weist
- * ein Konto ohne Paar ab. Dazu
- * reisen die Loeschvermerke und die Stuecke mit.
+ * WOFUER. Der Rueckweg nimmt Orte, Reanimation und Spur nur
+ * verschlossen an und weist Klartext ab, bevor etwas liegt. Dazu reisen die
+ * Loeschvermerke und die Stuecke mit. Bis Web 26 gab es daneben den
+ * Server-Weg des Demo-Resets, der Klartext selbst verschloss; seine Faelle
+ * (3) und (8) fielen mit KA-07, (3) misst jetzt nur noch den Vermerk.
  * ====================================================================== */
 echo "\n  Teil 14 — Ortsdaten nur verschlossen (S11-06)\n";
-require_once __DIR__ . '/../huelle/geraet.php';   // Fassung 2 vom Probegerät (Stichtag, 06e)
 $uid14 = $konto('probe-s11-06@example.invalid');
 try {
     $tag14 = ['id' => 990, 'day' => '2026-07-10', 'kind' => 'ground',
@@ -1793,7 +1695,7 @@ try {
             edbak_restore($uid14, ['version' => 7, 'days' => [$tag14], 'rest_segments' => [],
                 'missions' => [['client_ref' => 'k-' . $art, 'day_id' => 990,
                                 'started_at' => '2026-07-10 06:00:00',
-                                'ended_at' => '2026-07-10 07:00:00'] + $feld]], null, 'browser');
+                                'ended_at' => '2026-07-10 07:00:00'] + $feld]], null);
         } catch (DomainException $ex) { $grund = $ex->getMessage(); }
         $sag("(1) Browserweg weist Klartext ab: $art", $grund !== null && str_starts_with($grund, 'klartext:')
              && $mZahl($uid14) === 0, ($grund ?? 'angenommen') . ', Einsaetze ' . $mZahl($uid14));
@@ -1805,7 +1707,7 @@ try {
     try {
         edbak_restore($uid14, ['version' => 7, 'days' => [$tag14], 'rest_segments' => [],
             'missions' => [['client_ref' => 'v-m1', 'day_id' => 990,
-                            'started_at' => '2026-07-10 06:00:00']]], null, 'browser');
+                            'started_at' => '2026-07-10 06:00:00']]], null);
     } catch (DomainException $ex) { $grund = $ex->getMessage(); }
     $sag('(1b) Browserweg weist Nutzlast 7 ab (Web 23)', $grund !== null
          && str_starts_with($grund, 'version_alt:') && $mZahl($uid14) === 0,
@@ -1825,7 +1727,7 @@ try {
         'missions' => [['client_ref' => 'b-m1', 'day_id' => 990,
                         'started_at' => '2026-07-10 06:00:00', 'ended_at' => '2026-07-10 07:00:00',
                         'phases' => [['phase' => 4, 'occurred_at' => '2026-07-10 06:10:00']],
-                        'ort_huelle' => $huelle, 'spur_ref' => 1, 'n' => 2]]], null, 'browser');
+                        'ort_huelle' => $huelle, 'spur_ref' => 1, 'n' => 2]]], null);
     $ziel14 = $s14['spur_karte'][1] ?? null;
     $e14 = $ziel14 === null ? ['geschrieben' => 0]
          : edbak_spuren_schreiben($pdo, $uid14, [['owner_type' => $ziel14['art'],
@@ -1837,31 +1739,14 @@ try {
          && $m14 && (int)$m14['h'] === 1 && $n14 === 2 && ($e14['geschrieben'] ?? 0) === 1,
          'Einsaetze ' . ($s14['missions'] ?? '—') . ', Huelle ' . ($m14['h'] ?? '—') . ", Punkte $n14");
 
-    /* (3) Direkter Weg verschliesst Klartext selbst. */
-    $s14b = edbak_restore($uid14, ['version' => 7, 'days' => [$tag14], 'rest_segments' => [
+    /* (3) Ein Ruhesegment ohne Spur, mit Loeschvermerk. */
+    $s14b = edbak_restore($uid14, ['version' => 13, 'days' => [$tag14], 'rest_segments' => [
             ['client_ref' => 's-r1', 'day_id' => 990, 'started_at' => '2026-07-10 08:00:00',
              'ended_at' => '2026-07-10 09:00:00',
-             'track' => [[0, 47.3, 11.3, 710.0, 1783591200], [1, 47.31, 11.31, 711.0, 1783591260]],
              'loeschungen' => [['von_ts' => 1783591300, 'bis_ts' => 1783591400, 'n_punkte' => 4,
                                 'erstellt_am' => '2026-07-10 09:30:00']]]],
-        'missions' => [['client_ref' => 's-m1', 'day_id' => 990,
-                        'started_at' => '2026-07-10 06:30:00', 'ended_at' => '2026-07-10 07:30:00',
-                        'phases' => [['phase' => 4, 'occurred_at' => '2026-07-10 06:40:00',
-                                      'lat' => 47.15, 'lon' => 11.15]],
-                        'resus' => [['started_at' => '2026-07-10 06:45:00',
-                                     'events' => [['type' => 'adrenalin', 'occurred_at' => '2026-07-10 06:46:00']]]],
-                        'track' => [[0, 47.15, 11.15, 720.0, 1783586400]]]]], null, 'server', $blobGleich);
-    $sm = $pdo->query("SELECT id, ort_huelle IS NOT NULL h FROM missions WHERE user_id = $uid14
-                        AND client_ref = 's-m1'")->fetch(PDO::FETCH_ASSOC);
-    $smid = (int)($sm['id'] ?? 0);
-    /* Es gibt keine Spalte und keine Tabelle, in die
-     * Klartext gehen koennte; gezaehlt wird, ob es sie gibt. */
-    $klar = (db_hat_spalte($pdo, 'mission_phases', 'lat') ? 1 : 0)
-          + (db_hat_tabelle($pdo, 'resus_sessions') ? 1 : 0)
-          + (db_hat_tabelle($pdo, 'track_points') ? 1 : 0);
-    $stueck = (int)$pdo->query("SELECT COUNT(*) FROM track_stuecke WHERE owner_type = 'mission' AND owner_id = $smid")->fetchColumn();
-    $sag('(3) Server-Weg verschliesst Orte, Reanimation und Spur', $smid > 0 && (int)$sm['h'] === 1
-         && $klar === 0 && $stueck === 1, "Huelle " . ($sm['h'] ?? '—') . ", Klartextzeilen $klar, Stuecke $stueck");
+        'missions' => []], null);
+    $sag('(3) Das Ruhesegment liegt', ($s14b['rests'] ?? 0) === 1, 'Ruhesegmente ' . ($s14b['rests'] ?? '—'));
     $rid14 = (int)$pdo->query("SELECT id FROM rest_segments WHERE user_id = $uid14 AND client_ref = 's-r1'")->fetchColumn();
     $lv = loeschvermerke_zu_quellen($pdo, $uid14, 'rest', [$rid14]);
     $sag('(4) Der Loeschvermerk reist mit (F-S11-52)', count($lv[$rid14] ?? []) === 1
@@ -1869,9 +1754,9 @@ try {
          json_encode($lv[$rid14] ?? [], JSON_UNESCAPED_UNICODE));
     $kern = json_decode(edbak_build($uid14, true, ['ab' => 0, 'anzahl' => 50]), true);
     $rk = array_values(array_filter($kern['rest_segments'] ?? [], fn($r) => $r['client_ref'] === 's-r1'));
-    $mk = array_values(array_filter($kern['missions'] ?? [], fn($m) => $m['client_ref'] === 's-m1'));
+    $mk = array_values(array_filter($kern['missions'] ?? [], fn($m) => $m['client_ref'] === 'b-m1'));
     $sag('(5) Die Sicherung traegt Loeschvermerk, Huelle und Spurumriss', count($rk[0]['loeschungen'] ?? []) === 1
-         && !empty($mk[0]['ort_huelle']) && (int)($mk[0]['n'] ?? 0) === 1,
+         && !empty($mk[0]['ort_huelle']) && (int)($mk[0]['n'] ?? 0) === 2,
          'loeschungen ' . count($rk[0]['loeschungen'] ?? []) . ', Huelle ' . (empty($mk[0]['ort_huelle']) ? 'nein' : 'ja')
          . ', n ' . ($mk[0]['n'] ?? '—'));
 
@@ -1891,19 +1776,6 @@ try {
          && (int)(spur_zahlen($pdo, 'mission', [$mid2])[$mid2] ?? 0) === 3,
          'geschrieben ' . $e2['geschrieben'] . ', Punkte ' . (spur_zahlen($pdo, 'mission', [$mid2])[$mid2] ?? 0));
 
-    /* (8) Server-Weg ohne Paar: abgewiesen, bevor etwas liegt. */
-    $uid14b = $konto('probe-s11-06b@example.invalid');
-    $pdo->prepare('UPDATE users SET kp_oeffentlich = NULL, kp_privat = NULL WHERE id = ?')->execute([$uid14b]);
-    $grund = null;
-    try {
-        edbak_restore($uid14b, ['version' => 7, 'days' => [$tag14], 'rest_segments' => [],
-            'missions' => [['client_ref' => 'p-m1', 'day_id' => 990, 'started_at' => '2026-07-10 06:00:00',
-                            'track' => [[0, 47.1, 11.1, 700.0, 1783584000]]]]], null, 'server', $blobGleich);
-    } catch (DomainException $ex) { $grund = $ex->getMessage(); }
-    $sag('(8) Server-Weg ohne Schluesselpaar wird abgewiesen', $grund !== null
-         && str_starts_with($grund, 'kein_paar:') && $mZahl($uid14b) === 0,
-         mb_substr($grund ?? 'angenommen', 0, 40) . ', Einsaetze ' . $mZahl($uid14b));
-    $weg($uid14b);
 } finally {
     $weg($uid14);
 }
@@ -1923,15 +1795,15 @@ try {
  * ====================================================================== */
 echo "\n  Teil 15 — Sperrvermerke ueber Fenstergrenzen (Nr. 386, R17-23)\n";
 $hatNachreichen = function_exists('edbak_schnitte_nachreichen');
-$fenster15 = function (int $u, array $p, bool $segmenteZuerst) use ($restore, $blobGleich): array {
+$fenster15 = function (int $u, array $p, bool $segmenteZuerst) use ($restore): array {
     $sK = $restore($u, ['version' => 9, 'days' => $p['days'], 'missions' => [], 'rest_segments' => []]);
     $map = $sK['day_map'] ?? [];
     $fM = ['version' => 9, 'missions' => $p['missions'], 'rest_segments' => []];
     $fR = ['version' => 9, 'missions' => [], 'rest_segments' => $p['rest_segments']];
     $erst = $segmenteZuerst ? $fR : $fM;
     $dann = $segmenteZuerst ? $fM : $fR;
-    $s1 = edbak_restore($u, $erst, $map, 'server', $blobGleich, true);
-    $s2 = edbak_restore($u, $dann, $map, 'server', $blobGleich, true);
+    $s1 = $restore($u, $erst, $map, true);
+    $s2 = $restore($u, $dann, $map, true);
     $offen = array_merge($s1['schnitte_offen'] ?? [], $s2['schnitte_offen'] ?? []);
     $verworfen = ($s1['schnitte']['verworfen'] ?? 0) + ($s2['schnitte']['verworfen'] ?? 0);
     $uebernommen = ($s1['schnitte']['uebernommen'] ?? 0) + ($s2['schnitte']['uebernommen'] ?? 0);
