@@ -348,10 +348,10 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   **`pat_wrap_rc` hängt NICHT am Anteil.** Der Wiederherstellungsschlüssel
   öffnet ohne ihn, und deshalb ist der Verlust des Anteils **kein
   Datenverlust**, sondern ein Passwort-Reset für alle. Eine
-  `edka1:`-Wiederherstellungshülle wäre der Verlust genau dieses Rückwegs;
+  `edka2:`-Wiederherstellungshülle wäre der Verlust genau dieses Rückwegs;
   `WRAP_RC_RE` und `huelle_rc_pruefen()` lassen sie nicht zu. **Dasselbe
   gilt für `rw_privat`**, den privaten Teil des Rückwegs beim Zweitfaktor:
-  Er liegt als `edk1:` unter dem Inhaltsschlüssel und muss mit dem
+  Er liegt als `edk2:` unter dem Inhaltsschlüssel und muss mit dem
   Wiederherstellungsschlüssel allein aufgehen (`RW_PRIVAT_RE = WRAP_RC_RE`,
   `docs/Technik.md` 4.38).
   **Zwei Zeichen tragen die Zusage in die Oberfläche:** ein Schloss an jedem
@@ -422,8 +422,7 @@ davon aufweicht, wird nicht nebenbei gemacht, sondern angesprochen:
   eine halbe Spur, und zwar ohne Fehlermeldung. Es gibt genau einen Weg:
   `spur2_lesen()`, `spur2_lesen_viele()`, `spur2_stueck_schreiben()`,
   `spur2_stand()`, `spur2_faellig()`, `spur2_wartung_tauschen()`,
-  `spur2_uebernahme_liste()`, `spur2_uebernahme_zahl()`,
-  `spur2_uebernahme_tauschen()` (seit Web 26.0.0, 06e), `spur_min_ts()`,
+  `spur_min_ts()`,
   `spur_zahlen()`, `spur_stand()`, `spur_naechste_seq()`,
   `spur_loeschen()`, `spur_zeit_verschieben()`. Ein neuer Verbraucher, der
   daran vorbeigeht, ist ein Fehler. Format und Begründung:
