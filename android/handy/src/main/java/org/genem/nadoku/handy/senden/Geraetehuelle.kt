@@ -44,10 +44,16 @@ import kotlin.math.floor
  * nimmt den Geräteschlüssel dazu ([Absender]): Der Schlüssel der Hülle entsteht
  * aus dem flüchtigen UND dem statischen Geheimnis, und der Browser des Kontos
  * erkennt daran das Gerät, das er bei der Kopplung über den Vergleichswert
- * bestätigt hat. Fassung 1 bleibt, wie sie war — eine Kopplung ohne
- * Geräteschlüssel sendet sie weiter, bis der Server `huelle: 2` sagt
- * (JSON-Vertrag 1a.7). Welche Fassung gilt, entscheidet der Aufrufer; diese
+ * bestätigt hat. Welche Fassung gilt, entscheidet der Aufrufer; diese
  * Datei rechnet nur.
+ *
+ * FASSUNG 1 SENDET NIEMAND MEHR (seit Android 0.27.0, KA-21): Seit Web
+ * 26.0.0 nimmt der Server sie nicht mehr an (E-KA-60), und der
+ * [Sendekoerper] kennt nur noch Fassung 2. [spurstueck] und [einsatz] stehen
+ * trotzdem weiter hier, mit ihren Vektortests (`GeraetehuelleTest`): als
+ * Referenz, solange das Altformat im Anhebelauf des Browsers noch gelesen
+ * wird. Sie fallen mit KA-07 (E-KA-99). Bis 0.26.0 sendete eine Kopplung
+ * ohne `huelle: 2` sie weiter.
  *
  * DAS STATISCHE GEHEIMNIS RECHNET DIESE DATEI NICHT SELBST (seit KA-06f,
  * E-KA-71): Sie bestellt es beim [Absender], hinter dem auf dem Gerät der

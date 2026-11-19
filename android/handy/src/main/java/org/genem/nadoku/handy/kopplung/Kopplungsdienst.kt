@@ -232,9 +232,10 @@ class Kopplungsdienst(
     private val bestand: () -> Int = rueckstand,
     /**
      * Der Geräteschlüssel des Handys (seit KA-06c, Vertrag 1a.7). Mit ihm
-     * koppelt die App mit Vergleichswert und sendet danach in Fassung 2;
-     * `null` (der Prüfstand für den alten Weg, ein Gerät ohne Ablage) heißt:
-     * Kopplung wie bis Android 0.23, ohne Herkunftsnachweis.
+     * koppelt die App mit Vergleichswert und sendet danach in Fassung 2.
+     * `null` heißt seit 0.27.0 (KA-21): Dieses Handy kann nicht koppeln —
+     * [starten] bricht ab, statt ohne `schluessel` zu fragen. Abfragen,
+     * Bestätigen und Trennen einer bestehenden Kopplung gehen weiter.
      */
     private val geraeteschluessel: Geraeteschluessel? = null,
 ) {
@@ -257,16 +258,27 @@ class Kopplungsdienst(
          * BEVOR es die des Browsers kennt — nur so kann ein Server dazwischen
          * keinen passenden Wert ausrechnen. Ein neuer Versuch je Start; ein
          * gültiges Paar einer früheren Kopplung bleibt daneben liegen, bis
-         * dieser Versuch übernommen ist. */
-        val beginn = geraeteschluessel?.beginnen()
+         * dieser Versuch übernommen ist.
+         *
+         * OHNE SCHLÜSSEL KEIN START (seit Android 0.27.0, KA-21). Seit Web
+         * 26.0.0 antwortet der Server auf `start` ohne Block `schluessel`
+         * mit `400 schluessel`, Grund `fehlt` (E-KA-60), und eine Kopplung
+         * ohne Geräteschlüssel könnte ohnehin nichts senden ([Herkunft]).
+         * Kann das Handy kein Paar erzeugen — keine Ablage, oder der
+         * Keystore verweigert es —, endet der Versuch hier, ohne Anfrage.
+         * Bis 0.26.0 ging `start` dann ohne Block hinaus, und die Kopplung
+         * lief wie bis Android 0.23. Angezeigt wird es als „Kopplung
+         * fehlgeschlagen" ([Abweisung.UNBEKANNT]) — eine eigene Meldung
+         * wäre eine neue Darstellung. */
+        val beginn = try {
+            geraeteschluessel?.beginnen()
+        } catch (e: Exception) {
+            null
+        } ?: return Sitzungsergebnis.Abgewiesen(Abweisung.UNBEKANNT)
         val koerper = JSONObject()
             .put("aktion", "start")
             .put("geraet", geraet.alsJson())
-            .apply {
-                if (beginn != null) {
-                    put("schluessel", JSONObject().put("spk", b64(beginn.spk)).put("zusage", b64(beginn.zusage)))
-                }
-            }
+            .put("schluessel", JSONObject().put("spk", b64(beginn.spk)).put("zusage", b64(beginn.zusage)))
             .toString()
 
         return when (val a = netzweg.postJson(Serveradresse.pair(basis), koerper, emptyMap())) {
@@ -658,6 +670,13 @@ class Kopplungsdienst(
             "device_limit" -> Abweisung.ZU_VIELE_GERAETE
             "zu_viele_versuche", "zu_viele_sitzungen" -> Abweisung.ZU_VIELE_VERSUCHE
             "nicht_beansprucht" -> Abweisung.UNBEKANNT
+            /* `400 schluessel` (seit Web 26.0.0, Grund `fehlt` oder ein
+             * Block, den der Server nicht lesen kann): Seit 0.27.0 geht
+             * `start` nie ohne Block hinaus; kommt es trotzdem, ist es ein
+             * Fehler, den diese Fassung nicht beheben kann — „Kopplung
+             * fehlgeschlagen", wie jede andere unerwartete Antwort. Benannt,
+             * damit niemand ihn für einen vergessenen Fall hält. */
+            "schluessel" -> Abweisung.UNBEKANNT
             "server" -> Abweisung.SERVERFEHLER
             else -> when {
                 code == 401 -> Abweisung.SITZUNG_UNGUELTIG

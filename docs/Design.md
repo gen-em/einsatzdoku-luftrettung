@@ -415,6 +415,7 @@ derselben Tonreihen; die Bausteine wissen davon nichts.
 | Rolle | hell | dunkel |
 |---|---|---|
 | Seite, Karte, Abgesetztes | Schnee, neutral 75, Rauch | blau 900, Dunkelblau, blau 700 |
+| Rahmenkarte, Karte darin, ihr Schatten | neutral 75, Weiß, `--schatten` | blau 900, Dunkelblau, `0 2px 8px rgba(0,0,0,.35)` |
 | Text, Titel, Gedämpft | Asphalt, Dunkelblau, neutral 600 | Schnee, blau 100, blau 200 |
 | Link (unter dem Zeiger) | blau 600 (blau 600) | blau 300 (blau 200) |
 | Linie, Linie stark | neutral 200, neutral 600 | blau 700, blau 300 |
@@ -475,7 +476,7 @@ auseinanderlaufen kann.
 
 <!-- ERZEUGT von tools/erzeugen/design.py — nicht von Hand ändern. -->
 
-146 Token in 21 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
+150 Token in 21 Gruppen, alle aus `:root` in `server/assets/style.css`. Die Spalte **benutzt** zählt die `var()`-Verweise im übrigen Stylesheet.
 
 **Leitwerte**
 
@@ -495,9 +496,11 @@ auseinanderlaufen kann.
 | Token | Wert | benutzt | |
 |---|---|--:|---|
 | `--flaeche-seite` | `var(--genem-flaeche-standard)` | 1 |  |
-| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 21 |  |
+| `--flaeche-karte` | `var(--genem-flaeche-karte)` | 19 |  |
 | `--flaeche-abgesetzt` | `var(--genem-flaeche-abgesetzt)` | 35 |  |
 | `--flaeche-feld` | `var(--genem-flaeche-standard)` | 6 |  |
+| `--flaeche-innenkarte` | `var(--genem-flaeche-innenkarte)` | 1 |  |
+| `--flaeche-rahmen` | `var(--genem-flaeche-rahmen)` | 2 |  |
 | `--flaeche-marke` | `var(--genem-dunkelblau)` | 1 |  |
 
 **Schrift**
@@ -724,6 +727,8 @@ auseinanderlaufen kann.
 | `--schleier` | `rgba(26,46,77,.55)` | 2 | Dunkelblau, halbdurchsichtig |
 | `--schatten` | `0 2px 8px rgba(26,5,0,.10)` | 8 |  |
 | `--schatten-hoch` | `0 8px 28px rgba(26,5,0,.22)` | 3 |  |
+| `--schatten-karte` | `var(--schatten)` | 1 | ruhende Karte im Rahmen; dunkel --schatten-dunkel |
+| `--schatten-dunkel` | `0 2px 8px rgba(0,0,0,.35)` | 2 |  |
 | `--auf-dunkel-leise` | `rgba(255,255,255,.55)` | 2 |  |
 | `--auf-dunkel-flaeche` | `rgba(255,255,255,.14)` | 3 |  |
 | `--auf-dunkel-strich` | `rgba(255,255,255,.35)` | 1 |  |
@@ -1168,7 +1173,7 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 16 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
-| `server.svg` | Tabler Icons „server" (MIT) | 21 |
+| `server.svg` | Tabler Icons „server" (MIT) | 24 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 25 |
 | `sonne.svg` | Tabler Icons „sun" (MIT) | 2 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |
@@ -3627,13 +3632,28 @@ bleiben Karten Karten (E-OF-36, -38). Unter 1024 px haben Karte und Spalte
 keine eigene Box (`display: contents`). Seiten ohne Leiste tragen keine
 Rahmenkarte.
 
+**Die Karten darin heben sich ab** (seit Web 26.0.0, Variante C, von der
+BetreiberIn am 18.11.2026 mit Bildern freigegeben): hell **Weiß mit
+`--schatten`** auf dem Rahmen in neutral 75 (`--flaeche-innenkarte`,
+`--flaeche-rahmen`, `--schatten-karte`). Bis dahin hatten Rahmen und Karten
+dieselbe Fläche, und nur die Linie trennte sie. **Dunkel kehrt es sich um:**
+Die Karte bleibt Dunkelblau, Rahmen und Leistenspalte sinken auf blau 900
+— eine Karte in blau 700 wäre so hell wie `--linie`, und Kopf- und
+Zeilenlinien verschwänden. Abschnitte bleiben flach, ohne Schatten. Im
+Druck und auf dem Blatt kein Schatten. **Ein Schatten an einer ruhenden
+Karte** ist damit die zweite Verwendung neben schwebenden Elementen
+(`--schatten-hoch`); weitere gibt es nicht.
+
 **Jede Seite hat eine Fußzeile** — auch vor der Anmeldung, mit Lizenz,
 Versionsnummer und den Verweisen auf Impressum und Datenschutz. **Seit Web
 24.0.0 ist sie ein dunkelblauer Streifen** über die ganze Fensterbreite,
 Schrift und Verweise `--auf-dunkel`, die Version `--auf-dunkel-leise`, im
 Dunkelmodus mit derselben Kante wie die Kopfleiste (E-OF-34); bis dahin
 war sie hell mit einer Linie darüber, und nur die Anmeldung trug die
-dunkle Fassung (`.fuss-dunkel`, die Klasse wirkt nicht mehr). Die einzige
+dunkle Fassung (`.fuss-dunkel`, die Klasse wirkt nicht mehr). **Seit Web
+26.0.0 steht sie am Fensterboden**, auch auf einer kurzen Seite: Die Seite
+ist ein senkrechter Stapel, der Rahmen wächst (`body:has(> .fuss-seite)`);
+bis dahin stand sie mitten im Fenster, darunter leere Fläche. Die einzige
 Ausnahme ist der Einrichter: Er läuft, bevor es eine Datenbank gibt, und die
 beiden Rechtstextseiten brauchen eine.
 
@@ -3810,6 +3830,7 @@ genau das, wogegen sie schützt.
 ## 12. Änderungsverlauf
 
 | Fassung | Was |
+| **Web 26.0.0 (Schritt 28, Konzept KA, 06e)** | **3a, 10.1:** Karten in der Rahmenkarte hell Weiß mit Schatten, dunkel Dunkelblau auf blau 900 (Variante C, freigegeben 18.11.2026). Fußzeile am Fensterboden. Neue Token `--genem-flaeche-innenkarte`, `--genem-flaeche-rahmen` (Weiß bzw. neutral 75, dunkel Dunkelblau bzw. blau 900) und `--schatten-karte`; kein neuer Baustein. |
 |---|---|
 | **Web 24.10.0** | **9.11:** `data-ohne-feldfokus`. **9.42:** Die Zweitfaktor-Karte öffnet einen Dialog statt aufzuklappen; die Passkey-Zeilen tragen „Umbenennen" und „Entfernen" als Zeilenaktionen. Kein Token, kein Baustein. |
 | **Web 24.9.3** | **9.11:** Ein Klick neben einen Dialog schließt ihn, außer `data-dialog-fest` (Schlüssel-Dialoge). **9.37:** Reiter in Open Sans 700 statt Bricolage 700 — den Schnitt gibt es nicht, der Browser rechnete ihn nach, die Reiter sahen verschmiert aus (Rückmeldung vom 09.11.2026). Kein Token, kein Baustein. |

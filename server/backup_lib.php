@@ -938,6 +938,21 @@ function edbak_verworfen_satz(array $bericht): string
 function edbak_restore(int $userId, array $data, ?array $dayMap = null,
                        string $ortsdaten = 'browser', ?Closure $blobZiel = null,
                        bool $offenZurueck = false): array {
+    /* DER STICHTAG (06e, KA-19, E-KA-99): Gerätehüllen der Fassung 1 nimmt
+     * kein Schreibweg mehr an — nur der Demo-Reset aus einer Fixture bis
+     * Format 3 (`'server'`) verschließt sie selbst, und er ist die
+     * Testquelle der Übernahme, bis KA-07 beides entfernt. */
+    $vorher = huelle_fassung1_zulassen($ortsdaten === 'server' || huelle_fassung1_zulassen());
+    try {
+        return edbak_restore_lauf($userId, $data, $dayMap, $ortsdaten, $blobZiel, $offenZurueck);
+    } finally {
+        huelle_fassung1_zulassen($vorher);
+    }
+}
+
+/** Der Lauf von `edbak_restore()` — nur von dort aufgerufen. */
+function edbak_restore_lauf(int $userId, array $data, ?array $dayMap,
+                            string $ortsdaten, ?Closure $blobZiel, bool $offenZurueck): array {
     if (!in_array($ortsdaten, ['browser', 'server'], true)
         || ($ortsdaten === 'server' && $blobZiel === null)) {
         throw new InvalidArgumentException('ortsdaten: ' . $ortsdaten);

@@ -59,35 +59,12 @@
 'use strict';
 const EdInhalt = (() => {
 
-  /* ====================================================================
-   * DIE WEICHE — die EINE Stelle, die das Schreiben der Fassung 2 einschaltet
-   * ====================================================================
-   *
-   * Steht sie auf `false`, entsteht aus jedem Schreibweg dieser Datei, aus
-   * `EdCrypto.huelleBauen()` und aus den Schreibwegen in `huelle2.js` und
-   * `standbuch.js` das Format, das die Anwendung heute liest: `edk1:`,
-   * `edka1:`, Gerätehülle Fassung 1 — und das Standbuch schreibt nichts.
-   * GELESEN werden immer beide Fassungen.
-   *
-   * WARUM EINE KONSTANTE IM SKRIPT UND KEIN WERT VOM SERVER. Ein Schalter,
-   * den die Seite ausliefert, wäre ein Schalter in der Hand dessen, der den
-   * Server beschreibt: „schreib wieder Fassung 1". Umgelegt wird sie mit
-   * einer Auslieferung, und erst dann, wenn
-   *   (1) der Server beide Fassungen annimmt (Formprüfung, KA-06d),
-   *   (2) die Blätter des Standbuchs einen Endpunkt haben (standbuch.js),
-   *   (3) jeder Verbraucher über `lesen()`/`schreiben()` geht — die Liste
-   *       steht im Paketbericht KA-06b.
-   * Vorher umgelegt, schriebe der Browser Blöcke, die der Server abweist.
-   *
-   * UMGELEGT MIT WEB 25.0.0 (KA-14, E-KA-51, -82). Seitdem schreibt jeder
-   * Weg Fassung 2, das Standbuch führt Buch, und der Anhebelauf hebt nach der
-   * Anmeldung still den Altbestand. Zurück auf `false` geht es nicht ohne
-   * Schaden: Was Fassung 2 geschrieben hat, bleibt Fassung 2, und das Standbuch
-   * erwartet sie (Runbook, Technik 13). */
-  const SCHREIBT_FASSUNG_2 = true;
-
-  /** Schreibt diese Auslieferung Fassung 2? Die Weiche, für alle Dateien. */
-  function schreibt2() { return SCHREIBT_FASSUNG_2; }
+  /* DIE WEICHE IST ZURÜCKGEBAUT (Web 26.0.0, 06e, KA-20). Von Web 24.13 bis
+   * 24.19 stand hier `SCHREIBT_FASSUNG_2 = false`, mit Web 25.0.0 wurde sie
+   * umgelegt (KA-14). Seitdem schreibt jeder Weg Fassung 2; das alte Format
+   * liest nur noch der Anhebelauf (`unlock.js`, E-KA-97). Die Begründung,
+   * warum es eine Konstante im Skript war und kein Wert vom Server, steht in
+   * der Git-Geschichte dieser Datei. */
 
   const T = EdCrypto.teile;
   const te = new TextEncoder();
@@ -240,17 +217,11 @@ const EdInhalt = (() => {
   }
 
   /**
-   * SCHREIBEN — hinter der Weiche. Steht sie aus, entsteht `edk1:` wie aus
-   * `EdCrypto.encrypt()`; Zweck, Bezug und Zähler werden dann geprüft, aber
-   * nicht geschrieben.
+   * SCHREIBEN — immer Fassung 2 (`edk2:`).
    * @returns {Promise<string>}
    */
   async function schreiben(schluessel, zweck, bezug, klartext, z) {
-    if (SCHREIBT_FASSUNG_2) {
-      return verschliessenBytes(schluessel, zweck, bezug, te.encode(klartext), z || 0);
-    }
-    zusatzdaten(zweck, bezug);
-    return EdCrypto.encrypt(schluessel, klartext);
+    return verschliessenBytes(schluessel, zweck, bezug, te.encode(klartext), z || 0);
   }
 
   /* ---- Schlüsselhüllen (Zweck `wrap`) ----------------------------------
@@ -323,17 +294,14 @@ const EdInhalt = (() => {
     return hex;
   }
 
-  /** Eine Hülle SCHREIBEN — hinter der Weiche, für beide Arten. */
+  /** Eine Hülle SCHREIBEN — gebunden, für beide Arten. */
   async function huelleSchreiben(schluesselHex, ckHex, art, kennung) {
     huelleArt(art);
     if (art === 'rc' && kennung) { throw fehler('kennung'); }
-    if (SCHREIBT_FASSUNG_2) { return huelleBauen(schluesselHex, ckHex, art, kennung || null); }
-    if (art === 'pw') { return EdCrypto.huelleBauen(schluesselHex, ckHex, kennung || null); }
-    return EdCrypto.encrypt(schluesselHex, ckHex);
+    return huelleBauen(schluesselHex, ckHex, art, kennung || null);
   }
 
-  return { schreibt2,
-           lesen, schreiben, istGebunden,
+  return { lesen, schreiben, istGebunden,
            huelleBauen, huelleOeffnen, huelleSchreiben,
            /* die Fassungen einzeln — für standbuch.js, den Anhebelauf und die Probe */
            verschliessenBytes, oeffnenBytes, oeffnen1Bytes, alsText,

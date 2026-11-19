@@ -6,8 +6,17 @@ module Const {
     /* Fassung der Uhr-App. Sie zaehlt GETRENNT von Web und Android, weil sie
      * getrennt ausgeliefert wird (CLAUDE.md 2); sie steht auf der Sync-Seite
      * und geht als "app" im geraet-Block an den Server.
+     *
+     * DIE HAUPTNUMMER steigt, wenn sich aendert, WAS die Uhr sendet oder wie
+     * sie koppelt: 4 verschloss Spur, Phasenorte und Reanimation (S11),
+     * 5 koppelte mit Vergleichswert und sendete Fassung 2 (KG-03b),
+     * 6 sendet NUR noch Fassung 2 (KA-22): Seit Web 26.0.0 nimmt der Server
+     * weder Huellen der Fassung 1 noch ein `start` ohne Geraeteschluessel an.
+     * Eine Uhr ohne `huelle: 2` aus der Kopplung sendet nichts mehr und sagt
+     * "Neu koppeln"; ohne Geraetepaar beginnt sie keine Kopplung. Bis 5.1.0
+     * fiel sie in beiden Faellen auf Fassung 1 zurueck.
      */
-    const APP_VERSION = "5.1.0";
+    const APP_VERSION = "6.0.0";
 
     /* Wie lange ein geparktes (dauerhaft abgewiesenes) Paket auf der Uhr
      * liegen bleibt, bevor ein Sendelauf es raeumt (wie auf dem Handy):

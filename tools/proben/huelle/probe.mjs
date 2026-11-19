@@ -16,11 +16,9 @@
  * und `vektoren-inhalt.json`: `edk2:`, Schlüsselhüllen, Standbuch,
  * Gerätebuch, Ableitung 2, Gerätehülle Fassung 2 mit ihren Leseregeln und
  * der Vergleichswert der Kopplung — die Prüfungen stehen in
- * `pruefungen2.js` daneben. Sie laufen ZWEIMAL: mit der Weiche, wie sie
- * ausgeliefert wird (aus — jeder Schreibweg muss Fassung 1 ergeben), und in
- * einer zweiten Seite mit umgelegter Weiche (die Konstante
- * `SCHREIBT_FASSUNG_2` in `inhalt2.js` wird beim Laden ersetzt; findet die
- * Probe sie nicht genau einmal mit dem Wert `false`, ist sie rot).
+ * `pruefungen2.js` daneben. Sie laufen einmal, wie ausgeliefert. (Bis Web
+ * 25.x ZWEIMAL, mit der Weiche aus und an; die Weiche ist seit Web 26.0.0
+ * zurückgebaut, 06e.)
  *
  * `--bestand <Ordner>` nimmt die Skripte aus einem anderen Ordner als
  * `server/assets/` — für die Gegenprobe gegen einen älteren Stand. Was dort
@@ -60,7 +58,6 @@ const pruefungen2 = readFileSync(path.join(HIER, 'pruefungen2.js'), 'utf-8');
 /* Die Dateien der Fassung 2, in der Reihenfolge, in der die Anwendung sie
  * einbindet. Eine, die im Bestand fehlt, wird nicht geladen. */
 const NEU = ['inhalt2.js', 'huelle2.js', 'standbuch.js'];
-const WEICHE = /const SCHREIBT_FASSUNG_2 = (?:true|false);/g;
 
 let browser;
 try { browser = await starten(pw, motor); }
@@ -77,9 +74,9 @@ if (drossel > 1) {
 }
 await seite.addScriptTag({ content: quelle });
 
-/* Fassung 2 lädt eine eigene Funktion, weil sie zwei Seiten braucht. */
+/* Fassung 2 lädt eine eigene Seite. */
 const fehlend = NEU.filter((n) => !existsSync(path.join(BESTAND, n)));
-async function fassung2(weicheAn) {
+async function fassung2() {
   const s = await kontext.newPage();
   await s.goto('https://huelle.invalid/');
   const fehler = [];
@@ -87,18 +84,10 @@ async function fassung2(weicheAn) {
   await s.addScriptTag({ content: quelle });
   for (const n of NEU) {
     if (fehlend.includes(n)) { continue; }
-    let text = readFileSync(path.join(BESTAND, n), 'utf-8');
-    if (n === 'inhalt2.js') {
-      const treffer = (text.match(WEICHE) || []).length;
-      if (treffer !== 1) { return { zeilen: [`  FEHL  Weiche: „const SCHREIBT_FASSUNG_2 = …;“ steht ${treffer}-mal in inhalt2.js, erwartet einmal`], schlecht: 1, fehler }; }
-      /* Beide Stellungen ausdrücklich: Seit Web 25.0.0 ist „an“ ausgeliefert,
-       * „aus“ misst, dass die alten Wege weiter lesen (KA-14). */
-      text = text.replace(WEICHE, `const SCHREIBT_FASSUNG_2 = ${weicheAn ? 'true' : 'false'};`);
-    }
-    await s.addScriptTag({ content: text });
+    await s.addScriptTag({ content: readFileSync(path.join(BESTAND, n), 'utf-8') });
   }
   await s.addScriptTag({ content: pruefungen2 });
-  const erg = await s.evaluate(([v2, vi, an]) => window.hpFassung2(v2, vi, an), [vektoren2, vektorenInhalt, weicheAn]);
+  const erg = await s.evaluate(([v2, vi]) => window.hpFassung2(v2, vi), [vektoren2, vektorenInhalt]);
   await s.close();
   return Object.assign(erg, { fehler });
 }
@@ -185,8 +174,7 @@ const ergebnis = await seite.evaluate(async (v) => {
   return { zeilen, schlecht, zeiten };
 }, vektoren);
 
-const aus = await fassung2(false);
-const an = await fassung2(true);
+const an = await fassung2();
 await browser.close();
 console.log(`Hüllenprobe in ${motor}${drossel > 1 ? `, Drossel ${drossel}×` : ''}`
   + (bi >= 0 ? ` — Bestand ${BESTAND}` : ''));
@@ -198,7 +186,7 @@ for (const [k, z] of Object.entries(ergebnis.zeiten)) {
 const n = ergebnis.zeilen.length;
 console.log(`Fassung 1: ${n} Prüfungen, ${ergebnis.schlecht} Abweichungen`);
 for (const f of fehlend) { console.log(`  fehlt im Bestand: ${f}`); }
-for (const [name, e] of [['Weiche aus', aus], ['Weiche an (wie ausgeliefert)', an]]) {
+for (const [name, e] of [['wie ausgeliefert', an]]) {
   console.log(`Fassung 2, ${name}`);
   console.log(e.zeilen.join('\n'));
   for (const f of new Set(e.fehler)) { console.log(`  Seitenfehler: ${f}`); }
@@ -206,10 +194,10 @@ for (const [name, e] of [['Weiche aus', aus], ['Weiche an (wie ausgeliefert)', a
   console.log(`Fassung 2, ${name}: ${e.zeilen.length} Prüfungen, ${e.schlecht} Abweichungen`
     + ((e.ausgenommen || []).length ? `, ${e.ausgenommen.length} ausgenommen` : ''));
 }
-const gesamt = n + aus.zeilen.length + an.zeilen.length;
-const rot = ergebnis.schlecht + aus.schlecht + an.schlecht;
+const gesamt = n + an.zeilen.length;
+const rot = ergebnis.schlecht + an.schlecht;
 /* Ausgenommen heißt: Der Vektor verlangt es, die Seite kann es noch nicht.
  * Es zählt nicht als Prüfung und steht in der Schlusszeile, solange es das gibt. */
-const offen = (aus.ausgenommen || []).length + (an.ausgenommen || []).length;
+const offen = (an.ausgenommen || []).length;
 console.log(`${gesamt} Prüfungen, ${rot} Abweichungen` + (offen ? `, ${offen} ausgenommen (nicht gemessen)` : ''));
 process.exit(rot ? 1 : 0);

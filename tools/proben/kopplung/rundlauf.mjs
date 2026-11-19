@@ -305,7 +305,16 @@ console.log('\n  Das Gerät holt sich eine Sitzung (pair.php, aktion=start)');
 const geraet = await seite.evaluate(async () => {
   const a = await fetch('pair.php', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ aktion: 'start', geraet: { art: 'uhr', teil: '006-B4261-00' } }) });
+    body: JSON.stringify({ aktion: 'start', geraet: { art: 'uhr', teil: '006-B4261-00' },
+                               schluessel: await (async () => {
+                                 /* Seit Web 26.0.0 verlangt `start` den Geräteschlüssel (SPK und
+                                    Zusage, KA-17); ohne ihn 400 `schluessel`. Ein frisches Paar —
+                                    das Gerät sagt in diesem Lauf nie Ja. */
+                                 const kp = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
+                                 const b64 = (u) => btoa(String.fromCharCode(...u));
+                                 return { spk: b64(new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey))),
+                                          zusage: b64(crypto.getRandomValues(new Uint8Array(32))) };
+                               })() }) });
   return a.json();
 });
 pruefe(!!geraet.code && !!geraet.device_id && !!geraet.api_key,

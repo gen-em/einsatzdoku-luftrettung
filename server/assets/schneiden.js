@@ -365,11 +365,14 @@ const EdSchnitt = (() => {
     }
   }
 
-  async function rueckgaengig(missionId) {
+  async function rueckgaengig(missionId, schnitt) {
     const r = await ruf({ action: 'rueckgaengig', mission_id: missionId },
                         'Das Rückgängigmachen');
     if (!r.ok) { melde('warn', r.meldung); return; }
     const d = r.daten;
+    /* DER VERMERK IM STANDBUCH GEHT MIT (06e, F-KA-128): Ohne das blieben die
+       zurückgekehrten Punkte in einer Spur der Fassung 2 verborgen. */
+    if (schnitt) { await EdOrtsdaten.sperreAufheben(schnitt.ref, schnitt.von, schnitt.bis); }
     /* Wie beim Schneiden: das try nur noch um das Nachladen. */
     try {
       await neuLaden();
@@ -579,7 +582,12 @@ const EdSchnitt = (() => {
       b.addEventListener('click', () => {
         if (window.edBlatt) { window.edBlatt.zu(); }
         b.disabled = true;
-        rueckgaengig(Number(b.getAttribute('data-rueck')));
+        const mid = Number(b.getAttribute('data-rueck'));
+        let schnitt = null;
+        segmente.forEach((seg) => (seg.schnitte || []).forEach((c) => {
+          if (Number(c.mission_id) === mid) { schnitt = { ref: seg.client_ref, von: c.von_ts, bis: c.bis_ts }; }
+        }));
+        rueckgaengig(mid, schnitt);
       });
     });
 

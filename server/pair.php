@@ -203,19 +203,23 @@ if ($aktion === 'start') {
     $key   = bin2hex(random_bytes(24));
 
     /* ---- Der Geraeteschluessel (KA-06d) --------------------------------
-     * Fehlt der Block, koppelt das Geraet wie bisher, ohne Herkunft. Kommt
-     * er in falscher Form, ist das ein Fehler der App, kein Raten — 400 ohne
-     * Zaehlen. Ohne die Spalten (Migration steht aus) wird er ueberlesen. */
+     * Kommt er in falscher Form, ist das ein Fehler der App, kein Raten —
+     * 400 ohne Zaehlen. SEIT WEB 26.0.0 IST ER PFLICHT (06e, KA-19, E-KA-60):
+     * Ein Geraet ohne Schluessel koennte nur Fassung 1 senden, und die nimmt
+     * der Eingang nicht mehr an — es bekaeme ein Konto, in das es nichts
+     * liefern kann. `grund: fehlt` sagt der App, dass sie zu alt ist.
+     * Bis Web 25.x koppelte ein solches Geraet wie bisher, ohne Herkunft. */
     $schluessel = pair_schluessel_lesen(is_array($b) ? ($b['schluessel'] ?? null) : null);
     if ($schluessel === false) {
         antworten(400, ['error' => 'schluessel']);
     }
+    if ($schluessel === null) {
+        antworten(400, ['error' => 'schluessel', 'grund' => 'fehlt']);
+    }
 
     try {
         $code = pair_sitzung_anlegen($pdo, $devId, geraet_schluessel_hash($key), $geraet);
-        if ($schluessel !== null && pair_herkunft_bereit($pdo)) {
-            pair_schluessel_setzen($pdo, $devId, $schluessel);
-        }
+        pair_schluessel_setzen($pdo, $devId, $schluessel);
     } catch (Throwable $ex) {
         system_melden('pair', 'Kopplungssitzung konnte nicht angelegt werden', $ex);
         antworten(500, ['error' => 'server']);
@@ -312,16 +316,19 @@ if ($sitzung !== null) {
     if (($sitzung['abgelehnt'] ?? null) !== null) {
         antworten(409, ['error' => 'abgelehnt', 'grund' => (string)$sitzung['abgelehnt']]);
     }
-    /* MIT GERAETESCHLUESSEL zaehlt das Ja erst nach dem Offenlegen, und es
-     * schliesst nur ab, wenn das Web den Wert schon bestaetigt hat. Sonst
-     * wird es vermerkt; das Web schliesst ab, wenn „Wert stimmt“ kommt. */
-    if (($sitzung['spk'] ?? null) !== null) {
-        if (($sitzung['n_g'] ?? null) === null) { antworten(409, ['error' => 'zustand']); }
-        $pdo->prepare('UPDATE pair_sessions SET geraet_ja = 1 WHERE id = ?')->execute([$sid]);
-        $sitzung['geraet_ja'] = 1;
-        if ((int)$sitzung['wert_ok'] !== 1) {
-            antworten(202, ['wartet' => 'browser']);
-        }
+    /* Das Ja zaehlt erst nach dem Offenlegen, und es schliesst nur ab, wenn
+     * das Web den Wert schon bestaetigt hat. Sonst wird es vermerkt; das Web
+     * schliesst ab, wenn „Wert stimmt“ kommt. EINE SITZUNG OHNE
+     * GERAETESCHLUESSEL schliesst seit Web 26.0.0 nicht mehr ab (06e,
+     * E-KA-102): Sie kann nur von vor dem Update stammen, und bis dahin
+     * genuegte dort das Ja allein. */
+    if (($sitzung['spk'] ?? null) === null || ($sitzung['n_g'] ?? null) === null) {
+        antworten(409, ['error' => 'zustand']);
+    }
+    $pdo->prepare('UPDATE pair_sessions SET geraet_ja = 1 WHERE id = ?')->execute([$sid]);
+    $sitzung['geraet_ja'] = 1;
+    if ((int)$sitzung['wert_ok'] !== 1) {
+        antworten(202, ['wartet' => 'browser']);
     }
 
     /* ---- Das Geraet entsteht: eine Transaktion (kopplung_lib.php) -------

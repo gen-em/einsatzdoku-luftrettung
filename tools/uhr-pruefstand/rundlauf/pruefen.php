@@ -71,8 +71,30 @@ $pdo = db();
 $demo = demo_id();
 if ($demo === null) { fwrite(STDERR, "Kein Demo-Konto.\n"); exit(2); }
 $konto = $pdo->query('SELECT * FROM users WHERE id = ' . (int)$demo)->fetch(PDO::FETCH_ASSOC);
-$ck = demo_inhaltsschluessel($konto);
-$pkcs8 = demo_edk1_oeffnen($ck, (string)$konto['kp_privat']);
+/* SEIT DER FIXTURE IN FASSUNG 2 (KA-13) liegen Schluesselhuelle und
+ * privater Teil des Kontopaars als `edk2:` (Zaehler ‖ Laenge ‖ Nutzlast ‖
+ * Polster, gebunden an Zweck und Bezug). demo_inhaltsschluessel() liest nur
+ * `edk1:` und wirft seither; dieser Lauf oeffnete deshalb nichts mehr
+ * (gemessen am 17.11.2026, KA-22). Hier dieselbe Rechnung wie
+ * demo_frischer_schluessel(); `edk1:` bleibt als Rueckfall. */
+function edk2_nutzlast(?string $innen): ?string
+{
+    if ($innen === null || strlen($innen) < 8) { return null; }
+    $len = unpack('N', substr($innen, 4, 4))[1];
+    return strlen($innen) >= 8 + $len ? substr($innen, 8, $len) : null;
+}
+if (str_starts_with((string)$konto['pat_wrap_pw'], 'edk2:')) {
+    $haelfte = kdf_haelfte(DEMO_PASSWORT, (string)hex2bin((string)$konto['kdf_salt']), (int)$konto['kdf_iter']);
+    $ckHex = edk2_nutzlast(demo_edk2_innen($haelfte, (string)$konto['pat_wrap_pw'], 'wrap', 'pw'));
+    if ($ckHex === null || !preg_match('/^[0-9a-f]{64}\z/', $ckHex)) {
+        fwrite(STDERR, "Das Demo-Passwort oeffnet die Schluesselhuelle nicht.\n"); exit(2);
+    }
+    $ck = (string)hex2bin($ckHex);
+    $pkcs8 = edk2_nutzlast(demo_edk2_innen($ck, (string)$konto['kp_privat'], 'kp', ''));
+} else {
+    $ck = demo_inhaltsschluessel($konto);
+    $pkcs8 = demo_edk1_oeffnen($ck, (string)$konto['kp_privat']);
+}
 if ($pkcs8 === null) { fwrite(STDERR, "Privater Schluessel des Demo-Kontos geht nicht auf.\n"); exit(2); }
 $privat = openssl_pkey_get_private("-----BEGIN PRIVATE KEY-----\n" . chunk_split($pkcs8, 64, "\n")
                                    . "-----END PRIVATE KEY-----\n");

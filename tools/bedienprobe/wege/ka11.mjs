@@ -38,6 +38,10 @@ async function einmalWerfen(seite, fall) {
   window.__ka11 = { aufrufe: [] };
   EdOrtsdaten.fuerAnsicht = async function (m, ck, o) {
     window.__ka11.aufrufe.push(o && o.bestaetigt ? o.bestaetigt : null);
+    /* Auch in die Sitzungsablage: Das Übernehmen lädt die Seite neu, und
+       in WebKit kam der Neuladen schneller als die Abfrage des Wegs — der
+       Weg las null (F-KA-134). Die Ablage überlebt den Neuladen. */
+    if (o && o.bestaetigt) { try { sessionStorage.setItem('__ka11', JSON.stringify(o.bestaetigt)); } catch (x) { /* dann eben nicht */ } }
     if (erst) {
       erst = false;
       const e = new Error(${JSON.stringify(fall)});
@@ -112,14 +116,14 @@ export const wege = [
         /* Noch einmal von vorn, dann übernehmen. */
         await k.gehZu(`${k.basis}/einsatz.php?id=${id}`);
         await meldung(k);
+        await k.seite.evaluate(() => sessionStorage.removeItem('__ka11'));
         const neu = k.seite.waitForNavigation({ timeout: 20000 });
-        const bestaetigt = k.seite.evaluate(() => new Promise((fertig) => {
-          const ab = window.__ka11.aufrufe.length;
-          const t = setInterval(() => { if (window.__ka11.aufrufe.length > ab) { clearInterval(t); fertig(window.__ka11.aufrufe[ab]); } }, 20);
-        }));
         await k.seite.click('[data-rueckweg="uebernehmen"]');
-        const h = await bestaetigt.catch(() => null);
         await neu.catch(() => {});
+        /* Gelesen NACH dem Neuladen, aus der Sitzungsablage (F-KA-134). */
+        const h = await k.seite.evaluate(() => {
+          try { return JSON.parse(sessionStorage.getItem('__ka11') || 'null'); } catch (x) { return null; }
+        });
         const genau = JSON.stringify(h) === JSON.stringify(HINWEIS);
         const ok = warn && ohneKnopf && genau;
         return { ist: `Meldung ${warn ? 'wie M-KA-03 B' : `ABWEICHEND (${m.klasse}; ${m.knoepfe.join('|')})`}; `

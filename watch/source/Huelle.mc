@@ -27,6 +27,15 @@
 // Datenverlust, und "Uhr kann nicht verschluesseln" auf der Sync-Seite ist
 // eine Auskunft.
 //
+// SEIT UHR 6.0.0 SENDET DIE UHR DIESE FASSUNG NICHT MEHR (KA-22): Der
+// Eingang weist Huellen der Fassung 1 seit Web 26.0.0 mit 400 ab, und der
+// Sendeweg verschliesst nur noch ueber Huelle2.mc. Diese Datei bleibt, weil
+// Huelle2 ihre Bausteine benutzt (Byteordnung und Selbsttest `bereit()`,
+// ECDH, HKDF, AES, HMAC, Bindung, Innenformen, Kontoschluessel). Die
+// Funktionen der ganzen Huelle (`verschliessen()`, `spurstueck()`,
+// `einsatz()`) ruft nur noch die Krypto-Probe als Referenz; sie fallen mit
+// KA-07 (E-KA-99).
+//
 // DIE ANZEIGE AUF DER UHR liest den Klartextpuffer: Die
 // Uhr zeigt, was sie selbst aufgezeichnet hat; verschlossen wird erst auf
 // dem Weg hinaus.

@@ -145,6 +145,10 @@ $insG->execute([$uid, $nachbarKennung, geraet_schluessel_hash($nachbarKey),
                 'Ingestprobe Nachbar', 1, 'uhr', 'Forerunner 955']);
 $insG->execute([$uid, $ausKennung, geraet_schluessel_hash($ausKey),
                 'Ingestprobe Abgeschaltet', 0, 'uhr', 'Forerunner 955']);
+/* Seit Web 26.0.0 nimmt der Eingang nur Fassung 2 von einem Gerät mit
+ * bestätigtem Geräteschlüssel (Stichtag, 06e) — alle Probegeräte tragen den
+ * des Probegeräts. */
+gh_probe_herkunft($pdo, $uid);
 
 /* DIE TOEPFE WERDEN VOR DEM LAUF GELEERT, NICHT NUR DANACH.
  *
@@ -430,10 +434,21 @@ pruefe((int)$q->fetchColumn() === 0, 'Nach drei Abweisungen steht kein Einsatz d
 
 $gut = gh_probe_koerper(paket('probe-2', 0, 3, true), $ghPaar['sec1']);
 $kaputt = $gut;
-$kaputt['track']['huelle'] = base64_encode("\x02" . substr(base64_decode($gut['track']['huelle']), 1));
+$kaputt['track']['huelle'] = base64_encode("\x03" . substr(base64_decode($gut['track']['huelle']), 1));
 $k4 = senden($kaputt, null, null, true);
 pruefe($k4['code'] === 400 && ($k4['daten']['error'] ?? '') === 'payload',
        'Huelle mit fremder Fassung: 400 payload', 'HTTP ' . $k4['code'] . ', ' . (string)($k4['daten']['grund'] ?? ''));
+/* DER STICHTAG (06e, KA-19): Eine Hülle der Fassung 1 — wie ein Gerät von
+ * vor Web 25.0.0 sie schickt — nimmt der Eingang nicht mehr an. */
+$alt1 = $gut;
+$t1 = (int)$gut['track']['ts_von'];
+$alt1['track']['huelle'] = base64_encode(gh_verschliessen(gh_spur_innen([[47.5, 10.2, 800, $t1], [47.5, 10.2, 800, $t1 + 1],
+                                                                        [47.5, 10.2, 800, $t1 + 2]], $t1),
+                                                          $ghPaar['sec1'], 'spur', 'probe-2', '0:3'));
+$k4b = senden($alt1, null, null, true);
+pruefe($k4b['code'] === 400 && ($k4b['daten']['error'] ?? '') === 'payload'
+       && str_contains((string)($k4b['daten']['grund'] ?? ''), 'Fassung 1'),
+       'Huelle der Fassung 1 (Stichtag): 400 payload', 'HTTP ' . $k4b['code'] . ', ' . (string)($k4b['daten']['grund'] ?? ''));
 $kurz = $gut;
 $kurz['track']['huelle'] = base64_encode(random_bytes(64));
 $k5 = senden($kurz, null, null, true);
@@ -448,11 +463,11 @@ $q = $pdo->prepare("SELECT huelle FROM track_stuecke WHERE owner_type='mission' 
 $q->execute([$mid2]);
 $abgelegt = (string)$q->fetchColumn();
 $geoeffnet = '';
-try { $geoeffnet = gh_probe_oeffnen($abgelegt, $ghPaar['privat'], 'spur', 'probe-2', '0:3'); } catch (Throwable $ex) { $geoeffnet = 'FEHLER ' . $ex->getMessage(); }
-pruefe(strlen($geoeffnet) === 42, 'Die abgelegte Huelle geht mit dem Schluessel auf, unter ihrer Bindung',
-       strlen($geoeffnet) . ' Byte innen (erwartet 3 x 14)');
+try { $geoeffnet = gh2_probe_oeffnen($abgelegt, $ghPaar['privat'], 'spur', 'probe-2', '0:3'); } catch (Throwable $ex) { $geoeffnet = 'FEHLER ' . $ex->getMessage(); }
+pruefe(strlen($geoeffnet) === 12 + 42, 'Die abgelegte Huelle geht mit dem Schluessel auf, unter ihrer Bindung',
+       strlen($geoeffnet) . ' Byte innen (erwartet 12 Kopf + 3 x 14)');
 $falsch = 'kein Fehler';
-try { gh_probe_oeffnen($abgelegt, $ghPaar['privat'], 'spur', 'probe-1', '0:3'); } catch (Throwable $ex) { $falsch = $ex->getMessage(); }
+try { gh2_probe_oeffnen($abgelegt, $ghPaar['privat'], 'spur', 'probe-1', '0:3'); } catch (Throwable $ex) { $falsch = $ex->getMessage(); }
 pruefe($falsch === 'pruefwert', 'An einem anderen Einsatz geht sie NICHT auf', $falsch);
 
 /* Teil 6 (die Ortshoehe ueberlebt eine berichtigte Phasenzeit) IST

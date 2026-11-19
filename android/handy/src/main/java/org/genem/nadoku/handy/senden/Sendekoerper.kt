@@ -18,6 +18,13 @@ import org.json.JSONObject
  * Einsatzhülle (`ort_huelle`) statt in `phases[]` ([Geraetehuelle]). Klartext
  * weist der Server mit `400 klartext` ab.
  *
+ * NUR FASSUNG 2 (seit Android 0.27.0, KA-21). Seit Web 26.0.0 nimmt der
+ * Server eine Gerätehülle der Fassung 1 nicht mehr an (E-KA-60); [Fassung2]
+ * ist deshalb Pflicht, und ein Körper ohne Absender lässt sich gar nicht
+ * mehr bauen. Bis 0.26.0 hieß `fassung2 = null` „Fassung 1 wie bisher". Die
+ * Funktionen der Fassung 1 in [Geraetehuelle] stehen weiter als Referenz zu
+ * ihren Vektoren da; im Sendeweg ruft sie niemand.
+ *
  * DER ZÄHLER DER EINSATZHÜLLE KOMMT AUS DEM PAKET (E-KA-69, seit KA-06f):
  * `paket.zaehler`, vergeben, als sich der Inhalt zuletzt änderte, und mit
  * ihm gespeichert ([Huellenzaehler],
@@ -46,8 +53,8 @@ object Sendekoerper {
      * @param paket für einen Einsatz in Fassung 2 MIT Zähler
      *   (`paket.zaehler`); fehlt er, entsteht keine Hülle (die Funktion
      *   wirft) — ein erfundener Zähler wäre schlimmer als keine Anfrage
-     * @param fassung2 der Absender, wenn der Server `huelle: 2` gesagt
-     *   hat (seit KA-06c); `null` heißt Fassung 1 wie bisher
+     * @param fassung2 der Absender (seit KA-06c); Pflicht seit 0.27.0 —
+     *   ohne ihn sendet der [Sender] nichts
      * @param letztesStueck trägt dieses Stück alle noch offenen Punkte? Nur
      *   dann bekommt es bei einem abgeschlossenen Paket den Merker SCHLUSS
      */
@@ -57,7 +64,7 @@ object Sendekoerper {
         punkte: List<Rohpunkt>,
         phasen: List<Phaseneintrag> = emptyList(),
         kontoschluessel: ByteArray,
-        fassung2: Fassung2? = null,
+        fassung2: Fassung2,
         letztesStueck: Boolean = true,
     ): JSONObject = JSONObject().apply {
         put("kind", paket.art)
@@ -86,23 +93,19 @@ object Sendekoerper {
              * Phasenliste: Der Server ersetzt beide nach derselben Regel
              * (Vertrag 3.1), und eine Hülle, die zu einer anderen Liste
              * gehört, zeigte im Browser die falschen Orte. */
+            /* DAS `z` DES PAKETS, NICHT DER ANFRAGE (E-KA-69): Die Hülle wird
+             * bei jeder Anfrage neu verschlossen, der Zähler bleibt, solange
+             * der Inhalt bleibt. SCHLUSS trägt sie, sobald das Paket
+             * abgeschlossen ist. */
+            val z = checkNotNull(paket.zaehler) {
+                "Einsatz ${paket.clientRef} ohne Zähler — Puffer.einsatzstand() vergibt ihn"
+            }
             put(
                 "ort_huelle",
-                if (fassung2 == null) {
-                    Geraetehuelle.einsatz(paket.clientRef, paket.begonnenAt, phasen, kontoschluessel)
-                } else {
-                    /* DAS `z` DES PAKETS, NICHT DER ANFRAGE (E-KA-69): Die
-                     * Hülle wird bei jeder Anfrage neu verschlossen, der
-                     * Zähler bleibt, solange der Inhalt bleibt. SCHLUSS
-                     * trägt sie, sobald das Paket abgeschlossen ist. */
-                    val z = checkNotNull(paket.zaehler) {
-                        "Einsatz ${paket.clientRef} ohne Zähler — Puffer.einsatzstand() vergibt ihn"
-                    }
-                    Geraetehuelle.einsatz2(
-                        paket.clientRef, paket.begonnenAt, phasen, kontoschluessel,
-                        fassung2.absender, z, schluss = paket.final,
-                    )
-                },
+                Geraetehuelle.einsatz2(
+                    paket.clientRef, paket.begonnenAt, phasen, kontoschluessel,
+                    fassung2.absender, z, schluss = paket.final,
+                ),
             )
             /* `resus_sessions` wird NICHT gesendet — und zwar gar nicht, statt
              * als leere Liste. Die Reanimation bleibt bei der Garmin, das
@@ -119,21 +122,17 @@ object Sendekoerper {
          * (`next_seq`), und an der Warteschlange ändert sich nichts. */
         val art = if (paket.art == Paketzeile.ART_EINSATZ) "spur" else "ruhe"
         if (punkte.isNotEmpty()) {
+            /* SCHLUSS NUR AM LETZTEN STÜCK eines abgeschlossenen Pakets: Ein
+             * Paket kann final sein, während noch ein zweites Stück mit
+             * Punkten folgt (2000 je Stück). */
             put(
                 "track",
-                if (fassung2 == null) {
-                    Geraetehuelle.spurstueck(art, paket.clientRef, seqVon, punkte, kontoschluessel)
-                } else {
-                    /* SCHLUSS NUR AM LETZTEN STÜCK eines abgeschlossenen
-                     * Pakets: Ein Paket kann final sein, während noch ein
-                     * zweites Stück mit Punkten folgt (2000 je Stück). */
-                    Geraetehuelle.spurstueck2(
-                        art, paket.clientRef, seqVon, punkte, kontoschluessel, fassung2.absender,
-                        schluss = paket.final && letztesStueck,
-                    )
-                },
+                Geraetehuelle.spurstueck2(
+                    art, paket.clientRef, seqVon, punkte, kontoschluessel, fassung2.absender,
+                    schluss = paket.final && letztesStueck,
+                ),
             )
-        } else if (fassung2 != null && paket.final) {
+        } else if (paket.final) {
             /* DAS LEERE SCHLUSSSTÜCK (Vertrag 3.4): Ist beim Abschluss kein
              * Punkt mehr offen, sagt ein Stück ohne Punkte, dass die Spur
              * hier zu Ende ist. Ohne es liest der Browser eine Spur, deren

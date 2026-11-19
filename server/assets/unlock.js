@@ -290,8 +290,7 @@ const EdUnlock = (() => {
      *               (Altbestand) oder die eines vorherigen Anteils
      *               (Rotation). Dann bleibt die Hälfte, und nur der
      *               Datenschlüssel wechselt.
-     *   FORMAT      Die Weiche steht an (`EdInhalt.schreibt2()`, inhalt2.js),
-     *               und die Hülle ist noch Fassung 1. Dann bleibt der
+     *   FORMAT      Die Hülle ist noch Fassung 1. Dann bleibt der
      *               Datenschlüssel, und nur die Hülle wird gebunden neu
      *               gebaut (`edka2:`) — `huelleBauen()` tut das von selbst.
      *
@@ -308,8 +307,7 @@ const EdUnlock = (() => {
      * hin. Das deckt drei Lagen mit derselben Zeile ab: `fehlt` (es gibt
      * keinen), `abweichend` (es wird keiner herausgegeben) und `demo` (das
      * Demo-Konto bleibt auf `edk1:`). */
-    const formatHeben = typeof EdInhalt !== 'undefined' && EdInhalt.schreibt2()
-                        && !EdCrypto.huelleGebunden(wrap);
+    const formatHeben = typeof EdInhalt !== 'undefined' && !EdCrypto.huelleGebunden(wrap);
     const huelleUmstellen = !!(wrap && kennung
                                && (EdCrypto.huelleKennung(wrap) !== kennung || formatHeben));
     const neuIter = rundenAnheben ? ziel : kdfIter;
@@ -467,8 +465,8 @@ const EdUnlock = (() => {
    *
    * DER ALTBESTAND ZIEHT STILL IN DAS GEBUNDENE FORMAT UM — Patientenblöcke
    * (`edk1:` → `edk2:` mit Zähler und Blatt) und die privaten Teile von
-   * Kontopaar und Rückweg. NUR MIT UMGELEGTER WEICHE (`EdInhalt.schreibt2()`);
-   * steht sie aus, geschieht nichts, und es geht keine Anfrage hinaus.
+   * Kontopaar und Rückweg. Seit Web 26.0.0 der einzige Leser des alten
+   * Formats (E-KA-97); KA-07 baut ihn zurück.
    *
    * NICHTS WIRD GESCHRIEBEN, WAS NICHT WIEDER AUFGEHT. Je Block: den alten
    * öffnen, den neuen bauen, den neuen öffnen und mit dem Klartext
@@ -484,7 +482,7 @@ const EdUnlock = (() => {
   let formatLief = false;
 
   async function formatAnheben(ck) {
-    if (formatLief || !ck || typeof EdInhalt === 'undefined' || !EdInhalt.schreibt2()) { return; }
+    if (formatLief || !ck || typeof EdInhalt === 'undefined') { return; }
     formatLief = true;
     try {
       const holen = async () => {
@@ -540,6 +538,102 @@ const EdUnlock = (() => {
         for (let nr = 0; nr < j.rest_je_blatt.length; nr++) {
           if (j.rest_je_blatt[nr] === 0 && !(await buch.blattZuNr(nr))) { await buch.schliessen(nr); }
         }
+      }
+    } catch (e) {
+      /* still: siehe Kopf */
+    } finally {
+      /* Die Gerätedaten danach, auch wenn hier nichts zu heben war. */
+      await geraeteUebernehmen(ck);
+    }
+  }
+
+  /* ---- Die Übernahme der Gerätedaten (06e, KA-18, E-KA-81, -95, -97) -----
+   *
+   * WAS GERÄTE VOR WEB 25.0.0 OHNE HERKUNFTSNACHWEIS VERSCHLOSSEN HABEN
+   * (Gerätehülle Fassung 1), hebt das Konto: Es öffnet die Hülle und
+   * verschließt sie als Fassung 2 mit dem Kennzeichen „übernommen am …".
+   * Dieser Lauf ist der LETZTE Leser der Fassung 1 — jede Ansicht verlangt
+   * Fassung 2. Er läuft nur auf Seiten, die die Ortsdaten laden.
+   *
+   * NICHTS WIRD GESCHRIEBEN, WAS NICHT WIEDER AUFGEHT. Je Datensatz: heben,
+   * mit dem Leser der Ansicht (`verlangt2`) wieder öffnen — erst dann
+   * senden. Lücken einer Spur bekommen ihren engen Vermerk im Standbuch,
+   * BEVOR die Stücke getauscht werden. Der Server tauscht nur, wo noch genau
+   * die gelesene Hülle liegt, und eine Spur ganz oder gar nicht. Eine
+   * Einsatzhülle der Fassung 1 an einem Einsatz, dessen Stand das Standbuch
+   * schon kennt, ist zurückgelegt — sie bleibt liegen.
+   *
+   * Still wie der Anhebelauf; was nicht aufgeht, bleibt liegen und zeigt die
+   * Ansicht als Befund.
+   */
+  let geraeteLief = false;
+
+  async function geraeteUebernehmen(ck) {
+    if (geraeteLief || !ck || typeof EdOrtsdaten === 'undefined' || typeof EdHuelle2 === 'undefined'
+        || typeof EdStandbuch === 'undefined') { return; }
+    geraeteLief = true;
+    try {
+      const holen = async () => {
+        const r = await fetch('api/format_anheben.php?geraete=1', { credentials: 'same-origin', signal: EdApi.signal() });
+        return r.ok ? r.json() : null;
+      };
+      let j = await holen();
+      if (!j || (!j.einsaetze.length && !j.spuren.length)) { return; }
+      const k = await EdOrtsdaten.schluessel(ck);
+      const buch = await EdStandbuch.seitenbuch(ck);
+      const geraete = await buch.geraete();
+      const alt = await EdHuelle2.leser(k, geraete, false);
+      const neu = await EdHuelle2.leser(k, geraete, true);
+      const zuB64 = EdCrypto.teile.toB64;
+      const jetzt = Math.floor(Date.now() / 1000);
+      const liegt = new Set();
+      for (let runde = 0; runde < 50 && j; runde++) {
+        let geschafft = 0;
+        const posten = [];
+        for (const m of j.einsaetze) {
+          if (liegt.has('e' + m.id)) { continue; }
+          try {
+            const e = await buch.eintrag(m.client_ref);
+            if (e.o || !Number.isSafeInteger(m.started_ts)) { throw new Error('liegt'); }
+            const o = { z: 1, jetzt: jetzt, schluss: !!m.final || !!e.f, versatz: e.d || 0 };
+            const h = await EdHuelle2.einsatzUebernehmen(alt, k, m.client_ref, m.huelle, m.started_ts, o);
+            await EdHuelle2.einsatzLesen(neu, m.client_ref, h, m.started_ts, { versatz: o.versatz });
+            posten.push({ id: m.id, huelle: zuB64(h), alt: m.pruef });
+          } catch (e) { liegt.add('e' + m.id); }
+        }
+        if (posten.length) {
+          const a = await EdApi.postJson('api/format_anheben.php', { einsaetze: posten });
+          if (a.ok) { geschafft += a.daten.angehoben; }
+        }
+        for (const sp of j.spuren) {
+          if (liegt.has(sp.art + sp.id)) { continue; }
+          try {
+            const e = await buch.eintrag(sp.ref);
+            const d = e.d || 0;
+            const zweck = sp.art === 'rest' ? 'ruhe' : 'spur';   // die Bindung der Hülle, nicht die Tabelle
+            const stuecke = sp.stuecke.map((x) => Object.assign({}, x));
+            const erg = await EdHuelle2.spurUebernehmen(alt, k, zweck, sp.ref, stuecke,
+              { jetzt: jetzt, versatz: d, sperren: e.x || [], abgeschlossen: !!sp.final });
+            await EdHuelle2.spurLesen(neu, zweck, sp.ref, erg.stuecke,
+              { versatz: d, sperren: (e.x || []).concat(erg.vermerke), abgeschlossen: !!sp.final });
+            if (erg.vermerke.length) {
+              const f = await EdOrtsdaten.sperrenVermerkenViele(
+                [{ ref: sp.ref, sperren: erg.vermerke.map((v) => [v[0] + d, v[1] + d]) }], { ck: ck });
+              if (f && f.size) { throw new Error('vermerk'); }
+            }
+            const tausch = [];
+            stuecke.forEach((x, i) => {
+              if (erg.stuecke[i].huelle !== x.huelle) {
+                tausch.push({ seq_from: x.seq_from, huelle: zuB64(erg.stuecke[i].huelle), alt: x.pruef });
+              }
+            });
+            const a = await EdApi.postJson('api/format_anheben.php',
+              { spur: { art: sp.art, id: sp.id, stuecke: tausch } });
+            if (a.ok && a.daten.angehoben) { geschafft++; } else { liegt.add(sp.art + sp.id); }
+          } catch (e) { liegt.add(sp.art + sp.id); }
+        }
+        if (!geschafft) { break; }
+        j = await holen();
       }
     } catch (e) {
       /* still: siehe Kopf */

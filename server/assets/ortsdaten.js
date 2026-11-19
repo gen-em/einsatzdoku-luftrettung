@@ -130,6 +130,15 @@
     catch (e) { return false; }
   }
 
+  /* NUR FASSUNG 2 FÜR DAS EIGENE KONTO (06e, E-KA-97, -98). Wer ein Standbuch
+     hat (`k.ck`), liest Gerätedaten der Fassung 1 nicht mehr — der
+     Anhebelauf hat sie als Konto übernommen (`unlock.js`,
+     `geraeteUebernehmen()`); was noch dasteht, ist zurückgelegt oder kam ohne
+     Nachweis, und die Ansicht sagt `ohne-herkunft`. Ein FREMDES Paar im
+     Freigabeweg hat kein Buch und liest weiter beide: Ein Konto, das sich nie
+     wieder anmeldet, hebt niemand. */
+  const verlangt2 = (k) => !!(k && k.ck);
+
   /** Was das Standbuch zu einem Datensatz weiß — leer ohne Inhaltsschlüssel
    *  (ein fremdes Paar im Freigabeweg hat kein Buch dieses Kontos). */
   async function standbuchFuer(k, ref) {
@@ -158,20 +167,24 @@
   }
 
   /** Eine Spur mit mindestens einer Hülle der Fassung 2 — über `EdHuelle2`,
-   *  mit den Regeln für Folge, Zeit und Herkunft. Die Sperren des Klartexts
-   *  gelten zusätzlich: Sie blenden aus, sie belegen nichts. */
+   *  mit den Regeln für Folge, Zeit und Herkunft. Ausgeblendet wird NUR mit
+   *  den Sperren des Klartexts (`sperren` des Aufrufers, leer = alle Punkte,
+   *  etwa für die Sicherung); die Vermerke des Standbuchs erklären Lücken
+   *  und blenden nichts aus (06e, F-KA-130). */
   async function spur2(stuecke, art, ref, sperren, k) {
     const sb = await standbuchFuer(k, ref);
-    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, false);
+    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, verlangt2(k));
     const r = await EdHuelle2.spurLesen(ls, art, ref,
       (stuecke || []).map((st) => Object.assign({}, st, { huelle: b64(st.huelle) })),
       { versatz: sb.e.d || 0, sperren: sb.e.x || [], stand: sb.e.s || null })
       .catch((e) => { e.art = art; throw e; });
-    return r.punkte.filter((p) => !gesperrt(p.ts, sperren));
+    const punkte = r.punkte.filter((p) => !gesperrt(p.ts, sperren));
+    punkte.uebernommen = r.befund.uebernommen || null;   // 06e: für die Ansicht (E-KA-81)
+    return punkte;
   }
 
   async function spur(stuecke, art, ref, sperren, k) {
-    if ((stuecke || []).some((st) => istFassung2(st.huelle))) {
+    if (verlangt2(k) || (stuecke || []).some((st) => istFassung2(st.huelle))) {
       return spur2(stuecke, art, ref, sperren, k);
     }
     const nach = new Map();
@@ -261,7 +274,7 @@
      wirft — derselbe Fehler, dazu nur `art`. */
   async function einsatz2(m, k, bestaetigt) {
     const sb = await standbuchFuer(k, m.client_ref);
-    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, false);
+    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, verlangt2(k));
     const r = await EdHuelle2.einsatzLesen(ls, m.client_ref, b64(m.ort_huelle), beginnVon(m),
                                            { versatz: sb.e.d || 0, stand: standAus(sb.e), bestaetigt: bestaetigt })
       .catch((e) => { e.art = 'einsatz'; throw e; });
@@ -281,7 +294,7 @@
    */
   async function einsatzOeffnen(m, k) {
     if (!m.ort_huelle) { return null; }
-    if (istFassung2(m.ort_huelle)) {
+    if (verlangt2(k) || istFassung2(m.ort_huelle)) {
       const { sb, r } = await einsatz2(m, k, null);
       /* DER STAND GEHT BEIM LESEN MIT (wie `patLesen()`): Ein späteres
          Zurücklegen auf eine ältere Hülle fällt dann auf. Geschrieben wird,
@@ -385,6 +398,9 @@
     const innen = auf ? auf.inhalt : null;
     m.ort_absender = auf ? auf.absender : null;
     m.ort_befund = auf ? auf.befund : [];
+    /* VOM BROWSER ÜBERNOMMEN (06e, E-KA-81, M-KA-03 D): die Einsatzhülle
+       oder ein Stück der Spur trägt das Kennzeichen. */
+    m.ort_uebernommen = (innen && innen.herkunft && innen.herkunft.uebernommen) || punkte.uebernommen || null;
     const phasen = (innen && innen.phasen) || [];
     const frei = phasen.slice();
     (m.phases || []).forEach((p, i) => {
@@ -604,7 +620,6 @@
     await paarBereit();
     const pub = (typeof EdKontopaar !== 'undefined') ? EdKontopaar.oeffentlich() : null;
     if (!pub) { throw fehler('kein_paar', 'Für dieses Konto ist noch kein Schlüsselpaar eingerichtet.'); }
-    if (!EdInhalt.schreibt2()) { return { pub: pub, priv: null }; }
     /* Ohne `o.ck` der Inhaltsschlüssel der Seite — jeder Schreibweg steht auf
        einer Seite mit dem Rüstzeug (`PAT_WRAP`). */
     const ck = (o && o.ck) || ((typeof EdUnlock !== 'undefined' && typeof PAT_WRAP !== 'undefined')
@@ -625,12 +640,33 @@
    * den Schnitt stehen; die Lücke fällt dann beim Lesen auf.
    */
   async function sperreVermerken(ref, von, bis) {
-    if (!EdInhalt.schreibt2() || typeof PAT_WRAP === 'undefined') { return null; }
+    if (typeof PAT_WRAP === 'undefined') { return null; }
     try {
       const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
       if (!ck) { return null; }
       const buch = await EdStandbuch.seitenbuch(ck);
       return await buch.fortschreiben(ref, sperrenDazu([[von, bis]]));
+    } catch (e) { return null; }
+  }
+
+  /**
+   * EINEN GESPERRTEN ZEITRAUM WIEDER AUS DEM STANDBUCH — für „Schnitt
+   * zurücknehmen" (06e, F-KA-128). Der Schnitt hatte ihn vermerkt
+   * (`sperreVermerken()`); bleibt der Vermerk stehen, zeigt eine Spur der
+   * Fassung 2 die zurückgekehrten Punkte nicht. Ausgetragen wird nur genau
+   * dieser Zeitraum. Still wie das Vermerken.
+   */
+  async function sperreAufheben(ref, von, bis) {
+    if (typeof PAT_WRAP === 'undefined') { return null; }
+    try {
+      const ck = await EdUnlock.ensureContentKey(PAT_WRAP, KDF_SALT, KDF_ITER);
+      if (!ck) { return null; }
+      const buch = await EdStandbuch.seitenbuch(ck);
+      return await buch.fortschreiben(ref, (e) => {
+        const d = e.d || 0;
+        const x = (e.x || []).filter((y) => !(y[0] === von - d && y[1] === bis - d));
+        if (x.length) { e.x = x; } else { delete e.x; }
+      });
     } catch (e) { return null; }
   }
 
@@ -662,7 +698,6 @@
    *          mit der Weiche aus (dann braucht es keine)
    */
   async function sperrenVermerkenViele(liste, o) {
-    if (!EdInhalt.schreibt2()) { return null; }
     const posten = (liste || []).filter((x) => x && x.ref && x.sperren && x.sperren.length);
     const aus = new Map();
     if (!posten.length) { return aus; }
@@ -673,9 +708,20 @@
     return aus;
   }
 
+  /* DER VERSATZ BEIM SCHREIBEN (F-KA-129, V-KA-05). Ist ein Datensatz
+     umdatiert worden, steht `d` im Standbuch, und der Leser verlangt
+     Klartextzeit − Hüllenzeit = d. Was das Konto danach verschließt, trägt
+     deshalb die Zeit der Hülle (Klartext − d) — sonst scheiterte seine eigene
+     Hülle an `zeit`. Ohne Standbuch (Weiche aus, fremdes Paar) 0. */
+  async function versatzFuer(k, ref) {
+    if (!k || !k.ck || !ref) { return 0; }
+    try { return (await standbuchFuer(k, ref)).e.d || 0; } catch (e) { return 0; }
+  }
+
   async function stueckeBauen(punkte, art, ref, o) {
     o = o || {};
     const k = await schreibpaar(o);
+    const d = await versatzFuer(k, ref);
     const liste = punkte.map((p, i) => Object.assign({}, p, { seq: o.neu ? i : p.seq }));
     const gruppen = [];
     for (const p of liste) {
@@ -698,7 +744,7 @@
       /* Fassung 2: absolute Zeit im Kopf; SCHLUSS trägt, wer es verlangt
          (`o.schluss`, das letzte Stück einer abgeschlossenen Aufzeichnung). */
       const h = await EdHuelle2.stueckSchreiben(k, art, ref, platz,
-        { tsVon: tsVon, schluss: !!(o.schluss && g === gruppen[gruppen.length - 1]) }, innen);
+        { tsVon: tsVon - d, schluss: !!(o.schluss && g === gruppen[gruppen.length - 1]) }, innen);
       aus.push({ seq_from: g[0].seq, punkte: g.length, ts_von: tsVon,
                  ts_bis: Math.max.apply(null, g.map((p) => p.ts)), huelle: zuB64(h) });
     }
@@ -734,8 +780,9 @@
     const innen = new Uint8Array(await new Response(strom).arrayBuffer());
     const st = { seq_from: o.seqFrom, punkte: n, n_original: o.nOriginal, stufe: o.stufe, ts_von: tsVon,
                  ts_bis: Math.max.apply(null, punkte.map((p) => p.ts)) };
+    const d = await versatzFuer(k, ref);
     st.huelle = zuB64(await EdHuelle2.stueckSchreiben(k, art, ref, platzGepackt(st),
-                                                      { tsVon: tsVon, schluss: !!o.schluss }, innen));
+                                                      { tsVon: tsVon - d, schluss: !!o.schluss }, innen));
     return st;
   }
 
@@ -748,7 +795,7 @@
     o = o || {};
     const k = await schreibpaar(o);
     let kopf = null;
-    if (EdInhalt.schreibt2()) {
+    {
       if (!Number.isSafeInteger(o.start)) {
         throw fehler('beginn', 'Zum Verschließen fehlt der Beginn des Einsatzes.');
       }
@@ -757,7 +804,7 @@
          abgeschlossen (`f`), bleibt er es, auch wenn das Formular nichts
          davon weiß — sonst meldete der Browser seine eigene Hülle als
          `offen-nach-schluss`. */
-      kopf = { z: (sb.e.o || 0) + 1, start: o.start, schluss: !!o.schluss || !!sb.e.f };
+      kopf = { z: (sb.e.o || 0) + 1, start: o.start - (sb.e.d || 0), schluss: !!o.schluss || !!sb.e.f };
     }
     return zuB64(await EdHuelle2.einsatzSchreiben(k, ref, kopf, innen));
   }
@@ -786,6 +833,6 @@
                          einsatzZeiten: einsatzZeiten, einsatzInnen: einsatzInnen,
                          einsatzVerschliessen: einsatzVerschliessen, ortshoehe: ortshoehe,
                          stueckeBauen: stueckeBauen, gepacktBauen: gepacktBauen,
-                         schluesselAus: schluesselAus, sperreVermerken: sperreVermerken,
+                         schluesselAus: schluesselAus, sperreVermerken: sperreVermerken, sperreAufheben: sperreAufheben,
                          sperrenVermerkenViele: sperrenVermerkenViele };
 })();

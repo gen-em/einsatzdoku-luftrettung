@@ -174,6 +174,18 @@ try {
   const devId = 'dev-gpxprobe', devKey = randomBytes(24).toString('hex');
   php(`db()->prepare("INSERT INTO devices (user_id, device_id, api_key_hash, label, active, geraet_art, geraet_modell)
        VALUES (?,?,?,?,1,'uhr','fēnix 6 Pro')")->execute([${id}, '${devId}', geraet_schluessel_hash('${devKey}'), 'GPX-Probe']);`);
+  /* SEIT WEB 26.0.0 NUR FASSUNG 2 (Stichtag, 06e): festes Probegerät aus
+     `huelle/geraet.php`, am Server bestätigt, im Gerätebuch eingetragen —
+     ohne Nebenwirkung über `EdKeyGuard` (`ensureContentKey()` stieße
+     Kontopaar und Rückweg ein zweites Mal an). */
+  const spkB64 = execFileSync('php', ['-r', 'require "server/db.php"; require_once "tools/proben/huelle/geraet.php"; '
+    + `gh_probe_herkunft(db(), ${id}, '${devId}'); echo base64_encode(gh_probe_geraet()["sec1"]);`],
+    { cwd: WURZEL, encoding: 'utf8' }).trim();
+  await s.evaluate(async ([spk, d]) => {
+    const ck = await EdKeyGuard.contentKey(PAT_WRAP);
+    const buch = await EdStandbuch.seitenbuch(ck);
+    await buch.geraetEintragen({ spk: Uint8Array.from(atob(spk), (c) => c.charCodeAt(0)), geraet: d, seit: 0 });
+  }, [spkB64, devId]);
   const pakete = JSON.parse(execFileSync('php', [join(WURZEL, 'tools/proben/huelle/geraet_cli.php')],
     { input: JSON.stringify({ sec1, pakete: [einsatz, ruhe] }), encoding: 'utf8' }));
   const antw = [];

@@ -47,10 +47,18 @@ class KopplungTest {
         fw = "16", sdk = 36, app = "0.2.0",
     )
 
+    /*
+     * MIT GERÄTESCHLÜSSEL (seit Android 0.27.0, KA-21): Ohne ihn bricht
+     * `starten()` ab, bevor eine Anfrage hinausgeht — Web 26.0.0 nimmt
+     * `start` ohne Block `schluessel` nicht mehr an. Diese Fälle prüfen
+     * den Ablauf ohne Vergleichswert (der Prüfserver schickt kein `n_b`);
+     * das Paar wird gebraucht, nicht benutzt.
+     */
     private fun dienst() = Kopplungsdienst(
         HttpNetzweg(), tresor, server.basis,
         rueckstand = { rueckstand },
         raeumen = { geraeumt += 1 },
+        geraeteschluessel = org.genem.nadoku.handy.tresor.SpeicherGeraeteschluessel(),
     )
 
     @Before fun aufbauen() {
@@ -377,22 +385,37 @@ class KopplungTest {
         return Rueckstandsbindung(kontext)
     }
 
-    private fun dienstMit(b: Rueckstandsbindung, bis: Int = 0) = Kopplungsdienst(
+    private fun dienstMit(
+        b: Rueckstandsbindung,
+        bis: Int = 0,
+        gs: org.genem.nadoku.handy.tresor.Geraeteschluessel? = null,
+    ) = Kopplungsdienst(
         HttpNetzweg(), tresor, server.basis,
         rueckstand = { rueckstand },
         raeumen = { geraeumt += 1 },
         bindung = b,
         hoechstePaketId = { 17L },
         rueckstandBis = { bis },
+        geraeteschluessel = gs,
     )
 
-    /** Ohne Abmeldung bleibt die Sperre, wie sie war. */
+    /**
+     * Ohne Abmeldung bleibt die Sperre, wie sie war — solange die Herkunft
+     * nicht fehlt. Seit Android 0.27.0 (KA-21) fehlt sie auch ohne
+     * `huelle: 2`; der Fall braucht deshalb `huelle: 2` und ein gültiges Paar
+     * (bis dahin: eine Kopplung ohne beides).
+     */
     @Test fun rueckstandOhneAbmeldungSperrtWeiter() {
-        tresor.speichern(Zugangsdaten("dev-1", "k1", "SCHLUESSEL-A"))
+        tresor.speichern(Zugangsdaten("dev-1", "k1", "SCHLUESSEL-A", huelle2 = true))
+        val gs = org.genem.nadoku.handy.tresor.SpeicherGeraeteschluessel().also {
+            it.beginnen()
+            it.festlegen(org.genem.nadoku.handy.senden.Kurvenhilfe.punkt(java.math.BigInteger.valueOf(424242)), ByteArray(16))
+            assertTrue(it.uebernehmen())
+        }
         rueckstand = 2
         val b = bindung()
 
-        assertTrue(dienstMit(b).trennen() is Trennergebnis.Rueckstand)
+        assertTrue(dienstMit(b, gs = gs).trennen() is Trennergebnis.Rueckstand)
         assertNull("Keine Bindung ohne Abmeldung", b.gebundenBis)
         assertTrue(server.anfragen.isEmpty())
     }
@@ -449,6 +472,7 @@ class KopplungTest {
         val d = Kopplungsdienst(
             HttpNetzweg(), tresor, server.basis, bindung = b,
             hoechstePaketId = { 17L }, bestand = { 2 },
+            geraeteschluessel = org.genem.nadoku.handy.tresor.SpeicherGeraeteschluessel(),
         )
         sitzungsantwort()
         d.starten(geraet)
@@ -465,6 +489,7 @@ class KopplungTest {
         val d = Kopplungsdienst(
             HttpNetzweg(), tresor, server.basis, bindung = b,
             hoechstePaketId = { 17L }, bestand = { 0 },
+            geraeteschluessel = org.genem.nadoku.handy.tresor.SpeicherGeraeteschluessel(),
         )
         sitzungsantwort()
         d.starten(geraet)

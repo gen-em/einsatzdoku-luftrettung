@@ -199,6 +199,7 @@ $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash, label, act
                VALUES (?,?,?,?,1,?,?)')
     ->execute([$uid, $dev, geraet_schluessel_hash($key), 'Verbindungsprobe',
                'uhr', 'Forerunner 955']);
+gh_probe_herkunft($pdo, $uid, $dev);   // Fassung 2 vom Probegerät (Stichtag, 06e)
 /* Die Mengenbremse darf Teil 2 nicht dazwischenfunken: Sie laesst je
  * Kennung 30 Anfragen in 15 Minuten zu, und Teil 2 stellt mehr. */
 $pdo->exec("DELETE FROM rate_limits WHERE topf IN ('ingest','ingest_ip')");

@@ -1,11 +1,9 @@
 /* Wege aus Konzept KA, Paket KA-06b-3 — die Verbraucher des neuen Kerns.
  * ===========================================================================
  *
- * Die Weiche (`SCHREIBT_FASSUNG_2` in assets/inhalt2.js) steht in der
- * Anwendung aus. Diese Wege legen sie NUR IM BROWSER DER PROBE um: Playwright
- * fängt die Antwort für `inhalt2.js` ab und ersetzt `= false` durch `= true`
- * (`page.route`). Damit läuft die echte Seite, der echte Endpunkt und die
- * echte Datenbank — nur der Schalter ist ein anderer.
+ * Bis Web 24.x stand die Weiche (`SCHREIBT_FASSUNG_2`) in der Anwendung aus,
+ * und diese Wege legten sie nur im Browser der Probe um; seit Web 26.0.0 gibt
+ * es sie nicht mehr (06e).
  *
  *   - `ka06b3-patient-weiche-an`: einen Einsatz mit geschützten Angaben im
  *     Formular speichern. Danach trägt er `edk2:`, ein Blatt des Standbuchs
@@ -14,28 +12,14 @@
  *     ändert nichts.
  *   Bis Web 24.x gab es dazu `ka06b3-patient-weiche-aus` (die ausgelieferte
  *   Weiche schrieb `edk1:`). Seit Web 25.0.0 steht die Weiche an (KA-14),
- *   und zurück geht es nicht; der Weg ist entfallen, die Umleitung unten
- *   ist seitdem ohne Wirkung und bleibt nur, damit der Weg auch auf einem
- *   älteren Stand misst, was er sagt.
+ *   und zurück geht es nicht; der Weg ist entfallen.
  *
  * Anlass: Nr. 563.
  */
-const WEICHE = /const SCHREIBT_FASSUNG_2 = (?:true|false);/;
-
-async function weicheAn(seite) {
-  await seite.route(/assets\/inhalt2\.js/, async (route) => {
-    const antwort = await route.fetch();
-    const text = await antwort.text();
-    if (!WEICHE.test(text)) { throw new Error('Weiche in inhalt2.js nicht gefunden'); }
-    /* OHNE Länge und Kodierung des Originals: `true` ist ein Zeichen kürzer
-       als `false`, und eine Antwort mit falscher Länge verwirft der Browser
-       (net::ERR_FAILED) — dann fehlte `EdInhalt` auf der ganzen Seite. */
-    const kopf = Object.assign({}, antwort.headers(), { 'cache-control': 'no-store' });
-    delete kopf['content-length']; delete kopf['content-encoding'];
-    await route.fulfill({ status: antwort.status(), headers: kopf,
-                          body: text.replace(WEICHE, 'const SCHREIBT_FASSUNG_2 = true;') });
-  });
-}
+/* Die Weiche ist seit Web 26.0.0 zurückgebaut (06e, KA-20); bis dahin legte
+ * diese Funktion sie im Browser der Probe um. Sie bleibt als leerer Schritt,
+ * damit der Weg unverändert lesbar bleibt. */
+async function weicheAn() { /* nichts mehr umzulegen */ }
 
 /* Ein Einsatz des Kontos mit geschützten Angaben: aus dem Suchindex. */
 async function einsatzMitAngaben(k) {

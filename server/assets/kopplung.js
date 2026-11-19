@@ -69,8 +69,7 @@
   /* ---- Abgleich des Gerätebuchs -------------------------------------- */
   (async () => {
     const el = document.getElementById('geraetebuch-abgleich');
-    if (!el || typeof EdInhalt === 'undefined' || !EdInhalt.schreibt2()
-        || typeof PAT_WRAP === 'undefined') { return; }
+    if (!el || typeof EdInhalt === 'undefined' || typeof PAT_WRAP === 'undefined') { return; }
     try {
       const da = new Set(JSON.parse(el.dataset.geraete || '[]'));
       if (kasten && kasten.dataset.geraet) { da.add(kasten.dataset.geraet); }
@@ -135,7 +134,6 @@
   const FEHLER_MAX = 3;
 
   /* ---- 2. bis 4. Der Vergleichswert ---------------------------------- */
-  const herkunft = kasten.dataset.herkunft === '1';
   const karte = kasten.closest('.karte');
   const titel = karte ? karte.querySelector('.karte-titel') : null;
   let wertGezeigt = false;
@@ -231,12 +229,9 @@
           /* ERST DAS BUCH, DANN DER SERVER: Ein Gerät, das der Server
            * anlegt, ohne im Buch zu stehen, sendete Daten, die nicht
            * aufgehen; ein Eintrag ohne Gerät räumt der Abgleich auf. */
-          let imBuch = false;
-          if (EdInhalt.schreibt2()) {
-            const buch = await EdStandbuch.seitenbuch(gemerkt.ck);
-            imBuch = (await buch.geraetEintragen({ spk: gemerkt.spk, geraet: kasten.dataset.geraet,
-                                                    seit: Math.floor(Date.now() / 1000) })) !== null;
-          }
+          const buch = await EdStandbuch.seitenbuch(gemerkt.ck);
+          const imBuch = (await buch.geraetEintragen({ spk: gemerkt.spk, geraet: kasten.dataset.geraet,
+                                                      seit: Math.floor(Date.now() / 1000) })) !== null;
           const a = await melden({ antwort: 'ja', im_buch: imBuch });
           if (!a.ok) {
             fehlerZeigen(a.daten && a.daten.meldung ? a.daten.meldung
@@ -345,9 +340,9 @@
       case 'wartet':
         rest = parseInt(antwort.rest_s, 10) || 0;
         if (anzeige) { anzeige.textContent = restText(rest); }
-        if (herkunft && antwort.wert_ok) {
+        if (antwort.wert_ok) {
           schritt('geraet');
-        } else if (herkunft && antwort.n_g && !wertGezeigt) {
+        } else if (antwort.n_g && !wertGezeigt) {
           await wertZeigen(antwort.n_g);
           if (!laeuft) { return; }
         }

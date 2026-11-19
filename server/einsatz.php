@@ -938,6 +938,14 @@ async function ortsdatenOeffnen(m){
     await EdOrtsdaten.fuerAnsicht(m, ck);
     /* BEFUND AN EINER ANGENOMMENEN HÜLLE (KA-11, M-KA-03 A): Die Karte
      * erscheint, darüber die Meldung. */
+    if (m.ort_uebernommen) {
+      /* M-KA-03 D (06e, E-KA-81): Altbestand ohne Herkunft, vom Browser
+       * geprüft übernommen. Die Karte erscheint normal. */
+      ortsMeldung('info', 'Vom Browser übernommen am '
+        + EdFormat.tag(new Date(m.ort_uebernommen * 1000).toISOString()) + '.',
+        'Diese Ortsdaten kamen von einem Gerät, das ihre Herkunft noch nicht belegen konnte (alte App). '
+        + 'Dieser Browser hat sie geprüft übernommen; dass sie vom Gerät stammen, ist nicht belegt.', null, true);
+    }
     if ((m.ort_befund || []).includes('offen-nach-schluss')) {
       ortsMeldung('warn', 'Nach dem Abschluss kam noch ein offener Stand.',
         'Diesen Einsatz hatte ein Gerät schon als abgeschlossen gesendet; danach kam von '

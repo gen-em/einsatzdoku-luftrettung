@@ -71,7 +71,8 @@ enum class Sendeausgang {
 
     /**
      * Der Server verlangt den Herkunftsnachweis, aber das Gerätepaar fehlt
-     * (KA-15, E-KA-80): Nichts gesendet, nichts verloren; es hilft
+     * (KA-15, E-KA-80) oder die Kopplung trägt kein `huelle: 2` (seit
+     * 0.27.0, KA-21): Nichts gesendet, nichts verloren; es hilft
      * Neukoppeln.
      */
     HERKUNFT_FEHLT,
@@ -287,7 +288,8 @@ private fun Zustandsblock(
         org.genem.nadoku.handy.tresor.Herkunftsstand.GESICHERT ->
             Text(text = stringResource(R.string.sync_herkunft), color = Rolle.gedaempft, fontSize = 13.sp)
         /* HERKUNFT FEHLT (KA-15, E-KA-80, M-KA-03 F): Der Server verlangt den
-         * Nachweis, das Gerätepaar ist nicht da — es geht nichts hinaus.
+         * Nachweis, das Gerätepaar ist nicht da — oder, seit 0.27.0 (KA-21),
+         * die Kopplung stammt von vor `huelle: 2` —, es geht nichts hinaus.
          * Fehlerton, weil sonst niemand merkt, dass der Rückstand wächst;
          * vorhandene Bausteine (Zustandszeile, Hinweiskasten, KnopfPrimaer).
          * Im Dienst kein Knopf: Getrennt wird erst nach dem Dienst (KA-04). */

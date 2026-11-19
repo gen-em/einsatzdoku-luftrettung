@@ -5,20 +5,33 @@ package org.genem.nadoku.handy.tresor
  *
  * DREI LAGEN, und die Ansicht zeigt für jede etwas anderes:
  *
- * | Lage | Server hat `huelle: 2` gesagt | gültiges Gerätepaar | das Handy |
- * |---|---|---|---|
- * | [OHNE] | nein | gleich | sendet Fassung 1 wie bisher, keine Zeile |
- * | [GESICHERT] | ja | ja | sendet Fassung 2, „Herkunft gesichert" |
- * | [FEHLT] | ja | nein | **sendet nichts**, „Herkunft fehlt — neu koppeln" |
+ * | Lage | gekoppelt | Server hat `huelle: 2` gesagt | gültiges Gerätepaar | das Handy |
+ * |---|---|---|---|---|
+ * | [OHNE] | nein | — | — | sendet nichts, es gibt kein Ziel; keine Zeile |
+ * | [GESICHERT] | ja | ja | ja | sendet Fassung 2, „Herkunft gesichert" |
+ * | [FEHLT] | ja | nein | gleich | **sendet nichts**, „Herkunft fehlt — neu koppeln" |
+ * | [FEHLT] | ja | ja | nein | ebenso |
+ *
+ * SEIT ANDROID 0.27.0 GIBT ES KEINE FASSUNG 1 MEHR IM SENDEWEG (KA-21,
+ * E-KA-60). Web 26.0.0 ist der Stichtag: Der Server nimmt eine Gerätehülle
+ * der Fassung 1 nicht mehr an (`400`), und `start` ohne Block `schluessel`
+ * auch nicht. Eine Kopplung, der der Server nie `huelle: 2` gesagt hat,
+ * stammt also von vor Web 25.0.0 oder lief ohne Geräteschlüssel — sie kann
+ * nichts mehr senden, was der Server annimmt. Bis 0.26.0 stand [OHNE] auch
+ * für diese Lage und sendete Fassung 1; jetzt ist sie [FEHLT], derselbe
+ * Weg heraus wie beim verlorenen Paar: neu koppeln.
  */
 enum class Herkunftsstand {
-    /** Der Server verlangt keinen Nachweis: Fassung 1. */
+    /** Nicht gekoppelt: Es gibt nichts zu belegen und kein Ziel (bis 0.26.0 auch: Fassung 1). */
     OHNE,
 
     /** Verlangt und vorhanden: Fassung 2 mit dem Geräteschlüssel als Absender. */
     GESICHERT,
 
-    /** Verlangt, aber das Paar ist nicht da: Es geht nichts hinaus, bis neu gekoppelt ist. */
+    /**
+     * Gekoppelt, aber ohne `huelle: 2` oder ohne Paar: Es geht nichts hinaus,
+     * bis neu gekoppelt ist.
+     */
     FEHLT,
 }
 
@@ -53,12 +66,14 @@ enum class Herkunftsstand {
 object Herkunft {
 
     /**
-     * @param zugang die Kopplung aus dem Tresor; `null` (nicht gekoppelt) ist [Herkunftsstand.OHNE]
+     * @param zugang die Kopplung aus dem Tresor; `null` (nicht gekoppelt) ist
+     *   [Herkunftsstand.OHNE], eine ohne `huelle2` seit 0.27.0 [Herkunftsstand.FEHLT]
      * @param geraeteschluessel die Ablage des Paars; `null` heißt: Dieses
-     *   Handy hat keine — mit `huelle: 2` fehlt die Herkunft dann ebenso
+     *   Handy hat keine — die Herkunft fehlt dann ebenso
      */
     fun stand(zugang: Zugangsdaten?, geraeteschluessel: Geraeteschluessel?): Herkunftsstand = when {
-        zugang == null || !zugang.huelle2 -> Herkunftsstand.OHNE
+        zugang == null -> Herkunftsstand.OHNE
+        !zugang.huelle2 -> Herkunftsstand.FEHLT
         geraeteschluessel?.liefern() != null -> Herkunftsstand.GESICHERT
         else -> Herkunftsstand.FEHLT
     }

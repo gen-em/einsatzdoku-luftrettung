@@ -506,12 +506,22 @@ class EinsatzzaehlerTest {
         assertNotNull(stand.lesen())
     }
 
-    /** Fassung 1 kennt keinen Zähler: Der Sender vergibt für sie keinen, und die Hülle geht hinaus. */
-    @Test fun fassung1VergibtNichtsBeimSenden() {
+    /**
+     * Ohne `huelle: 2` geht seit Android 0.27.0 nichts hinaus (KA-21) — und
+     * weil nichts verschlossen wird, vergibt der Sender auch keinen Zähler.
+     * Ersetzt `fassung1VergibtNichtsBeimSenden`: Bis 0.26.0 ging hier eine
+     * Hülle der Fassung 1 hinaus, die keinen Zähler kennt; die Lage gibt es
+     * nicht mehr, wohl aber die Zusage, dass ohne Hülle kein `z` entsteht.
+     */
+    @Test fun ohneHuelle2VergibtNichtsUndSendetNichts() {
         val server = PruefServer().also { offen += it }
         val datei = File(kontext.filesDir, "pruef_zaehler_sender1.bin").also { it.delete() }
         val tresor = Schluesseltresor(datei, PruefTresorschluessel())
         tresor.speichern(Zugangsdaten("dev-pruef", "geheim-pruef", Base64.getEncoder().encodeToString(Huellenoeffner.konto)))
+        val gs = SpeicherGeraeteschluessel()
+        gs.beginnen()
+        gs.festlegen(Huellenoeffner.konto, ByteArray(16))
+        assertTrue(gs.uebernehmen())
         var kaputt = false
         puffer.close()
         puffer = pufferOeffnen(object : Zaehlerstand {
@@ -522,13 +532,17 @@ class EinsatzzaehlerTest {
         kaputt = true
         phase(id, 2)                                         // ohne Zähler
         assertNull(z(id))
+        kaputt = false
 
-        val sender = Sender(puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor, basis = server.basis)
+        val sender = Sender(
+            puffer = puffer, netzweg = HttpNetzweg(), tresor = tresor, basis = server.basis, geraeteschluessel = gs,
+        )
         server.antwortkoerper = """{"ok":true,"next_seq":0}"""
-        assertTrue(sender.sendeAlles().sauber)
-        assertEquals(1, server.anfragen.size)
-        assertEquals(1, Base64.getDecoder().decode(server.letzterKoerper().getString("ort_huelle"))[0].toInt())
-        assertNull("Fassung 1 hat keinen vergeben", z(id))
+        val bericht = sender.sendeAlles()
+        assertTrue(bericht.herkunftFehlt)
+        assertEquals(0, bericht.anfragen)
+        assertTrue(server.anfragen.isEmpty())
+        assertNull("ohne Hülle kein Zähler", z(id))
     }
 
     private companion object {

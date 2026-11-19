@@ -452,6 +452,9 @@ Daten erst nach Server-Bestätigung.
 │   │                       (P5c/AP2); ohne Skript rollt sie trotzdem
 │   ├── assets/listenkopf.js  Das Auswahlfeld im Listenkopf schickt sofort
 │   │                       ab und verbirgt den Knopf „Filtern“ (P5c/AP2)
+│   ├── assets/umdatieren.js  Nach dem Umdatieren eines Diensttags den
+│   │                       Versatz ins Standbuch, selbst gerechnet (seit
+│   │                       Web 26.0.0, F-KA-129, 4.42)
 │   ├── session_lib.php    Sitzungsende mit Räumung im Browser (Abmelden, Ablauf,
 │   │                       gelöschtes Konto, Passwortwechsel); dazu seit
 │   │                       Web 20.28.0 flash_setzen()/flash_holen() — die
@@ -3761,6 +3764,7 @@ Browser:
 | Rückweg der Fassung 4 (`api/backup_spuren_restore.php`, `edbak_spuren_schreiben()`) | `spur2_stueck_schreiben()` | — |
 | Umdatierung (`tageszuordnung_lib.php`) | `spur_min_ts()`, `spur_zeit_verschieben()` | — |
 | Wartungslauf (`api/wartungslauf.php`) | `spur2_faellig()`, `spur2_wartung_tauschen()` | Stücke |
+| Übernahme der Fassung 1 (`api/format_anheben.php`, seit Web 26.0.0) | `spur2_uebernahme_liste()`, `spur2_uebernahme_zahl()`, `spur2_uebernahme_tauschen()` | Stücke mit Prüfsumme; Tausch nur der Hülle, ganz oder gar nicht |
 
 Dazu die Schreib- und Löschseite: `spur_naechste_seq()` liefert die
 Fortsetzungsmarke der Uhr (`ingest.php`, über `spur2_stand()`),
@@ -10314,12 +10318,53 @@ denen ein Angriff scheitert, stehen in `tools/proben/huelle/referenz.py`
 
 | Datei | Hält |
 |---|---|
-| `inhalt2.js` (`EdInhalt`) | `edk2:` schreiben und lesen — AES-256-GCM mit Zusatzdaten aus Zweck und Bezug, Zähler und Größenklasse innen; die Hüllen `edka2:`; **die Weiche** `SCHREIBT_FASSUNG_2` |
+| `inhalt2.js` (`EdInhalt`) | `edk2:` schreiben und lesen — AES-256-GCM mit Zusatzdaten aus Zweck und Bezug, Zähler und Größenklasse innen; die Hüllen `edka2:` (bis Web 25.x dazu die Weiche `SCHREIBT_FASSUNG_2`, seit 26.0.0 zurückgebaut) |
 | `huelle2.js` (`EdHuelle2`) | Gerätehülle Fassung 2 öffnen (Herkunft über den Geräteschlüssel, Stückfolge, absolute Zeiten) und als Absender „Konto" schreiben; Zusage und Vergleichswert der Kopplung |
 | `standbuch.js` (`EdStandbuch`) | Zählerstand je Datensatz in 16 Blättern und das Gerätebuch, Ablage in IndexedDB `nadoku-stand`, Abschrift auf dem Server über einen austauschbaren Transport; `zurueckschreiben()` nach einem zurückgesetzten Server |
 | `crypto.js` | Ableitung 2 (ein PBKDF2-Block, Hälfte und Token per HKDF) ab 1 200 000 Runden (`ABLEITUNG2_AB`); `huelleOeffnen()` für `edka2:` |
 
-**Die Weiche steht seit Web 25.0.0 an** (KA-14, E-KA-82). Gelesen werden
+**Der Stichtag (seit Web 26.0.0, 06e, KA-16 bis KA-23, E-KA-60, -93 bis
+-101).** Kein Schreibweg nimmt mehr eine Gerätehülle der Fassung 1 oder einen
+Block `edk1:` an (`pruef_huelle()`, `pruef_pat_blob()` → 400); die einzige
+Ausnahme schaltet `huelle_fassung1_zulassen()` für die Dauer eines Aufrufs:
+`edbak_restore()` im Zweig `'server'` (Demo-Reset aus Fixture bis Format 3,
+die Testquelle der Übernahme) und `edbak_paket_einspielen()` (ein Adminpaket
+reicht gespeicherte Chiffretexte unverändert durch). `pair.php start` ohne
+`schluessel` ist `400 {error: schluessel, grund: fehlt}`; Zustand F der
+Kopplung entfällt, ebenso das Warten ohne Vergleichswert (Bild D) und die
+Warnung für ein Gerät ohne Selbstauskunft. Eine Sitzung ohne `spk` (nur von
+vor dem Update) gilt in `einstellungen.php` als unbekannter Code; es gibt
+keine älteren Geräte mehr (BetreiberIn, 17.11.2026). Eine Sicherung von vor Web 26 weist der Browser ab
+(`manifest.web_version`). Die eigene Ansicht verlangt Fassung 2
+(`verlangt2` = das Paar trägt `ck`, E-KA-98); nur der Freigabeweg mit fremdem
+Paar liest weiter beide. Die Weiche ist zurückgebaut.
+
+**Die Übernahme (seit Web 26.0.0, KA-18, E-KA-95, -97).** Der Anhebelauf
+(`unlock.js`, `geraeteUebernehmen()`) ist der letzte Leser der Fassung 1: Er
+holt über `api/format_anheben.php?geraete=1` Einsatzhüllen und Spuren mit
+Kennbyte 1 (`spur2_uebernahme_liste()`), verschließt sie als Konto mit dem
+Merker bzw. Feld `uebernommen` (`EdHuelle2.spurUebernehmen()`,
+`einsatzUebernehmen()`, Referenz `spur_uebernehmen()`, `einsatz_uebernehmen()`),
+öffnet sie mit `verlangt2` wieder, setzt für jede Lücke einen engen
+Löschvermerk `[t_vor + 1, t_nach − 1]` ins Standbuch und tauscht erst dann —
+der Server nur, wo noch genau die gelesene Hülle liegt, eine Spur ganz oder
+gar nicht (`spur2_uebernahme_tauschen()`). Die Einsatzansicht zeigt
+„Vom Browser übernommen am …“ (M-KA-03 D). `k` haftet beim Zusammenführen
+zweier Blätter (E-KA-94, F-KA-119). Das Lesen der Fassung 1 im Lauf, die alte
+Fixture und `geraetehuelle_lib.php` fallen mit KA-07 (E-KA-99).
+
+**Der Versatz beim Umdatieren (seit Web 26.0.0, F-KA-129, V-KA-05).**
+`diensttag_datum.php` nennt die Kennungen des Tages; `assets/umdatieren.js`
+merkt sich beim Absenden Tag, Daten, Zeitzone und Kennungen
+(`sessionStorage`, zehn Minuten), rechnet auf der Startseite mit
+`?umdatiert=1` den Versatz SELBST (Differenz der Ortsmitternächte, wie
+`tz_tag_datum_aendern()`) und trägt `d += Versatz` je Kennung ein. Belegt ist
+er damit vom Browser, nicht vom Server. Was das Konto danach verschließt,
+trägt die Hüllenzeit Klartext − `d` (`versatzFuer()` in `ortsdaten.js`).
+„Schnitt zurücknehmen“ trägt den Vermerk des Schnitts aus
+(`EdOrtsdaten.sperreAufheben()`, F-KA-128).
+
+**Die Weiche stand von Web 25.0.0 bis 25.x an** (KA-14, E-KA-82). Gelesen werden
 beide Fassungen; geschrieben wird nur noch Fassung 2, das Standbuch führt
 Buch, und der Anhebelauf hebt den Altbestand nach der Anmeldung. Bis
 Web 24.x stand sie aus, damit Server, Geräte und Anhebelauf zuerst
@@ -10464,8 +10509,13 @@ Messstand hing der GPX-Export. **Das Einspielen** (`einstellungen.php`,
 Löschvermerke, die eine Lücke decken**, gesammelt ins Standbuch ein
 (`EdOrtsdaten.sperrenVermerkenViele()`), bevor es sendet; eine Lücke ohne
 Vermerk oder ein gescheitertes Eintragen lehnt die Spur ab und meldet es.
-Die Quellen eines Schnitts bekommen mit Absicht keinen Vermerk — er sperrte
-die Punkte, die die Quelle behält. Vorher schrieb das Einspielen eine
+Die Quellen eines Schnitts bekommen mit Absicht keinen Vermerk. **Ein
+Vermerk erklärt eine Lücke, er blendet nichts aus** (seit Web 26.0.0,
+F-KA-130): `EdHuelle2.spurLesen()` liefert jeden vorhandenen Punkt, und
+ausgeblendet wird nur mit den Sperren des Klartexts, die der Aufrufer
+übergibt — wie in Fassung 1. Bis dahin blendete der Leser auch die
+Standbuch-Vermerke aus, und eine Sicherung verlor jeden Punkt, den ein
+Schnitt aus einer Ruhespur genommen hatte. Vorher schrieb das Einspielen eine
 solche Spur und meldete „übernommen“; geöffnet wurde sie danach mit
 `luecke` nicht mehr.
 
@@ -10491,7 +10541,7 @@ Gerätedaten (KA-06e, nach Web 25.0.0, E-KA-79).
 | `Track.mc` | GPS (15 m/10 s/1 s-Ausdünnung), Distanz/Anstieg, Anzeige-Polylinie (Cap 1000, Dichte-Halbierung), **Flash-Chunks à 200 Punkte**; `restore()` lädt Teil-Chunks zurück in den Puffer (verlustfrei) |
 | `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart); drei Zustände: aus / laufend / pausiert. **Seit Uhr 4.5.0** (KG-05): `buchen()` ist der eine Weg für Tasten und Menü — Sperre je Ereignisart (`SPERRE_MS`, nur im Speicher; seit Uhr 4.6.0 5 s, davor 10 s), Countdown-Neustart bei Rhythmuskontrolle und Defibrillation, Vibration; `restartCycle()` vibriert nicht mehr selbst; Erinnerungen bei 0:30 und 0:10 im Tick, nach einem Neustart nicht nachgeholt |
 | `Huelle2.mc` | **Seit Uhr 4.5.2** (KG-03a): Kern der Gerätehülle Fassung 2 nach der Referenz aus KA-06a — Gerätepaar (`Storage 'gpaar'`), Kennung SID, Z_s gegen den Kontoschlüssel (`'gzs'`), Spurstück mit 12-Byte-Kopf und Schlussstück, Einsatzhülle mit Zähler (`'gz'`), Zusage und Vergleichswert der Kopplung; Selbsttest gegen `HuelleVektor2.mc`. `Huelle.mc` gibt dafür `fertigen()`, `punkteInnen()` und `einsatzRumpf()` ab. **Seit Uhr 5.0.0** (KG-03b) in Gebrauch: Die Kopplung erzeugt das Paar und rechnet den Wert (`Pair.mc`), gesendet wird Fassung 2, wenn der Server bei der Kopplung `huelle: 2` gesagt hat (`Uploader.fassung2()`); bis Uhr 5.0.0 war der Zähler `z` die Unix-Sekunde des Verschließens (E-KA-64). **Seit Uhr 5.1.0** (KG-09, E-KA-69, -74) gehört `z` zum Inhalt: `inhaltZaehlen()` vergleicht den SHA-256 der Innenform ohne `z` (`inhaltHash()`) mit dem im Paket abgelegten (`'zh'`) und vergibt bei Abweichung `max(jetzt, gz + 1)` aus dem einen Gerätezähler `'gz'`, abgelegt mit dem Paket (`'z'`); gerufen von `Model.save()` für den laufenden Einsatz, von `_finishMission()` beim Abschluss und zur Sicherheit von `einsatz()` beim Verschließen (Pakete aus 5.0.0 ohne `z`) |
-| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.4. **Seit Uhr 4.0.0** sendet er nur verschlossen (`track` mit `huelle`, `ort_huelle`, Phasen ohne Koordinate, keine `resus_sessions`) und ohne Kontoschlüssel oder bei gescheitertem Selbsttest gar nicht; die Marke `bad_<ref>` trägt den Zeitpunkt, `parkFristPruefen()` räumt nach `PARK_FRIST_S` = 30 Tagen (E-S11-11). **Seit Uhr 4.1.0** (R17-21): die Frist auch für „abgemeldet" (`Storage 'abgem_seit'`, Zeitpunkt der ersten 401/403; `abmeldeFristPruefen()` vor jedem Sendelauf verwirft danach alle wartenden Pakete, E-R17-22); das bestätigte Paket geht über seine Referenz aus der Liste, nicht über einen Listenplatz (F-R17-52); `http://` wird zu `https://` (F-R17-11); Zugangsdaten nur aus `Storage 'cred'` — der Alt-Weg über die App-Einstellungen ist fort (E-R17-21). **Seit Uhr 4.2.0** (Konzept GR): 401 → `abgemeldet`, 403 → `gesperrt` mit Grund aus dem Körper (`abweisungMerken()`, auch aus `Pair.onSchluessel`), beide halten an (`angehalten()`); `syncAllEinmalTrotz()` versucht es einmal trotz der Marke — beim Erscheinen der Sync-Seite und beim Dienstende, nicht im Zwei-Sekunden-Takt; 429/503/507 setzen `_nichtVor` (feste Zeiten `Const.WARTEN_*`, weil Connect IQ keine Kopfzeilen liefert), und vor ihm sendet kein Anlass. **Seit Uhr 4.3.0**: `bindungPruefen()` vor jedem Sendelauf löst eine Bindung an denselben Schlüssel und verwirft nach Ablauf der Frist; `_findJob()` überspringt gebundene Pakete eines anderen Kontos (`istFremd()`), `fremdeZahl()` und `fremdeVerwerfen()` dienen der Sync-Seite. **Seit Uhr 4.4.0** (KG-01, Nr. 570): `_findJob()` prüft auch den laufenden Einsatz und das laufende Ruhestück auf `istFremd()`; `binden()` nimmt sie mit (`laufendeRefs()`), `fremdeVerwerfen()` verwirft sie nie und lässt ihre Bindung stehen; **seit Uhr 4.5.1** (KG-06) gilt eine 401/403 nur mit dem Fehlerfeld des Vertrags als Abmeldung oder Sperre (`vertragsAbweisung()`, auch für `Pair.onSchluessel`), sonst als Störung, und `abmeldeFristPruefen()` lässt nach Ablauf der Frist zuerst einen Versuch hinaus (`Storage 'abgem_versucht'`); `onResponse()` quittiert höchstens `seq_from` plus die gesendeten Punkte und nichts ohne `next_seq` (F-KA-18); ein unquittiertes Stück steht mit Anfang und Größe in `Storage 'stk_<ref>'` und wird identisch wiederholt (F-KA-07). **Seit Uhr 5.0.0** (KG-03b): `fassung2()` — Merker `Storage 'h2'` aus der Kopplung, Gerätepaar und bestandener Selbsttest der Fassung 2, der in `syncAll()` in einem eigenen Schritt läuft; dann `_verschliessen2()`: Merker SCHLUSS am Stück, das alle offenen Punkte einer abgeschlossenen Aufzeichnung trägt, sonst das leere Schlussstück (`<seq>:0`, `ts_von` = Ende aus dem Paket), Einsatzhülle mit Zähler. Ohne Merker Fassung 1. **Seit Uhr 5.1.0** (KG-10, E-KA-80, -86): Mit Merker, aber ohne gültiges Gerätepaar (`:paar`) oder mit gescheitertem Selbsttest der Fassung 2 (`:selbsttest`) sendet er nicht (`herkunftFehlt()`, in `syncAll()` und vor dem Verschließen) — bis 5.0.0 fiel er auf Fassung 1 zurück. Probe: `tools/uhr-pruefstand/sendeweg/` |
+| `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.4. **Seit Uhr 4.0.0** sendet er nur verschlossen (`track` mit `huelle`, `ort_huelle`, Phasen ohne Koordinate, keine `resus_sessions`) und ohne Kontoschlüssel oder bei gescheitertem Selbsttest gar nicht; die Marke `bad_<ref>` trägt den Zeitpunkt, `parkFristPruefen()` räumt nach `PARK_FRIST_S` = 30 Tagen (E-S11-11). **Seit Uhr 4.1.0** (R17-21): die Frist auch für „abgemeldet" (`Storage 'abgem_seit'`, Zeitpunkt der ersten 401/403; `abmeldeFristPruefen()` vor jedem Sendelauf verwirft danach alle wartenden Pakete, E-R17-22); das bestätigte Paket geht über seine Referenz aus der Liste, nicht über einen Listenplatz (F-R17-52); `http://` wird zu `https://` (F-R17-11); Zugangsdaten nur aus `Storage 'cred'` — der Alt-Weg über die App-Einstellungen ist fort (E-R17-21). **Seit Uhr 4.2.0** (Konzept GR): 401 → `abgemeldet`, 403 → `gesperrt` mit Grund aus dem Körper (`abweisungMerken()`, auch aus `Pair.onSchluessel`), beide halten an (`angehalten()`); `syncAllEinmalTrotz()` versucht es einmal trotz der Marke — beim Erscheinen der Sync-Seite und beim Dienstende, nicht im Zwei-Sekunden-Takt; 429/503/507 setzen `_nichtVor` (feste Zeiten `Const.WARTEN_*`, weil Connect IQ keine Kopfzeilen liefert), und vor ihm sendet kein Anlass. **Seit Uhr 4.3.0**: `bindungPruefen()` vor jedem Sendelauf löst eine Bindung an denselben Schlüssel und verwirft nach Ablauf der Frist; `_findJob()` überspringt gebundene Pakete eines anderen Kontos (`istFremd()`), `fremdeZahl()` und `fremdeVerwerfen()` dienen der Sync-Seite. **Seit Uhr 4.4.0** (KG-01, Nr. 570): `_findJob()` prüft auch den laufenden Einsatz und das laufende Ruhestück auf `istFremd()`; `binden()` nimmt sie mit (`laufendeRefs()`), `fremdeVerwerfen()` verwirft sie nie und lässt ihre Bindung stehen; **seit Uhr 4.5.1** (KG-06) gilt eine 401/403 nur mit dem Fehlerfeld des Vertrags als Abmeldung oder Sperre (`vertragsAbweisung()`, auch für `Pair.onSchluessel`), sonst als Störung, und `abmeldeFristPruefen()` lässt nach Ablauf der Frist zuerst einen Versuch hinaus (`Storage 'abgem_versucht'`); `onResponse()` quittiert höchstens `seq_from` plus die gesendeten Punkte und nichts ohne `next_seq` (F-KA-18); ein unquittiertes Stück steht mit Anfang und Größe in `Storage 'stk_<ref>'` und wird identisch wiederholt (F-KA-07). **Seit Uhr 5.0.0** (KG-03b): `fassung2()` — Merker `Storage 'h2'` aus der Kopplung, Gerätepaar und bestandener Selbsttest der Fassung 2, der in `syncAll()` in einem eigenen Schritt läuft; dann `_verschliessen2()`: Merker SCHLUSS am Stück, das alle offenen Punkte einer abgeschlossenen Aufzeichnung trägt, sonst das leere Schlussstück (`<seq>:0`, `ts_von` = Ende aus dem Paket), Einsatzhülle mit Zähler. Ohne Merker Fassung 1. **Seit Uhr 5.1.0** (KG-10, E-KA-80, -86): Mit Merker, aber ohne gültiges Gerätepaar (`:paar`) oder mit gescheitertem Selbsttest der Fassung 2 (`:selbsttest`) sendet er nicht (`herkunftFehlt()`, in `syncAll()` und vor dem Verschließen) — bis 5.0.0 fiel er auf Fassung 1 zurück. **Seit Uhr 6.0.0** (06e, KA-22): auch ohne Merker nicht (`:paar`, Sync-Seite „Neu koppeln“), der Zweig der Fassung 1 ist entfernt; `Pair.mc` beginnt keine Kopplung ohne Gerätepaar und bricht bei `400 schluessel` und bei `beansprucht` ohne N_b ab. Probe: `tools/uhr-pruefstand/sendeweg/` |
 | `Huelle.mc` | **Seit Uhr 4.0.0** (S11-08): die Gerätehülle (Format: Kopf von `tools/proben/huelle/referenz.py`) — Bausteine aus der Krypto-Probe, `spurstueck()` (14 Byte je Punkt), `einsatz()` (JSON, Zeiten seit Beginn), Kontoschlüssel in `Storage 'kschl'`, Selbsttest `bereit()` gegen `HuelleVektor.mc` (erzeugt, Fall „kurz"): misst die Byteordnung des ECDH-Geheimnisses und das ganze Prüfwort, Ergebnis je Fassung und Firmware in `Storage 'kpruef'` (E-S11-30, -78) — **seit Uhr 4.1.0 nur `be` oder `le`**: „kaputt" gilt bis zum nächsten Start und wird dann neu gemessen, `pruefungVergessen()` beim Trennen (F-R17-53) |
 | `Input.mc` | Eingabemodell: `ActionDelegate` übersetzt Tasten, Wischgesten und Langdrücke einmal zentral in Aktionen (s. Abschnitt 5.1); `TastenDelegate` ist die Basis der selbst gezeichneten Menüs und Warteseiten; `beruehrungVerwerfen()` setzt den Schalter `touchEnabled` um (seit Uhr 4.1.0, F-R17-68). **Seit Uhr 4.5.0**: `actUpKurz()`/`actDownKurz()` für den kurzen, selbst verfolgten UP/DOWN-Druck (Vorgabe: blättern), `halteAbbrechen()` vor jedem Seitenwechsel. **Seit Uhr 4.6.0** (KG-08, F-KG-18): Ein langer START öffnet Menüs schon nach 1 s Halten; `startUnten()` sagt der Seite, dass START noch unten ist, sie ruft `startGehalten()` am Menü-Delegate, und `TastenDelegate` verwirft das eine Loslassen samt dem `onSelect`, das der Simulator dabei trotzdem zustellt (`auswahlVerwerfen()`, F-KG-19). Ein neuer Druck auf START im Menü hebt den Merker auf. Von 4.5.0 bis 4.5.2 wartete die Seite stattdessen auf das Loslassen (`langNachLoslassen()`, F-KG-08) |
 | `DeviceProfile.mc` | je Profil eine eigene Fassung in `source-tasten5/` bzw. `source-tasten3/`; liefert `HAS_UP_DOWN` und die Bedienhinweise |
@@ -11297,7 +11347,10 @@ sendet ein Handy mit `huelle: 2` ohne Gerätepaar nichts:
 (`Sendebericht.herkunftFehlt`, später erneut), `schluesselHolen()` merkt
 sich `huelle` unabhängig vom Paar, und `trennen()` lässt bei `FEHLT` trotz
 Rückstand zu und bindet ihn an den Kontoschlüssel. Die Startseite zeigt
-M-KA-03 F. Die Regeln prüft
+M-KA-03 F. **Seit 0.27.0 (06e, KA-21)** ist auch ein gekoppeltes Handy ohne
+`huelle: 2` `FEHLT` (`OHNE` heißt nur noch „nicht gekoppelt“), der
+Sendekörper kennt nur Fassung 2, und `Kopplungsdienst` beginnt ohne
+Geräteschlüssel keine Kopplung. Die Regeln prüft
 `GeraeteschluesselTest` mit einer Ablage im Speicher (Robolectric hat keinen
 Keystore), die Keystore-Umsetzung `GeraeteschluesselGeraetTest` im Emulator
 oder am Gerät. `kopplung/Kopplungswert.kt` rechnet
@@ -13821,7 +13874,9 @@ sondern einer, die Quelle zu wechseln. Nach dem Schreiben: Zahl und Datum in
 E-KA-83). Bis Web 24.x trug der Browser kein Gerät ins Gerätebuch ein
 (die Weiche stand aus), und ohne Eintrag sagt `pair.php` dem Gerät nie
 `huelle: 2` — es sendet Fassung 1 ohne Herkunftsnachweis, bis es neu
-gekoppelt ist. Einen Weg „Wert nachträglich bestätigen" gibt es bewusst
+gekoppelt ist (seit Web 26.0.0 nimmt der Server das nicht mehr an, und
+Android 0.27.0 und Uhr 6.0.0 senden dann gar nicht, sondern sagen „neu
+koppeln“). Einen Weg „Wert nachträglich bestätigen" gibt es bewusst
 nicht. Nach dem Neukoppeln zeigt das Handy „Herkunft gesichert", die
 Uhr ebenso; ein Handy, das `huelle: 2` kennt, aber keinen Schlüssel hat,
 sendet nicht und sagt „Herkunft fehlt — neu koppeln" (E-KA-80).

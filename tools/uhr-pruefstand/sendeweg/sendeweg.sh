@@ -5,7 +5,8 @@
 #
 # Anlass: Nr. 570, Nr. 577, Nr. 580 — bis Uhr 4.3.3 liess die Uhr ein Neukoppeln im Dienst zu,
 # schickte den laufenden Einsatz ohne Pruefung der Bindung, glaubte jeder
-# Quittung und liess ein unquittiertes Stueck wachsen.
+# Quittung und liess ein unquittiertes Stueck wachsen; bis Uhr 5.1.0 sendete
+# sie ohne `huelle: 2` Fassung 1 und koppelte ohne Geraeteschluessel (KA-22).
 #
 # WAS SIE TUT. Eine Prueffassung (Kopie von watch/ unter
 # $CIQ_BASIS/sendeweg-app) mit SendewegProbe.mc; zwei Haken in der Kopie von
@@ -41,8 +42,10 @@ sed -i 's|<property id="serverUrl" type="string">[^<]*</property>|<property id="
 sed -i 's|        Track.restore();|        Track.restore();\n        SendewegProbe.starten();|' "$APP/source/NAdokuApp.mc"
 sed -i 's|^\(        \)var flat = Track.readPoints(ref, seqFrom, n);$|&\n\1SendewegProbe.stueck(seqFrom, flat.size() / 4);|' "$APP/source/Uploader.mc"
 sed -i 's|^        Communications.makeWebRequest(url,$|        if (SendewegProbe.abfangen(body)) { return; }\n&|' "$APP/source/Uploader.mc"
+# Fall 26 (KA-22): ein Geraet, das kein Paar hergibt.
+sed -i 's|^        try { k = Huelle2.kopplungBeginnen(); } catch (e) { k = null; }$|        try { k = SendewegProbe.ohnePaar() ? null : Huelle2.kopplungBeginnen(); } catch (e) { k = null; }|' "$APP/source/Pair.mc"
 grep -q '127.0.0.1:1<' "$APP/resources/settings/properties.xml" || fehler "Serveradresse nicht umgestellt"
-for muster in 'SendewegProbe.starten' 'SendewegProbe.stueck' 'SendewegProbe.abfangen'; do
+for muster in 'SendewegProbe.starten' 'SendewegProbe.stueck' 'SendewegProbe.abfangen' 'SendewegProbe.ohnePaar()'; do
     [ "$(grep -rc "$muster" "$APP/source" | awk -F: '{s+=$2} END {print s}')" = 1 ] \
         || fehler "Einhaengen gescheitert: $muster (genau einmal erwartet)"
 done
@@ -65,7 +68,7 @@ bash "$P" beenden >/dev/null 2>&1 || true
 printf '%s\n' "$AUSGABE" | grep -v '^SENDEWEG ENDE' | sed 's/^SENDEWEG /  /'
 pruef=$(printf '%s\n' "$AUSGABE" | grep -c '^SENDEWEG \(ok\|FEHL\)' || true)
 fehl=$(printf '%s\n' "$AUSGABE" | grep -c '^SENDEWEG FEHL' || true)
-SOLL=28
+SOLL=31
 if ! printf '%s\n' "$AUSGABE" | grep -q '^SENDEWEG ENDE'; then
     echo "  FEHL  keine ENDE-Zeile — die Probe brach nach $pruef Pruefungen ab"
     fehl=$((fehl+1))

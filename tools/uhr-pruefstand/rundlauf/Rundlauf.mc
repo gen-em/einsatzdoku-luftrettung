@@ -25,12 +25,14 @@
 // seit 4.1.0 entfernt sie ueber die Referenz. `bericht()` schreibt in die
 // Konsole des Simulators, was in der Liste und im Speicher uebrig ist.
 //
-// ART --neukoppeln / --fremdkonto (seit KG-05): `halten()` haelt das Senden
-// 30 s an, sobald die Uhr ihren Kontoschluessel hat. In dieser Zeit loescht
-// rundlauf.sh das Geraet; danach sendet die Uhr, bekommt 401 und hat einen
-// Rueckstand mit bekanntem Schluessel. Bis Web 24.12.0 holte sich dafuer
-// eine DEAKTIVIERTE Uhr den Schluessel; seit Web 24.12.1 gibt pair.php ihr
-// keinen mehr (F-KA-27).
+// ART --neukoppeln / --fremdkonto (seit KG-05), --reaktivieren (seit KA-22):
+// `halten()` haelt das Senden 30 s an, sobald die Uhr ihren Kontoschluessel
+// hat. In dieser Zeit loescht oder deaktiviert rundlauf.sh das Geraet;
+// danach sendet die Uhr, bekommt 401 bzw. 403 und hat einen Rueckstand mit
+// bekanntem Schluessel. Bis Web 24.12.0 holte sich dafuer eine DEAKTIVIERTE
+// Uhr den Schluessel; seit Web 24.12.1 gibt pair.php ihr keinen mehr
+// (F-KA-27). Bis Uhr 5.1.0 koppelte --reaktivieren ohne Schluessel und holte
+// ihn danach; mit dem Vergleichswert hat die Uhr ihn ab der Kopplung (KA-22).
 using Toybox.Lang;
 using Toybox.System;
 using Toybox.Application.Storage;
@@ -40,7 +42,7 @@ module Rundlauf {
     const EINSATZ = "m-rundlauf-0001";
     const RUHE = "r-rundlauf-0001";
     const SCHRUMPFEN = false;         // rundlauf.sh --schrumpfen setzt true
-    const HALTEN = false;             // rundlauf.sh --neukoppeln/--fremdkonto setzt true
+    const HALTEN = false;             // rundlauf.sh --neukoppeln/--fremdkonto/--reaktivieren setzt true
     const HALTEN_S = 30;
     const GEPARKT = ["m-rl-geparkt-1", "m-rl-geparkt-2"];
     var _ausgeloest as Lang.Boolean = false;
@@ -91,11 +93,6 @@ module Rundlauf {
         Model.save();
         Storage.setValue("rl_gefuellt", true);
     }
-
-    /* Arten der NACHHOLEN-Familie (rundlauf.sh, seit KG-03b): Die Uhr koppelt
-     * wie vor Uhr 5.0.0, ohne Geraeteschluessel (E-KG-36). Nur in diesen
-     * Prueffassungen eingehaengt. */
-    function alteKopplung() as Lang.Boolean { return true; }
 
     /* Haken am Anfang von Uploader._send (nur HALTEN): true = jetzt nicht
      * senden. Die Frist beginnt beim ersten Versuch MIT Schluessel. */

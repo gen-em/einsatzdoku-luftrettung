@@ -14,6 +14,75 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 26.0.0] — unveröffentlicht
+
+Schritt 28 (KA), 06e: Pakete KA-16 bis KA-23.
+
+### Geändert
+
+- **Web — das alte Format wird nicht mehr angenommen.** Daten ohne
+  Herkunftsnachweis ließen sich bis hierher weiter einspielen und vom Server
+  unterschieben. Jetzt nimmt kein Schreibweg sie mehr an, eine Kopplung
+  verlangt den Geräteschlüssel, und eine Sicherung von vor Web 26 lässt sich
+  nicht mehr einspielen — nach dem Update also gleich eine neue anlegen.
+- **Web — Karten heben sich vom Rahmen ab, der Fuß steht am Fensterboden.**
+  Rahmen und Karten hatten dieselbe Fläche, und nur eine feine Linie trennte
+  sie; jetzt liegen die Karten hell weiß mit leichtem Schatten darauf. Dunkel
+  sinkt stattdessen der Rahmen ab, weil eine hellere Karte so hell wäre wie
+  ihre Trennlinien. Auf kurzen Seiten stand die Fußzeile mitten im Fenster.
+- **Web — die Koppelseite kennt nur noch den Weg mit Vergleichswert.** Ältere
+  Apps gibt es nicht mehr, also auch keinen Hinweis mehr für ein Gerät ohne
+  Schlüssel oder ohne Angaben über sich.
+- **Web — alte Gerätedaten werden still übernommen.** Was Uhr und Handy
+  früher ohne Nachweis geschickt haben, verschließt der Browser nach der
+  Anmeldung neu, und die Einsatzansicht sagt „Vom Browser übernommen am …“.
+  Eine Lücke in einer solchen Spur bekommt einen engen Löschvermerk, statt
+  die ganze Spur unlesbar zu machen.
+- **Web — zwei Browser einigen sich zugunsten des Kontos.** Kannte ein
+  Browser einen Gerätestand, der nach einer Änderung im Konto kam, gewann
+  bisher der höhere Zähler; jetzt bleibt die Änderung des Kontos stehen.
+
+### Behoben
+
+- **Web — nach dem Umdatieren eines Diensttags fehlten die Ortsdaten.**
+  Spur, Phasenorte und Reanimation der seit Web 25 gesendeten Einsätze
+  gingen danach nicht mehr auf, weil niemand den Versatz vermerkte. Jetzt
+  rechnet der Browser ihn selbst aus und trägt ihn ein.
+- **Web — eine Sicherung verlor geschnittene Punkte.** Hatte ein Schnitt
+  Punkte aus einer Ruhespur in einen Einsatz genommen, fehlten sie in der
+  Sicherung der Ruhespur, weil das Lesen jeden Vermerk des Browsers
+  ausblendete. Ein Vermerk erklärt jetzt nur Lücken; ausgeblendet wird, was
+  der Server als geschnitten führt, und das nur in der Ansicht.
+- **Web — der Hinweis beim Koppeln mit Vergleichswert hatte zwei Sätze.**
+  Die Seitenregel erlaubt einen; der Bilderlauf koppelte bisher ein Gerät
+  ohne Schlüssel und sah diesen Hinweis nie.
+- **Web — ein zurückgenommener Schnitt ließ seine Punkte verborgen.** Der
+  Vermerk des Schnitts blieb stehen; jetzt geht er mit der Rücknahme.
+
+## [Uhr 6.0.0] — unveröffentlicht
+
+Schritt 28 (KA), 06e: Paket KA-22.
+
+### Geändert
+
+- **Uhr — die Garmin-Uhr sendet nur noch mit Herkunftsnachweis.** Eine Uhr
+  aus einer Kopplung von vor Web 25 schickte bisher weiter Daten ohne
+  Nachweis, die der Server seit Web 26 abweist. Jetzt zeigt sie „Neu
+  koppeln“ und behält die Daten; ohne Geräteschlüssel beginnt sie keine
+  Kopplung, und eine Kopplung ohne Vergleichswert bricht sie ab.
+
+## [Android 0.27.0] — unveröffentlicht
+
+Schritt 28 (KA), 06e: Paket KA-21.
+
+### Geändert
+
+- **Android — das Handy sendet nur noch mit Herkunftsnachweis.** Ein Handy,
+  das vor Web 25 gekoppelt war, sendete bisher weiter Daten ohne Nachweis,
+  die der Server seit Web 26 abweist. Jetzt zeigt es „Herkunft fehlt — neu
+  koppeln“, behält die Daten und lässt sich trotz Rückstand neu koppeln;
+  ohne Geräteschlüssel beginnt es gar keine Kopplung mehr.
+
 ## [Web 25.0.0] — unveröffentlicht
 
 Schritt 28 (KA), Pakete KA-08 bis KA-14.

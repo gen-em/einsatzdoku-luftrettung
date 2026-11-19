@@ -32,6 +32,7 @@ require_once $wurzel . '/db.php';
 require_once $wurzel . '/validate_lib.php';
 require_once $wurzel . '/spur_lib.php';
 require_once $wurzel . '/geraetehuelle_lib.php';
+require_once dirname(__DIR__) . '/huelle/geraet.php';   // Fassung 2 vom Probegerät (Stichtag, 06e)
 
 $konto = $argv[1] ?? 'demo@gen-em.org';
 $pdo = db();
@@ -58,7 +59,7 @@ function stueck(string $sec1, string $art, string $ref, int $seq, int $n, int $n
     $platz = "$seq:$n:$stufe:$nOrig";
     return ['seq_from' => $seq, 'punkte' => $n, 'n_original' => $nOrig, 'ts_von' => $von,
             'ts_bis' => $bis, 'stufe' => $stufe,
-            'huelle' => gh_verschliessen($klar, $sec1, $art, $ref, $platz)];
+            'huelle' => gh2_probe_verschliessen($klar, $sec1, $art, $ref, $platz)];
 }
 function stand(PDO $pdo, string $art, int $id): array {
     $q = $pdo->prepare('SELECT seq_from, punkte FROM track_stuecke WHERE owner_type = ? AND owner_id = ?
@@ -94,7 +95,7 @@ try {
     foreach ([0, 50] as $von) {
         spur2_stueck_schreiben($pdo, 'mission', (int)$e['id'], $von, 50, (int)$e['t'] + $von * 10,
             (int)$e['t'] + ($von + 49) * 10,
-            gh_verschliessen(str_repeat("\0", 14 * 50), $sec1, 'spur', (string)$e['client_ref'], "$von:50"));
+            gh2_probe_verschliessen(str_repeat("\0", 14 * 50), $sec1, 'spur', (string)$e['client_ref'], "$von:50"));
     }
     $mid = (int)$e['id'];
     $ref = (string)$e['client_ref'];
@@ -149,7 +150,7 @@ try {
      * Demo trägt je Spur eines). */
     $u0 = umriss($pdo, 'mission', $mid);
     spur2_stueck_schreiben($pdo, 'mission', $mid, $u0['m'], 4, $u0['b'], $u0['b'] + 30,
-        gh_verschliessen(str_repeat("\0", 56), $sec1, 'spur', $ref, $u0['m'] . ':4'));
+        gh2_probe_verschliessen(str_repeat("\0", 56), $sec1, 'spur', $ref, $u0['m'] . ':4'));
     $u = umriss($pdo, 'mission', $mid);
     $st = stand($pdo, 'mission', $mid);
     $nGes = $u['m'] - $u['s'];
@@ -190,7 +191,7 @@ try {
 
     /* Ein Gerät liefert nach: ein Stück der Stufe 1 über der Marke. */
     spur2_stueck_schreiben($pdo, 'mission', $mid, $u['m'], 3, $u['b'], $u['b'] + 20,
-        gh_verschliessen(str_repeat("\0", 42), $sec1, 'spur', $ref, $u['m'] . ':3'));
+        gh2_probe_verschliessen(str_repeat("\0", 42), $sec1, 'spur', $ref, $u['m'] . ':3'));
     $l = in_liste(spur2_faellig($pdo, $uid, 20, $jetzt), 'mission', $mid);
     pruefe($l !== null && count($l['stuecke']) === 2, 'Nachlieferung macht die Spur wieder fällig', $l ? count($l['stuecke']) . ' Stücke' : '—');
 

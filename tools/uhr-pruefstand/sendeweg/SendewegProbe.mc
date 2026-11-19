@@ -16,7 +16,16 @@
 // `huelle: 2` schaltet Fassung 2 ein, das leere Schlussstueck; Nr. 580 --
 // der Zaehler der Einsatzhuelle entstand beim Senden statt bei der
 // Aenderung, und eine Uhr mit `huelle: 2` ohne Paar oder mit gescheitertem
-// Selbsttest sendete Fassung 1 (KG-09, KG-10).
+// Selbsttest sendete Fassung 1 (KG-09, KG-10); Nr. 580, Teil KA-22 -- seit
+// Web 26.0.0 nimmt der Server weder Fassung 1 noch ein `start` ohne
+// Geraeteschluessel an: Ohne `huelle: 2` sendet die Uhr nichts, ohne Paar
+// beginnt sie keine Kopplung, und `400 schluessel` ist ein Fehler mit Text.
+//
+// SEIT UHR 6.0.0 KOPPELN DIE SENDEFAELLE MIT FASSUNG 2 (`_koppeln2`): Bis
+// dahin sendeten die Faelle 4 bis 11 Fassung 1, und eine Uhr ohne Merker
+// sendet jetzt gar nicht. Damit nicht jeder Fall ein Geraetepaar neu
+// rechnet (Waechter der Laufzeit), entsteht im zweiten Takt EINE echte
+// Kopplung, deren Paar die Faelle danach in den Speicher legen.
 //
 // Je Fall eine Zeile "SENDEWEG ok|FEHL <fall> <was>", am Ende
 // "SENDEWEG ENDE <faelle> <fehlschlaege>". Jeder Fall beginnt mit leerem
@@ -43,6 +52,15 @@ module SendewegProbe {
     var _schritt as Lang.Number = 0;
     var _a as Lang.String or Null = null;
     var _b as Lang.String or Null = null;
+    var _gpaar as Lang.Object or Null = null;   // Geraetepaar der Vorlage (Storage "gpaar")
+    var _gzs as Lang.Object or Null = null;     // und sein Z_s zu Schluessel a ("gzs")
+
+    /* Haken in Pair.sitzungStarten (sendeweg.sh): true = das Geraet gibt
+     * kein Paar her, als scheiterte Huelle2.kopplungBeginnen(). Eine
+     * Funktion, keine Konstante -- sonst sieht die Typpruefung den Zugriff
+     * auf null (F-KG-24). */
+    var _ohnePaar as Lang.Boolean = false;
+    function ohnePaar() as Lang.Boolean { return _ohnePaar; }
 
     function starten() as Void {
         _cb = new SendewegCb();
@@ -98,6 +116,32 @@ module SendewegProbe {
         Huelle.schluesselSetzen(k);
     }
 
+    /* Gekoppelt wie nach einer Kopplung mit Vergleichswert: Zugangsdaten,
+     * Kontoschluessel, Merker `huelle: 2`, das Paar der Vorlage, Selbsttest
+     * bestanden. Z_s nur zu Schluessel a; zu b rechnet die Uhr es neu. */
+    function _koppeln2(k as Lang.String) as Void {
+        _koppeln(k);
+        Storage.setValue("h2", true);
+        Storage.setValue("gpaar", _gpaar as Storage.ValueType);
+        if (k.equals(_a)) { Storage.setValue("gzs", _gzs as Storage.ValueType); }
+        Huelle2._geprueft = true;
+    }
+
+    /* Takt 2: eine echte Kopplung mit Fassung 2 (wie Fall 17), ihr Paar
+     * merken. Ohne Paar danach waere jeder Sendefall rot -- das sagt die
+     * Zeile, statt dass dreizehn Faelle es einzeln sagen. */
+    function _vorlage(a as Lang.String) as Void {
+        _leer();
+        _gekoppelt2(a);
+        Huelle2.statisch(Huelle._ausBase64(a));
+        _gpaar = Storage.getValue("gpaar");
+        _gzs = Storage.getValue("gzs");
+        if (!(_gpaar instanceof Lang.String) || !(_gzs instanceof Lang.String)) {
+            System.println("SENDEWEG FEHL vorlage kein Geraetepaar nach der Kopplung");
+            _faelle += 1; _fehl += 1;
+        }
+    }
+
     // Spurstueck `idx` (200 Punkte) eines abgeschlossenen Tracks
     function _stueckAblegen(ref as Lang.String, idx as Lang.Number) as Void {
         var a = [];
@@ -120,33 +164,37 @@ module SendewegProbe {
         if (_schritt == 1) { _a = _schluessel(); _b = _schluessel(); return; }
         var a = _a as Lang.String;
         var b = _b as Lang.String;
-        if (_schritt == 2) { _fall1(); }
-        else if (_schritt == 3) { _fall2(a); }
-        else if (_schritt == 4) { _fall3(); }
-        else if (_schritt == 5) { _fall4(a, b); }
-        else if (_schritt == 6) { _fall5a(a); }
-        else if (_schritt == 7) { _fall5b(); }
-        else if (_schritt == 8) { _fall6(a); }
-        else if (_schritt == 9) { _fall7(a); }
-        else if (_schritt == 10) { _fall8(a); }
-        else if (_schritt == 11) { _fall9(a); }
-        else if (_schritt == 12) { _fall10(a); }
-        else if (_schritt == 13) { _fall11a(a); }
-        else if (_schritt == 14) { _fall11b(); }
-        else if (_schritt == 15) { _fall12(); }
-        else if (_schritt == 16) { _fall13(a); }
-        else if (_schritt == 17) { _fall14(a); }
-        else if (_schritt == 18) { _fall15(); }
-        else if (_schritt == 19) { _fall16(a); }
-        else if (_schritt == 20) { _fall17(a); }
-        else if (_schritt == 21) { _fall18(); }
-        else if (_schritt == 22) { _fall19(a); }
-        else if (_schritt == 23) { _fall20(a); }
-        else if (_schritt == 24) { _fall21(); }
-        else if (_schritt == 25) { _fall22(a); }
-        else if (_schritt == 26) { _fall23(); }
-        else if (_schritt == 27) { _fall24(a); }
-        else if (_schritt == 28) { _fall25(a); }
+        if (_schritt == 2) { _vorlage(a); }
+        else if (_schritt == 3) { _fall1(); }
+        else if (_schritt == 4) { _fall2(a); }
+        else if (_schritt == 5) { _fall3(); }
+        else if (_schritt == 6) { _fall4(a, b); }
+        else if (_schritt == 7) { _fall5a(a); }
+        else if (_schritt == 8) { _fall5b(); }
+        else if (_schritt == 9) { _fall6(a); }
+        else if (_schritt == 10) { _fall7(a); }
+        else if (_schritt == 11) { _fall8(a); }
+        else if (_schritt == 12) { _fall9(a); }
+        else if (_schritt == 13) { _fall10(a); }
+        else if (_schritt == 14) { _fall11a(a); }
+        else if (_schritt == 15) { _fall11b(); }
+        else if (_schritt == 16) { _fall12(); }
+        else if (_schritt == 17) { _fall13(a); }
+        else if (_schritt == 18) { _fall14(a); }
+        else if (_schritt == 19) { _fall15(); }
+        else if (_schritt == 20) { _fall16(a); }
+        else if (_schritt == 21) { _fall17(a); }
+        else if (_schritt == 22) { _fall18(); }
+        else if (_schritt == 23) { _fall19(a); }
+        else if (_schritt == 24) { _fall20(a); }
+        else if (_schritt == 25) { _fall21(); }
+        else if (_schritt == 26) { _fall22(a); }
+        else if (_schritt == 27) { _fall23(); }
+        else if (_schritt == 28) { _fall24(a); }
+        else if (_schritt == 29) { _fall25(a); }
+        else if (_schritt == 30) { _fall26(); }
+        else if (_schritt == 31) { _fall27(); }
+        else if (_schritt == 32) { _fall28(); }
         else {
             (_t as Timer.Timer).stop();
             System.println("SENDEWEG ENDE " + _faelle.toString() + " " + _fehl.toString());
@@ -190,12 +238,12 @@ module SendewegProbe {
         // 4. Laufender Einsatz, Zugangsdaten gehen verloren, neue Kopplung mit
         //    anderem Schluessel: der laufende Einsatz bleibt liegen.
         _leer();
-        _koppeln(a);
+        _koppeln2(a);
         Model.serviceActive = true;
         _stueckAblegen("m-sw-lauf", 0);
         Model.mission = _einsatz("m-sw-lauf");
         Pair.lokalTrennen();
-        _koppeln(b);
+        _koppeln2(b);
         var job = Uploader._findJob();
         _melde(Uploader.istFremd("m-sw-lauf") && job == null, "bindung-laufender-einsatz",
                "fremd=" + Uploader.istFremd("m-sw-lauf").toString() + " job=" + (job == null ? "keiner" : "laufender Einsatz"));
@@ -208,7 +256,7 @@ module SendewegProbe {
         // 5. Gleiche Groesse bei Wiederholung: 200 gesendet, Antwort verloren,
         //    der Track waechst auf 400 -> wieder 0:200.
         _leer();
-        _koppeln(a);
+        _koppeln2(a);
         _stueckAblegen("m-sw-stueck", 0);
         Model.pendingMissions.add(_einsatz("m-sw-stueck"));
         Uploader._send({ "kind" => "mission", "data" => Model.pendingMissions[0] });
@@ -231,7 +279,7 @@ module SendewegProbe {
     function _fall6(a as Lang.String) as Void {
         // 6. Quittung ueber das Gesendete hinaus wird gedeckelt.
         _leer();
-        _koppeln(a);
+        _koppeln2(a);
         _stueckAblegen("m-sw-deckel", 0);
         Model.pendingMissions.add(_einsatz("m-sw-deckel"));
         Uploader._send({ "kind" => "mission", "data" => Model.pendingMissions[0] });
@@ -245,7 +293,7 @@ module SendewegProbe {
     // 8. 401 ohne Fehlerfeld (ein Zwischenstueck): keine Abmeldung.
     function _fall8(a as Lang.String) as Void {
         _leer();
-        _koppeln(a);
+        _koppeln2(a);
         _stueckAblegen("m-sw-401", 0);
         Model.pendingMissions.add(_einsatz("m-sw-401"));
         Uploader._send({ "kind" => "mission", "data" => Model.pendingMissions[0] });
@@ -257,7 +305,7 @@ module SendewegProbe {
     // 9. 403 mit fremdem Rumpf (Proxy-Seite): keine Sperre.
     function _fall9(a as Lang.String) as Void {
         _leer();
-        _koppeln(a);
+        _koppeln2(a);
         _stueckAblegen("m-sw-403", 0);
         Model.pendingMissions.add(_einsatz("m-sw-403"));
         Uploader._send({ "kind" => "mission", "data" => Model.pendingMissions[0] });
@@ -269,7 +317,7 @@ module SendewegProbe {
     // 10. Gegenprobe: 401 mit `auth` ist eine Abmeldung.
     function _fall10(a as Lang.String) as Void {
         _leer();
-        _koppeln(a);
+        _koppeln2(a);
         _stueckAblegen("m-sw-auth", 0);
         Model.pendingMissions.add(_einsatz("m-sw-auth"));
         Uploader._send({ "kind" => "mission", "data" => Model.pendingMissions[0] });
@@ -280,7 +328,7 @@ module SendewegProbe {
     // 11a. Frist abgelaufen: erst ein Versuch, nichts geraeumt.
     function _fall11a(a as Lang.String) as Void {
         _leer();
-        _koppeln(a);
+        _koppeln2(a);
         _stueckAblegen("m-sw-frist", 0);
         var m = _einsatz("m-sw-frist");
         m["final"] = true;
@@ -305,7 +353,7 @@ module SendewegProbe {
         // 7. Antwort ohne next_seq quittiert nichts (zuletzt: die alte Fassung
         //    bricht hier ab, und das zeigt die fehlende ENDE-Zeile).
         _leer();
-        _koppeln(a);
+        _koppeln2(a);
         _stueckAblegen("m-sw-ohne", 0);
         Model.pendingMissions.add(_einsatz("m-sw-ohne"));
         Uploader._send({ "kind" => "mission", "data" => Model.pendingMissions[0] });
@@ -436,20 +484,22 @@ module SendewegProbe {
     }
 
     function _fall19(a as Lang.String) as Void {
-        // 19. Gegenprobe: ohne `huelle: 2` Fassung 1 und kein Schlussstueck.
+        // 19. Gekoppelt mit Paar und bestandenem Selbsttest, aber OHNE den
+        //     Merker `huelle: 2`: nichts geht hinaus, auch nicht Fassung 1
+        //     (KA-22); die Sync-Seite sagt "Neu koppeln". Bis Uhr 5.1.0 war
+        //     das die Gegenprobe "Fassung 1 ohne Merker".
         _leer();
-        _koppeln(a);
+        _koppeln2(a);
+        Storage.deleteValue("h2");
         var m = _einsatz("m-sw-f1");
         m["final"] = true;
         m["endedAt"] = "2026-11-10T09:00:00Z";
         Model.pendingMissions = [m];
+        Uploader.syncAll();
+        Uploader._busy = false;
         Uploader._send({ "kind" => "mission", "data" => m });
-        var r = rumpf;
-        var gut = false;
-        if (r != null && r["ort_huelle"] instanceof Lang.String) {
-            gut = r["track"] == null && Huelle._ausBase64(r["ort_huelle"] as Lang.String)[0] == 1;
-        }
-        _melde(gut, "fassung1-ohne-merker", "track=" + (r == null || r["track"] == null ? "fehlt" : "da"));
+        _melde(Uploader.herkunftFehlt() == :paar && abgefangen == 0 && !Uploader._busy,
+               "ohne-merker-kein-senden", "gesendet=" + abgefangen.toString());
     }
 
     // ---- KG-09: der Zaehler am Inhalt, im Sendeweg ------------------------
@@ -554,5 +604,45 @@ module SendewegProbe {
         Pair.onSchluessel("sendeweg", 200, { "zustand" => "gekoppelt", "kontoschluessel" => a, "huelle" => 2 });
         _melde(true.equals(Storage.getValue("h2")) && Uploader.herkunftFehlt() == :paar,
                "status-merker-ohne-paar", "h2=" + Storage.getValue("h2"));
+    }
+    // ---- KA-22: Kopplung nur mit Geraeteschluessel -------------------------
+
+    function _fall26() as Void {
+        // 26. Das Geraet gibt kein Paar her: kein `start` ohne Schluessel,
+        //     sondern eine Meldung, und keine Anfrage (bis Uhr 5.1.0 ging
+        //     `start` ohne `schluessel` hinaus).
+        _leer();
+        _ohnePaar = true;
+        Pair.sitzungStarten();
+        _ohnePaar = false;
+        var st = Pair.status == null ? "leer" : Pair.status as Lang.String;
+        _melde("Verschlüsseln geht nicht".equals(st) && !Pair._startLaeuft,
+               "kein-start-ohne-paar", "status=" + st + " laeuft=" + Pair._startLaeuft.toString());
+    }
+
+    function _fall27() as Void {
+        // 27. `400 {"error":"schluessel","grund":"fehlt"}` auf `start` ist ein
+        //     Fehler mit Text, keine Kopplung.
+        _leer();
+        Pair.onStart(Pair._lauf, 400, { "error" => "schluessel", "grund" => "fehlt" });
+        var st = Pair.status == null ? "leer" : Pair.status as Lang.String;
+        var hi = Pair.statusHint == null ? "leer" : Pair.statusHint as Lang.String;
+        _melde("Verschlüsseln geht nicht".equals(st) && "Bitte melden".equals(hi)
+               && !Uploader.hasCredentials(),
+               "start-400-schluessel", "status=" + st + " / " + hi);
+    }
+
+    function _fall28() as Void {
+        // 28. `beansprucht` ohne N_b (Server ohne Vergleichswert): Nein und
+        //     Abbruch statt der alten Rueckfrage "Mit … koppeln?".
+        _leer();
+        Pair._dev = "sw-k4";
+        Pair._key = "probe";
+        Pair._abfragen = true;
+        Pair._mitSchluessel = true;
+        Pair.onStatus("sw-k4", 200, { "zustand" => "beansprucht", "konto" => "pr***@pr***.de" });
+        var st = Pair.status == null ? "leer" : Pair.status as Lang.String;
+        _melde("Kopplung abgebrochen".equals(st) && !Uploader.hasCredentials() && Pair._dev == null,
+               "beansprucht-ohne-nb-bricht-ab", "status=" + st);
     }
 }

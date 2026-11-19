@@ -5,7 +5,7 @@
  * Bytes schreiben und jede Gegenlage mit ihrem Grund abweisen.
  *
  * WAS. `probe.mjs` lädt diese Datei in die Seite und ruft
- * `hpFassung2(v2, vi, weicheAn)` mit `vektoren-2.json` und
+ * `hpFassung2(v2, vi)` mit `vektoren-2.json` und
  * `vektoren-inhalt.json`. Gemessen wird gegen `inhalt2.js`, `huelle2.js`,
  * `standbuch.js` und die Ableitung in `crypto.js`:
  *   byte-gleich   jeder Fall der Referenz, bei festem Nonce bzw. festem
@@ -15,16 +15,15 @@
  *                 (`speicherTransport()`): Anker, Nachtragen, Konflikt (409),
  *                 Ablage über zwei Bücher hinweg — dafür gibt es keine
  *                 Vektoren, die Erwartung steht hier
- *   Weiche        aus: jeder Schreibweg ergibt Fassung 1, das Buch sendet
- *                 nichts; an (probe.mjs lädt `inhalt2.js` dafür mit
- *                 umgelegter Konstante): Fassung 2, und sie geht auf
+ *   Schreiben     jeder Schreibweg ergibt Fassung 2, und sie geht auf (die
+ *                 Weiche „aus“ ist seit Web 26.0.0 zurückgebaut, 06e)
  *
  * JEDE PRÜFUNG STEHT FÜR SICH in einem `pruefe()`: Fehlt eine Datei oder
  * eine Funktion (die Gegenprobe gegen den Stand vor KA-06b), ist jede
  * einzeln rot — nicht eine Sammelmeldung grün daneben.
  */
 'use strict';
-window.hpFassung2 = async (v2, vi, weicheAn) => {
+window.hpFassung2 = async (v2, vi) => {
   const zeilen = [];
   /* Was die Vektoren verlangen und die Seite noch nicht kann — benannt und
    * gezählt, nicht als Prüfung gewertet (keine grüne Zahl ohne Gegenstand). */
@@ -296,6 +295,36 @@ window.hpFassung2 = async (v2, vi, weicheAn) => {
     if (f.grund) { await scheitert(`2/Folge ${f.name}`, f.grund, lesen); }
     else { await pruefe(`2/Folge ${f.name}`, async () => gleich(await lesen(), f.erwartet)); }
   }
+  /* Die Übernahme der Fassung 1 (06e, E-KA-95, -97): Die Seite hebt mit
+   * einem Leser ohne `verlangt2`, gelesen wird danach MIT — wie im
+   * Anhebelauf und danach in jeder Ansicht. Verglichen wird das Gelesene und
+   * die Vermerke; die Hüllen entstehen bei jedem Lauf neu. */
+  const ueb = v2.uebernahme || { spuren: [], einsaetze: [] };
+  for (const f of ueb.spuren) {
+    const heben = async () => {
+      const erg = await EdHuelle2.spurUebernehmen(await leser('standard', false), k, f.art, f.client_ref,
+        f.stuecke.map((x) => Object.assign({}, x, { huelle: x.huelle_b64 })),
+        { jetzt: ueb.jetzt, versatz: f.versatz, sperren: f.sperren, abgeschlossen: f.abgeschlossen });
+      const gl = await EdHuelle2.spurLesen(await leser('standard', true), f.art, f.client_ref, erg.stuecke,
+        { versatz: f.versatz, sperren: f.sperren.concat(erg.vermerke), abgeschlossen: f.abgeschlossen });
+      const p = gl.punkte;
+      return { punkte: p.length, erste_zeit: p[0].ts, letzte_zeit: p[p.length - 1].ts,
+               herkunft: gl.befund.herkunft, schluss: gl.befund.schluss, vermerke: erg.vermerke };
+    };
+    if (f.grund) { await scheitert(`2/Übernahme ${f.name}`, f.grund, heben); }
+    else { await pruefe(`2/Übernahme ${f.name}`, async () => gleich(await heben(), f.erwartet)); }
+  }
+  for (const f of ueb.einsaetze) {
+    await pruefe(`2/Übernahme Einsatz ${f.name}`, async () => {
+      const h = await EdHuelle2.einsatzUebernehmen(await leser('standard', false), k, f.client_ref, f.huelle_b64,
+        f.started_ts, { z: f.z, jetzt: ueb.jetzt, schluss: f.schluss, versatz: f.versatz });
+      const o = await EdHuelle2.einsatzLesen(await leser('standard', true), f.client_ref, h, f.started_ts,
+        { versatz: f.versatz });
+      return gleich({ z: o.inhalt.z, absender: o.absender,
+                      uebernommen: (o.inhalt.herkunft || {}).uebernommen,
+                      stand: EdHuelle2.standNachAbnahme(o.inhalt, o.absender, null) }, f.erwartet);
+    });
+  }
   for (const f of v2.einsaetze) {
     const lesen = async () => {
       const o = await EdHuelle2.einsatzLesen(await leser(f.buch), f.client_ref, f.huelle_b64, f.started_ts,
@@ -397,47 +426,17 @@ window.hpFassung2 = async (v2, vi, weicheAn) => {
     return zuHex(o.klar) === zuHex(klar) && o.absender === 'konto' && h[0] === 2;
   });
 
-  /* ================================================================ Weiche */
+  /* ============================================ Schreiben (immer Fassung 2) */
   const uhr = v2.geraete.uhr;
   const stueck = () => EdHuelle2.stueckSchreiben(k, 'spur', 'w-x', '0:1', { tsVon: 1784277065, schluss: true },
                                                  new Uint8Array(14));
   const einsatz1 = { fassung: 1, phasen: [{ phase: 4, t: 10, lat: 47.5, lon: 10.5 }], rea: [] };
-  if (!weicheAn) {
-    await pruefe('Weiche aus: schreibt2() ist false', async () => EdInhalt.schreibt2() === false);
-    await pruefe('Weiche aus: schreiben() ergibt edk1, EdCrypto.decrypt öffnet es', async () => {
-      const t = await EdInhalt.schreiben(ck, 'pat', 'w-x', '{"dx":"x"}', 5);
-      return t.startsWith('edk1:') && (await EdCrypto.decrypt(ck, t)) === '{"dx":"x"}';
-    });
-    await pruefe('Weiche aus: Hüllen bleiben edka1 / edk1', async () => {
-      const dk = vi.schluessel.dk_hex;
-      return (await EdCrypto.huelleBauen(dk, CK, '1a2b3c4d')).startsWith('edka1:1a2b3c4d:')
-        && (await EdInhalt.huelleSchreiben(dk, CK, 'pw', '1a2b3c4d')).startsWith('edka1:1a2b3c4d:')
-        && (await EdInhalt.huelleSchreiben(vi.schluessel.rc_hex, CK, 'rc', null)).startsWith('edk1:');
-    });
-    await pruefe('Weiche aus: Spurstück und Einsatzhülle sind Fassung 1 und gehen wie bisher auf', async () => {
-      const h = await stueck();
-      const e = await EdHuelle2.einsatzSchreiben(k, 'w-x', { z: 1, start: 1784277065, schluss: true }, einsatz1);
-      const innen = await EdCrypto.geraetehuelleOeffnen(e, k.priv, kpub, 'einsatz', 'w-x', '');
-      return h[0] === 1 && e[0] === 1 && (await EdCrypto.geraetehuelleOeffnen(h, k.priv, kpub, 'spur', 'w-x', '0:1')).length === 14
-        && gleich(JSON.parse(new TextDecoder().decode(innen)), einsatz1);
-    });
-    await pruefe('Weiche aus: das Standbuch sendet nichts', async () => {
-      const tr = EdStandbuch.speicherTransport();
-      const b = EdStandbuch.oeffnen({ konto: 'aus', schluessel: ck, transport: tr });
-      const a = await b.fortschreiben('w-x', (e) => { e.p = 1; });
-      const v = await b.vormerken('w-x', (e) => { e.p = 1; });
-      const g = await b.geraetEintragen({ spk: hex(uhr.oeffentlich_hex), geraet: 'dev-uhr', seit: 1 });
-      return a === null && v === null && g === null && (await b.nachtragen()) === null && tr.lager.size === 0;
-    });
-    return { zeilen, schlecht, ausgenommen };
-  }
-
-  await pruefe('Weiche an: schreiben() ergibt edk2 und geht gebunden auf', async () => {
+  await pruefe('Schreiben: schreiben() ergibt edk2 und geht gebunden auf', async () => {
     const t = await EdInhalt.schreiben(ck, 'pat', 'w-x', '{"dx":"x"}', 5);
     const o = await EdInhalt.lesen(ck, t, 'pat', 'w-x');
     return t.startsWith('edk2:') && o.text === '{"dx":"x"}' && o.z === 5 && o.gebunden === true;
   });
-  await pruefe('Weiche an: EdCrypto.huelleBauen ergibt edka2, und EdCrypto öffnet sie', async () => {
+  await pruefe('Schreiben: EdCrypto.huelleBauen ergibt edka2, und EdCrypto öffnet sie', async () => {
     const dk = vi.schluessel.dk_hex;
     const w = await EdCrypto.huelleBauen(dk, CK, '1a2b3c4d');
     const ohne = await EdCrypto.huelleBauen(dk, CK, null);
@@ -445,21 +444,21 @@ window.hpFassung2 = async (v2, vi, weicheAn) => {
       && ohne.startsWith('edk2:') && (await EdCrypto.huelleOeffnen(dk, ohne)) === CK
       && (await EdInhalt.huelleSchreiben(vi.schluessel.rc_hex, CK, 'rc', null)).startsWith('edk2:');
   });
-  await scheitert('Weiche an: Rückweg mit Anteil-Kennung schreiben', 'kennung', () =>
+  await scheitert('Schreiben: Rückweg mit Anteil-Kennung schreiben', 'kennung', () =>
     EdInhalt.huelleSchreiben(vi.schluessel.rc_hex, CK, 'rc', '1a2b3c4d'));
-  await pruefe('Weiche an: Spurstück vom Konto ist Fassung 2, Schluss und Zeit stehen innen', async () => {
+  await pruefe('Schreiben: Spurstück vom Konto ist Fassung 2, Schluss und Zeit stehen innen', async () => {
     const h = await stueck();
     const erg = await EdHuelle2.spurLesen(await leser(), 'spur', 'w-x',
       [{ seq_from: 0, punkte: 1, stufe: 1, ts_von: 1784277065, huelle: h }], { abgeschlossen: true });
     return h[0] === 2 && erg.befund.schluss === true && gleich(erg.befund.herkunft, ['konto'])
       && erg.punkte.length === 1 && erg.punkte[0].ts === 1784277065;
   });
-  await pruefe('Weiche an: Einsatzhülle vom Konto ist Fassung 2 mit Zähler', async () => {
+  await pruefe('Schreiben: Einsatzhülle vom Konto ist Fassung 2 mit Zähler', async () => {
     const e = await EdHuelle2.einsatzSchreiben(k, 'w-x', { z: 7, start: 1784277065, schluss: true }, einsatz1);
     const o = await EdHuelle2.einsatzLesen(await leser(), 'w-x', e, 1784277065, { stand: { o: 7, k: 1 } });
     return e[0] === 2 && o.absender === 'konto' && o.inhalt.z === 7 && gleich(o.inhalt.phasen, einsatz1.phasen);
   });
-  await scheitert('Weiche an: dieselbe Einsatzhülle gegen einen höheren Stand', 'zurueckgelegt', async () =>
+  await scheitert('Schreiben: dieselbe Einsatzhülle gegen einen höheren Stand', 'zurueckgelegt', async () =>
     EdHuelle2.einsatzLesen(await leser(), 'w-x',
       await EdHuelle2.einsatzSchreiben(k, 'w-x', { z: 7, start: 1784277065, schluss: true }, einsatz1),
       1784277065, { stand: { o: 8 } }));
