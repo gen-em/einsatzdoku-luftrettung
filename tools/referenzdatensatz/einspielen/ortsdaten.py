@@ -8,18 +8,26 @@ Datei tut für das Werkzeug, was `assets/ortsdaten.js` für den Browser tut:
 Hüllen und Stücke öffnen und verschließen.
 
   privat_laden(pkcs8_b64)                     der private Schlüssel des Kontos
-  einsatz_oeffnen(m, priv)                    die Einsatzhülle, geöffnet, oder None
-  einsatz_verschliessen(innen, sec1, ref)     verschließen, Base64
-  spur_oeffnen(stuecke, art, ref, sperren, priv)
+  leser(priv, geraete)                        was der Browser zum Öffnen hat
+  einsatz_oeffnen(m, ls)                      die Einsatzhülle, geöffnet, oder None
+  einsatz_verschliessen(innen, priv, ref, kopf)  verschließen, Base64
+  spur_oeffnen(stuecke, art, ref, sperren, ls)
                                               Punkte {seq, lat, lon, ele, ts}
-  stuecke_bauen(punkte, art, ref, sec1, neu)  Punkte → Stücke (≤ 2000, an Lücken)
-  gepackt_bauen(punkte, art, ref, sec1, …)    Punkte → ein Stück der Stufe 2/3
+  stuecke_bauen(punkte, art, ref, priv, neu)  Punkte → Stücke (≤ 2000, an Lücken)
+  gepackt_bauen(punkte, art, ref, priv, …)    Punkte → ein Stück der Stufe 2/3
   ortshoehe(punkte, phasen)                   Höhe des Einsatzorts oder None
   zeiten([(tag, hh:mm, versatz), …])          Ortszeit → Sekunden, über
                                               `local_to_utc()` (zeiten_cli.php)
 
+FASSUNG 2, ABSENDER DAS KONTO (seit KA-07, Nr. 567). Was das Werkzeug
+verschließt, verschließt es wie der Browser: mit dem ganzen Kontopaar
+(`verschliessen2()` mit dem privaten Kontoschlüssel als Absender). Geöffnet
+wird über `Leser` der Referenz mit dem Gerätebuch, das `einspielen.py`
+führt — Gerätedaten tragen den Absender ihres Geräts. Bis Web 26 schrieb
+diese Datei Fassung 1 mit dem öffentlichen Schlüssel allein.
+
 DAS FORMAT steht in `tools/proben/huelle/referenz.py` und nur dort; diese
-Datei benutzt dessen `verschliessen()` und `oeffnen()`. Die Regeln beim
+Datei benutzt dessen `verschliessen2()`, `Leser` und die Innenformen. Die Regeln beim
 Öffnen sind die von `ortsdaten.js`: Punkt i eines Stücks hat die
 Nummer `seq_from + i`, doppelte Nummern zählen einmal, Punkte in einer
 Sperrzeit fallen weg, Höhe -32768 heißt keine.
@@ -37,6 +45,7 @@ HIER = pathlib.Path(__file__).resolve().parent
 HUELLE = HIER.parents[1] / "proben" / "huelle"
 sys.path.insert(0, str(HUELLE))
 import referenz  # noqa: E402  (Format der Gerätehülle, eine Stelle)
+import referenz_inhalt  # noqa: E402  (edk2 und Gerätebuch, eine Stelle)
 
 from cryptography.hazmat.primitives import serialization  # noqa: E402
 
@@ -48,20 +57,39 @@ def privat_laden(pkcs8_b64: str):
     return serialization.load_der_private_key(base64.b64decode(pkcs8_b64), password=None)
 
 
-def einsatz_oeffnen(m: dict, priv) -> dict | None:
+def leser(priv, geraete: dict | None = None) -> "referenz.Leser":
+    """Was der Browser des Kontos zum Öffnen hat: den privaten Kontoschlüssel
+    und das Gerätebuch `{sid hex: {"spk": bytes, "bis": None}}`."""
+    return referenz.Leser(priv, geraete or {})
+
+
+def einsatz_oeffnen(m: dict, ls) -> dict | None:
+    """Die Einsatzhülle geöffnet — Innenform der Fassung 2 (`z`, `start`,
+    `schluss`, `phasen`, `rea`) — oder None, wenn der Einsatz keine trägt."""
     if not m.get("ort_huelle"):
         return None
-    innen = referenz.oeffnen(base64.b64decode(m["ort_huelle"]), priv, "einsatz",
-                             str(m["client_ref"]), "")
-    return json.loads(innen.decode("utf-8"))
+    klar, _ = ls.huelle(base64.b64decode(m["ort_huelle"]), "einsatz", str(m["client_ref"]), "")
+    return json.loads(klar.decode("utf-8"))
 
 
-def einsatz_verschliessen(innen: dict, sec1: bytes, ref: str) -> str:
-    klar = json.dumps(innen, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    return base64.b64encode(referenz.verschliessen(klar, sec1, "einsatz", ref, "")).decode("ascii")
+def einsatz_verschliessen(innen: dict, priv, ref: str, kopf: dict) -> str:
+    """`innen` {phasen, rea}; `kopf` {z, start, schluss} — wie
+    `EdHuelle2.einsatzSchreiben()`: `start` der absolute Beginn (Sekunden),
+    `z` der nächste Zähler, `schluss` trägt das Konto weiter (E-KA-76)."""
+    klar = referenz.einsatz_innen2(int(kopf["z"]), int(kopf["start"]), bool(kopf.get("schluss")),
+                                   innen.get("phasen") or [], innen.get("rea") or [])
+    sec1 = referenz.sec1(priv.public_key())
+    return base64.b64encode(referenz.verschliessen2(klar, sec1, priv, "einsatz", ref, "")).decode("ascii")
 
 
-def spur_oeffnen(stuecke: list, art: str, ref: str, sperren: list, priv) -> list[dict]:
+def _stueck_oeffnen(ls, st: dict, art: str, ref: str, platz: str) -> tuple[int, bytes]:
+    """Ein Stück öffnen: Zeit des Kopfs und Nutzlast."""
+    klar, _ = ls.huelle(base64.b64decode(st["huelle"]), art, ref, platz)
+    kopf = referenz.spur_innen2_lesen(klar)
+    return int(kopf["ts_von"]), kopf["nutzlast"]
+
+
+def spur_oeffnen(stuecke: list, art: str, ref: str, sperren: list, ls) -> list[dict]:
     """Wie `EdOrtsdaten.spur()`: Stücke der Stufe 2 und 3 zuerst —
     ihre Punkte tragen keine eigene Nummer; was ein Stück der Stufe 1 unter
     ihrer Marke trägt, steckt schon darin."""
@@ -72,22 +100,23 @@ def spur_oeffnen(stuecke: list, art: str, ref: str, sperren: list, priv) -> list
         if stufe < 2:
             continue
         n, n_orig = int(st["punkte"]), int(st["n_original"])
-        innen = referenz.oeffnen(base64.b64decode(st["huelle"]), priv, art, ref,
-                                 referenz.platz_gepackt(int(st["seq_from"]), n, stufe, n_orig))
+        if n == 0:
+            continue
+        ts_von, innen = _stueck_oeffnen(ls, st, art, ref,
+                                        referenz.platz_gepackt(int(st["seq_from"]), n, stufe, n_orig))
         marke = max(marke, int(st["seq_from"]) + n_orig)
-        for i, (la, lo, h, ts) in enumerate(referenz.gepackt_lesen(innen, n, int(st["ts_von"]))):
+        for i, (la, lo, h, ts) in enumerate(referenz.gepackt_lesen(innen, n, ts_von)):
             if any(s["von"] <= ts <= s["bis"] for s in sperren or []):
                 continue
             seq = int(st["seq_from"]) + i
             nach.setdefault(seq, {"seq": seq, "lat": la, "lon": lo, "ele": h, "ts": ts})
     for st in stuecke or []:
-        if int(st.get("stufe") or 1) >= 2:
+        if int(st.get("stufe") or 1) >= 2 or int(st["punkte"]) == 0:
             continue
-        innen = referenz.oeffnen(base64.b64decode(st["huelle"]), priv, art, ref,
-                                 f"{st['seq_from']}:{st['punkte']}")
+        ts_von, innen = _stueck_oeffnen(ls, st, art, ref, f"{st['seq_from']}:{st['punkte']}")
         for i in range(len(innen) // 14):
             la, lo, h, dt = struct.unpack(">iihI", innen[i * 14:(i + 1) * 14])
-            ts = int(st["ts_von"]) + dt
+            ts = ts_von + dt
             if any(s["von"] <= ts <= s["bis"] for s in sperren or []):
                 continue
             seq = int(st["seq_from"]) + i
@@ -98,13 +127,22 @@ def spur_oeffnen(stuecke: list, art: str, ref: str, sperren: list, priv) -> list
     return [nach[k] for k in sorted(nach)]
 
 
+def _konto_huelle(priv, innen: bytes, art: str, ref: str, platz: str, ts_von: int,
+                  schluss: bool = False) -> str:
+    sec1 = referenz.sec1(priv.public_key())
+    return base64.b64encode(referenz.verschliessen2(
+        referenz.spur_innen2(ts_von, innen, schluss=schluss), sec1, priv, art, ref, platz)).decode("ascii")
+
+
 def _runde(x: float) -> int:
     """Rundung wie PHPs `round()` und `ortsdaten.js`: von der Null weg."""
     return int(abs(x) + 0.5) * (1 if x >= 0 else -1)
 
 
-def stuecke_bauen(punkte: list[dict], art: str, ref: str, sec1: bytes,
-                  neu: bool = False) -> list[dict]:
+def stuecke_bauen(punkte: list[dict], art: str, ref: str, priv,
+                  neu: bool = False, schluss: bool = False) -> list[dict]:
+    """Wie `EdOrtsdaten.stueckeBauen()`: SCHLUSS trägt, wer es verlangt,
+    am letzten Stück."""
     liste = [dict(p, seq=i if neu else p["seq"]) for i, p in enumerate(punkte)]
     gruppen: list[list[dict]] = []
     for p in liste:
@@ -122,20 +160,20 @@ def stuecke_bauen(punkte: list[dict], art: str, ref: str, sec1: bytes,
         platz = f"{g[0]['seq']}:{len(g)}"
         aus.append({"seq_from": g[0]["seq"], "punkte": len(g), "ts_von": von,
                     "ts_bis": max(p["ts"] for p in g),
-                    "huelle": base64.b64encode(referenz.verschliessen(innen, sec1, art, ref, platz))
-                              .decode("ascii")})
+                    "huelle": _konto_huelle(priv, innen, art, ref, platz, von,
+                                            schluss and g is gruppen[-1])})
     return aus
 
 
-def gepackt_bauen(punkte: list[dict], art: str, ref: str, sec1: bytes, stufe: int,
-                  seq_from: int, n_original: int) -> dict:
+def gepackt_bauen(punkte: list[dict], art: str, ref: str, priv, stufe: int,
+                  seq_from: int, n_original: int, schluss: bool = False) -> dict:
     """Ein Stück der Stufe 2 oder 3 aus Punkten {lat, lon, ele, ts}."""
     von = min(p["ts"] for p in punkte)
     innen = referenz.innen_gepackt([(p["lat"], p["lon"], p["ele"], p["ts"]) for p in punkte], von)
     platz = referenz.platz_gepackt(seq_from, len(punkte), stufe, n_original)
     return {"seq_from": seq_from, "punkte": len(punkte), "n_original": n_original, "stufe": stufe,
             "ts_von": von, "ts_bis": max(p["ts"] for p in punkte),
-            "huelle": base64.b64encode(referenz.verschliessen(innen, sec1, art, ref, platz)).decode("ascii")}
+            "huelle": _konto_huelle(priv, innen, art, ref, platz, von, schluss)}
 
 
 def ortshoehe(punkte: list[dict], phasen: list[tuple[int, int]]) -> int | None:

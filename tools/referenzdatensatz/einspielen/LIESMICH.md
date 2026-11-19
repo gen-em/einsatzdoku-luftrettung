@@ -32,9 +32,13 @@ trägt `secure`. Vorgaben: `admin@example.invalid` / `pruefstandzugang2026`,
 
 ## Erwartete Zahl
 
-Alle Stufen ohne Abbruch, so viele Schnitte, Löschungen und Verdichtungen wie in den Quelldaten (05.11.2026: 5, 2, 20; `verdichten` hebt die Demo-Kennzeichnung dafür kurz auf, Nr. 459), **0** Klartext-Ortsdaten im Zielkonto, `sitzungsprobe.py` **2 von 2** — in rund fünf Minuten.
+Alle Stufen ohne Abbruch, so viele Schnitte, Löschungen und Verdichtungen wie in den Quelldaten (19.11.2026: 5, 2, 20; `verdichten` hebt die Demo-Kennzeichnung dafür kurz auf, Nr. 459), **0** Klartext-Ortsdaten im Zielkonto, `sitzungsprobe.py` **2 von 2**, `sichtpruefung.mjs` ohne Befund — in rund fünf Minuten.
 
 ## Was es nicht kann
 
-Den Browserschritt nachbauen (E-P1-10) oder auf `edka1:` umstellen (E-S10-15); es SCHREIBT Fassung 1 und `edk1:` (lesen
-kann `sitzung.py` beide Fassungen, KA-13) — die Fixture hebt `fixture/verschliessen.py`. Kacheln und Mail sieht es nicht, der Sperrlistenschritt geht je Installation nur einmal.
+Den Browserschritt nachbauen (E-P1-10) oder auf `edka2:` umstellen (E-S10-15). Es schreibt Fassung 2
+wie Gerät und Browser seit Web 26: die zwei Demo-Geräte mit festem Schlüssel (derselbe wie in
+`fixture/verschliessen.py`), gekoppelt mit Zusage, Vergleichswert und Eintrag ins Gerätebuch; was der
+Browser verschließt, mit dem Konto als Absender, `pat_blob` als `edk2:` (seit KA-07, Nr. 567; bis dahin
+Fassung 1 und `edk1:`). Den Vergleichswert rechnet es auf beiden Seiten selbst — ein Mensch vergleicht
+nichts. Kacheln und Mail sieht es nicht, der Sperrlistenschritt geht je Installation nur einmal.

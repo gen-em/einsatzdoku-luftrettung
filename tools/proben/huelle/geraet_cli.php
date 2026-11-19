@@ -8,7 +8,9 @@
  * Ortsdaten an. Statt das Umbauen in Python ein zweites Mal zu schreiben,
  * ruft es diese Datei: EINE Umsetzung, `geraet.php`.
  *
- * Eingabe (stdin):  {"sec1": "<Base64, 65 Byte>", "pakete": [ … ]}
+ * Eingabe (stdin):  {"sec1": "<Base64, 65 Byte>", "geraet_d": "<64 Hex>"?, "pakete": [ … ]}
+ *                   `geraet_d`: der private Schlüssel des sendenden Geräts;
+ *                   ohne ihn sendet das Probegerät (`gh_probe_geraet()`).
  * Ausgabe (stdout): [ … ] — dieselben Pakete in der verschlossenen Form
  */
 declare(strict_types=1);
@@ -20,6 +22,14 @@ $sec1 = base64_decode((string)($ein['sec1'] ?? ''), true);
 if (!is_array($ein) || $sec1 === false || strlen($sec1) !== 65) {
     fwrite(STDERR, "geraet_cli: erwartet {\"sec1\": Base64 von 65 Byte, \"pakete\": [...]}\n");
     exit(2);
+}
+if (isset($ein['geraet_d'])) {
+    $d = hex2bin((string)$ein['geraet_d']);
+    if ($d === false || strlen($d) !== 32) {
+        fwrite(STDERR, "geraet_cli: geraet_d muss 64 Hexzeichen haben\n");
+        exit(2);
+    }
+    gh_probe_geraet($d);
 }
 $aus = [];
 foreach ((array)($ein['pakete'] ?? []) as $p) {

@@ -49,10 +49,10 @@
     }
   ],
   "body_bytes": {
-    "min": 453,
-    "max": 10983,
-    "median": 1564.0,
-    "summe": 1820508
+    "min": 485,
+    "max": 11091,
+    "median": 1596.0,
+    "summe": 1863020
   },
   "punkte_gesamt": 69306,
   "fehlversuche": 0,

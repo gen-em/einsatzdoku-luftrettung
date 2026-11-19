@@ -41,9 +41,18 @@ declare(strict_types=1);
 require_once __DIR__ . '/geraetehuelle_lib.php';
 
 /** Das Probegerät: EIN festes Schlüsselpaar, wie der Geräteschlüssel. */
-function gh_probe_geraet(): array
+function gh_probe_geraet(?string $d = null): array
 {
     static $g = null;
+    /* EIN ANDERES GERÄT (Nr. 567): Der Einspiellauf des Referenzbestands
+     * sendet als die zwei Demo-Geräte, deren Schlüssel `verschliessen.py`
+     * aus ihrem Namen ableitet; er reicht `d` über `geraet_cli.php` herein. */
+    if ($d !== null) {
+        $k = gh_privat_aus_d($d);
+        $sec1 = gh_sec1_von($k);
+        $g = ['privat' => $k, 'sec1' => $sec1,
+              'sid' => substr(hash('sha256', 'nadoku-absender-1' . $sec1, true), 0, 8)];
+    }
     if ($g === null) {
         /* FEST, aus einem Namen abgeleitet (wie `schluessel_aus_name()` der
          * Referenz): `geraet_cli.php` läuft je Aufruf als eigener Prozess,
