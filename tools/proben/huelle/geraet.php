@@ -11,9 +11,9 @@
  *   gh_probe_koerper()       altes Paket -> neues: `track.points` wird ein
  *                            verschlossenes Stück, Koordinaten der Phasen und
  *                            die Reanimation wandern in `ort_huelle`
- *   gh_probe_oeffnen()       eine Hülle öffnen — NUR HIER, im Prüfwerkzeug.
- *                            Der Server hat diese Funktion mit Absicht nicht
- *                            (`server/geraetehuelle_lib.php`).
+ *   gh2_probe_oeffnen()      eine Hülle des Probegeräts öffnen — NUR HIER,
+ *                            im Prüfwerkzeug. Der Server hat diese Funktion
+ *                            mit Absicht nicht.
  *   gh_probe_einsatz()       die Einsatzhülle eines Einsatzes öffnen und als
  *                            Feld zurückgeben
  *   gh_probe_geraet()        das Schlüsselpaar DES Probegeräts (eines je Lauf)
@@ -26,13 +26,15 @@
  * gekoppeltes Gerät — als Absender das Probegerät, mit dem Zähler `z` in der
  * Einsatzhülle. Die Rechnung steht in `referenz.py` (`verschliessen2()`);
  * der Server hat sie mit Absicht nicht. Bis Web 25.x schrieb diese Datei
- * Fassung 1.
+ * Fassung 1. Seit KA-26 öffnet sie Fassung 1 auch nicht mehr
+ * (`gh_probe_oeffnen()` ist entfallen); gebaut wird sie nur noch als
+ * Gegenlage (`gh_verschliessen()` in `geraetehuelle_lib.php`).
  *
- * DIE INNENFORM DER EINSATZHÜLLE steht im JSON-Vertrag 1b und hier
- * als Code: {"fassung":1, "phasen":[{"phase","t","lat","lon"}],
- * "rea":[{"t","ereignisse":[{"art","t"}]}]} — alle Zeiten in Sekunden seit
- * dem Einsatzbeginn, damit ein Datumswechsel des Diensttags die
- * Hülle nicht ungültig macht.
+ * DIE INNENFORM DER EINSATZHÜLLE steht im Kopf von `referenz.py` und hier
+ * als Code: {"fassung":2, "z", "start", "schluss", "phasen":[{"phase","t",
+ * "lat","lon"}], "rea":[{"t","ereignisse":[{"art","t"}]}]} — alle Zeiten in
+ * Sekunden seit `start`, damit ein Datumswechsel des Diensttags die Hülle
+ * nicht ungültig macht.
  */
 declare(strict_types=1);
 
@@ -100,7 +102,8 @@ function gh2_probe_oeffnen(string $h, $kontoPriv, string $art, string $ref, stri
     return $klar;
 }
 
-/** Wie `gh_einsatz_verschliessen()`, aber Fassung 2 vom Probegerät (Stichtag, 06e). */
+/** Die Einsatzhülle in Fassung 2 vom Probegerät (bis KA-26 daneben
+ *  `gh_einsatz_verschliessen()` in Fassung 1). */
 function gh2_probe_einsatz_verschliessen(string $sec1, string $ref, int $beginn, array $phasen, array $reas,
                                          bool $schluss = true): string
 {
@@ -120,17 +123,18 @@ function gh2_probe_einsatz_verschliessen(string $sec1, string $ref, int $beginn,
                                    $sec1, 'einsatz', $ref, '');
 }
 
-/** Wie `gh_stuecke_bauen()`, aber Fassung 2 vom Probegerät; SCHLUSS am letzten
- *  Stück, wenn `$schluss`. */
+/** Punkte zu Stücken in Fassung 2 vom Probegerät (Gruppen wie
+ *  `EdOrtsdaten.stueckeBauen()`); SCHLUSS am letzten Stück, wenn `$schluss`.
+ *  @return list<array{seq_from:int, punkte:int, ts_von:int, ts_bis:int, huelle:string}> */
 function gh2_probe_stuecke_bauen(string $sec1, string $art, string $ref, array $punkte, bool $schluss = false): array
 {
-    $aus = gh_stuecke_bauen($sec1, $art, $ref, $punkte);       // nur für Gruppen, Zeiten, Plätze
+    $aus = gh_stuecke_gruppieren($punkte);
     $n = count($aus);
     foreach ($aus as $i => &$st) {
-        $g = array_values(array_filter($punkte, static fn($p) => (int)$p[0] >= $st['seq_from']
-                                                                && (int)$p[0] < $st['seq_from'] + $st['punkte']));
         $innen = pack('JCCn', $st['ts_von'], ($schluss && $i === $n - 1) ? 1 : 0, 0, 0)
-               . gh_spur_innen(array_map(static fn($p) => [$p[1], $p[2], $p[3], (int)$p[4]], $g), $st['ts_von']);
+               . gh_spur_innen(array_map(static fn($p) => [$p[1], $p[2], $p[3], (int)$p[4]], $st['gruppe']),
+                               $st['ts_von']);
+        unset($st['gruppe']);
         $st['huelle'] = gh2_probe_verschliessen($innen, $sec1, $art, $ref, $st['seq_from'] . ':' . $st['punkte']);
     }
     unset($st);
@@ -158,7 +162,7 @@ function gh_probe_iso_zu_s(string $iso): int
 }
 
 /**
- * Ein Paket im alten Format so umbauen, wie ein Gerät sendet.
+ * Ein Paket im alten Format (Klartext) so umbauen, wie ein Gerät sendet.
  * Ohne Punkte fällt `track` weg; ohne Koordinaten und Reanimation entsteht
  * trotzdem eine Einsatzhülle, sobald Phasen dabei sind — das tut auch das
  * Gerät, damit die Hülle zu den Phasen passt.
@@ -212,37 +216,13 @@ function gh_probe_koerper(array $k, string $sec1): array
     return $k;
 }
 
-/** Eine Hülle öffnen (Fassung 1). Wirft mit dem Grund wie `referenz.py`. */
-function gh_probe_oeffnen(string $h, $privat, string $art, string $ref, string $platz = ''): string
-{
-    if (strlen($h) < GH_KOPF + 16 + GH_TAG || (strlen($h) - GH_KOPF - GH_TAG) % 16) {
-        throw new RuntimeException('laenge');
-    }
-    if (ord($h[0]) !== GH_FASSUNG) { throw new RuntimeException('fassung'); }
-    $epk = substr($h, 1, 65);
-    $iv = substr($h, 66, 16);
-    $ct = substr($h, GH_KOPF, -GH_TAG);
-    $tag = substr($h, -GH_TAG);
-    $z = openssl_pkey_derive(gh_oeffentlich_laden($epk), $privat, 32);
-    if ($z === false) { throw new RuntimeException('schluessel'); }
-    $empf = gh_sec1_von($privat);
-    $okm = hash_hkdf('sha256', $z, 64, GH_INFO . $empf, $epk);
-    $soll = hash_hmac('sha256', substr($h, 0, -GH_TAG) . gh_bindung($art, $ref, $platz), substr($okm, 32), true);
-    if (!hash_equals($soll, $tag)) { throw new RuntimeException('pruefwert'); }
-    $klar = openssl_decrypt($ct, 'aes-256-cbc', substr($okm, 0, 32), OPENSSL_RAW_DATA, $iv);
-    if ($klar === false) { throw new RuntimeException('polsterung'); }
-    return $klar;
-}
-
-/** Die Einsatzhülle eines Einsatzes, geöffnet — oder null, wenn keine dasteht. */
+/** Die Einsatzhülle eines Einsatzes, geöffnet — oder null, wenn keine dasteht.
+ *  Nur Fassung 2 vom Probegerät; alles andere wirft mit dem Grund. */
 function gh_probe_einsatz(PDO $pdo, int $missionId, $privat): ?array
 {
     $q = $pdo->prepare('SELECT client_ref, ort_huelle FROM missions WHERE id = ?');
     $q->execute([$missionId]);
     $r = $q->fetch(PDO::FETCH_ASSOC);
     if (!$r || $r['ort_huelle'] === null) { return null; }
-    $h = (string)$r['ort_huelle'];
-    $klar = ord($h[0]) === 2 ? gh2_probe_oeffnen($h, $privat, 'einsatz', (string)$r['client_ref'])
-                             : gh_probe_oeffnen($h, $privat, 'einsatz', (string)$r['client_ref']);
-    return json_decode($klar, true);
+    return json_decode(gh2_probe_oeffnen((string)$r['ort_huelle'], $privat, 'einsatz', (string)$r['client_ref']), true);
 }

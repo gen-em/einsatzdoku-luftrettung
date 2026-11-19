@@ -315,30 +315,22 @@
       }
     },
     {
-      "name": "altbestand",
+      "name": "fassung-1",
       "client_ref": "w-20261111-0001",
       "text": "edk1:+jkzEp51xIEBuTgVzlYlfXRzh1VNQVU3pv2ODZvJJArNwe/hZ5y6ylLW",
       "blatt": 0,
       "blatt_text": "edk2:gKfsYlmgUWgktWnlh9QWVCdTgv2jJaBGniX/gHbfTu8lRkzaoaBXq+7f0jhHnBYb0GOEoWiph+VQinsj2kcptaE1z72k+Ui2fK0fvjJ0OIO5mREG4PlawGL4o6nN08eX/wm0a0ocb+ecXkJtUHBHztCtIxJJmJ+VuI3anrceMJ19g7E2ED5zRCrFV5pDJbdFx1aY1olQ6nNjU8rw",
       "anker": 17,
-      "erwartet": {
-        "z": 0,
-        "gebunden": false,
-        "blatt_hinkt": false
-      }
+      "grund": "altformat"
     },
     {
-      "name": "altbestand-ohne-kennung",
+      "name": "fassung-1-ohne-kennung",
       "client_ref": "w-20261111-0001",
       "text": "+jkzEp51xIEBuTgVzlYlfXRzh1VNQVU3pv2ODZvJJArNwe/hZ5y6ylLW",
       "blatt": 0,
       "blatt_text": "edk2:gKfsYlmgUWgktWnlh9QWVCdTgv2jJaBGniX/gHbfTu8lRkzaoaBXq+7f0jhHnBYb0GOEoWiph+VQinsj2kcptaE1z72k+Ui2fK0fvjJ0OIO5mREG4PlawGL4o6nN08eX/wm0a0ocb+ecXkJtUHBHztCtIxJJmJ+VuI3anrceMJ19g7E2ED5zRCrFV5pDJbdFx1aY1olQ6nNjU8rw",
       "anker": null,
-      "erwartet": {
-        "z": 0,
-        "gebunden": false,
-        "blatt_hinkt": false
-      }
+      "grund": "altformat"
     },
     {
       "name": "zurueckgelegt",
@@ -350,13 +342,13 @@
       "grund": "zurueckgelegt"
     },
     {
-      "name": "zurueckgelegt-auf-fassung-1",
+      "name": "fassung-1-wo-ein-zaehler-steht",
       "client_ref": "w-20261111-0001",
       "text": "edk1:+jkzEp51xIEBuTgVzlYlfXRzh1VNQVU3pv2ODZvJJArNwe/hZ5y6ylLW",
       "blatt": 0,
       "blatt_text": "edk2:h6kx9WtAQpavX2eQF1pH3NiTwZbEj8SSfG4eb0vn9pncV8ADnMpboXQBZkrdf3AB2iO+CAhjfQDQ4/dC3pyfNf1zLF4TSEcW5iudL/qejVKtROQZ+UccYOjHZICxnYmmoOZfDVsu6s7ZlFPOMSq657fgzfb5U2q2e2KEynqXHkxEKJJmACHwuJRv6sDPs8K6AMkvm9Tm/r0n8BrkyBokIKpLQU2uVcX8Njo7g8xAGFJa7Eh02oGetOpay2uNU5Q8Dwfif/xRamvnbriQTsz2y6Nm9M2PMBrW483vE5xYN/F7IXpoNu9Wlt5Nk8fNta5CQnJWzTOJ0F2koPFX1yT1p7T483B6ZxDE7pOGLAf86MLAWHcQqu3u+dsoYZg=",
       "anker": 17,
-      "grund": "zurueckgelegt"
+      "grund": "altformat"
     },
     {
       "name": "blatt-zurueckgelegt",
@@ -368,7 +360,7 @@
       "grund": "blatt-zurueckgelegt"
     },
     {
-      "name": "altformat-nach-anhebung",
+      "name": "fassung-1-im-geschlossenen-blatt",
       "client_ref": "w-20261111-0001",
       "text": "edk1:+jkzEp51xIEBuTgVzlYlfXRzh1VNQVU3pv2ODZvJJArNwe/hZ5y6ylLW",
       "blatt": 0,
@@ -523,6 +515,34 @@
       "schluessel_hex": "d4cdf777c2fc40face8a1e358d808f9fc57524239842d3b152667678bd500c34",
       "art": "pw",
       "text": "edk2:OTPkoByPDCBHJd5Wp1HeLYSL2OYYHRUrAODKPMJ7HY7RdqCOQaTVgsRTht5bjNYQmp7Q7OJ0lqL5IInvDBt5QMHSkVzrwbVomgaPc5OKYmFBx2bXuCBl5oD5Bfp0y15qXhxdtqipEnYNHQpp8vTGsW2IJOl/Oayi4Tp2+TcywXWy8dI3JXTt4fJb9GK+8/ZW5WNyAtq9b/TET1ZA"
+    },
+    {
+      "name": "fassung-1-edka1",
+      "grund": "kennung",
+      "schluessel_hex": "5d37eb781c767711e1364cf2dcd1a6fd54b118c968633294892e6361ed8d603b",
+      "art": "pw",
+      "text": "edka1:1a2b3c4d:Tu1n8AFcCQzTFdArKtVCKwRYX4/PIP1sTcjpgPwpZt9OiBabi8noVySg3xjRIR6Tdn+KAvjk1zBmrWe5kPgpjp+O2RWzD1pA3GliNjxocbUeMqLPWxtBwvzhHeQ="
+    },
+    {
+      "name": "fassung-1-edk1-pw",
+      "grund": "kennung",
+      "schluessel_hex": "5d37eb781c767711e1364cf2dcd1a6fd54b118c968633294892e6361ed8d603b",
+      "art": "pw",
+      "text": "edk1:Tu1n8AFcCQzTFdArKtVCKwRYX4/PIP1sTcjpgPwpZt9OiBabi8noVySg3xjRIR6Tdn+KAvjk1zBmrWe5kPgpjp+O2RWzD1pA3GliNjxocbUeMqLPWxtBwvzhHeQ="
+    },
+    {
+      "name": "fassung-1-edk1-rc",
+      "grund": "kennung",
+      "schluessel_hex": "d4cdf777c2fc40face8a1e358d808f9fc57524239842d3b152667678bd500c34",
+      "art": "rc",
+      "text": "edk1:97CVQIdUf1hUSEUCFM635w55Usngt/fAIPzp5iQXzpuqtgaLyLclvGD2pR/aCZsuKSmYSkKcOAvCv8oDBSk19DLTbTg9LNRCufCUjW0HeAQEj6SlgzGLM9Z+CR0="
+    },
+    {
+      "name": "fassung-1-ohne-kennung",
+      "grund": "kennung",
+      "schluessel_hex": "d4cdf777c2fc40face8a1e358d808f9fc57524239842d3b152667678bd500c34",
+      "art": "rc",
+      "text": "97CVQIdUf1hUSEUCFM635w55Usngt/fAIPzp5iQXzpuqtgaLyLclvGD2pR/aCZsuKSmYSkKcOAvCv8oDBSk19DLTbTg9LNRCufCUjW0HeAQEj6SlgzGLM9Z+CR0="
     }
   ],
   "standblaetter": [

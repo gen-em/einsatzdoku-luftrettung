@@ -3,32 +3,31 @@ declare(strict_types=1);
 
 if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }   // nur eingebunden (KA-05, F-KA-23)
 /**
- * DIE GERÄTEHÜLLE AUF DEM SERVER — verschließen, nie öffnen
+ * DIE GERÄTEHÜLLE IN DEN PROBEN — Bausteine und die Gegenlage der Fassung 1
  * ===========================================================================
  *
- * Das Format (Fassung 1) steht im Kopf von `tools/proben/huelle/referenz.py`,
- * und nur dort. Diese Datei ist seine dritte Umsetzung neben dem Browser
- * (`assets/crypto.js`) und der Uhr; die Hüllenprobe hält sie gegen dieselben
- * Prüfvektoren (byte-gleich bei festem flüchtigem Schlüssel und IV).
+ * Das Format steht im Kopf von `tools/proben/huelle/referenz.py`, und nur
+ * dort. Bis Web 26.x lag diese Datei als `server/geraetehuelle_lib.php` auf
+ * dem Server und verschloss Fassung 1 für den Demo-Reset; seit KA-24 liegt
+ * sie hier, und seit KA-26 trägt sie nur noch, was die Proben brauchen:
  *
- * WARUM DER SERVER ÜBERHAUPT VERSCHLIESST. Verschließen braucht nur den
- * ÖFFENTLICHEN Schlüssel des Kontos; öffnen kann nur, wer den privaten hat,
- * und den hat nur der Browser nach dem Entsperren. Der Server verschließt an
- * zwei Stellen: beim Zurücksetzen des Demobestands und in
- * den Proben, die den Eingang wie ein Gerät bedienen — dort sind die Daten
- * erfunden und kommen aus dem Repositorium. **Eine Funktion zum
- * Öffnen gibt es hier mit Absicht nicht** — wer sie schriebe, gäbe dem
- * Server einen Weg, den er nach der Zusage aus `CLAUDE.md` 4 nicht hat.
+ *   Bausteine     Bindung, Schlüssel laden und bauen, die Innenform der
+ *                 Punkte — `geraet.php` verschließt damit Fassung 2 wie ein
+ *                 gekoppeltes Gerät (`gh2_probe_*`).
+ *   Gegenlage     `gh_verschliessen()` baut eine Hülle der FASSUNG 1 — nur
+ *                 damit Proben messen, dass der Eingang sie abweist
+ *                 (`400 fassung`) und kein Leser sie öffnet
+ *                 (`ohne-herkunft`). Gesendet wird sie von keinem Gerät mehr.
  *
+ * **Eine Funktion zum Öffnen gibt es hier mit Absicht nicht.** Geöffnet
+ * wird nur in `geraet.php` (`gh2_probe_oeffnen()`), im Prüfwerkzeug.
  * Die PRÜFUNG der Form (Zeichenvorrat, Länge, Kennbyte) steht in der
- * gemeinsamen Prüfschicht: `pruef_huelle()` in `validate_lib.php`.
+ * gemeinsamen Prüfschicht: `pruef_huelle()` in `server/validate_lib.php`.
  */
 
-/** Fassung, Info-Text der Schlüsselableitung, Längen — wie `referenz.py`. */
+/** Fassung 1 (nur die Gegenlage), Info-Text der Ableitung — wie `referenz.py`. */
 const GH_FASSUNG = 1;
 const GH_INFO    = 'nadoku-huelle-1';
-const GH_KOPF    = 1 + 65 + 16;
-const GH_TAG     = 32;
 const GH_HOEHE_UNBEKANNT = -32768;
 
 /** SPKI-Vorspann für einen unkomprimierten P-256-Punkt (65 Byte folgen). */
@@ -87,8 +86,9 @@ function gh_sec1_von($privat): string
 }
 
 /**
- * Eine Hülle bauen (Binärwert). `$fest` nur für Prüfvektoren:
- * ['d' => 32 Byte, 'iv' => 16 Byte].
+ * Eine Hülle der FASSUNG 1 bauen (Binärwert) — nur als Gegenlage: Der
+ * Eingang weist sie ab, kein Leser öffnet sie. `$fest` nur für feste
+ * Eingaben: ['d' => 32 Byte, 'iv' => 16 Byte].
  */
 function gh_verschliessen(string $klar, string $empfSec1, string $art, string $clientRef,
                               string $platz = '', ?array $fest = null): string
@@ -135,46 +135,18 @@ function gh_spur_innen(array $punkte, int $tsVon): string
 }
 
 /**
- * Die Einsatzhülle aus Klartext bauen — Innenform wie der Browser
- * (`EdOrtsdaten.einsatzInnen()`) und die Gerätehilfe der Proben:
- * {"fassung":1, "phasen":[{phase,t,lat,lon}], "rea":[{t, ereignisse:[{art,t}]}]},
- * alle Zeiten in Sekunden seit `$beginn`.
- *
- * @param list<array{phase:int, ts:int, lat:?float, lon:?float}> $phasen
- * @param list<array{ts:int, ereignisse:list<array{art:string, ts:int}>}> $reas
- * @return string die Hülle, binär
- */
-function gh_einsatz_verschliessen(string $sec1, string $ref, int $beginn,
-                                  array $phasen, array $reas): string
-{
-    $innen = ['fassung' => 1, 'phasen' => [], 'rea' => []];
-    foreach ($phasen as $p) {
-        $innen['phasen'][] = ['phase' => (int)$p['phase'], 't' => (int)$p['ts'] - $beginn,
-                              'lat' => $p['lat'] === null ? null : (float)$p['lat'],
-                              'lon' => $p['lon'] === null ? null : (float)$p['lon']];
-    }
-    foreach ($reas as $r) {
-        $ev = [];
-        foreach ($r['ereignisse'] as $e) {
-            $ev[] = ['art' => (string)$e['art'], 't' => (int)$e['ts'] - $beginn];
-        }
-        $innen['rea'][] = ['t' => (int)$r['ts'] - $beginn, 'ereignisse' => $ev];
-    }
-    return gh_verschliessen(json_encode($innen, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
-                            $sec1, 'einsatz', $ref, '');
-}
-
-/**
- * Punkte zu verschlossenen Stücken — die Regel von
+ * Punkte zu Stücken gruppieren — die Regel von
  * `EdOrtsdaten.stueckeBauen()`: Ein Stück endet an jeder Lücke der
  * Punktnummern und nach höchstens 2000 Punkten (`LIMIT_TRACKPUNKTE_ANFRAGE`),
- * Punkt i eines Stücks ist `seq_from + i`.
+ * Punkt i eines Stücks ist `seq_from + i`. Verschlossen wird in `geraet.php`
+ * (`gh2_probe_stuecke_bauen()`); bis KA-26 verschloss diese Funktion selbst,
+ * in Fassung 1 (`gh_stuecke_bauen()`).
  *
  * @param list<array{0:int,1:float,2:float,3:?float,4:int}> $punkte
  *        [seq, lat, lon, ele, ts], nach `seq` sortiert, ohne Dubletten
- * @return list<array{seq_from:int, punkte:int, ts_von:int, ts_bis:int, huelle:string}>
+ * @return list<array{seq_from:int, punkte:int, ts_von:int, ts_bis:int, gruppe:list<array>}>
  */
-function gh_stuecke_bauen(string $sec1, string $art, string $ref, array $punkte): array
+function gh_stuecke_gruppieren(array $punkte): array
 {
     $gruppen = [];
     foreach ($punkte as $p) {
@@ -189,76 +161,8 @@ function gh_stuecke_bauen(string $sec1, string $art, string $ref, array $punkte)
     foreach ($gruppen as $g) {
         $ts = array_map(static fn($p) => (int)$p[4], $g);
         $von = min($ts);
-        $innen = gh_spur_innen(array_map(static fn($p) => [$p[1], $p[2], $p[3], (int)$p[4]], $g), $von);
         $aus[] = ['seq_from' => (int)$g[0][0], 'punkte' => count($g), 'ts_von' => $von,
-                  'ts_bis' => max($ts),
-                  'huelle' => gh_verschliessen($innen, $sec1, $art, $ref, $g[0][0] . ':' . count($g))];
+                  'ts_bis' => max($ts), 'gruppe' => $g];
     }
     return $aus;
-}
-
-/**
- * Die Innenform der Stufen 2 und 3 („B fest", `docs/Technik.md` 4.6): vier
- * Spalten zu je n Werten int32 big-endian — Breite, Länge (1e-7 Grad), Höhe
- * (ganze Meter, `GH_HOEHE_UNBEKANNT` = keine), Zeit (Sekunden seit `ts_von`) —,
- * jeder Wert als Abstand zum vorigen derselben Spalte, dann mit zlib gepackt
- * (`gzcompress()`, wie `innen_gepackt()` in `tools/proben/huelle/referenz.py`
- * und `CompressionStream('deflate')` im Browser).
- *
- * @param list<array{0:int,1:float,2:float,3:?float,4:int}> $punkte [seq, lat, lon, ele, ts]
- */
-function gh_gepackt_innen(array $punkte, int $tsVon): string
-{
-    $spalten = [[], [], [], []];
-    foreach ($punkte as $p) {
-        $spalten[0][] = (int)round((float)$p[1] * 1e7);
-        $spalten[1][] = (int)round((float)$p[2] * 1e7);
-        $spalten[2][] = $p[3] === null ? GH_HOEHE_UNBEKANNT
-                                       : max(-32767, min(32767, (int)round((float)$p[3])));
-        $spalten[3][] = (int)$p[4] - $tsVon;
-    }
-    $roh = '';
-    foreach ($spalten as $sp) {
-        $alt = 0;
-        foreach ($sp as $v) { $roh .= pack('N', ($v - $alt) & 0xFFFFFFFF); $alt = $v; }
-    }
-    $gepackt = gzcompress($roh, 6);
-    if ($gepackt === false) { throw new RuntimeException('zlib gescheitert'); }
-    return $gepackt;
-}
-
-/**
- * EIN Stück der Stufe 2 oder 3 aus Punkten — die dritte Fassung des Formats,
- * nach der Referenz (`referenz.py`) und dem Browser
- * (`EdOrtsdaten.gepacktBauen()`), gemessen von der Hüllenprobe gegen die
- * Referenz (`probe_server.php`, Vektoren „gepackt").
- *
- * DER SERVER PACKT NUR FÜR DAS DEMO-KONTO, beim Reset (`edbak_restore()`,
- * Zweig `'server'`; Konzept RD, E-RD-10): Die Fixture trägt dessen Punkte im
- * Klartext, ausgedünnt, mit `stufe` und `n_original`, und der Reset legt die
- * Spur so an, wie sie im Referenzkonto lag. Für jedes andere Konto gilt
- * weiter: Der Server sieht keine Punkte und packt nicht — gepackt wird im
- * Browser, im Wartungslauf. Jeder weitere Aufrufer ist ein Fehler; das
- * Register `tools/zaehlung/register.php` zählt die Aufrufer.
- *
- * Die Bindung trägt Stufe und Marke mit (`seq_from:punkte:stufe:n_original`),
- * damit der Server ein Stück nicht umetikettieren kann. `$fest` nur für
- * Prüfvektoren: ['d' => 32 Byte, 'iv' => 16 Byte].
- *
- * @param list<array{0:int,1:float,2:float,3:?float,4:int}> $punkte [seq, lat, lon, ele, ts]
- * @return array{seq_from:int, punkte:int, n_original:int, stufe:int, ts_von:int, ts_bis:int, huelle:string}
- */
-function gh_gepackt_bauen(string $sec1, string $art, string $ref, array $punkte, int $stufe,
-                          int $seqFrom, int $nOriginal, ?array $fest = null): array
-{
-    if (!$punkte || !in_array($stufe, [2, 3], true) || $nOriginal < count($punkte)) {
-        throw new InvalidArgumentException('gepacktes Stück mit unmöglichen Zahlen');
-    }
-    $ts = array_map(static fn($p) => (int)$p[4], $punkte);
-    $von = min($ts);
-    $n = count($punkte);
-    return ['seq_from' => $seqFrom, 'punkte' => $n, 'n_original' => $nOriginal, 'stufe' => $stufe,
-            'ts_von' => $von, 'ts_bis' => max($ts),
-            'huelle' => gh_verschliessen(gh_gepackt_innen($punkte, $von), $sec1, $art, $ref,
-                                         $seqFrom . ':' . $n . ':' . $stufe . ':' . $nOriginal, $fest)];
 }

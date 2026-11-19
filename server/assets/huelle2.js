@@ -491,7 +491,7 @@ const EdHuelle2 = (() => {
    *            o: number, stand_absender: string, vermerk: Array|null}|null}
    */
   function einsatzHinweis(d, absender, stand) {
-    if (absender === null || absender === KONTO || !stand || !stand.o || stand.k) { return null; }
+    if (absender === KONTO || !stand || !stand.o || stand.k) { return null; }
     if (!stand.a || stand.a === absender) { return null; }
     const vermerk = vermerkFuer(stand, absender);
     let art;
@@ -525,8 +525,8 @@ const EdHuelle2 = (() => {
    * dem Abnehmen dieser Hülle. */
   function einsatzBefunde(d, absender, stand) {
     const befund = [];
-    if (absender !== null && stand && stand.f && d.schluss !== true) { befund.push(OFFEN_NACH_SCHLUSS); }
-    if (absender !== null && absender !== KONTO) {
+    if (stand && stand.f && d.schluss !== true) { befund.push(OFFEN_NACH_SCHLUSS); }
+    if (absender !== KONTO) {
       const h = einsatzHinweis(d, absender, stand);
       const wirkt = ((stand && stand.u) || []).some(e => e[1] !== absender && e[0] >= d.z);
       if (wirkt || (h !== null && h.o >= d.z)) { befund.push(STAND_UEBERNOMMEN); }
@@ -541,7 +541,7 @@ const EdHuelle2 = (() => {
    * `EdOrtsdaten`, im Fortschreiben des Standbuchs und gegen den DANN
    * geltenden Eintrag).
    * @param d         das Innere, wie `einsatzLesen()` es liefert
-   * @param absender  ebenso: null, 'konto' oder die SID (hex)
+   * @param absender  ebenso: 'konto' oder die SID (hex)
    * @param stand     der Eintrag VOR dem Abnehmen
    * @param o  `jetzt`: die Unix-Sekunde der bewussten Bestätigung — verlangt,
    *           wo die Hülle nur mit ihr gilt, sonst ohne Wirkung
@@ -553,12 +553,6 @@ const EdHuelle2 = (() => {
   function standNachAbnahme(d, absender, stand, o) {
     const alt = stand || {}, jetzt = (o || {}).jetzt;
     const neu = {};
-    if (absender === null) {
-      for (const s of STANDFELDER) {
-        if (alt[s] && !(s === 'u' && !alt[s].length)) { neu[s] = alt[s]; }
-      }
-      return neu;
-    }
     if (hartZurueckgelegt(d, absender, stand)) { throw fehler('zurueckgelegt'); }
     const h = einsatzHinweis(d, absender, stand);
     if (h !== null && !Number.isSafeInteger(jetzt)) { throw fehler(BESTAETIGUNG); }

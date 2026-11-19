@@ -1,4 +1,4 @@
-"""Die Gerätehülle, Fassung 1 und 2 — Referenz und Prüfvektoren.
+"""Die Gerätehülle, Fassung 2 — Referenz und Prüfvektoren.
 
 Anlass: Nr. 43 und 563 — Spur, Phasenkoordinaten und Reanimation gehen
 verschlüsselt an den Server; drei Umsetzungen (Garmin, Android, Browser)
@@ -8,7 +8,7 @@ Konzept KA, KA-06a) belegt dazu Herkunft, Zeit und Vollständigkeit.
 WOFUER. Die Hülle entsteht an drei Stellen und wird an einer geöffnet. Ob
 drei Umsetzungen dasselbe tun, zeigt nur ein gemeinsamer Satz fester Eingaben
 mit erwarteten Ausgaben: diese Datei. Sie ist die Referenz, gegen die die
-Browserprobe (`probe.mjs`, gegen `server/assets/crypto.js`), die Probe-App der Uhr
+Browserprobe (`probe.mjs`, gegen `server/assets/huelle2.js`), die Probe-App der Uhr
 (`tools/uhr-pruefstand/krypto-probe/`) und die Android-Prüffälle
 laufen. Wer das Format ändert, ändert es HIER und erzeugt die Vektoren neu.
 
@@ -18,8 +18,18 @@ der Schwesterdatei `referenz_inhalt.py`: Sie haben andere Umsetzer (Browser
 und PHP, nie Uhr oder Handy) und ein anderes Verfahren (AES-GCM).
 
 =========================================================================
-FASSUNG 1 (S11) — bleibt lesbar, ihre Vektoren (`vektoren.json`) gelten fort
+FASSUNG 1 (S11) — wird seit Web 27.0.0 nicht mehr gelesen (KA-07)
 =========================================================================
+
+Kein Leser öffnet sie mehr: `Leser.huelle()` weist das Kennbyte 0x01 als
+`ohne-herkunft` ab, wie der Browser (`huelle2.js`); auf keiner Anlage
+liegt noch eine (E-KA-104, -106). Bis Web 26.x öffnete der Anhebelauf sie
+und verschloss sie als Konto neu (`spur_uebernehmen()`,
+`einsatz_uebernehmen()`); was er gehoben hat, trägt weiter den Merker
+UEBERNOMMEN. Die Form steht hier, weil Fassung 2 auf ihr aufbaut und weil
+`verschliessen()` sie noch BAUT — nur als Gegenlage für die Proben, die
+„Fassung 1 → abgewiesen" messen. Ihre Vektoren (`vektoren.json`,
+`HuelleVektor.mc`, `Vektoren.mc` der Krypto-Probe) sind entfallen.
 
     Kennbyte   1 Byte    0x01 — die Fassung
     EPK       65 Byte    flüchtiger öffentlicher Schlüssel, P-256, SEC1
@@ -219,7 +229,7 @@ die angenommene Hülle der Fassung 2 nicht `schluss: true` trägt — gleich
 von welchem Absender, auch vom Konto. Weil `f` haftet, steht der Befund bei
 JEDEM Lesen, solange die offene Hülle die gespeicherte ist, und fällt weg,
 sobald wieder eine abgeschlossene abgenommen ist. Eine Hülle der Fassung 1
-kommt nicht so weit (`zurueckgelegt` bzw. ohne Stand geduldet).
+kommt nicht so weit (`ohne-herkunft`).
 
 DER RÜCKWEG `uhrzeit-pruefen` (E-KA-70, F-KA-112; seit KA-09). Ein Gerät,
 dessen Uhr einmal vorauslief, hebt den Stand `o` eines Einsatzes über alles,
@@ -340,7 +350,8 @@ Daraus die Regeln beim Lesen (`spur_lesen()`):
     absender-gesperrt   das Gerät war zu dieser Zeit schon ausgetragen
     innen          ein Gerät gibt sich als Konto aus (Herkunftsliste, Merker,
                    Stufe ≥ 2) oder der Kopf ist unbrauchbar
-    ohne-herkunft  eine Hülle der Fassung 1, wo Fassung 2 verlangt ist
+    ohne-herkunft  eine Hülle der Fassung 1 (seit Web 27.0.0 überall; bis
+                   dahin nur, wo Fassung 2 verlangt war)
 Versatz, Löschvermerke und Stand kommen aus dem STANDBUCH
 (`referenz_inhalt.py`), nie aus dem Klartext der Datenbank.
 
@@ -365,9 +376,9 @@ muss er sich festlegen, bevor er die Zufallszahl der Gegenseite kennt, und
 trifft je Versuch mit eins zu einer Million — sichtbar als falscher Wert.
 
 AUFRUF
-    python3 referenz.py erzeugen     # vektoren.json, vektoren-2.json und die vier .mc-Dateien der Uhr
-                                     # (Vektoren.mc, HuelleVektor.mc, Vektoren2.mc, HuelleVektor2.mc)
-    python3 referenz.py pruefen      # beide Vektordateien gegen diese Umsetzung, die .mc-Dateien dagegen
+    python3 referenz.py erzeugen     # vektoren-2.json und die zwei .mc-Dateien der Uhr
+                                     # (Vektoren2.mc, HuelleVektor2.mc)
+    python3 referenz.py pruefen      # die Vektordatei gegen diese Umsetzung, die .mc-Dateien dagegen
     python3 referenz.py --selbstprobe
 """
 from __future__ import annotations
@@ -389,20 +400,16 @@ from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 HIER = pathlib.Path(__file__).resolve().parent
 WURZEL = HIER.parents[2]
-VEKTOREN = HIER / "vektoren.json"
-UHR_VEKTOREN = WURZEL / "tools" / "uhr-pruefstand" / "krypto-probe" / "source" / "Vektoren.mc"
-# Der Selbsttest der Uhr-App: EIN Fall, mit dem die App
-# beim ersten Senden ihre Byteordnung und die ganze Kette prüft.
-APP_VEKTOR = WURZEL / "watch" / "source" / "HuelleVektor.mc"
-# Dasselbe für Fassung 2 (KG-03a): die Fälle der Probe-App und der eine Fall
-# des Selbsttests `Huelle2.bereit()`. Eigene Dateien — die der Fassung 1
-# bleiben byte-gleich.
-UHR_VEKTOREN2 = UHR_VEKTOREN.with_name("Vektoren2.mc")
-APP_VEKTOR2 = APP_VEKTOR.with_name("HuelleVektor2.mc")
+# Die Fälle der Probe-App der Uhr (KG-03a) und der eine Fall des
+# Selbsttests der App (`Huelle.bereit()`, `Huelle2.bereit()`): Mit ihm
+# misst die Uhr beim ersten Senden ihre Byteordnung und die ganze Kette.
+# Bis Uhr 6.0.0 rechnete der Selbsttest dafür einen Fall der Fassung 1
+# nach (`HuelleVektor.mc`, KA-28).
+UHR_VEKTOREN2 = WURZEL / "tools" / "uhr-pruefstand" / "krypto-probe" / "source" / "Vektoren2.mc"
+APP_VEKTOR2 = WURZEL / "watch" / "source" / "HuelleVektor2.mc"
 
-FASSUNG = 1
+FASSUNG = 1                          # nur noch gebaut, als Gegenlage
 INFO = b"nadoku-huelle-1"
-KOPF = 1 + 65 + 16
 TAG = 32
 # Ordnung der Kurve P-256 — feste Schlüssel werden aus einem Namen abgeleitet
 # und in den gültigen Bereich gebracht, damit jede Zahl nachvollziehbar ist.
@@ -451,8 +458,9 @@ def schluessel_ableiten(z: bytes, epk: bytes, empf_pub: bytes) -> tuple[bytes, b
 
 def verschliessen(klartext: bytes, empf_pub: bytes, art: str, client_ref: str,
                   platz: str = "", *, fluechtig: ec.EllipticCurvePrivateKey | None = None,
-                  iv: bytes | None = None, zwischen: dict | None = None) -> bytes:
-    """Eine Hülle bauen. `fluechtig` und `iv` nur für Prüfvektoren fest."""
+                  iv: bytes | None = None) -> bytes:
+    """Eine Hülle der FASSUNG 1 bauen — nur als Gegenlage: Jeder Leser weist
+    sie als `ohne-herkunft` ab. `fluechtig` und `iv` nur für Vektoren fest."""
     empf = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(), empf_pub)
     fluechtig = fluechtig or ec.generate_private_key(ec.SECP256R1())
     iv = iv if iv is not None else __import__("os").urandom(16)
@@ -465,40 +473,10 @@ def verschliessen(klartext: bytes, empf_pub: bytes, art: str, client_ref: str,
     ct = e.update(gepolstert) + e.finalize()
     kopf = bytes([FASSUNG]) + epk + iv
     tag = hmac.new(k_mac, kopf + ct + bindung(art, client_ref, platz), hashlib.sha256).digest()
-    if zwischen is not None:
-        zwischen.update(epk=epk, z=z, k_enc=k_enc, k_mac=k_mac, gepolstert=gepolstert,
-                        ct=ct, tag=tag)
     return kopf + ct + tag
 
 
-def oeffnen(huelle: bytes, empf_priv: ec.EllipticCurvePrivateKey, art: str,
-            client_ref: str, platz: str = "") -> bytes:
-    if len(huelle) < KOPF + 16 + TAG or (len(huelle) - KOPF - TAG) % 16:
-        raise HuelleFehler("laenge")
-    if huelle[0] != FASSUNG:
-        raise HuelleFehler("fassung")
-    epk, iv = huelle[1:66], huelle[66:KOPF]
-    ct, tag = huelle[KOPF:-TAG], huelle[-TAG:]
-    try:
-        eph = ec.EllipticCurvePublicKey.from_encoded_point(ec.SECP256R1(), epk)
-    except ValueError as f:
-        raise HuelleFehler("schluessel") from f
-    z = empf_priv.exchange(ec.ECDH(), eph)
-    k_enc, k_mac = schluessel_ableiten(z, epk, sec1(empf_priv.public_key()))
-    soll = hmac.new(k_mac, huelle[:-TAG] + bindung(art, client_ref, platz),
-                    hashlib.sha256).digest()
-    if not hmac.compare_digest(soll, tag):
-        raise HuelleFehler("pruefwert")
-    d = Cipher(algorithms.AES(k_enc), modes.CBC(iv)).decryptor()
-    gepolstert = d.update(ct) + d.finalize()
-    try:
-        u = padding.PKCS7(128).unpadder()
-        return u.update(gepolstert) + u.finalize()
-    except ValueError as f:
-        raise HuelleFehler("polsterung") from f
-
-
-# ------------------------------------------------------------- Vektoren
+# ------------------------------------------------------------ Innenformen
 
 HOEHE_UNBEKANNT = -32768
 HOEHE_GRENZE = 32767
@@ -582,28 +560,13 @@ def platz_gepackt(seq_from: int, punkte: int, stufe: int, n_original: int) -> st
     return f"{seq_from}:{punkte}:{stufe}:{n_original}"
 
 
-def innen_json(punkte: list[tuple[float, float, float, int]]) -> bytes:
-    """Kandidat B: JSON, Koordinaten mit sechs Nachkommastellen, Höhe mit einer."""
-    return json.dumps({"p": [[round(la, 6), round(lo, 6), round(h, 1), t]
-                             for la, lo, h, t in punkte]}, separators=(",", ":")).encode()
-
-
 def beispielpunkte(n: int) -> list[tuple[float, float, float, int]]:
     """Eine feste, erfundene Spur bei Kempten — kein Ort aus einem Einsatz."""
     return [(47.7261 + i * 0.00031, 10.3159 + i * 0.00047, 674.0 + (i % 37) * 0.7, i * 5)
             for i in range(n)]
 
 
-EMPFAENGER = "nadoku-huelle-vektor-empfaenger"
-FAELLE = [
-    # Name, Art, client_ref, Platz, Klartext
-    ("leer", "einsatz", "w-20261011-0001", "", b""),
-    ("kurz", "einsatz", "w-20261011-0001", "", b"nadoku"),
-    ("ein-block", "spur", "w-20261011-0002", "0:1", b"0123456789abcdef"),
-    ("spur-binaer-3", "spur", "w-20261011-0002", "120:3", innen_binaer(beispielpunkte(3))),
-    ("ruhe-json-3", "ruhe", "r-20261011-0007", "0:3", innen_json(beispielpunkte(3))),
-    ("umlaut-ref", "einsatz", "Prüf-ß-€", "", b'{"ph":{"4":[47.7,10.3]}}'),
-]
+EMPFAENGER = "nadoku-huelle-vektor-empfaenger"   # der Kontoschlüssel der Vektoren
 # Gepackte Stücke (Stufe 2, 3): Name, Art, client_ref, Stufe, seq_from,
 # n_original, Punkte (Breite, Länge, Höhe, Zeit) — eine Höhe fehlt, eine ist
 # negativ, die Länge fällt (negativer Abstand).
@@ -614,78 +577,8 @@ GEPACKT = [
     ("gepackt-stufe-3", "spur", "m-20261105-0024", 3, 0, 120,
      [(47.5591, 10.217, 812.0, 2000), (47.5644, 10.2311, 1405.0, 2093), (47.6123, 10.2899, 930.0, 2290)]),
 ]
-# Was beim Öffnen scheitern MUSS — je mit dem erwarteten Grund.
-STOERUNGEN = [
-    ("tag-gekippt", "pruefwert"), ("ct-gekippt", "pruefwert"), ("iv-gekippt", "pruefwert"),
-    ("andere-ref", "pruefwert"), ("anderer-platz", "pruefwert"), ("andere-art", "pruefwert"),
-    ("fassung-2", "fassung"), ("gekuerzt", "laenge"),
-]
-
-
 def b64(b: bytes) -> str:
     return base64.b64encode(b).decode()
-
-
-def vektoren_bauen() -> dict:
-    empf = schluessel_aus_name(EMPFAENGER)
-    empf_pub = sec1(empf.public_key())
-    d = empf.private_numbers().private_value.to_bytes(32, "big")
-    aus = {
-        "format": "nadoku-huelle-1",
-        "hinweis": "Erzeugt von tools/proben/huelle/referenz.py — nicht von Hand ändern.",
-        "empfaenger": {"privat_hex": d.hex(), "oeffentlich_hex": empf_pub.hex()},
-        "faelle": [], "stoerungen": [],
-    }
-    for name, art, ref, platz, klar in FAELLE:
-        fl = schluessel_aus_name(f"nadoku-huelle-vektor-fluechtig-{name}")
-        iv = hashlib.sha256(f"nadoku-huelle-vektor-iv-{name}".encode()).digest()[:16]
-        zw: dict = {}
-        h = verschliessen(klar, empf_pub, art, ref, platz, fluechtig=fl, iv=iv, zwischen=zw)
-        aus["faelle"].append({
-            "name": name, "art": art, "client_ref": ref, "platz": platz,
-            "klartext_hex": klar.hex(),
-            "fluechtig_privat_hex": fl.private_numbers().private_value.to_bytes(32, "big").hex(),
-            "iv_hex": iv.hex(), "epk_hex": zw["epk"].hex(), "z_hex": zw["z"].hex(),
-            "k_enc_hex": zw["k_enc"].hex(), "k_mac_hex": zw["k_mac"].hex(),
-            "bindung_hex": bindung(art, ref, platz).hex(),
-            "ct_hex": zw["ct"].hex(), "tag_hex": zw["tag"].hex(), "huelle_b64": b64(h),
-        })
-    # GEPACKT (Stufe 2 und 3, Konzept RD, Nr. 500): dieselbe Hülle um die
-    # Innenform „B fest". Ein eigener Block und keine Zeile in FAELLE — die
-    # Uhr und die App lesen FAELLE, und packen tun sie nicht. `probe_server.php`
-    # hält `gh_gepackt_bauen()` byte-gleich dagegen. Die Punkte liegen auf
-    # ganzen 1e-7 Grad, damit keine Rundung an einer halben Stelle entscheidet
-    # (Python rundet dort zur geraden Zahl, PHP von der Null weg).
-    aus["gepackt"] = []
-    for name, art, ref, stufe, seq, n_orig, punkte in GEPACKT:
-        fl = schluessel_aus_name(f"nadoku-huelle-vektor-fluechtig-{name}")
-        iv = hashlib.sha256(f"nadoku-huelle-vektor-iv-{name}".encode()).digest()[:16]
-        ts_von = min(t for _, _, _, t in punkte)
-        platz = platz_gepackt(seq, len(punkte), stufe, n_orig)
-        h = verschliessen(innen_gepackt(punkte, ts_von), empf_pub, art, ref, platz, fluechtig=fl, iv=iv)
-        aus["gepackt"].append({
-            "name": name, "art": art, "client_ref": ref, "stufe": stufe, "seq_from": seq,
-            "n_original": n_orig, "punkte": [[seq + i, la, lo, hh, t] for i, (la, lo, hh, t) in enumerate(punkte)],
-            "roh_hex": gepackt_roh(punkte, ts_von).hex(), "platz": platz,
-            "fluechtig_privat_hex": fl.private_numbers().private_value.to_bytes(32, "big").hex(),
-            "iv_hex": iv.hex(), "huelle_b64": b64(h),
-        })
-    basis = aus["faelle"][3]
-    h = base64.b64decode(basis["huelle_b64"])
-    for name, grund in STOERUNGEN:
-        art, ref, platz = basis["art"], basis["client_ref"], basis["platz"]
-        g = bytearray(h)
-        if name == "tag-gekippt": g[-1] ^= 1
-        elif name == "ct-gekippt": g[KOPF] ^= 1
-        elif name == "iv-gekippt": g[66] ^= 1
-        elif name == "andere-ref": ref = ref + "x"
-        elif name == "anderer-platz": platz = "121:3"
-        elif name == "andere-art": art = "ruhe"
-        elif name == "fassung-2": g[0] = 2
-        elif name == "gekuerzt": g = g[:-1]
-        aus["stoerungen"].append({"name": name, "grund": grund, "art": art,
-                                  "client_ref": ref, "platz": platz, "huelle_b64": b64(bytes(g))})
-    return aus
 
 
 # =========================================================== Fassung 2
@@ -826,16 +719,14 @@ def einsatz_innen2(z: int, start: int, schluss: bool, phasen: list, rea: list,
 class Leser:
     """Was der Browser des Kontos zum Öffnen hat: den privaten Kontoschlüssel
     und das Gerätebuch — `{sid hex: {"spk": bytes, "bis": int | None}}`.
-    `verlangt2`: Fassung 1 gilt nicht mehr (nach dem Stichtag, oder wo das
-    Standbuch für diesen Datensatz schon einen Stand der Fassung 2 kennt)."""
+    Bis Web 26.x nahm er `verlangt2` und öffnete ohne es auch Fassung 1;
+    seit KA-07 ist Fassung 1 überall `ohne-herkunft`."""
 
-    def __init__(self, konto_priv: ec.EllipticCurvePrivateKey, geraete: dict,
-                 verlangt2: bool = False):
+    def __init__(self, konto_priv: ec.EllipticCurvePrivateKey, geraete: dict):
         self.priv = konto_priv
         self.pub = sec1(konto_priv.public_key())
         self.konto_sid = sid(self.pub)
         self.geraete = geraete
-        self.verlangt2 = verlangt2
 
     def _spk(self, s: bytes) -> bytes | None:
         if s == self.konto_sid:
@@ -843,18 +734,16 @@ class Leser:
         g = self.geraete.get(s.hex())
         return g["spk"] if g else None
 
-    def huelle(self, huelle: bytes, art: str, ref: str, platz: str = "") -> tuple[bytes, str | None]:
-        """Klartext und Absender: None (Fassung 1), "konto" oder die SID (hex)."""
+    def huelle(self, huelle: bytes, art: str, ref: str, platz: str = "") -> tuple[bytes, str]:
+        """Klartext und Absender: "konto" oder die SID (hex)."""
         if huelle[:1] == bytes([FASSUNG]):
-            if self.verlangt2:
-                raise HuelleFehler("ohne-herkunft")
-            return oeffnen(huelle, self.priv, art, ref, platz), None
+            raise HuelleFehler("ohne-herkunft")
         klar, s = oeffnen2(huelle, self.priv, self._spk, art, ref, platz)
         return klar, KONTO if s == self.konto_sid else s.hex()
 
-    def gesperrt(self, absender: str | None, zeit: int) -> bool:
+    def gesperrt(self, absender: str, zeit: int) -> bool:
         """War dieses Gerät zur Zeit der Daten schon ausgetragen?"""
-        g = self.geraete.get(absender or "")
+        g = self.geraete.get(absender)
         return bool(g) and g.get("bis") is not None and zeit > g["bis"]
 
 
@@ -879,24 +768,22 @@ def spur_lesen(leser: Leser, art: str, ref: str, stuecke: list[dict], *, versatz
     Klartextkennzeichen `final`.
 
     Gibt die Punkte (Nummer, Breite, Länge, Höhe, Zeit + Versatz) und einen
-    Befund zurück: `herkunft` (wer verschlossen hat), `schluss`, `fassung1`,
-    `gedeckt`. Wirft `HuelleFehler` mit benanntem Grund."""
+    Befund zurück: `herkunft` (wer verschlossen hat), `schluss`, `gedeckt`.
+    Wirft `HuelleFehler` mit benanntem Grund. Bis Web 26.x lockerte ein Stück
+    der Fassung 1 die Regeln `luecke` und `ohne-schluss` (Befund `fassung1`);
+    seit KA-07 kommt keines mehr so weit."""
     offen = []
     for st in stuecke:
         stufe = st.get("stufe", 1)
         platz = (platz_gepackt(st["seq_from"], st["punkte"], stufe, st["n_original"])
                  if stufe >= 2 else f"{st['seq_from']}:{st['punkte']}")
         klar, absender = leser.huelle(st["huelle"], art, ref, platz)
-        if absender is None:                          # Fassung 1
-            kopf = {"ts_von": st["ts_von"] - versatz, "merker": 0, "herkunft": [],
-                    "uebernommen": None, "nutzlast": klar}
-        else:
-            kopf = spur_innen2_lesen(klar)
-            if st["ts_von"] - kopf["ts_von"] != versatz:
-                raise HuelleFehler("zeit")
-            if absender != KONTO and (stufe >= 2 or kopf["herkunft"]
-                                      or kopf["merker"] & (M_LUECKE | M_UEBERNOMMEN)):
-                raise HuelleFehler("innen")
+        kopf = spur_innen2_lesen(klar)
+        if st["ts_von"] - kopf["ts_von"] != versatz:
+            raise HuelleFehler("zeit")
+        if absender != KONTO and (stufe >= 2 or kopf["herkunft"]
+                                  or kopf["merker"] & (M_LUECKE | M_UEBERNOMMEN)):
+            raise HuelleFehler("innen")
         if stufe >= 2:
             pkt = gepackt_lesen(kopf["nutzlast"], st["punkte"], kopf["ts_von"]) if st["punkte"] else []
             bis = st["seq_from"] + st["n_original"]
@@ -910,17 +797,16 @@ def spur_lesen(leser: Leser, art: str, ref: str, stuecke: list[dict], *, versatz
                             kopf["ts_von"] + t))
             bis = st["seq_from"] + st["punkte"]
         zeiten = [p[3] for p in pkt]
-        if absender not in (None, KONTO) and leser.gesperrt(absender, max(zeiten, default=kopf["ts_von"])):
+        if absender != KONTO and leser.gesperrt(absender, max(zeiten, default=kopf["ts_von"])):
             raise HuelleFehler("absender-gesperrt")
         offen.append({"von": st["seq_from"], "bis": bis, "stufe": stufe, "pkt": pkt,
                       "absender": absender, "merker": kopf["merker"],
                       "t_erst": min(zeiten, default=None), "t_letzt": max(zeiten, default=None)})
 
-    fassung1 = any(o["absender"] is None for o in offen)
     offen.sort(key=lambda o: (o["von"], -o["bis"]))
     ende, t_ende = 0, None
     for o in offen:
-        if o["von"] > ende and not fassung1 and not _ueberdeckt(sperren, t_ende, o["t_erst"]):
+        if o["von"] > ende and not _ueberdeckt(sperren, t_ende, o["t_erst"]):
             raise HuelleFehler("luecke")
         if o["bis"] > ende:
             ende = o["bis"]
@@ -929,7 +815,7 @@ def spur_lesen(leser: Leser, art: str, ref: str, stuecke: list[dict], *, versatz
     schluss = any(o["merker"] & M_SCHLUSS and o["bis"] == ende for o in offen)
     if stand is not None and (ende < stand[0] or max((o["stufe"] for o in offen), default=0) < stand[1]):
         raise HuelleFehler("zurueckgelegt")
-    if abgeschlossen and not schluss and not fassung1 and not _ueberdeckt(sperren, t_ende, None):
+    if abgeschlossen and not schluss and not _ueberdeckt(sperren, t_ende, None):
         raise HuelleFehler("ohne-schluss")
 
     # Entdoppeln wie bisher: gepackte Stücke zuerst, dann Gerätestücke über der Marke.
@@ -948,12 +834,12 @@ def spur_lesen(leser: Leser, art: str, ref: str, stuecke: list[dict], *, versatz
     # Kein Ausblenden (06e, F-KA-130): Vermerke erklären Lücken; ausblenden
     # tut der Aufrufer mit den Sperren des Klartexts.
     punkte = [(n, la, lo, h, t + versatz) for n, (la, lo, h, t) in sorted(nach.items())]
-    herkunft = sorted({("fassung-1" if o["absender"] is None else o["absender"]) for o in offen})
-    return punkte, {"herkunft": herkunft, "schluss": schluss, "fassung1": fassung1, "gedeckt": ende}
+    herkunft = sorted({o["absender"] for o in offen})
+    return punkte, {"herkunft": herkunft, "schluss": schluss, "gedeckt": ende}
 
 
 def einsatz_lesen(leser: Leser, ref: str, huelle: bytes, started_ts: int, *, versatz: int = 0,
-                  stand: dict | None = None, bestaetigt: dict | None = None) -> tuple[dict, str | None]:
+                  stand: dict | None = None, bestaetigt: dict | None = None) -> tuple[dict, str]:
     """Die Einsatzhülle öffnen und gegen Klartext und Standbuch halten.
     `started_ts`: der Klartextbeginn des Einsatzes. `stand`: der Eintrag des
     Standbuchs — `o` (Zähler der zuletzt abgenommenen Hülle), `k` (1: sie kam
@@ -966,10 +852,6 @@ def einsatz_lesen(leser: Leser, ref: str, huelle: bytes, started_ts: int, *, ver
         d = json.loads(klar.decode("utf-8"))
     except ValueError as f:
         raise HuelleFehler("innen") from f
-    if absender is None:
-        if stand and stand.get("o"):
-            raise HuelleFehler("zurueckgelegt")       # Fassung 1 nach einer abgenommenen Fassung 2
-        return d, None
     if (not isinstance(d, dict) or d.get("fassung") != 2 or type(d.get("z")) is not int
             or d["z"] < 1 or type(d.get("start")) is not int):
         raise HuelleFehler("innen")
@@ -988,98 +870,6 @@ def einsatz_lesen(leser: Leser, ref: str, huelle: bytes, started_ts: int, *, ver
     return d, absender
 
 
-# ------------------------------------------- Übernahme der Fassung 1 (06e)
-
-def spur_uebernehmen(leser: Leser, art: str, ref: str, stuecke: list[dict], *, jetzt: int,
-                     versatz: int = 0, sperren: tuple = (),
-                     abgeschlossen: bool = False) -> tuple[list[dict], list[tuple[int, int]]]:
-    """Eine Spur mit Stücken der Fassung 1 als KONTO neu verschließen (E-KA-97,
-    -95). Nur der Anhebelauf ruft das; er ist der letzte Leser der Fassung 1.
-
-    Jedes Stück der Fassung 1 wird geöffnet und als Fassung 2 vom Konto
-    verschlossen, mit Merker UEBERNOMMEN und `jetzt` — derselbe Platz,
-    dieselbe Nutzlast, `ts_von` der Hülle = Klartext − `versatz`. Stücke der
-    Fassung 2 bleiben, wie sie sind. Ist die Aufzeichnung `abgeschlossen` und
-    trägt kein übernommenes Stück am Ende schon SCHLUSS, bekommt es das
-    Stück, das bis ans Ende der Deckung reicht (Fassung 1 kannte den Merker
-    nicht). Jede LÜCKE in der Deckung, die kein belegter Löschvermerk
-    erklärt, bekommt einen ENGEN Vermerk (t_vor + 1, t_nach − 1) in der Zeit
-    der Hülle: Er erklärt die Lücke und blendet keinen Punkt aus. Ist sie dafür
-    zu eng (t_nach − t_vor < 2), wirft das `luecke` — die Spur bleibt, wie sie
-    war, und wird gemeldet.
-
-    Gibt die neuen Stücke (Klartextfelder wie zuvor, `huelle` neu) und die
-    neuen Vermerke zurück; die Spur liest danach `spur_lesen()` mit
-    `verlangt2`, `sperren` + Vermerke."""
-    offen = []
-    for st in stuecke:
-        stufe = st.get("stufe", 1)
-        platz = (platz_gepackt(st["seq_from"], st["punkte"], stufe, st["n_original"])
-                 if stufe >= 2 else f"{st['seq_from']}:{st['punkte']}")
-        klar, absender = leser.huelle(st["huelle"], art, ref, platz)
-        alt = absender is None
-        kopf = ({"ts_von": st["ts_von"] - versatz, "merker": 0, "nutzlast": klar} if alt
-                else spur_innen2_lesen(klar))
-        if stufe >= 2:
-            zeiten = ([p[3] for p in gepackt_lesen(kopf["nutzlast"], st["punkte"], kopf["ts_von"])]
-                      if st["punkte"] else [])
-            bis = st["seq_from"] + st["n_original"]
-        else:
-            if len(kopf["nutzlast"]) != 14 * st["punkte"]:
-                raise HuelleFehler("innen")
-            zeiten = [kopf["ts_von"] + struct.unpack(">I", kopf["nutzlast"][14 * i + 10:14 * i + 14])[0]
-                      for i in range(st["punkte"])]
-            bis = st["seq_from"] + st["punkte"]
-        offen.append({"st": st, "platz": platz, "klar": klar, "alt": alt, "ts": kopf["ts_von"],
-                      "von": st["seq_from"], "bis": bis, "schluss": bool(kopf["merker"] & M_SCHLUSS),
-                      "t_erst": min(zeiten, default=None), "t_letzt": max(zeiten, default=None)})
-    folge = sorted(offen, key=lambda o: (o["von"], -o["bis"]))
-    vermerke: list[tuple[int, int]] = []
-    ende, t_ende = 0, None
-    for o in folge:
-        if o["von"] > ende and not _ueberdeckt(tuple(sperren) + tuple(vermerke), t_ende, o["t_erst"]):
-            if t_ende is None or o["t_erst"] is None or o["t_erst"] - t_ende < 2:
-                raise HuelleFehler("luecke")
-            vermerke.append((t_ende + 1, o["t_erst"] - 1))
-        if o["bis"] > ende:
-            ende = o["bis"]
-            t_ende = o["t_letzt"] if o["t_letzt"] is not None else t_ende
-    schluss_fehlt = abgeschlossen and not any(o["schluss"] and o["bis"] == ende for o in offen)
-    neu = []
-    for o in offen:
-        if not o["alt"]:
-            neu.append(o["st"])
-            continue
-        schluss = schluss_fehlt and o["bis"] == ende
-        schluss_fehlt = schluss_fehlt and not schluss
-        innen = spur_innen2(o["ts"], o["klar"], schluss=schluss, uebernommen=jetzt)
-        h = verschliessen2(innen, leser.pub, leser.priv, art, ref, o["platz"])
-        neu.append(dict({k: w for k, w in o["st"].items() if k not in ("huelle", "huelle_b64")}, huelle=h))
-    return neu, vermerke
-
-
-def einsatz_uebernehmen(leser: Leser, ref: str, huelle: bytes, started_ts: int, *, z: int,
-                        jetzt: int, schluss: bool, versatz: int = 0) -> bytes:
-    """Eine Einsatzhülle der Fassung 1 als KONTO neu verschließen (E-KA-97).
-    `z` ist der nächste Zähler des Kontos, `schluss` das Klartextkennzeichen
-    des abgeschlossenen Einsatzes (Fassung 1 kannte beides nicht), `start` =
-    Klartextbeginn − `versatz`. Die Herkunft sagt, dass das Konto übernommen
-    hat: `{"von": [], "uebernommen": jetzt}`. Wirft `innen` für alles, was
-    keine Hülle der Fassung 1 ist."""
-    klar, absender = leser.huelle(huelle, "einsatz", ref, "")
-    if absender is not None:
-        raise HuelleFehler("innen")
-    try:
-        d = json.loads(klar.decode("utf-8"))
-    except ValueError as f:
-        raise HuelleFehler("innen") from f
-    if not isinstance(d, dict) or d.get("fassung") != 1:
-        raise HuelleFehler("innen")
-    innen = einsatz_innen2(z, started_ts - versatz, schluss, d.get("phasen") or [], d.get("rea") or [],
-                           {"von": [], "uebernommen": jetzt})
-    return verschliessen2(innen, leser.pub, leser.priv, "einsatz", ref, "")
-
-
 OFFEN_NACH_SCHLUSS = "offen-nach-schluss"
 UHRZEIT_PRUEFEN = "uhrzeit-pruefen"           # der Grund von `HuelleHinweis`
 STAND_UEBERNOMMEN = "stand-uebernommen"
@@ -1088,7 +878,7 @@ BESTAETIGUNG = "bestaetigung"                 # Abnehmen eines Hinweises ohne Ze
 STANDFELDER = ("o", "k", "a", "f", "u")
 
 
-def _vermerk(stand: dict | None, absender: str | None) -> list | None:
+def _vermerk(stand: dict | None, absender: str) -> list | None:
     """Der Vermerk `[z_v, sid, t]` für diesen Absender, oder None."""
     for e in (stand or {}).get("u") or []:
         if e[1] == absender:
@@ -1096,7 +886,7 @@ def _vermerk(stand: dict | None, absender: str | None) -> list | None:
     return None
 
 
-def _hart_zurueckgelegt(d: dict, absender: str | None, stand: dict | None) -> bool:
+def _hart_zurueckgelegt(d: dict, absender: str, stand: dict | None) -> bool:
     """Die Fälle, die keine Bestätigung aufhebt (Tabelle im Kopf): ein Gerät
     nach dem Konto; `z < o` vom Konto, vom Gerät des Stands oder an einem
     Blatt, das den Absender des Stands nicht kennt."""
@@ -1110,13 +900,13 @@ def _hart_zurueckgelegt(d: dict, absender: str | None, stand: dict | None) -> bo
     return False
 
 
-def einsatz_hinweis(d: dict, absender: str | None, stand: dict | None) -> dict | None:
+def einsatz_hinweis(d: dict, absender: str, stand: dict | None) -> dict | None:
     """Gilt diese (schon geöffnete und geprüfte) Einsatzhülle erst nach
     bewusster Bestätigung? Nur zwischen zwei GERÄTEN: Der Stand trägt `a`
     (kein `k`), die Hülle kommt von einem anderen Gerät, und entweder ist
     `z ≤ o` (`kleiner`, `gleich`), oder für diesen Absender steht ein
     Vermerk mit z_v ≥ z (`verworfen`). Sonst None. Rein — öffnet nichts."""
-    if absender is None or absender == KONTO or not stand or not stand.get("o") or stand.get("k"):
+    if absender == KONTO or not stand or not stand.get("o") or stand.get("k"):
         return None
     a = stand.get("a")
     if not a or a == absender:
@@ -1134,7 +924,7 @@ def einsatz_hinweis(d: dict, absender: str | None, stand: dict | None) -> dict |
     return {"art": art, "z": z, "absender": absender, "o": o, "stand_absender": a, "vermerk": vermerk}
 
 
-def einsatz_befunde(d: dict, absender: str | None, stand: dict | None) -> list[str]:
+def einsatz_befunde(d: dict, absender: str, stand: dict | None) -> list[str]:
     """Was an einer ANGENOMMENEN Einsatzhülle auffällt, ohne dass sie
     abgewiesen wird (E-KA-69, -70). `d`, `absender`: was `einsatz_lesen()`
     geliefert hat; `stand`: derselbe Eintrag des Standbuchs, VOR dem
@@ -1143,9 +933,9 @@ def einsatz_befunde(d: dict, absender: str | None, stand: dict | None) -> list[s
     `stand-uebernommen`: Nach dem Abnehmen wirkt ein Vermerk mit z_v ≥ z —
     der gezeigte Stand liegt bewusst unter einem verworfenen oder gleichauf."""
     befunde = []
-    if absender is not None and stand and stand.get("f") and d.get("schluss") is not True:
+    if stand and stand.get("f") and d.get("schluss") is not True:
         befunde.append(OFFEN_NACH_SCHLUSS)
-    if absender is not None and absender != KONTO:
+    if absender != KONTO:
         hinweis = einsatz_hinweis(d, absender, stand)
         wirkt = [e for e in (stand or {}).get("u") or [] if e[1] != absender and e[0] >= d["z"]]
         if wirkt or (hinweis is not None and hinweis["o"] >= d["z"]):
@@ -1153,7 +943,7 @@ def einsatz_befunde(d: dict, absender: str | None, stand: dict | None) -> list[s
     return befunde
 
 
-def stand_nach_abnahme(d: dict, absender: str | None, stand: dict | None, *,
+def stand_nach_abnahme(d: dict, absender: str, stand: dict | None, *,
                        jetzt: int | None = None) -> dict:
     """Der Eintrag des Standbuchs, nachdem der Browser diese Hülle abgenommen
     hat — nur die Felder der Einsatzhülle (`STANDFELDER`), in dieser
@@ -1163,8 +953,6 @@ def stand_nach_abnahme(d: dict, absender: str | None, stand: dict | None, *,
     dort fehlt, und `zurueckgelegt`, wo auch sie nichts hilft: Abnehmen kann
     man nur, was `einsatz_lesen()` angenommen hat."""
     alt = stand or {}
-    if absender is None:
-        return {s: alt[s] for s in STANDFELDER if alt.get(s)}
     if _hart_zurueckgelegt(d, absender, stand):
         raise HuelleFehler("zurueckgelegt")
     hinweis = einsatz_hinweis(d, absender, stand)
@@ -1344,6 +1132,7 @@ def _zu(name: str, wer: str, konto: ec.EllipticCurvePrivateKey, art: str, ref: s
 
 
 def _zu1(name: str, konto_pub: bytes, art: str, ref: str, platz: str, klar: bytes) -> bytes:
+    """Eine Hülle der Fassung 1 — nur als Gegenlage (`ohne-herkunft`)."""
     fl, iv = _fest(name)
     return verschliessen(klar, konto_pub, art, ref, platz, fluechtig=fl, iv=iv)
 
@@ -1371,10 +1160,10 @@ def _buecher(konto_pub: bytes) -> dict:
             "uhr-ausgetragen": {s("uhr"): eintrag("uhr", T0 + 10), s("handy"): eintrag("handy")}}
 
 
-def _leser(v: dict, buch: str = "standard", verlangt2: bool = False) -> Leser:
+def _leser(v: dict, buch: str = "standard") -> Leser:
     konto = ec.derive_private_key(int(v["konto"]["privat_hex"], 16), ec.SECP256R1())
     return Leser(konto, {k: {"spk": bytes.fromhex(e["spk_hex"]), "bis": e["bis"]}
-                         for k, e in v["buecher"][buch].items()}, verlangt2)
+                         for k, e in v["buecher"][buch].items()})
 
 
 def _ohne_a(stand: dict) -> dict:
@@ -1448,9 +1237,9 @@ def vektoren2_bauen() -> dict:
     h = base64.b64decode(b["huelle_b64"])
     klar = bytes.fromhex(b["klartext_hex"])
 
-    def stoer(name, grund, huelle, art=b["art"], ref=b["client_ref"], platz=b["platz"], verlangt2=False):
+    def stoer(name, grund, huelle, art=b["art"], ref=b["client_ref"], platz=b["platz"]):
         aus["stoerungen"].append({"name": name, "grund": grund, "art": art, "client_ref": ref,
-                                  "platz": platz, "verlangt2": verlangt2, "huelle_b64": b64(bytes(huelle))})
+                                  "platz": platz, "huelle_b64": b64(bytes(huelle))})
 
     def gekippt(i):
         g = bytearray(h); g[i] ^= 1; return g
@@ -1469,9 +1258,10 @@ def vektoren2_bauen() -> dict:
     stoer("fremdes-geraet", "absender", _zu("stoer-fremd", "fremd", konto, b["art"], b["client_ref"], b["platz"], klar))
     stoer("ohne-geraeteschluessel", "pruefwert",
           _gefaelscht("stoer-gefaelscht", kpub, b["art"], b["client_ref"], b["platz"], klar))
-    stoer("fassung-1-wo-2-verlangt", "ohne-herkunft",
-          _zu1("stoer-fassung1", kpub, b["art"], b["client_ref"], b["platz"], innen_binaer(_punkte(120, 3))),
-          verlangt2=True)
+    # Fassung 1 öffnet seit Web 27.0.0 kein Leser mehr (KA-07) — auch eine
+    # echte, mit dem Kontoschlüssel verschlossene nicht.
+    stoer("fassung-1", "ohne-herkunft",
+          _zu1("stoer-fassung1", kpub, b["art"], b["client_ref"], b["platz"], innen_binaer(_punkte(120, 3))))
 
     # --- Folgen: eine Aufzeichnung in drei Stücken, 8 Punkte, alle 5 s ---
     def stueck(name, von, n, *, wer="uhr", ref=REF_A, schluss=False, fassung=2, ts_klar=0, **kopf):
@@ -1493,16 +1283,16 @@ def vektoren2_bauen() -> dict:
                                            herkunft=(sid_uhr,))))}
 
     def folge(name, stuecke, erwartet, *, abgeschlossen=True, versatz=0, sperren=(), stand=None,
-              buch="standard", verlangt2=False):
+              buch="standard"):
         f = {"name": name, "art": "spur", "client_ref": REF_A, "stuecke": stuecke,
              "abgeschlossen": abgeschlossen, "versatz": versatz, "sperren": [list(s) for s in sperren],
-             "stand": list(stand) if stand else None, "buch": buch, "verlangt2": verlangt2}
+             "stand": list(stand) if stand else None, "buch": buch}
         f.update({"grund": erwartet} if isinstance(erwartet, str) else {"erwartet": erwartet})
         aus["folgen"].append(f)
 
-    def gut(n, erste, letzte, herkunft, schluss=True, fassung1=False):
+    def gut(n, erste, letzte, herkunft, schluss=True):
         return {"punkte": n, "erste_zeit": erste, "letzte_zeit": letzte, "herkunft": herkunft,
-                "schluss": schluss, "fassung1": fassung1}
+                "schluss": schluss}
 
     uhr = sid_uhr.hex()
     verschoben = lambda st, d: dict(st, ts_von=st["ts_von"] + d)
@@ -1530,41 +1320,11 @@ def vektoren2_bauen() -> dict:
           "pruefwert")
     folge("geraet-ausgetragen", [A, B, C], "absender-gesperrt", buch="uhr-ausgetragen")
     folge("geraet-gibt-sich-als-konto", [A, stueck("f-b-anmassung", 3, 3, herkunft=(sid_uhr,)), C], "innen")
+    # Fassung 1: ganz und als einzelnes Stück zwischen Stücken der Fassung 2.
     alt = [stueck("f1-a", 0, 3, fassung=1), stueck("f1-b", 3, 3, fassung=1), stueck("f1-c", 6, 2, fassung=1)]
-    folge("fassung-1-geduldet", alt, gut(8, T0, T0 + 35, ["fassung-1"], schluss=False, fassung1=True))
-    folge("fassung-1-wo-2-verlangt", alt, "ohne-herkunft", verlangt2=True)
+    folge("fassung-1", alt, "ohne-herkunft")
+    folge("fassung-1-zwischen-fassung-2", [A, alt[1], C], "ohne-herkunft")
 
-    # --- Übernahme der Fassung 1 durch das Konto (06e, E-KA-95, -97): Die
-    # Hüllen entstehen bei jedem Lauf neu (frischer EPK); verglichen wird,
-    # was danach mit `verlangt2` gelesen wird, und die Vermerke.
-    T_UEB = T0 + 30 * 86400
-    ueb = {"jetzt": T_UEB, "spuren": [], "einsaetze": []}
-
-    def uebernahme(name, stuecke, erwartet, *, abgeschlossen=True, versatz=0, sperren=()):
-        f = {"name": name, "art": "spur", "client_ref": REF_A, "stuecke": stuecke,
-             "abgeschlossen": abgeschlossen, "versatz": versatz, "sperren": [list(x) for x in sperren]}
-        f.update({"grund": erwartet} if isinstance(erwartet, str) else {"erwartet": erwartet})
-        ueb["spuren"].append(f)
-
-    def gelesen(n, erste, letzte, herkunft, vermerke, schluss=True):
-        return {"punkte": n, "erste_zeit": erste, "letzte_zeit": letzte, "herkunft": herkunft,
-                "schluss": schluss, "vermerke": [list(x) for x in vermerke]}
-
-    uebernahme("ganz", alt, gelesen(8, T0, T0 + 35, [KONTO], []))
-    uebernahme("laeuft-noch", alt[:2], gelesen(6, T0, T0 + 25, [KONTO], [], schluss=False),
-               abgeschlossen=False)
-    uebernahme("luecke-eng-vermerkt", [alt[0], alt[2]],
-               gelesen(5, T0, T0 + 35, [KONTO], [(T0 + 11, T0 + 29)]))
-    uebernahme("luecke-schon-vermerkt", [alt[0], alt[2]],
-               gelesen(5, T0, T0 + 35, [KONTO], []), sperren=[(T0 + 15, T0 + 25)])
-    uebernahme("gemischt-mit-geraet", [A, alt[1], C], gelesen(8, T0, T0 + 35, sorted([KONTO, uhr]), []))
-    uebernahme("umdatiert-belegt", [verschoben(x, 86400) for x in alt],
-               gelesen(8, T0 + 86400, T0 + 86435, [KONTO], []), versatz=86400)
-    ueb["einsaetze"].append({"name": "fassung-1", "client_ref": "m-20261111-0004", "started_ts": T0,
-                             "versatz": 0, "z": 7, "schluss": True, "huelle_b64": None,
-                             "erwartet": {"z": 7, "absender": KONTO, "uebernommen": T_UEB,
-                                          "stand": {"o": 7, "k": 1, "f": 1}}})
-    aus["uebernahme"] = ueb
     folge("gepackt-vom-konto", [P], gut(8, T0, T0 + 35, [KONTO]), stand=(8, 2))
     folge("zurueckgelegt-auf-geraetestuecke", [A, B, C], "zurueckgelegt", stand=(8, 2))
     folge("zurueckgelegt-kuerzer", [A, B], "zurueckgelegt", abgeschlossen=False, stand=(8, 1))
@@ -1578,8 +1338,6 @@ def vektoren2_bauen() -> dict:
     eu = b64(_zu("e-uhr", "uhr", konto, "einsatz", REF_E, "", einsatz_innen2(3, T0 + 60, True, PHASEN2, REA2)))
     e1 = b64(_zu1("e-fassung1", kpub, "einsatz", REF_E, "",
                   json.dumps({"fassung": 1, "phasen": PHASEN2, "rea": REA2}, separators=(",", ":")).encode()))
-
-    aus["uebernahme"]["einsaetze"][0]["huelle_b64"] = e1
 
     def einsatz(name, huelle_b64, erwartet, *, started_ts=T0, versatz=0, stand=None, ref=REF_E,
                 buch="standard"):
@@ -1596,8 +1354,8 @@ def vektoren2_bauen() -> dict:
     einsatz("umdatiert-belegt", e3, {"z": 3, "absender": handy}, started_ts=T0 + 86400, versatz=86400)
     einsatz("vertauscht", e3, "pruefwert", ref="m-20261111-0005")
     einsatz("geraet-nach-konto", e5, "zurueckgelegt", stand={"o": 4, "k": 1})
-    einsatz("fassung-1-nach-abnahme", e1, "zurueckgelegt", stand={"o": 3})
-    einsatz("fassung-1-geduldet", e1, {"z": None, "absender": None})
+    einsatz("fassung-1", e1, "ohne-herkunft")
+    einsatz("fassung-1-nach-abnahme", e1, "ohne-herkunft", stand={"o": 3})
     einsatz("fremdes-geraet", ef, "absender")
     einsatz("geraet-ausgetragen", eu, "absender-gesperrt", started_ts=T0 + 60, buch="uhr-ausgetragen")
 
@@ -1898,8 +1656,7 @@ def pruefen2(v: dict) -> list[str]:
             fehler.append(f"2/{g['name']}: geht nicht auf ({e})")
     for s in v["stoerungen"]:
         try:
-            _leser(v, verlangt2=s["verlangt2"]).huelle(base64.b64decode(s["huelle_b64"]), s["art"],
-                                                      s["client_ref"], s["platz"])
+            le.huelle(base64.b64decode(s["huelle_b64"]), s["art"], s["client_ref"], s["platz"])
             fehler.append(f"2/Störung {s['name']}: ging auf")
         except HuelleFehler as e:
             if str(e) != s["grund"]:
@@ -1907,12 +1664,12 @@ def pruefen2(v: dict) -> list[str]:
     for f in v["folgen"]:
         stuecke = [dict(s, huelle=base64.b64decode(s["huelle_b64"])) for s in f["stuecke"]]
         try:
-            pkt, bef = spur_lesen(_leser(v, f["buch"], f["verlangt2"]), f["art"], f["client_ref"], stuecke,
+            pkt, bef = spur_lesen(_leser(v, f["buch"]), f["art"], f["client_ref"], stuecke,
                                   versatz=f["versatz"], sperren=tuple(map(tuple, f["sperren"])),
                                   abgeschlossen=f["abgeschlossen"],
                                   stand=tuple(f["stand"]) if f["stand"] else None)
             ist = {"punkte": len(pkt), "erste_zeit": pkt[0][4], "letzte_zeit": pkt[-1][4],
-                   "herkunft": bef["herkunft"], "schluss": bef["schluss"], "fassung1": bef["fassung1"]}
+                   "herkunft": bef["herkunft"], "schluss": bef["schluss"]}
             if "grund" in f:
                 fehler.append(f"2/Folge {f['name']}: ging auf, erwartet {f['grund']}")
             elif ist != f["erwartet"]:
@@ -1920,45 +1677,8 @@ def pruefen2(v: dict) -> list[str]:
         except HuelleFehler as e:
             if str(e) != f.get("grund"):
                 fehler.append(f"2/Folge {f['name']}: Grund {e}, erwartet {f.get('grund', 'geht auf')}")
-    ueb = v.get("uebernahme") or {}
-    for f in ueb.get("spuren", []):
-        stuecke = [dict(s, huelle=base64.b64decode(s["huelle_b64"])) for s in f["stuecke"]]
-        sperren = tuple(map(tuple, f["sperren"]))
-        try:
-            neu, verm = spur_uebernehmen(_leser(v), f["art"], f["client_ref"], stuecke, jetzt=ueb["jetzt"],
-                                         versatz=f["versatz"], sperren=sperren,
-                                         abgeschlossen=f["abgeschlossen"])
-            pkt, bef = spur_lesen(_leser(v, verlangt2=True), f["art"], f["client_ref"], neu,
-                                  versatz=f["versatz"], sperren=sperren + tuple(verm),
-                                  abgeschlossen=f["abgeschlossen"])
-            ist = {"punkte": len(pkt), "erste_zeit": pkt[0][4], "letzte_zeit": pkt[-1][4],
-                   "herkunft": bef["herkunft"], "schluss": bef["schluss"], "vermerke": [list(x) for x in verm]}
-            for alt_, n_ in zip(stuecke, neu):
-                if alt_["huelle"][:1] == bytes([FASSUNG]):
-                    klar, wer = _leser(v, verlangt2=True).huelle(n_["huelle"], f["art"], f["client_ref"],
-                                                                 f"{n_['seq_from']}:{n_['punkte']}")
-                    if wer != KONTO or spur_innen2_lesen(klar)["uebernommen"] != ueb["jetzt"]:
-                        fehler.append(f"2/Übernahme {f['name']}: Stück {n_['seq_from']} ohne Kennzeichen")
-            if "grund" in f:
-                fehler.append(f"2/Übernahme {f['name']}: ging auf, erwartet {f['grund']}")
-            elif ist != f["erwartet"]:
-                fehler.append(f"2/Übernahme {f['name']}: {ist}, erwartet {f['erwartet']}")
-        except HuelleFehler as e:
-            if str(e) != f.get("grund"):
-                fehler.append(f"2/Übernahme {f['name']}: Grund {e}, erwartet {f.get('grund', 'geht auf')}")
-    for f in ueb.get("einsaetze", []):
-        try:
-            h = einsatz_uebernehmen(_leser(v), f["client_ref"], base64.b64decode(f["huelle_b64"]),
-                                    f["started_ts"], z=f["z"], jetzt=ueb["jetzt"], schluss=f["schluss"],
-                                    versatz=f["versatz"])
-            d, wer = einsatz_lesen(_leser(v, verlangt2=True), f["client_ref"], h, f["started_ts"],
-                                   versatz=f["versatz"])
-            ist = {"z": d["z"], "absender": wer, "uebernommen": (d.get("herkunft") or {}).get("uebernommen"),
-                   "stand": stand_nach_abnahme(d, wer, None)}
-            if ist != f["erwartet"]:
-                fehler.append(f"2/Übernahme Einsatz {f['name']}: {ist}, erwartet {f['erwartet']}")
-        except HuelleFehler as e:
-            fehler.append(f"2/Übernahme Einsatz {f['name']}: Grund {e}")
+    if "uebernahme" in v:
+        fehler.append("2/Übernahme: die Fälle der Übernahme (Fassung 1) gibt es seit KA-07 nicht mehr")
     for f in v["einsaetze"]:
         try:
             d, wer = einsatz_lesen(_leser(v, f["buch"]), f["client_ref"], base64.b64decode(f["huelle_b64"]),
@@ -2094,9 +1814,7 @@ def zahlen2(v: dict) -> str:
            + sum("grund" in f for f in rueck) - hinweise)
     gut = (len(v["faelle"]) + len(v["gepackt"]) + sum("grund" not in f for f in v["folgen"])
            + sum("grund" not in f for f in v["einsaetze"]) + 1 + (1 if v.get("zaehler") else 0)
-           + sum("grund" not in f for f in rueck) + (1 if rw.get("zusammenfuehren") else 0)
-           + len((v.get("uebernahme") or {}).get("spuren", []))
-           + len((v.get("uebernahme") or {}).get("einsaetze", [])))
+           + sum("grund" not in f for f in rueck) + (1 if rw.get("zusammenfuehren") else 0))
     # + 1 die Kopplung, + 1 die Zählerfolge (E-KA-69), + 1 das Zusammenführen
     # (KA-09) — je als EIN Fall. Ein Hinweis ist weder geöffnet noch
     # abgewiesen und steht für sich.
@@ -2109,67 +1827,19 @@ def mc_bytes(hexwert: str) -> str:
     return "[" + ", ".join(f"0x{x:02x}" for x in b) + "]b"
 
 
-def uhr_vektoren(v: dict) -> str:
-    """Die Vektoren als Monkey-C-Quelltext für die Probe-App. Die Uhr bekommt
-    die Werte so, wie der Server sie liefern wird (SEC1, big-endian); das
-    Umsetzen in Garmins Byteordnung ist Teil dessen, was die Probe prüft."""
-    zeilen = ["// ERZEUGT von tools/proben/huelle/referenz.py erzeugen — nicht von Hand ändern.",
-              "// Anlass: entfällt — Erzeuger (E-BR-05)",
-              "import Toybox.Lang;", "", "module Vektoren {",
-              f"    const EMPF_PUB = {mc_bytes(v['empfaenger']['oeffentlich_hex'])};",
-              "    const FAELLE = ["]
-    for f in v["faelle"]:
-        if f["name"] not in ("kurz", "spur-binaer-3"):
-            continue
-        zeilen += ["        {",
-                   f"            :name => \"{f['name']}\",",
-                   f"            :klar => {mc_bytes(f['klartext_hex'] or '00')},",
-                   f"            :klarLeer => {'true' if not f['klartext_hex'] else 'false'},",
-                   f"            :bindung => {mc_bytes(f['bindung_hex'])},",
-                   f"            :fluechtig => {mc_bytes(f['fluechtig_privat_hex'])},",
-                   f"            :iv => {mc_bytes(f['iv_hex'])},",
-                   f"            :epk => {mc_bytes(f['epk_hex'])},",
-                   f"            :z => {mc_bytes(f['z_hex'])},",
-                   f"            :kEnc => {mc_bytes(f['k_enc_hex'])},",
-                   f"            :kMac => {mc_bytes(f['k_mac_hex'])},",
-                   f"            :ct => {mc_bytes(f['ct_hex'])},",
-                   f"            :tag => {mc_bytes(f['tag_hex'])}",
-                   "        },"]
-    zeilen += ["    ];", "}", ""]
-    return "\n".join(zeilen)
-
-
-def app_vektor(v: dict) -> str:
-    """Der Fall „kurz" als Monkey-C-Quelltext für die App. Die App
-    rechnet ihn mit festem flüchtigem Schlüssel und festem IV nach: stimmt Z
-    erst umgedreht, ist die Ordnung little-endian; stimmt danach
-    das TAG, trägt die ganze Kette — ECDH, HKDF, AES, HMAC, Bindung."""
-    f = next(f for f in v["faelle"] if f["name"] == "kurz")
-    return "\n".join([
-        "// ERZEUGT von tools/proben/huelle/referenz.py erzeugen — nicht von Hand ändern.",
-        "// Anlass: entfällt — Erzeuger (E-BR-05)",
-        "// Der Selbsttest der Gerätehülle (S11-08, E-S11-30): Fall „kurz“ aus",
-        "// tools/proben/huelle/vektoren.json.",
-        "import Toybox.Lang;", "", "module HuelleVektor {",
-        f"    const EMPF_PUB = {mc_bytes(v['empfaenger']['oeffentlich_hex'])};",
-        f"    const KLAR = {mc_bytes(f['klartext_hex'])};",
-        f"    const BINDUNG = {mc_bytes(f['bindung_hex'])};",
-        f"    const D = {mc_bytes(f['fluechtig_privat_hex'])};",
-        f"    const IV = {mc_bytes(f['iv_hex'])};",
-        f"    const Z = {mc_bytes(f['z_hex'])};",
-        f"    const TAG = {mc_bytes(f['tag_hex'])};",
-        "}", ""])
-
-
 UHR_FAELLE2 = ("kurz", "spur-3")
 
 
 def uhr_vektoren2(v2: dict) -> str:
     """Fassung 2 als Monkey-C-Quelltext für die Probe-App (KG-03a): die Fälle
     „kurz" und „spur-3" — beide von der Uhr verschlossen — mit der ganzen
-    Hülle, dazu Kennung und Z_s der Uhr, die Kopplung und die Zählerfolge
-    (`zaehler`, KG-09). Alles aus
-    `vektoren-2.json`, nichts neu gerechnet."""
+    Hülle und ihren Zwischenwerten (EPK, Z_e, k_enc, k_mac, CT, TAG — die
+    Bausteine, die die Probe einzeln misst; bis KA-28 maß sie sie an Fassung
+    1), dazu Kennung und Z_s der Uhr, die Kopplung und die Zählerfolge
+    (`zaehler`, KG-09). Alles aus `vektoren-2.json`, nichts neu gerechnet.
+    Die Uhr bekommt die Werte so, wie der Server sie liefert (SEC1,
+    big-endian); das Umsetzen in Garmins Byteordnung ist Teil dessen, was
+    die Probe prüft."""
     faelle = [f for f in v2["faelle"] if f["name"] in UHR_FAELLE2]
     if [f["name"] for f in faelle] != list(UHR_FAELLE2) or any(f["absender"] != "uhr" for f in faelle):
         raise ValueError("Vektoren2.mc: die Fälle der Uhr fehlen oder haben einen anderen Absender")
@@ -2204,6 +1874,12 @@ def uhr_vektoren2(v2: dict) -> str:
                    f"            :bindung => {mc_bytes(f['bindung_hex'])},",
                    f"            :fluechtig => {mc_bytes(f['fluechtig_privat_hex'])},",
                    f"            :iv => {mc_bytes(f['iv_hex'])},",
+                   f"            :epk => {mc_bytes(f['epk_hex'])},",
+                   f"            :zE => {mc_bytes(f['z_e_hex'])},",
+                   f"            :kEnc => {mc_bytes(f['k_enc_hex'])},",
+                   f"            :kMac => {mc_bytes(f['k_mac_hex'])},",
+                   f"            :ct => {mc_bytes(f['ct_hex'])},",
+                   f"            :tag => {mc_bytes(f['tag_hex'])},",
                    f"            :huelle => {mc_bytes(base64.b64decode(f['huelle_b64']).hex())}",
                    "        },"]
     # Wie ein Absender zählt (KG-09): die Schritte des Vektors `zaehler`, je
@@ -2219,22 +1895,28 @@ def uhr_vektoren2(v2: dict) -> str:
     return "\n".join(zeilen)
 
 
-def app_vektor2(v: dict, v2: dict) -> str:
-    """Der Fall „kurz" der Fassung 2 für den Selbsttest `Huelle2.bereit()`.
-    Kontoschlüssel und Klartext sind dieselben wie in Fassung 1 und stehen
-    schon in `HuelleVektor.mc` — die App trägt sie nicht zweimal."""
+def app_vektor2(v2: dict) -> str:
+    """Der Fall „kurz" der Fassung 2 für den Selbsttest der App. Die App
+    rechnet ihn mit festem Gerätepaar, festem flüchtigem Schlüssel und
+    festem IV nach: `Huelle.bereit()` hält Z_s gegen den Vektor — stimmt es
+    erst umgedreht, ist die Ordnung little-endian —, `Huelle2.bereit()`
+    rechnet die ganze Hülle; stimmen Kennung und TAG, trägt die Kette —
+    SHA-256, beide ECDH, HKDF, AES, HMAC, Bindung. Bis Uhr 6.0.0 maß
+    `Huelle.bereit()` die Byteordnung an einem Fall der Fassung 1
+    (`HuelleVektor.mc`); diese Datei ist seit KA-28 die einzige."""
     f = next(f for f in v2["faelle"] if f["name"] == "kurz")
-    f1 = next(f for f in v["faelle"] if f["name"] == "kurz")
-    if (v2["konto"]["oeffentlich_hex"] != v["empfaenger"]["oeffentlich_hex"]
-            or f["klartext_hex"] != f1["klartext_hex"] or f["absender"] != "uhr"):
-        raise ValueError("HuelleVektor2.mc: Konto, Klartext oder Absender passen nicht zu HuelleVektor.mc")
+    if f["absender"] != "uhr":
+        raise ValueError("HuelleVektor2.mc: der Fall „kurz“ kommt nicht von der Uhr")
     return "\n".join([
         "// ERZEUGT von tools/proben/huelle/referenz.py erzeugen — nicht von Hand ändern.",
         "// Anlass: entfällt — Erzeuger (E-BR-05)",
-        "// Der Selbsttest der Gerätehülle, Fassung 2 (KG-03a): Fall „kurz“ aus",
-        "// tools/proben/huelle/vektoren-2.json. Kontoschlüssel und Klartext: HuelleVektor.mc.",
+        "// Der Selbsttest der Gerätehülle (KG-03a, seit Uhr 6.0.1 der einzige):",
+        "// Fall „kurz“ aus tools/proben/huelle/vektoren-2.json.",
         "import Toybox.Lang;", "", "module HuelleVektor2 {",
+        f"    const KONTO = {mc_bytes(v2['konto']['oeffentlich_hex'])};",
+        f"    const KLAR = {mc_bytes(f['klartext_hex'])};",
         f"    const D_GERAET = {mc_bytes(v2['geraete']['uhr']['privat_hex'])};",
+        f"    const Z_S = {mc_bytes(f['z_s_hex'])};",
         f"    const BINDUNG = {mc_bytes(f['bindung_hex'])};",
         f"    const D = {mc_bytes(f['fluechtig_privat_hex'])};",
         f"    const IV = {mc_bytes(f['iv_hex'])};",
@@ -2243,51 +1925,16 @@ def app_vektor2(v: dict, v2: dict) -> str:
         "}", ""])
 
 
-def uhr_dateien2(v: dict, v2: dict) -> list[tuple[pathlib.Path, str]]:
-    return [(UHR_VEKTOREN2, uhr_vektoren2(v2)), (APP_VEKTOR2, app_vektor2(v, v2))]
-
-
-def pruefen(v: dict) -> list[str]:
-    """Jeden Fall neu rechnen, jede Hülle öffnen, jede Störung scheitern sehen."""
-    fehler = []
-    neu = vektoren_bauen()
-    if neu != v:
-        fehler.append("vektoren.json weicht von der Umsetzung ab — neu erzeugen?")
-    empf = ec.derive_private_key(int(v["empfaenger"]["privat_hex"], 16), ec.SECP256R1())
-    for f in v["faelle"]:
-        try:
-            k = oeffnen(base64.b64decode(f["huelle_b64"]), empf, f["art"], f["client_ref"], f["platz"])
-            if k.hex() != f["klartext_hex"]:
-                fehler.append(f"{f['name']}: Klartext weicht ab")
-        except HuelleFehler as e:
-            fehler.append(f"{f['name']}: geht nicht auf ({e})")
-    for s in v["stoerungen"]:
-        try:
-            oeffnen(base64.b64decode(s["huelle_b64"]), empf, s["art"], s["client_ref"], s["platz"])
-            fehler.append(f"Störung {s['name']}: ging auf")
-        except HuelleFehler as e:
-            if str(e) != s["grund"]:
-                fehler.append(f"Störung {s['name']}: Grund {e}, erwartet {s['grund']}")
-    return fehler
+def uhr_dateien2(v2: dict) -> list[tuple[pathlib.Path, str]]:
+    return [(UHR_VEKTOREN2, uhr_vektoren2(v2)), (APP_VEKTOR2, app_vektor2(v2))]
 
 
 def selbstprobe() -> int:
     """Je Fehlerart ein Fall mit eingebautem Fehler und eine Gegenprobe."""
-    v = vektoren_bauen()
     faelle = []
-    faelle.append(("Gegenprobe: frische Vektoren", not pruefen(v)))
-    w = json.loads(json.dumps(v)); w["faelle"][1]["klartext_hex"] = "00"
-    faelle.append(("Fehler: Klartext verfälscht", bool(pruefen(w))))
-    w = json.loads(json.dumps(v)); w["stoerungen"][0]["grund"] = "fassung"
-    faelle.append(("Fehler: falscher Grund erwartet", bool(pruefen(w))))
-    w = json.loads(json.dumps(v)); w["stoerungen"][0]["huelle_b64"] = w["faelle"][3]["huelle_b64"]
-    faelle.append(("Fehler: Störung geht auf", bool(pruefen(w))))
-    empf = schluessel_aus_name(EMPFAENGER)
-    pub = sec1(empf.public_key())
-    zufall = verschliessen(b"x" * 100, pub, "spur", "r", "0:1")
-    faelle.append(("Gegenprobe: zufällige Hülle geht auf",
-                   oeffnen(zufall, empf, "spur", "r", "0:1") == b"x" * 100))
-    # Fassung 2: dieselben vier Fehlerarten, dazu je Vektorart eine.
+    pub = sec1(schluessel_aus_name(EMPFAENGER).public_key())
+    # Fassung 2: je Vektorart eine Fehlerart. (Bis KA-07 standen davor vier
+    # Fälle gegen die Vektoren der Fassung 1.)
     v2 = vektoren2_bauen()
     faelle.append(("Gegenprobe 2: frische Vektoren", not pruefen2(v2)))
     w = json.loads(json.dumps(v2)); w["faelle"][0]["klartext_hex"] = "00"
@@ -2439,11 +2086,22 @@ def selbstprobe() -> int:
         faelle.append(("Fehler 2: Gerät fehlt im Gerätebuch", False))
     except HuelleFehler as e:
         faelle.append(("Fehler 2: Gerät fehlt im Gerätebuch", str(e) == "absender"))
+    # Fassung 1 öffnet kein Leser mehr (KA-07): eine echte, mit dem
+    # Kontoschlüssel verschlossene Hülle — auch ohne Gerätebuch, auch als
+    # Einsatzhülle und als Stück einer Spur.
+    alt = verschliessen(b"z" * 100, pub, "spur", "r", "0:1")
     try:
-        oeffnen(zufall2, konto, "spur", "r", "0:1")
-        faelle.append(("Fehler 2: Fassung 2 mit dem Öffner der Fassung 1", False))
+        Leser(konto, buch).huelle(alt, "spur", "r", "0:1")
+        faelle.append(("Fehler 2: Fassung 1 geht auf", False))
     except HuelleFehler as e:
-        faelle.append(("Fehler 2: Fassung 2 mit dem Öffner der Fassung 1", str(e) in ("fassung", "laenge")))
+        faelle.append(("Fehler 2: Fassung 1 geht auf", str(e) == "ohne-herkunft"))
+    w = json.loads(json.dumps(v2))
+    next(f for f in w["folgen"] if f["name"] == "fassung-1")["erwartet"] = {"punkte": 8}
+    del next(f for f in w["folgen"] if f["name"] == "fassung-1")["grund"]
+    faelle.append(("Fehler 2: Spur der Fassung 1 als lesbar erwartet",
+                   meldet(w, "2/Folge fassung-1: Grund ohne-herkunft, erwartet geht auf")))
+    w = json.loads(json.dumps(v2)); w["uebernahme"] = {"spuren": [], "einsaetze": []}
+    faelle.append(("Fehler 2: Vektoren tragen wieder eine Übernahme", meldet(w, "2/Übernahme:")))
     schlecht = 0
     for name, gut in faelle:
         print(f"  {'ok  ' if gut else 'FEHL'}  {name}")
@@ -2457,49 +2115,26 @@ def main() -> int:
     if arg == "--selbstprobe":
         return selbstprobe()
     if arg == "erzeugen":
-        v = vektoren_bauen()
-        VEKTOREN.write_text(json.dumps(v, ensure_ascii=False, indent=2) + "\n", "utf-8")
-        UHR_VEKTOREN.parent.mkdir(parents=True, exist_ok=True)
-        UHR_VEKTOREN.write_text(uhr_vektoren(v), "utf-8")
-        APP_VEKTOR.write_text(app_vektor(v), "utf-8")
-        print(f"{len(v['faelle'])} Fälle, {len(v['stoerungen'])} Störungen → {VEKTOREN.name}, "
-              f"{UHR_VEKTOREN.relative_to(WURZEL)}, {APP_VEKTOR.relative_to(WURZEL)}")
-        # Fassung 2: Die Quelltexte der Uhr für Fassung 1 (Vektoren.mc,
-        # HuelleVektor.mc) bleiben, wie sie sind; Fassung 2 bekommt seit
-        # KG-03a eigene Dateien daneben.
         v2 = vektoren2_bauen()
         VEKTOREN2.write_text(json.dumps(v2, ensure_ascii=False, indent=2) + "\n", "utf-8")
-        for pfad, text in uhr_dateien2(v, v2):
+        for pfad, text in uhr_dateien2(v2):
             pfad.write_text(text, "utf-8")
         print(f"{zahlen2(v2)} → {VEKTOREN2.name}, "
               f"{UHR_VEKTOREN2.relative_to(WURZEL)}, {APP_VEKTOR2.relative_to(WURZEL)}")
         return 0
     if arg == "pruefen":
-        if not VEKTOREN.exists():
-            print("vektoren.json fehlt"); return 2
-        v = json.loads(VEKTOREN.read_text("utf-8"))
-        fehler = pruefen(v)
-        if not fehler and UHR_VEKTOREN.read_text("utf-8") != uhr_vektoren(v):
-            fehler.append("Vektoren.mc weicht ab — neu erzeugen")
-        if not fehler and (not APP_VEKTOR.exists()
-                           or APP_VEKTOR.read_text("utf-8") != app_vektor(v)):
-            fehler.append("watch/source/HuelleVektor.mc weicht ab — neu erzeugen")
-        for f in fehler:
-            print("  FEHL  " + f)
-        print(f"{len(v['faelle'])} Fälle geöffnet, {len(v['stoerungen'])} Störungen abgewiesen, "
-              f"{len(fehler)} Abweichungen")
         if not VEKTOREN2.exists():
             print("vektoren-2.json fehlt"); return 2
         v2 = json.loads(VEKTOREN2.read_text("utf-8"))
         fehler2 = pruefen2(v2)
-        if not fehler and not fehler2:
-            for pfad, text in uhr_dateien2(v, v2):
+        if not fehler2:
+            for pfad, text in uhr_dateien2(v2):
                 if not pfad.exists() or pfad.read_text("utf-8") != text:
                     fehler2.append(f"{pfad.relative_to(WURZEL)} weicht ab — neu erzeugen")
         for f in fehler2:
             print("  FEHL  " + f)
         print(f"{zahlen2(v2)}, {len(fehler2)} Abweichungen")
-        return 1 if fehler or fehler2 else 0
+        return 1 if fehler2 else 0
     print(__doc__)
     return 2
 

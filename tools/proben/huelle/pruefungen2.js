@@ -53,6 +53,15 @@ window.hpFassung2 = async (v2, vi) => {
       { name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveBits']);
   };
   const aes = (h) => crypto.subtle.importKey('raw', hex(h), { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+  /* Ein Block der ERSTEN Fassung (`edk1:`, AES-GCM ohne Zusatzdaten) — nur
+   * als Gegenlage: Seit Web 27.0.0 (KA-07) öffnet ihn kein Leser mehr, und
+   * die Seite kann ihn nicht mehr bauen (`EdCrypto.encrypt()` ist fort). */
+  const edk1 = async (schluesselHex, text) => {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv },
+      await aes(schluesselHex), new TextEncoder().encode(text)));
+    return 'edk1:' + btoa(String.fromCharCode(...iv, ...ct));
+  };
   /* DER RÜCKWEG (E-KA-70, KA-09): Kann die Seite ihn? Sie sagt es mit der
    * Konstanten `EdHuelle2.UHRZEIT_PRUEFEN`. Fehlt sie (bis KA-10), sind die
    * Prüfungen dazu AUSGENOMMEN — je Prüfung eine Zeile, in der Schlusszahl
@@ -117,25 +126,25 @@ window.hpFassung2 = async (v2, vi) => {
   await pruefe('EdCrypto.huelleOeffnen öffnet edka2 und edk2 (pw)', async () =>
     (await EdCrypto.huelleOeffnen(wpw.schluessel_hex, wpw.text)) === CK
     && (await EdCrypto.huelleOeffnen(vi.huellen[2].schluessel_hex, vi.huellen[2].text)) === CK);
-  await scheitert('EdCrypto.decrypt weist edk2 benannt ab', 'gebunden', () =>
-    EdCrypto.decrypt(CK, vi.faelle[0].text));
-  await pruefe('lesen() nimmt Fassung 1 (ungebunden) und Fassung 2 (gebunden)', async () => {
-    const alt = await EdCrypto.encrypt(ck, 'Prüf-ß-€');
-    const a = await EdInhalt.lesen(ck, alt, 'kp', '');
+  /* DIE ERSTE FASSUNG IST FORT (KA-07, Web 27.0.0): Kein Leser öffnet sie,
+   * und die Bausteine dafür sind aus der Seite entfernt. Die Hüllen der
+   * Fassung 1 (`edka1:`, `edk1:`, ohne Kennung) prüfen die Vektoren unter
+   * „Hülle Störung fassung-1-…". */
+  await pruefe('lesen() nimmt Fassung 2', async () => {
     const kp = vi.faelle.find((f) => f.zweck === 'kp');
     const b = await EdInhalt.lesen(kp.schluessel_hex, kp.text, 'kp', '');
-    return a.text === 'Prüf-ß-€' && a.gebunden === false && a.z === 0
-      && b.gebunden === true && b.text === new TextDecoder().decode(hex(kp.nutzlast_hex));
+    return b.gebunden === true && b.text === new TextDecoder().decode(hex(kp.nutzlast_hex));
   });
-  await pruefe('Hülle Fassung 1 (edka1, edk1, ohne Kennung) geht über huelleOeffnen auf', async () => {
-    const dk = vi.schluessel.dk_hex;
-    const roh = await EdCrypto.encrypt(dk, CK);
-    return (await EdInhalt.huelleOeffnen(dk, 'edka1:1a2b3c4d:' + roh.slice(5), 'pw')) === CK
-      && (await EdInhalt.huelleOeffnen(dk, roh, 'pw')) === CK
-      && (await EdInhalt.huelleOeffnen(dk, roh.slice(5), 'rc')) === CK;
-  });
-  await scheitert('Hülle edka1 als rc', 'kennung', async () =>
-    EdInhalt.huelleOeffnen(vi.schluessel.dk_hex, 'edka1:1a2b3c4d:' + (await EdCrypto.encrypt(vi.schluessel.dk_hex, CK)).slice(5), 'rc'));
+  await scheitert('lesen() weist edk1 ab', 'kennung', async () =>
+    EdInhalt.lesen(ck, await edk1(CK, 'Prüf-ß-€'), 'kp', ''));
+  await scheitert('lesen() weist edk1 ohne Kennung ab', 'kennung', async () =>
+    EdInhalt.lesen(ck, (await edk1(CK, 'Prüf-ß-€')).slice(5), 'kp', ''));
+  await scheitert('EdCrypto.huelleOeffnen weist edka1 als Altformat ab', 'altformat', async () =>
+    EdCrypto.huelleOeffnen(vi.schluessel.dk_hex, 'edka1:1a2b3c4d:' + (await edk1(vi.schluessel.dk_hex, CK)).slice(5)));
+  await pruefe('Die Bausteine der ersten Fassung sind aus der Seite entfernt', async () =>
+    ['encrypt', 'decrypt', 'geraetehuelleOeffnen', 'geraetehuelleVerschliessen', 'geraetehuelleAbleiten',
+     'HUELLE_PRAEFIX', 'CHIFFRE_PRAEFIX'].every((n) => EdCrypto[n] === undefined)
+    && ['spurUebernehmen', 'einsatzUebernehmen'].every((n) => EdHuelle2[n] === undefined));
   await pruefe('0 bis 504 Byte Patientendaten ergeben dieselbe Länge; 505 die nächste Klasse', async () => {
     const l = [];
     for (const n of [0, 2, 100, 400, 504, 505]) {
@@ -219,7 +228,7 @@ window.hpFassung2 = async (v2, vi) => {
   try { k = { priv: await privat(v2.konto.privat_hex, v2.konto.oeffentlich_hex), pub: kpub }; } catch (e) { /* s. o. */ }
   const buch = (name) => Object.fromEntries(Object.entries(v2.buecher[name])
     .map(([s, e]) => [s, { spk: hex(e.spk_hex), bis: e.bis }]));
-  const leser = (name, verlangt2) => EdHuelle2.leser(k, buch(name || 'standard'), !!verlangt2);
+  const leser = (name) => EdHuelle2.leser(k, buch(name || 'standard'));
   const absender = async (wer) => (wer === 'konto' ? { privat: k.priv, spk: kpub }
     : { privat: await privat(v2.geraete[wer].privat_hex, v2.geraete[wer].oeffentlich_hex),
         spk: hex(v2.geraete[wer].oeffentlich_hex) });
@@ -281,49 +290,19 @@ window.hpFassung2 = async (v2, vi) => {
   }
   for (const s of v2.stoerungen) {
     await scheitert(`2/Störung ${s.name}`, s.grund, async () =>
-      (await leser('standard', s.verlangt2)).huelle(ausB64(s.huelle_b64), s.art, s.client_ref, s.platz));
+      (await leser()).huelle(ausB64(s.huelle_b64), s.art, s.client_ref, s.platz));
   }
   for (const f of v2.folgen) {
     const lesen = async () => {
-      const erg = await EdHuelle2.spurLesen(await leser(f.buch, f.verlangt2), f.art, f.client_ref,
+      const erg = await EdHuelle2.spurLesen(await leser(f.buch), f.art, f.client_ref,
         f.stuecke.map((x) => Object.assign({}, x, { huelle: x.huelle_b64 })),
         { versatz: f.versatz, sperren: f.sperren, abgeschlossen: f.abgeschlossen, stand: f.stand });
       const p = erg.punkte;
       return { punkte: p.length, erste_zeit: p[0].ts, letzte_zeit: p[p.length - 1].ts,
-               herkunft: erg.befund.herkunft, schluss: erg.befund.schluss, fassung1: erg.befund.fassung1 };
+               herkunft: erg.befund.herkunft, schluss: erg.befund.schluss };
     };
     if (f.grund) { await scheitert(`2/Folge ${f.name}`, f.grund, lesen); }
     else { await pruefe(`2/Folge ${f.name}`, async () => gleich(await lesen(), f.erwartet)); }
-  }
-  /* Die Übernahme der Fassung 1 (06e, E-KA-95, -97): Die Seite hebt mit
-   * einem Leser ohne `verlangt2`, gelesen wird danach MIT — wie im
-   * Anhebelauf und danach in jeder Ansicht. Verglichen wird das Gelesene und
-   * die Vermerke; die Hüllen entstehen bei jedem Lauf neu. */
-  const ueb = v2.uebernahme || { spuren: [], einsaetze: [] };
-  for (const f of ueb.spuren) {
-    const heben = async () => {
-      const erg = await EdHuelle2.spurUebernehmen(await leser('standard', false), k, f.art, f.client_ref,
-        f.stuecke.map((x) => Object.assign({}, x, { huelle: x.huelle_b64 })),
-        { jetzt: ueb.jetzt, versatz: f.versatz, sperren: f.sperren, abgeschlossen: f.abgeschlossen });
-      const gl = await EdHuelle2.spurLesen(await leser('standard', true), f.art, f.client_ref, erg.stuecke,
-        { versatz: f.versatz, sperren: f.sperren.concat(erg.vermerke), abgeschlossen: f.abgeschlossen });
-      const p = gl.punkte;
-      return { punkte: p.length, erste_zeit: p[0].ts, letzte_zeit: p[p.length - 1].ts,
-               herkunft: gl.befund.herkunft, schluss: gl.befund.schluss, vermerke: erg.vermerke };
-    };
-    if (f.grund) { await scheitert(`2/Übernahme ${f.name}`, f.grund, heben); }
-    else { await pruefe(`2/Übernahme ${f.name}`, async () => gleich(await heben(), f.erwartet)); }
-  }
-  for (const f of ueb.einsaetze) {
-    await pruefe(`2/Übernahme Einsatz ${f.name}`, async () => {
-      const h = await EdHuelle2.einsatzUebernehmen(await leser('standard', false), k, f.client_ref, f.huelle_b64,
-        f.started_ts, { z: f.z, jetzt: ueb.jetzt, schluss: f.schluss, versatz: f.versatz });
-      const o = await EdHuelle2.einsatzLesen(await leser('standard', true), f.client_ref, h, f.started_ts,
-        { versatz: f.versatz });
-      return gleich({ z: o.inhalt.z, absender: o.absender,
-                      uebernommen: (o.inhalt.herkunft || {}).uebernommen,
-                      stand: EdHuelle2.standNachAbnahme(o.inhalt, o.absender, null) }, f.erwartet);
-    });
   }
   for (const f of v2.einsaetze) {
     const lesen = async () => {
@@ -565,15 +544,10 @@ window.hpFassung2 = async (v2, vi) => {
     for (const r of refs) { if ((await neu.eintrag(r)).p !== 2) { return false; } }
     return erg.every((o) => o.blatt_hinkt && o.z === 2);
   });
-  await pruefe('Buch: Altbestand (Fassung 1) geht auf, solange das Blatt offen ist', async () => {
-    const alt = await EdCrypto.encrypt(ck, '{"dx":"uralt"}');
-    const o = await b1.patLesen(alt, await imBlatt(NR, 'alt-'));
-    return o.gebunden === false && o.z === 0 && o.text === '{"dx":"uralt"}' && (await b1.alleZu()) === false;
-  });
-  await scheitert('Buch: nach schliessen() ist Fassung 1 in diesem Blatt ein Befund', 'altformat', async () => {
-    await b1.schliessen(NR);
-    return b1.patLesen(await EdCrypto.encrypt(ck, '{"dx":"uralt"}'), await imBlatt(NR, 'alt-'));
-  });
+  /* Fassung 1 ist seit Web 27.0.0 in jedem Blatt ein Befund (KA-07) — bis
+   * dahin ging sie im offenen Blatt als Altbestand auf. */
+  await scheitert('Buch: Fassung 1 ist altformat, auch im offenen Blatt', 'altformat', async () =>
+    b1.patLesen(await edk1(CK, '{"dx":"uralt"}'), await imBlatt(NR, 'alt-')));
 
   /* Das Gerätebuch über denselben Weg. */
   let sidUhr = null;
