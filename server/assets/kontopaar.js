@@ -11,13 +11,14 @@
  *   öffentlicher Teil  SPKI, Base64            → users.kp_oeffentlich
  *                                                (der Server versiegelt ihn)
  *   privater Teil      PKCS8, Base64, verpackt → users.kp_privat
- *                      mit dem INHALTSSCHLÜSSEL (`EdCrypto.encrypt(ck, …)`,
- *                      Kennung `edk1:`) — nicht `huelleBauen()`: Er muss mit
- *                      dem Wiederherstellungsschlüssel allein aufgehen.
+ *                      mit dem INHALTSSCHLÜSSEL (`EdInhalt.schreiben(ck,
+ *                      'kp', …)`, Kennung `edk2:`) — nicht `huelleBauen()`:
+ *                      Er muss mit dem Wiederherstellungsschlüssel allein
+ *                      aufgehen.
  *
  * Uhr und Handy bekommen den öffentlichen Teil bei der Kopplung und
  * verschließen damit Spur, Phasenkoordinaten und Reanimation
- * (`EdCrypto.geraetehuelleVerschliessen`); geöffnet wird mit dem privaten.
+ * (Gerätehülle Fassung 2, `EdHuelle2`); geöffnet wird mit dem privaten.
  *
  * ===========================================================================
  * DREI AUFRUFER, alle aus `unlock.js`, sobald der Inhaltsschlüssel da ist
@@ -76,8 +77,7 @@
                                                true, ['deriveBits']);
     const spki  = base64(await crypto.subtle.exportKey('spki', kp.publicKey));
     const pkcs8 = base64(await crypto.subtle.exportKey('pkcs8', kp.privateKey));
-    /* Zweck `kp`, ohne Bezug (KA-06b-3): mit der Weiche an `edk2:`, sonst
-       `edk1:` wie bisher. */
+    /* Zweck `kp`, ohne Bezug (KA-06b-3): `edk2:`. */
     return { oeffentlich: spki, privat: await EdInhalt.schreiben(ck, 'kp', '', pkcs8, 0) };
   }
 

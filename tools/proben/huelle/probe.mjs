@@ -1,24 +1,22 @@
 /* Hüllenprobe im Browser — die WebCrypto-Umsetzung gegen die Prüfvektoren.
  *
- * Anlass: Nr. 43 — drei Umsetzungen eines Formats müssen byte-gleich sein.
+ * Anlass: Nr. 43, Nr. 563 — drei Umsetzungen eines Formats müssen byte-gleich
+ * sein, und jede Gegenlage muss mit ihrem Grund scheitern.
  *
- * WAS. Lädt `server/assets/crypto.js` (frueher die Vorlage
- * `huelle.js`) in eine Seite und prüft dessen Gerätehülle gegen
- * `vektoren.json` aus `referenz.py`:
- *   je Fall    Z (ECDH), k_enc und k_mac (HKDF), die ganze Hülle byte-gleich
- *              bei festem flüchtigem Schlüssel und IV, und das Öffnen
- *   je Störung das Öffnen scheitert, und zwar mit dem erwarteten Grund
- *   Rundlauf   eine Hülle mit zufälligem Schlüssel und IV geht auf
- * Dazu, ohne Abnahme, die Zeiten für Verschließen und Öffnen eines
- * Spurstücks zu 200 und 500 Punkten in beiden Innenformen (Median aus 9).
+ * WAS. Lädt `crypto.js`, `inhalt2.js`, `huelle2.js` und `standbuch.js` in
+ * eine Seite und hält sie gegen `vektoren-2.json` und `vektoren-inhalt.json`
+ * aus `referenz.py` und `referenz_inhalt.py`: `edk2:`, Schlüsselhüllen,
+ * Standbuch, Gerätebuch, Ableitung 2, Gerätehülle Fassung 2 mit ihren
+ * Leseregeln und der Vergleichswert der Kopplung — die Prüfungen stehen in
+ * `pruefungen2.js` daneben. Dazu, ohne Abnahme, die Zeiten für Verschließen
+ * und Öffnen eines Spurstücks zu 200 und 500 Punkten in beiden Innenformen
+ * (Median aus 9), Absender das Konto.
  *
- * FASSUNG 2 (Nr. 563, KA-06b). Danach dieselbe Seite gegen `vektoren-2.json`
- * und `vektoren-inhalt.json`: `edk2:`, Schlüsselhüllen, Standbuch,
- * Gerätebuch, Ableitung 2, Gerätehülle Fassung 2 mit ihren Leseregeln und
- * der Vergleichswert der Kopplung — die Prüfungen stehen in
- * `pruefungen2.js` daneben. Sie laufen einmal, wie ausgeliefert. (Bis Web
- * 25.x ZWEIMAL, mit der Weiche aus und an; die Weiche ist seit Web 26.0.0
- * zurückgebaut, 06e.)
+ * FASSUNG 1 (Kennbyte 0x01, `edk1:`, `edka1:`) misst diese Probe seit
+ * KA-07 (Web 27.0.0) nur noch als Gegenlage: Sie muss überall scheitern
+ * (`ohne-herkunft`, `kennung`, `altformat`). Bis dahin lief vorweg eine
+ * eigene Seite gegen `vektoren.json` und die Gerätehülle der Fassung 1 aus
+ * `crypto.js`; beide sind entfernt.
  *
  * `--bestand <Ordner>` nimmt die Skripte aus einem anderen Ordner als
  * `server/assets/` — für die Gegenprobe gegen einen älteren Stand. Was dort
@@ -48,16 +46,15 @@ catch (e) { console.log(`Playwright fehlt (${MODUL}) — nicht gelaufen`); proce
 const motor = motorWahl(process.argv);
 const di = process.argv.indexOf('--drossel');
 const drossel = di >= 0 ? Number(process.argv[di + 1]) : 1;
-const vektoren = JSON.parse(readFileSync(path.join(HIER, 'vektoren.json'), 'utf-8'));
 const bi = process.argv.indexOf('--bestand');
 const BESTAND = bi >= 0 ? path.resolve(process.argv[bi + 1]) : path.join(HIER, '../../../server/assets');
-const quelle = readFileSync(path.join(BESTAND, 'crypto.js'), 'utf-8');
 const vektoren2 = JSON.parse(readFileSync(path.join(HIER, 'vektoren-2.json'), 'utf-8'));
 const vektorenInhalt = JSON.parse(readFileSync(path.join(HIER, 'vektoren-inhalt.json'), 'utf-8'));
 const pruefungen2 = readFileSync(path.join(HIER, 'pruefungen2.js'), 'utf-8');
-/* Die Dateien der Fassung 2, in der Reihenfolge, in der die Anwendung sie
- * einbindet. Eine, die im Bestand fehlt, wird nicht geladen. */
-const NEU = ['inhalt2.js', 'huelle2.js', 'standbuch.js'];
+/* Die Dateien, in der Reihenfolge, in der die Anwendung sie einbindet. Eine,
+ * die im Bestand fehlt, wird nicht geladen. */
+const DATEIEN = ['crypto.js', 'inhalt2.js', 'huelle2.js', 'standbuch.js'];
+const fehlend = DATEIEN.filter((n) => !existsSync(path.join(BESTAND, n)));
 
 let browser;
 try { browser = await starten(pw, motor); }
@@ -66,138 +63,78 @@ const kontext = await browser.newContext();
 await kontext.route('https://huelle.invalid/**', (r) => r.fulfill({
   status: 200, contentType: 'text/html', body: '<!doctype html><title>Hüllenprobe</title>' }));
 const seite = await kontext.newPage();
+const seitenfehler = [];
+seite.on('pageerror', (e) => seitenfehler.push(String(e.message).split('\n')[0]));
 await seite.goto('https://huelle.invalid/');
 if (drossel > 1) {
   if (motor !== 'chromium') { console.log('--drossel geht nur mit chromium'); process.exit(2); }
   const cdp = await kontext.newCDPSession(seite);
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: drossel });
 }
-await seite.addScriptTag({ content: quelle });
-
-/* Fassung 2 lädt eine eigene Seite. */
-const fehlend = NEU.filter((n) => !existsSync(path.join(BESTAND, n)));
-async function fassung2() {
-  const s = await kontext.newPage();
-  await s.goto('https://huelle.invalid/');
-  const fehler = [];
-  s.on('pageerror', (e) => fehler.push(String(e.message).split('\n')[0]));
-  await s.addScriptTag({ content: quelle });
-  for (const n of NEU) {
-    if (fehlend.includes(n)) { continue; }
-    await s.addScriptTag({ content: readFileSync(path.join(BESTAND, n), 'utf-8') });
-  }
-  await s.addScriptTag({ content: pruefungen2 });
-  const erg = await s.evaluate(([v2, vi]) => window.hpFassung2(v2, vi), [vektoren2, vektorenInhalt]);
-  await s.close();
-  return Object.assign(erg, { fehler });
+for (const n of DATEIEN) {
+  if (fehlend.includes(n)) { continue; }
+  await seite.addScriptTag({ content: readFileSync(path.join(BESTAND, n), 'utf-8') });
 }
+await seite.addScriptTag({ content: pruefungen2 });
+const erg = await seite.evaluate(([v2, vi]) => window.hpFassung2(v2, vi), [vektoren2, vektorenInhalt]);
 
-const ergebnis = await seite.evaluate(async (v) => {
-  const hex = (h) => new Uint8Array((h.match(/../g) || []).map((x) => parseInt(x, 16)));
-  const zuHex = (b) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
-  const ausB64 = (t) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
-  /* Die Gerätehülle aus crypto.js; den privaten Schlüssel aus d baut die
-   * Probe selbst (JWK) — die Anwendung holt ihn aus seiner Hülle. */
-  const E = EdCrypto;
-  const b64url = (b) => btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  const H = {
-    privat: (d, pub) => crypto.subtle.importKey('jwk', { kty: 'EC', crv: 'P-256', d: b64url(d),
+/* Zeiten — Auskunft, keine Abnahme. Dieselben Innenformen wie referenz.py;
+ * verschlossen wird als Konto (wie Formular, Wartungslauf und Schnitt). */
+let zeiten = {};
+try {
+  zeiten = await seite.evaluate(async (v2) => {
+    const hex = (h) => new Uint8Array((h.match(/../g) || []).map((x) => parseInt(x, 16)));
+    const b64url = (b) => btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const pub = hex(v2.konto.oeffentlich_hex), d = hex(v2.konto.privat_hex);
+    const priv = await crypto.subtle.importKey('jwk', { kty: 'EC', crv: 'P-256', d: b64url(d),
       x: b64url(pub.slice(1, 33)), y: b64url(pub.slice(33, 65)), ext: true },
-      { name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveBits']),
-    bindung: E.geraetehuelleBindung,
-    ableiten: E.geraetehuelleAbleiten,
-    verschliessen: async (klar, pub, art, ref, platz, fest) => E.geraetehuelleVerschliessen(klar, pub, art, ref, platz,
-      fest ? { privat: await H.privat(fest.fluechtigD, fest.fluechtigPub), epk: fest.fluechtigPub, iv: fest.iv } : undefined),
-    oeffnen: E.geraetehuelleOeffnen,
-  };
-  const zeilen = [];
-  let schlecht = 0;
-  const melde = (gut, text) => { zeilen.push(`  ${gut ? 'ok  ' : 'FEHL'}  ${text}`); if (!gut) { schlecht++; } };
-
-  const empfPub = hex(v.empfaenger.oeffentlich_hex);
-  const empfPriv = await H.privat(hex(v.empfaenger.privat_hex), empfPub);
-
-  for (const f of v.faelle) {
-    const fl = hex(f.fluechtig_privat_hex), epk = hex(f.epk_hex);
-    const flKey = await H.privat(fl, epk);
-    const empfKey = await crypto.subtle.importKey('raw', empfPub, { name: 'ECDH', namedCurve: 'P-256' }, false, []);
-    const k = await H.ableiten(flKey, empfKey, epk, empfPub);
-    melde(zuHex(k.z) === f.z_hex, `${f.name}: ECDH (Z)`);
-    melde(zuHex(k.kEnc) === f.k_enc_hex && zuHex(k.kMac) === f.k_mac_hex, `${f.name}: HKDF (k_enc, k_mac)`);
-    melde(zuHex(H.bindung(f.art, f.client_ref, f.platz)) === f.bindung_hex, `${f.name}: Bindung`);
-    const h = await H.verschliessen(hex(f.klartext_hex), empfPub, f.art, f.client_ref, f.platz,
-                                    { fluechtigD: fl, fluechtigPub: epk, iv: hex(f.iv_hex) });
-    melde(zuHex(h) === zuHex(ausB64(f.huelle_b64)), `${f.name}: Hülle byte-gleich (${h.length} Byte)`);
-    try {
-      const k2 = await H.oeffnen(ausB64(f.huelle_b64), empfPriv, empfPub, f.art, f.client_ref, f.platz);
-      melde(zuHex(k2) === f.klartext_hex, `${f.name}: öffnen`);
-    } catch (e) { melde(false, `${f.name}: öffnen — ${e.message}`); }
-  }
-  for (const st of v.stoerungen) {
-    try {
-      await H.oeffnen(ausB64(st.huelle_b64), empfPriv, empfPub, st.art, st.client_ref, st.platz);
-      melde(false, `Störung ${st.name}: ging auf`);
-    } catch (e) {
-      melde(e.grund === st.grund, `Störung ${st.name}: abgewiesen (${e.grund || e.message})`);
-    }
-  }
-  const zufall = crypto.getRandomValues(new Uint8Array(1000));
-  const hz = await H.verschliessen(zufall, empfPub, 'spur', 'w-x', '0:70');
-  const kz = await H.oeffnen(hz, empfPriv, empfPub, 'spur', 'w-x', '0:70');
-  melde(zuHex(kz) === zuHex(zufall), 'Rundlauf mit zufälligem Schlüssel und IV');
-
-  /* Zeiten — Auskunft, keine Abnahme. Dieselben Innenformen wie referenz.py. */
-  const zeiten = {};
-  for (const n of [200, 500]) {
-    const bin = new Uint8Array(n * 14);
-    const dv = new DataView(bin.buffer);
-    const pkt = [];
-    for (let i = 0; i < n; i++) {
-      const la = 47.7261 + i * 0.00031, lo = 10.3159 + i * 0.00047, he = 674 + (i % 37) * 0.7;
-      dv.setInt32(i * 14, Math.round(la * 1e7)); dv.setInt32(i * 14 + 4, Math.round(lo * 1e7));
-      dv.setInt16(i * 14 + 8, Math.round(he)); dv.setUint32(i * 14 + 10, i * 5);
-      pkt.push([+la.toFixed(6), +lo.toFixed(6), +he.toFixed(1), i * 5]);
-    }
-    const json = new TextEncoder().encode(JSON.stringify({ p: pkt }));
-    for (const [form, klar] of [['binaer', bin], ['json', json]]) {
-      const zu = [], auf = [];
-      let h;
-      for (let r = 0; r < 9; r++) {
-        let t = performance.now(); h = await H.verschliessen(klar, empfPub, 'spur', 'w-x', `0:${n}`); zu.push(performance.now() - t);
-        t = performance.now(); await H.oeffnen(h, empfPriv, empfPub, 'spur', 'w-x', `0:${n}`); auf.push(performance.now() - t);
+      { name: 'ECDH', namedCurve: 'P-256' }, false, ['deriveBits']);
+    const ls = await EdHuelle2.leser({ priv, pub }, {});
+    const aus = {};
+    for (const n of [200, 500]) {
+      const bin = new Uint8Array(n * 14);
+      const dv = new DataView(bin.buffer);
+      const pkt = [];
+      for (let i = 0; i < n; i++) {
+        const la = 47.7261 + i * 0.00031, lo = 10.3159 + i * 0.00047, he = 674 + (i % 37) * 0.7;
+        dv.setInt32(i * 14, Math.round(la * 1e7)); dv.setInt32(i * 14 + 4, Math.round(lo * 1e7));
+        dv.setInt16(i * 14 + 8, Math.round(he)); dv.setUint32(i * 14 + 10, i * 5);
+        pkt.push([+la.toFixed(6), +lo.toFixed(6), +he.toFixed(1), i * 5]);
       }
-      const med = (a) => Math.round(a.sort((x, y) => x - y)[4] * 100) / 100;
-      zeiten[`${form}-${n}`] = { innen_byte: klar.length, huelle_byte: h.length,
-                                 verschliessen_ms: med(zu), oeffnen_ms: med(auf) };
+      const json = new TextEncoder().encode(JSON.stringify({ p: pkt }));
+      for (const [form, klar] of [['binaer', bin], ['json', json]]) {
+        const zu = [], auf = [];
+        let h;
+        for (let r = 0; r < 9; r++) {
+          let t = performance.now();
+          h = await EdHuelle2.verschliessen2(klar, pub, { privat: priv, spk: pub }, 'spur', 'w-x', `0:${n}`);
+          zu.push(performance.now() - t);
+          t = performance.now(); await ls.huelle(h, 'spur', 'w-x', `0:${n}`); auf.push(performance.now() - t);
+        }
+        const med = (a) => Math.round(a.sort((x, y) => x - y)[4] * 100) / 100;
+        aus[`${form}-${n}`] = { innen_byte: klar.length, huelle_byte: h.length,
+                                verschliessen_ms: med(zu), oeffnen_ms: med(auf) };
+      }
     }
-  }
-  return { zeilen, schlecht, zeiten };
-}, vektoren);
-
-const an = await fassung2();
+    return aus;
+  }, vektoren2);
+} catch (e) { zeiten = { fehler: String(e.message).split('\n')[0] }; }
 await browser.close();
+
 console.log(`Hüllenprobe in ${motor}${drossel > 1 ? `, Drossel ${drossel}×` : ''}`
   + (bi >= 0 ? ` — Bestand ${BESTAND}` : ''));
-console.log(ergebnis.zeilen.join('\n'));
-for (const [k, z] of Object.entries(ergebnis.zeiten)) {
+for (const f of fehlend) { console.log(`  fehlt im Bestand: ${f}`); }
+console.log(erg.zeilen.join('\n'));
+for (const f of new Set(seitenfehler)) { console.log(`  Seitenfehler: ${f}`); }
+for (const a of erg.ausgenommen || []) { console.log(`  ----  nicht gemessen: ${a}`); }
+for (const [k, z] of Object.entries(zeiten)) {
+  if (k === 'fehler') { console.log(`  Zeit  nicht gemessen: ${z}`); continue; }
   console.log(`  Zeit  ${k}: innen ${z.innen_byte} B, Hülle ${z.huelle_byte} B, `
     + `verschließen ${z.verschliessen_ms} ms, öffnen ${z.oeffnen_ms} ms`);
 }
-const n = ergebnis.zeilen.length;
-console.log(`Fassung 1: ${n} Prüfungen, ${ergebnis.schlecht} Abweichungen`);
-for (const f of fehlend) { console.log(`  fehlt im Bestand: ${f}`); }
-for (const [name, e] of [['wie ausgeliefert', an]]) {
-  console.log(`Fassung 2, ${name}`);
-  console.log(e.zeilen.join('\n'));
-  for (const f of new Set(e.fehler)) { console.log(`  Seitenfehler: ${f}`); }
-  for (const a of e.ausgenommen || []) { console.log(`  ----  nicht gemessen: ${a}`); }
-  console.log(`Fassung 2, ${name}: ${e.zeilen.length} Prüfungen, ${e.schlecht} Abweichungen`
-    + ((e.ausgenommen || []).length ? `, ${e.ausgenommen.length} ausgenommen` : ''));
-}
-const gesamt = n + an.zeilen.length;
-const rot = ergebnis.schlecht + an.schlecht;
 /* Ausgenommen heißt: Der Vektor verlangt es, die Seite kann es noch nicht.
  * Es zählt nicht als Prüfung und steht in der Schlusszeile, solange es das gibt. */
-const offen = (an.ausgenommen || []).length;
-console.log(`${gesamt} Prüfungen, ${rot} Abweichungen` + (offen ? `, ${offen} ausgenommen (nicht gemessen)` : ''));
-process.exit(rot ? 1 : 0);
+const offen = (erg.ausgenommen || []).length;
+console.log(`${erg.zeilen.length} Prüfungen, ${erg.schlecht} Abweichungen`
+  + (offen ? `, ${offen} ausgenommen (nicht gemessen)` : ''));
+process.exit(erg.schlecht ? 1 : 0);

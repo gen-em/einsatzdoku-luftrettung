@@ -3,8 +3,8 @@
 // WAS DAS IST. Fassung 2 belegt dem Browser des Kontos, WELCHES Geraet eine
 // Huelle verschlossen hat, wann die Daten entstanden sind und ob etwas
 // fehlt. Dazu bekommt die Uhr ein eigenes, dauerhaftes Schluesselpaar; der
-// Schluessel jeder Huelle entsteht aus zwei Geheimnissen -- dem fluechtigen
-// wie in Fassung 1 und dem statischen dieses Paars gegen den
+// Schluessel jeder Huelle entsteht aus zwei Geheimnissen -- einem
+// fluechtigen je Huelle und dem statischen dieses Paars gegen den
 // Kontoschluessel. Signieren kann Connect IQ nicht (F-KG-11), eine zweite
 // Schluesselvereinbarung schon.
 //
@@ -96,12 +96,14 @@ module Huelle2 {
 
     // ---- Der Selbsttest ---------------------------------------------------
 
-    /* Kann diese Uhr Fassung 2 rechnen? Setzt den Selbsttest der Fassung 1
-     * voraus (Byteordnung) und rechnet dann EINEN festen Fall der Referenz
-     * nach (HuelleVektor2.mc): Stimmen Kennung und Pruefwort, tragen
-     * SHA-256, beide Schluesselvereinbarungen und die Ableitung. Gemessen
-     * wird beim ersten Aufruf je App-Fassung und Firmware; wie in Huelle.mc
-     * bleibt nur ein gutes Ergebnis im Storage.
+    /* Kann diese Uhr Fassung 2 rechnen? Setzt die Byteordnung voraus
+     * (Huelle.bereit(), am selben Fall gemessen) und rechnet dann den Fall
+     * der Referenz ganz nach (HuelleVektor2.mc): Stimmen Kennung und
+     * Pruefwort, tragen SHA-256, beide Schluesselvereinbarungen, die
+     * Ableitung, AES, HMAC und die Bindung. Gemessen wird beim ersten Aufruf
+     * je App-Fassung und Firmware; wie in Huelle.mc bleibt nur ein gutes
+     * Ergebnis im Storage. Bis Uhr 6.0.0 mass Huelle.bereit() die
+     * Byteordnung an einem Fall der Fassung 1 (HuelleVektor.mc, KA-28).
      *
      * Huelle.bereit() ruft das NICHT: Der erste Start soll nichts kosten.
      * Uploader.syncAll() fragt hier, bevor es Fassung 2 sendet -- in einem
@@ -127,8 +129,8 @@ module Huelle2 {
         try {
             var g = Huelle.paar(HuelleVektor2.D_GERAET);
             var spk = Huelle.geraetZuSec1(g.getPublicKey().getBytes() as Lang.ByteArray);
-            var h = verschliessenRoh(HuelleVektor.KLAR, HuelleVektor.EMPF_PUB, spk,
-                                     Huelle.ecdh(g, HuelleVektor.EMPF_PUB),
+            var h = verschliessenRoh(HuelleVektor2.KLAR, HuelleVektor2.KONTO, spk,
+                                     Huelle.ecdh(g, HuelleVektor2.KONTO),
                                      HuelleVektor2.BINDUNG, HuelleVektor2.D, HuelleVektor2.IV);
             gut = Huelle.gleich(h.slice(1, 1 + SID_LAENGE), HuelleVektor2.SID)
                   && Huelle.gleich(h.slice(h.size() - 32, h.size()), HuelleVektor2.TAG);
@@ -193,7 +195,7 @@ module Huelle2 {
      * big-endian wie in der Referenz. Es ist je Paar und Konto fest und
      * wird deshalb EINMAL gerechnet und abgelegt (V-KA-02) -- im Speicher
      * fuer diesen Lauf, im Storage ueber den Neustart. Eine Huelle kostet
-     * danach eine Schluesselvereinbarung wie in Fassung 1, nicht zwei; und
+     * danach eine Schluesselvereinbarung, nicht zwei; und
      * die erste Huelle nach dem Start nicht drei Rechnungen in einem Zug
      * (Waechter der Laufzeit).
      *
@@ -281,8 +283,9 @@ module Huelle2 {
     }
 
     /* Ein Spurstueck (Art "spur" oder "ruhe") aus den flachen Punkten von
-     * Track.readPoints(), wie Huelle.spurstueck(). `schluss`: Es ist das
-     * letzte Stueck der Aufzeichnung. */
+     * Track.readPoints() (Innenform: Huelle.punkteInnen()), Platz
+     * "<seq_from>:<punkte>". `schluss`: Es ist das letzte Stueck der
+     * Aufzeichnung. */
     function spurstueck(art as Lang.String, ref as Lang.String, seqFrom as Lang.Number,
                         flat as Lang.Array, schluss as Lang.Boolean) as Lang.Dictionary {
         var n = flat.size() / 4;

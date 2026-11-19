@@ -633,7 +633,7 @@ try {
      * Rückweg-Selbsttests, der private Teil dazu ist nicht aufgehoben und
      * wird hier nicht gebraucht. */
     $kpKlar = RW_VEKTOR_OEFFENTLICH;
-    kp_ablegen($pdo, $uid, $kpKlar, 'edk1:' . base64_encode(random_bytes(48)));
+    kp_ablegen($pdo, $uid, $kpKlar, 'edk2:' . base64_encode(random_bytes(48)));
 
     $pdo->prepare("DELETE FROM backup_targets WHERE name = 'Schluesselwechselprobe'")->execute();
     $pdo->prepare("INSERT INTO backup_targets (name, protokoll, host, port, nutzer, pfad, passiv, aktiv, erstellt_am)

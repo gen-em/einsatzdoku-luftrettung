@@ -7,69 +7,50 @@ bauartbedingt nicht. Ein Skript, das nachtragen will, muss also selbst
 verschluesseln, und zwar genau so, wie der Browser es taete. Sonst liest die
 Anwendung den Bestand spaeter nicht.
 
-Die drei Groessen (docs/Backup-Format.md, assets/crypto.js):
+Die Groessen (docs/Backup-Format.md, assets/crypto.js, assets/inhalt2.js):
 
-  Ableitung   PBKDF2-SHA256(Passwort, kdf_salt, kdf_iter) -> 512 Bit
-              erste 32 Byte = dataKey  (bleibt lokal, verschluesselt nichts
-                                        selbst, sondern packt den Inhalts-
-                                        schluessel aus)
-              zweite 32 Byte = authToken (ersetzt das Passwort zum Server)
-  Inhalts-    zufaellige 32 Byte, liegen passwortverpackt in users.pat_wrap_pw
-  schluessel
-  Chiffretext 'edk1:' + Base64(IV(12) || AES-256-GCM(Klartext))
+  Ableitung   nach der Rundenzahl: unter `ABLEITUNG2_AB` PBKDF2-SHA256 mit
+              512 Bit (erste Haelfte, Token), ab dort Ableitung 2
+              (`referenz_inhalt.ableitung2()`)
+  Inhalts-    zufaellige 32 Byte, liegen verpackt in users.pat_wrap_pw
+  schluessel  (`edk2:` bzw. `edka2:<kennung>:`, Zweck `wrap`)
+  Chiffretext `edk2:` — gebunden an Zweck und Bezug, mit Zaehler und
+              Groessenklasse (`referenz_inhalt.verschliessen()`)
 
-DER PRAEFIX IST PFLICHT fuer neu geschriebene Werte.
-Aeltere Chiffretexte tragen ihn nicht; beide Formen sind gueltig und stehen
-dauerhaft nebeneinander, weil der Server sie nicht nachtragen kann.
-
-DER DATENSCHLUESSEL HAENGT AM SERVER-ANTEIL. Die
-PBKDF2-Ableitung oben bleibt, wie sie ist; ihre erste Haelfte heisst jetzt
-HAELFTE und ist nicht mehr selbst der Datenschluessel:
+DER DATENSCHLUESSEL HAENGT AM SERVER-ANTEIL:
 
   Datenschluessel = HKDF-SHA256(ikm  = Haelfte (32 Byte),
                                 salt = Konto-Anteil (32 Byte),
                                 info = "edka1|dk") -> 32 Byte
 
-Der Konto-Anteil kommt als 64 Hexzeichen aus der Seite (`KONTO_ANTEILE`) und
-geht als ROHBYTES in das Salz — nicht als Hextext. Diese Festlegung steht an
-zwei Orten gleich: hier und in `EdCrypto.datenschluessel()` (assets/crypto.js).
+`edka1|dk` ist der Name der Ableitung, kein Format, und bleibt. Der
+Konto-Anteil kommt als 64 Hexzeichen aus der Seite (`KONTO_ANTEILE`) und
+geht als ROHBYTES in das Salz — hier und in `EdCrypto.datenschluessel()`.
 
 WELCHE HUELLE WELCHEN SCHLUESSEL BRAUCHT, steht in ihrem Praefix:
-  `edka1:<kennung>:…`  ->  HKDF mit dem Anteil zu <kennung>
-  `edk1:…` oder ohne   ->  die Haelfte unveraendert (Altfassung)
+  `edka2:<kennung>:…`  ->  HKDF mit dem Anteil zu <kennung>
+  `edk2:…`             ->  die Haelfte unveraendert (Demo-Konto, ohne Anteil)
 
-FASSUNG 2 WIRD GELESEN (Konzept KA, KA-13). Mit umgelegter Weiche (Web
-25.0.0) stellt der Browser ein Konto bei der Anmeldung um: Ableitung 2 ab
-1 200 000 Runden (ein PBKDF2-Block, Haelfte und Token per HKDF) und die
-gebundene Huelle `edk2:` bzw. `edka2:<kennung>:`. Dieses Modul rechnet die
-Ableitung nach der Rundenzahl und oeffnet beide Huellenfassungen — das
-Format der Fassung 2 steht in `tools/proben/huelle/referenz_inhalt.py`, und
-von dort wird es gerufen, nicht nachgebaut. Geschrieben wird hier weiter
-Fassung 1 (`verschluesseln()`, `huelle_bauen()`, `pat_blob()`).
-
-DIESES MODUL STELLT NICHT UM. Es liest beide Fassungen und baut auf
-Verlangen die neue; ob ein Konto umgestellt WIRD, entscheidet der Browser
-(`unlock.js`). Ein Konto, das nur ueber den Pruefstand angemeldet war, bleibt
-deshalb auf `edk1:` — das ist Absicht und steht so im Pruefdokument.
+NUR FASSUNG 2 (seit KA-07, Web 27.0.0). Bis dahin schrieb dieses Modul
+`edk1:` und `edka1:` und las beide Fassungen; der Server nimmt die erste seit
+Web 26 nicht mehr an, und seit Web 27 liest sie niemand. Das Format steht in
+`tools/proben/huelle/referenz_inhalt.py`, und von dort wird es gerufen,
+nicht nachgebaut.
 """
 from __future__ import annotations
 
-import base64
 import hashlib
 import hmac
 import json
-import os
 import re
 
 import pathlib
 import sys
 
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "proben" / "huelle"))
 import referenz_inhalt  # noqa: E402  (edk2 und Ableitung 2 — eine Stelle)
 
-PRAEFIX = "edk1:"
 PRAEFIX2 = "edk2:"
 HUELLE_PRAEFIX2 = "edka2:"
 ABLEITUNG2_AB = 1_200_000           # wie `ABLEITUNG2_AB` in assets/crypto.js
@@ -91,15 +72,14 @@ def ableiten(passwort: str, salt_hex: str, runden: int) -> tuple[str, str]:
     return bits[:32].hex(), bits[32:].hex()
 
 
-HUELLE_PRAEFIX = "edka1:"
-HKDF_INFO = b"edka1|dk"
+HKDF_INFO = b"edka1|dk"            # der Name der Ableitung, kein Format
 
 
 def huelle_kennung(huelle: str | None) -> str | None:
-    """Die Anteil-Kennung im Praefix einer Huelle — oder None (Altfassung)."""
+    """Die Anteil-Kennung im Praefix einer Huelle — oder None (ohne Anteil)."""
     if not huelle:
         return None
-    m = re.match(r"^edka[12]:([0-9a-f]{8}):", huelle)
+    m = re.match(r"^edka2:([0-9a-f]{8}):", huelle)
     return m.group(1) if m else None
 
 
@@ -151,68 +131,36 @@ def hkdf_sha256(ikm: bytes, salt: bytes, info: bytes, laenge: int) -> bytes:
 
 def entpacken(wrap: str, schluessel_hex: str) -> str:
     """Verpackten Inhaltsschluessel auspacken -> Inhaltsschluessel als Hex.
-
-    Beide Fassungen: `edk2:` und `edka2:<kennung>:` sind an Zweck und Bezug
-    gebunden (`wrap`, `pw` bzw. `pw:<kennung>`) und gehen ueber die Referenz.
-    """
-    if wrap.startswith((PRAEFIX2, HUELLE_PRAEFIX2)):
-        return referenz_inhalt.huelle_oeffnen(bytes.fromhex(schluessel_hex), wrap, "pw")
-    return entschluesseln(wrap, schluessel_hex)
+    `edk2:` und `edka2:<kennung>:` sind an Zweck und Bezug gebunden (`wrap`,
+    `pw` bzw. `pw:<kennung>`); eine andere Huelle wirft (`kennung`)."""
+    return referenz_inhalt.huelle_oeffnen(bytes.fromhex(schluessel_hex), wrap, "pw")
 
 
 def huelle_bauen(inhaltsschluessel_hex: str, datenschluessel_hex: str,
                  kennung: str | None) -> str:
-    """Eine Schluesselhuelle bauen — mit Anteil-Kennung oder ohne.
-
-    `kennung is None` ergibt die Altfassung `edk1:…`; das ist der Weg fuer das
-    Demo-Konto und fuer eine Installation ohne Anteil.
-    """
-    iv = os.urandom(12)
-    ct = AESGCM(bytes.fromhex(datenschluessel_hex)).encrypt(
-        iv, inhaltsschluessel_hex.encode("utf-8"), None)
-    roh = base64.b64encode(iv + ct).decode("ascii")
-    return (PRAEFIX + roh) if kennung is None \
-        else f"{HUELLE_PRAEFIX}{kennung}:{roh}"
+    """Eine Passworthuelle bauen — `edka2:<kennung>:` oder ohne Anteil `edk2:`
+    (Demo-Konto, Installation ohne Anteil). Wie `EdCrypto.huelleBauen()`."""
+    return referenz_inhalt.huelle_bauen(bytes.fromhex(datenschluessel_hex),
+                                        inhaltsschluessel_hex, "pw", kennung)
 
 
-def verschluesseln(klartext: str, schluessel_hex: str) -> str:
-    iv = os.urandom(12)
-    ct = AESGCM(bytes.fromhex(schluessel_hex)).encrypt(iv, klartext.encode("utf-8"), None)
-    return PRAEFIX + base64.b64encode(iv + ct).decode("ascii")
+def verschluesseln(klartext: str, schluessel_hex: str, zweck: str, bezug: str = "",
+                   z: int = 0) -> str:
+    """Ein gebundener Text `edk2:` — wie `EdInhalt.schreiben()`."""
+    return referenz_inhalt.verschliessen(bytes.fromhex(schluessel_hex), zweck, bezug,
+                                         klartext.encode("utf-8"), z)
 
 
-def entschluesseln(chiffre: str, schluessel_hex: str, zweck: str | None = None,
-                   bezug: str = "") -> str:
-    """Chiffretext oeffnen — beide Huellenfassungen und der Bestand ohne Praefix.
-
-    EIN GEBUNDENER TEXT (`edk2:`) GEHT NUR AN SEINER STELLE AUF: Wer ihn
-    oeffnet, nennt `zweck` (`pat`, `kp`, `rw`) und `bezug` (bei `pat` die
-    client_ref des Einsatzes). Ohne `zweck` wirft die Funktion, statt mit
-    einem Pruefwertfehler zu antworten, der aussieht wie ein falscher
-    Schluessel.
-
-    DIE KENNUNG WIRD HIER NUR ABGESCHNITTEN, NICHT AUSGEWERTET. Welcher
-    Schluessel zu `edka1:<kennung>:` gehoert, entscheidet `datenschluessel()`
-    eine Ebene darueber; hier steht nur, wo der Base64-Teil anfaengt. Die beiden
-    zu vermengen hiesse, dieser Funktion das Konto und die Anteile
-    mitzugeben, die sie fuer einen `pat_blob` gar nicht braucht.
-    """
-    if chiffre.startswith(PRAEFIX2):
-        if zweck is None:
-            raise ValueError("Ein `edk2:`-Text ist gebunden — `zweck` und `bezug` angeben.")
-        return referenz_inhalt.oeffnen(bytes.fromhex(schluessel_hex), chiffre, zweck, bezug)[0].decode("utf-8")
-    if chiffre.startswith(HUELLE_PRAEFIX):
-        roh = chiffre.split(":", 2)[2]
-    elif chiffre.startswith(PRAEFIX):
-        roh = chiffre[len(PRAEFIX):]
-    else:
-        roh = chiffre
-    b = base64.b64decode(roh)
-    return AESGCM(bytes.fromhex(schluessel_hex)).decrypt(b[:12], b[12:], None).decode("utf-8")
+def entschluesseln(chiffre: str, schluessel_hex: str, zweck: str, bezug: str = "") -> str:
+    """Einen gebundenen Text oeffnen. Er geht nur an seiner Stelle auf: Wer
+    ihn oeffnet, nennt `zweck` (`pat`, `kp`, `rw`) und `bezug` (bei `pat` die
+    client_ref des Einsatzes). Ein Text, der nicht `edk2:` ist, wirft."""
+    return referenz_inhalt.oeffnen(bytes.fromhex(schluessel_hex), chiffre, zweck, bezug)[0].decode("utf-8")
 
 
-def pat_blob(geschuetzt: dict, inhaltsschluessel_hex: str) -> str | None:
-    """Geschuetzte Angaben -> `edk1:`-Chiffretext, oder None wenn nichts da ist.
+def pat_blob(geschuetzt: dict, inhaltsschluessel_hex: str, ref: str, z: int = 1) -> str | None:
+    """Geschuetzte Angaben -> `edk2:`-Block (Zweck `pat`, Bezug die client_ref,
+    Zaehler `z`), oder None wenn nichts da ist.
 
     LEERE FELDER FLIEGEN RAUS, nicht als null mit. Der Browser baut den Block
     genauso auf (einsatz_form.php, sammlePat): Ein `"dx": null` im Klartext
@@ -243,4 +191,4 @@ def pat_blob(geschuetzt: dict, inhaltsschluessel_hex: str) -> str | None:
     if not o:
         return None
     return verschluesseln(json.dumps(o, ensure_ascii=False, separators=(",", ":")),
-                          inhaltsschluessel_hex)
+                          inhaltsschluessel_hex, "pat", ref, z)

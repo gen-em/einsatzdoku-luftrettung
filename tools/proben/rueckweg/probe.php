@@ -16,8 +16,8 @@ declare(strict_types=1);
  *        verändert, zweckfremd, fremdes Konto, verstümmelt → abgewiesen.
  *     3. Fremde Schlüssel: P-384 und Ed25519 weist `rw_oeffentlich_pruefen()`
  *        ab, und eine gültige Signatur mit ihnen nimmt `rw_pruefen()` nicht an.
- *     4. Die Prüfregeln des Paars: die Form des öffentlichen Teils, `edk1:`
- *        für den privaten, nie `edka1:`.
+ *     4. Die Prüfregeln des Paars: die Form des öffentlichen Teils, `edk2:`
+ *        für den privaten, nie `edka2:`, nie das alte Format.
  *     5. Die Statuszeile „Rückweg-Prüfung" in drei Lagen, mit gesetzten Werten.
  *     6. Die Marke: Der Selbsttest läuft einmal je Marke, ein gestellter
  *        Fehlschlag schaltet den Weg ab.
@@ -169,9 +169,11 @@ echo "== A4. Prüfregeln (E-RW-05)\n";
 pruefe((bool)preg_match(RW_OEFFENTLICH_RE, $pub) && strlen($pub) === 124,
        'RW_OEFFENTLICH_RE nimmt einen P-256-SPKI', strlen($pub) . ' Zeichen');
 $chiffre = base64_encode(random_bytes(160));
-pruefe((bool)preg_match(RW_PRIVAT_RE, 'edk1:' . $chiffre), 'RW_PRIVAT_RE nimmt edk1:');
-pruefe(!preg_match(RW_PRIVAT_RE, 'edka1:0123456789abcdef:' . $chiffre),
-       'RW_PRIVAT_RE weist edka1: ab — der private Teil hängt nie am Server-Anteil');
+pruefe((bool)preg_match(RW_PRIVAT_RE, 'edk2:' . $chiffre), 'RW_PRIVAT_RE nimmt edk2:');
+pruefe(!preg_match(RW_PRIVAT_RE, 'edka2:01234567:' . $chiffre),
+       'RW_PRIVAT_RE weist edka2: ab — der private Teil hängt nie am Server-Anteil');
+pruefe(!preg_match(RW_PRIVAT_RE, 'edk1:' . $chiffre) && !preg_match(RW_PRIVAT_RE, $chiffre),
+       'RW_PRIVAT_RE weist das alte Format ab (edk1:, ohne Kennung; seit Web 27.0.0, KA-07)');
 
 /* ---- 5. Statuszeile ---------------------------------------------------------- */
 echo "== A5. Statuszeile „Rückweg-Prüfung\" in drei Lagen\n";
@@ -221,7 +223,7 @@ register_shutdown_function(static function () use ($pdo, $probeId): void {
 $lagen = [];
 $lagen['fehlt'] = rw_zustand($probeId);
 $pdo->prepare('UPDATE users SET rw_oeffentlich = ?, rw_privat = ?, rw_seit = UTC_TIMESTAMP()
-               WHERE id = ?')->execute([$pub, 'edk1:' . $chiffre, $probeId]);
+               WHERE id = ?')->execute([$pub, 'edk2:' . $chiffre, $probeId]);
 $lagen['da'] = rw_zustand($probeId);
 /* DIE LAGE „spalten" SO, WIE MYSQL SIE MELDET: SQLSTATE 42S22.
  * Eine SQLite-Datenbank ohne die Spalten genuegt nicht — sie
@@ -281,13 +283,14 @@ require_once $wurzel . '/server/totp_lib.php';
 require_once $wurzel . '/server/ratelimit_lib.php';
 require_once $wurzel . '/server/serverkrypto_lib.php';
 
-/** `crypto.js` encrypt(): edk1: + Base64(IV 12 || Chiffre || Tag 16). */
+/** Eine Formattrappe: `edk2:` + Base64(IV 12 || Chiffre || Tag 16). Der
+ *  Server öffnet `rw_privat` nie; öffnen tut sie nur diese Probe selbst. */
 function edk_verpacken(string $schluessel, string $klartext): string
 {
     $iv = random_bytes(12);
     $tag = '';
     $c = openssl_encrypt($klartext, 'aes-256-gcm', $schluessel, OPENSSL_RAW_DATA, $iv, $tag);
-    return 'edk1:' . base64_encode($iv . $c . $tag);
+    return 'edk2:' . base64_encode($iv . $c . $tag);
 }
 function edk_oeffnen(string $schluessel, string $blob): ?string
 {

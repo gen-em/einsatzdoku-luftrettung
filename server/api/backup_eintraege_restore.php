@@ -85,8 +85,7 @@ try {
     }
     $stats = db_transaktion(db(), function (PDO $pdo) use ($userId, $eintraege, $b, $blaetter, $texte): array {
         $st = edbak_restore($userId, $eintraege,
-                            is_array($b['day_map'] ?? null) ? $b['day_map'] : [], 'browser',
-                            null, true);
+                            is_array($b['day_map'] ?? null) ? $b['day_map'] : [], true);
         sb_blaetter_schreiben($pdo, $userId, $blaetter, $texte);
         return $st;
     });

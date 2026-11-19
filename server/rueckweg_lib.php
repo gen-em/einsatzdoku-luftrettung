@@ -17,7 +17,7 @@ if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) 
  * steht, taugt nicht als Nachweis — wer einen
  * Abzug hat, legt ihn vor. Hier liegt in der Datenbank nur der
  * ÖFFENTLICHE Teil (`rw_oeffentlich`) und der private als Chiffretext unter
- * dem Inhaltsschlüssel (`rw_privat`, `edk1:`), den der Server nie kennt. Ein
+ * dem Inhaltsschlüssel (`rw_privat`, `edk2:`), den der Server nie kennt. Ein
  * Abzug kann damit prüfen, aber nicht signieren.
  *
  * DAS VERFAHREN: ECDSA über P-256 (`secp256r1`) mit SHA-256, die

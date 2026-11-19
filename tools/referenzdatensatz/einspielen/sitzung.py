@@ -301,15 +301,15 @@ class Sitzung:
         # ---- Der Server-Anteil -------------------------------------------
         #
         # Die PBKDF2-Haelfte ist nicht selbst der
-        # Datenschluessel: Traegt die Huelle das Praefix `edka1:<kennung>:`,
+        # Datenschluessel: Traegt die Huelle das Praefix `edka2:<kennung>:`,
         # kommt der Datenschluessel aus HKDF(Haelfte, Konto-Anteil). Den
         # Anteil liefert die angemeldete Seite als `KONTO_ANTEILE` — sie ist
         # dieselbe Quelle, aus der auch der Browser ihn nimmt.
         #
         # DIESES SKRIPT STELLT NICHT UM. Es liest, was dasteht;
         # ein Konto, das nur ueber den Pruefstand angemeldet war, bleibt auf
-        # `edk1:`. Der Umstellungslauf braucht einen echten Browser, und das
-        # ist die Grenze dieses Pruefmittels.
+        # `edk2:` ohne Anteil. Der Umstellungslauf braucht einen echten
+        # Browser, und das ist die Grenze dieses Pruefmittels.
         self.anteile = self.konstante(html, "KONTO_ANTEILE") or {}
         self.anteil_kennung = self.konstante(html, "ANTEIL_KENNUNG")
         self.anteil_stand = self.konstante(html, "ANTEIL_STAND") or "fehlt"
@@ -393,7 +393,7 @@ class Sitzung:
 
         WIE DER BROWSER (`assets/kontopaar.js`): ECDH P-256, der oeffentliche
         Teil als SPKI, der private als PKCS8 in Base64, verschluesselt mit dem
-        Inhaltsschluessel (`edk1:`, AES-GCM wie `EdCrypto.encrypt`), angelegt
+        Inhaltsschluessel (`edk2:`, Zweck `kp`, wie `EdKontopaar.paarErzeugen`), angelegt
         ueber `api/kontopaar.php` mit dem Passwortnachweis. Kein Sonderzugang:
         Der Server versiegelt den oeffentlichen Teil selbst, und der Browser
         oeffnet den privaten spaeter wie einen, den er selbst angelegt hat.
@@ -407,9 +407,8 @@ class Sitzung:
             spki = base64.b64decode(self.konstante(html, "KP_OEFFENTLICH"))
             chiffre = self.konstante(html, "KP_PRIVAT")
             if chiffre and self.inhaltsschluessel:
-                # Zweck `kp`: Seit der umgelegten Weiche liegt der private
-                # Teil gebunden (`edk2:`); Fassung 1 liest die Angabe nicht.
-                self.paar_privat = krypto.entschluesseln(chiffre, self.inhaltsschluessel, zweck="kp")
+                # Zweck `kp`, ohne Bezug: Der private Teil liegt gebunden (`edk2:`).
+                self.paar_privat = krypto.entschluesseln(chiffre, self.inhaltsschluessel, "kp")
             return spki[-65:]
         if stand != "fehlt":
             raise RuntimeError(f"Kontoschluessel: Stand {stand!r} -- "
@@ -423,7 +422,7 @@ class Sitzung:
             "aktion": "anlegen", "token": self.token,
             "oeffentlich": base64.b64encode(spki).decode("ascii"),
             "privat": krypto.verschluesseln(base64.b64encode(pkcs8).decode("ascii"),
-                                            self.inhaltsschluessel)})
+                                            self.inhaltsschluessel, "kp")})
         if a.status_code != 200:
             raise RuntimeError(f"api/kontopaar.php anlegen: HTTP {a.status_code} {a.text[:200]}")
         self.paar_privat = base64.b64encode(pkcs8).decode("ascii")

@@ -21,9 +21,9 @@ import org.json.JSONObject
  * NUR FASSUNG 2 (seit Android 0.27.0, KA-21). Seit Web 26.0.0 nimmt der
  * Server eine Gerätehülle der Fassung 1 nicht mehr an (E-KA-60); [Fassung2]
  * ist deshalb Pflicht, und ein Körper ohne Absender lässt sich gar nicht
- * mehr bauen. Bis 0.26.0 hieß `fassung2 = null` „Fassung 1 wie bisher". Die
- * Funktionen der Fassung 1 in [Geraetehuelle] stehen weiter als Referenz zu
- * ihren Vektoren da; im Sendeweg ruft sie niemand.
+ * mehr bauen. Bis 0.26.0 hieß `fassung2 = null` „Fassung 1 wie bisher"; bis
+ * 0.27.0 standen die Funktionen der Fassung 1 noch als Referenz in
+ * [Geraetehuelle], seit 0.27.1 gibt es sie nicht mehr (KA-27).
  *
  * DER ZÄHLER DER EINSATZHÜLLE KOMMT AUS DEM PAKET (E-KA-69, seit KA-06f):
  * `paket.zaehler`, vergeben, als sich der Inhalt zuletzt änderte, und mit

@@ -105,7 +105,7 @@ require_once __DIR__ . '/konfig_lib.php';
  * auf die Ursache.
  */
 
-/* Kennung des Formats, wie `edk1:` im Browser (crypto.js). Sie steht vorn,
+/* Kennung des Formats, wie `edk2:` im Browser (inhalt2.js). Sie steht vorn,
  * damit ein Feld in der Datenbank auf einen Blick als versiegelt zu erkennen
  * ist — und damit eine spätere zweite Fassung neben der ersten existieren
  * kann, ohne dass geraten werden muss. */
@@ -414,8 +414,9 @@ function konto_anteil(int $userId, string $roh): string
 /**
  * Die Anteil-Kennung, die eine Schlüsselhülle im Präfix trägt — oder null.
  *
- * Eine Hülle mit Anteil lautet `edka1:<kennung>:<base64>`; eine
- * ohne Anteil `edk1:<base64>` oder ganz ohne Präfix (Altbestand). An dieser
+ * Eine Hülle mit Anteil lautet `edka2:<kennung>:<base64>`; eine
+ * ohne Anteil `edk2:<base64>` (seit Web 27.0.0 die einzigen Formen; bis
+ * dahin auch `edka1:`, `edk1:` und Text ohne Präfix). An dieser
  * einen Stelle wird das gelesen, serverseitig — der Server öffnet dabei
  * nichts und kann es auch nicht.
  *
@@ -429,7 +430,7 @@ function konto_anteil(int $userId, string $roh): string
 function huelle_anteil_kennung(?string $huelle): ?string
 {
     if ($huelle === null) { return null; }
-    return preg_match('/^edka[12]:([0-9a-f]{8}):/', $huelle, $m) ? $m[1] : null;
+    return preg_match('/^edka2:([0-9a-f]{8}):/', $huelle, $m) ? $m[1] : null;
 }
 
 /* ---- Marken in app_state ------------------------------------------------
@@ -481,7 +482,7 @@ function schluessel_marke_setzen(string $k, string $v): void
  *
  *   fehlt        Keine `kdf_anteil`-Zeile, keine Marke. Das ist der Zustand
  *                JEDER Installation, bevor ein Anteil angelegt ist:
- *                Es wird nichts ausgeliefert, die Hüllen bleiben `edk1:`, und
+ *                Es wird nichts ausgeliefert, die Hüllen bleiben `edk2:`, und
  *                die Anwendung läuft wie ohne Anteil. Es geschieht
  *                nichts, bis jemand auf der Karte „Anlegen" drückt — das ist
  *                Absicht.
@@ -491,7 +492,7 @@ function schluessel_marke_setzen(string $k, string $v): void
  *                Anmelden.
  *   abweichend   Der Wert ist ein anderer als der, mit dem gearbeitet wurde
  *                — oder er fehlt, obwohl gearbeitet wurde. DANN WIRD NICHTS
- *                AUSGELIEFERT. Eine `edka1:`-Hülle lässt sich nicht öffnen,
+ *                AUSGELIEFERT. Eine `edka2:`-Hülle lässt sich nicht öffnen,
  *                und die Seite sagt das mit der erwarteten Kennung, statt
  *                „Passwort falsch" zu behaupten.
  *
@@ -507,7 +508,7 @@ function schluessel_marke_setzen(string $k, string $v): void
  * übernimmt die Funktion, WAS DASTEHT — auch einen falsch abgeschriebenen
  * Wert. Das ist derselbe Fall wie beim Schluesselblatt („Ohne Eintrag in
  * `app_state` gibt es nichts zu prüfen"), und er ist harmlos: In diesem
- * Zustand existiert keine `edka1:`-Hülle, gegen die man prüfen könnte.
+ * Zustand existiert keine `edka2:`-Hülle, gegen die man prüfen könnte.
  *
  * Das Ergebnis wird gemerkt — die Funktion läuft auf jeder angemeldeten
  * Seite. `$frisch` setzt zurück, nachdem `config.php` geschrieben wurde.
@@ -592,7 +593,7 @@ function anteil_ausgeliefert(): ?string
  * und für diesen Fehler genügt das.
  *
  * DAS DEMO-KONTO IST AUSGENOMMEN und muss es sein: Es bekommt
- * keinen Anteil, seine Hülle bleibt `edk1:`. Der Aufrufer sagt das mit
+ * keinen Anteil, seine Hülle bleibt `edk2:`. Der Aufrufer sagt das mit
  * `$istDemo`, statt dass diese Funktion `demo_lib.php` nachlädt — sie liegt
  * unter `db.php` und soll dort nicht hinaufgreifen.
  */
@@ -689,7 +690,7 @@ function konto_anteile(int $userId): array
  * könnte mit ihm weiter offline raten. Der Pfeffer hat einen anderen
  * Ableitungszweck und verlässt den Server nie.
  *
- * WARUM DIE KENNUNG IM PRÄFIX STEHT. Aus demselben Grund wie bei `edka1:`:
+ * WARUM DIE KENNUNG IM PRÄFIX STEHT. Aus demselben Grund wie bei `edka2:`:
  * Während einer Rotation stehen zwei Anteile in `config.php`, und der Server
  * muss wissen, mit welchem er prüft. Die Umstellung auf den neuen läuft je
  * Konto bei der nächsten Anmeldung, mit derselben Hülle zusammen.
@@ -1288,10 +1289,10 @@ function anteil_alt_entfernen(): array
  * Neuanfang — ein frischer Anteil, obwohl der alte verloren ist.
  *
  * DER FALL, FÜR DEN ES DAS GIBT: `config.php` ist weg und beide Ausdrucke des
- * Schlüsselblatts auch. Dann lässt sich keine `edka1:`-Hülle mehr öffnen, und
+ * Schlüsselblatts auch. Dann lässt sich keine `edka2:`-Hülle mehr öffnen, und
  * es gibt nichts nachzutragen.
  *
- * WAS DAS KOSTET, UND WAS NICHT. Jedes Konto mit `edka1:`-Hülle muss sein
+ * WAS DAS KOSTET, UND WAS NICHT. Jedes Konto mit `edka2:`-Hülle muss sein
  * Passwort über den **Wiederherstellungsschlüssel** neu setzen — der hängt
  * nicht am Anteil. Es ist also ein Vorgang für alle und **kein
  * Datenverlust**. Genau deshalb steht der Knopf überhaupt da: Ohne ihn bliebe
@@ -1350,7 +1351,7 @@ function anteil_neuanfang(): array
  * Auskunft möglich, für die man sonst den Schlüssel bräuchte.
  *
  * Das Demo-Konto zählt **nicht mit**: Es bleibt bauartbedingt auf
- * `edk1:`, und es als „noch offen" zu führen hieße, eine Zahl zu zeigen, die
+ * `edk2:` ohne Kennung, und es als „noch offen" zu führen hieße, eine Zahl zu zeigen, die
  * nie auf null geht. Denselben Fehler hat die Zeile „Schlüsselableitung"
  * schon einmal gemacht.
  *

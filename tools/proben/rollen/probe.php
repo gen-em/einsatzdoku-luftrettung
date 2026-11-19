@@ -972,7 +972,7 @@ if (!db_hat_spalte($pdo, 'users', 'rw_seit')) {
         $spki = (string)preg_replace('/-----[^-]+-----|\s/', '',
             \phpseclib3\Crypt\EC::createKey(RW_KURVE)->getPublicKey()->toString('PKCS8'));
         $r = hole('api/rueckweg_anlegen.php', $k['sid'], ['token' => $tok, 'oeffentlich' => $spki,
-                  'privat' => 'edk1:' . base64_encode(random_bytes(160))], $k['csrf']);
+                  'privat' => 'edk2:' . base64_encode(random_bytes(160))], $k['csrf']);
         $da = (int)$pdo->query('SELECT rw_oeffentlich IS NOT NULL FROM users WHERE id = ' . (int)$k['id'])
                        ->fetchColumn();
         $ok = $r['code'] === 200 && $da === 1;
@@ -1201,7 +1201,7 @@ if (isset($konten['admin'])) {
 
 // 4. Demo-Konto: der Wiederherstellungsschlüssel bleibt (F-KA-41)
 $wrapVor = $pdo->query('SELECT pat_wrap_rc FROM users WHERE id = ' . $demoZiel)->fetchColumn();
-$r = hole('api/schluessel_erneuern.php', $demoSitzung['sid'], ['pat_wrap_rc' => 'edk1:x'], $demoSitzung['csrf']);
+$r = hole('api/schluessel_erneuern.php', $demoSitzung['sid'], ['pat_wrap_rc' => 'edk2:x'], $demoSitzung['csrf']);
 $fehler = (string)(json_decode($r['rumpf'], true)['error'] ?? '');
 pruef($r['code'] === 403 && $fehler === 'demo'
       && $pdo->query('SELECT pat_wrap_rc FROM users WHERE id = ' . $demoZiel)->fetchColumn() === $wrapVor,

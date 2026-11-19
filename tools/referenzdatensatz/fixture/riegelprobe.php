@@ -8,28 +8,28 @@ declare(strict_types=1);
  * Demo-Kontos unveraendert in die Fixture, und `demo_lib.php` schreibt sie
  * bei jedem Reset unveraendert zurueck ins Konto — auf der
  * PRODUKTIVinstallation, die ihren eigenen Server-Anteil fuehrt. Eine Huelle
- * mit Anteil (`edka1:<kennung>:`) ist dort nicht zu oeffnen: Das Demo-Konto
+ * mit Anteil (`edka2:<kennung>:`) ist dort nicht zu oeffnen: Das Demo-Konto
  * kaeme herein und saehe nichts, bei jedem Reset aufs Neue, ohne Meldung.
  *
  * Verlangt ist deshalb der Riegel in `erzeugen.php`. Diese Probe misst
  * ihn — beide Richtungen, denn ein Riegel, der IMMER zuschlaegt, ist ebenso
  * kaputt wie einer, der es nie tut:
  *
- *   1. POSITIV — das Demo-Konto traegt eine Huelle ohne Anteil (`edk1:`,
- *      seit Fixture-Format 4 `edk2:`), und `erzeugen.php` laeuft durch
+ *   1. POSITIV — das Demo-Konto traegt eine Huelle ohne Anteil (`edk2:`;
+ *      bis Web 26 auch `edk1:`), und `erzeugen.php` laeuft durch
  *      (Rueckgabe 0, eine Datei im Format 4 entsteht).
- *   2. NEGATIV — ein Konto mit `edka1:`-Huelle wird abgewiesen
+ *   2. NEGATIV — ein Konto mit `edka2:`-Huelle wird abgewiesen
  *      (Rueckgabe 2, Meldung nennt das gefundene Praefix, KEINE Datei).
  *
  * WARUM DER NEGATIVFALL NICHTS UMSTELLT. Der naheliegende Weg waere, die
- * Huelle des Demo-Kontos kurz auf `edka1:` zu setzen und danach
+ * Huelle des Demo-Kontos kurz auf `edka2:` zu setzen und danach
  * zurueckzulegen. Genau dieser Weg hat einmal ein Konto gekostet:
  * Eine Umhuellung ist nicht rueckrechenbar, und wer den
  * Schnappschuss eine Handlung zu spaet nimmt, sperrt das Konto dauerhaft aus.
  *
  * Deshalb wird hier NICHTS geschrieben. `erzeugen.php` nimmt das Konto als
  * Argument — der Negativfall zeigt es einfach auf ein Konto des
- * Referenzbestands, das seine `edka1:`-Huelle regulaer beim Anmelden bekommen
+ * Referenzbestands, das seine `edka2:`-Huelle regulaer beim Anmelden bekommen
  * hat. Ein echter Fall statt eines nachgestellten, und die Datenbank bleibt
  * unberuehrt.
  *
@@ -39,7 +39,7 @@ declare(strict_types=1);
  *     php tools/referenzdatensatz/fixture/riegelprobe.php umlauf-csv@example.invalid
  *
  * Das Argument ist das Konto fuer den NEGATIVfall; es muss eine Huelle mit
- * Anteil tragen (`edka1:` oder `edka2:`) und die Rolle `user` haben — sonst
+ * Anteil tragen (`edka2:`) und die Rolle `user` haben — sonst
  * schlaegt ein anderer Riegel vorher zu, und die Probe sagt das, statt
  * gruen zu melden. Die Rundenzahl spielt seit KA-13 keine Rolle mehr: Die
  * Fixture traegt `KDF_ITER_ZIEL` durch Bau (`erzeugen.php`, Kopf).
@@ -51,7 +51,7 @@ declare(strict_types=1);
  * brach `erzeugen.php` vor jedem Riegel ab (Rueckgabe 2), und die Probe sah
  * 3 von 10 rot — und einen Fall gruen aus dem falschen Grund: Der
  * Negativfall erwartet Rueckgabe 2, und die kam vom allgemeinen Abbruch,
- * nicht vom Riegel. Fall 2b haelt das fest (die Meldung muss `edka1:`
+ * nicht vom Riegel. Fall 2b haelt das fest (die Meldung muss `edka2:`
  * nennen), und Fall 1c misst, dass die Fixture Format 3 mit Spurpunkten ist.
  *
  * DIE POSITIVE HAELFTE SCHREIBT EINE DATEI — in den Systemtempordner, nicht
@@ -112,11 +112,11 @@ if ($neg['role'] !== 'user') {
     exit(2);
 }
 $negPraefix = explode(':', (string)$neg['praefix'])[0] . ':';
-if (!in_array($negPraefix, ['edka1:', 'edka2:'], true)) {
+if ($negPraefix !== 'edka2:') {
     fwrite(STDERR, sprintf(
-        "Das Negativkonto %s traegt `%s`, gebraucht wird `edka1:` oder `edka2:`.\n"
+        "Das Negativkonto %s traegt `%s`, gebraucht wird `edka2:`.\n"
       . "Herzustellen, indem sich das Konto einmal im Browser anmeldet -- oder\n"
-      . "mit tools/proben/anteil/huelle_stellen.py <konto> <passwort> edka1.\n",
+      . "mit tools/proben/anteil/huelle_stellen.py <konto> <passwort> edka2.\n",
         $negativKonto, (string)$neg['praefix']));
     exit(2);
 }
@@ -194,10 +194,10 @@ if ($summeVor === false || !copy($fxPfad, $fxSicher)) {
 $verbiegen = static function (string $spalte) use ($fxSicher, $fxPfad): void {
     $j = json_decode((string)gzdecode((string)file_get_contents($fxSicher)), true);
     $alt = (string)$j['konto'][$spalte];
-    /* `edk1:` durch `edka1:<acht hex>:` ersetzen — die Form, die eine Huelle
+    /* `edk2:` durch `edka2:<acht hex>:` ersetzen — die Form, die eine Huelle
      * mit Server-Anteil traegt. Der Inhalt bleibt, er wird nie geoeffnet. */
-    $j['konto'][$spalte] = 'edka1:' . bin2hex(random_bytes(4)) . ':'
-                         . substr($alt, strlen('edk1:'));
+    $j['konto'][$spalte] = 'edka2:' . bin2hex(random_bytes(4)) . ':'
+                         . substr($alt, strlen('edk2:'));
     file_put_contents($fxPfad, (string)gzencode(
         (string)json_encode($j, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), 9));
 };
@@ -226,7 +226,7 @@ try {
 
     $verbiegen('pat_wrap_pw');
     $r1 = $laden();
-    pruef('3  Eine Fixture mit `edka1:`-Schluesselhuelle wird abgewiesen',
+    pruef('3  Eine Fixture mit `edka2:`-Schluesselhuelle wird abgewiesen',
           str_contains($r1['aus'], 'ABGEWIESEN'),
           trim(mb_substr($r1['aus'], 0, 72)));
     pruef('3  ... und die Meldung nennt den Server-Anteil',
@@ -236,7 +236,7 @@ try {
     copy($fxSicher, $fxPfad);
     $verbiegen('pat_wrap_rc');
     $r2 = $laden();
-    pruef('4  Auch eine `edka1:`-Wiederherstellungs-Huelle wird abgewiesen (E-S10-04)',
+    pruef('4  Auch eine `edka2:`-Wiederherstellungs-Huelle wird abgewiesen (E-S10-04)',
           str_contains($r2['aus'], 'ABGEWIESEN'),
           trim(mb_substr($r2['aus'], 0, 72)));
 

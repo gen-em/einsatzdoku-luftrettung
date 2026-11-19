@@ -50,8 +50,11 @@ DER RÜCKWEG BLEIBT. `kp`, `rw` und `wrap`/"rc" brauchen zum Öffnen nur
 ihren Schlüssel und feste Zeichenketten — nichts vom Server, keinen Anteil.
 Der Wiederherstellungsschlüssel allein öffnet weiter alles (CLAUDE.md 4).
 
-FASSUNG 1 BLEIBT LESBAR: "edk1:" ‖ Base64(NONCE ‖ CT ‖ TAG) oder dasselbe
-ohne Kennung, AES-256-GCM ohne Zusatzdaten, die Nutzlast ungepolstert.
+FASSUNG 1 WIRD SEIT WEB 27.0.0 NICHT MEHR GELESEN (KA-07, E-KA-104):
+"edk1:" ‖ Base64(NONCE ‖ CT ‖ TAG) oder dasselbe ohne Kennung, AES-256-GCM
+ohne Zusatzdaten, die Nutzlast ungepolstert — als Block `altformat`, als
+Hülle (auch `edka1:`) `kennung`, wie im Browser. `verschliessen1()` baut
+sie nur noch als Gegenlage. Bis Web 26.x öffnete der Anhebelauf sie.
 
 =========================================================================
 Das Standbuch — der Zählerstand, den der Server nicht fälschen kann
@@ -91,15 +94,17 @@ damit der nächste Browser nicht bei null anfängt.
       d   Versatz in Sekunden (Umdatierung des Diensttags): Klartextzeit −
           Zeit in der Hülle
       x   Löschvermerke [[von, bis], …] in der Zeit der Hülle
-    zu    true: Der Anhebelauf ist durch — ein Block der Fassung 1 in diesem
-          Blatt ist kein Altbestand mehr, sondern ein Befund (`altformat`).
+    zu    bis Web 26.x: Der Anhebelauf ist durch. Wird geschrieben und
+          gelesen, wirkt aber nicht mehr: Ein Block der Fassung 1 ist seit
+          Web 27.0.0 in jedem Blatt `altformat`.
 
 DIE REGELN BEIM LESEN (`blatt_oeffnen()`, `pat_lesen()`):
     blatt-zurueckgelegt   der Server liefert ein Blatt mit kleinerer Version,
                           als dieser Browser schon gesehen hat (der Anker)
-    zurueckgelegt         Z des Blocks < p des Eintrags — oder ein Block der
-                          Fassung 1, wo der Eintrag schon einen Zähler hat
-    altformat             Fassung 1 in einem Blatt mit "zu"
+    zurueckgelegt         Z des Blocks < p des Eintrags
+    altformat             ein Block, der nicht "edk2:" ist (Fassung 1) —
+                          vor jeder anderen Prüfung (bis Web 26.x nur in
+                          einem Blatt mit "zu")
     Z > p oder kein Eintrag: kein Fehler — das Blatt hinkt (ein verlorener
     Schreibvorgang); der Browser trägt nach. Fälschen kann das niemand: Ein
     höheres Z entsteht nur mit dem Schlüssel.
@@ -248,24 +253,9 @@ def oeffnen(schluessel: bytes, text: str, zweck: str, bezug: str) -> tuple[bytes
 
 
 def verschliessen1(schluessel: bytes, nutzlast: bytes, nonce: bytes) -> str:
-    """Fassung 1, wie `EdCrypto.encrypt()` bis KA-06 — nur für die Vektoren."""
+    """Fassung 1, wie `EdCrypto.encrypt()` bis Web 26.x — nur noch als
+    Gegenlage: Kein Leser öffnet sie (KA-07). `oeffnen1()` ist entfallen."""
     return KENNUNG1 + base64.b64encode(nonce + AESGCM(schluessel).encrypt(nonce, nutzlast, None)).decode()
-
-
-def oeffnen1(schluessel: bytes, text: str) -> bytes:
-    """Fassung 1: mit oder ohne Kennung, ohne Zusatzdaten, ohne Polster."""
-    if ":" in text and not text.startswith(KENNUNG1):
-        raise InhaltFehler("kennung")
-    try:
-        roh = base64.b64decode(text[len(KENNUNG1):] if text.startswith(KENNUNG1) else text, validate=True)
-    except ValueError as f:
-        raise InhaltFehler("form") from f
-    if len(roh) < 12 + 16:
-        raise InhaltFehler("form")
-    try:
-        return AESGCM(schluessel).decrypt(roh[:12], roh[12:], None)
-    except InvalidTag as f:
-        raise InhaltFehler("pruefwert") from f
 
 
 # ------------------------------------------- Schlüsselhüllen (`wrap`)
@@ -364,12 +354,7 @@ def pat_lesen(schluessel: bytes, text: str, ref: str, blatt: dict | None) -> tup
     eintrag = (blatt or {}).get("e", {}).get(kennung(ref), {})
     stand = eintrag.get("p", 0)
     if not text.startswith(KENNUNG):
-        klar = oeffnen1(schluessel, text)
-        if stand:
-            raise InhaltFehler("zurueckgelegt")       # Fassung 1, wo schon Fassung 2 lag
-        if blatt and blatt.get("zu"):
-            raise InhaltFehler("altformat")
-        return klar, {"z": 0, "gebunden": False, "blatt_hinkt": False}
+        raise InhaltFehler("altformat")               # Fassung 1, seit Web 27.0.0 in jedem Blatt
     klar, z = oeffnen(schluessel, text, "pat", ref)
     if z < stand:
         raise InhaltFehler("zurueckgelegt")
@@ -530,6 +515,17 @@ def vektoren_bauen() -> dict:
         {"name": "rc-huelle-als-pw", "grund": "pruefwert", "schluessel_hex": rc.hex(), "art": "pw",
          "text": aus["huellen"][0]["text"]},
     ]
+    # Hüllen der Fassung 1 (KA-07): `edka1:`, `edk1:` und ohne Kennung — jede
+    # `kennung`, ehe ein Schlüssel angefasst wird. Echt verschlossen, mit dem
+    # richtigen Schlüssel: Abgewiesen wird die Form, nicht ein falscher Wert.
+    h1 = {art: verschliessen1(k, ck.hex().encode(), _n("huelle1-" + art)) for art, k in (("pw", dk), ("rc", rc))}
+    for name, schluessel, art, text in (
+            ("fassung-1-edka1", dk, "pw", "edka1:1a2b3c4d:" + h1["pw"][len(KENNUNG1):]),
+            ("fassung-1-edk1-pw", dk, "pw", h1["pw"]),
+            ("fassung-1-edk1-rc", rc, "rc", h1["rc"]),
+            ("fassung-1-ohne-kennung", rc, "rc", h1["rc"][len(KENNUNG1):])):
+        aus["huellen_stoerungen"].append({"name": name, "grund": "kennung", "schluessel_hex": schluessel.hex(),
+                                          "art": art, "text": text})
 
     # --- Lagen: ein Patientenblock gegen Blatt und Anker ---
     def lage(name, text, blatt_text, erwartet, anker=None, blatt_als=nr):
@@ -547,12 +543,14 @@ def vektoren_bauen() -> dict:
     lage("blatt-hinkt", z4, blatt, {"z": 4, "gebunden": True, "blatt_hinkt": True}, anker=17)
     lage("ohne-eintrag", pat_a, blatt_leer, {"z": 3, "gebunden": True, "blatt_hinkt": True}, anker=17)
     lage("ohne-blatt", pat_a, None, {"z": 3, "gebunden": True, "blatt_hinkt": True})
-    lage("altbestand", alt1, blatt_leer, {"z": 0, "gebunden": False, "blatt_hinkt": False}, anker=17)
-    lage("altbestand-ohne-kennung", ohne_kennung, blatt_leer, {"z": 0, "gebunden": False, "blatt_hinkt": False})
+    # Fassung 1 ist seit Web 27.0.0 in jedem Blatt `altformat` (KA-07) — bis
+    # dahin im offenen Blatt Altbestand und nur im geschlossenen ein Befund.
+    lage("fassung-1", alt1, blatt_leer, "altformat", anker=17)
+    lage("fassung-1-ohne-kennung", ohne_kennung, blatt_leer, "altformat")
     lage("zurueckgelegt", z2, blatt, "zurueckgelegt", anker=17)
-    lage("zurueckgelegt-auf-fassung-1", alt1, blatt, "zurueckgelegt", anker=17)
+    lage("fassung-1-wo-ein-zaehler-steht", alt1, blatt, "altformat", anker=17)
     lage("blatt-zurueckgelegt", z2, blatt_alt, "blatt-zurueckgelegt", anker=17)
-    lage("altformat-nach-anhebung", alt1, blatt_zu, "altformat", anker=17)
+    lage("fassung-1-im-geschlossenen-blatt", alt1, blatt_zu, "altformat", anker=17)
     lage("blatt-unter-fremder-nummer", pat_a, blatt, "pruefwert", blatt_als=(nr + 1) % BLAETTER)
     lage("vertauschter-block", verschliessen(ck, "pat", REF_B, b'{"dx":"fremd"}', 9, nonce=_n("fremd")),
          blatt, "pruefwert", anker=17)
@@ -699,10 +697,14 @@ def selbstprobe() -> int:
     falsch("Fehler: Zähler verfälscht", lambda w: w["faelle"][0].update(z=4))
     falsch("Fehler: falscher Grund erwartet", lambda w: w["stoerungen"][0].update(grund="form"))
     falsch("Fehler: vertauschter Block geht auf", lambda w: w["stoerungen"][0].update(bezug=REF_A))
-    falsch("Fehler: zurückgelegter Block geht auf", lambda w: w["lagen"][7].update(text=w["lagen"][0]["text"]))
-    falsch("Fehler: zurückgelegtes Blatt geht auf", lambda w: w["lagen"][9].update(anker=16))
-    falsch("Fehler: Altformat nach der Anhebung geht auf",
-           lambda w: w["lagen"][10].update(blatt_text=w["lagen"][5]["blatt_text"]))
+    lage_ = lambda w, name: next(f for f in w["lagen"] if f["name"] == name)  # noqa: E731
+    falsch("Fehler: zurückgelegter Block geht auf",
+           lambda w: lage_(w, "zurueckgelegt").update(text=lage_(w, "gut")["text"]))
+    falsch("Fehler: zurückgelegtes Blatt geht auf", lambda w: lage_(w, "blatt-zurueckgelegt").update(anker=16))
+    falsch("Fehler: Fassung 1 geht auf", lambda w: lage_(w, "fassung-1").update(text=lage_(w, "gut")["text"]))
+    falsch("Fehler: Hülle edka1 geht auf",
+           lambda w: next(f for f in w["huellen_stoerungen"] if f["name"] == "fassung-1-edka1")
+           .update(text=w["huellen"][1]["text"]))
     falsch("Fehler: Blattnummer verfälscht", lambda w: w["stand"]["blattnummern"].update({REF_B: 99}))
     falsch("Fehler: Hülle mit falschem Inhaltsschlüssel", lambda w: w["schluessel"].update(ck_hex="00" * 32))
     falsch("Fehler: Gerätebuch zurückgelegt geht auf", lambda w: w["geraetebuch"]["gegenlagen"][0].update(anker=4))

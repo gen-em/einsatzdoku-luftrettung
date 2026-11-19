@@ -187,9 +187,8 @@
   async function entschluessle(ck, blob, ref) {
     if (!blob || !ck) { return { zustand: 'leer', daten: null }; }
     try {
-      /* Über das Standbuch (KA-06b-3): beide Fassungen, und ein gebundener
-         Block wird gegen seinen Zählerstand gehalten. Fassung 1 geht bei
-         ausgeschalteter Weiche weiter über `EdCrypto.decrypt()`. */
+      /* Über das Standbuch (KA-06b-3): Der Block wird gegen seinen
+         Zählerstand gehalten. Einer im alten Format ist `unlesbar`. */
       return { zustand: 'ok', daten: JSON.parse(await EdStandbuch.patOeffnen(ck, blob, ref)) || {} };
     } catch (e) {
       return { zustand: 'unlesbar', daten: null };

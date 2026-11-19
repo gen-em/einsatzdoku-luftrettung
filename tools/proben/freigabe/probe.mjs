@@ -111,29 +111,59 @@ try {
   pruefe(await seite.evaluate(() => typeof EdCrypto === 'object'),
          'crypto.js ist auf der Anmeldeseite geladen');
 
+  /* Die Anmeldeseite lädt `crypto.js`, die Bausteine der Fassung 2 nicht
+   * immer — die Probe holt sie aus der Anlage nach, nicht aus einer Kopie. */
+  for (const [name, datei] of [['EdInhalt', 'inhalt2.js'], ['EdHuelle2', 'huelle2.js']]) {
+    if (!await seite.evaluate((n) => typeof window[n] === 'object', name)) {
+      await seite.addScriptTag({ url: `${BASIS}/assets/${datei}` });
+    }
+  }
   const KLARTEXT = { diag: 'Freigabeprobe-Diagnose', alter: 42 };
+  /* SEIT KA-07 (Web 27) IN FASSUNG 2, und zwar alles: Hülle `edk2:` unter
+   * dem Wiederherstellungsschlüssel, Block und privater Teil `edk2:`, Orte,
+   * Reanimation und Spur als Gerätehülle Fassung 2 mit dem Konto als
+   * Absender. Bis dahin baute die Probe `edk1:` über `EdCrypto.encrypt()`
+   * und ließ den Server Orte und Spur verschließen (Fassung 1). */
   const mat = await seite.evaluate(async (klar) => {
     const code = EdCrypto.newRecoveryCode();
     const ck   = EdCrypto.randomHex(32);
     const rc   = await EdCrypto.recoveryKeyHex(code);
-    /* Das Schlüsselpaar der Quelle, wie `EdKontopaar.anlegen()`
-       es baut: SPKI offen, PKCS8 unter dem Inhaltsschlüssel. */
+    /* Das Schlüsselpaar der Quelle, wie `EdKontopaar.paarErzeugen()`
+       es baut: SPKI offen, PKCS8 unter dem Inhaltsschlüssel (Zweck `kp`). */
     const kp = await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true,
                                                ['deriveBits']);
     const b64 = (b) => btoa(String.fromCharCode(...new Uint8Array(b)));
+    const k = { priv: kp.privateKey, pub: new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey)) };
+    const REF = 'fg-rc-1';
+    const beginn = Date.UTC(2026, 6, 10, 6, 0, 0) / 1000;
+    const ort = await EdHuelle2.einsatzSchreiben(k, REF, { z: 1, start: beginn, schluss: true },
+      { phasen: [{ phase: 4, t: 600, lat: 47.15, lon: 11.15 }],
+        rea: [{ t: 1200, ereignisse: [{ art: 'adrenalin', t: 1260 }] }] });
+    /* Zwei Punkte, ein Stück — Innenform wie `EdOrtsdaten.stueckeBauen()`. */
+    const punkte = [[47.1, 11.1, 700, 1783300000], [47.2, 11.2, 705, 1783300060]];
+    const innen = new Uint8Array(punkte.length * 14);
+    const dv = new DataView(innen.buffer);
+    punkte.forEach(([lat, lon, ele, ts], i) => {
+      dv.setInt32(i * 14, Math.round(lat * 1e7)); dv.setInt32(i * 14 + 4, Math.round(lon * 1e7));
+      dv.setInt16(i * 14 + 8, ele); dv.setUint32(i * 14 + 10, ts - punkte[0][3]);
+    });
+    const stueck = await EdHuelle2.stueckSchreiben(k, 'spur', REF, '0:2',
+                                                   { tsVon: punkte[0][3], schluss: true }, innen);
     return {
       code,
-      wrap:  await EdCrypto.encrypt(rc, ck),
+      wrap:  await EdInhalt.huelleBauen(rc, ck, 'rc', null),
       check: await EdCrypto.contentKeyCheck(ck),
-      blob:  await EdCrypto.encrypt(ck, JSON.stringify(klar)),
+      blob:  await EdInhalt.schreiben(ck, 'pat', REF, JSON.stringify(klar), 1),
       spki:  b64(await crypto.subtle.exportKey('spki', kp.publicKey)),
-      kp_privat: await EdCrypto.encrypt(ck, b64(await crypto.subtle.exportKey('pkcs8', kp.privateKey))),
+      kp_privat: await EdInhalt.schreiben(ck, 'kp', '', b64(await crypto.subtle.exportKey('pkcs8', kp.privateKey)), 0),
+      ort_huelle: b64(ort),
+      stuecke: [{ seq_from: 0, punkte: 2, ts_von: punkte[0][3], ts_bis: punkte[1][3], huelle: b64(stueck) }],
     };
   }, KLARTEXT);
   pruefe(typeof mat.code === 'string' && mat.code.length > 0
-         && mat.wrap && mat.check && mat.blob,
-         'Hülle, Prüfsumme und Chiffretext kommen aus assets/crypto.js',
-         'Code ' + mat.code.slice(0, 4) + '…');
+         && mat.wrap && mat.check && mat.blob && mat.ort_huelle,
+         'Hülle, Prüfsumme, Chiffretext und Ortshülle kommen aus der Anwendung',
+         'Code ' + mat.code.slice(0, 4) + '…, ' + String(mat.wrap).slice(0, 5) + ' / ' + String(mat.blob).slice(0, 5));
 
   /* ---- 2. Quelle herrichten, sichern, freigeben ------------------------ */
   const q = php('quelle', { ...mat, ziel: ZIEL });

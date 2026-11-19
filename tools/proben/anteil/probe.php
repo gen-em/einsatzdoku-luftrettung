@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Anteilprobe — rechnet der Server den Server-Anteil richtig, und erkennt er
  * die fuenf Lagen?
  *
- * Anlass: Nr. 307 — die Huellenpruefung nahm edka1: auch fuer pat_wrap_rc an (Teil A3 haette es fangen muessen)
+ * Anlass: Nr. 307 — die Huellenpruefung nahm edka1: (heute edka2:) auch fuer pat_wrap_rc an (Teil A3 haette es fangen muessen)
  *
  * WOFUER. Der Server-Anteil ist das zweite Geheimnis der Installation, und er
  * hat eine unangenehme Eigenschaft: Wenn er falsch ist, sieht das aus wie ein
@@ -176,37 +176,43 @@ pruefe('derselbe Konto, anderer Anteil ergibt Verschiedenes', $a7 !== $a7b, true
 
 teil('A2. Die Anteil-Kennung im Huellenpraefix');
 
-pruefe('edka1: mit Kennung wird gelesen',
-       huelle_anteil_kennung('edka1:ab12cd34:AAAA'), 'ab12cd34');
-pruefe('edk1: traegt keine Anteil-Kennung',
-       huelle_anteil_kennung('edk1:AAAA'), null);
+pruefe('edka2: mit Kennung wird gelesen',
+       huelle_anteil_kennung('edka2:ab12cd34:AAAA'), 'ab12cd34');
+pruefe('edk2: traegt keine Anteil-Kennung',
+       huelle_anteil_kennung('edk2:AAAA'), null);
+/* Seit KA-07 (Web 27) liest der Server das alte Praefix gar nicht mehr. */
+pruefe('edka1: wird nicht mehr gelesen',
+       huelle_anteil_kennung('edka1:ab12cd34:AAAA'), null);
 pruefe('Huelle ohne Praefix traegt keine', huelle_anteil_kennung('AAAA'), null);
 pruefe('null traegt keine', huelle_anteil_kennung(null), null);
 /* Sieben Zeichen, Grossbuchstaben, fehlender Doppelpunkt: alles KEINE
  * gueltige Kennung. Eine halb erkannte waere schlimmer als gar keine — der
  * Server verglichte dann gegen einen Wert, den niemand gebaut hat. */
 pruefe('sieben Hexzeichen sind keine Kennung',
-       huelle_anteil_kennung('edka1:ab12cd3:AAAA'), null);
+       huelle_anteil_kennung('edka2:ab12cd3:AAAA'), null);
 pruefe('Grossbuchstaben sind keine Kennung',
-       huelle_anteil_kennung('edka1:AB12CD34:AAAA'), null);
+       huelle_anteil_kennung('edka2:AB12CD34:AAAA'), null);
 pruefe('ohne zweiten Doppelpunkt keine Kennung',
-       huelle_anteil_kennung('edka1:ab12cd34AAAA'), null);
+       huelle_anteil_kennung('edka2:ab12cd34AAAA'), null);
 
-teil('A3. WRAP_RE nimmt beide Fassungen, PAT_BLOB_RE bleibt eng');
+teil('A3. WRAP_RE nimmt nur die gebundenen Fassungen (seit KA-07)');
 
 require_once $wurzel . '/validate_lib.php';
 $b64 = str_repeat('A', 40);
-pruefe('WRAP_RE nimmt edk1:',  preg_match(WRAP_RE, 'edk1:' . $b64) === 1, true);
-pruefe('WRAP_RE nimmt edka1:', preg_match(WRAP_RE, 'edka1:ab12cd34:' . $b64) === 1, true);
-pruefe('WRAP_RE nimmt ohne Praefix', preg_match(WRAP_RE, $b64) === 1, true);
+pruefe('WRAP_RE nimmt edk2:',  preg_match(WRAP_RE, 'edk2:' . $b64) === 1, true);
+pruefe('WRAP_RE nimmt edka2:', preg_match(WRAP_RE, 'edka2:ab12cd34:' . $b64) === 1, true);
+pruefe('WRAP_RE weist edk1: ab',  preg_match(WRAP_RE, 'edk1:' . $b64) === 1, false);
+pruefe('WRAP_RE weist edka1: ab', preg_match(WRAP_RE, 'edka1:ab12cd34:' . $b64) === 1, false);
+pruefe('WRAP_RE weist ohne Praefix ab', preg_match(WRAP_RE, $b64) === 1, false);
 pruefe('WRAP_RE weist eine halbe Kennung ab',
-       preg_match(WRAP_RE, 'edka1:ab12cd3:' . $b64) === 1, false);
+       preg_match(WRAP_RE, 'edka2:ab12cd3:' . $b64) === 1, false);
 /* DER BLOB BLEIBT UNBERUEHRT, und das ist die Aussage des Anteils in einer Zeile:
  * Der Anteil steckt im Datenschluessel, der Datenschluessel oeffnet die
  * Huelle, und in der Huelle liegt derselbe Inhaltsschluessel wie vorher. Kein
- * Datensatz wird angefasst, wenn ein Konto umstellt. */
-pruefe('PAT_BLOB_RE nimmt edka1: NICHT',
-       preg_match(PAT_BLOB_RE, 'edka1:ab12cd34:' . str_repeat('A', 60)) === 1, false);
+ * Datensatz wird angefasst, wenn ein Konto umstellt. Der Patientenblock nimmt
+ * deshalb keine Huelle mit Anteil-Kennung an. */
+pruefe('pruef_pat_blob nimmt edka2: NICHT',
+       pruef_pat_blob('edka2:ab12cd34:' . str_repeat('A', 60)), null);
 
 /* ---- B. Die fuenf Lagen -------------------------------------------------- */
 

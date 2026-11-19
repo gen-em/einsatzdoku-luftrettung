@@ -1167,13 +1167,13 @@ AGPL-3.0; siehe `docs/Lizenzen.md`.
 | `position.svg` | Tabler Icons „current-location" (MIT) | 5 |
 | `profil.svg` | Tabler Icons „user" (MIT) | 18 |
 | `protokoll.svg` | Tabler Icons „list" (MIT) | 24 |
-| `punkte.svg` | Tabler Icons „dots" (MIT) | 70 |
+| `punkte.svg` | Tabler Icons „dots" (MIT) | 66 |
 | `reanimation.svg` | Tabler Icons „activity" (MIT) | 0 |
 | `rechtstexte.svg` | Tabler Icons „file-text" (MIT) | 2 |
 | `schliessen.svg` | Tabler Icons „x" (MIT) | 16 |
 | `schloss-offen.svg` | Tabler Icons „lock-open" (MIT) | 5 |
 | `schloss.svg` | Tabler Icons „lock" (MIT) | 21 |
-| `server.svg` | Tabler Icons „server" (MIT) | 24 |
+| `server.svg` | Tabler Icons „server" (MIT) | 15 |
 | `sicherung.svg` | Tabler Icons „archive" (MIT) | 25 |
 | `sonne.svg` | Tabler Icons „sun" (MIT) | 2 |
 | `sonstiges.svg` | Tabler Icons „dots-circle-horizontal" (MIT) | 78 |

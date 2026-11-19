@@ -21,15 +21,22 @@ trugen die Dateien Gerätedaten ohne Herkunftsnachweis (Gerätehülle Fassung 1)
 und Blöcke `edk1:`, die kein Schreibweg mehr annimmt; der Browser weist die
 Datei mit Grund ab, bevor er etwas sendet, und der Server weist dieselben
 Inhalte an jedem Schreibweg ab (`pruef_huelle()`, `pruef_pat_blob()`). Die
-Nutzlast bleibt 13; geändert hat sich nur, was darin stehen darf. Ein
-**Adminpaket** (Konto-Sicherung der Verwaltung) reicht gespeicherte
-Chiffretexte unverändert durch und darf Fassung 1 weiter tragen: Ein Konto,
-das sich seit Web 25 nicht angemeldet hat, hat dort noch welche, und seine
-nächste Anmeldung hebt sie (E-KA-99).
+Nutzlast bleibt 13; geändert hat sich nur, was darin stehen darf.
+
+**Ein Adminpaket** (Konto-Sicherung der Verwaltung) reicht gespeicherte
+Chiffretexte unverändert durch. Bis Web 26 durfte es deshalb Fassung 1
+tragen (E-KA-99). **Seit Web 27.0.0 (KA-07, E-KA-107, F-KA-136) lassen sich
+nur Pakete einspielen oder freigeben, die Web 27 oder später angelegt hat**
+(`edbak_paket_zu_alt()`, gefragt wird `web_version` im Manifest): Ein Paket
+von Web 26 kann noch Gerätehüllen der Fassung 1 und `edk1:`-Blöcke von
+Konten tragen, die sich damals nicht angemeldet hatten, und die liest seit
+Web 27 niemand mehr. Abgewiesen wird das Paket ganz (Freigabe `409
+fassung_alt`), bevor etwas geschrieben ist; ein neues Paket legt der nächste
+Lauf an.
 
 | Fassung | Gestalt | geschrieben | gelesen |
 |---|---|---|---|
-| **4** | ZIP mit versiegelten Teilen (`PK`-Magie) | seit Web 11.0.0 | ja, seit Web 23 nur Nutzlast 13, seit Web 26 nur aus Web 26 und später |
+| **4** | ZIP mit versiegelten Teilen (`PK`-Magie) | seit Web 11.0.0 | ja, seit Web 23 nur Nutzlast 13, seit Web 26 nur aus Web 26 und später (Adminpakete seit Web 27 nur aus Web 27 und später) |
 | 3 | eine versiegelte Datei (`EDBAK2`, Kopf mit Rundenzahl) | Web 5.0.0 – 10.3.0 | bis Web 22.7.0 |
 | 2 | eine versiegelte Datei ohne Rundenzahl im Kopf | bis Web 4.7.0 | bis Web 22.7.0 |
 
@@ -816,13 +823,12 @@ seit Web 4.1.2 auch:
     // `pat` das Kennzeichen `pat_unreadable` und — seit Web 4.1.0 — der
     // unveränderte Chiffretext `pat_blob` in der Datei:
     // "pat_unreadable": true,
-    // "pat_blob": "edk1:Base64 …"   -> unverändert übernommener Chiffretext
+    // "pat_blob": "edk2:Base64 …"   -> unverändert übernommener Chiffretext
     //
-    // Seit Web 5.1.0 trägt ein neu geschriebener Chiffretext die Formatkennung
-    // `edk1:` (M2-10). Ältere tragen sie nicht — beide Formen sind gültig und
-    // stehen dauerhaft nebeneinander, weil der Server sie nicht nachtragen
-    // kann (er hat den Schlüssel nach Bauart nicht). Der Einspielweg nimmt
-    // beide an.
+    // Seit Web 25.0.0 ist der Chiffretext gebunden (`edk2:`, Zweck `pat`,
+    // Bezug die client_ref). Bis Web 26 gab es daneben `edk1:` (seit Web
+    // 5.1.0, M2-10) und Text ohne Kennung; seit Web 27.0.0 (KA-07) nimmt der
+    // Einspielweg nur noch `edk2:` an.
 
     "phases": [ { "phase": 2, "occurred_at": "2026-07-19 08:15:00",
                   "lat": 47.72, "lon": 10.31 } ],
@@ -1640,7 +1646,7 @@ Ruhesegmente).
   "web_version": "12.0.0",
   "konto":  { "account_key": "…16 Hexziffern…", "email": "…", "name": "…" },
   "schluessel": { "pat_wrap_rc": "…", "pat_key_check": "…",
-                  "kp_privat": "edk1:…" },   // seit Web 22.5.0, s. unten
+                  "kp_privat": "edk2:…" },   // seit Web 22.5.0 (bis Web 24 `edk1:`), s. unten
   "umfang": { "einsaetze": 42, "diensttage": 12, "ruhezeiten": 3,
               "papierkorb": { "einsaetze": 5, "diensttage": 1, "ruhezeiten": 5 } },
   "nutzlast":      13,         // Fassung des Kerns, s. Abschnitt 2 (EDBAK_NUTZLAST)

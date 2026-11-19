@@ -14,6 +14,28 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 27.0.0] — unveröffentlicht
+
+Schritt 28 (KA), KA-07: Pakete KA-24 bis KA-30.
+
+### Entfernt
+
+- **Web — das alte Format wird nicht mehr gelesen.** Seit Web 26 nahm es kein
+  Schreibweg mehr an, gelesen wurde es aber weiter, und wer die Datenbank
+  beschreibt, konnte einem Konto so noch Daten ohne Bindung unterschieben.
+  Jetzt öffnen Server und Browser nur noch die gebundene Form, und mit dem
+  Lesen gehen der Anhebelauf und die Übernahme alter Gerätedaten. Vorher war
+  auf Produktiv nachgezählt, dass nichts mehr im alten Format liegt.
+
+### Geändert
+
+- **Web — Konto-Backups der Verwaltung gelten erst ab Web 27.** Ein Paket
+  trägt, was die Anlage gespeichert hatte, und unter Web 26 konnten das noch
+  Daten im alten Format von Konten sein, die sich nicht angemeldet hatten.
+  Wert für Wert verworfen käme ein halbes Konto heraus; deshalb weisen
+  Einspielen und Freigabe ein älteres Paket ganz ab, und der nächste Lauf
+  legt ein neues an.
+
 ## [Web 26.0.0] — unveröffentlicht
 
 Schritt 28 (KA), 06e: Pakete KA-16 bis KA-23.
@@ -59,6 +81,19 @@ Schritt 28 (KA), 06e: Pakete KA-16 bis KA-23.
 - **Web — ein zurückgenommener Schnitt ließ seine Punkte verborgen.** Der
   Vermerk des Schnitts blieb stehen; jetzt geht er mit der Rücknahme.
 
+## [Uhr 6.0.1] — unveröffentlicht
+
+Schritt 28 (KA), KA-07: Paket KA-28.
+
+### Entfernt
+
+- **Uhr — der Code der ersten Hüllenfassung ist fort.** Seit 6.0.0 sendete
+  die Uhr sie nicht mehr, trug aber ihr Verschließen weiter mit, und der
+  Selbsttest vor dem ersten Senden maß die Byteordnung an einem Fall dieser
+  Fassung. Er rechnet jetzt einen Fall der zweiten Fassung nach, sodass
+  nichts mehr an einem Format hängt, das kein Leser mehr öffnet. Was die Uhr
+  sendet, ändert sich nicht.
+
 ## [Uhr 6.0.0] — unveröffentlicht
 
 Schritt 28 (KA), 06e: Paket KA-22.
@@ -70,6 +105,21 @@ Schritt 28 (KA), 06e: Paket KA-22.
   Nachweis, die der Server seit Web 26 abweist. Jetzt zeigt sie „Neu
   koppeln“ und behält die Daten; ohne Geräteschlüssel beginnt sie keine
   Kopplung, und eine Kopplung ohne Vergleichswert bricht sie ab.
+
+## [Android 0.27.1] — unveröffentlicht
+
+Schritt 28 (KA), KA-07: Paket KA-27.
+
+### Entfernt
+
+- **Android — die Gerätehülle der Fassung 1 ist aus dem Quelltext
+  gestrichen.** Seit 0.27.0 sendete das Handy sie nicht mehr, weil der
+  Server sie seit Web 26 abweist; ihre Funktionen standen nur noch als
+  Referenz zu Vektoren, die mit KA-07 ebenfalls fallen. Toter Code, der eine
+  Verschlüsselung ohne Herkunftsnachweis bereithält, lädt dazu ein, ihn
+  wieder aufzurufen. Die Prüffälle der Fassung 2 bleiben, und der
+  Gerätetest auf dem Telefon prüft jetzt deren acht Vektoren statt der
+  sechs alten.
 
 ## [Android 0.27.0] — unveröffentlicht
 

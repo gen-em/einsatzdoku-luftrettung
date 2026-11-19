@@ -20,8 +20,8 @@ node ../browser/csv_import.mjs && python3 messprotokoll.py && node sichtpruefung
 
 Sieben Wege: `pair.php`, `ingest.php`, `api/day.php`, `einsatz_form.php`,
 `api/schneiden.php`, `api/wartungslauf.php` und die Oberfläche — seit S11-06e wie ein Browser ab Web 22:
-Hülle, Blob und Schnitt verschließt es selbst (`ortsdaten.py`, F-S11-43, -53). Stand der Stufen in `lauf.json`;
-warum die Reihenfolge so ist, steht an der Stufe in `einspielen.py`; `messprotokoll.py` misst das Sendeverhalten einer Uhr (E-P1-14).
+Hülle, Blob und Schnitt verschließt es selbst, in Fassung 2 als Konto, Gerätedaten als zwei Demo-Geräte mit dem festen Schlüssel aus
+`fixture/verschliessen.py`, gekoppelt mit Vergleichswert und Gerätebuch (`ortsdaten.py`, F-S11-43, -53). Stand der Stufen in `lauf.json`; warum die Reihenfolge so ist, steht an der Stufe in `einspielen.py`; `messprotokoll.py` misst das Sendeverhalten einer Uhr (E-P1-14).
 
 ## Was es braucht
 
@@ -32,9 +32,9 @@ trägt `secure`. Vorgaben: `admin@example.invalid` / `pruefstandzugang2026`,
 
 ## Erwartete Zahl
 
-Alle Stufen ohne Abbruch, so viele Schnitte, Löschungen und Verdichtungen wie in den Quelldaten (05.11.2026: 5, 2, 20; `verdichten` hebt die Demo-Kennzeichnung dafür kurz auf, Nr. 459), **0** Klartext-Ortsdaten im Zielkonto, `sitzungsprobe.py` **2 von 2** — in rund fünf Minuten.
+Alle Stufen ohne Abbruch, so viele Schnitte, Löschungen und Verdichtungen wie in den Quelldaten (19.11.2026: 5, 2, 20; `verdichten` hebt die Demo-Kennzeichnung dafür kurz auf, Nr. 459), **0** Klartext-Ortsdaten im Zielkonto, `sitzungsprobe.py` **2 von 2**, `sichtpruefung.mjs` ohne Befund — in rund fünf Minuten.
 
 ## Was es nicht kann
 
-Den Browserschritt nachbauen (E-P1-10) oder auf `edka1:` umstellen (E-S10-15); es SCHREIBT Fassung 1 und `edk1:` (lesen
-kann `sitzung.py` beide Fassungen, KA-13) — die Fixture hebt `fixture/verschliessen.py`. Kacheln und Mail sieht es nicht, der Sperrlistenschritt geht je Installation nur einmal.
+Den Browserschritt nachbauen (E-P1-10), auf `edka2:` umstellen (E-S10-15) oder einen Menschen vergleichen lassen: Den Vergleichswert
+rechnet es auf beiden Seiten selbst. Kacheln und Mail sieht es nicht, die Sperrliste geht je Installation einmal.

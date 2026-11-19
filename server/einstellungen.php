@@ -3835,13 +3835,9 @@ ui_seite_start(['titel' => 'Einstellungen',
           z.abgelehnt.push(`${ziel.art} ${ziel.id}: ${err.message}`);
           continue;
         }
-        /* Eine Fassung-1-Hülle darunter (eine Kontosicherung, wie sie
-           liegt): Dann prüft auch der Leser keine Lücken. */
-        const fassung1 = stuecke.some((st) => {
-          try { return atob(String(st.huelle || '').slice(0, 4)).charCodeAt(0) !== 2; }
-          catch (x) { return true; }
-        });
-        if (!fassung1) {
+        /* Seit Web 27.0.0 sind alle Stücke Fassung 2 (KA-07); jede Lücke
+           braucht einen Vermerk. */
+        {
           const luecken = rwLuecken(stuecke);
           const da = z.sperren.get(ziel.ref) || [];
           const noetig = [];
@@ -4047,7 +4043,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           /* Der Nachweis ist, dass sich die Hülle öffnen lässt — seit S10
            * also über den Datenschlüssel aus Hälfte UND Server-Anteil
            * (E-S10-08). Mit `decrypt()` scheiterte es hier an jeder
-           * `edka1:`-Hülle, und die Meldung behauptete dann „das ist nicht
+           * `edka2:`-Hülle, und die Meldung behauptete dann „das ist nicht
            * dein Kontopasswort" für ein richtiges Passwort. */
           const k = await EdCrypto.deriveKeys(pw, KDF_SALT, KDF_ITER);
           const dk = await EdCrypto.datenschluessel(k.haelfteHex, PAT_WRAP,

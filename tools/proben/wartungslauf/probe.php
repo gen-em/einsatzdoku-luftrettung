@@ -31,7 +31,6 @@ $wurzel = dirname(__DIR__, 3) . '/server';
 require_once $wurzel . '/db.php';
 require_once $wurzel . '/validate_lib.php';
 require_once $wurzel . '/spur_lib.php';
-require_once $wurzel . '/geraetehuelle_lib.php';
 require_once dirname(__DIR__) . '/huelle/geraet.php';   // Fassung 2 vom Probegerät (Stichtag, 06e)
 
 $konto = $argv[1] ?? 'demo@gen-em.org';
@@ -178,7 +177,7 @@ try {
 
     $pat = $e['pat_blob'];
     $t = spur2_wartung_tauschen($pdo, $uid, 'mission', $mid, $st, $gut,
-                                ['neu' => 'edk1:probe-neu', 'pruef' => str_repeat('0', 64)], $jetzt);
+                                ['neu' => 'edk2:probe-neu', 'pruef' => str_repeat('0', 64)], $jetzt);
     pruefe($t['ok'] && ($t['pat'] ?? '') === 'geaendert', 'Tausch gelingt; Blob mit falscher Prüfsumme bleibt', ($t['pat'] ?? '—'));
     $q = $pdo->prepare('SELECT pat_blob FROM missions WHERE id = ?');
     $q->execute([$mid]);
@@ -200,10 +199,10 @@ try {
     $duenn = stueck($sec1, 'mission', $ref, $u['s'], 10, $nGes + 3, 3, $u['v'], $u['b'] + 20);
     $pruefsumme = spur2_pat_pruefsumme($pat);
     $t = spur2_wartung_tauschen($pdo, $uid, 'mission', $mid, $st2, $duenn,
-                                ['neu' => 'edk1:probe-neu', 'pruef' => $pruefsumme], $jetzt);
+                                ['neu' => 'edk2:probe-neu', 'pruef' => $pruefsumme], $jetzt);
     pruefe($t['ok'] && ($t['pat'] ?? '') === 'geschrieben', 'nach der Frist: Stufe 3 in einem Tausch, Blob geschrieben', ($t['pat'] ?? ($t['grund'] ?? '—')));
     $q->execute([$mid]);
-    pruefe($q->fetchColumn() === 'edk1:probe-neu', 'pat_blob ersetzt');
+    pruefe($q->fetchColumn() === 'edk2:probe-neu', 'pat_blob ersetzt');
     $t = spur2_wartung_tauschen($pdo, $uid, 'mission', $mid, stand($pdo, 'mission', $mid),
                                 stueck($sec1, 'mission', $ref, $u['s'], 10, $nGes + 3, 2, $u['v'], $u['b'] + 20), null, $jetzt);
     pruefe(!$t['ok'] && $t['grund'] === 'stufe', 'von Stufe 3 zurück auf 2: stufe', $t['grund'] ?? 'ok');

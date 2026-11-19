@@ -103,12 +103,9 @@ function demo_fixture_vorhanden(): bool { return is_file(demo_fixture_pfad()); }
  * wuerde ein Konto ohne Schluesselmaterial anlegen — und das faellt erst auf,
  * wenn jemand sich anmeldet und nichts lesen kann.
  */
-function demo_fixture_laden(?string $pfad = null): array
+function demo_fixture_laden(): array
 {
-    /* Ein anderer Pfad nur für Prüfmittel (KA-14): Die Bedienprobe des
-     * Anhebelaufs braucht einen Bestand im alten Format, und den trägt die
-     * ausgelieferte Fixture seit Format 4 nicht mehr. */
-    $pfad = $pfad ?? demo_fixture_pfad();
+    $pfad = demo_fixture_pfad();
     if (!is_file($pfad)) {
         throw new RuntimeException('Keine Demo-Fixture unter server/demo/fixture.json.');
     }
@@ -129,21 +126,19 @@ function demo_fixture_laden(?string $pfad = null): array
     if (!is_array($fx) || ($fx['format'] ?? '') !== 'einsatzdoku-demo-fixture') {
         throw new RuntimeException('server/demo/fixture.json hat nicht das erwartete Format.');
     }
-    /* FORMAT 1 BIS 4. Format 3 (Konzept RD) traegt an spurtragenden
-     * Eintraegen `stufe` und `n_original` und an Segmenten `loeschungen`; der
-     * Reset legt daraus Stufe 2 und 3 an (`edbak_restore()`, Zweig 'server').
-     * Format 2 und 1 tragen das nicht und laufen weiter — jede Spur dann auf
-     * Stufe 1. FORMAT 4 (Konzept KA, KA-13, F-KA-104) traegt den Bestand
-     * VERSCHLOSSEN, wie er nach dem Umlegen der Weiche in einem Konto liegt:
+    /* NUR FORMAT 4 (seit Web 27.0.0, KA-07). Format 4 (Konzept KA, KA-13,
+     * F-KA-104) traegt den Bestand VERSCHLOSSEN, wie er in einem Konto liegt:
      * Geraetehuellen der Fassung 2 von zwei Demo-Geraeten mit festem
      * Schluessel, `edk2:`-Bloecke, Standbuch, Geraetebuch und Kontopaar —
-     * der Reset reicht ihn durch (`demo_bestand_einspielen4()`). Eine hoehere
-     * Nummer stammt aus einem Erzeuger, den diese Fassung nicht kennt:
-     * abgewiesen, statt halb gelesen. */
+     * der Reset reicht ihn durch (`demo_bestand_durchreichen()`). Format 1
+     * bis 3 trugen den Bestand im Klartext, und der Server verschloss ihn
+     * selbst in Fassung 1; das fiel mit KA-07. Eine andere Nummer stammt aus
+     * einem Erzeuger, den diese Fassung nicht kennt: abgewiesen, statt halb
+     * gelesen. */
     $fxVersion = (int)($fx['version'] ?? 1);
-    if ($fxVersion < 1 || $fxVersion > 4) {
+    if ($fxVersion !== 4) {
         throw new RuntimeException('Die Fixture hat Format ' . $fxVersion
-            . '; diese Fassung liest Format 1 bis 4.');
+            . '; diese Fassung liest nur Format 4.');
     }
     foreach (['konto', 'daten'] as $pflicht) {
         if (!is_array($fx[$pflicht] ?? null)) {
@@ -158,20 +153,18 @@ function demo_fixture_laden(?string $pfad = null): array
     /* FORMAT 4 BRINGT MEHR MIT, UND ALLES DAVON IST PFLICHT: Ohne Kontopaar
      * ginge keine Geraetehuelle auf, ohne Geraetebuch (Blatt 16) keine der
      * Demo-Geraete (`absender`), und ein fehlendes Blatt liesse den
-     * Anhebelauf nach jeder Anmeldung eines schreiben. */
-    if ($fxVersion >= 4) {
-        foreach (['kp_oeffentlich', 'kp_privat', 'pat_wrap_rc', 'rc_hex'] as $pflicht) {
-            if (!is_string($fx['konto'][$pflicht] ?? null) || $fx['konto'][$pflicht] === '') {
-                throw new RuntimeException("Fixture unvollstaendig: konto.$pflicht fehlt.");
-            }
+     * Standbuch nach jeder Anmeldung eines anlegen. */
+    foreach (['kp_oeffentlich', 'kp_privat', 'pat_wrap_rc', 'rc_hex'] as $pflicht) {
+        if (!is_string($fx['konto'][$pflicht] ?? null) || $fx['konto'][$pflicht] === '') {
+            throw new RuntimeException("Fixture unvollstaendig: konto.$pflicht fehlt.");
         }
-        $wer = array_map(static fn($b) => is_array($b) ? (int)($b['wer'] ?? -1) : -1,
-                         (array)($fx['standbuch'] ?? []));
-        sort($wer);
-        if ($wer !== range(0, 16) || !is_array($fx['spuren'] ?? null)) {
-            throw new RuntimeException('Fixture unvollstaendig: Format 4 traegt 16 Blaetter, '
-                . 'das Geraetebuch und die Spurstuecke.');
-        }
+    }
+    $wer = array_map(static fn($b) => is_array($b) ? (int)($b['wer'] ?? -1) : -1,
+                     (array)($fx['standbuch'] ?? []));
+    sort($wer);
+    if ($wer !== range(0, 16) || !is_array($fx['spuren'] ?? null)) {
+        throw new RuntimeException('Fixture unvollstaendig: Format 4 traegt 16 Blaetter, '
+            . 'das Geraetebuch und die Spurstuecke.');
     }
     /* DIE RUNDENZAHL MUSS BEDIENBAR SEIN.
      *
@@ -192,8 +185,7 @@ function demo_fixture_laden(?string $pfad = null): array
             . ' an — das Demo-Konto koennte sich nicht anmelden.');
     }
 
-    /* DIE HUELLEN TRAGEN KEINEN ANTEIL — `edk1:`, ab Format 4 `edk2:`
-     * (zweiter Riegel).
+    /* DIE HUELLEN TRAGEN KEINEN ANTEIL — `edk2:` (zweiter Riegel).
      *
      * DERSELBE GEDANKE WIE EINE ZEILE HOEHER, mit einem anderen Geheimnis.
      * Die Rundenzahl entscheidet, ob sich das Demo-Konto anmelden kann; die
@@ -201,7 +193,7 @@ function demo_fixture_laden(?string $pfad = null): array
      *
      * Der Datenschluessel haengt am Server-Anteil aus `config.php`,
      * und der ist je Installation ein anderer (`install.php` wuerfelt ihn).
-     * Eine Huelle mit Anteil (`edka1:<kennung>:`) laesst sich nur dort
+     * Eine Huelle mit Anteil (`edka2:<kennung>:`) laesst sich nur dort
      * oeffnen, wo dieser Anteil steht. Die Fixture reist aber: Sie entsteht
      * auf der Referenzmaschine und wird beim Deploy auf den Produktivserver
      * gelegt.
@@ -209,7 +201,7 @@ function demo_fixture_laden(?string $pfad = null): array
      * Und das Demo-Konto bekommt BAUARTBEDINGT gar keinen Anteil
      * (`auth_guard.php`): `KONTO_ANTEILE` ist fuer es
      * `null`, `ANTEIL_STAND` ist `'demo'`. `EdCrypto.datenschluessel()`
-     * wirft bei einer `edka1:`-Huelle ohne Anteil ausdruecklich, statt auf
+     * wirft bei einer `edka2:`-Huelle ohne Anteil ausdruecklich, statt auf
      * die PBKDF2-Haelfte zurueckzufallen — der Rueckfall ergaebe einen
      * Schluessel, der nicht passt, und saehe aus wie ein falsches Passwort.
      *
@@ -237,7 +229,7 @@ function demo_fixture_laden(?string $pfad = null): array
         throw new RuntimeException('Die Schluesselhuelle der Fixture ist fuer '
             . 'das Demo-Konto unbrauchbar: ' . $grundPw
             . ' Das Demo-Konto bekommt keinen Server-Anteil; seine Huelle muss '
-            . '`edk1:` oder `edk2:` tragen. Die Fixture neu erzeugen — '
+            . '`edk2:` tragen. Die Fixture neu erzeugen — '
             . 'tools/referenzdatensatz/fixture/erzeugen.php haelt an, wenn sie '
             . 'es nicht tut.');
     }
@@ -603,13 +595,13 @@ function demo_zweitfaktor_leeren(PDO $pdo, int $id): void
  * kommt aus `demo_id()` und wird nicht von aussen entgegengenommen — die
  * Funktion kann kein anderes Konto treffen, auch nicht bei falschem Aufruf.
  */
-function demo_zuruecksetzen(?string $fixture = null): array
+function demo_zuruecksetzen(): array
 {
     $id = demo_id();
     if ($id === null) {
         throw new RuntimeException('Kein Demo-Konto vermerkt — nichts zurückzusetzen.');
     }
-    $fx = demo_frischer_schluessel(demo_fixture_laden($fixture));
+    $fx = demo_frischer_schluessel(demo_fixture_laden());
     $pdo = db();
     $beginn = time();
 
@@ -744,110 +736,45 @@ function kdf_haelfte(string $passwort, string $salz, int $runden): string
 
 /**
  * Der Inhaltsschluessel des Demo-Kontos (32 Byte), aus dem bekannten Passwort
- * — dieselbe Rechnung wie `EdCrypto.deriveKeys()` und `huelleOeffnen()` fuer
- * ein Konto ohne Server-Anteil: PBKDF2-SHA256 auf 512 Bit, die erste Haelfte
- * oeffnet `pat_wrap_pw` (`edk1:`, AES-GCM), darin steht der Schluessel als
- * Hex-Text.
+ * — dieselbe Rechnung wie der Browser fuer ein Konto ohne Server-Anteil: die
+ * PBKDF2-Haelfte (`kdf_haelfte()`) oeffnet `pat_wrap_pw` (`edk2:`, Zweck
+ * `wrap`, Bezug `pw`), darin steht der Schluessel als Hex-Text. Nur fuer
+ * Pruefmittel (Uhr-Pruefstand) und den Reset; jedes andere Konto kann der
+ * Server nicht oeffnen.
  */
 function demo_inhaltsschluessel(array $konto): string
 {
     $haelfte = kdf_haelfte(DEMO_PASSWORT, (string)hex2bin((string)$konto['kdf_salt']),
                            (int)$konto['kdf_iter']);
-    $ckHex = demo_edk1_oeffnen($haelfte, (string)$konto['pat_wrap_pw']);
-    if ($ckHex === null || !preg_match('/^[0-9a-f]{64}\z/', $ckHex)) {
-        throw new RuntimeException('Das Demo-Passwort öffnet die Schlüsselhülle der Fixture '
+    $innen = demo_edk2_innen($haelfte, (string)$konto['pat_wrap_pw'], 'wrap', 'pw');
+    $ckHex = $innen === null ? '' : demo_edk2_nutzlast($innen);
+    if (!preg_match('/^[0-9a-f]{64}\z/', $ckHex)) {
+        throw new RuntimeException('Das Demo-Passwort öffnet die Schlüsselhülle '
             . 'nicht. Passwort im Handbuch, DEMO_PASSWORT und Fixture gehören zusammen.');
     }
     return (string)hex2bin($ckHex);
 }
 
-/** `edk1:`-Chiffretext (AES-GCM, IV 12 Byte vorn, Tag 16 Byte hinten) oeffnen — oder null. */
-function demo_edk1_oeffnen(string $schluessel, string $text): ?string
+/** Die Nutzlast aus einem Innentext (Zähler 4 ‖ Länge 4 ‖ Nutzlast ‖ Polster). */
+function demo_edk2_nutzlast(string $innen): string
 {
-    if (str_starts_with($text, 'edk1:')) { $text = substr($text, 5); }
-    $roh = base64_decode($text, true);
-    if ($roh === false || strlen($roh) < 12 + 16) { return null; }
-    $klar = openssl_decrypt(substr($roh, 12, -16), 'aes-256-gcm', $schluessel, OPENSSL_RAW_DATA,
-                            substr($roh, 0, 12), substr($roh, -16));
-    return $klar === false ? null : $klar;
-}
-
-/** Klartext zu `edk1:` — das Format von `EdCrypto.encrypt()`. */
-function demo_edk1_bauen(string $schluessel, string $klar): string
-{
-    $iv = random_bytes(12);
-    $tag = '';
-    $ct = openssl_encrypt($klar, 'aes-256-gcm', $schluessel, OPENSSL_RAW_DATA, $iv, $tag, '', 16);
-    if ($ct === false) { throw new RuntimeException('AES-GCM gescheitert'); }
-    return 'edk1:' . base64_encode($iv . $ct . $tag);
-}
-
-/**
- * Hat das Demo-Konto kein Schluesselpaar, legt der Server eines an
- * — wie `EdKontopaar.anlegen()`: P-256, der oeffentliche Teil als
- * SPKI, der private als PKCS8 unter dem Inhaltsschluessel. Ohne Paar liesse
- * sich der Bestand nicht verschliessen, und eine frische Anlage zeigte keine
- * Karte, bis sich jemand als Demo angemeldet hat.
- */
-function demo_paar_sicherstellen(PDO $pdo, int $id, string $ck): void
-{
-    require_once __DIR__ . '/kontopaar_lib.php';
-    if (!demo_ist_demo($id)) {
-        throw new RuntimeException('demo_paar_sicherstellen() arbeitet nur auf dem Demo-Konto.');
-    }
-    /* DA IST NICHT GENUG: Der private Teil muss mit DIESEM Inhaltsschluessel
-     * aufgehen (Konzept RD, F-RD-25). Der Reset schreibt Schluesselhuelle und
-     * damit den Inhaltsschluessel aus der Fixture ins Konto — stammt die
-     * Fixture aus einem anderen Referenzkonto als die vorige (jede neue
-     * Fixture tut das), liegt `kp_privat` unter dem ALTEN Schluessel. Der
-     * Browser konnte dann keine Spur, keinen Ort und keine Reanimation mehr
-     * oeffnen, versuchte das Paar zu ersetzen und lief in die Mengenbremse
-     * (gemessen: `kontopaar` nach 5 Versuchen gesperrt, 87 Konsolenfehler im
-     * Bilderlauf). Ein Paar, das nicht aufgeht, wird verworfen und neu
-     * angelegt; der Reset verschliesst danach alles mit dem neuen. */
-    $z = kp_zustand($id, $pdo);
-    if ($z['stand'] === 'da' && $z['privat'] !== null
-        && demo_edk1_oeffnen($ck, (string)$z['privat']) !== null) { return; }
-    if ($z['stand'] === 'da') {
-        $pdo->prepare('UPDATE users SET kp_oeffentlich = NULL, kp_privat = NULL, kp_seit = NULL
-                        WHERE id = ?')->execute([$id]);
-    }
-    $k = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
-    if ($k === false || !openssl_pkey_export($k, $pem)) {
-        throw new RuntimeException('Das Schlüsselpaar des Demo-Kontos ließ sich nicht erzeugen.');
-    }
-    $koerper = static fn(string $p): string => (string)preg_replace('/-----[^-]+-----|\s+/', '', $p);
-    $spki = $koerper((string)openssl_pkey_get_details($k)['key']);
-    $pkcs8 = $koerper((string)$pem);
-    if (!kp_ablegen($pdo, $id, $spki, demo_edk1_bauen($ck, $pkcs8))) {
-        throw new RuntimeException('Das Schlüsselpaar des Demo-Kontos ließ sich nicht ablegen.');
-    }
+    if (strlen($innen) < 8) { return ''; }
+    $n = unpack('N', substr($innen, 4, 4))[1];
+    return $n > strlen($innen) - 8 ? '' : substr($innen, 8, $n);
 }
 
 /**
  * Geraete und Bestand einspielen. Erwartet eine offene Transaktion.
  *
- * VERSCHLOSSEN: Orte, Reanimation und Spur der
- * Fixture verschliesst `edbak_restore()` mit dem oeffentlichen Schluessel des
- * Demo-Kontos ('server'), Transportziel und Ortshoehe legt der Rueckruf mit
- * dem Inhaltsschluessel in den `pat_blob`. Der Bestand des Demo-Kontos traegt
- * danach keine Klartext-Ortsdaten mehr — sonst verweigerte die Aufraeum-
- * migration auf jeder Anlage mit Demo-Konto.
+ * VERSCHLOSSEN: Kontopaar, Bloecke, Huellen und Standbuch kommen verschlossen
+ * aus der Fixture (Format 4); der Server oeffnet davon nichts und
+ * verschliesst nichts (`demo_bestand_durchreichen()`). Bis Web 26.x legte er
+ * bei Format 1 bis 3 das Paar selbst an und verschloss den Klartext der
+ * Fixture in Fassung 1.
  */
 function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
 {
-    /* FORMAT 4 REICHT DURCH (KA-13): Kontopaar, Bloecke, Huellen und
-     * Standbuch kommen verschlossen aus der Fixture; der Server oeffnet
-     * davon nichts und verschliesst nichts. Bis Format 3 legt er das Paar an
-     * und verschliesst den Klartext der Fixture selbst (Fassung 1). */
-    $durchreichen = (int)($fx['version'] ?? 1) >= 4;
-    $ck = null;
-    if ($durchreichen) {
-        demo_kontopaar_setzen($pdo, $id, $fx['konto']);
-    } else {
-        $ck = demo_inhaltsschluessel($fx['konto']);
-        demo_paar_sicherstellen($pdo, $id, $ck);
-    }
+    demo_kontopaar_setzen($pdo, $id, $fx['konto']);
 
     /* Geraete VOR dem Bestand: `edbak_restore()` verknuepft die
      * Dienstkennungen (`day_refs`) ueber die oeffentliche Geraetekennung mit
@@ -865,7 +792,7 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
      * Geraeteseite haelt beides gegeneinander und truege einen Bucheintrag
      * ohne Geraet sonst aus (`kopplung.js`, Abgleich). Vor `update.php` gibt
      * es die Spalten nicht; dann bleibt es bei der alten Form. */
-    $mitSpk = $durchreichen && db_hat_spalte($pdo, 'devices', 'herkunft');
+    $mitSpk = db_hat_spalte($pdo, 'devices', 'herkunft');
     $insDev = $pdo->prepare('INSERT INTO devices (user_id, device_id, api_key_hash,
                                                   label, active,
                                                   geraet_art, geraet_modell'
@@ -917,36 +844,7 @@ function demo_bestand_einspielen(PDO $pdo, int $id, array $fx): array
         erststart_erledigt($id, ERSTSTART_GERAET);
     }
 
-    if ($durchreichen) {
-        $stats = demo_bestand_durchreichen($pdo, $id, $fx);
-        $stats['geraete'] = $geraete;
-        return $stats;
-    }
-
-    $blobZiel = static function (?string $blob, array $zusatz) use ($ck): string {
-        $pat = [];
-        if ($blob !== null) {
-            $klar = demo_edk1_oeffnen($ck, $blob);
-            if ($klar === null) {
-                throw new RuntimeException('Ein pat_blob der Fixture geht mit dem Inhaltsschlüssel '
-                    . 'des Demo-Kontos nicht auf.');
-            }
-            $pat = (array)json_decode($klar, true);
-        }
-        $pat += $zusatz;        // was der Blob schon trägt, bleibt
-        return demo_edk1_bauen($ck, (string)json_encode($pat, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-    };
-    /* DIE VERMERKE BEKOMMEN EINEN ZEITPUNKT VOR DIESEM RESET (Konzept RD,
-     * E-RD-18, F-RD-14): Mit dem Wert aus der Fixture hielte jede spaeter
-     * installierte Anlage die Demo-Schnitte fuer alt (`409 altschnitt`), und die
-     * Ruecknahme liesse sich nirgends vorfuehren. EINE SEKUNDE VOR dem Beginn,
-     * nicht die Einspielzeit selbst: Der Reset schreibt die Stuecke ueber
-     * mehrere Sekunden, und ein Vermerk, der juenger waere als das gepackte
-     * Stueck seines Segments, liesse die Ruecknahme dort zu — die Punkte
-     * sind aber schon gefallen (F-RD-22, `spur2_seit_gepackt()`). */
-    $vorher = gmdate('Y-m-d H:i:s', time() - 1);
-    $stats = edbak_restore($id, $fx['daten'], null, 'server', $blobZiel);
-    schnitte_stempeln($pdo, $id, $vorher);
+    $stats = demo_bestand_durchreichen($pdo, $id, $fx);
     $stats['geraete'] = $geraete;
     return $stats;
 }
@@ -1023,11 +921,10 @@ function demo_edk2_huelle_innen(string $ckHex): string
  */
 function demo_frischer_schluessel(array $fx): array
 {
-    if ((int)($fx['version'] ?? 1) < 4) { return $fx; }
     $k = $fx['konto'];
     $haelfte = kdf_haelfte(DEMO_PASSWORT, (string)hex2bin((string)$k['kdf_salt']), (int)$k['kdf_iter']);
     $innen = demo_edk2_innen($haelfte, (string)$k['pat_wrap_pw'], 'wrap', 'pw');
-    $altHex = $innen === null ? '' : substr($innen, 8, 64);
+    $altHex = $innen === null ? '' : demo_edk2_nutzlast($innen);
     if ($innen === null || !preg_match('/^[0-9a-f]{64}\z/', $altHex)) {
         throw new RuntimeException('Das Demo-Passwort öffnet die Schlüsselhülle der Fixture '
             . 'nicht. Passwort im Handbuch, DEMO_PASSWORT und Fixture gehören zusammen.');
@@ -1129,7 +1026,7 @@ function demo_bestand_durchreichen(PDO $pdo, int $id, array $fx): array
     /* Die Vermerke bekommen einen Zeitpunkt vor diesem Reset — wie im Weg bis
      * Format 3 (E-RD-18, F-RD-14, -22). */
     $vorher = gmdate('Y-m-d H:i:s', time() - 1);
-    $stats = edbak_restore($id, $fx['daten'], null, 'browser');
+    $stats = edbak_restore($id, $fx['daten']);
     $karte = (array)($stats['spur_karte'] ?? []);
     unset($stats['spur_karte'], $stats['day_map']);
     $liste = [];

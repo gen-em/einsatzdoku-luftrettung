@@ -6,7 +6,8 @@
  * niemand. Diese Probe fährt sie mit umgelegter Weiche (nur in dieser Seite)
  * gegen die Fälle `rueckweg` aus `vektoren-2.json`, Standbuch im Speicher.
  * Seit KA-14 dazu das gesammelte Fortschreiben beim Lesen und das
- * Fortschreiben vieler Einträge (F-KA-122, -124).
+ * Fortschreiben vieler Einträge (F-KA-122, -124); seit KA-26 die Gegenlage
+ * einer Einsatzhülle der Fassung 1 (`ohne-herkunft`).
  * Aufruf: node ortsdaten_probe.mjs [--motor chromium|firefox|webkit]
  */
 import { readFileSync } from 'node:fs';
@@ -173,6 +174,16 @@ const erg = await s.evaluate(async ([v2, vi]) => {
         && gleich((await z8.eintrag('viele-0')).x, [[1, 2]]) && gleich(await z8.eintrag('viele-1'), {})
         && gleich((await z8.eintrag('viele-2')).x, [[3, 4]]),
         'fortschreibenViele: zwei geschrieben, der werfende mit seinem Fehler und ohne Eintrag');
+  /* 9. Fassung 1 (KA-07): Die Einsatzansicht öffnet keine Hülle ohne
+     Herkunft mehr, und am Stand ändert sich nichts. */
+  const f1 = v2.einsaetze.find((f) => f.name === 'fassung-1');
+  tr = EdStandbuch.speicherTransport();
+  a = await neu(tr); await geraete(a);
+  buchJetzt = a;
+  try { await EdOrtsdaten.einsatzOeffnen(M(f1), k); melde(false, 'Fassung 1: ging auf'); }
+  catch (e) { melde(e.grund === 'ohne-herkunft', 'Fassung 1: einsatzOeffnen weist ab (' + (e.grund || e.message) + ')'); }
+  await ruhe();
+  melde(gleich(await standVon(a, f1.client_ref), {}), 'Fassung 1: kein Stand geschrieben');
   return { zeilen, rot };
 }, [v2, vi]);
 await browser.close();

@@ -1,22 +1,19 @@
 #!/usr/bin/env python3
-"""Sitzungsprobe — oeffnet `sitzung.py` BEIDE Huellenfassungen?
+"""Sitzungsprobe — oeffnet `sitzung.py` BEIDE Arten der Schluesselhuelle?
 
-DIE FRAGE. Eine Schluesselhuelle traegt entweder das alte Praefix
-`edk1:` (Datenschluessel = PBKDF2-Haelfte) oder das neue `edka1:<kennung>:`
-(Datenschluessel = HKDF aus Haelfte und Konto-Anteil). Der Bestand fuehrt beide
-gleichzeitig und wird das noch eine Weile tun: Ein Konto stellt erst beim
-ersten Anmelden IM BROWSER um, und `sitzung.py` stellt ausdruecklich nicht um
-— sie liest, was dasteht.
+DIE FRAGE. Eine Schluesselhuelle traegt entweder `edk2:` ohne Anteil
+(Datenschluessel = Haelfte der Ableitung) oder `edka2:<kennung>:` mit Anteil
+(Datenschluessel = HKDF aus Haelfte und Konto-Anteil). Der Bestand fuehrt
+beide: Das Demo-Konto bekommt bauartbedingt keinen Anteil, jedes andere
+Konto stellt beim ersten Anmelden IM BROWSER um, und `sitzung.py` stellt
+ausdruecklich nicht um — sie liest, was dasteht. (Bis Web 26 hiessen die
+beiden `edk1:` und `edka1:`; seit KA-07, Web 27, gibt es sie nicht mehr.)
 
-Damit haengt der ganze Pruefstand daran, dass `sitzung.py` beide Fassungen
+Damit haengt der ganze Pruefstand daran, dass `sitzung.py` beide Arten
 oeffnet. Tut sie es nicht, faellt das nicht als Fehler auf, sondern als etwas
 viel Unangenehmeres: `einspielen.py`, die Kreislaeufe und jede Probe, die sich
-anmeldet, laufen weiter und lesen leere oder falsche Angaben.
-
-Genau das war die Begruendung, `sitzung.py` und `krypto.py` frueh
-umzustellen („sitzung.py waere eine Mine geworden"). Diese Probe
-ist die Gegenrechnung dazu: Sie misst nach, dass die Mine entschaerft ist —
-an ZWEI echten Konten des Referenzbestands, nicht an einer Attrappe.
+anmeldet, laufen weiter und lesen leere oder falsche Angaben. Diese Probe
+misst es an ZWEI echten Konten des Referenzbestands, nicht an einer Attrappe.
 
 WIE GEMESSEN WIRD — und warum „ein Schluessel kam heraus" nicht reicht.
 `entpacken()` liefert bei einem falschen Datenschluessel keinen falschen
@@ -38,16 +35,16 @@ AUFRUF
 
 Die Konten kommen aus den Umgebungsvariablen oder aus den Vorgaben unten:
 
-    SITZUNGSPROBE_ALT="konto:passwort"     erwartet `edk1:`
-    SITZUNGSPROBE_NEU="konto:passwort"     erwartet `edka1:`
+    SITZUNGSPROBE_ALT="konto:passwort"     erwartet `edk2:` (ohne Anteil)
+    SITZUNGSPROBE_NEU="konto:passwort"     erwartet `edka2:` (mit Anteil)
 
 Die Vorgaben sind das Demo-Konto (ALT) und das Pruefkonto (NEU),
 weil nur diese beiden auf JEDER frischen Anlage in der verlangten Fassung
-stehen: Das Demo-Konto bekommt bauartbedingt keinen Anteil und bleibt `edk1:`
+stehen: Das Demo-Konto bekommt bauartbedingt keinen Anteil und bleibt `edk2:`
 (der Riegel in `demo_lib.php`), das Pruefkonto wird von der ersten
-Browserprobe auf `edka1:` umgestellt. Standen hier das Pruefkonto
+Browserprobe auf `edka2:` umgestellt. Standen hier das Pruefkonto
 als ALT und `umlauf-csv@` als NEU, traegt auf einer mit `hochfahren.sh --neu`
-aufgebauten Anlage das eine schon `edka1:` und das andere gar keine
+aufgebauten Anlage das eine schon `edka2:` und das andere gar keine
 Huelle, und die Probe mass nichts.
 
 Erwartet: **2 von 2**, Rueckgabe 0.
@@ -56,7 +53,7 @@ WENN DIE PROBE MELDET „beide Konten tragen dasselbe Praefix": Das ist kein
 Fehler der Anwendung, sondern eine fehlende Voraussetzung — der Bestand fuehrt
 dann keine zwei Fassungen mehr. Herzustellen mit
 
-    python3 tools/proben/anteil/huelle_stellen.py <konto> <passwort> edk1
+    python3 tools/proben/anteil/huelle_stellen.py <konto> <passwort> edk2
 
 Die Probe sagt es als eigenen Befund und nicht als gruene Zahl; eine Zahl, die
 zweimal dasselbe gemessen hat, ist keine 2 von 2.
@@ -118,9 +115,7 @@ def gerechnet(ck_hex: str) -> str:
 def messen(email: str, passwort: str, erwartet: tuple[str, ...]) -> str | None:
     """Anmelden, Huelle oeffnen, Pruefsumme vergleichen. Liefert das Praefix.
 
-    `erwartet`: die Praefixe dieser Bauart in beiden Fassungen — ohne Anteil
-    `edk1:` und, seit das Demo-Konto mit Fixture-Format 4 kommt (KA-13),
-    `edk2:`; mit Anteil `edka1:` und nach der Umstellung im Browser `edka2:`.
+    `erwartet`: das Praefix dieser Art — ohne Anteil `edk2:`, mit `edka2:`.
     """
     try:
         s = sitzungsmodul.Sitzung(BASIS).anmelden(email, passwort)
@@ -143,18 +138,18 @@ def messen(email: str, passwort: str, erwartet: tuple[str, ...]) -> str | None:
 
 
 print(f"Sitzungsprobe gegen {BASIS}")
-print(f"  Altfassung  {ALT[0]}")
-print(f"  Neufassung  {NEU[0]}\n")
+print(f"  ohne Anteil {ALT[0]}")
+print(f"  mit Anteil  {NEU[0]}\n")
 
-p_alt = messen(ALT[0], ALT[1], ("edk1:", "edk2:"))
-p_neu = messen(NEU[0], NEU[1], ("edka1:", "edka2:"))
+p_alt = messen(ALT[0], ALT[1], ("edk2:",))
+p_neu = messen(NEU[0], NEU[1], ("edka2:",))
 
 # DIE GEGENPROBE ZUR ZAHL. Zwei gruene Haken sagen nichts, wenn beide Konten
 # dieselbe Fassung tragen — dann ist eine Fassung schlicht nicht gemessen
 # worden. Das ist genau der Fehler, den CLAUDE.md 6 meint: „Eine gruene Zahl
 # ist erst dann ein Beleg, wenn sie das Gemessene benennt."
 if p_alt and p_neu and p_alt == p_neu:
-    print(f"\n  ACHTUNG: Beide Konten tragen {p_alt} — es wurde nur EINE Fassung "
+    print(f"\n  ACHTUNG: Beide Konten tragen {p_alt} — es wurde nur EINE Art "
           f"gemessen.\n  Voraussetzung herstellen mit tools/proben/anteil/huelle_stellen.py.")
     offen += 1
     gesamt += 1

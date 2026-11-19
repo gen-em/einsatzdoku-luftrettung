@@ -8,7 +8,7 @@ Installation ein — kein roher SQL-Weg. Die vier Wege:
                          Ruhe-Segmente, Phasen, Reanimationen, Spur
   2. `api/day.php`       Zuordnung der neutralen Diensttage
   3. `einsatz_form.php`  Nachtragen der Felder und der geschuetzten Angaben,
-                         `pat_blob` als `edk1:`-Chiffretext
+                         `pat_blob` als `edk2:`-Block
   4. Weboberflaeche      Papierkorb (`einsatz_loeschen.php`,
                          `diensttag_loeschen.php`, `papierkorb.php`)
 
@@ -93,6 +93,9 @@ class Lauf:
     def demo_sitzung(self) -> sitzungsmodul.Sitzung:
         if self.s is None or self.s.email != DEMO_EMAIL:
             self.s = sitzungsmodul.Sitzung(self.basis).anmelden(DEMO_EMAIL, DEMO_PASSWORT)
+        # Das Geraetebuch, wie der Browser es zum Oeffnen hat (Fassung 2):
+        # Gerätedaten tragen den Absender ihres Geraets.
+        self.s.buch = geraetebuch(self)
         return self.s
 
 
@@ -314,48 +317,89 @@ def _geraete_ids(s) -> set[str]:
     return set(re.findall(r'id="f-devdel-(\d+)"', s.get("einstellungen.php?t=geraete").text))
 
 
+def geraet_schluessel(nummer: str):
+    """Der Geraeteschluessel eines Demo-Geraets — derselbe, den
+    `fixture/verschliessen.py` (`geraeteschluessel()`) aus dem Namen ableitet:
+    Was der Einspiellauf als Geraet verschliesst, verschliesst die Fixture
+    spaeter mit demselben Absender."""
+    return ortsdaten.referenz.schluessel_aus_name(f"nadoku-demo-geraet-{nummer}")
+
+
+def geraetebuch(lauf: "Lauf") -> dict:
+    """Das Geraetebuch, wie der Browser es zum Oeffnen hat:
+    `{sid hex: {"spk": bytes, "bis": None}}` fuer jedes gekoppelte Geraet."""
+    r = ortsdaten.referenz
+    buch = {}
+    for nummer, g in (lauf.zustand.get("geraete") or {}).items():
+        if g.get("schwebend"):
+            continue
+        spk = r.sec1(geraet_schluessel(nummer).public_key())
+        buch[r.sid(spk).hex()] = {"spk": spk, "bis": None}
+    return buch
+
+
+def buch_eintragen(s, spk: bytes, geraet: str) -> None:
+    """Ein Geraet ins Geraetebuch des Kontos — wie `geraetEintragen()` in
+    `assets/standbuch.js`: das Buch holen, oeffnen, den Eintrag setzen,
+    mit der naechsten Version ueber `api/standbuch.php` ablegen. Ein Konflikt
+    (409) heisst: Ein Browser hat dazwischen geschrieben — dann noch einmal."""
+    r, inh = ortsdaten.referenz, ortsdaten.referenz_inhalt
+    ck = bytes.fromhex(s.inhaltsschluessel)
+    sid = r.sid(spk).hex()
+    for _ in range(4):
+        h = s.json_post("api/standbuch.php", {"aktion": "holen", "wer": "buch"})
+        if h.status_code != 200:
+            raise RuntimeError(f"Geraetebuch holen: HTTP {h.status_code} {h.text[:200]}")
+        d = h.json()
+        version, geraete = 0, []
+        if d.get("text"):
+            klar, version = inh.oeffnen(ck, d["text"], "geraete", "")
+            geraete = json.loads(klar.decode("utf-8"))["geraete"]
+        geraete = [g for g in geraete if g["sid"] != sid]
+        geraete.append({"sid": sid, "spk": base64.b64encode(spk).decode("ascii"),
+                        "geraet": geraet, "seit": int(time.time()), "bis": None})
+        a = s.json_post("api/standbuch.php", {
+            "aktion": "ablegen", "wer": "buch", "version_alt": version, "version": version + 1,
+            "text": inh.geraetebuch_bauen(ck, version + 1, geraete)})
+        if a.status_code == 200:
+            return
+        if a.status_code != 409:
+            raise RuntimeError(f"Geraetebuch ablegen: HTTP {a.status_code} {a.text[:200]}")
+    raise RuntimeError("Geraetebuch: vier Konflikte hintereinander")
+
+
 def stufe_geraet(lauf: Lauf) -> None:
     """Die zwei Referenzgeraete -- ueber den ECHTEN Kopplungsweg.
 
-    WARUM NICHT MEHR ueber die Geraeteseite (`action=add`). Der kurze Weg legt
-    ein Geraet mit Beschriftung an und sonst nichts: `geraet_art` und
-    `geraet_modell` bleiben NULL. `ingest.php` kopiert beide
-    Spalten beim Anlegen an jeden Einsatz und jedes Segment (Momentaufnahme) -- mit NULL an der Quelle trug der ganze Referenzbestand eine leere
-    Momentaufnahme, und der edbak-Kreislauf belegte fuer die Momentaufnahme nichts. Art und
-    Modell entstehen AUSSCHLIESSLICH in `pair.php` im Ja-Zweig; einen
-    Nachtragsweg gibt es nicht.
+    WARUM NICHT ueber die Geraeteseite (`action=add`): Art und Modell
+    entstehen AUSSCHLIESSLICH in `pair.php` im Ja-Zweig, und `ingest.php`
+    kopiert beide an jeden Einsatz und jedes Segment (Momentaufnahme).
 
-    VIER SCHRITTE JE GERAET, und der dritte laeuft im Browser des Kontos:
+    SEIT WEB 26 MIT GERAETESCHLUESSEL UND VERGLEICHSWERT (Nr. 567, KA-07).
+    Ein Geraet ohne Schluessel koppelt nicht mehr (`400 schluessel`), und
+    abgeschlossen wird erst, wenn das Ja am Geraet UND „Wert stimmt" im Web
+    vorliegen. Je Geraet, in dieser Reihenfolge (JSON-Vertrag 1a.7):
 
-      1. `POST pair.php {"aktion":"start","geraet":{...}}`, OHNE Kopfzeilen.
-         Die Antwort traegt Code, Kennung und Schluessel im JSON -- damit
-         faellt das Abklauben des Markups weg, das frueher an jeder
-         Umgestaltung der Seite zerbrach.
-      2. Zustand sichern, SOFORT. Der Schluessel geht genau einmal ueber die
-         Leitung; ein Abbruch zwischen Schritt 1 und 4 hinterliesse sonst
-         eine Kopplungssitzung, zu der niemand mehr den Schluessel hat.
-      3. `POST einstellungen.php?t=geraete action=koppeln_bestaetigen` mit dem
-         Code -- das Einloesen im Konto.
-      4. `POST pair.php {"aktion":"bestaetigen","antwort":"ja"}` MIT
-         X-Device-Id/X-Api-Key. Erst hier entsteht die Zeile in `devices`,
-         und erst hier stehen Art und Modell darin.
+      1. Geraet: `start` mit Block und `schluessel` {spk, zusage} -- der
+         Schluessel ist der feste des Demo-Geraets (`geraet_schluessel()`),
+         die Zusage legt N_g fest, bevor das Geraet N_b kennt.
+      2. Zustand sichern, SOFORT (der API-Schluessel kommt genau einmal).
+      3. Web: `koppeln_bestaetigen` mit Code und N_b.
+      4. Geraet: `status` (Kontoschluessel, N_b), dann `offenlegen` N_g.
+      5. Web: Zusage pruefen, den Wert rechnen und gegen den des Geraets
+         halten, das Geraet ins Geraetebuch eintragen (`buch_eintragen()`),
+         dann `api/kopplung_wert.php` {antwort: ja, im_buch: true}.
+      6. Geraet: `bestaetigen` ja -- erst HIER entsteht die Zeile in
+         `devices`, mit Art, Modell und SPK. 409 `nicht_beansprucht` hiesse:
+         Schritt 3 hat nicht gewirkt.
+      7. Sprechende Beschriftung ueber `action=rename`.
 
-    DER BELEG FUER SCHRITT 3 IST SCHRITT 4, nicht die HTTP-Antwort. Erfolg ist
-    dort eine 302, Misserfolg eine 200 mit Fehlertext im HTML -- nach dem
-    automatischen Folgen der Umleitung sind beide 200. Wer sich darauf
-    verlaesst, meldet Erfolg und faellt erst spaeter auf. Bleibt Schritt 3
-    ohne Wirkung, antwortet Schritt 4 mit 409 `nicht_beansprucht`; das ist der
-    positive Beleg, und er wird hier ausdruecklich geprueft.
+    Beide Seiten rechnet hier dasselbe Werkzeug; der Vergleich der beiden
+    Werte belegt deshalb nur, dass Zusage, N_b und Kontoschluessel richtig
+    durch den Server gelaufen sind -- nicht, dass ein Mensch verglichen hat.
 
-    DIE BESCHRIFTUNG KOMMT ZULETZT. `pair.php` setzt beim Ja
-    `label = geraet_vorgabename(art)` -- also schlicht „Uhr" oder „Handy".
-    Die sprechenden Namen der Referenz entstehen danach ueber
-    `action=rename`.
-
-    RATENSCHUTZ: `pair_start` laesst 20 Anfragen je 600 s und Adresse zu, und
-    NICHTS setzt den Topf zurueck (kein `rate_erfolg('pair_start')` im Baum).
-    Zwei Geraete je Lauf heisst zehn Laeufe je zehn Minuten. Wer beim
-    Entwickeln oefter fahren muss, raeumt den Topf so ab, wie es
+    RATENSCHUTZ: `pair_start` laesst 20 Anfragen je 600 s und Adresse zu.
+    Wer beim Entwickeln oefter fahren muss, raeumt den Topf so ab, wie es
     `tools/proben/kopplung/probe.php` tut -- hier steht kein SQL.
     """
     s = lauf.demo_sitzung()
@@ -383,13 +427,24 @@ def stufe_geraet(lauf: Lauf) -> None:
     if alt_ids:
         melde(f"  {len(alt_ids)} Gerät(e) ohne bekannten Schlüssel entfernt.")
 
+    # DAS KONTOPAAR ZUERST: `koppeln_bestaetigen` verlangt es (ohne Paar
+    # kein Vergleichswert), und der Browser legt es beim Entsperren an.
+    s.kontoschluessel()
     geraete = {}
     bekannt = _geraete_ids(s)
     for g in quelle:
         kennung, beschriftung, block = g["nummer"], g["beschriftung"], g["block"]
 
-        # --- 1. Sitzung eroeffnen (ohne Kopfzeilen) ------------------------
-        a = s.json_post("pair.php", {"aktion": "start", "geraet": block})
+        r = ortsdaten.referenz
+        priv_g = geraet_schluessel(kennung)
+        spk = r.sec1(priv_g.public_key())
+        n_g = os.urandom(r.NONCE_LAENGE)
+        b64 = lambda x: base64.b64encode(x).decode("ascii")  # noqa: E731
+
+        # --- 1. Sitzung eroeffnen (ohne Kopfzeilen), mit Geraeteschluessel -
+        a = s.json_post("pair.php", {"aktion": "start", "geraet": block,
+                                     "schluessel": {"spk": b64(spk),
+                                                    "zusage": b64(r.kopplung_zusage(n_g, spk))}})
         if a.status_code != 200:
             raise RuntimeError(f"Gerät {kennung}: pair.php start antwortete "
                                f"{a.status_code}: {a.text[:200]}")
@@ -403,23 +458,70 @@ def stufe_geraet(lauf: Lauf) -> None:
                             "art": block["art"], "schwebend": True}
         lauf.zustand["geraete"] = geraete
         lauf.sichern()
+        am_geraet = {"X-Device-Id": dev, "X-Api-Key": key, "Content-Type": "application/json"}
 
-        # --- 3. Code im Konto einloesen ------------------------------------
+        def geraet_ruft(koerper: dict):
+            s.anfragen += 1
+            return s.s.post(f"{s.basis}/pair.php", json=koerper, timeout=60, headers=am_geraet)
+
+        # --- 3. Code im Konto pruefen (SPK und Zusage sehen), dann mit N_b
+        #        einloesen -- in dieser Reihenfolge, wie der Browser: Wer N_b
+        #        schickt, bevor er die Zusage hat, hat keine.
         s.csrf_auffrischen("einstellungen.php?t=geraete")
-        s.post("einstellungen.php?t=geraete",
-               {"csrf": s.csrf, "action": "koppeln_bestaetigen", "code": code})
+        pr = s.post("einstellungen.php?t=geraete",
+                    {"csrf": s.csrf, "action": "koppeln_pruefen", "code": code})
+        m_spk = re.search(r'data-spk="([^"]+)"', pr.text)
+        m_zus = re.search(r'data-zusage="([^"]+)"', pr.text)
+        if not m_spk or not m_zus:
+            raise RuntimeError(f"Gerät {kennung}: die Prüfseite zeigt SPK und Zusage nicht — "
+                               f"{fehlertext(pr.text) or 'kein Meldungstext'}")
+        spk_web, zusage_web = base64.b64decode(m_spk.group(1)), base64.b64decode(m_zus.group(1))
+        if spk_web != spk:
+            raise RuntimeError(f"Gerät {kennung}: die Prüfseite zeigt einen anderen Geräteschlüssel")
+        n_b = os.urandom(r.NONCE_LAENGE)
+        s.csrf_auffrischen("einstellungen.php?t=geraete")
+        ein = s.post("einstellungen.php?t=geraete",
+                     {"csrf": s.csrf, "action": "koppeln_bestaetigen", "code": code, "n_b": b64(n_b)})
 
-        # --- 4. Am Geraet mit Ja bestaetigen -- und DAS ist der Beleg ------
-        b = s.s.post(f"{s.basis}/pair.php",
-                     json={"aktion": "bestaetigen", "antwort": "ja"}, timeout=60,
-                     headers={"X-Device-Id": dev, "X-Api-Key": key,
-                              "Content-Type": "application/json"})
-        s.anfragen += 1
+        # --- 4. Am Geraet: Kontoschluessel und N_b holen, N_g offenlegen ---
+        st = geraet_ruft({"aktion": "status"})
+        sj = st.json() if st.status_code == 200 else {}
+        if sj.get("zustand") != "beansprucht" or not sj.get("kontoschluessel") or not sj.get("n_b"):
+            # Die Seite traegt Textbausteine fuer jeden Zustand (das Skript
+            # zeigt sie an) — ihr Meldungstext ist erst hier ein Befund.
+            raise RuntimeError(f"Gerät {kennung}: status nach dem Einlösen {st.status_code} {st.text[:200]} "
+                               f"— hat `koppeln_bestaetigen` nicht gewirkt? Seite: {fehlertext(ein.text)}")
+        konto_pub = base64.b64decode(sj["kontoschluessel"])
+        if base64.b64decode(sj["n_b"]) != n_b:
+            raise RuntimeError(f"Gerät {kennung}: das Gerät bekam ein anderes N_b, als der Browser schickte")
+        of = geraet_ruft({"aktion": "offenlegen", "n_g": b64(n_g)})
+        if of.status_code != 200:
+            raise RuntimeError(f"Gerät {kennung}: offenlegen {of.status_code} {of.text[:200]}")
+
+        # --- 5. Im Web: Wert rechnen, vergleichen, Buch, „Wert stimmt" ------
+        stand = s.get("api/kopplung_stand.php")
+        sd = stand.json() if stand.status_code == 200 else {}
+        try:
+            wert_web = r.kopplung_wert(s.kontoschluessel(), spk_web, base64.b64decode(sd["n_g"]),
+                                       n_b, zusage_web)
+        except (KeyError, TypeError, ValueError, r.HuelleFehler) as f:
+            raise RuntimeError(f"Gerät {kennung}: kopplung_stand.php liefert keinen rechenbaren Stand "
+                               f"({stand.status_code} {stand.text[:200]})") from f
+        wert_geraet = r.kopplung_wert(konto_pub, spk, n_g, n_b)
+        if wert_web != wert_geraet:
+            raise RuntimeError(f"Gerät {kennung}: Vergleichswert im Web {wert_web}, am Gerät {wert_geraet}")
+        buch_eintragen(s, spk, beschriftung)
+        w = s.json_post("api/kopplung_wert.php", {"antwort": "ja", "im_buch": True})
+        if w.status_code != 200 or not w.json().get("ok"):
+            raise RuntimeError(f"Gerät {kennung}: kopplung_wert.php {w.status_code} {w.text[:200]}")
+
+        # --- 6. Am Geraet mit Ja bestaetigen -- und DAS ist der Beleg ------
+        b = geraet_ruft({"aktion": "bestaetigen", "antwort": "ja"})
         if b.status_code != 200 or not b.json().get("ok"):
             raise RuntimeError(
                 f"Gerät {kennung}: das Ja am Gerät antwortete {b.status_code}: "
                 f"{b.text[:200]} — bei 409 `nicht_beansprucht` hat das Einlösen "
-                f"des Codes im Konto nicht gewirkt.")
+                f"des Codes im Konto nicht gewirkt, bei 202 fehlt „Wert stimmt“.")
         geraete[kennung]["schwebend"] = False
 
         # --- 5. Sprechende Beschriftung ------------------------------------
@@ -440,14 +542,17 @@ def stufe_geraet(lauf: Lauf) -> None:
 
 
 # --------------------------------------------------------------- 4. Ingest
-def pakete_verschliessen(sec1: bytes, roh: list[dict]) -> list[dict]:
+def pakete_verschliessen(sec1: bytes, roh: list[dict], nummer: str) -> list[dict]:
     """Pakete im Format des Sendeplans (Ortsdaten im Klartext) in das Format
     bringen, das `ingest.php` annimmt: Phasenorte, Reanimation und Spur in
-    Gerätehüllen, verschlossen mit dem Kontoschlüssel. Dieselbe Gerätehilfe
-    wie in den Proben (`tools/proben/huelle/geraet_cli.php`)."""
+    Geraetehuellen der Fassung 2, verschlossen mit dem Kontoschluessel und
+    dem Schluessel des sendenden Demo-Geraets (`geraet_schluessel()`).
+    Dieselbe Geraetehilfe wie in den Proben (`tools/proben/huelle/geraet_cli.php`)."""
+    d = geraet_schluessel(nummer).private_numbers().private_value.to_bytes(32, "big")
     umbau = subprocess.run(
         ["php", str(HIER.parents[2] / "tools" / "proben" / "huelle" / "geraet_cli.php")],
-        input=json.dumps({"sec1": base64.b64encode(sec1).decode("ascii"), "pakete": roh}),
+        input=json.dumps({"sec1": base64.b64encode(sec1).decode("ascii"), "geraet_d": d.hex(),
+                          "pakete": roh}),
         capture_output=True, text=True, check=True)
     return json.loads(umbau.stdout)
 
@@ -468,18 +573,21 @@ def stufe_ingest(lauf: Lauf) -> None:
     messung: list[dict] = []
     fehler = 0
 
-    # SEIT WEB 22 VERSCHLOSSEN. Der Sendeplan liegt im
-    # alten Format vor (Punkte, Koordinaten und Reanimation im Klartext);
-    # `ingest.php` nimmt das nicht mehr an. Umgebaut wird mit DERSELBEN
-    # Geraetehilfe wie in den Proben (`tools/proben/huelle/geraet.php`), in
-    # einem Aufruf fuer alle offenen Pakete, verschlossen mit dem
-    # Kontoschluessel des Demokontos -- den legt die Sitzung an, wenn das
-    # Konto noch keinen hat, so wie der Browser beim Entsperren.
+    # SEIT WEB 22 VERSCHLOSSEN, seit Web 27 nur Fassung 2. Der Sendeplan
+    # liegt im alten Format vor (Punkte, Koordinaten und Reanimation im
+    # Klartext); `ingest.php` nimmt das nicht an. Umgebaut wird mit DERSELBEN
+    # Geraetehilfe wie in den Proben (`tools/proben/huelle/geraet.php`), ein
+    # Aufruf je Geraet, verschlossen mit dem Kontoschluessel des Demokontos
+    # und dem Schluessel des Geraets, das sendet -- der steht seit der
+    # Kopplung in `devices.spk`, und der Eingang haelt die SID dagegen.
     offen = [e for e in plan if e["datei"] not in bereits]
     sec1 = s.kontoschluessel()
-    roh = [json.loads((AUSGABE / e["datei"]).read_text("utf-8")) for e in offen]
-    verschlossen = dict(zip((e["datei"] for e in offen), pakete_verschliessen(sec1, roh)))
-    melde(f"  {len(offen)} Pakete verschlossen (Kontoschlüssel {sec1[:4].hex()}…).")
+    verschlossen: dict = {}
+    for nummer in sorted({e["ref"].split("-")[1] for e in offen}):
+        teil = [e for e in offen if e["ref"].split("-")[1] == nummer]
+        roh = [json.loads((AUSGABE / e["datei"]).read_text("utf-8")) for e in teil]
+        verschlossen.update(zip((e["datei"] for e in teil), pakete_verschliessen(sec1, roh, nummer)))
+    melde(f"  {len(offen)} Pakete verschlossen (Fassung 2, Kontoschlüssel {sec1[:4].hex()}…).")
 
     for eintrag in plan:
         datei = eintrag["datei"]
@@ -585,7 +693,7 @@ def stufe_zuordnen(lauf: Lauf) -> None:
 def formularfelder(daten: dict, s, bestand: dict | None = None) -> list:
     """Aus einem Formular-Dokument des Generators die POST-Felder bauen.
 
-    `pat_blob` entsteht HIER als `edk1:`-Chiffretext. Der Server nimmt ihn
+    `pat_blob` entsteht HIER als `edk2:`-Block (Zweck `pat`, Bezug die client_ref). Der Server nimmt ihn
     bauartbedingt nur so entgegen (`pruef_pat_blob`) — er hat den Schluessel
     nicht und koennte den Inhalt gar nicht pruefen. Das ist keine Luecke,
     sondern die Zusage: Klartext dieser Felder geht nie an den Server.
@@ -663,7 +771,7 @@ def formularfelder(daten: dict, s, bestand: dict | None = None) -> list:
     # zeigt sie aus der Huelle an und schickt sie unveraendert zurueck.
     vorrat: dict[int, list] = {}
     if bestand is not None:
-        alt = ortsdaten.einsatz_oeffnen(bestand, priv) or {}
+        alt = ortsdaten.einsatz_oeffnen(bestand, ortsdaten.leser(priv, s.buch)) or {}
         for o in alt.get("phasen", []):
             vorrat.setdefault(int(o["phase"]), []).append(o)
         if not rea_innen and alt.get("rea"):
@@ -679,19 +787,24 @@ def formularfelder(daten: dict, s, bestand: dict | None = None) -> list:
                              "lat": o.get("lat") if o else None,
                              "lon": o.get("lon") if o else None})
     ref = bestand["client_ref"] if bestand is not None else "man-" + os.urandom(8).hex()
+    # FASSUNG 2, ABSENDER DAS KONTO, wie `EdOrtsdaten.einsatzVerschliessen()`:
+    # nach einer Geraetehuelle der naechste Zaehler, und `schluss` traegt das
+    # Konto weiter (E-KA-76); ein neuer Einsatz beginnt bei 1.
+    kopf = {"z": int(alt.get("z", 0)) + 1 if bestand is not None and alt else 1,
+            "start": beginn, "schluss": bool(alt.get("schluss")) if bestand is not None and alt else False}
     liste.append(("ort_huelle", ortsdaten.einsatz_verschliessen(
-        {"fassung": 1, "phasen": innen_phasen, "rea": rea_innen}, sec1, ref)))
+        {"phasen": innen_phasen, "rea": rea_innen}, priv, ref, kopf)))
     liste.append(("ort_phasen", json.dumps([[nr, t] for nr, t in phasen_ts])))
     if bestand is None:
         liste.append(("client_ref", ref))
     else:
         punkte = ortsdaten.spur_oeffnen(bestand.get("spur_stuecke") or [], "spur", ref,
-                                        bestand.get("spur_sperren") or [], priv)
+                                        bestand.get("spur_sperren") or [], ortsdaten.leser(priv, s.buch))
         h = ortsdaten.ortshoehe(punkte, phasen_ts)
         if h is not None:
             geschuetzt["ortshoehe"] = h
 
-    blob = krypto.pat_blob(geschuetzt, s.inhaltsschluessel)
+    blob = krypto.pat_blob(geschuetzt, s.inhaltsschluessel, ref)
     if blob:
         liste.append(("pat_blob", blob))
     return liste
@@ -837,7 +950,8 @@ def stufe_sperrliste(lauf: Lauf) -> None:
     # werden verschlossen wie in der Stufe `ingest`, sonst misst der Schritt
     # eine Abweisung statt der Sperrliste.
     pakete = pakete_verschliessen(s.kontoschluessel(),
-                                  [json.loads(p.read_text("utf-8")) for p in dateien])
+                                  [json.loads(p.read_text("utf-8")) for p in dateien],
+                                  e["client_ref"].split("-")[1])
 
     def senden() -> None:
         for koerper in pakete:
@@ -939,7 +1053,7 @@ def stufe_schneiden(lauf: Lauf) -> None:
             sec1, priv = s.kontopaar()
             sperren = [{"von": x["von_ts"], "bis": x["bis_ts"]} for x in seg.get("schnitte", [])]
             punkte = ortsdaten.spur_oeffnen(seg.get("spur_stuecke") or [], "ruhe",
-                                            seg["client_ref"], sperren, priv)
+                                            seg["client_ref"], sperren, ortsdaten.leser(priv, s.buch))
             von, bis = ortsdaten.zeiten([(liste["day"], sc["beginn"][11:16], bt),
                                          (liste["day"], sc["ende"][11:16], et)])
             drin = [p for p in punkte if von <= p["ts"] <= bis]
@@ -953,7 +1067,7 @@ def stufe_schneiden(lauf: Lauf) -> None:
                 "beginn_tag": bt, "ende_tag": et,
                 "phasen": {nr: wann[11:16] for nr, wann in sc["phasen"].items()},
                 "client_ref": ref,
-                "stuecke": ortsdaten.stuecke_bauen(drin, "spur", ref, sec1, neu=True),
+                "stuecke": ortsdaten.stuecke_bauen(drin, "spur", ref, priv, neu=True),
             })
             if antwort.status_code != 200:
                 raise RuntimeError(f"{kennung}: api/schneiden.php antwortete "
@@ -1017,7 +1131,7 @@ def stufe_loeschen(lauf: Lauf) -> None:
             liste, seg = segment_finden(lauf, s, kennung, d, x["segment"])
             stand = [[st["seq_from"], st["punkte"]] for st in seg.get("spur_stuecke") or []]
             punkte = ortsdaten.spur_oeffnen(seg.get("spur_stuecke") or [], "ruhe",
-                                            seg["client_ref"], [], priv)
+                                            seg["client_ref"], [], ortsdaten.leser(priv, s.buch))
             if probe is None:
                 quelle = next(r for r in d["ruhesegmente"] if r["client_ref"] == x["segment"])
                 a = s.json_post("api/schneiden.php", {
@@ -1045,10 +1159,10 @@ def stufe_loeschen(lauf: Lauf) -> None:
                 vonseq = min(st["seq_from"] for st in alle)
                 marke = max([st["seq_from"] + (st["n_original"] if int(st.get("stufe") or 1) >= 2
                                                else st["punkte"]) for st in alle] + [rest[-1]["seq"] + 1])
-                stuecke = [ortsdaten.gepackt_bauen(rest, "ruhe", seg["client_ref"], sec1, stufe,
+                stuecke = [ortsdaten.gepackt_bauen(rest, "ruhe", seg["client_ref"], priv, stufe,
                                                    vonseq, marke - vonseq)]
             else:
-                stuecke = ortsdaten.stuecke_bauen(rest, "ruhe", seg["client_ref"], sec1)
+                stuecke = ortsdaten.stuecke_bauen(rest, "ruhe", seg["client_ref"], priv)
             a = s.json_post("api/schneiden.php", {
                 "action": "loeschen", "rest_id": seg["id"],
                 "beginn": x["beginn"][11:16], "ende": x["ende"][11:16],
@@ -1098,7 +1212,7 @@ def stufe_verdichten(lauf: Lauf) -> None:
     Kennzeichnung auf und setzt sie im `finally` wieder — mit neuer
     Resetmarke wie beim ersten Kennzeichnen. Dazwischen arbeitet nur dieses
     Werkzeug; im Browser meldet sich niemand an (die stille Umstellung der
-    Huelle auf `edka1:` liefe nur dort).
+    Huelle auf `edka2:` liefe nur dort).
     """
     if lauf.zustand.get("verdichtet") is not None:
         melde("  Verdichtung besteht bereits.")
@@ -1149,7 +1263,7 @@ def stufe_verdichten(lauf: Lauf) -> None:
 def verdichten_eine(s, e: dict, stufe: int, sec1: bytes, priv) -> dict:
     """Eine Spur — `eine()` aus `assets/wartungslauf.js`, ohne die Ortshoehe."""
     art_h = "ruhe" if e["art"] == "rest" else "spur"
-    punkte = ortsdaten.spur_oeffnen(e["stuecke"], art_h, e["ref"], e["sperren"], priv)
+    punkte = ortsdaten.spur_oeffnen(e["stuecke"], art_h, e["ref"], e["sperren"], ortsdaten.leser(priv, s.buch))
     if not punkte:
         raise RuntimeError(f"{e['ref']}: nach dem Ausblenden kein Punkt (F-RD-08)")
     behalten = punkte
@@ -1160,9 +1274,9 @@ def verdichten_eine(s, e: dict, stufe: int, sec1: bytes, priv) -> dict:
     von = min(st["seq_from"] for st in e["stuecke"])
     marke = max(st["seq_from"] + (st["n_original"] if int(st.get("stufe") or 1) >= 2 else st["punkte"])
                 for st in e["stuecke"])
-    stueck = ortsdaten.gepackt_bauen(behalten, art_h, e["ref"], sec1, stufe, von, marke - von)
+    stueck = ortsdaten.gepackt_bauen(behalten, art_h, e["ref"], priv, stufe, von, marke - von)
     # DER RUNDLAUF: das neue Stueck oeffnen und Punkt fuer Punkt vergleichen.
-    wieder = ortsdaten.spur_oeffnen([stueck], art_h, e["ref"], [], priv)
+    wieder = ortsdaten.spur_oeffnen([stueck], art_h, e["ref"], [], ortsdaten.leser(priv, s.buch))
     runde = ortsdaten._runde
     if len(wieder) != len(behalten) or any(
             runde(a["lat"] * 1e7) != runde(b["lat"] * 1e7) or runde(a["lon"] * 1e7) != runde(b["lon"] * 1e7)

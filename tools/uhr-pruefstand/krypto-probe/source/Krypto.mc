@@ -1,6 +1,8 @@
 // Die Geraetehuelle auf der Garmin-Uhr — die Bausteine, die die Probe misst.
-// Format: Kopf von tools/proben/huelle/referenz.py (Fassung 1). Kein
-// Bestandteil der App; S11-08 uebernimmt, was die Probe bestaetigt.
+// Format: Kopf von tools/proben/huelle/referenz.py (Fassung 2). Kein
+// Bestandteil der App: eine zweite, unabhaengige Rechnung neben Huelle.mc
+// und Huelle2.mc, gegen dieselben Vektoren. Bis KA-28 rechnete sie Fassung 1
+// (Kennbyte 0x01, ein Geheimnis); die ist auf der Uhr fort.
 //
 // GARMINS BYTEORDNUNG (SDK 9.2.0, Toybox.Cryptography): Schluessel sind
 // „byte-vertauscht", je Koordinate little-endian, und ohne das Praefix 0x04.
@@ -14,7 +16,7 @@ import Toybox.StringUtil;
 
 module Krypto {
 
-    const INFO = "nadoku-huelle-1";
+    const INFO = "nadoku-huelle-2";
 
     // "be" oder "le" — wie generateSecret() das Geheimnis liefert. Setzt die
     // Probe, nachdem sie es gegen den Vektor gehalten hat.
@@ -118,22 +120,29 @@ module Krypto {
         return zOrdnung.equals("le") ? umgedreht(z, 0, z.size()) : z;
     }
 
-    // Die ganze Huelle. `d` und `iv` nur fuer Pruefvektoren fest, sonst null.
-    // `zw` nimmt die Zwischenwerte auf, wenn die Probe sie sehen will.
-    function verschliessen(klar as ByteArray, empfPub as ByteArray, bindung as ByteArray,
-                           d as ByteArray or Null, iv as ByteArray or Null,
-                           zw as Dictionary or Null) as ByteArray {
+    // Die ganze Huelle der Fassung 2: Kennbyte 0x02, Kennung des Absenders,
+    // EPK, IV, AES-256-CBC, HMAC; Schluessel aus Z_e (fluechtig gegen Konto)
+    // und Z_s (Absender statisch gegen Konto, hier vorgegeben). `d` und `iv`
+    // nur fuer Pruefvektoren fest, sonst null. `zw` nimmt die Zwischenwerte
+    // auf, wenn die Probe sie sehen will.
+    function verschliessen(klar as ByteArray, konto as ByteArray, spk as ByteArray, sid as ByteArray,
+                           zS as ByteArray, bindung as ByteArray, d as ByteArray or Null,
+                           iv as ByteArray or Null, zw as Dictionary or Null) as ByteArray {
         var p = paar(d);
         var epk = garminZuSec1(p.getPublicKey().getBytes() as ByteArray);
         if (iv == null) { iv = Cryptography.randomBytes(16); }
-        var z = ecdh(p, empfPub);
+        var zE = ecdh(p, konto);
+        var ikm = zE.slice(0, null);
+        ikm.addAll(zS);
         var info = text(INFO);
-        info.addAll(empfPub);
-        var okm = hkdf(z, epk, info);
+        info.addAll(konto);
+        info.addAll(spk);
+        var okm = hkdf(ikm, epk, info);
         var kEnc = okm.slice(0, 32);
         var kMac = okm.slice(32, 64);
         var ct = aesCbc(kEnc, iv, gepolstert(klar));
-        var aus = [1]b;
+        var aus = [2]b;
+        aus.addAll(sid);
         aus.addAll(epk);
         aus.addAll(iv);
         aus.addAll(ct);
@@ -142,7 +151,7 @@ module Krypto {
         var tag = hmac(kMac, mac);
         aus.addAll(tag);
         if (zw != null) {
-            zw[:epk] = epk; zw[:z] = z; zw[:kEnc] = kEnc; zw[:kMac] = kMac;
+            zw[:epk] = epk; zw[:zE] = zE; zw[:kEnc] = kEnc; zw[:kMac] = kMac;
             zw[:ct] = ct; zw[:tag] = tag;
         }
         return aus;

@@ -187,10 +187,6 @@ Daten erst nach Server-Bestätigung.
 │   ├── spur_lib.php       Spurstücke lesen und schreiben — die EINZIGE Stelle,
 │   │                       die `track_stuecke` anfasst (SPUR2, 4.6, 4.40;
 │   │                       bis Web 22.7.0 dazu `track_points`/`track_blobs`)
-│   ├── geraetehuelle_lib.php  Die Gerätehülle VERSCHLIESSEN (S11-04a) — für
-│   │                       Proben, Demo und den direkten Rückweg der
-│   │                       Verwaltung (S11-06c); byte-gleich mit Browser und
-│   │                       Referenz. Ein Öffnen gibt es hier mit Absicht nicht
 │   ├── kontopaar_lib.php  Das Schlüsselpaar des Kontos (S11-03): Siegel,
 │   │                       Zustand, Ablegen, SEC1 für die Kopplung (4.40)
 │   ├── standbuch_lib.php  Die Abschrift des Standbuchs (KA-06b-2): Stand,
@@ -849,10 +845,10 @@ Daten erst nach Server-Bestätigung.
 │   │   │                  pruefkonten.sh legt die Prüfkonten der Rollen
 │   │   │                  admin und support für den Bilderlauf an (R4-08);
 │   │   │                  sitzungsprobe.py misst, dass sitzung.py BEIDE
-│   │   │                  Hüllenfassungen öffnet (edk1: und edka1:, S10);
+│   │   │                  Hüllenarten öffnet (edk2: und edka2:, S10);
 │   │   │                  demo_kennzeichnen.php vermerkt das frische Konto als
 │   │   │                  Demo-Konto — VOR der ersten Anmeldung, sonst stellt
-│   │   │                  unlock.js still auf edka1: um und die Fixture lässt
+│   │   │                  unlock.js still auf edka2: um und die Fixture lässt
 │   │   │                  sich am Ende nicht mehr erzeugen
 │   │   ├── browser/       was es nur im Browser gibt: CSV-Import, Angriffs-
 │   │   │                  werte (P-07), Exporte, Umläufe, Papierkorb-Mischfall,
@@ -862,7 +858,7 @@ Daten erst nach Server-Bestätigung.
 │   │   └── fixture/       erzeugt server/demo/fixture.json.gz (öffnet dazu die
 │   │                      Hüllen des Demo-Kontos, RD-01); riegelprobe.php
 │   │                      misst die zwei Riegel darin (Zielrundenzahl,
-│   │                      Hülle bleibt edk1: — sonst wäre das Demo-Konto auf
+│   │                      Hülle bleibt edk2: — sonst wäre das Demo-Konto auf
 │   │                      der Produktivinstallation ausgesperrt, S10)
 │   ├── proben/            Prüfungen gegen die laufende Anlage
 │   │                      (PK-04/2, E-PK-24): ingest, spur, jobs,
@@ -1071,7 +1067,7 @@ Motoren 0. Ein Rauschfilter dafür ist deshalb **nicht** gebaut worden.
 
 | Tabelle | Zweck / Besonderheiten |
 |---|---|
-| `users` | Login (E-Mail = Username), Rolle (`role`, seit Web 20.41.0 vier Werte: `user`, `admin`, `betreiberin`, `support` — R75, E-P5c-14); Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 23.10.0 dazu **`darstellung`** (`''` = Umschalter, `system`, `hell` / `dunkel` — vier Werte seit Web 24.9.0, ohne Migration; bis dahin `''` = wie das Gerät; Migration `2026_11_07_darstellung`, Schritt 26, MA-07) — gelesen bei der Anmeldung wie `logo_wahl`, ausgegeben als `data-theme` (4.41). Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.38. **Seit Web 20.43.0 das Paar des Rückwegs** (Konzept RW, E-RW-05): `rw_oeffentlich` (öffentlicher Teil eines ECDSA-P-256-Paars, SPKI in Base64, 124 Zeichen), `rw_privat` (der private Teil als Chiffretext unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:` — er muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie `pat_wrap_rc`), `rw_seit` (wann es entstand). Leer heißt: noch kein Paar. Ein Abzug enthält den öffentlichen Teil und einen Chiffretext unter einem Schlüssel, den der Server nie kennt — er kann prüfen, nicht signieren (4.38). **Seit Web 22.0.0 das Schlüsselpaar des Kontos** (S11-03): `kp_oeffentlich` (öffentlicher Teil eines ECDH-P-256-Paars, SPKI, **versiegelt** mit `sk_versiegeln()`, Zweck `kontopaar|<user_id>`), `kp_privat` (privater Teil unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:`), `kp_seit`. Leer heißt: noch kein Paar. Siehe 4.40 |
+| `users` | Login (E-Mail = Username), Rolle (`role`, seit Web 20.41.0 vier Werte: `user`, `admin`, `betreiberin`, `support` — R75, E-P5c-14); Löschen kaskadiert alles; **Browser-Schlüsselableitung** (`kdf_salt` + `kdf_iter` = Rundenzahl je Konto) und **E2E-Schlüssel-Hüllen** `pat_wrap_pw`/`pat_wrap_rc` (Inhaltsschlüssel passwort- bzw. wiederherstellungsverpackt), dazu `pat_key_check` = im Browser gerechnete Prüfsumme des Inhaltsschlüssels (NULL bei Altbestand — ein gültiger Zustand); `session_epoch` = Zähler, mit dem ein Passwortwechsel offene Sitzungen beendet (**seit Web 4.5.0 in Gebrauch**). `password_hash` ist NULL, solange das Passwort noch nicht gesetzt wurde — ein solches Konto kann sich nicht anmelden. Die **Sortierregel der E-Mail-Spalte ist ausdrücklich festgelegt** (`utf8mb4_unicode_ci`); ohne das hinge die Anmeldung an der Standardregel der jeweiligen Installation. Seit Web 4.5.0 schreibt und sucht der Code zusätzlich kleingeschrieben (`email_lib.php`), hängt also nicht mehr von der Sortierregel ab; **Bestandszeilen bleiben unverändert**, die ci-Regel trifft sie ohnehin. Seit Web 9.7.0 dazu **`logo_wahl`** (`''` = Standard der Installation, sonst `hubschrauber` / `fahrzeug` / `wechselnd`, E-P3-20) — der Leerstring ist die Vorgabe, damit ein späterer Wechsel des Installationsstandards bestehende Konten erreicht. Seit Web 23.10.0 dazu **`darstellung`** (`''` = Umschalter, `system`, `hell` / `dunkel` — vier Werte seit Web 24.9.0, ohne Migration; bis dahin `''` = wie das Gerät; Migration `2026_11_07_darstellung`, Schritt 26, MA-07) — gelesen bei der Anmeldung wie `logo_wahl`, ausgegeben als `data-theme` (4.41). Seit Web 9.8.0 dazu **`last_login`** (DATETIME NULL) — der Zeitpunkt der letzten **Anmeldung**, geschrieben von `login.php` und sonst nirgends; Kontoseite und NutzerInnen-Liste zeigen ihn. Der Bestand bekommt bei der Migration NULL und nicht NOW(): Der Wert wäre sonst erfunden, und zwar genau in der Spalte, mit der man ungenutzte Konten sucht. NULL erscheint als „—“. **Seit Web 20.17.0 der Lebenszyklus** (P5b/AP2, E-P5b-12): `status` (`unbestaetigt` / `wartet` / `aktiv` / `gesperrt`), `bestaetigt_am`, `gesperrt_seit`, `gesperrt_grund`, `loeschung_am`. **Der Bestand wird `aktiv`** — jeder andere Wert wäre eine Aussage über Konten, die es vor der Prüfung schon gab, und `unbestaetigt` sperrte sie am Tag nach dem Update alle aus. `bestaetigt_am` bleibt dort **NULL**: „die Frage stellte sich nicht", dieselbe Entscheidung wie bei `last_login`. Der Index `idx_status_loeschung` ist für die Verfalljobs, nicht für die Anzeige. **Seit Web 20.42.0 der Zweitfaktor** (P5c/AP5, E-P5c-54): `totp_geheimnis` (20 Byte, versiegelt mit `sk_versiegeln()`, Zweck `totp|<user_id>` — der Zweck verhindert das Umhängen auf ein anderes Konto), `totp_seit` (eingeschaltet, **erst nach einem bestätigten Code**; ein Geheimnis ohne `totp_seit` ist eine angefangene Einrichtung) und `totp_schritt` (der zuletzt angenommene Zeitschritt — kein Code gilt zweimal). Siehe 4.38. **Seit Web 20.43.0 das Paar des Rückwegs** (Konzept RW, E-RW-05): `rw_oeffentlich` (öffentlicher Teil eines ECDSA-P-256-Paars, SPKI in Base64, 124 Zeichen), `rw_privat` (der private Teil als Chiffretext unter dem **Inhaltsschlüssel**, `edk2:`, nie `edka2:` — er muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie `pat_wrap_rc`), `rw_seit` (wann es entstand). Leer heißt: noch kein Paar. Ein Abzug enthält den öffentlichen Teil und einen Chiffretext unter einem Schlüssel, den der Server nie kennt — er kann prüfen, nicht signieren (4.38). **Seit Web 22.0.0 das Schlüsselpaar des Kontos** (S11-03): `kp_oeffentlich` (öffentlicher Teil eines ECDH-P-256-Paars, SPKI, **versiegelt** mit `sk_versiegeln()`, Zweck `kontopaar|<user_id>`), `kp_privat` (privater Teil unter dem **Inhaltsschlüssel**, `edk1:`, nie `edka1:`), `kp_seit`. Leer heißt: noch kein Paar. Siehe 4.40 |
 | `vertraute_geraete` | „Gerät merken" beim Zweitfaktor (seit Web 21.8.0, Schritt 18, SR-02, E-SR-07): `user_id` (`ON DELETE CASCADE`), `token_hash` (SHA-256 des Cookies `EDGERAET`, eindeutig), `angelegt_am`, `zuletzt_am` (fortgeschrieben bei jeder Anmeldung ohne Code, ohne Protokoll). **Kein User-Agent, kein Gerätename** (R36). **Gültig ist eine Zeile, solange `angelegt_am` plus die heutige Dauer ihrer Rollengruppe in der Zukunft liegt** — gerechnet beim Prüfen, nicht beim Merken (E-SR-17); der Aufräumjob löscht abgelaufene. Reist im Komplett-Stand mit (nur Hashes), **nicht** im Konto-Backup: Ein Cookie gehört zu einem Browser, nicht zu einem Konto. Mehr in 4.38 |
 | `passkeys` | Passkeys als Verfahren des Zweitfaktors (seit Web 21.10.0, Schritt 18, SR-09, E-SR-29 bis -33): `user_id` (`ON DELETE CASCADE`), `credential_id` (Base64url der Kennung, höchstens 1023 Byte → `VARCHAR(1364)`, `ascii_bin`), `credential_hash` (SHA-256 der Kennung, `CHAR(64)`, **eindeutig** — seit Web 21.11.0, E-SR-47: Ein Index über die Kennung selbst reichte über 767 Byte und scheiterte unter einem älteren Zeilenformat), `rp_id` (die Adresse, für die der Passkey entstand, seit Web 21.11.0, E-SR-48; Index `idx_konto` über `user_id, rp_id`), `oeffentlich` (der öffentliche Schlüssel als SPKI-PEM — bei der Registrierung aus COSE überführt, damit die Anmeldung ohne CBOR auskommt), `alg` (-7 ES256 oder -257 RS256), `zaehler` (Signaturzähler, E-SR-33), `bezeichnung` (bis 40 Zeichen oder leer), `angelegt_am`, `zuletzt_am`, `gewarnt_am` (letzte Mail wegen eines zurückgelaufenen Zählers, höchstens eine je Tag, E-SR-46). **Kein User-Agent, keine AAGUID, kein Gerätename** (E-SR-31, R36); höchstens zehn je Konto **und Adresse** (`PK_HOECHSTENS`, geprüft unter `FOR UPDATE`). Reist im Komplett-Stand mit, **nicht** im Konto-Backup: Ein Passkey gilt nur für die Adresse, an der er entstand (Backup-Format 4, 6.11). Mehr in 4.38 |
 | `totp_codes` | Die Wiederherstellungscodes des Zweitfaktors (seit Web 20.42.0, P5c/AP5): `user_id`, `hash` (`password_hash()`), `benutzt_am` (NULL = offen). **Nicht am Serverschlüssel** (E-P5c-42) — sie sind der Rückweg für genau den Fall, dass das Geheimnis nicht mehr zu öffnen ist. `ON DELETE CASCADE` mit dem Konto. Angenommen wird atomar (`UPDATE … WHERE benutzt_am IS NULL`, gültig bei `rowCount() = 1`) |
@@ -1239,7 +1235,7 @@ Funktionen in `crypto.js` — `datenschluessel()`, `huelleOeffnen()`,
 | Erstvergabe und Reset | `pw_handling.php` | `pat_wrap_rc` (**ohne** Anteil) | aktuellem Anteil |
 
 **Eine sechste kam beim Gegenlesen dazu:** `EdCrypto.getContentKey()` rief
-`decrypt()` unmittelbar und wäre an jeder `edka1:`-Hülle gescheitert. Da
+`decrypt()` unmittelbar und wäre an jeder Hülle mit Anteil (damals `edka1:`) gescheitert. Da
 `EdKeyGuard.contentKey()` darauf aufsetzt, betrifft das **jede** Anzeigeseite
 — und zwar erst beim zweiten Seitenaufbau, weil der erste den Schlüssel aus
 dem Vormerkfach bekommt. Sie geht seit Web 20.0.0 ebenfalls über
@@ -1289,7 +1285,7 @@ welchen die Installation hat. Erst der Vergleich beider ergibt eine Aussage:
 
 | Lage | Bedingung | Verhalten |
 |---|---|---|
-| **nicht eingerichtet** | kein `kdf_anteil`, keine Marke | keine Auslieferung; Hüllen bleiben `edk1:`, alles läuft wie vor S10 |
+| **nicht eingerichtet** | kein `kdf_anteil`, keine Marke | keine Auslieferung; Hüllen bleiben `edk2:` ohne Anteil, alles läuft wie vor S10 |
 | **bereit** | Wert = Marke | Auslieferung, stille Umstellung |
 | **Rotation** | `kdf_anteil_alt` gesetzt | beide Anteile werden ausgeliefert; Umstellung je Konto beim nächsten Anmelden |
 | **abweichend** | Wert ≠ Marke, oder Wert fehlt bei gesetzter Marke | **keine Auslieferung**; die Seite nennt die erwartete Kennung statt „Passwort falsch" |
@@ -1348,47 +1344,36 @@ genau eine A4-Seite, je Wert eine Kachel mit sechzehn nummerierten Gruppen,
 das Logo als Standard der Installation, auf einer Anlage mit Etikett die
 Umgebungszeile; `.blatt-wert` ist entfallen.
 
-**Formatkennung (seit Web 5.1.0, M2-10).** Jeder von `EdCrypto.encrypt()`
-erzeugte Chiffretext beginnt mit `edk1:` — sowohl `pat_blob` als auch die
-beiden Hüllen. Ohne eine solche Kennung gäbe es beim nächsten Verfahrenswechsel
-kein Merkmal, an dem sich alt von neu unterscheiden ließe; man müsste raten,
-und ein falscher Rateversuch sieht aus wie ein falscher Schlüssel.
+**Formatkennung.** Jeder Chiffretext unter dem Inhaltsschlüssel beginnt mit
+`edk2:` (`EdInhalt`, `inhalt2.js`; Format in 4.42) — `pat_blob`, der private
+Teil des Kontopaars und der des Rückwegs, die Blätter des Standbuchs und die
+Schlüsselhüllen. Ein Textpräfix statt eines Kennungsbytes, weil der
+Doppelpunkt nicht zum base64-Zeichenvorrat gehört: Die Kennung ist auch in der
+Datenbankspalte auf den ersten Blick zu erkennen, ohne etwas zu entschlüsseln.
+Eine **unbekannte** Kennung meldet der Browser mit Grund (`kennung`) statt mit
+„Schlüssel passt nicht".
 
-Ein Textpräfix statt eines Kennungsbytes, weil der Doppelpunkt nicht zum
-base64-Zeichenvorrat gehört: Die Kennung ist damit auch in der Datenbankspalte
-auf den ersten Blick zu erkennen, ohne etwas zu entschlüsseln.
+**Die Hüllenkennung `edka2:` (S10, E-S10-05).** Eine Passworthülle, die am
+Server-Anteil hängt, lautet `edka2:<kennung>:<base64>` — die acht Hexzeichen
+sind die Kennung des Anteils, mit dem sie gebaut wurde; sie steht zusätzlich
+in den Zusatzdaten (Bezug `pw:<kennung>`), und eine umetikettierte Hülle
+bricht am Prüfwert. Der Browser braucht bei einer Rotation die Auskunft, mit
+*welchem* von zwei Anteilen er öffnet; die Statusseite muss zählen können,
+wer noch auf dem alten steht. Beides steht im Präfix und ist lesbar, ohne
+dass jemand etwas öffnet (`SUBSTRING` in SQL, `huelle_anteil_kennung()` in
+PHP). Der Anteil steckt im Datenschlüssel, und der öffnet ausschließlich die
+Hülle: **Kein Datensatz wird angefasst**, wenn ein Konto umstellt.
+`pat_wrap_rc`, `kp_privat` und `rw_privat` tragen nie eine Anteil-Kennung
+(`WRAP_RC_RE`, `KP_PRIVAT_RE`, `RW_PRIVAT_RE` nehmen nur `edk2:`).
 
-**Beim Lesen großzügig, ohne Umstellung des Bestands.** Ein Chiffretext ohne
-Kennung ist die erste Fassung. Der Server kann die Kennung nicht nachtragen —
-er hat den Schlüssel nach Bauart nicht. Beide Formen stehen deshalb dauerhaft
-nebeneinander; ein Datensatz bekommt die Kennung, wenn er das nächste Mal
-gespeichert wird. Eine **unbekannte** Kennung meldet „mit einer neueren Fassung
-verschlüsselt" statt „Schlüssel passt nicht".
-
-Serverseitig prüfen `PAT_BLOB_RE` und `WRAP_RE` (beide `validate_lib.php`)
-beide Formen. `WRAP_RE` stand bis Web 5.0.1 dreifach im Projekt — als Konstante
-in `pw_handling.php` und wortgleich in `einstellungen.php` und
-`api/kdf_upgrade.php`; eine davon beim Nachziehen zu vergessen hätte einen
-Passwortwechsel scheitern lassen.
-
-**Die Hüllenkennung `edka1:` (seit Web 19.7.0, S10, E-S10-05).** Eine Hülle,
-die am Server-Anteil hängt, lautet `edka1:<kennung>:<base64>` — die acht
-Hexzeichen sind die Kennung des Anteils, mit dem sie gebaut wurde. Der
-Chiffretext dahinter ist derselbe AES-256-GCM-Aufbau wie bisher.
-
-*Warum nicht schlicht `edk2:`.* Zwei Gründe. `EdCrypto.decrypt()` weist jede
-Kennung außer `edk1:` als „neuere Programmfassung" ab — die Fassung der
-**Hülle** ist aber etwas anderes als die Fassung des **Verfahrens**. Und der
-Browser braucht bei einer Rotation die Auskunft, mit *welchem* von zwei
-Anteilen er öffnet; die Statusseite muss zählen können, wer noch auf dem alten
-steht. Beides steht im Präfix und ist lesbar, ohne dass jemand etwas öffnet
-(`SUBSTRING` in SQL, `huelle_anteil_kennung()` in PHP).
-
-*Nur `WRAP_RE` nimmt die neue Kennung an, `PAT_BLOB_RE` bleibt eng.* Das ist
-kein Versehen: Der Anteil steckt im Datenschlüssel, und der öffnet
-ausschließlich die Hülle. Der Inhaltsschlüssel darin und damit jeder
-`pat_blob` sind unverändert — **kein Datensatz wird angefasst**, wenn ein
-Konto umstellt. `pat_wrap_rc` bekommt ebenfalls kein `edka1:`-Präfix.
+*Werdegang.* Von Web 5.1.0 (M2-10) bis Web 24 schrieb `EdCrypto.encrypt()`
+`edk1:` (AES-256-GCM ohne Zusatzdaten), davor Text ohne Kennung; die Hülle am
+Anteil hieß von Web 19.7.0 an `edka1:<kennung>:`. Seit Web 25.0.0 (KA-14)
+wird gebunden geschrieben, seit Web 26.0.0 (06e) nimmt kein Schreibweg das
+alte Format mehr an, und **seit Web 27.0.0 (KA-07) liest es niemand mehr**:
+Server (`WRAP_PRAEFIX_RE`, `pruef_pat_blob()`), Browser und Werkzeuge kennen
+nur noch `edk2:`/`edka2:`. Vor dem Rückbau lag auf Produktiv kein Datensatz
+mehr im alten Format (E-KA-104, gemessen 19.11.2026).
 
 Beide Hüllen entstehen **gemeinsam mit dem Passwort** in `pw_handling.php`
 (siehe unten). Ein anmeldbares Konto ohne Hüllen kann es dadurch nicht geben;
@@ -1594,7 +1579,7 @@ des Zweitfaktors ist dieselbe Seite); die Anmeldung wartet vor dem Senden.
 Die Hex-Fächer bis 23.3.x räumt jede Seite mit `crypto.js` beim Laden.
 
 **`aesKey()` nimmt beide Formen.** Alle Verbraucher reichen den Schlüssel nur
-an `EdCrypto.encrypt()`/`decrypt()` oder an das Schlüsselpaar weiter;
+an `EdInhalt` (`inhalt2.js`; bis Web 26 `EdCrypto.encrypt()`/`decrypt()`) oder an das Schlüsselpaar weiter;
 `aesKey()` importiert ein Hex und reicht einen `CryptoKey` unverändert durch.
 Wo der Inhaltsschlüssel als Hex gebraucht wird — eine Hülle bauen, die
 Prüfsumme bilden —, kommt er aus der Hülle, die das Passwort gerade geöffnet
@@ -1952,10 +1937,12 @@ dieser Weg nur noch Nutzlast 13** — Endpunkt und `edbak_restore()` weisen
 eine ältere Datei mit `409 version_alt` ab, eine einteilige Datei weist
 schon der Browser ab; bis Web 22.7.0 verschloss er jede Nutzlast ab 6 und
 las SPUR1 selbst (`EdOrtsdaten.spur1Lesen()`). Auch die Verwaltung spielt
-ein Paket seit Web 23 über `'browser'` ein (E-S11-84). `'server'` ruft nur
-noch der Demo-Reset: Dort verschließt der Server die Nutzlast-7-Fixture aus
-dem Repositorium selbst (`geraetehuelle_lib.php`, E-S11-20). Aufbau und
-Tabelle: `docs/Backup-Format.md` 3.
+ein Paket seit Web 23 über `'browser'` ein (E-S11-84). **Seit Web 27.0.0
+(KA-07) gibt es nur noch diesen einen Weg:** `'server'` rief zuletzt nur der
+Demo-Reset, der die Klartext-Fixture (Format 1 bis 3) aus dem Repositorium
+selbst verschloss (`geraetehuelle_lib.php`, E-S11-20, Fassung 1); er liest
+seit KA-13 Format 4 und reicht Hüllen durch, und `edbak_restore()` hat das
+Argument nicht mehr. Aufbau und Tabelle: `docs/Backup-Format.md` 3.
 
 **Die Warnung vor unlesbaren Angaben steht vor dem ersten Schreiben.** Ob es
 etwas zu warnen gibt, kann der Einspielweg bei Fassung 4 nicht mehr selbst
@@ -3764,7 +3751,6 @@ Browser:
 | Rückweg der Fassung 4 (`api/backup_spuren_restore.php`, `edbak_spuren_schreiben()`) | `spur2_stueck_schreiben()` | — |
 | Umdatierung (`tageszuordnung_lib.php`) | `spur_min_ts()`, `spur_zeit_verschieben()` | — |
 | Wartungslauf (`api/wartungslauf.php`) | `spur2_faellig()`, `spur2_wartung_tauschen()` | Stücke |
-| Übernahme der Fassung 1 (`api/format_anheben.php`, seit Web 26.0.0) | `spur2_uebernahme_liste()`, `spur2_uebernahme_zahl()`, `spur2_uebernahme_tauschen()` | Stücke mit Prüfsumme; Tausch nur der Hülle, ganz oder gar nicht |
 
 Dazu die Schreib- und Löschseite: `spur_naechste_seq()` liefert die
 Fortsetzungsmarke der Uhr (`ingest.php`, über `spur2_stand()`),
@@ -6203,18 +6189,18 @@ Die Zuordnung Datensatz ↔ Person entsteht ausschließlich über den
 verschlüsselten Block.
 
 **Unter demselben Inhaltsschlüssel liegt seit Web 20.44.0 der private Teil
-des Rückweg-Paars** (`users.rw_privat`, `edk1:`, Konzept RW, 4.38) — keine
+des Rückweg-Paars** (`users.rw_privat`, `edk2:`, Konzept RW, 4.38) — keine
 Patientenangabe, sondern Schlüsselmaterial, aber mit derselben Zusage: Der
 Server kennt den Schlüssel nicht und kann ihn nicht öffnen. Der öffentliche
 Teil (`rw_oeffentlich`) steht im Klartext, weil er öffentlich ist; aus ihm
 folgt nichts über den Block. Wie `pat_wrap_rc` hängt `rw_privat` **nicht** am
-Server-Anteil (`RW_PRIVAT_RE` weist `edka1:` ab), weil er mit dem
+Server-Anteil (`RW_PRIVAT_RE` weist `edka2:` ab), weil er mit dem
 Wiederherstellungsschlüssel allein aufgehen muss.
 
 **Seit Web 22.0.0 auch der private Teil des Kontopaars** (`users.kp_privat`,
-`edk1:`, S11-03, 4.40) — mit derselben Begründung: Er muss mit dem
+`edk2:`, S11-03, 4.40) — mit derselben Begründung: Er muss mit dem
 Wiederherstellungsschlüssel allein aufgehen, sonst gingen mit dem Anteil
-alle Ortsdaten des Kontos verloren (`KP_PRIVAT_RE` weist `edka1:` ab). Der
+alle Ortsdaten des Kontos verloren (`KP_PRIVAT_RE` weist `edka2:` ab). Der
 öffentliche Teil (`kp_oeffentlich`) ist nicht geheim, liegt aber
 **versiegelt**: nicht um ihn zu verbergen, sondern damit ihn niemand ohne
 den Serverschlüssel austauschen kann.
@@ -6688,7 +6674,7 @@ Die Bausteine im Einzelnen:
 | Patientenanzeige | `assets/patient.js` | Eine Entschlüsselungsschleife statt fünf; unterscheidet sichtbar „keine Angaben" von „nicht lesbar". `entschluessleListe()` wird seit Web 4.6.0 von allen Aufrufern benutzt (Tages-, Zeitraum- und Suchansicht, Export, Import-Abgleich, Backup-Lauf) und schreibt je Einsatz `_pat` und `_patState`. |
 | Migrationsschutz | `migration_lib.php` (`migrationen_inhalt_zaehlen()`) | Destruktive Migrationen tragen `zerstoert` (Klartext, was verlorenginge) und optional `inhalt` (Spalten, deren Inhalt die Ausführung blockiert — einzeln freigebbar, wenn die Daten gesichert sind). **Seit Web 21.0.0 dazu `vorbedingung`** (P5c/AP8, E-P5c-125): eine Funktion, die zählt, was die Migration unmöglich machte, und `vorbedingung_weg`, der eine Satz, wie man es herstellt. Sie sperrt **ohne Freigabe-Kennung** — kein Häkchen auf Betrieb → Updates, ein eigener Hinweis in `php update.php` —, weil ein `MODIFY … NOT NULL` über einer NULL-Zeile nichts freizugeben hätte. Eine blockierte Migration hält die Kette **nicht** an — sie hat nichts getan, anders als ein Fehler. |
 | Blockabfrage | `db.php` (`sql_in_bloecken()`) | Eine Abfrage je Tabelle statt einer je Datensatz, in Blöcken zu 1000 IDs. Benutzt von Export, Tagesansicht und Backup. Die Vorlage trägt `{IDS}` und ist **keine** Formatzeichenkette — ein Prozentzeichen im SQL bleibt ein Prozentzeichen. |
-| Formatkennung des Chiffretexts | `assets/crypto.js` (`CHIFFRE_PRAEFIX`), `validate_lib.php` (`PAT_BLOB_RE`, `WRAP_RE`) | `edk1:` vor jedem Chiffretext. Schreiben immer, Lesen großzügig (keine Kennung = erste Fassung), unbekannte Kennung wird als solche gemeldet. Betrifft `pat_blob` **und** beide Schlüsselhüllen — sie kommen aus derselben Funktion. |
+| Formatkennung des Chiffretexts | `assets/inhalt2.js` (`KENNUNG`), `validate_lib.php` (`WRAP_PRAEFIX_RE`, `pruef_pat_blob()`) | `edk2:` vor jedem Chiffretext, gebunden an Zweck und Bezug; eine andere Kennung wird als solche gemeldet (`kennung`). Betrifft `pat_blob` **und** beide Schlüsselhüllen. Bis Web 26 `edk1:` und Text ohne Kennung, seit Web 27.0.0 nicht mehr gelesen (KA-07). |
 | Rundenzahl der Ableitung | `db.php` (`KDF_ITER_ZIEL`, `KDF_ITER_LISTE`), `users.kdf_iter` | Je Konto gespeichert und gelesen, nicht angenommen. `deriveKeys()` verlangt sie als **Pflichtparameter ohne Vorgabewert** — ein Vorgabewert ließe jede vergessene Aufrufstelle stillschweigend mit dem alten Wert rechnen, und das fiele erst bei der nächsten Anhebung auf. Der Salz-Endpunkt nennt jeder Adresse dieselbe **Liste**, damit er nicht verrät, welche Konten es gibt. **Beim Anheben von `KDF_ITER_ZIEL` muss der bisherige Wert in `KDF_ITER_LISTE` stehen bleiben**, sonst kann sich kein Bestandskonto mehr anmelden; die Zeile „Schlüsselableitung" auf Betrieb → Status meldet diesen Zustand (rot, „Anmeldung blockiert"). |
 | Wiederherstellungsschlüssel | `assets/crypto.js` (`pruefeRecoveryCode()`) | Prüft Länge und Alphabet **vor** der Ableitung und unterscheidet Tippfehler von falschem Zettel. Ohne die Prüfung entsteht aus einer krummen Eingabe klaglos ein falscher Schlüssel, und die Meldung lautet in beiden Fällen „passt nicht". |
 | Passwortgüte | `assets/pwquality.js` | Mindestlänge im Skript statt nur als HTML-Attribut, Stärkeanzeige, Abgleich gegen häufige Passwörter. Seit Web 4.7.0 an allen fünf Stellen eingebunden: Erstvergabe, Zurücksetzen, Passwortwechsel, Backup-Passwort, Export-Archivpasswort. Vorher lag der Baustein ungenutzt neben `minlength`-Attributen. |
@@ -6845,16 +6831,16 @@ gebunden, und beide haben darum ein Riegelpaar:
 | Wert | Riegel im Erzeuger (`fixture/erzeugen.php`) | Riegel im Einspieler (`demo_fixture_laden()`) |
 |---|---|---|
 | `kdf_iter` | bricht ab, wenn das Konto nicht auf `KDF_ITER_ZIEL` steht (Backlog Nr. 155, Web 19.2.0) | weist eine Rundenzahl ab, die `KDF_ITER_LISTE` nicht mehr anbietet |
-| `pat_wrap_pw` / `pat_wrap_rc` | bricht ab, wenn eine der beiden nicht `edk1:` trägt (S10/AP5) | weist sie ab — `huelle_pw_pruefen($wrap, istDemo: true)` und `huelle_rc_pruefen()`, Web 20.2.1 |
+| `pat_wrap_pw` / `pat_wrap_rc` | bricht ab, wenn eine der beiden nicht `edk2:` trägt (S10/AP5; bis Web 26 auch `edk1:`) | weist sie ab — `huelle_pw_pruefen($wrap, istDemo: true)` und `huelle_rc_pruefen()`, Web 20.2.1 |
 
-**Warum die Hüllen `edk1:` bleiben müssen.** Seit S10 hängt der
+**Warum die Hüllen `edk2:` (ohne Anteil) bleiben müssen.** Seit S10 hängt der
 Datenschlüssel am Server-Anteil aus `config.php`, und den würfelt
 `install.php` je Installation neu. Eine Hülle mit Anteil
-(`edka1:<kennung>:`) lässt sich nur dort öffnen, wo dieser Anteil steht. Das
+(`edka2:<kennung>:`) lässt sich nur dort öffnen, wo dieser Anteil steht. Das
 Demo-Konto bekommt bauartbedingt **gar keinen** (E-P1-19/E-S10-06):
 `KONTO_ANTEILE` ist für es `null`, `ANTEIL_STAND` ist `'demo'`, und
 `api/kdf_upgrade.php` überspringt es. `EdCrypto.datenschluessel()` wirft bei
-einer `edka1:`-Hülle ohne Anteil ausdrücklich, statt auf die PBKDF2-Hälfte
+einer `edka2:`-Hülle ohne Anteil ausdrücklich, statt auf die PBKDF2-Hälfte
 zurückzufallen — ein Rückfall ergäbe einen Schlüssel, der nicht passt, und der
 Fehlschlag sähe aus wie ein falsch getipptes Passwort.
 
@@ -9047,8 +9033,8 @@ Drei Feinheiten, die je einen Betriebsfall entscheiden:
   eine genannte. Während einer Anteilsrotation trägt die alte Hülle noch den
   alten Anteil — mit der zweiten wäre die Erneuerung für jedes Konto
   gescheitert, das sich seither nicht angemeldet hat.
-- `encrypt()` und **nicht** `huelleBauen()`: `pat_wrap_rc` hängt **nicht** am
-  Server-Anteil (E-S10-04). Der Server weist eine `edka1:`-Hülle zusätzlich ab
+- Art `rc` und **nicht** `pw`: `pat_wrap_rc` hängt **nicht** am
+  Server-Anteil (E-S10-04). Der Server weist eine `edka2:`-Hülle zusätzlich ab
   (`huelle_rc_pruefen()`).
 - **Das Passwort wird verlangt, obwohl die Sitzung steht.** Nicht wegen der
   Verschlüsselung — eine entsperrte Sitzung hätte den ck bereits —, sondern
@@ -9612,7 +9598,7 @@ Anmeldung, für jedes Konto mit Inhaltsschlüssel außer dem Demo-Konto
 Auflösen des Vormerkfachs das Anmelde-Token (nach einer stillen Anhebung das
 neue) und gibt es, sobald der Inhaltsschlüssel da ist, mit ihm an
 `EdRueckweg.anlegen()`: WebCrypto erzeugt ein Paar auf P-256, der private
-Teil (PKCS8) wird mit `EdCrypto.encrypt(ck, …)` zu `edk1:`, beides geht an
+Teil (PKCS8) wird mit `EdInhalt.schreiben(ck, 'rw', …)` zu `edk2:` (bis Web 24 `EdCrypto.encrypt()`, `edk1:`), beides geht an
 `api/rueckweg_anlegen.php`. **Das Vormerkfach löst `unlock.js` dafür selbst
 auf**, wenn ein Paar fehlt — auch auf einer Seite, die den Schlüssel nicht
 braucht (F-RW-14: Die Startseite eines Kontos ohne Diensttag löste es nie);
@@ -9931,7 +9917,7 @@ jedes Konto ein **ECDH-Paar auf P-256**.
 | Stück | Wo | Was es ist |
 |---|---|---|
 | öffentlicher Teil | `users.kp_oeffentlich` | SPKI in Base64, **versiegelt** (`sk_versiegeln()`, Zweck `kontopaar|<id>`) |
-| privater Teil | `users.kp_privat` | PKCS8 unter dem Inhaltsschlüssel, `edk1:` (`KP_PRIVAT_RE`) |
+| privater Teil | `users.kp_privat` | PKCS8 unter dem Inhaltsschlüssel, `edk2:` mit Zweck `kp` (`KP_PRIVAT_RE`) |
 | Zeitpunkt | `users.kp_seit` | wann es entstand |
 | Bibliothek | `kontopaar_lib.php` | Siegel, Prüfung (P-256 über denselben Lader wie der Rückweg), Zustand, Ablegen, SEC1 für Geräte |
 | Endpunkt | `api/kontopaar.php` | `anlegen` (mit Passwortnachweis oder, für das erste Anlegen, der Anlegemarke der Sitzung), `abweichung` und — seit Web 22.0.4 — `oeffnen_fehler` |
@@ -10010,7 +9996,9 @@ oder ein Eingriff in die Datenbank (vertauschte oder veränderte Hülle).
 Zweck `kontopaar`); die Schlüsselwechselprobe zählt es mit.
 
 **Das Format der Gerätehülle** steht an einer Stelle, im Kopf von
-`tools/proben/huelle/referenz.py` (Fassung 1): Kennbyte, flüchtiger
+`tools/proben/huelle/referenz.py` — seit Web 27.0.0 nur noch Fassung 2
+(Kennbyte 2, Absenderkennung, zweites ECDH mit dem Schlüssel des Absenders;
+4.42). Die Fassung 1, von der dieser Abschnitt ausging: Kennbyte, flüchtiger
 öffentlicher Schlüssel (SEC1), IV, AES-256-CBC mit PKCS#7, HMAC-SHA256 über
 Kopf, Chiffretext und eine Bindung aus Art, `client_ref` und Platz. Ein
 flüchtiges Paar je Hülle, Innenform binär mit 14 Byte je Punkt, höchstens
@@ -10034,7 +10022,8 @@ löscht das Gerät. Angenommen wird:
 
 **Die Prüfschicht prüft die Form** (`pruef_huelle()` in `validate_lib.php`):
 Base64, Länge zwischen `GH_MIN_BYTE` und `GH_STUECK_MAX_BYTE` bzw.
-`GH_EINSATZ_MAX_BYTE`, Chiffretext ein Vielfaches von 16, Fassung 1,
+`GH_EINSATZ_MAX_BYTE`, Chiffretext ein Vielfaches von 16, seit Web 27.0.0
+nur Fassung 2 (`GH_MIN_BYTE` 138; bis Web 26 auch Fassung 1),
 unkomprimierter Punkt. Den Inhalt prüfen Gerät und Browser.
 
 **Die Regeln je Punkt gelten jetzt je Stück** (`spur2_*` in `spur_lib.php`):
@@ -10053,13 +10042,14 @@ Punkt, Höhe in ganzen Metern (bis 16.10.2026 Dezimeter, F-S11-64), `-32768`
 = keine; Einsatzhülle JSON mit Zeiten seit `started_at`. Die
 genaue Form steht im JSON-Vertrag 3.4.
 
-**Verschließen auf dem Server** (`geraetehuelle_lib.php`): für Proben und das
-Demo-Zurücksetzen (`gh_einsatz_verschliessen()`, `gh_stuecke_bauen()`,
-S11-06c; bis Web 22.7.0 dazu der direkte Rückweg einer Kontosicherung der
-Verwaltung, mit `gh_gepackt_bauen()` für eine ausgedünnte Spur), byte-gleich
-gegen die Prüfvektoren (Hüllenprobe, Teil Server). **Öffnen kann der Server nicht** — die Funktion gibt es dort
-nicht, nur im Prüfwerkzeug (`tools/proben/huelle/geraet.php`), mit dem die
-Proben wie ein Gerät senden und das Ergebnis nachlesen.
+**Verschließen kann der Server nicht mehr, öffnen konnte er nie** (seit Web
+27.0.0, KA-07). Bis Web 26 lag `geraetehuelle_lib.php` im Server — Fassung 1
+verschließen für Proben und das Demo-Zurücksetzen aus einer Klartext-Fixture
+(S11-06c; bis Web 22.7.0 dazu der direkte Rückweg einer Kontosicherung der
+Verwaltung). Seit KA-07 liegt sie unter `tools/proben/huelle/`, zusammen mit
+dem Prüfwerkzeug `geraet.php`, mit dem die Proben wie ein Gerät senden
+(Fassung 2, Probegerät oder Demo-Gerät mit festem Schlüssel) und das Ergebnis
+nachlesen.
 
 **Mitgeführt:** `spur_loeschen()`, Waisenjob, Kontingent (`spur_bytes()`) und
 Demo-Zurücksetzen zählen die Stücke mit. Ansichten (S11-04c), Export und
@@ -10173,10 +10163,9 @@ bindet Stufe und Marke: `seq_from:punkte:stufe:n_original`. Gemessen am
 Referenzbestand (F-S11-76): 4,40 Byte je Punkt gegen 14,40 ungepackt und 3,69
 in SPUR1; am Demo-Bestand nach dem ersten Lauf 4,56 (Einsätze, mit Hülle).
 Eine Umsetzung je Ort: `referenz.py` (`innen_gepackt()`) und `ortsdaten.js`
-(`gepacktBauen()`, Öffnen in `spur()`), dazu seit Web 23.8.0
-`gh_gepackt_bauen()` in `geraetehuelle_lib.php` **nur für den Demo-Reset**
-(4.21; bis Web 22.7.0 gab es sie schon einmal, für den direkten Rückweg einer
-Kontosicherung mit ausgedünnter SPUR1-Spur).
+(`gepacktBauen()`, Öffnen in `spur()`); von Web 23.8.0 bis 26 dazu
+`gh_gepackt_bauen()` in `geraetehuelle_lib.php` für den Demo-Reset aus einer
+Klartext-Fixture (4.21), seit KA-07 nur noch im Prüfwerkzeug.
 
 **Wo er läuft** (Mockup M-S11-02, Variante 1): **auf der Startseite still**,
 ein Durchgang je Aufruf, 1,5 s nach dem Laden, nur mit Schlüssel — er fragt nie
@@ -10323,7 +10312,23 @@ denen ein Angriff scheitert, stehen in `tools/proben/huelle/referenz.py`
 | `standbuch.js` (`EdStandbuch`) | Zählerstand je Datensatz in 16 Blättern und das Gerätebuch, Ablage in IndexedDB `nadoku-stand`, Abschrift auf dem Server über einen austauschbaren Transport; `zurueckschreiben()` nach einem zurückgesetzten Server |
 | `crypto.js` | Ableitung 2 (ein PBKDF2-Block, Hälfte und Token per HKDF) ab 1 200 000 Runden (`ABLEITUNG2_AB`); `huelleOeffnen()` für `edka2:` |
 
-**Der Stichtag (seit Web 26.0.0, 06e, KA-16 bis KA-23, E-KA-60, -93 bis
+**Seit Web 27.0.0 gibt es nur noch das neue Format (KA-07, E-KA-104 bis
+-109).** Server, Browser, Android 0.27.1 und Uhr 6.0.1 lesen keine
+Gerätehülle der Fassung 1 und keinen Block `edk1:`/`edka1:` mehr; Leser,
+die eine finden, melden `ohne-herkunft` bzw. `kennung`/`altformat`.
+Entfallen sind der Anhebelauf samt `api/format_anheben.php`, die Übernahme
+(`spur2_uebernahme_*`, `geraeteUebernehmen()`), `huelle_fassung1_zulassen()`,
+der Zweig `'server'` von `edbak_restore()` und der Demo-Reset aus einer
+Klartext-Fixture (nur noch Format 4); `geraetehuelle_lib.php` liegt nur noch
+unter `tools/proben/huelle/`. Ein Paket der Verwaltung lässt sich nur noch
+einspielen oder freigeben, wenn Web 27 oder später es angelegt hat
+(`edbak_paket_zu_alt()`, F-KA-136). Das Kennzeichen „Vom Browser übernommen“
+(`uebernommen`) bleibt lesbar, entsteht aber nicht mehr neu. Vor dem
+Rückbau lag auf Produktiv kein Datensatz mehr im alten Format (E-KA-104,
+SQL-Nachweis vom 19.11.2026; Staging zählt nicht, 12.5). Die folgenden drei
+Absätze beschreiben den Stand von Web 26.
+
+**Der Stichtag (Web 26.0.0 bis 26.x, 06e, KA-16 bis KA-23, E-KA-60, -93 bis
 -101).** Kein Schreibweg nimmt mehr eine Gerätehülle der Fassung 1 oder einen
 Block `edk1:` an (`pruef_huelle()`, `pruef_pat_blob()` → 400); die einzige
 Ausnahme schaltet `huelle_fassung1_zulassen()` für die Dauer eines Aufrufs:
@@ -10339,7 +10344,7 @@ keine älteren Geräte mehr (BetreiberIn, 17.11.2026). Eine Sicherung von vor We
 (`verlangt2` = das Paar trägt `ck`, E-KA-98); nur der Freigabeweg mit fremdem
 Paar liest weiter beide. Die Weiche ist zurückgebaut.
 
-**Die Übernahme (seit Web 26.0.0, KA-18, E-KA-95, -97).** Der Anhebelauf
+**Die Übernahme (nur Web 26, KA-18, E-KA-95, -97).** Der Anhebelauf
 (`unlock.js`, `geraeteUebernehmen()`) ist der letzte Leser der Fassung 1: Er
 holt über `api/format_anheben.php?geraete=1` Einsatzhüllen und Spuren mit
 Kennbyte 1 (`spur2_uebernahme_liste()`), verschließt sie als Konto mit dem
@@ -10418,7 +10423,7 @@ Fassung 2 an. **Das Ziel der Rundenzahl ist seit Web 25.0.0 1 200 000**
 Übergang, gemessen: Anmeldung des Demo-Kontos 1,0 bis 1,4 s in Chromium im
 Container); die stille Anhebung nach der Anmeldung hebt jedes Konto.
 
-**Der Anhebelauf** (seit Web 24.17.0, KA-06b-4, E-KA-40): still nach der
+**Der Anhebelauf** (Web 24.17.0 bis 26.x, KA-06b-4, E-KA-40; seit KA-07 entfallen): still nach der
 Anmeldung, nur mit umgelegter Weiche — seit Web 25.0.0 also für jedes
 Konto mit Altbestand (`formatAnheben()` in `unlock.js`,
 `api/format_anheben.php`). Er hebt Patientenblöcke (`edk1:` → `edk2:` mit
@@ -10526,11 +10531,12 @@ Schlüssel im Gerätebuch, `edk2:`-Blöcke, 16 geschlossene Blätter, Kontopaar,
 1 200 000 Runden. Der Reset (`demo_zuruecksetzen()`) schreibt Blätter,
 Gerätebuch und Geräteschlüssel mit und wechselt dabei den Inhaltsschlüssel;
 lesende Aufrufe von `api/standbuch.php` setzen die Änderungsmarke nicht.
-Formate 1 bis 3 lädt er weiter (die Bedienprobe des Anhebelaufs braucht
-Format 3, `tools/referenzdatensatz/fixture/alt/`).
-
-**Was noch nicht da ist:** der Stichtag für Fassung 1 und das Altformat der
-Gerätedaten (KA-06e, nach Web 25.0.0, E-KA-79).
+Seit Web 27.0.0 (KA-07) lädt er nur noch Format 4; die Fixture im Format 3
+für die Bedienprobe des Anhebelaufs ist mit ihm entfallen. **Neu gebaut
+wird der Bestand** über den Einspiellauf (`tools/referenzdatensatz/
+einspielen/`), seit KA-07 ganz in Fassung 2: die zwei Demo-Geräte mit dem
+festen Schlüssel aus `verschliessen.py`, gekoppelt mit Zusage, Vergleichswert
+und Eintrag ins Gerätebuch, dazu `edk2:` aus dem Werkzeug (Nr. 567).
 
 ## 5. Uhr-App (Monkey C) — Modulstruktur
 
@@ -10542,7 +10548,7 @@ Gerätedaten (KA-06e, nach Web 25.0.0, E-KA-79).
 | `Cpr.mc` | Rea-Timer app-weit (1-s-Tick), 2:00-Zyklus, Ereignisse, **persistenter Zustand** (übersteht Neustart); drei Zustände: aus / laufend / pausiert. **Seit Uhr 4.5.0** (KG-05): `buchen()` ist der eine Weg für Tasten und Menü — Sperre je Ereignisart (`SPERRE_MS`, nur im Speicher; seit Uhr 4.6.0 5 s, davor 10 s), Countdown-Neustart bei Rhythmuskontrolle und Defibrillation, Vibration; `restartCycle()` vibriert nicht mehr selbst; Erinnerungen bei 0:30 und 0:10 im Tick, nach einem Neustart nicht nachgeholt |
 | `Huelle2.mc` | **Seit Uhr 4.5.2** (KG-03a): Kern der Gerätehülle Fassung 2 nach der Referenz aus KA-06a — Gerätepaar (`Storage 'gpaar'`), Kennung SID, Z_s gegen den Kontoschlüssel (`'gzs'`), Spurstück mit 12-Byte-Kopf und Schlussstück, Einsatzhülle mit Zähler (`'gz'`), Zusage und Vergleichswert der Kopplung; Selbsttest gegen `HuelleVektor2.mc`. `Huelle.mc` gibt dafür `fertigen()`, `punkteInnen()` und `einsatzRumpf()` ab. **Seit Uhr 5.0.0** (KG-03b) in Gebrauch: Die Kopplung erzeugt das Paar und rechnet den Wert (`Pair.mc`), gesendet wird Fassung 2, wenn der Server bei der Kopplung `huelle: 2` gesagt hat (`Uploader.fassung2()`); bis Uhr 5.0.0 war der Zähler `z` die Unix-Sekunde des Verschließens (E-KA-64). **Seit Uhr 5.1.0** (KG-09, E-KA-69, -74) gehört `z` zum Inhalt: `inhaltZaehlen()` vergleicht den SHA-256 der Innenform ohne `z` (`inhaltHash()`) mit dem im Paket abgelegten (`'zh'`) und vergibt bei Abweichung `max(jetzt, gz + 1)` aus dem einen Gerätezähler `'gz'`, abgelegt mit dem Paket (`'z'`); gerufen von `Model.save()` für den laufenden Einsatz, von `_finishMission()` beim Abschluss und zur Sicherheit von `einsatz()` beim Verschließen (Pakete aus 5.0.0 ohne `z`) |
 | `Uploader.mc` | Job-Queue (fertige Einsätze → Segmente → aktive), Chunking ≤ 500, `next_seq`-Bestätigung, Purge inkl. Marken; `hasServer()`/`hasCredentials()`. **Seit Uhr 3.1.0** trennt `onResponse()` drei Fälle: eine Störung (später erneut), ein dauerhaft abgewiesenes Paket (Marke `bad_<ref>`, wird übersprungen) und ein abgemeldetes Gerät (`401`/`403` → `abgemeldet`, das Senden hält an). Siehe 5.4. **Seit Uhr 4.0.0** sendet er nur verschlossen (`track` mit `huelle`, `ort_huelle`, Phasen ohne Koordinate, keine `resus_sessions`) und ohne Kontoschlüssel oder bei gescheitertem Selbsttest gar nicht; die Marke `bad_<ref>` trägt den Zeitpunkt, `parkFristPruefen()` räumt nach `PARK_FRIST_S` = 30 Tagen (E-S11-11). **Seit Uhr 4.1.0** (R17-21): die Frist auch für „abgemeldet" (`Storage 'abgem_seit'`, Zeitpunkt der ersten 401/403; `abmeldeFristPruefen()` vor jedem Sendelauf verwirft danach alle wartenden Pakete, E-R17-22); das bestätigte Paket geht über seine Referenz aus der Liste, nicht über einen Listenplatz (F-R17-52); `http://` wird zu `https://` (F-R17-11); Zugangsdaten nur aus `Storage 'cred'` — der Alt-Weg über die App-Einstellungen ist fort (E-R17-21). **Seit Uhr 4.2.0** (Konzept GR): 401 → `abgemeldet`, 403 → `gesperrt` mit Grund aus dem Körper (`abweisungMerken()`, auch aus `Pair.onSchluessel`), beide halten an (`angehalten()`); `syncAllEinmalTrotz()` versucht es einmal trotz der Marke — beim Erscheinen der Sync-Seite und beim Dienstende, nicht im Zwei-Sekunden-Takt; 429/503/507 setzen `_nichtVor` (feste Zeiten `Const.WARTEN_*`, weil Connect IQ keine Kopfzeilen liefert), und vor ihm sendet kein Anlass. **Seit Uhr 4.3.0**: `bindungPruefen()` vor jedem Sendelauf löst eine Bindung an denselben Schlüssel und verwirft nach Ablauf der Frist; `_findJob()` überspringt gebundene Pakete eines anderen Kontos (`istFremd()`), `fremdeZahl()` und `fremdeVerwerfen()` dienen der Sync-Seite. **Seit Uhr 4.4.0** (KG-01, Nr. 570): `_findJob()` prüft auch den laufenden Einsatz und das laufende Ruhestück auf `istFremd()`; `binden()` nimmt sie mit (`laufendeRefs()`), `fremdeVerwerfen()` verwirft sie nie und lässt ihre Bindung stehen; **seit Uhr 4.5.1** (KG-06) gilt eine 401/403 nur mit dem Fehlerfeld des Vertrags als Abmeldung oder Sperre (`vertragsAbweisung()`, auch für `Pair.onSchluessel`), sonst als Störung, und `abmeldeFristPruefen()` lässt nach Ablauf der Frist zuerst einen Versuch hinaus (`Storage 'abgem_versucht'`); `onResponse()` quittiert höchstens `seq_from` plus die gesendeten Punkte und nichts ohne `next_seq` (F-KA-18); ein unquittiertes Stück steht mit Anfang und Größe in `Storage 'stk_<ref>'` und wird identisch wiederholt (F-KA-07). **Seit Uhr 5.0.0** (KG-03b): `fassung2()` — Merker `Storage 'h2'` aus der Kopplung, Gerätepaar und bestandener Selbsttest der Fassung 2, der in `syncAll()` in einem eigenen Schritt läuft; dann `_verschliessen2()`: Merker SCHLUSS am Stück, das alle offenen Punkte einer abgeschlossenen Aufzeichnung trägt, sonst das leere Schlussstück (`<seq>:0`, `ts_von` = Ende aus dem Paket), Einsatzhülle mit Zähler. Ohne Merker Fassung 1. **Seit Uhr 5.1.0** (KG-10, E-KA-80, -86): Mit Merker, aber ohne gültiges Gerätepaar (`:paar`) oder mit gescheitertem Selbsttest der Fassung 2 (`:selbsttest`) sendet er nicht (`herkunftFehlt()`, in `syncAll()` und vor dem Verschließen) — bis 5.0.0 fiel er auf Fassung 1 zurück. **Seit Uhr 6.0.0** (06e, KA-22): auch ohne Merker nicht (`:paar`, Sync-Seite „Neu koppeln“), der Zweig der Fassung 1 ist entfernt; `Pair.mc` beginnt keine Kopplung ohne Gerätepaar und bricht bei `400 schluessel` und bei `beansprucht` ohne N_b ab. Probe: `tools/uhr-pruefstand/sendeweg/` |
-| `Huelle.mc` | **Seit Uhr 4.0.0** (S11-08): die Gerätehülle (Format: Kopf von `tools/proben/huelle/referenz.py`) — Bausteine aus der Krypto-Probe, `spurstueck()` (14 Byte je Punkt), `einsatz()` (JSON, Zeiten seit Beginn), Kontoschlüssel in `Storage 'kschl'`, Selbsttest `bereit()` gegen `HuelleVektor.mc` (erzeugt, Fall „kurz"): misst die Byteordnung des ECDH-Geheimnisses und das ganze Prüfwort, Ergebnis je Fassung und Firmware in `Storage 'kpruef'` (E-S11-30, -78) — **seit Uhr 4.1.0 nur `be` oder `le`**: „kaputt" gilt bis zum nächsten Start und wird dann neu gemessen, `pruefungVergessen()` beim Trennen (F-R17-53) |
+| `Huelle.mc` | **Seit Uhr 4.0.0** (S11-08): die Gerätehülle (Format: Kopf von `tools/proben/huelle/referenz.py`) — Bausteine aus der Krypto-Probe, `spurstueck()` (14 Byte je Punkt), `einsatz()` (JSON, Zeiten seit Beginn), Kontoschlüssel in `Storage 'kschl'`, Selbsttest `bereit()` gegen `HuelleVektor.mc` (erzeugt, Fall „kurz"): misst die Byteordnung des ECDH-Geheimnisses und das ganze Prüfwort, Ergebnis je Fassung und Firmware in `Storage 'kpruef'` (E-S11-30, -78) — **seit Uhr 4.1.0 nur `be` oder `le`**: „kaputt" gilt bis zum nächsten Start und wird dann neu gemessen, `pruefungVergessen()` beim Trennen (F-R17-53). **Seit Uhr 6.0.1** (KA-28) ohne Fassung 1: `verschliessen()`, `spurstueck()`, `einsatz()` und `HuelleVektor.mc` sind entfernt; `bereit()` misst die Byteordnung an Z_s des Falls „kurz" aus `HuelleVektor2.mc` (eine Schlüsselvereinbarung), die ganze Kette misst `Huelle2.bereit()` an demselben Fall. Was bleibt, sind Bausteine für `Huelle2.mc` und der Kontoschlüssel |
 | `Input.mc` | Eingabemodell: `ActionDelegate` übersetzt Tasten, Wischgesten und Langdrücke einmal zentral in Aktionen (s. Abschnitt 5.1); `TastenDelegate` ist die Basis der selbst gezeichneten Menüs und Warteseiten; `beruehrungVerwerfen()` setzt den Schalter `touchEnabled` um (seit Uhr 4.1.0, F-R17-68). **Seit Uhr 4.5.0**: `actUpKurz()`/`actDownKurz()` für den kurzen, selbst verfolgten UP/DOWN-Druck (Vorgabe: blättern), `halteAbbrechen()` vor jedem Seitenwechsel. **Seit Uhr 4.6.0** (KG-08, F-KG-18): Ein langer START öffnet Menüs schon nach 1 s Halten; `startUnten()` sagt der Seite, dass START noch unten ist, sie ruft `startGehalten()` am Menü-Delegate, und `TastenDelegate` verwirft das eine Loslassen samt dem `onSelect`, das der Simulator dabei trotzdem zustellt (`auswahlVerwerfen()`, F-KG-19). Ein neuer Druck auf START im Menü hebt den Merker auf. Von 4.5.0 bis 4.5.2 wartete die Seite stattdessen auf das Loslassen (`langNachLoslassen()`, F-KG-08) |
 | `DeviceProfile.mc` | je Profil eine eigene Fassung in `source-tasten5/` bzw. `source-tasten3/`; liefert `HAS_UP_DOWN` und die Bedienhinweise |
 | `Util.mc` | Zeit, Formate, Vibration; **seit Uhr 4.5.0** die Muster der Reanimation `reaKurz(n)`/`reaLang(n)` (100 %, je eines in einem Aufruf, E-KG-11 bis -13) |
@@ -11310,8 +11316,10 @@ Kurvengleichung des Kontoschlüssels selbst, weil `KeyFactory` es nicht tut;
 neben Kennung und Geräteschlüssel; `Kopplungsdienst` legt ihn bei `bestaetigen`
 und `status` ab, und fehlt er, holt `Sender` ihn vor dem ersten Stück über
 `schluesselHolen()` nach (E-S11-80). Ohne Schlüssel sendet der Lauf nichts
-und meldet `ohneSchluessel`. Die Prüffälle (`GeraetehuelleTest`) lesen die
-Vektoren aus `tools/proben/huelle/vektoren.json` selbst. **Der Ingest ist geräteneutral und bleibt es** — er sieht ein Gerät mit Kennung und
+und meldet `ohneSchluessel`. Die Prüffälle (`Geraetehuelle2Test`) lesen die
+Vektoren aus `tools/proben/huelle/vektoren-2.json` selbst; die Fassung 1 und
+mit ihr `vektoren.json` sind seit Android 0.27.1 aus der App gestrichen
+(KA-27). **Der Ingest ist geräteneutral und bleibt es** — er sieht ein Gerät mit Kennung und
 API-Schlüssel und weiß nicht, ob dahinter Monkey C oder Kotlin steckt. Die
 Kennungspräfixe unterscheiden die Quellen (`am-`/`ar-`/`ad-` für das Handy,
 `wm-` für die Wear-OS-Uhr); sie stehen seit Vertragsfassung 1.4 im
@@ -14085,7 +14093,7 @@ Web 23.1.0 gab, ist damit zu. *Was zu tun ist:*
 2. Die BetreiberIn setzt ihr Passwort über **„Passwort vergessen"** neu —
    Mail an die eigene Adresse, im Browser der Wiederherstellungsschlüssel.
    Der neue Hash entsteht ohne Pfeffer, weil kein Anteil ausgeliefert wird;
-   die neue Hülle ohne Anteil (`edk1:`).
+   die neue Hülle ohne Anteil (`edk2:`).
 3. Anmelden, **Betrieb → Server → Schlüssel → „Nachtragen vom Blatt"**: den
    Anteil vom Schlüsselblatt eintragen. Er wird gegen die Kennung in
    `app_state` geprüft, bevor etwas geschrieben wird.
@@ -14917,7 +14925,7 @@ Rechner, nicht im selben Backup:
    mehr zu öffnen** (nicht verschmerzbar).
 3. **Der Server-Anteil** darin (`'kdf_anteil' => '…'`, 64 Hexzeichen; seit
    Web 19.7.0, S10). Er geht in den Datenschlüssel **jedes Kontos** ein.
-   **Ohne ihn** lässt sich keine `edka1:`-Hülle mehr öffnen — und zwar für
+   **Ohne ihn** lässt sich keine `edka2:`-Hülle mehr öffnen — und zwar für
    alle gleichzeitig. **Es ist trotzdem kein Datenverlust:** `pat_wrap_rc`
    hängt nicht am Anteil, jede NutzerIn kommt über den
    Wiederherstellungsschlüssel wieder herein und setzt dabei ihr Passwort
@@ -15040,7 +15048,7 @@ Hüllen gebaut wurden" (seit Web 19.7.0, S10).** Das ist die Lage *abweichend*:
 `config.php` trägt einen anderen `kdf_anteil` als den, dessen Kennung in
 `app_state.kdf_anteil_kennung` steht — oder gar keinen. Die Anwendung läuft
 weiter, **es ist kein Wartungsmodus**; nur der Anteil wird nicht ausgeliefert,
-und Konten mit `edka1:`-Hülle kommen nicht an ihre geschützten Angaben.
+und Konten mit `edka2:`-Hülle kommen nicht an ihre geschützten Angaben.
 
 *Reihenfolge:*
 1. Betrieb → **Status**, Zeile „Server-Anteil". Sie nennt die **erwartete**
@@ -15058,7 +15066,7 @@ und Konten mit `edka1:`-Hülle kommen nicht an ihre geschützten Angaben.
 *Was ausdrücklich **nicht** passiert:* „Passwort falsch". Die Meldung
 unterscheidet gegenüber der NutzerIn nicht zwischen „fehlt" und „anderer
 Wert" (dieselbe Linie wie `sk_oeffnen()`); den Unterschied sieht die
-BetreiberIn auf Status und Karte. Konten mit `edk1:`-Hülle — darunter das
+BetreiberIn auf Status und Karte. Konten mit `edk2:`-Hülle ohne Anteil — darunter das
 Demo-Konto — sind von alledem nicht betroffen und melden sich weiter an.
 
 **Zeile „Schlüsselableitung" auf Betrieb → Status (seit Web 5.0.1; bis

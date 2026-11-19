@@ -76,6 +76,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                              . 'Bitte die Administration verständigen.'], 500);
     }
     $fassung = (int)($paket['version'] ?? 1);
+    $zuAlt = edbak_paket_zu_alt($paket);
+    if ($zuAlt !== null) {
+        json_out(['error' => 'fassung_alt', 'meldung' => $zuAlt], 409);
+    }
 
     /* Kein eigenes `header('Cache-Control: no-store')`: `json_roh_out()`
      * setzt den Satz, und `json_out()` unten geht durch sie. */

@@ -1,7 +1,9 @@
 """Die Schluesselhuelle eines Kontos auf eine bestimmte Fassung stellen.
 
 WOZU. Der Umstellungslauf (`umstellungslauf.mjs`) misst, ob der Browser eine
-`edk1:`-Huelle beim Anmelden von selbst auf `edka1:` umstellt. Das laesst sich
+`edk2:`-Huelle ohne Anteil beim Anmelden von selbst auf `edka2:` umstellt.
+(Bis Web 26 hiessen die beiden `edk1:` und `edka1:`; seit KA-07 gibt es nur
+noch die gebundene Fassung.) Das laesst sich
 GENAU EINMAL messen — danach ist das Konto umgestellt, und der zweite Lauf
 misst nur noch, dass nichts mehr passiert. Ein Pruefmittel, das beim zweiten
 Aufruf etwas anderes misst als beim ersten, ist keines.
@@ -20,8 +22,8 @@ zu tun.
 **Gegen eine Testinstallation fahren, nicht gegen den Produktivserver.**
 
 Aufruf:
-  python3 tools/proben/anteil/huelle_stellen.py <konto> <passwort> edk1|edka1
-  python3 tools/proben/anteil/huelle_stellen.py umlauf-csv@example.invalid … edk1
+  python3 tools/proben/anteil/huelle_stellen.py <konto> <passwort> edk2|edka2
+  python3 tools/proben/anteil/huelle_stellen.py umlauf-csv@example.invalid … edk2
   (Basisadresse ueber die Umgebungsvariable BASIS, Vorgabe https://127.0.0.1:8443)
 
 Rueckgabewert: 0 = die Huelle steht auf der gewuenschten Fassung, 1 = nicht.
@@ -55,8 +57,8 @@ def main() -> int:
         print(__doc__)
         return 2
     konto, passwort, fassung = sys.argv[1], sys.argv[2], sys.argv[3]
-    if fassung not in ("edk1", "edka1"):
-        print(f"Unbekannte Fassung {fassung!r} — erlaubt: edk1, edka1")
+    if fassung not in ("edk2", "edka2"):
+        print(f"Unbekannte Art {fassung!r} — erlaubt: edk2, edka2")
         return 2
     basis = os.environ.get("BASIS", "https://127.0.0.1:8443")
 
@@ -65,18 +67,18 @@ def main() -> int:
         print("Dieses Konto hat keine Schluesselhuelle — nichts zu stellen.")
         return 1
 
-    ist = "edka1" if krypto.huelle_kennung(s.wrap) else "edk1"
+    ist = "edka2" if krypto.huelle_kennung(s.wrap) else "edk2"
     if ist == fassung:
         print(f"{konto}: steht schon auf {fassung}: — nichts zu tun.")
         return 0
 
-    if fassung == "edka1":
+    if fassung == "edka2":
         if not s.anteil_kennung:
             print(f"{konto}: Diese Installation liefert keinen Server-Anteil aus "
-                  f"(ANTEIL_STAND {s.anteil_stand}) — edka1: ist nicht baubar.")
+                  f"(ANTEIL_STAND {s.anteil_stand}) — edka2: ist nicht baubar.")
             return 1
         kennung = s.anteil_kennung
-        dk = krypto.datenschluessel(s.haelfte, f"edka1:{kennung}:", s.anteile)
+        dk = krypto.datenschluessel(s.haelfte, f"edka2:{kennung}:", s.anteile)
     else:
         kennung = None
         dk = s.haelfte
@@ -86,7 +88,7 @@ def main() -> int:
     # GEGENPROBE VOR DEM SCHREIBEN: Die neue Huelle muss denselben
     # Inhaltsschluessel hergeben. Eine Huelle, die sich nicht oeffnen laesst,
     # kostet das Konto seine Daten — und zwar erst beim naechsten Anmelden.
-    if krypto.entschluesseln(neu, dk) != s.inhaltsschluessel:
+    if krypto.entpacken(neu, dk) != s.inhaltsschluessel:
         print("Die neu gebaute Huelle gibt einen ANDEREN Inhaltsschluessel her. "
               "Es wurde nichts geschrieben.")
         return 1

@@ -770,12 +770,14 @@ ließe sich in der Weboberfläche später nicht darstellen.
 
 ### 3.4 Die Gerätehülle — seit Web 22.0.1 (S11-04a)
 
-Das Format **Fassung 1** steht im Kopf von `tools/proben/huelle/referenz.py`,
-und nur dort; dort stehen auch die Prüfvektoren, gegen die Server, Browser,
-Uhr und Handy laufen. Kurz: Kennbyte `0x01` · flüchtiger öffentlicher
-Schlüssel (65 Byte, SEC1) · IV (16) · AES-256-CBC · HMAC-SHA256 (32), mit
-ECDH auf P-256 gegen den Kontoschlüssel aus der Kopplung (1a.3a) und HKDF.
-Übertragen als **Base64**.
+Das Format steht im Kopf von `tools/proben/huelle/referenz.py`, und nur
+dort; dort stehen auch die Prüfvektoren, gegen die Browser, Uhr und Handy
+laufen. **Seit Web 27.0.0 (KA-07) gilt nur noch Fassung 2** (Kennbyte
+`0x02`, unten). Die Fassung 1 bis Web 26 war kürzer: Kennbyte `0x01` ·
+flüchtiger öffentlicher Schlüssel (65 Byte, SEC1) · IV (16) · AES-256-CBC ·
+HMAC-SHA256 (32), mit ECDH auf P-256 gegen den Kontoschlüssel aus der
+Kopplung (1a.3a) und HKDF — ohne Absender, also von jedem baubar, der den
+öffentlichen Kontoschlüssel kennt. Übertragen als **Base64**.
 
 **Die Bindung** geht in die HMAC und steht nicht in der Hülle: Art,
 `client_ref` des Eigentümers und Platz. Wer öffnet, setzt sie aus dem
@@ -798,8 +800,8 @@ nur unter seiner eigenen Absenderkennung: den ersten 8 Byte von
 bestätigten Geräteschlüssel oder unter fremder Kennung → `400 payload`.
 **Fassung 1 (Kennbyte `0x01`) nimmt der Eingang seit Web 26.0.0 nicht mehr
 an** (Stichtag, 06e) → `400 payload` mit dem Grund „Fassung 1 ohne
-Herkunftsnachweis wird seit Web 26.0.0 nicht mehr angenommen — Gerät neu
-koppeln“.
+Herkunftsnachweis wird nicht mehr angenommen — Gerät neu koppeln“; seit Web
+27.0.0 liest sie auch kein Browser mehr.
 
 **Das leere Schlussstück** (nur Fassung 2): Ist beim Abschluss einer
 Aufzeichnung kein Punkt mehr offen, schickt das Gerät ein Stück mit

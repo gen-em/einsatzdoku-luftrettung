@@ -11,8 +11,17 @@ Handlauf umginge den Zweigschutz von `main`, den die alte Regel voraussetzt.
 Die Kette setzt an die Stelle des Zweigschutzes die ABSTAMMUNG: Ein
 `hotfix/*`-Commit zählt, wenn er vom Zeiger `produktion` abstammt — also von
 genau dem Stand, der heute ausgeliefert ist. Wer einen Hotfix baut, zweigt
-vom Ausgelieferten ab; wer etwas anderes unterschieben will, kann das nicht,
-ohne die Abstammung zu verlieren.
+vom Ausgelieferten ab.
+
+DIE ABSTAMMUNG BELEGT DEN AUSGANGSPUNKT, NICHT DEN INHALT (F-KA-43). Ein
+Commit, der vom Zeiger abstammt, kann darüber hinaus alles enthalten — wer
+auf den Zweig schreiben darf, schreibt auch dort. Was ein Hotfix ENTHAELT,
+halten die anderen Tore: Stufe 1 auf demselben Baum, Staging grün, die
+Freigabe der BetreiberIn. Die Abstammung verhindert nur, dass ein Stand aus
+einer anderen Linie — etwa ein ungemergter Stand neben `main` — auf dem
+Hotfix-Weg nach Produktiv kommt. (Bis KA-07 stand hier, wer etwas anderes
+unterschieben wolle, könne das nicht, ohne die Abstammung zu verlieren; das
+versprach mehr, als das Tor hält.)
 
 WARUM DAS HIER STEHT UND NICHT ALS `if` IM ARBEITSLAUF. Dieselbe Begründung
 wie beim Backup-Tor: Eine Bedingung, die eine Auslieferung

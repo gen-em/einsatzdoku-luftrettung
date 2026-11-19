@@ -1,6 +1,6 @@
 # Hüllenprobe
 
-Gerätehülle (Fassung 1 und 2) und Chiffretexte unter dem Inhaltsschlüssel (`edk2:`) gegen Prüfvektoren.
+Gerätehülle (Fassung 2) und Chiffretexte unter dem Inhaltsschlüssel (`edk2:`) gegen Prüfvektoren.
 **Anlass: Nr. 43 und 563** — Garmin, Android und Browser müssen dieselben Bytes schreiben.
 
 ## Aufruf
@@ -13,28 +13,28 @@ python3 tools/proben/huelle/referenz_inhalt.py erzeugen   # ebenso, für edk2
 
 ## Was es misst
 
-`referenz.py` ist die Referenz der Gerätehülle (Format im Kopf): Fassung 1 →
-`vektoren.json`, `Vektoren.mc`; Fassung 2 (Herkunft, Zeit, Zähler samt Rückweg, Stückfolge, Übernahme der Fassung 1,
-Vergleichswert der Kopplung) → `vektoren-2.json`, `Vektoren2.mc`, `HuelleVektor2.mc`. `referenz_inhalt.py`: `edk2:`,
-Standbuch, Gerätebuch, Ableitung → `vektoren-inhalt.json`. Jede Gegenlage
-(vertauscht, zurückgelegt, Zeit verschoben, Stück entfernt, ohne Geräteschlüssel)
-scheitert mit benanntem Grund. `probe_server.php` hält Fassung 1 dagegen, `probe.mjs`
-beide: Fassung 2 mit `pruefungen2.js` (`inhalt2.js`, `huelle2.js`, `standbuch.js`), einmal
-mit der Weiche wie ausgeliefert, einmal umgelegt; `--bestand <Ordner>` misst einen älteren
-Stand. Die Uhr: `pruefstand.sh kryptoprobe`. `geraet.php`, `*_cli.php`: Gerätehilfe.
+`referenz.py` ist die Referenz der Gerätehülle (Format im Kopf): Fassung 2 (Herkunft, Zeit,
+Zähler samt Rückweg, Stückfolge, Vergleichswert der Kopplung) → `vektoren-2.json`,
+`Vektoren2.mc`, `HuelleVektor2.mc`. `referenz_inhalt.py`: `edk2:`, Standbuch, Gerätebuch,
+Ableitung → `vektoren-inhalt.json`. Jede Gegenlage scheitert mit benanntem Grund, auch die
+erste Fassung (`ohne-herkunft`, `kennung`, `altformat`) — seit KA-07 nur noch als Gegenlage
+gebaut. `probe.mjs` misst die Seite mit `pruefungen2.js`; `--bestand <Ordner>` einen älteren
+Stand. `probe_server.php`: die Gerätehilfe in PHP gegen die Referenz. `geraet.php`,
+`*_cli.php`: Gerätehilfe der Proben. Die Uhr: `pruefstand.sh kryptoprobe`.
 
 ## Was es braucht
 
 Python mit `cryptography`, Node mit Playwright und einen Browser aus
-`/opt/pw-browsers`. Keine Anlage: Die Seite beantwortet die Probe selbst.
+`/opt/pw-browsers`. Keine Anlage: Die Seite beantwortet die Probe selbst. PHP mit
+`openssl`; `probe_server.php` bindet `server/db.php` ein und braucht deshalb eine
+`server/config.php` (für `kdf_haelfte()` aus `demo_lib.php`, keine Datenbankabfrage).
 
 ## Erwartete Zahl
 
-`referenz.py`: Selbstprobe **48 Fälle, 0 Fehlschläge** · Fassung 1 **6 geöffnet,
-8 Störungen** · Fassung 2 **47 geöffnet, 50 Gegenlagen, 5 Hinweise**, je 0 Abweichungen.
-`referenz_inhalt.py`: **28 Fälle, 0 Fehlschläge** · **26 geöffnet, 28 Gegenlagen**.
-Server **22** (bis KA-06c stand hier 18 — überholt seit KA-06b-3) · Browser **606 Prüfungen** (39 + 271 Weiche aus + 296 an), 0 Abweichungen, 0 ausgenommen (15.11.2026, KA-10; bis KA-09 450 mit 156 ausgenommen) · `ortsdaten_probe.mjs` **17 Prüfungen**, 0 Abweichungen (Rückweg über `EdOrtsdaten`, Weiche nur in der Seite an).
+`referenz.py`: Selbstprobe **45/0** · Fassung 2 **46 geöffnet, 52 Gegenlagen, 5 Hinweise**.
+`referenz_inhalt.py`: **29/0** · **24 geöffnet, 34 Gegenlagen**. PHP **18** · Browser **302**,
+0 ausgenommen · `ortsdaten_probe.mjs` **21** — je 0 Abweichungen (19.11.2026, KA-26).
 
 ## Was es nicht kann
 
-Fassung 2: Referenz und Browser, Geräte und PHP folgen. Die Vektoren belegen das Format, nicht den Entwurf.
+Die Vektoren belegen das Format, nicht den Entwurf. Ob Garmin und Android dieselben Bytes schreiben, messen die Krypto-Probe und die Android-Prüffälle, nicht diese Probe.

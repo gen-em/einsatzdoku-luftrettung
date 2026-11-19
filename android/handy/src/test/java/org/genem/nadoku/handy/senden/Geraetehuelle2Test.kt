@@ -273,8 +273,10 @@ class Geraetehuelle2Test {
             v.getJSONObject("geraete").getJSONObject("uhr").getString("sid_hex") to paar("uhr").spk,
             v.getJSONObject("geraete").getJSONObject("handy").getString("sid_hex") to paar("handy").spk,
         )
-        val stoerungen = liste("stoerungen").filter { !it.getBoolean("verlangt2") }
-        assertEquals(13, stoerungen.size)
+        // Seit KA-07 scheitert jede Störung, auch die Hülle der Fassung 1 (am
+        // Kennbyte); den Merker `verlangt2` hat die Referenz nicht mehr.
+        val stoerungen = liste("stoerungen")
+        assertEquals(14, stoerungen.size)
         for (s in stoerungen) {
             val h = b64(s.getString("huelle_b64"))
             val ging = runCatching {

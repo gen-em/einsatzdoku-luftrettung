@@ -141,8 +141,8 @@ print(f"Anteilprobe, Teil E — {BASIS}")
 
 # DIE VORAUSSETZUNG WIRD HERGESTELLT, NICHT VORAUSGESETZT.
 #
-# E4 bis E6 messen die Umstellung einer `edk1:`-Huelle. Steht das Konto schon
-# auf `edka1:` — und das tut es nach jedem Lauf dieser Datei, nach dem
+# E4 bis E6 messen die Umstellung einer `edk2:`-Huelle. Steht das Konto schon
+# auf `edka2:` — und das tut es nach jedem Lauf dieser Datei, nach dem
 # Umstellungslauf und nach jedem Anmelden im Browser —, dann antwortet der
 # Endpunkt mit 'nicht_noetig', und der Lauf meldet 11 offene Erwartungen, die
 # in Wahrheit nur eine falsche Ausgangslage sind. Genau so schon gelesen:
@@ -151,7 +151,7 @@ print(f"Anteilprobe, Teil E — {BASIS}")
 # `huelle_stellen.py` kann das rueckwaerts; hier wird es aufgerufen statt
 # nachgebaut, damit es EINE Umsetzung bleibt.
 _stellen = subprocess.run(
-    [sys.executable, str(HIER / "huelle_stellen.py"), ADMIN, ADMIN_PW, "edk1"],
+    [sys.executable, str(HIER / "huelle_stellen.py"), ADMIN, ADMIN_PW, "edk2"],
     capture_output=True, text=True, env={**os.environ, "BASIS": BASIS})
 print("  Ausgangslage: " + (_stellen.stdout.strip().splitlines() or ["(stumm)"])[-1])
 if _stellen.returncode != 0:
@@ -180,8 +180,8 @@ try:
     # ein Befund entstanden: 22 von 33, ohne dass an der Anwendung etwas
     # fehlte. Eine Voraussetzung, die nur als Meldung dasteht, ist keine.
     teil("E0. Die Ausgangslage")
-    pruefe("huelle_stellen.py hat die Huelle auf `edk1:` gestellt",
-           bool(wrap_vorher) and wrap_vorher.startswith("edk1:"), True)
+    pruefe("huelle_stellen.py hat die Huelle auf `edk2:` gestellt",
+           bool(wrap_vorher) and wrap_vorher.startswith("edk2:"), True)
 
     teil("E1. Die Seite liefert Anteil und Kennung")
     pruefe("ANTEIL_STAND ist 'bereit'", s.anteil_stand, "bereit")
@@ -198,7 +198,7 @@ try:
     alt_token = krypto.ableiten(ADMIN_PW, salz, int(iter_vorher))[1]
     chk = hashlib.sha256(("edk-ckchk:" + ck).encode()).hexdigest()[:32]
 
-    dk_neu = krypto.datenschluessel(s.haelfte, f"edka1:{kennung}:", s.anteile)
+    dk_neu = krypto.datenschluessel(s.haelfte, f"edka2:{kennung}:", s.anteile)
     huelle_neu = krypto.huelle_bauen(ck, dk_neu, kennung)
 
     def ruf(koerper: dict):
@@ -246,8 +246,8 @@ try:
     pruefe("HTTP-Status", r.status_code, 200)
     pruefe("ok", antwort(r).get("ok"), True)
     pruefe("die Antwort nennt die neue Kennung", antwort(r).get("huelle"), kennung)
-    pruefe("die Huelle traegt jetzt das edka1-Praefix",
-           feld("pat_wrap_pw", uid).startswith(f"edka1:{kennung}:"), True)
+    pruefe("die Huelle traegt jetzt das edka2-Praefix",
+           feld("pat_wrap_pw", uid).startswith(f"edka2:{kennung}:"), True)
     pruefe("die Pruefsumme ist unveraendert", feld("pat_key_check", uid), chk_vorher)
     pruefe("die Rundenzahl ist unveraendert", feld("kdf_iter", uid).strip(), iter_vorher)
 
@@ -260,8 +260,8 @@ try:
     # Waere der Inhaltsschluessel danach ein anderer, waeren alle Daten des
     # Kontos verloren. Das ist die Zahl, auf die es ankommt.
     s2 = Sitzung(BASIS).anmelden(ADMIN, ADMIN_PW)
-    pruefe("die Seite liefert jetzt eine edka1-Huelle",
-           (s2.wrap or "").startswith("edka1:"), True)
+    pruefe("die Seite liefert jetzt eine edka2-Huelle",
+           (s2.wrap or "").startswith("edka2:"), True)
     pruefe("der Inhaltsschluessel ist derselbe", s2.inhaltsschluessel, ck)
 
     teil("E9. Ohne Formular-Token kommt nichts durch")
@@ -270,7 +270,7 @@ try:
     pruefe("HTTP-Status", r.status_code, 403)
     pruefe("Fehlerkennung", antwort(r).get("error"), "csrf")
 
-    teil("E10. Das Demo-Konto wird uebersprungen und bleibt auf edk1:")
+    teil("E10. Das Demo-Konto wird uebersprungen und bleibt auf edk2:")
     d = Sitzung(BASIS).anmelden(DEMO, DEMO_PW)
     pruefe("ANTEIL_STAND ist 'demo'", d.anteil_stand, "demo")
     # AM ROHTEXT DER SEITE gemessen, nicht am Ergebnis von `sitzung.py`: Jenes
@@ -283,8 +283,8 @@ try:
     pruefe("KONTO_ANTEILE steht als null in der Seite",
            roh.group(1).strip() if roh else "(fehlt)", "null")
     pruefe("ANTEIL_KENNUNG ist null", d.anteil_kennung, None)
-    pruefe("die Demo-Huelle traegt kein edka1-Praefix",
-           (d.wrap or "").startswith("edka1:"), False)
+    pruefe("die Demo-Huelle traegt kein edka2-Praefix",
+           (d.wrap or "").startswith("edka2:"), False)
     r = d.json_post("api/kdf_upgrade.php",
                     {"alt_token": "0" * 64, "neu_token": "0" * 64,
                      "neu_iter": 600000})

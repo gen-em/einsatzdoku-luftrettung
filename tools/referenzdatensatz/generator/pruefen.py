@@ -198,8 +198,8 @@ def main() -> int:
         "HKDF-SHA256 weicht vom Prueffall 1 aus RFC 5869 ab")
 
     # UND DIE BEIDEN HUELLENFASSUNGEN, jede in ihre eigene Richtung. Ohne
-    # Kennung muss `edk1:` herauskommen und der Datenschluessel die blosse
-    # PBKDF2-Haelfte sein; mit Kennung `edka1:<kennung>:` und ein ANDERER
+    # Kennung muss `edk2:` herauskommen und der Datenschluessel die blosse
+    # PBKDF2-Haelfte sein; mit Kennung `edka2:<kennung>:` und ein ANDERER
     # Schluessel. Waeren beide gleich, ginge der Anteil ins Leere, ohne dass
     # eine Zeile falsch aussaehe.
     _haelfte = os.urandom(32).hex()
@@ -207,18 +207,18 @@ def main() -> int:
     _kennung = hashlib.sha256(bytes.fromhex(_anteil)).hexdigest()[:8]
     _ck = os.urandom(32).hex()
     _alt = krypto.huelle_bauen(_ck, _haelfte, None)
-    lauf.pruefe(_alt.startswith("edk1:"), "Huelle ohne Anteil traegt nicht `edk1:`")
+    lauf.pruefe(_alt.startswith("edk2:"), "Huelle ohne Anteil traegt nicht `edk2:`")
     lauf.pruefe(krypto.datenschluessel(_haelfte, _alt, {}) == _haelfte,
                 "Ohne Anteil ist der Datenschluessel nicht die PBKDF2-Haelfte")
     lauf.pruefe(krypto.entpacken(_alt, _haelfte) == _ck,
                 "Huelle ohne Anteil geht nicht wieder auf")
-    _dkNeu = krypto.datenschluessel(_haelfte, f"edka1:{_kennung}:x",
+    _dkNeu = krypto.datenschluessel(_haelfte, f"edka2:{_kennung}:x",
                                     {_kennung: _anteil})
     lauf.pruefe(_dkNeu != _haelfte,
                 "Mit Anteil kommt derselbe Datenschluessel heraus wie ohne — "
                 "der Anteil geht ins Leere")
     _neu = krypto.huelle_bauen(_ck, _dkNeu, _kennung)
-    lauf.pruefe(_neu.startswith(f"edka1:{_kennung}:"),
+    lauf.pruefe(_neu.startswith(f"edka2:{_kennung}:"),
                 "Huelle mit Anteil traegt die Kennung nicht im Praefix")
     lauf.pruefe(krypto.entpacken(_neu, krypto.datenschluessel(
                     _haelfte, _neu, {_kennung: _anteil})) == _ck,
@@ -240,11 +240,11 @@ def main() -> int:
         g = f.get("geschuetzt")
         if not g:
             continue
-        chiffre = krypto.pat_blob(g, ck)
+        chiffre = krypto.pat_blob(g, ck, pfad.stem)
         if chiffre is None:
             continue
-        lauf.pruefe(chiffre.startswith("edk1:"), f"{pfad.name}: Chiffretext ohne Formatkennung")
-        zurueck = json.loads(krypto.entschluesseln(chiffre, ck))
+        lauf.pruefe(chiffre.startswith("edk2:"), f"{pfad.name}: Chiffretext ohne Formatkennung")
+        zurueck = json.loads(krypto.entschluesseln(chiffre, ck, "pat", pfad.stem))
         for schluessel in ("dx", "age", "dob", "mission_no", "site_desc", "notes"):
             wert = g.get(schluessel)
             if wert in (None, ""):

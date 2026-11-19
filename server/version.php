@@ -9007,4 +9007,17 @@ declare(strict_types=1);
  *   (F-KA-128). Hauptnummer, weil ein Format endet. KEIN SCHEMA;
  *   ausgeliefert erst nach dem Tag von 25.0.0, dem Anhebelauf auf Produktiv
  *   und dem Neukoppeln der Geraete (E-KA-93). */
-const WEB_VERSION = '26.0.0';
+/* 27.0.0 IST DIE HAUPTNUMMER DES RUECKBAUS (Schritt 28, Konzept KA, KA-07,
+ *   KA-24 bis KA-30; E-KA-104 bis -109). Das alte Format wird nicht mehr
+ *   gelesen: Server, Browser und Werkzeuge kennen nur noch `edk2:`/`edka2:`
+ *   und die Geraetehuelle der Fassung 2. Entfallen sind der Anhebelauf samt
+ *   `api/format_anheben.php`, die Uebernahme alter Geraetedaten, der Zweig
+ *   `'server'` der Wiederherstellung und der Demo-Reset aus einer
+ *   Klartext-Fixture; das Verschliessen in PHP lebt nur noch als
+ *   Probewerkzeug. Ein Paket der Verwaltung laesst sich nur einspielen oder
+ *   freigeben, wenn Web 27 es angelegt hat (F-KA-136). Der Rueckbau setzte
+ *   voraus, dass auf Produktiv nichts mehr im alten Format liegt — belegt
+ *   per SQL am 19.11.2026 (E-KA-104). Hauptnummer, weil Daten im alten
+ *   Format danach unlesbar sind. KEIN SCHEMA; nach dem Tag gleich ein neues
+ *   Konto-Backup je Konto anlegen lassen, aeltere Pakete gelten nicht mehr. */
+const WEB_VERSION = '27.0.0';

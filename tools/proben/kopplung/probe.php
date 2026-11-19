@@ -266,8 +266,8 @@ $kpPaar = static function (): string {
 $kpA = $kpPaar(); $kpB = $kpPaar();
 pruefe(kp_oeffentlich_pruefen($kpA) === null && kp_sec1($kpA) !== null,
        'K2  openssl-SPKI ist ein P-256-Schluessel, SEC1 65 Byte', (string)strlen((string)base64_decode((string)kp_sec1($kpA))));
-pruefe(kp_ablegen($pdo, $uid, $kpA, 'edk1:' . base64_encode(random_bytes(48))) === true
-       && kp_ablegen($pdo, $uid, $kpB, 'edk1:' . base64_encode(random_bytes(48))) === false,
+pruefe(kp_ablegen($pdo, $uid, $kpA, 'edk2:' . base64_encode(random_bytes(48))) === true
+       && kp_ablegen($pdo, $uid, $kpB, 'edk2:' . base64_encode(random_bytes(48))) === false,
        'K3  ablegen einmal ja, ein zweites Paar nein (kein Ersetzen)');
 $roh = (string)$pdo->query("SELECT kp_oeffentlich FROM users WHERE id = $uid")->fetchColumn();
 pruefe(sk_versiegelt($roh) && !str_contains($roh, substr($kpA, 30, 40)),
@@ -814,7 +814,7 @@ pruefe($zahl === $katalog,
        $zahl . ' von ' . $katalog);
 
 $s11 = start()['daten'];
-kp_ablegen($pdo, $uid2, $kpB, 'edk1:' . base64_encode(random_bytes(48)));   // beanspruchen verlangt ein Paar
+kp_ablegen($pdo, $uid2, $kpB, 'edk2:' . base64_encode(random_bytes(48)));   // beanspruchen verlangt ein Paar
 beanspruchen($pdo, (string)$s11['code'], $uid2, false);
 $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$uid2]);
 pruefe(sitzung($pdo, (string)$s11['device_id']) === null,

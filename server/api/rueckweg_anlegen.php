@@ -19,13 +19,13 @@ require_once __DIR__ . '/../demo_lib.php';
  *
  *   oeffentlich  der öffentliche Teil, SPKI in Base64 — darf jeder kennen
  *   privat       der private Teil (PKCS8), verpackt mit dem INHALTSSCHLÜSSEL
- *                (`edk1:`) — den der Server nicht kennt
+ *                (`edk2:`) — den der Server nicht kennt
  *   token        das Anmelde-Token: der Nachweis des Passworts
  *   ersetzen     1, wenn ein vorhandenes Paar ersetzt werden soll
  *
  * Prüfen kann der Server den öffentlichen Teil auf Form UND Kurve
  * (`rw_oeffentlich_pruefen()` lädt ihn und verlangt `secp256r1`) und den
- * privaten auf die Form (`RW_PRIVAT_RE`: nur `edk1:`, nie `edka1:` — der
+ * privaten auf die Form (`RW_PRIVAT_RE`: nur `edk2:`, nie `edka2:` — der
  * private Teil muss mit dem Wiederherstellungsschlüssel allein aufgehen, wie
  * `pat_wrap_rc`). Ob der private Teil zum öffentlichen GEHÖRT, kann er nicht
  * prüfen — er kann ihn nicht öffnen.

@@ -81,11 +81,10 @@
     /* `encrypt()` UND NICHT `huelleBauen()` — die Wiederherstellungs-Hülle
      * bekommt KEINEN Anteil. Sie ist der Rückweg für den Fall,
      * dass der Anteil verloren ist; hinge sie selbst daran, gäbe es keinen.
-     * Der Server weist eine `edka1:`-Hülle hier ohnehin ab — aber die
+     * Der Server weist eine `edka2:`-Hülle hier ohnehin ab — aber die
      * richtige Stelle, sie gar nicht erst zu bauen, ist diese. */
-    /* Seit KA-06b-3 über `EdInhalt.huelleSchreiben(…, 'rc')`: mit der
-     * Weiche an `edk2:` (Zweck `wrap`, Bezug `rc`), sonst `edk1:` wie
-     * bisher — eine Kennung nimmt die Art `rc` nie an. */
+    /* Über `EdInhalt.huelleSchreiben(…, 'rc')`: `edk2:` (Zweck `wrap`,
+     * Bezug `rc`) — eine Kennung nimmt die Art `rc` nie an. */
     const wrapRc = await EdInhalt.huelleSchreiben(rk, ck, 'rc', null);
 
     /* ---- 5: senden ------------------------------------------------------ */

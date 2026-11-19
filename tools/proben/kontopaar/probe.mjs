@@ -172,10 +172,13 @@ try {
     const priv = await EdKontopaar.privat(ck);
     const pub = EdKontopaar.oeffentlich();
     const klar = crypto.getRandomValues(new Uint8Array(500));
-    const h = await EdCrypto.geraetehuelleVerschliessen(klar, pub, 'spur', 'w-probe', '0:35');
-    const auf = await EdCrypto.geraetehuelleOeffnen(h, priv, pub, 'spur', 'w-probe', '0:35');
+    /* Fassung 2 (seit KA-07; bis dahin Fassung 1 über
+     * `EdCrypto.geraetehuelleVerschliessen`): Absender ist das Konto selbst. */
+    const abs = { privat: priv, spk: pub };
+    const h = await EdHuelle2.verschliessen2(klar, pub, abs, 'spur', 'w-probe', '0:35');
+    const auf = (await EdHuelle2.oeffnen2(h, priv, pub, () => pub, 'spur', 'w-probe', '0:35')).klar;
     let fremd = null;
-    try { await EdCrypto.geraetehuelleOeffnen(h, priv, pub, 'spur', 'w-anders', '0:35'); }
+    try { await EdHuelle2.oeffnen2(h, priv, pub, () => pub, 'spur', 'w-anders', '0:35'); }
     catch (e) { fremd = e.grund; }
     return { pass, gleich: auf.length === klar.length && auf.every((b, i) => b === klar[i]),
              fremd, meldungen: document.querySelectorAll('[data-kontopaar] .meldung-fehler').length,

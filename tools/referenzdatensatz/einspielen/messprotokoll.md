@@ -31,8 +31,8 @@ ankommt.
 | Teilstücke je Paket | 1 … 14 (Median 3) |
 | Pakete in mehreren Teilstücken | 197 |
 | Trackpunkte gesamt | 69306 |
-| Body-Größe | 453 … 10983 Bytes (Median 1564) |
-| Übertragen gesamt | 1.7 MB |
+| Body-Größe | 485 … 11091 Bytes (Median 1596) |
+| Übertragen gesamt | 1.8 MB |
 | **Fehlversuche** | **0** |
 | Anfragen mit verworfenen Einzelwerten (`rejected`) | 0 |
 | Anfragen mit übergangener Liste (`kept_*`) | 0 |

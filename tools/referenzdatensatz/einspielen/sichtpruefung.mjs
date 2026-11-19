@@ -91,7 +91,10 @@ pruefe(seite.url().includes('einsatz.php'), 'Einsatzseite nicht erreicht');
 
 const spurEinsatz = await seite.locator('#map svg path, .leaflet-overlay-pane path').count();
 pruefe(spurEinsatz > 0, 'Keine Spur auf der Einsatzkarte');
-const phasen = await seite.locator('#phasebody tr').count();
+/* Die Phasen stehen seit E-P3-33 als Zeilen `.phasen-zeile`, nicht mehr als
+   Tabellenzeilen — `#phasebody tr` fand nichts und meldete einen Befund, den
+   es nicht gab (gefunden in KA-07, Nr. 567). */
+const phasen = await seite.locator('#phasebody .phasen-zeile').count();
 pruefe(phasen > 0, 'Keine Phasenzeilen am Einsatz');
 
 // Geschützte Angaben: Der Browser hat den Schlüssel aus der Anmeldung im
@@ -105,9 +108,23 @@ pruefe(!gesperrt, 'Geschützte Angaben sind gesperrt, obwohl frisch angemeldet')
    gab. Geprüft wird beides: dass die Beschriftung da ist UND dass ein Wert
    darunter steht (die Beschriftung allein bewiese nur, dass die Seite
    gerendert hat, nicht dass entschlüsselt wurde). */
-const hatDiagnose = /diagnose\s*🔒/i.test(text);
-const wert = text.match(/diagnose\s*🔒\s*\n(.+)/i);
-const hatWert = !!(wert && wert[1].trim().length > 3);
+/* DAS SCHLOSS IST EIN SYMBOL, kein Zeichen (`dtGeschuetzt()`, `.lese-schloss`):
+   Ein Muster auf „🔒" im Text fand nichts mehr (gefunden in KA-07, Nr. 567).
+   Gesucht wird die Beschriftung MIT Schloss und der Wert daneben. */
+const diag = await seite.evaluate(() => {
+  /* Die Zeile ist `<dt>Symbol Diagnose</dt><dd>Wert</dd>`; gelesen wird nur
+     der Text der dt selbst, ohne den <title> des Symbols. */
+  for (const dt of document.querySelectorAll('.tagfeld > dt')) {
+    if (!dt.querySelector('.lese-schloss')) { continue; }
+    const eigen = [...dt.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join('').trim();
+    if (!/^diagnose$/i.test(eigen)) { continue; }
+    const wert = dt.nextElementSibling;
+    return { da: true, wert: wert ? wert.textContent.trim() : '' };
+  }
+  return { da: false, wert: '' };
+});
+const hatDiagnose = diag.da;
+const hatWert = diag.wert.length > 3;
 pruefe(hatDiagnose, 'Keine Diagnose-Beschriftung auf der Einsatzseite');
 pruefe(hatWert, 'Diagnose-Beschriftung ohne Wert — nicht entschlüsselt');
 await seite.screenshot({ path: `${ordner}/02-einsatz.png`, fullPage: false });
@@ -123,7 +140,7 @@ const ergebnis = {
   basis, titel, einsatzzeilen: zeilen, spuren_tag: spuren,
   spuren_einsatz: spurEinsatz, phasenzeilen: phasen,
   geschuetzt_lesbar: !gesperrt && hatDiagnose && hatWert,
-  diagnose_gelesen: wert ? wert[1].trim() : null,
+  diagnose_gelesen: diag.wert || null,
   kacheln, konsolenfehler: konsole, befunde,
 };
 writeFileSync(`${ordner}/ergebnis.json`, JSON.stringify(ergebnis, null, 2) + '\n');

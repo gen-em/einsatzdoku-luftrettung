@@ -55,17 +55,31 @@ function pruefe(bool $ok, string $was, string $wert = ''): void {
 
 echo "Spurprobe gegen $konto\n";
 
-/* ---- Teil 1 — Ausduennung ueber die Punkte der Demo-Fixture --------------- */
+/* ---- Teil 1 — Ausduennung ueber die Punkte der Referenzsicherung ---------- */
 
 echo "\n  Teil 1 — Ausduennung: haelt sie ihre Zusage? (E-S2-05)\n";
 
-/* DIE PUNKTE KOMMEN AUS DER LETZTEN FIXTURE IM ALTEN FORMAT (Format 3,
- * Stand e2e4d8f): Seit Web 25.0.0 trägt die ausgelieferte Fixture nur noch
- * verschlossene Hüllen der Fassung 2 (Format 4, KA-13), und der Server kann
- * sie nicht öffnen. Die Ausdünnung ist eine Rechnung über Punkte — welche
- * Fixture sie liefert, ändert an der Zusage nichts. */
-$altFixture = dirname(__DIR__, 2) . '/referenzdatensatz/fixture/alt/fixture-format3.json.gz';
-$fx = is_file($altFixture) ? demo_fixture_laden($altFixture)['daten'] : ['missions' => [], 'rest_segments' => []];
+/* DIE PUNKTE KOMMEN AUS DER REFERENZSICHERUNG (`tools/referenzdatensatz/
+ * referenz/`, verschlüsselt mit dem öffentlichen Demo-Passwort): Die ausgelieferte
+ * Fixture trägt seit Format 4 nur verschlossene Hüllen der Fassung 2, und der
+ * Server kann sie nicht öffnen. Bis Web 26.x kamen die Punkte aus der letzten
+ * Fixture im alten Format (Format 3), die mit KA-07 entfiel. Die Ausdünnung
+ * ist eine Rechnung über Punkte — welche Datei sie liefert, ändert an der
+ * Zusage nichts. Geöffnet wird mit `lesen.py`, demselben Leser wie im
+ * Kreislauf. */
+$refOrdner = dirname(__DIR__, 2) . '/referenzdatensatz/referenz';
+$refDatei = (glob($refOrdner . '/einsatzdoku-backup-*.edbak') ?: [''])[0];
+$fx = ['missions' => [], 'rest_segments' => []];
+if ($refDatei !== '') {
+    $py = 'import json,sys; sys.path.insert(0, sys.argv[1]); from lesen import lesen_edbak; '
+        . 'd = lesen_edbak(sys.argv[2], sys.argv[3]); '
+        . 'print(json.dumps({"missions": d.get("missions", []), "rest_segments": d.get("rest_segments", [])}))';
+    $aus = shell_exec('python3 -c ' . escapeshellarg($py) . ' '
+        . escapeshellarg(dirname(__DIR__, 2) . '/referenzdatensatz/vergleich') . ' '
+        . escapeshellarg($refDatei) . ' ' . escapeshellarg('nadokudemo0815') . ' 2>/dev/null');
+    $j = is_string($aus) ? json_decode($aus, true) : null;
+    if (is_array($j)) { $fx = $j; }
+}
 $spuren = [];
 foreach ($fx['missions'] ?? [] as $m) {
     if (!empty($m['track'])) {
@@ -81,7 +95,7 @@ foreach ($fx['rest_segments'] ?? [] as $r) {
     if (!empty($r['track'])) { $spuren[] = [$r['track'], []]; }
 }
 $alle = array_sum(array_map(static fn($s) => count($s[0]), $spuren));
-pruefe($alle > 0, 'Die Demo-Fixture traegt Punkte', count($spuren) . " Spuren, $alle Punkte");
+pruefe($alle > 0, 'Die Referenzsicherung traegt Punkte', count($spuren) . " Spuren, $alle Punkte");
 
 $dpPunkte = 0; $dpBehalten = 0; $dpVerletzt = 0; $dpErste = null;
 $dpMaxDauer = 0.0; $dpSpuren = 0;

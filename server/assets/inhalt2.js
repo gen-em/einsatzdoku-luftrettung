@@ -1,13 +1,12 @@
 /* Gen-EM NAdoku — Chiffretexte unter dem Inhaltsschlüssel, Fassung 2 (`edk2:`).
  *
  * ZWECK DIESER DATEI. Sie schreibt und liest den GEBUNDENEN Chiffretext und
- * die gebundenen Schlüsselhüllen, und sie trägt die eine Weiche, die das
- * Schreiben der Fassung 2 einschaltet. Format und Prüfvektoren stehen in
+ * die gebundenen Schlüsselhüllen. Format und Prüfvektoren stehen in
  * `tools/proben/huelle/referenz_inhalt.py` und nur dort; die Hüllenprobe
  * (`tools/proben/huelle/probe.mjs`) hält diese Datei byte-gleich dagegen.
  *
  * WAS DAS PROBLEM WAR (Audit KA, F-KA-04, Nr. 563). Ein Chiffretext der
- * Fassung 1 (`edk1:`, crypto.js) ist an nichts gebunden: AES-GCM ohne
+ * Fassung 1 (`edk1:`, bis Web 26.x in crypto.js) war an nichts gebunden: AES-GCM ohne
  * Zusatzdaten. Wer die Datenbank beschreiben kann, hängt den Patientenblock
  * eines Einsatzes an einen anderen, legt `kp_privat` an die Stelle von
  * `rw_privat` oder spielt den Block von gestern zurück — und alles geht
@@ -43,7 +42,8 @@
  * `edka2:`-Hülle für "rc" baut diese Datei nicht und öffnet sie nicht
  * (`kennung`) — sie wäre der Verlust genau dieses Rückwegs (CLAUDE.md 4).
  *
- * FASSUNG 1 BLEIBT LESBAR: `lesen()` und `huelleOeffnen()` nehmen beide.
+ * FASSUNG 1 IST NICHT MEHR LESBAR (seit Web 27.0.0, KA-07): `lesen()` und
+ * `huelleOeffnen()` weisen alles ohne `edk2:`/`edka2:` mit `kennung` ab.
  *
  * FEHLER tragen `.grund`, in dieser Reihenfolge geprüft:
  *   zweck      der Zweck steht nicht in der Liste
@@ -61,15 +61,16 @@ const EdInhalt = (() => {
 
   /* DIE WEICHE IST ZURÜCKGEBAUT (Web 26.0.0, 06e, KA-20). Von Web 24.13 bis
    * 24.19 stand hier `SCHREIBT_FASSUNG_2 = false`, mit Web 25.0.0 wurde sie
-   * umgelegt (KA-14). Seitdem schreibt jeder Weg Fassung 2; das alte Format
-   * liest nur noch der Anhebelauf (`unlock.js`, E-KA-97). Die Begründung,
+   * umgelegt (KA-14). Seitdem schreibt jeder Weg Fassung 2; seit Web 27.0.0
+   * (KA-07) liest auch niemand mehr das alte Format (`edk1:`, `edka1:`, Text
+   * ohne Kennung) — auf keiner Anlage liegt noch eines (E-KA-104). Die Begründung,
    * warum es eine Konstante im Skript war und kein Wert vom Server, steht in
    * der Git-Geschichte dieser Datei. */
 
   const T = EdCrypto.teile;
   const te = new TextEncoder();
-  const KENNUNG = 'edk2:', KENNUNG1 = 'edk1:';
-  const HUELLE_KENNUNG = 'edka2:', HUELLE_KENNUNG1 = 'edka1:';
+  const KENNUNG = 'edk2:';
+  const HUELLE_KENNUNG = 'edka2:';
   const ZWECKE = ['pat', 'kp', 'rw', 'wrap', 'stand', 'geraete'];
   const KLASSEN = [128, 256, 512, 1024, 2048, 4096];
   /* Ein Patientenblock hat mindestens 512 Byte innen: Ein fast leerer sieht
@@ -172,25 +173,6 @@ const EdInhalt = (() => {
     return { nutzlast: innen.slice(KOPF, KOPF + l), z: z };
   }
 
-  /**
-   * Öffnen, Fassung 1 — mit oder ohne Kennung, ohne Zusatzdaten, ohne
-   * Polster. Dasselbe wie `EdCrypto.decrypt()`, aber mit benanntem Grund.
-   * @returns {Promise<Uint8Array>}
-   */
-  async function oeffnen1Bytes(schluessel, text) {
-    if (typeof text !== 'string') { throw fehler('kennung'); }
-    if (text.indexOf(':') >= 0 && !text.startsWith(KENNUNG1)) { throw fehler('kennung'); }
-    const b = text.startsWith(KENNUNG1) ? text.slice(KENNUNG1.length) : text;
-    if (!B64.test(b)) { throw fehler('form'); }
-    const r = T.fromB64(b);
-    if (r.length < NONCE + TAG) { throw fehler('form'); }
-    const key = await T.aesSchluessel(schluessel, ['decrypt']);
-    try {
-      return new Uint8Array(await crypto.subtle.decrypt(
-        { name: 'AES-GCM', iv: r.slice(0, NONCE) }, key, r.slice(NONCE)));
-    } catch (e) { throw fehler('pruefwert'); }
-  }
-
   /** UTF-8 streng: Eine Nutzlast, die kein Text ist, ist `innen`. */
   function alsText(bytes) {
     try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); }
@@ -200,20 +182,17 @@ const EdInhalt = (() => {
   const istGebunden = text => typeof text === 'string' && text.startsWith(KENNUNG);
 
   /**
-   * LESEN, BEIDE FASSUNGEN — der Weg für `kp`, `rw` und jeden Text unter dem
-   * Inhaltsschlüssel, der keinen Zähler führt. Ein Patientenblock geht über
-   * `EdStandbuch` (`patLesen()`), weil erst das Standbuch sagt, ob er
-   * zurückgelegt wurde.
+   * LESEN — der Weg für `kp`, `rw` und jeden Text unter dem Inhaltsschlüssel,
+   * der keinen Zähler führt. Ein Patientenblock geht über `EdStandbuch`
+   * (`patLesen()`), weil erst das Standbuch sagt, ob er zurückgelegt wurde.
+   * Ein Text ohne `edk2:` ist `kennung` — das alte Format liest seit Web
+   * 27.0.0 niemand mehr.
    * @returns {Promise<{text: string, z: number, gebunden: boolean}>}
-   *          `gebunden: false` heißt Fassung 1 — an nichts gebunden.
    */
   async function lesen(schluessel, text, zweck, bezug) {
-    if (istGebunden(text)) {
-      const o = await oeffnenBytes(schluessel, text, zweck, bezug);
-      return { text: alsText(o.nutzlast), z: o.z, gebunden: true };
-    }
-    zusatzdaten(zweck, bezug);                 // der Zweck wird auch hier geprüft
-    return { text: alsText(await oeffnen1Bytes(schluessel, text)), z: 0, gebunden: false };
+    if (!istGebunden(text)) { zusatzdaten(zweck, bezug); throw fehler('kennung'); }
+    const o = await oeffnenBytes(schluessel, text, zweck, bezug);
+    return { text: alsText(o.nutzlast), z: o.z, gebunden: true };
   }
 
   /**
@@ -264,7 +243,7 @@ const EdInhalt = (() => {
   }
 
   /**
-   * Eine Hülle öffnen — BEIDE FASSUNGEN. Liefert den Inhaltsschlüssel (Hex).
+   * Eine Hülle öffnen (`edk2:`, `edka2:<k>:`). Liefert den Inhaltsschlüssel (Hex).
    * Den Schlüssel zur Anteil-Kennung hat der Aufrufer schon gebildet
    * (`EdCrypto.datenschluessel()`); hier wird sie nur gebunden geprüft.
    */
@@ -281,13 +260,8 @@ const EdInhalt = (() => {
                                'wrap', 'pw:' + kennung)).nutzlast;
     } else if (text.startsWith(KENNUNG)) {
       ck = (await oeffnenBytes(schluesselHex, text, 'wrap', art)).nutzlast;
-    } else if (text.startsWith(HUELLE_KENNUNG1)) {
-      if (art === 'rc') { throw fehler('kennung'); }
-      const ende = text.indexOf(':', HUELLE_KENNUNG1.length);
-      if (ende < 0) { throw fehler('kennung'); }
-      ck = await oeffnen1Bytes(schluesselHex, text.slice(ende + 1));
     } else {
-      ck = await oeffnen1Bytes(schluesselHex, text);
+      throw fehler('kennung');               // erste Fassung: seit Web 27.0.0 nicht mehr
     }
     const hex = alsText(ck);
     if (!CK_FORM.test(hex)) { throw fehler('innen'); }
@@ -303,8 +277,8 @@ const EdInhalt = (() => {
 
   return { lesen, schreiben, istGebunden,
            huelleBauen, huelleOeffnen, huelleSchreiben,
-           /* die Fassungen einzeln — für standbuch.js, den Anhebelauf und die Probe */
-           verschliessenBytes, oeffnenBytes, oeffnen1Bytes, alsText,
+           /* die Bausteine einzeln — für standbuch.js und die Probe */
+           verschliessenBytes, oeffnenBytes, alsText,
            zusatzdaten, klasse, istKlasse, fehler,
            KENNUNG, HUELLE_KENNUNG };
 })();

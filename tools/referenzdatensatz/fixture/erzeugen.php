@@ -19,7 +19,7 @@ declare(strict_types=1);
  *      Spurstuecke ueber `spur2_lesen_viele()` und die Blaetter des
  *      Standbuchs. Es oeffnet NICHTS — der Server hat dafuer mit Absicht
  *      keine Funktion.
- *   2. `verschliessen.py` oeffnet den Rohbestand (beide Fassungen, nach den
+ *   2. `verschliessen.py` oeffnet den Rohbestand (Fassung 2, nach den
  *      Regeln der Referenz in `tools/proben/huelle/`) und verschliesst ihn
  *      neu: Geraetehuelle Fassung 2 von den Demo-Geraeten mit festem
  *      Schluessel, `edk2:`, Standbuch, Geraetebuch, Kontopaar. Was dabei wer
@@ -97,17 +97,17 @@ if ($u['role'] !== 'user') {
  * Demo-Passwort, mit der Zahl, die hier mitgeht — die Fixture traegt das
  * Ziel, auf welcher Zahl das Konto auch steht. */
 
-/* DIE HUELLE DES KONTOS TRAEGT KEINEN ANTEIL (`edk1:`, `edk2:`), SONST ABBRUCH.
+/* DIE HUELLE DES KONTOS TRAEGT KEINEN ANTEIL (`edk2:`), SONST ABBRUCH.
  *
  * Der Datenschluessel haengt zusaetzlich am Server-Anteil aus
  * `config.php`. Eine Huelle, die damit gebildet wurde, traegt das Praefix
- * `edka1:<kennung>:` — und sie laesst sich nur auf DER Installation oeffnen,
+ * `edka2:<kennung>:` — und sie laesst sich nur auf DER Installation oeffnen,
  * deren Anteil diese Kennung hat.
  *
  * Die Fixture geht aber gerade NICHT dorthin zurueck, aus der sie stammt:
  * Sie liegt unter `server/demo/` und wird beim Deploy auf die
  * Produktivinstallation gelegt, die ihren eigenen Anteil fuehrt. Eine
- * `edka1:`-Huelle in der Fixture hiesse dort: Das Demo-Konto meldet sich an
+ * `edka2:`-Huelle in der Fixture hiesse dort: Das Demo-Konto meldet sich an
  * (der bcrypt-Hash passt), und danach laesst sich nichts oeffnen. Bei jedem
  * Reset aufs Neue, ohne Meldung.
  *
@@ -119,7 +119,7 @@ if ($u['role'] !== 'user') {
  *     REGULAEREN Weg — sie sagt nichts ueber eine Huelle, die jemand von Hand
  *     gesetzt hat oder die aus einem anderen Bestand stammt.
  *   - `huelle_pw_pruefen($wrap, istDemo: true)` in `serverkrypto_lib.php`
- *     weist eine `edka1:`-Huelle fuer das Demo-Konto ab. Das greift auf den
+ *     weist eine `edka2:`-Huelle fuer das Demo-Konto ab. Das greift auf den
  *     SCHREIBWEGEN der Anwendung — der Demo-Reset in `demo_lib.php` schreibt
  *     mit eigenem SQL und kommt dort nicht vorbei.
  *
@@ -134,22 +134,22 @@ if ($u['role'] !== 'user') {
  * nimmt dem Demo-Konto genau den. Zwei Zeilen, die nie zuschlagen sollten —
  * das ist der Sinn eines Riegels.
  *
- * DER RIEGEL STEHT VOR JEDEM OEFFNEN. Eine `edka1:`-Huelle laesst sich mit
+ * DER RIEGEL STEHT VOR JEDEM OEFFNEN. Eine `edka2:`-Huelle laesst sich mit
  * `DEMO_PASSWORT` allein nicht oeffnen; stuende das Oeffnen davor, kaeme die
  * Meldung „Passwort passt nicht" statt der, die den Grund nennt. */
 foreach (['pat_wrap_pw' => 'Schluesselhuelle',
           'pat_wrap_rc' => 'Wiederherstellungs-Huelle'] as $spalte => $name) {
     $huelle = (string)($u[$spalte] ?? '');
     if ($huelle === '') { continue; }
-    if (!str_starts_with($huelle, 'edk1:') && !str_starts_with($huelle, 'edk2:')) {
+    if (!str_starts_with($huelle, 'edk2:')) {
         abbruch(sprintf(
-            "ABBRUCH: Die %s von %s traegt `%s`, erwartet ist `edk1:` oder `edk2:`.\n"
+            "ABBRUCH: Die %s von %s traegt `%s`, erwartet ist `edk2:`.\n"
           . "Die Fixture wird auf einer Installation mit einem ANDEREN\n"
           . "Server-Anteil eingespielt; eine Huelle mit Anteil ist dort nicht zu\n"
           . "oeffnen. Das Demo-Konto kaeme herein und saehe nichts.\n"
           . "Weg zurueck: Passwort des Demo-Kontos im Browser neu setzen,\n"
           . "solange `config.php` KEINEN `kdf_anteil` fuehrt -- oder\n"
-          . "`tools/proben/anteil/huelle_stellen.py %s <passwort> edk1`.\n",
+          . "`tools/proben/anteil/huelle_stellen.py %s <passwort> edk2`.\n",
             $name, $email, explode(':', $huelle)[0] . ':', $email));
     }
 }

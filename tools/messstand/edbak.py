@@ -35,7 +35,7 @@ DAS FORMAT (Fassung 4, `server/assets/crypto.js`, `sealTeil`; ausführlich
 
 Der Inhalt ist KLARTEXT: Der Browser entschlüsselt vor dem Versiegeln, damit
 sich das Backup in jedes Konto einspielen lässt (`Backup-Format.md` 2).
-Dieses Werkzeug fasst deshalb nie einen `edk1:`-Chiffretext an.
+Dieses Werkzeug fasst deshalb nie einen `edk2:`-Chiffretext an.
 
 WARUM DAS GZIP HIER NACHGEBAUT WIRD UND NICHT WEGGELASSEN. Ohne das Flag wäre
 die Datei zwar lesbar (der Öffner kennt beide Fälle), aber sie wäre nicht die

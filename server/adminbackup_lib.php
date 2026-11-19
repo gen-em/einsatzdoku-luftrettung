@@ -2331,6 +2331,27 @@ function edbak_erinnerung(): array
 }
 
 /**
+ * NUR PAKETE AB WEB 27.0.0 (KA-07, E-KA-107, F-KA-136) — fuer das Einspielen
+ * durch die Verwaltung UND den Freigabeweg. Ein Paket traegt, was die Anlage
+ * gespeichert hatte, unveraendert. Bis Web 26.x konnte das Geraetehuellen der
+ * Fassung 1 und Bloecke im alten Format (`edk1:`) enthalten — von Konten, die
+ * sich noch nicht angemeldet hatten. Beides nimmt die Pruefschicht nicht mehr
+ * an, und der Browser oeffnet es nicht mehr; Wert fuer Wert verworfen kaeme
+ * ein halbes Konto heraus. Abgewiesen wird deshalb das Paket, ganz, bevor
+ * etwas geschrieben ist. Gefragt wird die Fassung, die es geschrieben hat; ein
+ * Paket ohne Angabe ist aelter. Liefert die Meldung oder null.
+ */
+function edbak_paket_zu_alt(array $manifest): ?string
+{
+    $geschrieben = (string)($manifest['web_version'] ?? '');
+    if ((int)explode('.', $geschrieben)[0] >= 27) { return null; }
+    return 'Dieses Konto-Backup stammt aus Web ' . ($geschrieben !== '' ? $geschrieben : 'einer alten Fassung')
+         . '. Seit Web 27.0.0 lassen sich nur Pakete verwenden, die mit Web 27 oder später '
+         . 'angelegt wurden — ältere können Daten im alten Format tragen. Ein neues Paket '
+         . 'legt der nächste Lauf an (Verwaltung → Konto-Backups).';
+}
+
+/**
  * Ein Adminpaket der Fassung 2 in ein Konto einspielen.
  *
  * WOFUER. Fassung 2 liegt mehrteilig vor; sie am Stueck zu lesen und
@@ -2355,21 +2376,6 @@ function edbak_erinnerung(): array
  * Rueckgabe: [bool $ok, ?string $meldung, ?array $stats].
  */
 function edbak_paket_einspielen(string $kennung, string $datei, int $zielUserId): array
-{
-    /* DER STICHTAG GILT HIER NICHT (06e, E-KA-99): Das Paket trägt, was die
-     * Anlage gespeichert hatte, unverändert. Ein Konto, das sich seit Web
-     * 25.0.0 nicht angemeldet hat, hat dort noch Gerätedaten der Fassung 1;
-     * die hebt seine nächste Anmeldung. Abgewiesen würden sie verloren. */
-    $vorher = huelle_fassung1_zulassen(true);
-    try {
-        return edbak_paket_einspielen_lauf($kennung, $datei, $zielUserId);
-    } finally {
-        huelle_fassung1_zulassen($vorher);
-    }
-}
-
-/** Der Lauf von `edbak_paket_einspielen()` — nur von dort aufgerufen. */
-function edbak_paket_einspielen_lauf(string $kennung, string $datei, int $zielUserId): array
 {
     if (!edbak_kennung_gueltig($kennung) || edbak_paket_fassung($datei) !== 2) {
         return [false, 'Das ist kein mehrteiliges Backup-Paket.', null];
@@ -2415,6 +2421,11 @@ function edbak_paket_einspielen_lauf(string $kennung, string $datei, int $zielUs
         $zip->close();
         return [false, 'Dem Backup fehlt ein lesbares Manifest.', null];
     }
+    $zuAlt = edbak_paket_zu_alt($manifest);
+    if ($zuAlt !== null) {
+        $zip->close();
+        return [false, $zuAlt, null];
+    }
     /* VOLLSTAENDIGKEIT VOR DEM ERSTEN SCHREIBEN. Ein fehlendes Teil soll
      * auffallen, solange das Zielkonto noch unberuehrt ist — nicht auf halber
      * Strecke, wenn schon die Haelfte drinsteht. */
@@ -2457,7 +2468,7 @@ function edbak_paket_einspielen_lauf(string $kennung, string $datei, int $zielUs
         /* 'browser': Ein Paket traegt Huellen
          * und Stuecke, wie sie lagen; Klartext-Ortsdaten weist der Weg ab,
          * wie den Browser. */
-        $stats = edbak_restore($zielUserId, $kopf, null, 'browser');
+        $stats = edbak_restore($zielUserId, $kopf);
         $offen = [];
         $dayMap = $stats['day_map'] ?? [];
         $karte  = $stats['spur_karte'] ?? [];
@@ -2485,7 +2496,7 @@ function edbak_paket_einspielen_lauf(string $kennung, string $datei, int $zielUs
              * nehmen — den mit Spurverweisen — und die Felder der spaeteren
              * Fassungen samt und sonders optional sind. */
             $f['version'] = EDBAK_NUTZLAST;
-            $s2 = edbak_restore($zielUserId, $f, $dayMap, 'browser', null, true);
+            $s2 = edbak_restore($zielUserId, $f, $dayMap, true);
             foreach ((array)($s2['spur_karte'] ?? []) as $ref => $ziel) {
                 $karte[(int)$ref] = $ziel;
             }

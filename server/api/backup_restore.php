@@ -94,7 +94,7 @@ if ($nutzlast > NUTZLAST_HOECHSTENS) {
 }
 
 try {
-    $stats = edbak_restore($userId, $data, null, 'browser');
+    $stats = edbak_restore($userId, $data);
     /* DIE SPURKARTE GEHT GETRENNT ZURUECK, nicht in `stats`: `stats` ist die
      * Rueckmeldung an die Nutzerin und wird angezeigt; die Karte ist eine
      * Arbeitsangabe fuer den naechsten Schritt des Browsers. */

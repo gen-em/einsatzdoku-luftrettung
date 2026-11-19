@@ -122,22 +122,10 @@
   /** Der Ort einer Hülle der Stufe 2 oder 3. */
   const platzGepackt = (st) => st.seq_from + ':' + st.punkte + ':' + st.stufe + ':' + st.n_original;
 
-  /* FASSUNG 2 (KA-06b-3) — erkannt am Kennbyte der Hülle (0x02). Steht die
-     * Weiche aus, gibt es keine; dann läuft jeder Leseweg unten wie bisher. */
-  function istFassung2(huelle) {
-    if (huelle instanceof Uint8Array) { return huelle[0] === 2; }
-    try { return typeof huelle === 'string' && atob(huelle.slice(0, 4)).charCodeAt(0) === 2; }
-    catch (e) { return false; }
-  }
-
-  /* NUR FASSUNG 2 FÜR DAS EIGENE KONTO (06e, E-KA-97, -98). Wer ein Standbuch
-     hat (`k.ck`), liest Gerätedaten der Fassung 1 nicht mehr — der
-     Anhebelauf hat sie als Konto übernommen (`unlock.js`,
-     `geraeteUebernehmen()`); was noch dasteht, ist zurückgelegt oder kam ohne
-     Nachweis, und die Ansicht sagt `ohne-herkunft`. Ein FREMDES Paar im
-     Freigabeweg hat kein Buch und liest weiter beide: Ein Konto, das sich nie
-     wieder anmeldet, hebt niemand. */
-  const verlangt2 = (k) => !!(k && k.ck);
+  /* NUR FASSUNG 2 (seit Web 27.0.0, KA-07). Eine Gerätehülle der Fassung 1
+     liest niemand mehr; `EdHuelle2` weist sie mit `ohne-herkunft` ab. Bis
+     Web 26.x las ein fremdes Paar im Freigabeweg noch beide, und bis Web
+     25.x jeder Weg ohne Standbuch. */
 
   /** Was das Standbuch zu einem Datensatz weiß — leer ohne Inhaltsschlüssel
    *  (ein fremdes Paar im Freigabeweg hat kein Buch dieses Kontos). */
@@ -173,7 +161,7 @@
    *  und blenden nichts aus (06e, F-KA-130). */
   async function spur2(stuecke, art, ref, sperren, k) {
     const sb = await standbuchFuer(k, ref);
-    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, verlangt2(k));
+    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {});
     const r = await EdHuelle2.spurLesen(ls, art, ref,
       (stuecke || []).map((st) => Object.assign({}, st, { huelle: b64(st.huelle) })),
       { versatz: sb.e.d || 0, sperren: sb.e.x || [], stand: sb.e.s || null })
@@ -183,45 +171,8 @@
     return punkte;
   }
 
-  async function spur(stuecke, art, ref, sperren, k) {
-    if (verlangt2(k) || (stuecke || []).some((st) => istFassung2(st.huelle))) {
-      return spur2(stuecke, art, ref, sperren, k);
-    }
-    const nach = new Map();
-    /* ZUERST DIE GEPACKTEN (Stufe 2 und 3). Ihre Punkte tragen keine
-       eigene Nummer; das Stück deckt seq_from bis seq_from + n_original − 1,
-       und was ein Gerätestück darunter trägt, steckt schon darin. */
-    let marke = 0;
-    for (const st of stuecke || []) {
-      if (!(st.stufe >= 2)) { continue; }
-      const innen = await EdCrypto.geraetehuelleOeffnen(b64(st.huelle), k.priv, k.pub, art, ref,
-                                                        platzGepackt(st))
-        .catch((e) => { e.art = art; throw e; });
-      marke = Math.max(marke, st.seq_from + st.n_original);
-      (await gepacktLesen(innen, st.punkte, st.ts_von)).forEach((p, i) => {
-        if (gesperrt(p.ts, sperren)) { return; }
-        const seq = st.seq_from + i;
-        if (!nach.has(seq)) { nach.set(seq, Object.assign({ seq: seq }, p)); }
-      });
-    }
-    for (const st of stuecke || []) {
-      if (st.stufe >= 2) { continue; }
-      const innen = await EdCrypto.geraetehuelleOeffnen(b64(st.huelle), k.priv, k.pub, art, ref,
-                                                        st.seq_from + ':' + st.punkte)
-        .catch((e) => { e.art = art; throw e; });
-      const dv = new DataView(innen.buffer, innen.byteOffset, innen.byteLength);
-      const n = Math.floor(innen.byteLength / 14);
-      for (let i = 0; i < n; i++) {
-        const ts = st.ts_von + dv.getUint32(i * 14 + 10);
-        if (gesperrt(ts, sperren)) { continue; }
-        const seq = st.seq_from + i;
-        if (seq < marke || nach.has(seq)) { continue; }
-        const h = dv.getInt16(i * 14 + 8);
-        nach.set(seq, { seq: seq, lat: dv.getInt32(i * 14) / 1e7, lon: dv.getInt32(i * 14 + 4) / 1e7,
-                        ele: h === HOEHE_UNBEKANNT ? null : h, ts: ts });
-      }
-    }
-    return [...nach.values()].sort((a, b) => a.seq - b.seq);
+  function spur(stuecke, art, ref, sperren, k) {
+    return spur2(stuecke, art, ref, sperren, k);
   }
 
   /* DER STAND DER EINSATZHÜLLE IM STANDBUCH (KA-10, E-KA-70, -88): die
@@ -274,7 +225,7 @@
      wirft — derselbe Fehler, dazu nur `art`. */
   async function einsatz2(m, k, bestaetigt) {
     const sb = await standbuchFuer(k, m.client_ref);
-    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {}, verlangt2(k));
+    const ls = await EdHuelle2.leser(k, sb.buch ? await sb.buch.geraete() : {});
     const r = await EdHuelle2.einsatzLesen(ls, m.client_ref, b64(m.ort_huelle), beginnVon(m),
                                            { versatz: sb.e.d || 0, stand: standAus(sb.e), bestaetigt: bestaetigt })
       .catch((e) => { e.art = 'einsatz'; throw e; });
@@ -284,8 +235,7 @@
   /**
    * DIE EINSATZHÜLLE ÖFFNEN — MIT ABSENDER UND BEFUNDEN (KA-10).
    * @returns {Promise<{inhalt: object, absender: string|null, befund: string[]}|null>}
-   *   null ohne Hülle. `absender`: null (Fassung 1, ohne Herkunftsnachweis),
-   *   'konto' oder die SID des Geräts (hex). `befund` weist nicht ab:
+   *   null ohne Hülle. `absender`: 'konto' oder die SID des Geräts (hex). `befund` weist nicht ab:
    *   'offen-nach-schluss', 'stand-uebernommen' (`EdHuelle2`).
    * WIRFT, wo die Hülle erst nach bewusster Bestätigung gilt, den Fehler aus
    * `EdHuelle2.einsatzLesen()`, unverändert: `grund` 'uhrzeit-pruefen',
@@ -294,35 +244,29 @@
    */
   async function einsatzOeffnen(m, k) {
     if (!m.ort_huelle) { return null; }
-    if (verlangt2(k) || istFassung2(m.ort_huelle)) {
-      const { sb, r } = await einsatz2(m, k, null);
-      /* DER STAND GEHT BEIM LESEN MIT (wie `patLesen()`): Ein späteres
-         Zurücklegen auf eine ältere Hülle fällt dann auf. Geschrieben wird,
-         sobald der Eintrag danach ein anderer wäre — höherer Zähler, erster
-         Abschluss (`f` haftet, E-KA-76), ein Vermerk, der wegfällt, oder
-         nur der Absender, den ein Blatt von vor KA-09 nicht kennt. Mit der
-         Weiche aus schreibt das Buch nichts. Die Seite wartet nicht darauf;
-         was dabei scheitert, steht beim nächsten Lesen wieder an. */
-      if (sb.buch && r.absender !== null) {
-        const alt = standAus(sb.e);
-        let neu = null;
-        try { neu = EdHuelle2.standNachAbnahme(r.inhalt, r.absender, alt, {}); } catch (e) { neu = null; }
-        if (neu && JSON.stringify(neu) !== JSON.stringify(alt)) {
-          /* Auf einer Abschrift: Das Fortschreiben läuft der Rückgabe nach
-             und darf deren `befund` nicht mehr ändern. */
-          /* GESAMMELT (KA-14, F-KA-124): Ein Export öffnet Tausende Hüllen,
-             und je Hülle ein Schreiben war eine Flut von 409 auf 16
-             Blättern. `fortschreibenGesammelt()` schreibt je Blatt einmal. */
-          sb.buch.fortschreibenGesammelt(m.client_ref, abnehmen(Object.assign({}, r), null, null))
-            .catch(() => {});
-        }
+    const { sb, r } = await einsatz2(m, k, null);
+    /* DER STAND GEHT BEIM LESEN MIT (wie `patLesen()`): Ein späteres
+       Zurücklegen auf eine ältere Hülle fällt dann auf. Geschrieben wird,
+       sobald der Eintrag danach ein anderer wäre — höherer Zähler, erster
+       Abschluss (`f` haftet, E-KA-76), ein Vermerk, der wegfällt, oder
+       nur der Absender, den ein Blatt von vor KA-09 nicht kennt. Die Seite
+       wartet nicht darauf; was dabei scheitert, steht beim nächsten Lesen
+       wieder an. */
+    if (sb.buch) {
+      const alt = standAus(sb.e);
+      let neu = null;
+      try { neu = EdHuelle2.standNachAbnahme(r.inhalt, r.absender, alt, {}); } catch (e) { neu = null; }
+      if (neu && JSON.stringify(neu) !== JSON.stringify(alt)) {
+        /* Auf einer Abschrift: Das Fortschreiben läuft der Rückgabe nach
+           und darf deren `befund` nicht mehr ändern. */
+        /* GESAMMELT (KA-14, F-KA-124): Ein Export öffnet Tausende Hüllen,
+           und je Hülle ein Schreiben war eine Flut von 409 auf 16
+           Blättern. `fortschreibenGesammelt()` schreibt je Blatt einmal. */
+        sb.buch.fortschreibenGesammelt(m.client_ref, abnehmen(Object.assign({}, r), null, null))
+          .catch(() => {});
       }
-      return r;
     }
-    const innen = await EdCrypto.geraetehuelleOeffnen(b64(m.ort_huelle), k.priv, k.pub,
-                                                      'einsatz', m.client_ref, '')
-      .catch((e) => { e.art = 'einsatz'; throw e; });
-    return { inhalt: JSON.parse(new TextDecoder().decode(innen)), absender: null, befund: [] };
+    return r;
   }
 
   /** Die Einsatzhülle, geöffnet — nur das Innere, oder null. Wer Absender
@@ -342,14 +286,14 @@
    *
    * ERST DAS STANDBUCH, DANN DIE HÜLLE: Der gesenkte Stand und der Vermerk
    * über den verworfenen werden geschrieben, und darauf wird GEWARTET. Geht
-   * das Schreiben nicht durch (Netz, Konflikt, Weiche aus), wirft der Weg,
+   * das Schreiben nicht durch (Netz, Konflikt), wirft der Weg,
    * und es gilt nichts — eine Bestätigung, die nirgends steht, sähe der
    * nächste Browser nicht, und der verworfene Stand kehrte still zurück.
    * @param o  `jetzt` (Unix-Sekunde) nur für Proben
    * @returns {Promise<{inhalt, absender, befund}>} wie `einsatzOeffnen()`
    */
   async function einsatzUebernehmen(m, k, hinweis, o) {
-    if (!m.ort_huelle || !istFassung2(m.ort_huelle)) {
+    if (!m.ort_huelle) {
       throw fehler('bestaetigung', 'Zu dieser Einsatzhülle gibt es nichts zu bestätigen.');
     }
     const { sb, r } = await einsatz2(m, k, hinweis);
@@ -612,10 +556,9 @@
    * @param {Array} punkte  aus `spur()`: {seq, lat, lon, ele, ts}, sortiert
    * @returns {Promise<Array>} [{seq_from, punkte, ts_von, ts_bis, huelle}]
    */
-  /* DAS PAAR ZUM SCHREIBEN (KA-06b-3). Mit der Weiche aus genügt der
-   * öffentliche Teil, und `EdHuelle2` schreibt Fassung 1 wie bisher. Mit
-   * der Weiche an ist der Browser der Absender „Konto" — dafür braucht er
-   * den privaten Teil, also den Inhaltsschlüssel (`o.ck`, F-KA-88). */
+  /* DAS PAAR ZUM SCHREIBEN (KA-06b-3). Der Browser ist der Absender
+   * „Konto" — dafür braucht er den privaten Teil, also den
+   * Inhaltsschlüssel (`o.ck`, F-KA-88). */
   async function schreibpaar(o) {
     await paarBereit();
     const pub = (typeof EdKontopaar !== 'undefined') ? EdKontopaar.oeffentlich() : null;
@@ -635,8 +578,8 @@
    * oder ein Löschen lässt eine Lücke in der Folge der Stücke; in Fassung 2
    * gilt sie nur, wenn ein Vermerk des Kontos sie deckt — sonst wäre
    * „ein Stück entfernt" nicht von einem Schnitt zu unterscheiden. Die
-   * Vermerke stehen in der Zeit der Hülle (Klartext minus Versatz). Mit der
-   * Weiche aus schreibt das Buch nichts. Still: Ein Fehlschlag hier lässt
+   * Vermerke stehen in der Zeit der Hülle (Klartext minus Versatz). Still:
+   * Ein Fehlschlag hier lässt
    * den Schnitt stehen; die Lücke fällt dann beim Lesen auf.
    */
   async function sperreVermerken(ref, von, bis) {
@@ -694,8 +637,7 @@
    * melden — sie ginge nicht mehr auf.
    * @param liste  [{ ref, sperren: [[von, bis], …] }] in Klartextzeit
    * @param o      { ck } wie `stueckeBauen()`
-   * @returns {Promise<Map|null>} ref → Fehler (nur die gescheiterten); null
-   *          mit der Weiche aus (dann braucht es keine)
+   * @returns {Promise<Map>} ref → Fehler (nur die gescheiterten)
    */
   async function sperrenVermerkenViele(liste, o) {
     const posten = (liste || []).filter((x) => x && x.ref && x.sperren && x.sperren.length);
@@ -712,7 +654,7 @@
      umdatiert worden, steht `d` im Standbuch, und der Leser verlangt
      Klartextzeit − Hüllenzeit = d. Was das Konto danach verschließt, trägt
      deshalb die Zeit der Hülle (Klartext − d) — sonst scheiterte seine eigene
-     Hülle an `zeit`. Ohne Standbuch (Weiche aus, fremdes Paar) 0. */
+     Hülle an `zeit`. Ohne Standbuch (fremdes Paar) 0. */
   async function versatzFuer(k, ref) {
     if (!k || !k.ck || !ref) { return 0; }
     try { return (await standbuchFuer(k, ref)).e.d || 0; } catch (e) { return 0; }
@@ -786,10 +728,9 @@
     return st;
   }
 
-  /** Die Einsatzhülle verschließen. Weiche aus: Fassung 1 mit dem
-   *  öffentlichen Kontoschlüssel, wie bisher. Weiche an: Fassung 2 als
-   *  Absender „Konto", mit dem nächsten Zähler aus dem Standbuch und dem
-   *  absoluten Beginn (`o.start`, Unix-Sekunden) — `o.ck` ist dann Pflicht.
+  /** Die Einsatzhülle verschließen: Fassung 2 als Absender „Konto", mit dem
+   *  nächsten Zähler aus dem Standbuch und dem absoluten Beginn (`o.start`,
+   *  Unix-Sekunden) — `o.ck` ist Pflicht.
    *  Den Zähler hebt das Standbuch beim nächsten Lesen (`einsatz()`). */
   async function einsatzVerschliessen(innen, ref, o) {
     o = o || {};

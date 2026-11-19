@@ -59,7 +59,7 @@ hält es gegen die Eingabe — weicht etwas ab, entsteht keine Datei.
 Aufruf:  python3 verschliessen.py EINGABE.json.gz [AUSGABE.json.gz]
                  [--runden N] [--selbstprobe]
          EINGABE   der Rohbestand aus `erzeugen.php` (verschlossen, wie er im
-                   Konto liegt — beide Fassungen) oder eine Fixture im Format 3
+                   Konto liegt — Fassung 2) oder eine Fixture im Format 3
          AUSGABE   Vorgabe `server/demo/fixture.json.gz`
          --runden  Rundenzahl des Kontos; Vorgabe `KDF_ITER_ZIEL` aus
                    `server/db.php`. Ab 1 200 000 Ableitung 2 (E-KA-84).
@@ -203,8 +203,9 @@ def ck_alt(konto: dict) -> bytes:
     haelfte, _ = ableiten(DEMO_PASSWORT, bytes.fromhex(konto["kdf_salt"]), int(konto["kdf_iter"]))
     wrap = konto["pat_wrap_pw"]
     try:
-        hexwert = (inh.huelle_oeffnen(haelfte, wrap, "pw") if wrap.startswith(inh.KENNUNG)
-                   else inh.oeffnen1(haelfte, wrap).decode())
+        # Nur Fassung 2 (seit KA-07): `huelle_oeffnen()` wirft `kennung`
+        # bei allem anderen.
+        hexwert = inh.huelle_oeffnen(haelfte, wrap, "pw")
     except inh.InhaltFehler as f:
         raise Abbruch(f"Das Demo-Passwort öffnet die Schlüsselhülle der Eingabe nicht ({f}).") from f
     if not re.fullmatch(r"[0-9a-f]{64}", hexwert):
@@ -213,10 +214,12 @@ def ck_alt(konto: dict) -> bytes:
 
 
 def pat_klar(ck: bytes, blob: str, ref: str) -> bytes:
-    """Der Klartext eines Patientenblocks der Eingabe — beide Fassungen."""
-    if blob.startswith(inh.KENNUNG):
+    """Der Klartext eines Patientenblocks der Eingabe (`edk2:`; das alte
+    Format liest seit KA-07 niemand mehr)."""
+    try:
         return inh.oeffnen(ck, blob, "pat", ref)[0]
-    return inh.oeffnen1(ck, blob)
+    except inh.InhaltFehler as f:
+        raise Abbruch(f"Der Patientenblock von {ref} geht nicht auf ({f}).") from f
 
 
 # ---------------------------------------------- Rohbestand öffnen (Eingabe)
@@ -227,8 +230,8 @@ def roh_oeffnen(roh: dict) -> dict:
     mit `stufe` und `n_original`, Phasenorte an den Phasen, Reanimation als
     `resus`; `pat_blob` bleibt Chiffretext der Eingabe.
 
-    BEIDE FASSUNGEN. Ein Konto von vor der Weiche trägt Fassung 1 und
-    `edk1:`; danach liegt beides nebeneinander. Geöffnet wird mit dem, was
+    NUR FASSUNG 2 (seit KA-07). Bis Web 26 lag in einem Konto von vor der
+    Weiche daneben Fassung 1 und `edk1:`. Geöffnet wird mit dem, was
     ein Browser des Kontos hat — Demo-Passwort, Kontopaar, Gerätebuch und
     Standbuch des Kontos (Versatz) —, über `Leser` der Referenz. Die
     Vermerke des Standbuchs blenden hier NICHTS aus: Was im Segment liegt,
@@ -240,7 +243,7 @@ def roh_oeffnen(roh: dict) -> dict:
     ck = ck_alt(k)
     try:
         text = k["kp_privat"]
-        pkcs8 = inh.oeffnen(ck, text, "kp", "")[0] if text.startswith(inh.KENNUNG) else inh.oeffnen1(ck, text)
+        pkcs8 = inh.oeffnen(ck, text, "kp", "")[0]
         priv = serialization.load_der_private_key(base64.b64decode(pkcs8), password=None)
         spki = serialization.load_der_public_key(base64.b64decode(k["kp_oeffentlich"]))
         buch, blaetter = {}, {}
@@ -273,14 +276,11 @@ def roh_oeffnen(roh: dict) -> dict:
             n_original += int(st["n_original"])
             platz = gh.platz_gepackt(seq, n, stufe, int(st["n_original"])) if stufe >= 2 else f"{seq}:{n}"
             try:
-                klar, absender = leser.huelle(base64.b64decode(st["huelle"]), art, ref, platz)
-                if absender is None:
-                    ts_von, nutz = int(st["ts_von"]) - d, klar
-                else:
-                    kopf = gh.spur_innen2_lesen(klar)
-                    if int(st["ts_von"]) - kopf["ts_von"] != d:
-                        raise gh.HuelleFehler("zeit")
-                    ts_von, nutz = kopf["ts_von"], kopf["nutzlast"]
+                klar, _ = leser.huelle(base64.b64decode(st["huelle"]), art, ref, platz)
+                kopf = gh.spur_innen2_lesen(klar)
+                if int(st["ts_von"]) - kopf["ts_von"] != d:
+                    raise gh.HuelleFehler("zeit")
+                ts_von, nutz = kopf["ts_von"], kopf["nutzlast"]
                 if stufe >= 2:
                     pkt = gh.gepackt_lesen(nutz, n, ts_von)
                 else:
@@ -318,7 +318,7 @@ def roh_oeffnen(roh: dict) -> dict:
             innen, _ = gh.einsatz_lesen(leser, ref, base64.b64decode(huelle), start, versatz=versatz(ref))
         except gh.HuelleFehler as f:
             raise Abbruch(f"Die Einsatzhülle von {ref} geht nicht auf: {f}") from f
-        if not isinstance(innen, dict) or innen.get("fassung") not in (1, 2):
+        if not isinstance(innen, dict) or innen.get("fassung") != 2:
             raise Abbruch(f"Die Einsatzhülle von {ref} hat keine bekannte Innenform.")
         zeit = lambda t: datetime.fromtimestamp(start + t, timezone.utc).strftime("%Y-%m-%d %H:%M:%S")  # noqa: E731
         # Phasenorte an die Phasen des Kerns, über Nummer UND Zeit: Die Folge
@@ -546,8 +546,8 @@ def bauen(fx3: dict, runden: int) -> tuple[dict, dict]:
         x = eintraege.get(ref, {}).get("x", [])
         spuren[platz]["sichtbar"] = sum(1 for t in ts if not any(von <= t <= bis for von, bis in x))
 
-    # Die Blätter: alle 16, alle geschlossen — der Anhebelauf hat hier nichts
-    # mehr zu tun, und Fassung 1 wäre in diesem Konto ein Befund.
+    # Die Blätter: alle 16, alle geschlossen (`zu`) — so liegt ein Konto
+    # nach dem Anhebelauf, den es seit KA-07 nicht mehr gibt.
     je_blatt: dict[int, dict] = {nr: {} for nr in range(inh.BLAETTER)}
     for ref, e in eintraege.items():
         if "x" in e:
@@ -603,7 +603,7 @@ def gegenlesen(fx3: dict, fx4: dict) -> list[str]:
         s = gh.sid(base64.b64decode(g["spk"])).hex()
         if s not in buch or buch[s]["spk"] != base64.b64decode(g["spk"]):
             bef.append(f"Gerät {g['device_id']} steht nicht im Gerätebuch.")
-    leser = gh.Leser(priv, buch, verlangt2=True)
+    leser = gh.Leser(priv, buch)
     alt_ck = ck_alt(fx3["konto"])
     eintrag = lambda ref: blaetter[inh.blatt_nr(ref)]["e"].get(inh.kennung(ref), {})  # noqa: E731
     stuecke = {(s["art"], s["spur_ref"]): s["stuecke"] for s in fx4["spuren"]}
@@ -625,14 +625,16 @@ def gegenlesen(fx3: dict, fx4: dict) -> list[str]:
             return
         # Was die Vermerke des Standbuchs ausblenden, blendet die Anwendung
         # auch über die Sperren des Klartexts aus — verglichen wird der Rest.
-        soll = [p for p in sorted(alt["track"], key=lambda p: p[0])
-                if not any(von <= p[4] <= bis for von, bis in e.get("x", []))]
-        ist = [(runde(p[1] * 1e7), runde(p[2] * 1e7), p[3], p[4]) for p in pkt]
+        # AUSGEBLENDET WIRD AUF BEIDEN SEITEN: `spur_lesen()` blendet seit 06e
+        # nicht mehr selbst aus (F-KA-130), das tut der Aufrufer. Bis KA-07
+        # filterte diese Gegenlesung nur die Eingabe, und ein geschnittenes,
+        # nie verdichtetes Segment wich ab (gefunden mit Nr. 567).
+        gesperrt = lambda t: any(von <= t <= bis for von, bis in e.get("x", []))  # noqa: E731
+        soll = [p for p in sorted(alt["track"], key=lambda p: p[0]) if not gesperrt(p[4])]
+        ist = [(runde(p[1] * 1e7), runde(p[2] * 1e7), p[3], p[4]) for p in pkt if not gesperrt(p[4])]
         if ist != [(runde(p[1] * 1e7), runde(p[2] * 1e7),
                     None if p[3] is None else gh.hoehe_innen(p[3]), p[4]) for p in soll]:
             bef.append(f"{ref}: die geöffnete Spur weicht ab ({len(ist)} gegen {len(soll)} Punkte)")
-        if befund["fassung1"]:
-            bef.append(f"{ref}: ein Stück der Fassung 1")
 
     for alt, neu in zip(fx3["daten"]["missions"], fx4["daten"]["missions"]):
         ref = str(alt["client_ref"])

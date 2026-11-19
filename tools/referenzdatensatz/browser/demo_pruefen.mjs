@@ -704,7 +704,7 @@ if (schritte.includes('sperren')) {
    * Gemessen wurde damit die CSRF-Sperre — nicht das, was hier gemeint war:
    * dass `api/kdf_upgrade.php` das Demo-Konto ÜBERSPRINGT.
    * Das ist die tragende Zusage an dieser Stelle: Das Demo-Konto
-   * bekommt keinen Server-Anteil, seine Hülle bleibt `edk1:`, und die stille
+   * bekommt keinen Server-Anteil, seine Hülle bleibt `edk2:`, und die stille
    * Umstellung darf sie nicht anfassen.
    *
    * Aus dem `melde` ist deshalb eine ERWARTUNG geworden. Eine Zeile, die nur

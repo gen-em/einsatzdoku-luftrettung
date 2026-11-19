@@ -14,6 +14,7 @@ const echteJetzt = Date.now;
 Date.now = () => jetzt;
 </script>
 <script src="/server/assets/crypto.js"></script>
+<script src="/server/assets/inhalt2.js"></script>
 <script src="/server/assets/keyguard.js"></script>
 <script>
 'use strict';
@@ -96,9 +97,11 @@ async function warteBis(bedingung, ms) {
   // (5) Der Griff
   jetzt = echteJetzt();
   const griff = await EdKeyGuard.ablegen(CK, HUELLE);
-  const verschlossen = await EdCrypto.encrypt(CK, 'Probe');           // mit dem Hex
+  /* Gebunden wie jeder Block seit Web 25 (`edk2:`, Zweck `pat`); bis KA-07
+     über `EdCrypto.encrypt()`/`.decrypt()`, die es seit Web 27 nicht mehr gibt. */
+  const verschlossen = await EdInhalt.schreiben(CK, 'pat', 'frist-probe', 'Probe', 1);   // mit dem Hex
   let geoeffnet = null;
-  try { geoeffnet = await EdCrypto.decrypt(griff, verschlossen); } catch (x) { geoeffnet = 'FEHLER ' + x.name; }
+  try { geoeffnet = (await EdInhalt.lesen(griff, verschlossen, 'pat', 'frist-probe')).text; } catch (x) { geoeffnet = 'FEHLER ' + (x.grund || x.name); }
   let ausgeleitet;
   try { await crypto.subtle.exportKey('raw', griff); ausgeleitet = 'EXPORTIERT'; }
   catch (x) { ausgeleitet = 'verweigert'; }

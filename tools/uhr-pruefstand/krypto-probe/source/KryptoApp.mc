@@ -6,12 +6,15 @@
 // der Laufzeit ausloest. Jede Zeile steht auf dem Display (Blaettern mit
 // Hoch/Runter oder Wischen) und auf der Konsole des Simulators.
 //
+//   DIE BAUSTEINE (Krypto.mc, eine Rechnung neben der App) gegen die Faelle
+//   „kurz" und „spur-3" der Fassung 2 (Vektoren2.mc). Bis KA-28 mass die
+//   Probe sie an Fassung 1 (Vektoren.mc); die ist auf der Uhr fort.
 //   PAAR    Schluesselpaar aus festem d: stimmt der oeffentliche Teil nach
-//           der Umrechnung in SEC1 mit dem Vektor?
-//   ECDH    Z gegen den Vektor — in welcher Byteordnung kommt es?
-//   HKDF    Schluesselableitung ueber HMAC gegen den Vektor
+//           der Umrechnung in SEC1 mit dem Vektor (EPK)?
+//   ECDH    Z_e gegen den Vektor — in welcher Byteordnung kommt es?
+//   HKDF    Schluesselableitung ueber HMAC gegen den Vektor (Z_e ‖ Z_s)
 //   AES     AES-256-CBC samt Polsterung gegen den Vektor
-//   HMAC    Pruefwert gegen den Vektor
+//   HMAC    Pruefwert gegen den Vektor (Kennbyte 2, SID, EPK, IV, CT, Bindung)
 //   HUELLE  die ganze Huelle je Fall byte-gleich
 //   PACKEN  gibt es eine Packfunktion (deflate)?
 //   T-PAAR  Zeit fuer ein frisches Schluesselpaar (dreimal)
@@ -30,9 +33,9 @@
 //
 //   AB HIER DER KRYPTO-KERN DER APP (KG-03a): watch/source/Huelle.mc und
 //   Huelle2.mc, mit uebersetzt (monkey.jungle) — nicht Krypto.mc daneben.
-//   APP-BEREIT  der Selbsttest der App fuer Fassung 1, Huelle.bereit()
-//   APP-HUELLE  Fassung 1 aus Huelle.mc je Fall byte-gleich
-//   APP-INNEN   die Innenform der Punkte aus Huelle.mc gegen den Vektor
+//   APP-BEREIT  der Selbsttest der App fuer die Byteordnung, Huelle.bereit()
+//           (seit KA-28 an Z_s des Falls der Fassung 2; APP-HUELLE und
+//           APP-INNEN massen bis dahin Fassung 1 aus Huelle.mc)
 //   SID     Kennung des Absenders aus seinem Schluessel
 //   ZS      das statische Geheimnis Z_s und der oeffentliche Teil des
 //           Geraetepaars aus festem d
@@ -46,7 +49,8 @@
 //   GERAETEHUELLE, EINSATZ2, NEUSTART  mit dem abgelegten Paar und Zufall
 //           verschliessen: Form, Kennung, Z_s aus dem Speicher und nach
 //           einem nachgestellten Neustart aus dem Storage
-//   T-FASSUNG  500 Punkte in Fassung 1 und 2: Zeit und Speicher; Z_s neu
+//   T-FASSUNG  500 Punkte durch den Weg der App (Fassung 2): Zeit und
+//           Speicher; Z_s neu (bis KA-28 auch Fassung 1 daneben)
 //   ZAEHLER-…  der Zaehler z der Einsatzhuelle (E-KA-69, KG-09): z gehoert
 //           zum Inhalt. Die Regel max(jetzt, letztes + 1) ohne Uhr (FOLGE);
 //           am Speicher mit der Zeit des Geraets, Senden zaehlt nicht (ZEIT);
@@ -118,8 +122,8 @@ module Probe {
     }
 
     function fall(name as String) as Dictionary {
-        for (var i = 0; i < Vektoren.FAELLE.size(); i++) {
-            var f = Vektoren.FAELLE[i] as Dictionary;
+        for (var i = 0; i < Vektoren2.FAELLE.size(); i++) {
+            var f = Vektoren2.FAELLE[i] as Dictionary;
             if ((f[:name] as String).equals(name)) { return f; }
         }
         return {};
@@ -162,8 +166,8 @@ module Probe {
             urteil("PAAR", ok, zusatz);
         } else if (n == 1) {
             Krypto.zOrdnung = "be";
-            var z = Krypto.ecdh(Krypto.paar(f[:fluechtig] as ByteArray), Vektoren.EMPF_PUB);
-            var soll = f[:z] as ByteArray;
+            var z = Krypto.ecdh(Krypto.paar(f[:fluechtig] as ByteArray), Vektoren2.KONTO);
+            var soll = f[:zE] as ByteArray;
             if (Krypto.gleich(z, soll)) {
                 urteil("ECDH", true, "(big-endian)");
             } else if (Krypto.gleich(Krypto.umgedreht(z, 0, z.size()), soll)) {
@@ -174,8 +178,11 @@ module Probe {
             }
         } else if (n == 2) {
             var info = Krypto.text(Krypto.INFO);
-            info.addAll(Vektoren.EMPF_PUB);
-            var okm = Krypto.hkdf(f[:z] as ByteArray, f[:epk] as ByteArray, info);
+            info.addAll(Vektoren2.KONTO);
+            info.addAll(Vektoren2.SPK);
+            var ikm = (f[:zE] as ByteArray).slice(0, null);
+            ikm.addAll(Vektoren2.Z_S);
+            var okm = Krypto.hkdf(ikm, f[:epk] as ByteArray, info);
             urteil("HKDF", Krypto.gleich(okm.slice(0, 32), f[:kEnc] as ByteArray)
                            && Krypto.gleich(okm.slice(32, 64), f[:kMac] as ByteArray), "");
         } else if (n == 3) {
@@ -183,23 +190,19 @@ module Probe {
                                    Krypto.gepolstert(f[:klar] as ByteArray));
             urteil("AES", Krypto.gleich(ct, f[:ct] as ByteArray), "");
         } else if (n == 4) {
-            var mac = [1]b;
+            var mac = [2]b;
+            mac.addAll(Vektoren2.SID);
             mac.addAll(f[:epk] as ByteArray);
             mac.addAll(f[:iv] as ByteArray);
             mac.addAll(f[:ct] as ByteArray);
             mac.addAll(f[:bindung] as ByteArray);
             urteil("HMAC", Krypto.gleich(Krypto.hmac(f[:kMac] as ByteArray, mac), f[:tag] as ByteArray), "");
         } else if (n == 5 || n == 6) {
-            var g = fall(n == 5 ? "kurz" : "spur-binaer-3");
-            var h = Krypto.verschliessen(g[:klar] as ByteArray, Vektoren.EMPF_PUB,
-                                         g[:bindung] as ByteArray, g[:fluechtig] as ByteArray,
-                                         g[:iv] as ByteArray, null);
-            var soll = [1]b;
-            soll.addAll(g[:epk] as ByteArray);
-            soll.addAll(g[:iv] as ByteArray);
-            soll.addAll(g[:ct] as ByteArray);
-            soll.addAll(g[:tag] as ByteArray);
-            urteil("HUELLE " + g[:name], Krypto.gleich(h, soll), "(" + h.size() + " B)");
+            var g = fall(n == 5 ? "kurz" : "spur-3");
+            var h = Krypto.verschliessen(g[:klar] as ByteArray, Vektoren2.KONTO, Vektoren2.SPK,
+                                         Vektoren2.SID, Vektoren2.Z_S, g[:bindung] as ByteArray,
+                                         g[:fluechtig] as ByteArray, g[:iv] as ByteArray, null);
+            urteil("HUELLE " + g[:name], Krypto.gleich(h, g[:huelle] as ByteArray), "(" + h.size() + " B)");
         } else if (n == 7) {
             // Connect IQ 9.2.0 kennt kein deflate (api.mir durchsucht, S11-02);
             // gefragt wird trotzdem das Geraet.
@@ -223,7 +226,7 @@ module Probe {
             // (F-S11-85)? Y um eins veraendert. Eine Meldung, kein Urteil:
             // Huelle.schluesselSetzen() verlaesst sich darauf, und die Zeile
             // sagt, ob es das darf.
-            var falsch = Vektoren.EMPF_PUB.slice(0, 65);
+            var falsch = Vektoren2.KONTO.slice(0, 65);
             falsch[64] = (falsch[64] + 1) & 0xff;
             var was = "nicht geprueft";
             try {
@@ -246,68 +249,54 @@ module Probe {
         } else if (n == 16) {
             statisch();
         } else if (n == 17) {
+            Huelle.pruefungVergessen();         // messen, nicht den Vermerk lesen
             var ok = Huelle.bereit();
             urteil("APP-BEREIT", ok && Krypto.zOrdnung.equals(Huelle._ordnung),
                    "(" + Huelle._ordnung + ")");
-        } else if (n == 18 || n == 19) {
-            var g = fall(n == 18 ? "kurz" : "spur-binaer-3");
-            var h = Huelle.verschliessenRoh(g[:klar] as ByteArray, Vektoren.EMPF_PUB,
-                                            g[:bindung] as ByteArray, g[:fluechtig] as ByteArray,
-                                            g[:iv] as ByteArray);
-            var soll = [1]b;
-            soll.addAll(g[:epk] as ByteArray);
-            soll.addAll(g[:iv] as ByteArray);
-            soll.addAll(g[:ct] as ByteArray);
-            soll.addAll(g[:tag] as ByteArray);
-            urteil("APP-HUELLE " + g[:name], Krypto.gleich(h, soll), "(" + h.size() + " B)");
-        } else if (n == 20) {
-            var innen = Huelle.punkteInnen(punkte(0, 3, 1700000000), 0);
-            urteil("APP-INNEN", Krypto.gleich(innen[0] as ByteArray, fall("spur-binaer-3")[:klar] as ByteArray)
-                                && innen[1] == 1700000000 && innen[2] == 1700000010, "");
-        } else if (n == 21) {
+        } else if (n == 18) {
             urteil("SID", Krypto.gleich(Huelle2.sidVon(Vektoren2.SPK), Vektoren2.SID), "");
-        } else if (n == 22) {
+        } else if (n == 19) {
             var p = Huelle.paar(Vektoren2.GERAET_D);
             var spk = Huelle.geraetZuSec1(p.getPublicKey().getBytes() as ByteArray);
             urteil("ZS", Krypto.gleich(spk, Vektoren2.SPK)
                          && Krypto.gleich(Huelle.ecdh(p, Vektoren2.KONTO), Vektoren2.Z_S), "");
-        } else if (n == 23 || n == 24) {
-            var g = Vektoren2.FAELLE[n - 23] as Dictionary;
+        } else if (n == 20 || n == 21) {
+            var g = Vektoren2.FAELLE[n - 20] as Dictionary;
             var h = Huelle2.verschliessenRoh(g[:klar] as ByteArray, Vektoren2.KONTO, Vektoren2.SPK,
                                              Vektoren2.Z_S, g[:bindung] as ByteArray,
                                              g[:fluechtig] as ByteArray, g[:iv] as ByteArray);
             urteil("HUELLE2 " + g[:name], Krypto.gleich(h, g[:huelle] as ByteArray), "(" + h.size() + " B)");
-        } else if (n == 25) {
+        } else if (n == 22) {
             var innen = Huelle2.spurInnen(punkte(Vektoren2.SPUR_VON, 3, Vektoren2.SPUR_TS), false);
             urteil("INNEN2", Krypto.gleich(innen[0] as ByteArray,
                                            (Vektoren2.FAELLE[1] as Dictionary)[:klar] as ByteArray), "");
-        } else if (n == 26) {
+        } else if (n == 23) {
             urteil("ZUSAGE", Krypto.gleich(Huelle2.zusage(Vektoren2.N_G, Vektoren2.SPK), Vektoren2.ZUSAGE), "");
-        } else if (n == 27) {
+        } else if (n == 24) {
             var w = Huelle2.wert(Vektoren2.KONTO, Vektoren2.SPK, Vektoren2.N_G, Vektoren2.N_B);
             urteil("WERT", w.equals(Vektoren2.WERT), w);
-        } else if (n == 28) {
+        } else if (n == 25) {
             Huelle2.pruefungVergessen();        // messen, nicht den Vermerk lesen
             urteil("APP-BEREIT2", Huelle2.bereit(), "");
-        } else if (n == 29) {
+        } else if (n == 26) {
             kopplung();
-        } else if (n == 30) {
+        } else if (n == 27) {
             geraetehuelle();
-        } else if (n == 31) {
+        } else if (n == 28) {
             einsatz2();
-        } else if (n == 32) {
+        } else if (n == 29) {
             neustart();
-        } else if (n == 33 || n == 34) {
-            fassungen(n == 34);
-        } else if (n == 35) {
+        } else if (n == 30) {
+            fassungen();
+        } else if (n == 31) {
             zsNeu();
-        } else if (n == 36) {
+        } else if (n == 32) {
             zaehler();
-        } else if (n == 37) {
+        } else if (n == 33) {
             zaehlerVektor();
-        } else if (n == 38) {
+        } else if (n == 34) {
             zaehlerInhalt();
-        } else if (n == 39) {
+        } else if (n == 35) {
             zaehlerZeit();
         } else {
             return false;
@@ -437,15 +426,15 @@ module Probe {
                        + " probe-spur 14:3 1784277135 " + a["huelle"]);
     }
 
-    // 500 Punkte durch den Weg der App, Fassung 1 oder 2. Z_s liegt bereit.
-    function fassungen(zwei as Boolean) as Void {
+    // 500 Punkte durch den Weg der App (Fassung 2). Z_s liegt bereit. Bis
+    // KA-28 lief daneben derselbe Weg in Fassung 1 (Huelle.spurstueck()).
+    function fassungen() as Void {
         var flat = punkte(0, 500, 1784277065);
         var vor = System.getSystemStats().usedMemory;
         var t0 = System.getTimer();
-        var a = zwei ? Huelle2.spurstueck("spur", "probe-spur", 0, flat, false)
-                     : Huelle.spurstueck("spur", "probe-spur", 0, flat);
+        var a = Huelle2.spurstueck("spur", "probe-spur", 0, flat, false);
         var t1 = System.getTimer();
-        melde("T-FASSUNG " + (zwei ? "2" : "1") + ", 500 Punkte");
+        melde("T-FASSUNG 2, 500 Punkte");
         melde((t1 - t0) + " ms, " + (a["huelle"] as String).length() + " Z.");
         melde("Speicher +" + ((System.getSystemStats().usedMemory - vor) / 1024) + " kB");
     }
@@ -766,7 +755,7 @@ module Probe {
         var q = new Cryptography.KeyPair({
             :algorithm => Cryptography.KEY_PAIR_ELLIPTIC_CURVE_SECP256R1,
             :privateKey => priv as ByteArray});
-        var z = Krypto.ecdh(q, Vektoren.EMPF_PUB);
+        var z = Krypto.ecdh(q, Vektoren2.KONTO);
         var t1 = System.getTimer();
         var daten = new [7000]b;
         for (var i = 0; i < 7000; i++) { daten[i] = i & 0xff; }
@@ -808,7 +797,8 @@ module Probe {
         var t1 = System.getTimer();
         var mitte = System.getSystemStats().usedMemory;
         var bindung = Krypto.text("spur");
-        var h = Krypto.verschliessen(innen, Vektoren.EMPF_PUB, bindung, null, null, null);
+        var h = Krypto.verschliessen(innen, Vektoren2.KONTO, Vektoren2.SPK, Vektoren2.SID, Vektoren2.Z_S,
+                                     bindung, null, null, null);
         var t2 = System.getTimer();
         var nach = System.getSystemStats().usedMemory;
         var spitze = (mitte > nach ? mitte : nach) - vor;

@@ -16,10 +16,10 @@ python3 abgleich.py [--tief | --schreiben] [--fixture PFAD] [--selbstprobe]
 
 `erzeugen.php` liest Konto, Geräte, Bestand (`edbak_build()`), Stücke und
 Standbuch, wie sie liegen, und öffnet nichts. `verschliessen.py` öffnet den
-Rohbestand (beide Fassungen) über die Referenz in `tools/proben/huelle/` und
+Rohbestand (Fassung 2, seit KA-07) über die Referenz in `tools/proben/huelle/` und
 verschließt neu: Gerätehülle Fassung 2 von zwei Demo-Geräten mit festem
 Schlüssel, `edk2:`, 16 geschlossene Blätter, Gerätebuch, Kontopaar — wer was
-verschließt, steht in seinem Kopf. Danach liest es alles gegen; bei einem
+verschließt, steht in seinem Kopf. Danach liest es alles gegen (gesperrte Punkte blendet es auf beiden Seiten aus, F-KA-130); bei einem
 Befund entsteht keine Datei. `riegelprobe.php`: Hülle ohne Anteil, Reset mit
 verbogener Fixture. `abgleich.py` (Stufe 1): Umriss der Fixture gegen
 `../referenz/umriss.json`; `--tief` rechnet ihn aus der `.edbak` nach.
@@ -31,10 +31,10 @@ für die Riegelprobe ein Konto mit Anteil und Rolle `user` (`../vergleich/pruefk
 
 ## Erwartete Zahl
 
-`erzeugen.php` Rückgabe 0, „Gegenlesung ohne Befund“ (15.11.2026: 67 016 Punkte in 223 Spuren und 269 Stücken, 197 vom Gerät).
+`erzeugen.php` Rückgabe 0, „Gegenlesung ohne Befund“ (15.11.2026 und nach dem Neuaufbau am 19.11.2026: 67 016 Punkte in 223 Spuren und 269 Stücken, 197 vom Gerät).
 `verschliessen.py --selbstprobe` **9 / 0**, `riegelprobe.php` **11 von 11**, `abgleich.py` „Gleich.", Selbstprobe **10 / 0**.
 
 ## Was es nicht kann
 
 Den Bestand herstellen (`einspielen/`, `browser/`); laufende Jobs landen still in der Datei.
-Der Abgleich zählt den Umriss, er öffnet nichts. Die Fixture gilt nur mit umgelegter Weiche.
+Der Abgleich zählt den Umriss, er öffnet nichts. Ein Neuaufbau ist nicht byte-gleich: Zeitstempel, Gerätekennungen, Salz und die Kennungen von Hand angelegter, importierter und geschnittener Einsätze entstehen je Lauf neu.

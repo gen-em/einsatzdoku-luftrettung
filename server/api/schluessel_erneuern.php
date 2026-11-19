@@ -95,7 +95,7 @@ passwort_nachweis_json($userId, post_text('token'), 'passwort', 'text');
 $wrapRc = post_text('wrap_rc');
 
 /* `huelle_rc_pruefen()` UND NICHT NUR EIN FORMATTEST. Sie weist eine
- * `edka1:`-Huelle ab — also eine, die am Server-Anteil haengt. Genau die
+ * `edka2:`-Huelle ab — also eine, die am Server-Anteil haengt. Genau die
  * waere hier der Verlust des Rueckwegs: `pat_wrap_rc` oeffnet ohne Anteil,
  * und deshalb ist dessen Verlust kein Datenverlust. Eine Huelle,
  * die das aufgibt, sieht man dem Feld nicht an — bis es zu spaet ist. */

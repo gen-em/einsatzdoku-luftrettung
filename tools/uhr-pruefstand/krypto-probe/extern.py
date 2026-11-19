@@ -56,7 +56,7 @@ def pruefen(zeilen: list[str]) -> list[tuple[str, bool, str]]:
                 ok = False
             aus.append(("kopplung", ok, wert))
             continue
-        leser = r.Leser(konto, {eigen: {"spk": spk, "bis": None}}, verlangt2=True)
+        leser = r.Leser(konto, {eigen: {"spk": spk, "bis": None}})
         huelle = base64.b64decode(t[-1])
         name = " ".join(t[1:2] + t[3:5])
         try:

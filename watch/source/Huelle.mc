@@ -8,33 +8,34 @@
 // Kontoinhaberin. Eine verlorene Uhr gibt deshalb auch keine gesendeten
 // Einsaetze preis.
 //
-// DAS FORMAT steht im Kopf von tools/proben/huelle/referenz.py, und nur dort
-// (Fassung 1): Kennbyte 0x01 · fluechtiger oeffentlicher Schluessel (65 Byte
-// SEC1) · IV · AES-256-CBC · HMAC-SHA256, Schluessel ueber ECDH auf P-256
-// und HKDF. Die Bausteine hier stammen aus der Krypto-Probe
-// (tools/uhr-pruefstand/krypto-probe/); dort sind sie gegen die
-// Vektoren gemessen, auf drei Uhren im Simulator und auf der Fenix 6 Pro.
+// DAS FORMAT steht im Kopf von tools/proben/huelle/referenz.py, und nur dort.
+// Verschlossen wird in Huelle2.mc (Fassung 2); diese Datei traegt die
+// Bausteine, die Huelle2 benutzt -- ECDH auf P-256 samt Byteordnung, HKDF,
+// AES-256-CBC, HMAC-SHA256, Bindung, Innenform der Punkte, Rumpf der
+// Einsatzhuelle --, den Kontoschluessel und den Selbsttest der Byteordnung.
+// Die Bausteine stammen aus der Krypto-Probe (tools/uhr-pruefstand/
+// krypto-probe/); dort sind sie gegen die Vektoren gemessen, auf drei Uhren
+// im Simulator und auf der Fenix 6 Pro.
 //
 // GARMINS BYTEORDNUNG. Toybox.Cryptography fuehrt Schluessel je
 // Koordinate little-endian und ohne das Praefix 0x04, und liefert das
 // gemeinsame Geheimnis Z im Simulator und auf der Fenix 6 Pro ebenfalls
 // little-endian. Fuer FR 945 und Venu 3s ist das angenommen, nicht gemessen.
 // Deshalb ANNIMMT die App es nicht, sondern MISST es: Vor dem
-// ersten Senden rechnet sie einen festen Fall aus der Referenz nach
-// (HuelleVektor.mc). Stimmt Z erst umgedreht, ist die Ordnung "le"; stimmt
-// danach das Pruefwort, traegt die ganze Kette. Stimmt keines, sendet sie
-// nicht — eine Huelle, die im Browser nicht aufgeht, waere ein stiller
-// Datenverlust, und "Uhr kann nicht verschluesseln" auf der Sync-Seite ist
-// eine Auskunft.
+// ersten Senden rechnet sie das statische Geheimnis Z_s eines festen Falls
+// aus der Referenz nach (HuelleVektor2.mc). Stimmt es erst umgedreht, ist
+// die Ordnung "le". Ob danach die ganze Kette traegt -- SHA-256, HKDF, AES,
+// HMAC, Bindung --, misst Huelle2.bereit() an demselben Fall. Stimmt etwas
+// nicht, sendet sie nicht — eine Huelle, die im Browser nicht aufgeht, waere
+// ein stiller Datenverlust, und "Verschluesseln geht nicht" auf der
+// Sync-Seite ist eine Auskunft.
 //
-// SEIT UHR 6.0.0 SENDET DIE UHR DIESE FASSUNG NICHT MEHR (KA-22): Der
-// Eingang weist Huellen der Fassung 1 seit Web 26.0.0 mit 400 ab, und der
-// Sendeweg verschliesst nur noch ueber Huelle2.mc. Diese Datei bleibt, weil
-// Huelle2 ihre Bausteine benutzt (Byteordnung und Selbsttest `bereit()`,
-// ECDH, HKDF, AES, HMAC, Bindung, Innenformen, Kontoschluessel). Die
-// Funktionen der ganzen Huelle (`verschliessen()`, `spurstueck()`,
-// `einsatz()`) ruft nur noch die Krypto-Probe als Referenz; sie fallen mit
-// KA-07 (E-KA-99).
+// FASSUNG 1 IST FORT (seit Uhr 6.0.1, KA-28). Seit Uhr 6.0.0 (KA-22) sendete
+// die Uhr sie nicht mehr; ihre Funktionen (`verschliessen()`,
+// `spurstueck()`, `einsatz()`) rief nur noch die Krypto-Probe, und der
+// Selbsttest mass die Byteordnung an einem Fall der Fassung 1
+// (HuelleVektor.mc). Beides ist entfernt; der Selbsttest rechnet den Fall
+// der Fassung 2 nach.
 //
 // DIE ANZEIGE AUF DER UHR liest den Klartextpuffer: Die
 // Uhr zeigt, was sie selbst aufgezeichnet hat; verschlossen wird erst auf
@@ -49,8 +50,6 @@ using Toybox.Time.Gregorian;
 using Toybox.Application.Storage;
 
 module Huelle {
-
-    const INFO = "nadoku-huelle-1";
 
     /* Storage-Schluessel. Der Kontoschluessel liegt als Base64 neben "cred"
      * — als Zeichenkette, weil Storage nicht auf jeder
@@ -126,9 +125,11 @@ module Huelle {
 
     // ---- Der Selbsttest -------------------------------------------------
 
-    /* Kann diese Uhr verschliessen? Beim ersten Aufruf je App-Fassung und
-     * Firmware wird gemessen (zwei Schluesselvereinbarungen, auf der
-     * Fenix 6 Pro rund 0,2 s), danach steht das Ergebnis im Storage.
+    /* Kennt diese Uhr ihre Byteordnung? Beim ersten Aufruf je App-Fassung
+     * und Firmware wird gemessen (eine Schluesselvereinbarung, bis Uhr 6.0.0
+     * zwei an einem Fall der Fassung 1, auf der Fenix 6 Pro zusammen rund
+     * 0,2 s), danach steht das Ergebnis im Storage. Die ganze Kette misst
+     * Huelle2.bereit(), das hierauf aufbaut.
      *
      * NUR EIN GUELTIGES ERGEBNIS BLEIBT. Landete auch "kaputt" im Storage,
      * und zwar fuer jede Ausnahme beim Messen -- knapper Speicher beim
@@ -166,18 +167,11 @@ module Huelle {
         }
         var ergebnis = "kaputt";
         try {
-            var p = paar(HuelleVektor.D);
-            var z = _geheimnisRoh(p, HuelleVektor.EMPF_PUB);
-            var ordnung = null;
-            if (gleich(z, HuelleVektor.Z)) { ordnung = "be"; }
-            else if (gleich(umgedreht(z, 0, z.size()), HuelleVektor.Z)) { ordnung = "le"; }
-            if (ordnung != null) {
-                _ordnung = ordnung;
-                var h = verschliessenRoh(HuelleVektor.KLAR, HuelleVektor.EMPF_PUB,
-                                         HuelleVektor.BINDUNG, HuelleVektor.D, HuelleVektor.IV);
-                var tag = h.slice(h.size() - 32, h.size());
-                if (gleich(tag, HuelleVektor.TAG)) { ergebnis = ordnung; }
-            }
+            /* Z_s: das Geraetepaar des Vektors gegen den Kontoschluessel --
+             * dieselbe Rechnung wie Huelle2.statisch(). */
+            var z = _geheimnisRoh(paar(HuelleVektor2.D_GERAET), HuelleVektor2.KONTO);
+            if (gleich(z, HuelleVektor2.Z_S)) { ergebnis = "be"; }
+            else if (gleich(umgedreht(z, 0, z.size()), HuelleVektor2.Z_S)) { ergebnis = "le"; }
         } catch (e) {
             ergebnis = "kaputt";
         }
@@ -273,8 +267,8 @@ module Huelle {
         return aus;
     }
 
-    // Ein Schluesselpaar: aus festem d (big-endian, nur fuer den Selbsttest)
-    // oder neu erzeugt — je Huelle ein fluechtiges.
+    // Ein Schluesselpaar: aus festem d (big-endian, nur fuer Selbsttest und
+    // Probe) oder neu erzeugt — je Huelle ein fluechtiges.
     function paar(d as Lang.ByteArray or Null) as Cryptography.KeyPair {
         if (d == null) {
             return new Cryptography.KeyPair({
@@ -317,23 +311,7 @@ module Huelle {
         return aus;
     }
 
-    /* Die ganze Huelle, binaer. `d` und `iv` nur fuer den Selbsttest fest. */
-    function verschliessenRoh(klar as Lang.ByteArray, empfPub as Lang.ByteArray,
-                              bind as Lang.ByteArray, d as Lang.ByteArray or Null,
-                              iv as Lang.ByteArray or Null) as Lang.ByteArray {
-        var p = paar(d);
-        var epk = geraetZuSec1(p.getPublicKey().getBytes() as Lang.ByteArray);
-        if (iv == null) { iv = Cryptography.randomBytes(16); }
-        var z = ecdh(p, empfPub);
-        var info = text(INFO);
-        info.addAll(empfPub);
-        var kopf = [1]b;
-        kopf.addAll(epk);
-        kopf.addAll(iv);
-        return fertigen(kopf, hkdf(z, epk, info), iv, klar, bind);
-    }
-
-    /* Der Schluss jeder Huelle, gleich in Fassung 1 und 2 (Huelle2.mc):
+    /* Der Schluss jeder Huelle (Huelle2.verschliessenRoh()):
      * `kopf` ist alles vor dem Chiffretext (Kennbyte bis IV), `okm` sind
      * die 64 Byte aus HKDF -- vorn der Schluessel fuer AES-256-CBC, hinten
      * der fuer das Pruefwort ueber Kopf, Chiffretext und Bindung. `kopf`
@@ -349,11 +327,6 @@ module Huelle {
         return kopf;
     }
 
-    function verschliessen(klar as Lang.ByteArray, art as Lang.String, ref as Lang.String,
-                           platz as Lang.String) as Lang.String {
-        return base64(verschliessenRoh(klar, _empfaenger(), bindung(art, ref, platz), null, null));
-    }
-
     // ---- Die Innenformen ---------------------------------------------------
 
     /* Von der Null weg runden, wie PHPs round() und referenz.py — sonst
@@ -363,23 +336,13 @@ module Huelle {
         return -(Math.floor(-x + 0.5).toNumber());
     }
 
-    /* Ein Spurstueck (Art "spur" oder "ruhe") aus den flachen Punkten von
-     * Track.readPoints() — je Punkt lat, lon, ele, epoch. Innen 14 Byte je
-     * Punkt, big-endian: Breite und Laenge in 1e-7 Grad
-     * (int32), Hoehe in ganzen Metern (int16, -32768 = keine), Zeit relativ
-     * zu ts_von (uint32). Platz "<seq_from>:<punkte>". */
-    function spurstueck(art as Lang.String, ref as Lang.String, seqFrom as Lang.Number,
-                        flat as Lang.Array) as Lang.Dictionary {
-        var n = flat.size() / 4;
-        var p = punkteInnen(flat, 0);
-        var platz = seqFrom.toString() + ":" + n.toString();
-        return { "seq_from" => seqFrom, "punkte" => n, "ts_von" => p[1], "ts_bis" => p[2],
-                 "huelle" => verschliessen(p[0] as Lang.ByteArray, art, ref, platz) };
-    }
-
-    /* Die Punkte in der Innenform, mit `kopf` freien Bytes davor (Fassung 1:
-     * keine; Fassung 2 schreibt dorthin ihren Kopf, Huelle2.mc). Gibt
-     * [innen, ts_von, ts_bis] zurueck; `flat` darf nicht leer sein. */
+    /* Die Punkte in der Innenform, aus den flachen Punkten von
+     * Track.readPoints() — je Punkt lat, lon, ele, epoch: 14 Byte je Punkt,
+     * big-endian, Breite und Laenge in 1e-7 Grad (int32), Hoehe in ganzen
+     * Metern (int16, -32768 = keine), Zeit relativ zu ts_von (uint32). Davor
+     * `kopf` freie Bytes, in die Huelle2.mc den Kopf des Spurstuecks
+     * schreibt. Gibt [innen, ts_von, ts_bis] zurueck; `flat` darf nicht leer
+     * sein. */
     function punkteInnen(flat as Lang.Array, kopf as Lang.Number) as Lang.Array {
         var n = flat.size() / 4;
         var von = flat[3] as Lang.Number;
@@ -431,19 +394,11 @@ module Huelle {
         return (x as Lang.Double).format("%.7f");
     }
 
-    /* Die Einsatzhuelle (Art "einsatz", Platz leer; JSON-Vertrag 3.4):
-     * {"fassung":1,"phasen":[{"phase","t","lat","lon"}],
-     * "rea":[{"t","ereignisse":[{"art","t"}]}]}, alle Zeiten in Sekunden
-     * seit started_at. Immer VOLLSTAENDIG — sie wird mit der
-     * Phasenliste ersetzt (Vertrag 3.1), die Uhr schickt beide zusammen. */
-    function einsatz(ref as Lang.String, d as Lang.Dictionary) as Lang.String {
-        var beginn = _sekunden(d["startedAt"] as Lang.String);
-        return verschliessen(text("{\"fassung\":1," + einsatzRumpf(d, beginn)), "einsatz", ref, "");
-    }
-
-    /* Phasen und Reanimation als JSON, vom Schluessel "phasen" bis zur
-     * schliessenden Klammer des Ganzen -- der Teil, der in Fassung 1 und 2
-     * gleich ist. `beginn`: started_at in Unix-Sekunden. */
+    /* Phasen und Reanimation der Einsatzhuelle als JSON, vom Schluessel
+     * "phasen" bis zur schliessenden Klammer des Ganzen; den Kopf davor
+     * schreibt Huelle2.einsatzInnen(). Alle Zeiten in Sekunden seit
+     * started_at (`beginn`, Unix-Sekunden). Immer VOLLSTAENDIG — die Huelle
+     * wird mit der Phasenliste ersetzt (Vertrag 3.1). */
     function einsatzRumpf(d as Lang.Dictionary, beginn as Lang.Number) as Lang.String {
         var s = "\"phasen\":[";
         var raw = d["phases"] as Lang.Array<Lang.Array>;

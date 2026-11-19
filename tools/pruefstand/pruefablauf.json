@@ -1096,7 +1096,7 @@
         "server/spur_lib.php",
         "server/api/mission.php",
         "server/api/day.php",
-        "server/geraetehuelle_lib.php",
+        "tools/proben/huelle/geraetehuelle_lib.php",
         "tools/proben/ortsdaten/**",
         "tools/proben/huelle/geraet.php",
         "tools/proben/huelle/geraet_cli.php",
@@ -1137,8 +1137,7 @@
         "server/assets/inhalt2.js",
         "server/assets/huelle2.js",
         "server/assets/standbuch.js",
-        "server/assets/ortsdaten.js",
-        "server/geraetehuelle_lib.php"
+        "server/assets/ortsdaten.js"
       ],
       "proben": [
         "huellenprobe",

@@ -3,9 +3,8 @@
  * Anlass: Nr. 563 — mit umgelegter Weiche zeigte ein Demo-Bestand der
  * Fassung 1 Gerätedaten ohne Herkunftsnachweis (Konzept KA, KA-13, F-KA-104).
  *
- * WAS ES MISST. Nach einem Demo-Reset und der Anmeldung als Demo-Konto, mit
- * der Weiche AN (nur im Browser dieser Probe, `page.route` auf
- * `inhalt2.js` — das Muster aus `tools/bedienprobe/wege/ka06b3.mjs`):
+ * WAS ES MISST. Nach einem Demo-Reset und der Anmeldung als Demo-Konto (bis
+ * Web 25 mit der Weiche AN, nur im Browser dieser Probe):
  *
  *   1. Jeder Einsatz und jedes Ruhesegment des Bestands geht auf — über
  *      dieselben Funktionen wie die Ansichten (`EdOrtsdaten.fuerAnsicht()`,
@@ -17,8 +16,8 @@
  *   3. Das Ansehen schreibt kein Blatt: Die 17 Versionen in
  *      `stand_blaetter` sind danach dieselben — auch nach der Geräteseite,
  *      deren Abgleich einen Bucheintrag ohne Gerät austrüge.
- *   4. Der Anhebelauf hat nichts zu tun: kein Block im alten Format, keine
- *      Anfrage mit `POST` an `api/format_anheben.php`.
+ *   4. Kein Block im alten Format (bis Web 26 dazu: keine Anfrage an
+ *      `api/format_anheben.php`; den Anhebelauf gibt es seit KA-07 nicht mehr).
  *   5. `--zweimal`: Im SELBEN Browser (mit seinem Anker in IndexedDB) einen
  *      Einsatz speichern, zurücksetzen, neu anmelden — wieder geht alles auf.
  *      Das ist die BesucherIn, die nach dem Reset wiederkommt.
@@ -87,7 +86,6 @@ const SOLL = {
 /* ---- Browser (die Weiche ist seit Web 26.0.0 zurückgebaut, 06e) --------- */
 const browser = await starten(PW, MOTOR);
 const kontext = await kontextMachen(browser, { basis, optionen: { viewport: { width: 1400, height: 1000 } } });
-const weicheGesehen = 'zurückgebaut (Web 26)';
 const seite = await kontext.newPage();
 const posts = [];
 seite.on('request', (r) => {
@@ -168,8 +166,7 @@ async function allesOeffnen() {
 }
 
 function auswerten(r, was) {
-  melde(`${was}: ${r.einsaetze.length} Einsätze, ${r.ruhe.length} Ruhesegmente geöffnet (Weiche ${r.weiche ? 'an' : 'AUS'})`);
-  pruefe(r.weiche === true, 'die Weiche steht im Browser der Probe an');
+  melde(`${was}: ${r.einsaetze.length} Einsätze, ${r.ruhe.length} Ruhesegmente geöffnet`);
   pruefe(r.befundeBuch.length === 0, `Standbuch ohne Befund beim Abgleich${r.befundeBuch.length ? ': ' + JSON.stringify(r.befundeBuch.slice(0, 3)) : ''}`);
   const fe = r.einsaetze.filter((z) => z.fehler), fr = r.ruhe.filter((z) => z.fehler);
   const gruende = (l) => [...new Set(l.map((z) => z.fehler))].join(', ');
@@ -220,7 +217,6 @@ try {
   if (!a.angemeldet) { throw new Error('Anmeldung als Demo-Konto gescheitert: ' + (a.meldung || a.url)); }
   await seite.waitForTimeout(1500);                 // der Anhebelauf läuft still nach dem Entsperren
   auswerten(await allesOeffnen(), 'Nach dem Reset');
-  melde(`  Weiche: ${weicheGesehen}`);
 
   /* Die Geräteseite: Ihr Abgleich trüge einen Bucheintrag ohne Gerät aus. */
   await seite.goto(`${basis}/einstellungen.php?t=geraete`, { waitUntil: 'load' });
@@ -228,8 +224,6 @@ try {
   const nach = zustand('stand');
   pruefe(JSON.stringify(nach.blaetter) === JSON.stringify(vor.blaetter),
     `das Ansehen schreibt kein Blatt (Versionen ${Object.values(nach.blaetter).join(',')})`);
-  const anheben = posts.filter((p) => p.startsWith('api/format_anheben.php'));
-  pruefe(anheben.length === 0, `der Anhebelauf sendet nichts (${anheben.length} POST)`);
   pruefe(konsole.length === 0, `keine Ausnahme in der Seite${konsole.length ? ': ' + konsole[0] : ''}`);
   const zaehl = {};
   for (const p of posts) { if (p !== 'login.php') { zaehl[p] = (zaehl[p] || 0) + 1; } }

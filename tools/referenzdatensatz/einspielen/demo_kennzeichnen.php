@@ -7,8 +7,8 @@ declare(strict_types=1);
  * WOFUER, UND WARUM ES DIESES SKRIPT BRAUCHT.
  *
  * `fixture/erzeugen.php` bricht ab, wenn die Schluesselhuelle des Kontos nicht
- * `edk1:` traegt. Der Riegel ist richtig: Eine
- * `edka1:`-Huelle haengt am Server-Anteil DIESER Installation, und die Fixture
+ * `edk2:` traegt (ohne Anteil). Der Riegel ist richtig: Eine
+ * `edka2:`-Huelle haengt am Server-Anteil DIESER Installation, und die Fixture
  * reist auf eine andere -- das Demo-Konto kaeme dort herein und saehe nichts.
  *
  * Welche Fassung entsteht, entscheidet `pw_handling.php` in dem Augenblick, in
@@ -21,7 +21,7 @@ declare(strict_types=1);
  *   - Der Einspiellauf legt das Konto ueber den regulaeren Einladungsweg an
  *     (`stufe_konto`) und setzt das Passwort im Browser.
  *   - Zu diesem Zeitpunkt ist es ein KONTO WIE JEDES ANDERE, also bekommt es
- *     `edka1:`.
+ *     `edka2:`.
  *   - `demo_anlegen()` im Adminbereich kann die Kennzeichnung nicht
  *     nachtragen: Es legt ein Konto AUS DER FIXTURE an und lehnt ab, solange
  *     eines mit dieser Adresse besteht.
@@ -69,7 +69,7 @@ foreach ($argv as $i => $a) {
  * aber das Referenzkonto soll ueber genau diesen regulaeren Weg verdichtet
  * werden. `einspielen.py` hebt die Kennzeichnung deshalb fuer die Dauer der
  * Stufe auf und setzt sie danach mit diesem Skript wieder. Dazwischen meldet
- * sich niemand im Browser an: Die stille Umstellung der Huelle auf `edka1:`
+ * sich niemand im Browser an: Die stille Umstellung der Huelle auf `edka2:`
  * liefe nur dort, und `fixture/erzeugen.php` braeche dann ab.
  * Nur die Zeile `demo_user_id` faellt; die Resetmarke bleibt, wo sie ist. */
 if ($aufheben) {
@@ -106,7 +106,7 @@ $pdo->prepare('INSERT INTO app_state (k, v) VALUES (?, ?)
 demo_reset_marke_setzen(time() + $frist);
 
 printf("Konto #%d (%s) ist jetzt das Demo-Konto dieser Installation.\n", $id, $adresse);
-printf("Huelle: %s…  (fuer die Fixture muss sie `edk1:` sein — die Fassung "
+printf("Huelle: %s…  (fuer die Fixture muss sie `edk2:` sein — die Art "
      . "entsteht beim SETZEN des Passworts)\n", (string)$konto['huelle']);
 printf("Reset ausgesetzt fuer %d s (bis %s).\n", $frist,
        date('Y-m-d H:i:s', time() + $frist + DEMO_RESET_SEKUNDEN));
