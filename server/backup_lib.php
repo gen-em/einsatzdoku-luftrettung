@@ -910,76 +910,26 @@ function edbak_verworfen_satz(array $bericht): string
  * `user_id`, in einer Abfrage; was nicht diesem Konto gehoert, faellt heraus,
  * und die betroffenen Eintraege werden uebersprungen und gezaehlt.
  *
- * ZWEI HERKUENFTE DER ORTSDATEN (`$ortsdaten`):
+ * DIE ORTSDATEN KOMMEN VERSCHLOSSEN. Der Browser hat Orte, Reanimation und
+ * Spur schon verschlossen (Einsatzhuelle `ort_huelle`; Stuecke ueber die
+ * Spurteile) und Transportziel und Ortshoehe in den `pat_blob` gelegt. Eine
+ * Nutzlast mit Klartext-Ortsdaten wird ABGEWIESEN
+ * (`DomainException('klartext: …')`, der Endpunkt antwortet 400), vor jedem
+ * Schreiben — wie `ingest.php` und der CSV-Import. Auch das direkte
+ * Einspielen einer Kontosicherung durch die Verwaltung und der Demo-Reset
+ * (Fixture Format 4) gehen diesen Weg: Ihre Pakete tragen Huellen und
+ * Stuecke, wie sie liegen.
  *
- *   'browser'  Der Browser hat Orte, Reanimation und Spur schon verschlossen
- *              (Einsatzhuelle `ort_huelle`; Stuecke ueber die Spurteile) und
- *              Transportziel und Ortshoehe in den `pat_blob` gelegt. Eine
- *              Nutzlast mit Klartext-Ortsdaten wird ABGEWIESEN
- *              (`DomainException('klartext: …')`, der Endpunkt antwortet 400),
- *              vor jedem Schreiben — wie `ingest.php` und der CSV-Import.
- *              Auch das direkte Einspielen einer Kontosicherung durch
- *              die Verwaltung geht diesen Weg: Ihre Pakete
- *              tragen Huellen und Stuecke, wie sie liegen.
- *   'server'   NUR NOCH DER DEMO-RESET: Die Fixture liegt im
- *              Klartext im Repositorium (Nutzlast 7, mit Punktlisten), und
- *              der Server verschliesst Orte, Reanimation und Spur mit dem
- *              oeffentlichen Schluessel des Kontos.
- *              Transportziel und Ortshoehe legt `$blobZiel` in den Blob —
- *              ohne ihn ist dieser Weg nicht erlaubt: Es gibt keine
- *              Spalten, in denen sie liegen bleiben koennten.
- *
- * `$blobZiel` (nur der Demo-Reset): Wer den Inhaltsschluessel des Kontos
- * hat, kann Transportziel und Ortshoehe in den Blob legen. Der Rueckruf
- * bekommt den `pat_blob` der Datei (oder null) und die Angaben und gibt den
- * neuen Blob zurueck. Das Demo-Konto ist das einzige, dessen Passwort der
- * Server kennt — es steht im Handbuch.
+ * Bis Web 26.x gab es einen zweiten Weg, `'server'`: Der Demo-Reset aus einer
+ * Fixture bis Format 3 lag im Klartext vor, und der Server verschloss Orte,
+ * Reanimation und Spur selbst — als Geraetehuelle der Fassung 1. Er fiel mit
+ * KA-07 (Web 27.0.0) samt dieser Fixture.
  */
 function edbak_restore(int $userId, array $data, ?array $dayMap = null,
-                       string $ortsdaten = 'browser', ?Closure $blobZiel = null,
                        bool $offenZurueck = false): array {
-    /* DER STICHTAG (06e, KA-19, E-KA-99): Gerätehüllen der Fassung 1 nimmt
-     * kein Schreibweg mehr an — nur der Demo-Reset aus einer Fixture bis
-     * Format 3 (`'server'`) verschließt sie selbst, und er ist die
-     * Testquelle der Übernahme, bis KA-07 beides entfernt. */
-    $vorher = huelle_fassung1_zulassen($ortsdaten === 'server' || huelle_fassung1_zulassen());
-    try {
-        return edbak_restore_lauf($userId, $data, $dayMap, $ortsdaten, $blobZiel, $offenZurueck);
-    } finally {
-        huelle_fassung1_zulassen($vorher);
-    }
-}
-
-/** Der Lauf von `edbak_restore()` — nur von dort aufgerufen. */
-function edbak_restore_lauf(int $userId, array $data, ?array $dayMap,
-                            string $ortsdaten, ?Closure $blobZiel, bool $offenZurueck): array {
-    if (!in_array($ortsdaten, ['browser', 'server'], true)
-        || ($ortsdaten === 'server' && $blobZiel === null)) {
-        throw new InvalidArgumentException('ortsdaten: ' . $ortsdaten);
-    }
-    if ($ortsdaten === 'browser') {
-        $fund = edbak_klartext_fund($data);
-        if ($fund !== null) { throw new DomainException('klartext: ' . $fund); }
-    }
+    $fund = edbak_klartext_fund($data);
+    if ($fund !== null) { throw new DomainException('klartext: ' . $fund); }
     $pdo = db();
-    require_once __DIR__ . '/geraetehuelle_lib.php';
-    require_once __DIR__ . '/kontopaar_lib.php';
-    /* Der oeffentliche Schluessel des Kontos — erst geholt, wenn etwas zu
-     * verschliessen ist: Ein Konto ohne Paar spielt eine Sicherung ohne
-     * Ortsdaten weiter ein. */
-    $sec1 = null;
-    $sec1Holen = static function () use ($pdo, $userId, &$sec1): string {
-        if ($sec1 === null) {
-            $b64 = kp_fuer_geraet($pdo, $userId);     // SEC1 als Base64, wie fuer das Geraet
-            $sec1 = $b64 === null ? null : base64_decode($b64);
-            if ($sec1 === null) {
-                throw new DomainException('kein_paar: Das Zielkonto hat noch kein Schlüsselpaar. '
-                    . 'Es entsteht beim ersten Entsperren nach einer Anmeldung; danach lässt '
-                    . 'sich die Sicherung einspielen.');
-            }
-        }
-        return $sec1;
-    };
     $stats = ['missions' => 0, 'missions_skipped' => 0, 'rests' => 0, 'rests_skipped' => 0,
               'days' => 0, 'stammdaten' => 0, 'stammdaten_skipped' => 0,
               /* Wie viel davon in den PAPIERKORB gegangen ist. Die
@@ -1104,12 +1054,10 @@ function edbak_restore_lauf(int $userId, array $data, ?array $dayMap,
     $nutzlast = (int)($data['version'] ?? 0);
     /* DER BROWSERWEG NIMMT NUR NUTZLAST 13. Die Endpunkte
      * weisen eine aeltere Datei schon vorher ab (`409 version_alt`); diese
-     * Zeile ist die Schranke, die nicht davon abhaengt. Der Serverweg ist
-     * nur noch der Demo-Reset mit seiner Nutzlast 7 aus dem Repositorium. */
-    if ($ortsdaten === 'browser' && $nutzlast < EDBAK_NUTZLAST) {
+     * Zeile ist die Schranke, die nicht davon abhaengt. */
+    if ($nutzlast < EDBAK_NUTZLAST) {
         throw new DomainException('version_alt: Nutzlast ' . $nutzlast);
     }
-    $mitVerweisen = $nutzlast >= 8;
 
     /* VERSCHACHTELUNGSFAEHIG.
      *
@@ -1639,106 +1587,6 @@ function edbak_restore_lauf(int $userId, array $data, ?array $dayMap,
         /* Einsaetze: Dublette = gleiche client_ref bei dieser NutzerIn */
         $exists = $pdo->prepare('SELECT id FROM missions WHERE user_id = ? AND client_ref = ?');
 
-        /* SPUR SCHREIBEN — EINE STELLE FUER BEIDE ARTEN.
-         *
-         * Es waren zwei, und sie waren verschieden: Der Einsatz begrenzte die
-         * Menge, pruefte den Aufbau und liess pruef_breite/pruef_laenge ueber
-         * die Koordinaten laufen; das Ruhesegment schrieb roh, was in der
-         * Datei stand. `(float)"Unfug"` ist 0.0 — aus einem unbrauchbaren
-         * Punkt wurde damit still eine gueltige Koordinate im Golf von Guinea,
-         * und die Punktzahl war unbegrenzt.
-         *
-         * Zwei Kopien einer Pruefung sind eine Kopie zu viel: Die zweite
-         * bleibt zurueck. Jetzt gibt es eine.
-         *
-         * ZUSAETZLICH GEPRUEFT werden `seq` und `ts` gegen den Wertebereich
-         * ihrer Spalten (beide INT UNSIGNED NOT NULL) und `ele` auf
-         * Numerik. Auch das war auf BEIDEN Wegen offen: Ein negatives `seq`
-         * oder ein Text in `ele` bringt nicht einen Punkt zu Fall, sondern
-         * ueber die Ausnahme die ganze Wiederherstellung.
-         *
-         * UND DIE EINDEUTIGKEIT VON `seq`. Der Wertebereich
-         * allein reicht nicht: eine Spur ist durch
-         * (owner_type, owner_id, seq) bestimmt, und zwei Stuecke mit
-         * derselben Nummer widersprechen einander heute ebenso; zwei Punkte
-         * mit derselben Nummer loesten also einen Schluesselkonflikt aus — und der reisst wieder den
-         * gesamten Lauf mit. Ein eigener Export erzeugt keine Wiedergaenger;
-         * eine von Hand bearbeitete oder fremde Datei kann es. Der zweite
-         * Punkt wird deshalb uebersprungen und gemeldet.
-         *
-         * Der kuerzere Weg waere INSERT IGNORE gewesen. Er ist der stille:
-         * Die Datei behielte einen Fehler, den niemand zu sehen bekommt.
-         * $gesehen wird je Eigentuemer neu angelegt — der Schluessel gilt nur
-         * innerhalb einer Spur. */
-        $spurSchreiben = function (string $typ, int $ownerId, $liste, string $ref,
-                                   array $eintrag = [])
-                              use ($pdo, $pruef, $sec1Holen): void {
-            $gesehen = [];
-            $gueltig = [];
-            /* ABLEHNEN STATT KAPPEN.
-             *
-             * Nicht pruef_menge() mit derselben Konstante, die ingest.php je
-             * ANFRAGE anwendet — hier gaelte sie je SPUR. Was die Uhr ueber
-             * viele Anfragen aufbauen darf, wuerde beim Zurueckspielen bei
-             * 2000 Punkten abgeschnitten; die Datei trug
-             * die ganze Spur, zurueck kam ihr Anfang. In ein frisches Konto
-             * eingespielt war der Verlust endgueltig.
-             *
-             * Jetzt: eigene, hohe Grenze — und eine Spur darueber wird GANZ
-             * abgelehnt und benannt. Eine halbe Spur sieht aus wie eine ganze. */
-            $punkte = pruef_menge_streng($liste ?? [], LIMIT_TRACKPUNKTE_SPUR,
-                                         $typ . '.track', $pruef);
-            if ($punkte === null) { return; }
-            foreach ($punkte as $p) {
-                if (!is_array($p) || count($p) < 5) { continue; }
-                $la = pruef_breite($p[1], $typ . '.track.lat', $pruef);
-                $lo = pruef_laenge($p[2], $typ . '.track.lon', $pruef);
-                $seq = pruef_zahl($p[0], 0, 4294967295, $typ . '.track.seq', $pruef);
-                $ts  = pruef_zahl($p[4], 0, 4294967295, $typ . '.track.ts', $pruef);
-                if ($la === null || $lo === null || $seq === null || $ts === null) { continue; }
-                if (isset($gesehen[$seq])) {
-                    $pruef->melde($typ . '.track.seq', 'Nummer doppelt');
-                    continue;
-                }
-                $gesehen[$seq] = true;
-                // Hoehe darf fehlen, aber nicht Text sein.
-                $ele = is_numeric($p[3]) ? (float)$p[3] : null;
-                $gueltig[] = [(int)$seq, (float)$la, (float)$lo, $ele, (int)$ts];
-            }
-            if (!$gueltig) { return; }
-            /* VERSCHLOSSEN, NICHT ALS ZEILEN. Hierher kommt nur
-             * noch der Demo-Reset ('server'); der Browserweg schickt Stuecke,
-             * und eine Punktliste haette ihn oben abgewiesen. */
-            usort($gueltig, static fn($a, $b) => $a[0] <=> $b[0]);
-            /* STUFE 2 UND 3 AUS DER FIXTURE (Fixture-Format 3, Konzept RD,
-             * E-RD-10). Traegt der Eintrag `stufe` >= 2, legt der Reset die
-             * Spur so an, wie sie im Referenzkonto lag: EIN gepacktes Stueck
-             * ueber `seq_from` bis `seq_from + n_original - 1`, die Punkte so,
-             * wie die Fixture sie traegt — schon ausgeduennt; der Reset duennt
-             * nicht aus (E-RD-02, F-RD-05: quadratisch). Ein Eintrag, dessen
-             * `n_original` unter der Punktzahl liegt, widerspricht sich; er wird
-             * gemeldet und als Stufe 1 geschrieben, damit keine Spur fehlt. */
-            $stufe = (int)($eintrag['stufe'] ?? 1);
-            if ($stufe >= SPUR2_STUFE_GEPACKT) {
-                $nOrig = (int)($eintrag['n_original'] ?? 0);
-                if ($stufe <= SPUR2_STUFE_DUENN && $nOrig >= count($gueltig)) {
-                    $st = gh_gepackt_bauen($sec1Holen(), $typ === 'rest' ? 'ruhe' : 'spur', $ref,
-                                           $gueltig, $stufe, $gueltig[0][0], $nOrig);
-                    spur2_stueck_schreiben($pdo, $typ, $ownerId, $st['seq_from'], $st['punkte'],
-                                           $st['ts_von'], $st['ts_bis'], $st['huelle'],
-                                           $st['stufe'], $st['n_original']);
-                    return;
-                }
-                $pruef->melde($typ . '.stufe', 'Stufe ' . $stufe . ' mit n_original ' . $nOrig
-                              . ' bei ' . count($gueltig) . ' Punkten — als Stufe 1 geschrieben');
-            }
-            foreach (gh_stuecke_bauen($sec1Holen(), $typ === 'rest' ? 'ruhe' : 'spur', $ref,
-                                      $gueltig) as $st) {
-                spur2_stueck_schreiben($pdo, $typ, $ownerId, $st['seq_from'], $st['punkte'],
-                                       $st['ts_von'], $st['ts_bis'], $st['huelle']);
-            }
-        };
-
         /* Kein `$stueckeSchreiben`: Der Browserweg nimmt nur Nutzlast 13,
          * deren Spuren ueber `api/backup_spuren_restore.php` kommen. */
 
@@ -1971,28 +1819,6 @@ function edbak_restore_lauf(int $userId, array $data, ?array $dayMap,
 
             $oe = edbak_origin_edited($m);
 
-            /* TRANSPORTZIEL UND ORTSHOEHE IN DEN BLOB — nur mit `$blobZiel`
-             * (Demo-Reset). Danach stehen sie nicht mehr in `$m`, und
-             * die Spalten bleiben leer. */
-            if ($blobZiel !== null) {
-                $zusatz = [];
-                $ziel = trim((string)($m['transport_dest'] ?? ''));
-                $zLat = is_numeric($m['dest_lat'] ?? null) ? (float)$m['dest_lat'] : null;
-                $zLon = is_numeric($m['dest_lon'] ?? null) ? (float)$m['dest_lon'] : null;
-                if ($ziel !== '' || $zLat !== null) {
-                    $zusatz['transport_dest'] = ['addr' => $ziel]
-                        + ($zLat !== null && $zLon !== null ? ['lat' => $zLat, 'lon' => $zLon] : []);
-                }
-                if (is_numeric($m['site_ele_m'] ?? null)) {
-                    $zusatz['ortshoehe'] = (int)$m['site_ele_m'];
-                }
-                if ($zusatz) {
-                    $blob = $m['pat_blob'] ?? null;
-                    $m['pat_blob'] = $blobZiel(is_string($blob) && $blob !== '' ? $blob : null, $zusatz);
-                }
-                unset($m['transport_dest'], $m['dest_lat'], $m['dest_lon'], $m['site_ele_m']);
-            }
-
             /* `geraet_art` und `geraet_modell` stehen in der FESTEN Liste und
              * NICHT in `$extraCols`. `$extraCols` kommt aus dem
              * Formular-Feldkatalog (`mission_fields.php`) — die beiden stehen
@@ -2147,23 +1973,11 @@ function edbak_restore_lauf(int $userId, array $data, ?array $dayMap,
              * Klartext. Fuer beides gibt es keine Tabelle.
              *
              * Aus der Datei kommt sie, wenn der Browser sie gebaut hat oder
-             * die Sicherung sie unlesbar mitbrachte (`ort_unlesbar`). Im
-             * Demo-Reset baut der Server sie aus dem Klartext der Fixture.
-             * Im Browserweg kann es Klartext hier nicht geben —
-             * `edbak_klartext_fund()` haette die Nutzlast oben abgewiesen. */
+             * die Sicherung sie unlesbar mitbrachte (`ort_unlesbar`).
+             * Klartext kann es hier nicht geben — `edbak_klartext_fund()`
+             * haette die Nutzlast oben abgewiesen. */
             $huelle = pruef_huelle($m['ort_huelle'] ?? null, GH_EINSATZ_MAX_BYTE,
                                    'ort_huelle', $pruef);
-            $klarOrt = $neueReas !== []
-                || array_filter($neuePhasen, static fn($p) => $p['lat'] !== null || $p['lon'] !== null);
-            if ($huelle === null && $klarOrt) {
-                $sek = static fn(string $t): int => (int)strtotime($t . ' UTC');
-                $huelle = gh_einsatz_verschliessen($sec1Holen(), $werte['client_ref'], $sek($startedAt),
-                    array_map(static fn($p) => ['phase' => $p['phase'], 'ts' => $sek($p['occurred_at']),
-                                                'lat' => $p['lat'], 'lon' => $p['lon']], $neuePhasen),
-                    array_map(static fn($r) => ['ts' => $sek($r['started_at']),
-                        'ereignisse' => array_map(static fn($e) => ['art' => $e[0], 'ts' => $sek($e[1])],
-                                                  $r['events'])], $neueReas));
-            }
             if ($huelle !== null) {
                 $pdo->prepare('UPDATE missions SET ort_huelle = ? WHERE id = ? AND user_id = ?')
                     ->execute([$huelle, $mid, $userId]);
@@ -2171,19 +1985,13 @@ function edbak_restore_lauf(int $userId, array $data, ?array $dayMap,
             /* Ohne `lat`/`lon` — `einsatz_phasen_ersetzen()` schreibt nur
              * Nummer und Zeit. */
             einsatz_phasen_ersetzen($pdo, $mid, $neuePhasen, ['loeschen' => false]);
-            /* ZWEI WEGE, UND DIE FASSUNG ENTSCHEIDET — nicht das Vorhandensein
-             * eines `track`-Feldes. Eine Spur ohne Punkte saehe genauso aus
-             * wie ein Verweis, und dann liefe eine Fassung-8-Datei still in
-             * den Altweg und verloere alle Spuren. */
-            if ($mitVerweisen) {
-                if (isset($m['spur_ref'])) {
-                    $spurKarte[(int)$m['spur_ref']] = ['art' => 'mission', 'id' => $mid,
-                                                       'ref' => $werte['client_ref']];
-                }
-                $spurWiderspruch('mission', $m);
-            } else {
-                $spurSchreiben('mission', $mid, $m['track'] ?? [], $werte['client_ref'], $m);
+            /* DIE SPUR KOMMT ALS VERWEIS (Nutzlast 13): Die Stuecke reicht der
+             * Browser ueber `api/backup_spuren_restore.php` nach. */
+            if (isset($m['spur_ref'])) {
+                $spurKarte[(int)$m['spur_ref']] = ['art' => 'mission', 'id' => $mid,
+                                                   'ref' => $werte['client_ref']];
             }
+            $spurWiderspruch('mission', $m);
 
 
             $stats['missions']++;
@@ -2286,14 +2094,10 @@ function edbak_restore_lauf(int $userId, array $data, ?array $dayMap,
                                                      'rest.loeschungen.erstellt_am', $pruef));
                 $stats['schnitte']['uebernommen']++;
             }
-            if ($mitVerweisen) {
-                if (isset($r['spur_ref'])) {
-                    $spurKarte[(int)$r['spur_ref']] = ['art' => 'rest', 'id' => $rid, 'ref' => $rRef];
-                }
-                $spurWiderspruch('rest', $r);
-            } else {
-                $spurSchreiben('rest', $rid, $r['track'] ?? [], $rRef, $r);
+            if (isset($r['spur_ref'])) {
+                $spurKarte[(int)$r['spur_ref']] = ['art' => 'rest', 'id' => $rid, 'ref' => $rRef];
             }
+            $spurWiderspruch('rest', $r);
             $stats['rests']++;
             if ($rGeloescht) { $stats['papierkorb']['ruhezeiten']++; }
         }
@@ -2432,11 +2236,7 @@ function edbak_restore_lauf(int $userId, array $data, ?array $dayMap,
         throw $ex;
     }
 
-    /* Einsatzort-Hoehe: Die rechnet nur das direkte Einspielen, beim
-     * Verschliessen der Spur (`$spurSchreiben`); ein Fehlschlag kostet nur
-     * die Anzeige und wird gezaehlt. */
-
-    if ($mitVerweisen) { $stats['spur_karte'] = $spurKarte; }
+    $stats['spur_karte'] = $spurKarte;
     /* DIE ZUORDNUNG DER DIENSTTAGE GEHT ZURUECK, damit die Fenster
      * der Eintraege wissen, an welchen Tag sie gehoeren. Nur, wenn dieser Lauf
      * Diensttage vor sich hatte — sonst waere es die Zuordnung, die er selbst

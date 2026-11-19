@@ -15,7 +15,7 @@ if (PHP_SAPI !== 'cli' && realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) 
  *   kp_oeffentlich  der öffentliche Teil (SPKI, Base64), VERSIEGELT mit dem
  *                   Serverschlüssel, Zweck `kontopaar|<Kontonummer>`
  *   kp_privat       der private Teil (PKCS8) unter dem INHALTSSCHLÜSSEL,
- *                   `edk1:` — nie `edka1:` (`KP_PRIVAT_RE`)
+ *                   `edk2:` — nie `edka2:` (`KP_PRIVAT_RE`)
  *   kp_seit         wann es entstand
  *
  * WARUM VERSIEGELT. Wer nur die Datenbank beschreiben

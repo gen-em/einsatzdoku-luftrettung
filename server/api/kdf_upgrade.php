@@ -21,7 +21,7 @@ require_once __DIR__ . '/../serverkrypto_lib.php'; // anteil_ausgeliefert(), hue
  *   Passwort gehabt, und kann beide Ableitungen bilden.
  *
  *   HUELLENFASSUNG. Die Huelle des Kontos traegt noch kein
- *   `edka1:`-Praefix — oder das eines ALTEN Server-Anteils, weil eine
+ *   `edka2:`-Praefix — oder das eines ALTEN Server-Anteils, weil eine
  *   Rotation laeuft. Der Browser oeffnet sie mit dem passenden
  *   Datenschluessel, baut sie mit dem aktuellen Anteil neu und schickt sie
  *   hierher. Die Rundenzahl bleibt dabei, wie sie ist.
@@ -55,7 +55,7 @@ require_once __DIR__ . '/../serverkrypto_lib.php'; // anteil_ausgeliefert(), hue
  * hier schliessen ihn aus.
  *
  * Umgekehrt gilt dasselbe: Wird gar kein Anteil ausgeliefert (`fehlt`,
- * `abweichend`, Demo), darf hier auch keine `edka1:`-Huelle ankommen. Sie
+ * `abweichend`, Demo), darf hier auch keine `edka2:`-Huelle ankommen. Sie
  * waere mit einem Anteil gebaut, den diese Installation nicht kennt.
  *
  * ---- WARUM DAS ALTE TOKEN VERLANGT WIRD ----------------------------------
@@ -234,4 +234,4 @@ try {
  * Browser wertet es heute nicht aus; der Prüfstand tut es (`tools/proben/anteil/`),
  * und ein Mitschnitt im Netzwerkfenster wird damit lesbar. */
 json_out(['ok' => true, 'iter' => $neuIter,
-          'huelle' => $huellenwechsel ? ($neuKennung ?? 'edk1') : 'unveraendert']);
+          'huelle' => $huellenwechsel ? ($neuKennung ?? 'edk2') : 'unveraendert']);

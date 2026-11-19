@@ -31,7 +31,6 @@ $wurzel = dirname(__DIR__, 3) . '/server';
 require_once $wurzel . '/db.php';
 require_once $wurzel . '/validate_lib.php';
 require_once $wurzel . '/spur_lib.php';
-require_once $wurzel . '/geraetehuelle_lib.php';
 require_once dirname(__DIR__) . '/huelle/geraet.php';   // Fassung 2 vom Probegerät (Stichtag, 06e)
 
 $konto = $argv[1] ?? 'demo@gen-em.org';

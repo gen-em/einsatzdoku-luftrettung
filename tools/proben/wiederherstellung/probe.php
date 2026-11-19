@@ -1775,7 +1775,6 @@ try {
  * reisen die Loeschvermerke und die Stuecke mit.
  * ====================================================================== */
 echo "\n  Teil 14 — Ortsdaten nur verschlossen (S11-06)\n";
-require_once $server . '/geraetehuelle_lib.php';
 require_once __DIR__ . '/../huelle/geraet.php';   // Fassung 2 vom Probegerät (Stichtag, 06e)
 $uid14 = $konto('probe-s11-06@example.invalid');
 try {

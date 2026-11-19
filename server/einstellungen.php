@@ -4047,7 +4047,7 @@ ui_seite_start(['titel' => 'Einstellungen',
           /* Der Nachweis ist, dass sich die Hülle öffnen lässt — seit S10
            * also über den Datenschlüssel aus Hälfte UND Server-Anteil
            * (E-S10-08). Mit `decrypt()` scheiterte es hier an jeder
-           * `edka1:`-Hülle, und die Meldung behauptete dann „das ist nicht
+           * `edka2:`-Hülle, und die Meldung behauptete dann „das ist nicht
            * dein Kontopasswort" für ein richtiges Passwort. */
           const k = await EdCrypto.deriveKeys(pw, KDF_SALT, KDF_ITER);
           const dk = await EdCrypto.datenschluessel(k.haelfteHex, PAT_WRAP,

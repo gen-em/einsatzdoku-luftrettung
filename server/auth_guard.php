@@ -735,7 +735,7 @@ $kdfIter     = (int)($row['kdf_iter'] ?? KDF_ITER_ZIEL) ?: KDF_ITER_ZIEL;
  * kommt aus der Fixture und muss auf JEDER Installation aufgehen — eine
  * Huelle, die am Anteil dieser einen Installation haengt, taete das nicht.
  * Es bekommt deshalb `null` und den Stand `'demo'`, und seine Huelle bleibt
- * `edk1:`. Dasselbe Muster wie bei der Rundenzahl, aus demselben Grund.
+ * `edk2:` ohne Kennung. Dasselbe Muster wie bei der Rundenzahl, aus demselben Grund.
  *
  * `$kontoAnteile` ist ein Feld `{ kennung => 64 hex }`: im Regelfall einer,
  * waehrend einer Rotation zwei, im Zustand „abweichend" keiner. Welcher davon

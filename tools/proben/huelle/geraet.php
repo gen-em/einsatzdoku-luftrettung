@@ -36,7 +36,7 @@
  */
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../../server/geraetehuelle_lib.php';
+require_once __DIR__ . '/geraetehuelle_lib.php';
 
 /** Das Probegerät: EIN festes Schlüsselpaar, wie der Geräteschlüssel. */
 function gh_probe_geraet(): array

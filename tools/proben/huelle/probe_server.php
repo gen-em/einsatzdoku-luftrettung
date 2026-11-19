@@ -17,7 +17,7 @@
 declare(strict_types=1);
 
 $hier = __DIR__;
-require $hier . '/../../../server/geraetehuelle_lib.php';
+require $hier . '/geraetehuelle_lib.php';
 
 $v = json_decode((string)file_get_contents($hier . '/vektoren.json'), true);
 if (!is_array($v)) { echo "vektoren.json nicht lesbar — nicht gelaufen\n"; exit(2); }

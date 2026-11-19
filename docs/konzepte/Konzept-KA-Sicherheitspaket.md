@@ -12,7 +12,7 @@ steht da, die Nummer setzt die Umsetzung.
 | | |
 |---|---|
 | Stand | **Umsetzung** seit 10.11.2026, Zweig `claude/affectionate-darwin-vqocxe`, Backlog-Spanne 560–569 |
-| In Arbeit | **KA-07** (Modell, Texte, Abschluss, dazu der Rückbau des Altformats; E-KA-104, -105), Zweig `claude/amazing-keller-i2f04f`: Bestandsaufnahme läuft |
+| In Arbeit | **KA-07** (E-KA-104 bis -108), Zweig `claude/amazing-keller-i2f04f`: **KA-24 Server erledigt** (Code; Prüfmittel folgen mit KA-26), als Nächstes KA-25 Browser |
 | Erledigt | **06e** (KA-16 bis KA-23, PR #192, gemergt 19.11.2026, Web 26.0.0, Android 0.27.0, Uhr 6.0.0; dazu E-KA-102, -103 und F-KA-128 bis -135; R91 auf Staging ohne Befund, Lauf 223) · **Weiche** (KA-08 bis KA-15, PR #190, Web 25.0.0, Android 0.26.0) · **KA-06f** (PR #187, gemergt 15.11.2026, Android 0.25.0, Web 24.19.0; Zweig `claude/amazing-keller-i2f04f`; R91 auf Staging grün, Abschnitt 9) · **KA-06c** (PR #184, gemergt 14.11.2026, Android 0.24.0, Web 24.18.1; R91 auf Staging grün, Abschnitt 9) · **KA-06d** (PR #179, gemergt 14.11.2026, Web 24.18.0; `update.php` auf Staging gelaufen, R91 grün, Abschnitt 9) · **KA-06b-4** (PR #177, gemergt 13.11.2026, Web 24.17.0; R91 auf Staging grün, Abschnitt 9) · **KA-06b-3** (PR #176, gemergt 13.11.2026, Web 24.16.0) · **KA-06b-2** (PR #175, gemergt 12.11.2026, Web 24.15.0; `update.php` auf Staging gelaufen) · **KA-06b-1** (PR #174, gemergt 11.11.2026, Web 24.14.0) · **KA-06a** (PR #172, gemergt 11.11.2026, Referenz und Vektoren) · **KA-06b vorab** (PR #171, gemergt 11.11.2026, Web 24.13.1) · **KA-05** (PR #170, gemergt 11.11.2026, Web 24.13.0; Lauf 196 grün, auf Staging nachgeprüft — P-KA-11 bestanden, P-KA-10: Staging listet `assets/` noch) · **KA-01** (PR #165, gemergt 10.11.2026; Lauf 191 auf `main` grün, FTPS gegen Staging mit `security: strict`) · **KA-04** (PR #169, gemergt 11.11.2026, Web 24.12.1, Android 0.23.0) · **KA-03** (PR #167, gemergt 10.11.2026, Web 24.12.0) · **KA-02** (PR #166, gemergt 10.11.2026, Web 24.11.0; Lauf 192 grün, auf Staging nachgeprüft — Abschnitt 9; Tag `web-v24.11.0`, Lauf 193 auf Produktiv grün) |
 | Hakt | nichts im Code. **Offen bei der BetreiberIn:** die SHA-Pflicht für Aktionen (Rest von KA-M2; das geprüfte Zertifikat ist mit Lauf 193 auch auf Produktiv belegt); **vor dem Tag von KA-03** P-KA-05 (SFTP-Ziele mit Abdruck) |
 | Gelesen gegen | Commit `e8b0fc5` · Web 24.10.1 · Uhr 4.3.3 · Android 0.22.0; die Befunde von KA-01 am 10.11.2026 gegen `3e06f50` nachgelesen — alle acht halten (Abschnitt 9) |
@@ -797,6 +797,16 @@ Die Pakete, eines nach dem anderen:
 
 Fassungen: Web **27.0.0**, Android und Uhr je eine Korrekturfassung.
 
+**Voraussetzung auf Produktiv gemessen (19.11.2026, BetreiberIn, nach dem
+Tag `web-v26.0.0`, KA-M4 und Demo-Reset):** je Konto `pat_wrap_pw`
+`edka2:` bzw. `edk2:` (Demo, ohne Anteil), `pat_wrap_rc`, `kp_privat`,
+`rw_privat` `edk2:` oder leer; `pat_blob` außerhalb `edk2:` 0, Einsatzhüllen
+der Fassung 1 0, Spurstücke der Fassung 1 0. Tobias' Konto ist neu und noch
+nicht eingerichtet (alles leer). Davor zeigte dieselbe Abfrage bei der
+BetreiberIn eine Wiederherstellungshülle ganz ohne Kennung (`PWH0Q…`, die
+älteste Form) und 11 Einsatzhüllen der Fassung 1 — beides vor der ersten
+Anmeldung unter Web 26 und vor KA-M4.
+
 ---
 
 ## 6. Meilensteine der BetreiberIn
@@ -1069,6 +1079,7 @@ ist (t_nach − t_vor < 2), kommt in keinem Vektor vor.
 | F-KA-133 | **Der Bilderlauf koppelt ohne Geräteschlüssel** (Prüfstand haupt in 06e): `aufnehmen.mjs` startete für 33a/33b eine Kopplung ohne `schluessel`, seit KA-17 400 — 40 Konsolenfehler. Mit Schlüssel zeigte 33a dann den Zweig, den der Lauf nie gesehen hatte, und der verletzte die Seitenregel (zwei Sätze im Hinweis, seit KA-06d) | **behoben (06e):** Bilderlauf und Handlauf `rundlauf.mjs` schicken ein frisches P-256-Paar; Hinweis ein Satz; Bilderlauf 33a/33b ohne Konsolenfehler und Seitenregelbefund. Der Handlauf kommt danach nicht ans Ende (Backlog Nr. 592) |
 | F-KA-134 | **`ka11-uhrzeit-pruefen` wackelt in WebKit** (Prüfstand haupt in 06e, nach E-KA-102): Der Weg las den bestätigten Hinweis über ein `evaluate`, das auf die Seite wartete; das Übernehmen lädt neu, und kam der Neuladen vor dem 20-ms-Takt, las er `null` — „bestätigt ETWAS ANDERES“. Ein Fehler der Probe, nicht der Anwendung | **behoben (06e):** die Hülle legt den Hinweis zusätzlich in die Sitzungsablage, gelesen wird nach dem Neuladen; WebKit 3/3, Chromium 1/1, Gegenprobe (falscher Hinweis in der Ablage) rot |
 | F-KA-135 | **`umdatieren-versatz` wackelt in WebKit** (Prüfstand haupt in 06e): Nach dem Demo-Reset leitete die noch offene Seite im Hintergrund auf `login.php?ende=abgemeldet` und unterbrach die Neuanmeldung („interrupted by another navigation“). Ein Fehler der Probe | **behoben (06e):** die Wege verlassen die Seite vor dem Reset (`about:blank`); WebKit 2 × 3/3 mit `ka06b4-anhebelauf`, Chromium 2/2. Dazu: Der Container startete zweimal mitten im Prüfstand neu (Uhr-Krypto, Bilderlauf) — beide Läufe ohne Bericht |
+| F-KA-136 | **Ein Verwaltungspaket von Web 26 kann noch Fassung 1 tragen** (KA-24): E-KA-107 sagte „vor Web 26 abweisen“. Ein Paket trägt aber, was die Anlage gespeichert hatte — unter Web 26 lagen dort Gerätehüllen der Fassung 1 und `edk1:`-Blöcke von Konten, die sich noch nicht angemeldet hatten. Die Prüfschicht verwürfe sie Wert für Wert, und heraus käme ein halbes Konto | **gelöst (KA-24):** Grenze **Web 27** statt 26, für das Einspielen durch die Verwaltung und den Freigabeweg (`edbak_paket_zu_alt()`) |
 | Bedienprobe `ka06b3`, `ka06d` (4) | grün ohne Weiche | — | Rückbau der Weiche |
 | Proben ingest / wiederherstellung / verbindung / wartungslauf / gpx / ortsdaten / kopplung | **100/0, 149/0, 27/0, 34/0 + 24/0, 48/0, 58/0, 106/0** — als Gerät jetzt Fassung 2 (`geraet.php`: festes Probegerät, `gh2_probe_*`) | neue Fälle: Fassung 1 → 400 (ingest), `start` ohne Schlüssel → 400 (kopplung 43), Konto ohne Paar beansprucht nicht (K1) | Stichtag am Server, Proben umgestellt |
 | Kreislauf `edbak --frisch` (neue Referenzsicherung, E-KA-100) | **345 356** Vergleiche, **0** unerklärt, 22 erwartet | erste Referenz mit dem Fehler erzeugt: 5 unerklärt, 222 statt 223 Spuren | F-KA-130 |

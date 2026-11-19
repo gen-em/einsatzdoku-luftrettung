@@ -12,7 +12,7 @@ require_once __DIR__ . '/../ratelimit_lib.php';
  *
  *   {aktion:'anlegen', token, oeffentlich, privat}
  *        oeffentlich  SPKI in Base64 (ECDH, P-256) — darf jeder kennen
- *        privat       PKCS8 unter dem INHALTSSCHLÜSSEL (`edk1:`)
+ *        privat       PKCS8 unter dem INHALTSSCHLÜSSEL (`edk2:`)
  *        token        das Anmelde-Token: der Nachweis des Passworts — leer,
  *                     wenn die Sitzung eine Anlegemarke traegt (Nr. 392)
  *     -> 200 {ok:true} · 400 paar · 403 passwort · 409 vorhanden|migration

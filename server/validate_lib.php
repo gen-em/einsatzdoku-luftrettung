@@ -43,20 +43,6 @@ require_once __DIR__ . '/db.php';
  * ------------------------------------------------------------------------ */
 
 /**
- * Untergrenze des verschluesselten Patientenblocks.
- *
- * Herleitung, nicht geraten: AES-256-GCM legt vor den Chiffretext einen
- * Zufallswert von 12 Byte und haengt einen Pruefwert von 16 Byte an. Auch bei
- * voellig leerem Klartext sind das 28 Byte, in base64 also 40 Zeichen. Kuerzer
- * KANN ein gueltiger Block nicht sein.
- *
- * Im Umlauf waren bisher drei verschiedene Untergrenzen: 16 (Formular),
- * 20 (Import) und gar keine (Backup) — alle drei unterhalb des
- * ueberhaupt Moeglichen oder nicht vorhanden.
- */
-const PAT_BLOB_MIN = 40;
-
-/**
  * Obergrenze des verschluesselten Patientenblocks.
  *
  * 60000 Zeichen = 60000 Byte (base64 ist reines ASCII). Die Spalte ist ein
@@ -70,103 +56,32 @@ const PAT_BLOB_MIN = 40;
 const PAT_BLOB_MAX = 60000;
 
 /**
- * Formatkennung vor einem Chiffretext.
+ * DIE FORMEN DER SCHLUESSELHUELLEN (seit Web 27.0.0 NUR NOCH FASSUNG 2,
+ * KA-07, E-KA-106). Der Server kann keine Huelle oeffnen; er prueft Kennung
+ * und Zeichenvorrat, die Groessenklasse nicht.
  *
- * WARUM ES SIE GIBT
- * Ein Chiffretext bestand bisher aus Zufallswert und Nutzdaten, ohne jede
- * Angabe darueber, mit welchem Verfahren er entstanden ist. Wird das Verfahren
- * je gewechselt — und irgendwann wird es das —, gibt es kein Merkmal, an dem
- * sich alt von neu unterscheiden liesse. Der Backup-Container macht es seit
- * jeher richtig vor: Er traegt eine Fassungsnummer im Kopf.
+ *   `pat_wrap_pw`  `edka2:<Kennung>:` (am Server-Anteil, die acht Hexzeichen
+ *                  sagen, mit WELCHEM) oder `edk2:` (ohne Anteil — das
+ *                  Demo-Konto)
+ *   `pat_wrap_rc`  NUR `edk2:` — nie am Anteil, denn sie ist der Rueckweg,
+ *                  wenn der Anteil verloren geht (CLAUDE.md 4). Pruefte EINE
+ *                  Regel beide Huellen, gaelte `edka2:` stillschweigend auch
+ *                  hier, und ein Konto waere nach dem Verlust des Anteils
+ *                  nicht mehr zu retten — ohne dass man es dem Feld ansaehe.
  *
- * Der Doppelpunkt gehoert NICHT zum base64-Zeichenvorrat. Die Kennung ist
- * deshalb eindeutig zu erkennen, ohne etwas zu entschluesseln — anders als ein
- * Kennungsbyte INNERHALB der Daten, das man von einem Zufallswert nur durch
- * Ausprobieren unterscheiden koennte.
+ * Mit dem Rueckweg teilen sich `rw_privat` und `kp_privat` die Form von
+ * `pat_wrap_rc`: Sie liegen unter dem Inhaltsschluessel und muessen mit dem
+ * Wiederherstellungsschluessel allein aufgehen.
  *
- * BEIM LESEN GROSSZUEGIG: Ein Chiffretext OHNE Kennung ist die erste Fassung.
- * Es gibt keine Umstellung des Bestands — der Server kann sie nicht
- * entschluesseln und die Kennung deshalb nicht nachtragen. Beide Formen stehen
- * dauerhaft nebeneinander; ein Datensatz bekommt die Kennung, wenn er das
- * naechste Mal gespeichert wird.
+ * Bis Web 26.x nahmen die Ausdruecke dazu die erste Fassung an (`edk1:`,
+ * `edka1:<Kennung>:` und Text ohne Kennung); seit dem Merge von KA-07 liegt
+ * auf keiner Anlage mehr eine solche Huelle (E-KA-104, gemessen 19.11.2026).
+ * `WRAP_RE` bleibt als Name bestehen und ist `WRAP_PW_RE` — die Aufrufer in
+ * pw_handling.php meinen die Passwort-Huelle.
  */
-const CHIFFRE_PRAEFIX = 'edk1:';
-const CHIFFRE_PRAEFIX_RE = '(?:edk1:)?';
-
-/** Zeichenvorrat des Chiffretexts (base64 mit Fuellzeichen), mit oder ohne
- *  Formatkennung. Die Laengengrenzen gelten fuer den base64-Teil. */
-const PAT_BLOB_RE = '#^' . CHIFFRE_PRAEFIX_RE
-                  . '[A-Za-z0-9+/=]{' . PAT_BLOB_MIN . ',' . PAT_BLOB_MAX . '}$#';
-
-/**
- * Kennung einer Schluesselhuelle MIT Server-Anteil.
- *
- * Eine solche Huelle lautet `edka1:<kennung>:<base64>`, wobei <kennung> die
- * acht Hexzeichen des Anteils sind, mit dem sie gebaut wurde. Der Chiffretext
- * dahinter ist derselbe AES-256-GCM-Aufbau wie bisher; was dazukommt, ist die
- * Auskunft, WELCHER Schluessel sie oeffnet.
- *
- * WARUM NICHT SCHLICHT `edk2:`. Zwei Gruende, und beide sind praktisch.
- * Erstens weist `EdCrypto.decrypt()` jede Kennung ausser `edk1:` als
- * „neuere Programmfassung" ab — die Fassung der HUELLE ist aber etwas anderes
- * als die Fassung des Verfahrens, und die beiden zu vermengen hiesse, jedem
- * Huellenwechsel eine Fehlermeldung mitzugeben. Zweitens braucht der Browser
- * bei einer Rotation die Auskunft, mit WELCHEM von zwei Anteilen er oeffnet,
- * und die Statusseite muss zaehlen koennen, wer noch auf dem alten steht —
- * beides steht im Praefix und ist lesbar, ohne dass jemand etwas oeffnet.
- *
- * `pat_wrap_rc` bekommt KEIN solches Praefix: Der Wiederherstellungsschluessel
- * haengt nicht am Anteil, und das ist der Rueckweg, wenn der Anteil verloren
- * geht.
- */
-const HUELLE_PRAEFIX = 'edka1:';
-
-/**
- * Zeichenvorrat einer Schluesselhuelle (pat_wrap_pw, pat_wrap_rc).
- *
- * EINE Stelle: Drei wortgleiche Fassungen (pw_handling.php, einstellungen.php,
- * api/kdf_upgrade.php) muesste man einzeln nachziehen — und eine vergessene
- * wiese eine gueltige Huelle ab, mit dem Ergebnis, dass ein Passwortwechsel
- * scheitert.
- *
- * ZWEI KENNUNGEN SIND ERLAUBT, und zwar nur hier — `PAT_BLOB_RE`
- * bleibt unberuehrt. Das ist kein Versehen: Der Anteil steckt im
- * DATENSCHLUESSEL, und der oeffnet ausschliesslich die Huelle. Der
- * Inhaltsschluessel darin und damit jeder `pat_blob` sind unveraendert —
- * kein Datensatz wird angefasst, wenn ein Konto umstellt.
- */
-/* SEIT WEB 24.16.0 AUCH FASSUNG 2 (KA-06b-3): `edk2:` und `edka2:<Kennung>:`
- * — die Form, die `EdInhalt.huelleSchreiben()` mit umgelegter Weiche
- * schreibt (Technik 4.42). Der Ausdruck prüft Kennung und Zeichenvorrat;
- * die Größenklasse prüft er nicht, und der Server kann eine Hülle ohnehin
- * nicht öffnen. */
-const WRAP_PRAEFIX_RE = '(?:edk1:|edka1:[0-9a-f]{8}:|edk2:|edka2:[0-9a-f]{8}:)?';
-
-/**
- * ZWEI AUSDRUECKE, WEIL ES ZWEI HUELLEN MIT VERSCHIEDENEN ZUSAGEN SIND.
- * 
- *
- * Pruefte EINE Regel beide Huellen, gaelte die Kennung `edka1:`
- * stillschweigend auch fuer `pat_wrap_rc` — und damit koennte eine
- * Wiederherstellungs-Huelle am Server-Anteil haengen, ohne dass irgendetwas
- * es aufhielte.
- *
- * DAS WAERE DER VERLUST DES RUECKWEGS, also genau dessen, was die Zusage
- * verspricht: `pat_wrap_rc` oeffnet OHNE Anteil, und deshalb ist der Verlust
- * des Anteils kein Datenverlust. Eine `edka1:`-Huelle dort waere
- * ein Konto, das nach dem Verlust des Anteils nicht mehr zu retten ist — und
- * man saehe es dem Feld nicht an, bis es zu spaet ist.
- *
- * Deshalb gilt: `WRAP_PW_RE` nimmt beide Kennungen, `WRAP_RC_RE` nur die
- * alte. `WRAP_RE` bleibt als Name bestehen und ist `WRAP_PW_RE` — die
- * Aufrufer, die beide Huellen pruefen, stehen in pw_handling.php und meinen
- * dort die Passwort-Huelle.
- */
+const WRAP_PRAEFIX_RE = '(?:edk2:|edka2:[0-9a-f]{8}:)';
 const WRAP_PW_RE = '#^' . WRAP_PRAEFIX_RE . '[A-Za-z0-9+/=]{20,4000}$#';
-/* Die Wiederherstellungshülle — und mit ihr `rw_privat` und `kp_privat` —
- * nimmt `edk2:` an, NIE `edka2:` (und nie `edka1:`): Sie muss ohne den
- * Server-Anteil aufgehen (CLAUDE.md 4). */
-const WRAP_RC_RE = '#^(?:edk1:|edk2:)?[A-Za-z0-9+/=]{20,4000}$#';
+const WRAP_RC_RE = '#^edk2:[A-Za-z0-9+/=]{20,4000}$#';
 const WRAP_RE    = WRAP_PW_RE;
 
 /**
@@ -208,8 +123,8 @@ function edk2_innenlaenge(string $text, int $max_innen): ?int
  * ist, prüft `rw_oeffentlich_pruefen()`; die Regel hier hält nur die Form.
  *
  * `RW_PRIVAT_RE` IST `WRAP_RC_RE`, mit Absicht: Der private Teil liegt unter
- * dem INHALTSSCHLÜSSEL (`edk1:`) und muss mit dem Wiederherstellungsschlüssel
- * allein aufgehen — wie `pat_wrap_rc`. Eine `edka1:`-Fassung hinge am
+ * dem INHALTSSCHLÜSSEL (`edk2:`) und muss mit dem Wiederherstellungsschlüssel
+ * allein aufgehen — wie `pat_wrap_rc`. Eine `edka2:`-Fassung hinge am
  * Server-Anteil, und der Rückweg ginge mit dem Anteil verloren.
  */
 const RW_OEFFENTLICH_RE = '#^[A-Za-z0-9+/]{100,200}={0,2}$#';
@@ -220,8 +135,8 @@ const RW_PRIVAT_RE      = WRAP_RC_RE;
  *
  * Dieselben Formen wie beim Rückweg, aus demselben Grund: Der öffentliche
  * Teil ist SPKI in Base64 (ECDH auf P-256 hat dieselbe SPKI wie ECDSA), der
- * private liegt unter dem INHALTSSCHLÜSSEL (`edk1:`) und muss mit dem
- * Wiederherstellungsschlüssel allein aufgehen. Eine `edka1:`-Fassung hinge
+ * private liegt unter dem INHALTSSCHLÜSSEL (`edk2:`) und muss mit dem
+ * Wiederherstellungsschlüssel allein aufgehen. Eine `edka2:`-Fassung hinge
  * am Server-Anteil — ginge der verloren, wären mit dem Paar alle Spuren,
  * Phasenkoordinaten und Reanimationen des Kontos verloren (`CLAUDE.md` 4).
  * Zwei Namen statt eines geteilten: Wer eines der Paare ändert, soll das
@@ -291,16 +206,16 @@ const LIMIT_TRACKPUNKTE_SPUR    = 50000;
  * Den Inhalt pruefen das Geraet beim Erzeugen und der Browser beim Oeffnen.
  * Das Format steht in `tools/proben/huelle/referenz.py`:
  *
- *   Kennbyte 1 · EPK 65 · IV 16 · Chiffretext 16·n (n >= 1) · TAG 32
+ *   Kennbyte 2 · SID 8 · EPK 65 · IV 16 · Chiffretext 16·n (n >= 1) · TAG 32
  *
- * also mindestens 130 Byte, und die Laenge ohne Kopf und TAG ein Vielfaches
+ * also mindestens 138 Byte, und die Laenge ohne Kopf und TAG ein Vielfaches
  * von 16. Die Obergrenzen folgen aus den Mengengrenzen darueber, nicht aus
  * dem Gefuehl: Ein Spurstueck traegt hoechstens LIMIT_TRACKPUNKTE_ANFRAGE
  * Punkte zu 14 Byte, dazu Polsterung und Kopf. Die Einsatzhuelle
  * traegt JSON mit hoechstens LIMIT_PHASEN Phasen und LIMIT_REA_SESSION
  * Sitzungen zu LIMIT_REA_EREIGN Ereignissen; 256 KB sind das Vierfache des
  * groessten denkbaren Inhalts. */
-const GH_MIN_BYTE         = 130;
+const GH_MIN_BYTE         = 138;
 const GH_STUECK_MAX_BYTE  = LIMIT_TRACKPUNKTE_ANFRAGE * 14 + 16 + 130;
 /** Ein gepacktes Stueck (Stufe 2/3): hoechstens die ganze Spur,
  *  16 Byte je Punkt ungepackt, dazu was `deflate` im schlimmsten Fall anhaengt. */
@@ -822,41 +737,9 @@ function pruef_pat_blob($wert, string $feld = 'Patientenblock', ?Pruefliste $p =
         return $s;
     }
     /* Das alte Format (`edk1:` oder ohne Kennung) nimmt seit Web 26.0.0 kein
-     * Schreibweg mehr an — derselbe Stichtag wie fuer die Geraetehuelle,
-     * dieselbe Ausnahme (`huelle_fassung1_zulassen()`). */
-    if (!huelle_fassung1_zulassen()) {
-        $p?->melde($feld, 'altes Format (edk1) wird seit Web 26.0.0 nicht mehr angenommen');
-        return null;
-    }
-    if (!preg_match(PAT_BLOB_RE, $s)) {
-        $laenge = strlen($s);
-        $grund = $laenge < PAT_BLOB_MIN
-            ? 'kuerzer als ' . PAT_BLOB_MIN . ' Zeichen (kein gueltiger Chiffretext moeglich)'
-            : ($laenge > PAT_BLOB_MAX
-                ? 'laenger als ' . PAT_BLOB_MAX . ' Zeichen'
-                : 'kein base64');
-        $p?->melde($feld, $grund);
-        return null;
-    }
-    return $s;
-}
-
-/**
- * DER STICHTAG DER FASSUNG 1 (06e, KA-19, E-KA-60, -99). Seit Web 26.0.0
- * nimmt kein Schreibweg eine Geraetehuelle der Fassung 1 und keinen
- * Patientenblock im alten Format (`edk1:`) an — weder ein
- * Geraet (`ingest.php`, `400 payload`) noch der Browser. EINE Ausnahme, eng
- * und nur fuer die Dauer des Aufrufs: `edbak_restore()` im Zweig `'server'`
- * (Demo-Reset aus einer Fixture bis Format 3), die Testquelle der Uebernahme
- * bis KA-07. Liefert den vorigen Wert, damit der Aufrufer ihn in `finally`
- * zuruecksetzt; ohne Argument nur lesen.
- */
-function huelle_fassung1_zulassen(?bool $setzen = null): bool
-{
-    static $zugelassen = false;
-    $vorher = $zugelassen;
-    if ($setzen !== null) { $zugelassen = $setzen; }
-    return $vorher;
+     * Schreibweg mehr an; seit Web 27.0.0 (KA-07) gibt es keine Ausnahme mehr. */
+    $p?->melde($feld, 'altes Format (edk1) wird nicht mehr angenommen');
+    return null;
 }
 
 /**
@@ -864,7 +747,7 @@ function huelle_fassung1_zulassen(?bool $setzen = null): bool
  *
  * Geprueft wird die FORM: Base64 ohne fremde Zeichen, Laenge zwischen
  * GH_MIN_BYTE und `$maxByte`, Chiffretext ein Vielfaches von 16, Kennbyte der
- * Fassung 1, ein unkomprimierter Punkt als fluechtiger Schluessel. Ob die
+ * Fassung 2, ein unkomprimierter Punkt als fluechtiger Schluessel. Ob die
  * Huelle aufgeht, kann nur der Browser sagen.
  */
 function pruef_huelle($wert, int $maxByte, string $feld = 'Huelle', ?Pruefliste $p = null): ?string
@@ -879,21 +762,17 @@ function pruef_huelle($wert, int $maxByte, string $feld = 'Huelle', ?Pruefliste 
     $n = strlen($roh);
     if ($n < GH_MIN_BYTE) { $p?->melde($feld, 'kuerzer als ' . GH_MIN_BYTE . ' Byte'); return null; }
     if ($n > $maxByte) { $p?->melde($feld, 'laenger als ' . $maxByte . ' Byte'); return null; }
-    /* ZWEI FASSUNGEN (seit Web 24.16.0, KA-06b-3, F-KA-83). Fassung 1:
-     * Kennbyte, 65 Byte EPK, 16 Byte IV — Kopf 82. Fassung 2: dazu 8 Byte
-     * SID vor dem EPK — Kopf 90, kleinste Hülle 138 (`referenz.py`). Der
-     * Browser schreibt Fassung 2 erst mit umgelegter Weiche; die Form steht
-     * schon hier, damit die Schreibwege des Browsers sie durchlassen. */
+    /* NUR FASSUNG 2 (seit Web 27.0.0, KA-07; Fassung 1 nahm seit Web 26.0.0
+     * kein Schreibweg mehr an): Kennbyte 2, 8 Byte SID, 65 Byte EPK, 16 Byte
+     * IV — Kopf 90, kleinste Huelle 138 (`referenz.py`). */
     $fassung = ord($roh[0]);
-    if ($fassung === 1 && !huelle_fassung1_zulassen()) {
-        $p?->melde($feld, 'Fassung 1 ohne Herkunftsnachweis wird seit Web 26.0.0 nicht mehr angenommen — Gerät neu koppeln');
+    if ($fassung === 1) {
+        $p?->melde($feld, 'Fassung 1 ohne Herkunftsnachweis wird nicht mehr angenommen — Gerät neu koppeln');
         return null;
     }
-    if ($fassung !== 1 && $fassung !== 2) { $p?->melde($feld, 'unbekannte Fassung ' . $fassung); return null; }
-    $kopf = $fassung === 2 ? 90 : 82;
-    if ($fassung === 2 && $n < 138) { $p?->melde($feld, 'kuerzer als 138 Byte'); return null; }
-    if (($n - $kopf - 32) % 16 !== 0) { $p?->melde($feld, 'Chiffretext kein Vielfaches von 16'); return null; }
-    if ($roh[$fassung === 2 ? 9 : 1] !== "\x04") { $p?->melde($feld, 'kein unkomprimierter Schluessel'); return null; }
+    if ($fassung !== 2) { $p?->melde($feld, 'unbekannte Fassung ' . $fassung); return null; }
+    if (($n - 90 - 32) % 16 !== 0) { $p?->melde($feld, 'Chiffretext kein Vielfaches von 16'); return null; }
+    if ($roh[9] !== "\x04") { $p?->melde($feld, 'kein unkomprimierter Schluessel'); return null; }
     return $roh;
 }
 
