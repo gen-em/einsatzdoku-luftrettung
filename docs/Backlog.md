@@ -793,19 +793,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      neuen Befund, Prüffälle grün.
 <!-- -->
 
-567. **Der Einspiellauf des Demo-Bestands schreibt noch Fassung 1.** · gehört zu: 28 · Stand: offen · seit 15.11.2026
-     *Aufgenommen 15.11.2026 aus KA-13 (E-KA-90).* `einspielen.py` koppelt
-     das Demo-Gerät ohne Vergleichswert und sendet Gerätehüllen der
-     Fassung 1; erst `fixture/verschliessen.py` verschließt alles neu. Nach
-     dem Umlegen der Weiche schreiben die Browserschritte des Laufs
-     (`passwort_setzen.mjs`, `csv_import.mjs`) aber schon Fassung 2 — der
-     Mischzustand ist nie durchgespielt. *Weg:* Kopplung mit Vergleichswert
-     über `pair.php` und Ingest in Fassung 2 im Einspiellauf, spätestens mit
-     dem Stichtag aus 06e. *Abnahme:* voller Einspiellauf, `erzeugen.php`
-     und `verschliessen.py` ohne Befund, Fixture byte-gleich zur heutigen
-     oder begründet anders.
-<!-- -->
-
 592. **Der Handlauf der Kopplung kennt den Vergleichswert nicht.** · gehört zu: 28 · Stand: offen · seit 17.11.2026
      *Aufgenommen 17.11.2026 aus 06e (F-KA-133).* `tools/proben/kopplung/
      rundlauf.mjs` (von Hand, kein Prüfstand ruft ihn) startet seit 06e
@@ -816,21 +803,6 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      es seit E-KA-102 nicht mehr. *Weg:* den Weg aus `tools/proben/kopplung/
      probe.php` (Zusage, Offenlegen, Vergleichswert) übernehmen.
      *Abnahme:* ein Handlauf bis zum gekoppelten Gerät und Trennen.
-<!-- -->
-
-593. **Ein Konto, das nie etwas Verschlüsseltes öffnet, wird nie angehoben.** · gehört zu: 28 · Stand: offen · seit 19.11.2026
-     *Aufgenommen 19.11.2026 nach PR #192.* Der Anhebelauf (`formatAnheben()`
-     in `assets/unlock.js`) startet erst, wenn eine Seite den
-     Inhaltsschlüssel verlangt. Ein Konto ohne Einsätze mit geschützten
-     Angaben, etwa ein reines Verwaltungskonto, behält Kontopaar und
-     Rückweg als `edk1:`. Örtlich nachgestellt mit `bilderlauf-admin`:
-     20 s Startseite ohne Anfrage an `format_anheben.php`, nach dem
-     Entsperren beides `edk2:`. Auf Produktiv betrifft es drei Konten.
-     Mit KA-07 fällt der Leser für `edk1:`, und das Kontopaar wäre dann
-     unlesbar. *Weg:* vor KA-07 die Anhebung beim Entsperren auf jeder
-     Seite oder ein einmaliges Pflicht-Entsperren; KA-07 erst, wenn keine
-     Zeile mehr `edk1:` trägt. *Abnahme:* Abfrage über `users` und
-     `missions` ohne `edk1:`, Probe mit einem Konto ohne Einsätze.
 <!-- -->
 
 594. **Die Kontenliste zeigt nicht auf einen Blick, welche Konten gesperrt oder nur eingeladen sind.** · gehört zu: 13 · Stand: offen · seit 19.11.2026

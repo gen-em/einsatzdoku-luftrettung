@@ -11448,3 +11448,35 @@ zutreffen.
      `vermerk-ueber-vorhandenem` in `tools/proben/huelle/referenz.py`,
      Kreislauf ohne unerklärte Abweichung.
      Erledigt mit Web 26.0.0 (06e, F-KA-130).
+
+567. **Der Einspiellauf des Demo-Bestands schreibt noch Fassung 1.** · gehört zu: 28 · Stand: erledigt · seit 15.11.2026
+     *Aufgenommen 15.11.2026 aus KA-13 (E-KA-90).* `einspielen.py` koppelt
+     das Demo-Gerät ohne Vergleichswert und sendet Gerätehüllen der
+     Fassung 1; erst `fixture/verschliessen.py` verschließt alles neu. Nach
+     dem Umlegen der Weiche schreiben die Browserschritte des Laufs
+     (`passwort_setzen.mjs`, `csv_import.mjs`) aber schon Fassung 2 — der
+     Mischzustand ist nie durchgespielt. *Weg:* Kopplung mit Vergleichswert
+     über `pair.php` und Ingest in Fassung 2 im Einspiellauf, spätestens mit
+     dem Stichtag aus 06e. *Abnahme:* voller Einspiellauf, `erzeugen.php`
+     und `verschliessen.py` ohne Befund, Fixture byte-gleich zur heutigen
+     oder begründet anders.
+     Erledigt mit Web 27.0.0 (KA-07, KA-26, E-KA-109): Einspiellauf ganz in
+     Fassung 2 mit Kopplung samt Vergleichswert und Gerätebuch, Fixture ohne
+     Befund neu erzeugt (begründet nicht byte-gleich, Konzept KA F-KA-137).
+
+593. **Ein Konto, das nie etwas Verschlüsseltes öffnet, wird nie angehoben.** · gehört zu: 28 · Stand: erledigt · seit 19.11.2026
+     *Aufgenommen 19.11.2026 nach PR #192.* Der Anhebelauf (`formatAnheben()`
+     in `assets/unlock.js`) startet erst, wenn eine Seite den
+     Inhaltsschlüssel verlangt. Ein Konto ohne Einsätze mit geschützten
+     Angaben, etwa ein reines Verwaltungskonto, behält Kontopaar und
+     Rückweg als `edk1:`. Örtlich nachgestellt mit `bilderlauf-admin`:
+     20 s Startseite ohne Anfrage an `format_anheben.php`, nach dem
+     Entsperren beides `edk2:`. Auf Produktiv betrifft es drei Konten.
+     Mit KA-07 fällt der Leser für `edk1:`, und das Kontopaar wäre dann
+     unlesbar. *Weg:* vor KA-07 die Anhebung beim Entsperren auf jeder
+     Seite oder ein einmaliges Pflicht-Entsperren; KA-07 erst, wenn keine
+     Zeile mehr `edk1:` trägt. *Abnahme:* Abfrage über `users` und
+     `missions` ohne `edk1:`, Probe mit einem Konto ohne Einsätze.
+     Erledigt mit Web 27.0.0 (KA-07, E-KA-104): Der SQL-Nachweis vom
+     19.11.2026 zeigte auf Produktiv keine Zeile mehr mit `edk1:`; die
+     Anhebung beim Entsperren war damit nicht mehr nötig.
