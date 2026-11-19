@@ -156,6 +156,9 @@ Safari.
 | E-KA-103 | **Karten heben sich vom Rahmen ab, Fuß am Fensterboden** — noch in 06e. Drei Varianten mit Bildern (A Schnee, B Rauch, C Weiß mit Schatten); gewählt **C**. Abweichung vom Bild, angesagt: Dunkel lag die Karte im Mockup auf blau 700, so hell wie `--linie` — umgesetzt ist dunkel Dunkelblau auf blau 900 | 18.11.2026, BetreiberIn |
 | E-KA-104 | **Backlog Nr. 593 wird per SQL-Nachweis erledigt, nicht gebaut**: Seit Web 26 entsteht kein `edk1:` und keine Gerätehülle der Fassung 1 mehr; vor dem Merge von KA-07 zeigt eine Abfrage auf Produktiv, dass keine mehr liegen | 19.11.2026, BetreiberIn |
 | E-KA-105 | **KA-07 wird jetzt gebaut, der PR wartet** — gemergt erst, wenn die Prüfungen nach dem Tag `web-v26.0.0` (P-KA-21 bis -24) durch sind und die Abfrage aus E-KA-104 nichts Altes mehr zeigt. KA-07 umfasst jetzt auch den Rückbau des Altformats (E-KA-97, -99) und wird deshalb Web 27.0.0 | 19.11.2026, BetreiberIn |
+| E-KA-106 | **Auch die Leser der Schlüsselhüllen fallen** (`edk1:`/`edka1:` für `pat_wrap_pw` und `pat_wrap_rc`). Voraussetzung vor dem Merge: auf Produktiv der Wiederherstellungsschlüssel erneuert (KA-M4) und jedes Konto einmal angemeldet; die Abfrage aus E-KA-104 prüft dazu die beiden Hüllen. Ohne das sperrte KA-07 Konten aus oder bräche ihren Rückweg | 19.11.2026, BetreiberIn |
+| E-KA-107 | **Konto-Backups der Verwaltung von vor Web 26 werden abgewiesen** — wie E-KA-100 für eigene Sicherungen; `huelle_fassung1_zulassen()` fällt ganz | 19.11.2026, BetreiberIn |
+| E-KA-108 | **Die toten Funktionen der Fassung 1 gehen auch in den Apps** — Android und Garmin lesen Fassung 1 nicht und senden sie seit 06e nicht; der Selbsttest der Uhr bekommt einen Vektor der Fassung 2 | 19.11.2026, BetreiberIn |
 | E-KA-73 | **E-KA-69, -71 und -72 kommen als eigenes Paket KA-06f vor 06e**, in einer neuen Instanz; der Krypto-Teil (Keystore-Umsetzung von `Geraeteschluessel`, Zählerregel in Referenz und Handy) geht wieder an einen Fable-Agenten (wie E-KA-67), der Garmin-Teil von E-KA-69 an KG (E-KA-21) | 15.11.2026, BetreiberIn |
 | E-KA-66 | **Gerätebuch und „Wert stimmt“ gehen in zwei Schritten, nicht in einer Transaktion:** erst das Buch (über den vorhandenen Weg `geraetEintragen()`), dann der Vermerk am Server mit `im_buch`. Ein Gerät am Server ohne Buch-Eintrag sendete Daten, die nicht aufgehen; ein Buch-Eintrag ohne Gerät räumt der Abgleich der Geräteseite auf (`bis`). Weicht vom Entwurf 06d, Punkt 5 ab | 13.11.2026, Umsetzung |
 | E-KA-67 | **Den Anschluss des leeren Schlussstücks prüft der Browser beim Lesen (Regel `luecke`), nicht der Eingang** — der Eingang prüft Form (Fassung 2, `ts_von` = `ts_bis`). Eine Abfrage des letzten Stücks im Eingang kostete jede Anfrage und belegte nichts, was der Browser nicht ohnehin prüft. Weicht vom Entwurf 06d, Punkt 8 ab | 13.11.2026, Umsetzung |
@@ -777,6 +780,22 @@ Schlüsselwechsel. Das Lesen des Altformats im Anhebelauf fällt mit KA-07.
 **Berührt:** `docs/`, Kommentare — Stufe **Korrektur** für die Auslieferung,
 deren Kommentare sich ändern. **Modell:** Opus. **Fächerung:** keine
 (erzählender Text).
+
+**Neu geschnitten am 19.11.2026** (E-KA-104 bis -108, nach einer
+Bestandsaufnahme aller Fundstellen): KA-07 baut auch das Altformat zurück.
+Die Pakete, eines nach dem anderen:
+
+| Paket | Inhalt | Fächerung |
+|---|---|---|
+| KA-24 Server | `format_anheben.php`, `spur2_uebernahme_*`, `huelle_fassung1_zulassen()`, Zweig `'server'`, Demo-Reset aus Fixture 1–3, Verschließen in `geraetehuelle_lib.php` (was die Proben brauchen, wandert nach `tools/proben/huelle/`); Formprüfungen nur noch `edk2:`/`edka2:` (`PAT_BLOB_RE`, `WRAP_PW_RE`, `WRAP_RC_RE`, `KP_`/`RW_PRIVAT_RE` — nie `edka*` für `rc`); Adminpakete vor Web 26 abgewiesen | seriell |
+| KA-25 Browser | `crypto.js` (`edk1:`, Gerätehülle 1, `edka1:`), `inhalt2.js` (`KENNUNG1`, `oeffnen1Bytes`), `huelle2.js` (Leser 1, Übernahme; `uebernommen` bleibt), `ortsdaten.js` (Zweig 1; `einsatzUebernehmen` des Rückwegs bleibt), `standbuch.js` (`altformat`, `zu` lesend tolerant), `unlock.js` (Anhebelauf, Übernahme, `formatHeben`), Freigabeweg | seriell |
+| KA-26 Fixture, Proben, Werkzeuge | alte Fixture, Referenz und Vektoren (Fassung 1 heraus, neu erzeugt), Proben auf Fassung 2, `einspielen.py` (Backlog Nr. 567), Generator | seriell |
+| KA-27 Android | `Geraetehuelle.kt` ohne Fassung 1, Prüffälle | ein Agent (eigene Dateien) |
+| KA-28 Uhr | `Huelle.mc` ohne Fassung 1, Selbsttest mit Vektor der Fassung 2, Krypto-Probe | ein Agent (eigene Dateien) |
+| KA-29 Texte | F-KA-43 (Rest: `freigabe.py`), Bedrohungsmodell ganz, `CLAUDE.md`, Handbuch, Technik | seriell |
+| KA-30 Abschluss | voller Prüfstand, Prüfdokument, Abschluss nach Rahmenplan 9, PR (Merge wartet, E-KA-105) | seriell |
+
+Fassungen: Web **27.0.0**, Android und Uhr je eine Korrekturfassung.
 
 ---
 
