@@ -550,8 +550,8 @@ if (!zweitfaktor_geraete_da($pdo)) {
     $r = http('POST', 'pw_handling.php', [
         'new_token' => bin2hex(random_bytes(32)), 'new_salt' => bin2hex(random_bytes(16)),
         'new_iter'  => (string)KDF_ITER_ZIEL,
-        'wrap_pw'   => ($kennung !== null ? 'edka1:' . $kennung . ':' : 'edk1:') . base64_encode(random_bytes(48)),
-        'wrap_rc'   => 'edk1:' . base64_encode(random_bytes(48)), 'key_check' => '']);
+        'wrap_pw'   => ($kennung !== null ? 'edka2:' . $kennung . ':' : 'edk2:') . base64_encode(random_bytes(48)),
+        'wrap_rc'   => 'edk2:' . base64_encode(random_bytes(48)), 'key_check' => '']);
     $gesetzt = (string)$pdo->query("SELECT password_hash FROM users WHERE id = $uid")->fetchColumn()
                !== $sichernPw['password_hash'];
     pruefe($vorZ === 1 && $gesetzt && $zeilen() === 0
@@ -965,7 +965,7 @@ if ($demo === null) {
      * wird das Leeren, nicht die Form. Ohne die Spalten (vor `update.php`)
      * ist der Fall nicht gemessen und rot, statt still übersprungen. */
     if (db_hat_spalte($pdo, 'users', 'rw_seit')) {
-        $pdo->prepare("UPDATE users SET rw_oeffentlich = 'probe', rw_privat = 'edk1:probe',
+        $pdo->prepare("UPDATE users SET rw_oeffentlich = 'probe', rw_privat = 'edk2:probe',
                               rw_seit = UTC_TIMESTAMP() WHERE id = ?")->execute([$demo]);
         demo_zweitfaktor_leeren($pdo, $demo);
         $z = $pdo->query("SELECT (rw_oeffentlich IS NULL) + (rw_privat IS NULL) + (rw_seit IS NULL)
