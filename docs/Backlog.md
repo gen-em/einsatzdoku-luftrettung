@@ -859,3 +859,15 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      ausnehmen; statt der Plakette ein neutrales „Demo — wird nicht
      gesichert“, kein Knopf „Konto-Backup erzeugen“. *Abnahme:* Probe mit
      Demo-Konto ohne Backup — Zahlen 0, keine Mail, kein Paket.
+<!-- -->
+
+596. **Der Betriebslauf der Anteilprobe findet die Verwaltungskarte nicht mehr.** · gehört zu: 28 · Stand: offen · seit 19.11.2026
+     *Aufgenommen 19.11.2026 aus KA-07 (F-KA-140).*
+     `tools/proben/anteil/betriebslauf.mjs` (von Hand, kein Prüfstand ruft
+     ihn) findet auf der Karte „Server-Anteil“ weder Kennung noch
+     Statuszeile, nicht „Nachtragen vom Blatt“ und nicht „Neuanfang“, und
+     das Feld für den Wert ist unsichtbar — die Selektoren stammen von vor
+     einer Umgestaltung der Verwaltung. Die Zustände `abweichend` und
+     `Rotation` sieht damit im Browser niemand. *Weg:* Selektoren an die
+     heutige Karte, dann den Lauf ganz fahren. *Abnahme:* alle Abschnitte
+     grün, `config.php`, Hüllen und Konto byte-gleich zurück.
