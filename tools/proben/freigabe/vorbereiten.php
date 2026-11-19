@@ -60,30 +60,34 @@ if ($schritt === 'quelle') {
                    bin2hex(random_bytes(8)), $daten['wrap'], $daten['check']]);
     $uid = (int)$pdo->lastInsertId();
     $kennung = (string)$pdo->query("SELECT account_key FROM users WHERE id=$uid")->fetchColumn();
-    /* Das Paar der Quelle: Der Serverweg verschliesst Orte,
-     * Reanimation und Spur damit, und das Paket traegt den privaten Teil.
-     * Diesen Weg geht sonst nur der Demo-Reset; er
-     * verlangt einen Rechenweg fuer den Block. Der Block kommt hier fertig
-     * aus dem Browser und traegt weder Ziel noch Hoehe — er bleibt, wie er ist. */
+    /* Das Paar der Quelle. Orte, Reanimation und Spur kommen schon
+     * verschlossen aus dem Browser (Fassung 2, Absender das Konto); der
+     * Server legt sie nur ab — wie der Rueckweg einer echten Sicherung:
+     * Nutzlast 13 mit Huelle im Eintrag, die Stuecke ueber die Spurkarte.
+     * Bis Web 26 nahm die Probe hier den Server-Weg, der Klartext selbst
+     * verschloss (Fassung 1); er fiel mit KA-07. */
     require_once $w . '/kontopaar_lib.php';
     kp_ablegen($pdo, $uid, (string)$daten['spki'], (string)$daten['kp_privat']);
 
-    edbak_restore($uid, [
-        'version' => 7,
+    $st = edbak_restore($uid, [
+        'version' => EDBAK_NUTZLAST,
         'days' => [['id' => 990, 'day' => '2026-07-10', 'kind' => 'ground',
                     'vehicle_name' => 'Freigabeprobe', 'base_name' => 'Probenstation']],
         'missions' => [[
             'client_ref' => 'fg-rc-1', 'day_id' => 990,
             'started_at' => '2026-07-10 06:00:00', 'ended_at' => '2026-07-10 07:00:00',
             'pat_blob' => $daten['blob'],
-            'phases' => [['phase' => 4, 'occurred_at' => '2026-07-10 06:10:00',
-                          'lat' => 47.15, 'lon' => 11.15]],
-            'resus' => [['started_at' => '2026-07-10 06:20:00',
-                         'events' => [['type' => 'adrenalin', 'occurred_at' => '2026-07-10 06:21:00']]]],
-            'track' => [[0, 47.1, 11.1, 700.0, 1783300000],
-                        [1, 47.2, 11.2, 705.0, 1783300060]]]],
+            'phases' => [['phase' => 4, 'occurred_at' => '2026-07-10 06:10:00']],
+            'ort_huelle' => $daten['ort_huelle'], 'spur_ref' => 1, 'n' => 2]],
         'rest_segments' => [],
-    ], null, 'server', static fn(?string $blob, array $zusatz): ?string => $blob);
+    ]);
+    $ziel = $st['spur_karte'][1] ?? null;
+    if ($ziel === null) { fwrite(STDERR, "Spurkarte fehlt\n"); exit(2); }
+    $sp = edbak_spuren_schreiben($pdo, $uid, [['owner_type' => $ziel['art'], 'owner_id' => $ziel['id'],
+                                              'stuecke' => $daten['stuecke']]]);
+    if (($sp['geschrieben'] ?? 0) !== 1) {
+        fwrite(STDERR, 'Spur: ' . json_encode($sp, JSON_UNESCAPED_UNICODE) . "\n"); exit(2);
+    }
 
     [$ok, $grund, $info] = edbak_sicherung_erzeugen($uid);
     if (!$ok) { fwrite(STDERR, "Backup: $grund\n"); exit(2); }
