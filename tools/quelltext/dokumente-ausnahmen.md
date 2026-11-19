@@ -51,6 +51,7 @@ früherer Stand genannt, im Satz erkennbar. `Beispiel`: ein Platzhalter.
 | `(\.github/workflows/)?deploy\.yml` | Früher | mit Web 20.4.0 gelöscht |
 | `tools/containeraufbau/(aufbau\.sh)?\|aufbau\.sh` | Früher | bis PK-02, seither `tools/sandbox/aufbauen.sh` (`Sandbox-Setup.md` 1.2) |
 | `referenz/altformat/` | Früher | mit S11-12 entfernt (Backlog Nr. 46) |
+| `(server/)?(api/)?format_anheben\.php\|(watch/source/)?HuelleVektor\.mc\|(tools/proben/huelle/)?vektoren\.json\|(source/)?Vektoren\.mc` | Früher | mit KA-07 (Web 27.0.0, Uhr 6.0.1) entfernt — Anhebelauf und die Vektoren der Fassung 1; im Satz als „bis“ oder „entfallen“ genannt |
 | `HemsApp\.mc\|MapPage\.mc\|ClockView/SpeedView/StatsView/SyncView/CprView\.mc` | Früher | Dateinamen der Uhr-App vor der Umbenennung, im Satz als frühere genannt |
 | `x/\|Ziel` | Beispiel | Platzhalter in einer Regel (`x/**`) und im Linkmuster `[Text](Ziel)` |
 | `Einundzwanzig Dateien unter .server/api/.` | Früher | Zahl der Endpunkte vor Schritt 15 AP3, im Satz als „fingen … an" genannt (`Technik.md` 4.5) |

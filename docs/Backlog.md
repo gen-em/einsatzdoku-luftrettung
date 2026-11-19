@@ -657,7 +657,7 @@ neue Nummer, die `origin/main` oder ein anderer Remote-Zweig auch anlegt, ist ro
      (2) Kennungen in Zeichenketten — Meldungen, Prüfdaten der
      Android-Tests, die Spaltentitel `(E8)` im Export — und in
      `<!-- -->` und eingebetteten `<script>` der Seiten, 384 Stellen in
-     `server/`. (3) `watch/source/HuelleVektor.mc` wird aus
+     `server/`. (3) `watch/source/HuelleVektor2.mc` wird aus
      `tools/proben/huelle/referenz.py` erzeugt; seine Kennungen ändern sich
      nur dort.
      *Weg:* (1) Datei für Datei lesen, je Satz entscheiden; (2) nur, wo die
