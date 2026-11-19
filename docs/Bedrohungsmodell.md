@@ -203,7 +203,7 @@ Wert nicht, den der Baustein schützt** — nicht, dass sie nichts erreicht.
 
 Was nach Abschnitt 4 offen bleibt, steht hier mit einer von vier
 Zuordnungen: **hingenommen** (und warum), **Befund** (in der Freigaberunde
-von 12b zu entscheiden, F-R17-Nummer), **KA** (Befund des Audits vom 09.11.2026, F-KA-Nummer; Schritt 28 behebt ihn, `docs/konzepte/Konzept-KA-Sicherheitspaket.md`), **S11** (wird dort geschlossen oder
+von 12b zu entscheiden, F-R17-Nummer), **KA** (Befund des Audits vom 09.11.2026, F-KA-Nummer; Schritt 28 hat ihn behoben; Konzept KA, gelöscht, letzter Stand `ef2a12ad`), **S11** (wird dort geschlossen oder
 dort entschieden).
 
 | Nr. | Restrisiko | Zuordnung |

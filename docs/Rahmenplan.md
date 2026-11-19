@@ -1,15 +1,15 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 249 (19.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 250 (19.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
-**Stand `origin/main`** (Commit `bbed45e`, PR #192, gemessen 19.11.2026): Web 26.0.0 ·
-Uhr 6.0.0 · Android 0.27.0; auf Staging (Lauf 223); Produktiv Web 25.0.0 · Android 0.26.0 (Tags vom 17.11.2026), Uhr 5.1.0.
-**Läuft:** 28 (KA) — Umsetzung; KA-01 bis KA-06d, 06f, die Weiche (KA-08 bis KA-15) und 06e (KA-16 bis KA-23, Web 26.0.0, Android 0.27.0, Uhr 6.0.0) erledigt; offen KA-07 (R92).
-**Als Nächstes:** Tags `web-v26.0.0`, `android-v0.27.0`, `uhr-v6.0.0` (Betreiberin), dann KA-07; danach 13 (P7).
-**Offene PRs:** keine.
-**Fällig bei der Betreiberin:** 44 Posten (Abschnitt 6.1). **`update.php`:** auf Staging nichts offen (Betreiberin, 12.11.2026, nach KA-06b-2); auf Produktiv seit dem Tag `web-v24.11.0` fällig, falls noch nicht aufgerufen (Migration `2026_11_07_darstellung`).
+**Stand `origin/main`** (Commit `dec3b37`, PR #194, gemessen 19.11.2026): Web 26.0.0 ·
+Uhr 6.0.0 · Android 0.27.0; auf Staging; Produktiv Web 26.0.0 · Android 0.27.0 · Uhr 6.0.0 (Tags vom 19.11.2026).
+**Läuft:** 28 — KA abgeschlossen mit KA-07 (Web 27.0.0, Android 0.27.1, Uhr 6.0.1; im PR, Merge nach P-KA-25); offen der Garmin-Teil KG (Gerätetests).
+**Als Nächstes:** P-KA-25, Merge von KA-07, R91, Tags `web-v27.0.0`, `android-v0.27.1`, `uhr-v6.0.1` (Betreiberin); danach 13 (P7).
+**Offene PRs:** KA-07 (Zweig `claude/amazing-keller-i2f04f`).
+**Fällig bei der Betreiberin:** 45 Posten (Abschnitt 6.1). **`update.php`:** auf Staging nichts offen (Betreiberin, 12.11.2026, nach KA-06b-2); auf Produktiv seit dem Tag `web-v24.11.0` fällig, falls noch nicht aufgerufen (Migration `2026_11_07_darstellung`).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -121,7 +121,7 @@ weil das Altbestand-Werkzeug ein einziges Konto voraussetzte.
 | 11 | **Planung v1.0** | Festlegungen vor dem Schnitt (R65 bis R73, entschieden 03.09.2026); Ergebnis sind die Konzepte der Phasen P6 bis P8 mit je eigenem Paketschnitt (P6 nach der Freigaberunde des Reviews) | keine | `docs/konzepte/Konzept-Planung-v1.0.md` | gemergt 03.09.2026 — Festlegungen entschieden (R65–R73); offen nur die Paketschnitte, je mit dem Konzept zu 12b, 13 und 14 |
 | 13 | **P7 — Gesicht v1.0** | Umbenennung überall (E-Mail-Langform entscheiden), Demo-Passwort (R25); Vertrag v1 (R12, Nr. 23); Doku-Neufassung, Handbuch als HTML (R16, R72); Manifest (R70); Changelog neu (R15); Backlog-Übernahme; Kommentarregel (R69, Nr. 409); Lizenzen, Tabellen mit Mockup (Nr. 342) | 26 | eigenes Konzept nach K1 | offen — Konzeptsitzung kann neben 24 laufen, Umsetzung nach 24 |
 | 14 | **P8 — Schnitt** | Neuaufsetzen mit Übernahme per edbak (R40 (3), R60, Nr. 324); Migrationsregister neu (R66); Repo-Umzug und Inventur mit Begründung je Weglassung (R68); Kette im neuen Repositorium (R67, R40 (4)); Rechts- und Betreiberunterlagen (R41); Abnahme nach R11; Tags `web-v1.0.0`, `uhr-v…`, `android-v1.0.0` | 13 | eigenes Konzept nach K1 | offen — nach 13; die Inventur (R68) entscheidet die zwölf Werkzeug-Punkte mit `gehört zu: 14` (E-BE-04) |
-| 28 | **KA — Sicherheitspaket** | Alle 43 Befunde des Audits beheben, hoch bis Hinweis (E-KA-04): Kette (FTPS-Zertifikat), Notfallblatt im Browser, Schranken der Verwaltung, Kontobindung der Geräte, Mengen und Fremdbestandteile, Bindung und Herkunft der Chiffretexte (Formatwechsel, E-KA-05), Modell und Texte | keine | `docs/konzepte/Konzept-KA-Sicherheitspaket.md`, Befunde in `Audit-KA-Sicherheit-Krypto.md` | Umsetzung seit 10.11.2026 (Spanne 560–569), ein PR je Paket; KA-01 bis KA-05, KA-06a, 06b vorab, 06b-1 bis 06b-3 erledigt (PR #165–#176), KA-06b-4 im PR; Garmin bei KG (PR #168). Von KA-M2 bleibt die SHA-Pflicht |
+| 28 | **KA — Sicherheitspaket** | Alle 43 Befunde des Audits beheben, hoch bis Hinweis (E-KA-04): Kette (FTPS-Zertifikat), Notfallblatt im Browser, Schranken der Verwaltung, Kontobindung der Geräte, Mengen und Fremdbestandteile, Bindung und Herkunft der Chiffretexte (Formatwechsel, E-KA-05), Modell und Texte | keine | Konzept KA und Audit-Bericht gelöscht (`ef2a12ad`); Garmin-Teil `docs/konzepte/Konzept-KG-Garmin-Sicherheit.md` | Umsetzung — KA abgeschlossen (KA-01 bis KA-07, Abschnitt 8); offen nur KG, die Gerätetests der Betreiberin. Von KA-M2 bleibt die SHA-Pflicht |
 | — | **Betriebsübergang** | Öffnung in Wellen über die Betriebsarten (R41); Produktionsfreigabe in den Stores mit Welle 1 (R65; nach MDR-Abgrenzung und Rechtsunterlagen); mit Welle 1 entfällt die Seitenladung (`apk.php`, Handbuch 10.1); Garmin-Uhr über den Connect-IQ-Store; halbjährliche Probe-Wiederherstellung | v1.0 | — | offen — beginnt mit v1.0 (nach den Schritten 13 und 14); Wellen nach R41 |
 
 Kein offener Schritt hat einen Block: Die Zeilen nennen den Inhalt; den
@@ -166,6 +166,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
 | **KA-M2, Rest — seit KA-01 fällig:** die SHA-Pflicht für Aktionen einschalten (das geprüfte FTPS-Zertifikat ist auf Staging, Lauf 191, und Produktiv, Lauf 193, belegt) | 28 (KA) | 10.11.2026 | `Pruefliste.md` 1, P-KA-02; Konzept KA 6 |
+| **KA-07:** P-KA-25 (Zählabfrage, Staging vor dem Merge, Produktiv vor dem Tag `web-v27.0.0`), -26 und -27 (Lesen, Sichern, Konto-Backups ab Web 27; nach dem Tag „Alle sichern“), -28 (Apps am Gerät) | 28 (KA) | 19.11.2026 | `Pruefliste.md` 1, 6, 10 |
 | **P-KA-05 — vor dem Tag von KA-03:** auf Produktiv jedes SFTP-Backup-Ziel mit gespeichertem Hostschlüssel (sonst „Verbindung prüfen"), denn ab Web 24.12.0 sendet der Job ohne Abdruck nicht | 28 (KA) | 10.11.2026 | `Pruefliste.md` 6, P-KA-05 |
 | **P-PK-37:** `STAGING_PASS` einmal falsch, einmal leer setzen — Stufe 2 rot mit Grund im ersten Messschritt; P-PK-18 (zwei Merges in einer Minute) bei Gelegenheit. P-PK-19, -21, -38 und PK-M2 sind seit Lauf 101 erledigt | PK | 29.09.2026 | `Pruefliste.md` 1, 5s |
 | **Prüfliste PK ohne Merge:** Z12 — „Schema gegen MySQL 8.4.0" und „Schema gegen MariaDB 10.6" als Pflichtprüfung (P-PK-36) | PK | 23.09.2026 | `Pruefliste.md` 1 |
@@ -367,7 +368,7 @@ werden hier kompakt angehängt; **der Statussatz wird ersetzt, nicht ergänzt**
 | R89 | Der Prüfumfang folgt der Berührung: drei Engines, zehn Breiten und alle Seiten nur bei Stylesheet-Berührung, Zehnerregel oder `haupt`; sonst schmal. Ersetzt R87 | umgesetzt in Schritt 20 (abgeschlossen 02.11.2026); entschieden 01.11.2026 (Betreiberin); E-PU-16 und -18 bestätigt 02.11.2026 | Konzept PU (gelöscht, `47a8567c`), E-PU-01 bis -19 |
 | R90 | Vor v1.0 liegt, was v1.0 festschreibt oder Daten gefährdet; was nicht kommt, wird verworfen statt geparkt. Schritte PR, 21 (GR), 22 (BR5) vor 13 | gilt; entschieden 02.11.2026 (Betreiberin); Stand `verworfen` in `Backlog-Erledigt.md` ersetzt `nicht umsetzen`; Zuordnung in den Kopfzeilen | `Vorbereitung-Backlog-Einordnung.md`, E-BE-01 bis -07 |
 | R91 | Nach jedem Merge auf `main` prüft die Arbeitsumgebung auf Staging die Prüflisten-Punkte „Claude" und „beide", mit eigenem BetreiberIn-Konto | gilt; entschieden 02.11.2026 (Betreiberin) | `Pruefablauf.md` 2.4, `Pruefliste.md` (Spalte „Wer") |
-| R92 | Audit KA als Sofortpunkt 28 vor 13: alle 43 Befunde werden behoben; Bindung und Herkunft der Chiffretexte in einem Zug, vor v1.0 | gilt; entschieden 10.11.2026 (Betreiberin) | `Konzept-KA-Sicherheitspaket.md`, E-KA-04 bis -07 |
+| R92 | Audit KA als Sofortpunkt 28 vor 13: alle 43 Befunde werden behoben; Bindung und Herkunft der Chiffretexte in einem Zug, vor v1.0 | gilt; entschieden 10.11.2026 (Betreiberin); KA umgesetzt bis Web 27.0.0 | Konzept KA (gelöscht, `ef2a12ad`), E-KA-04 bis -07 |
 
 ## 8. Erledigt
 
@@ -431,6 +432,7 @@ die Aufräumfassung vom 24.09.2026 gelöscht hat (Archiv-2, Verlaufszeile 110).
 | 26 — MA: Markenabgleich mit dem Branding-Repo | Web 23.9.0–23.11.3, Android 0.21.1–0.22.0, Uhr 4.3.3 | 07.11.2026 · PR #156 | gelöscht (`57ef0f0`) | `Pruefliste.md` 7 bis 10 | Marke aus `gen-em-branding`; Aktion Dunkelblau, Hauptaktion Orange; Dark Mode; axe-core 0 Verstöße |
 | BR7 — Backlog-Runde 7 | nur Werkzeug | 06.11.2026 · PR #154 | gelöscht (`063eb827`) | — (kein Handpunkt) | Schemaprobe auf einer Kopie von `server/` (Nr. 510); Bedienprobe misst den Nachladeknopf auf 390 px statt P-R4-17; Prüfrunde auf Staging, Zeiger `produktion` 26 h fehlend, jetzt mit Löschsperre |
 | 21 — GR: Geräterunde | Uhr 4.2.0–4.3.1, Android 0.19.0–0.20.0 | 02.11.2026 · PR #136 | gelöscht (`129604f2`) | `Pruefliste.md` 10 | Antwortauswertung nach der Fehlertabelle im Vertrag (403, 429, 503, 507), Neukoppeln mit Schlüsselbindung gegen fremde Konten, Senden nach Reaktivieren, Sync-Seite ohne Überlappung; ausgeliefert noch nicht (Tags offen); neu 470, 471 |
+| 28 — KA: Sicherheitspaket | Web 24.11.0–27.0.0, Android 0.23.0–0.27.1, Uhr 6.0.0–6.0.1 | 19.11.2026 · PR #165–#192, PR KA-07 | gelöscht (`ef2a12ad`) | `Pruefliste.md` 1, 5, 6, 10 | 43 Befunde behoben; Chiffretexte gebunden, Gerätedaten mit Herkunft, Standbuch, Kopplung mit Vergleichswert; seit Web 27 kein Altformat; Garmin bei KG |
 
 ## 9. Pflege dieses Dokuments
 
