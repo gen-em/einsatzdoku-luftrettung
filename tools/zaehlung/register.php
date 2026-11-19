@@ -680,15 +680,15 @@ return [
 /* ---- Spuren --------------------------------------------------------------- */
 
 ['kennung' => 'Z49', 'paket' => 'RD-04',
- 'beschreibung' => 'gh_gepackt_bauen( — der Server packt nur fuer den Demo-Reset',
+ 'beschreibung' => 'gh_gepackt_bauen( — der Server packt nicht',
  'grund' => 'Konzept RD, E-RD-10: Der Server sieht keine Punkte und packt nicht; '
-          . 'gepackt wird im Browser. Die eine Ausnahme ist der Demo-Reset '
-          . '(edbak_restore(), Zweig server, in backup_lib.php), der die Fixture '
-          . 'mit Stufe 2 und 3 so anlegt, wie sie im Referenzkonto lag. Ein zweiter '
-          . 'Aufrufer waere ein Server, der fuer ein Konto packt.',
+          . 'gepackt wird im Browser. Bis Web 26.x war der Demo-Reset aus einer '
+          . 'Fixture bis Format 3 die eine Ausnahme (edbak_restore(), Zweig server); '
+          . 'seit KA-07 (Web 27.0.0) gibt es ihn nicht mehr, und geraetehuelle_lib.php '
+          . 'liegt bei den Proben. Ein Aufrufer in server/ waere ein Server, der fuer '
+          . 'ein Konto packt.',
  'sicht' => 'php_ohne_zeichenketten', 'bereich' => 'php',
- 'ausser' => ['server/geraetehuelle_lib.php'],
  'regel' => ['art' => 'aufruf', 'namen' => ['gh_gepackt_bauen']],
- 'start' => 0, 'decke_jetzt' => 1, 'decke_ziel' => 1],
+ 'start' => 0, 'decke_jetzt' => 0, 'decke_ziel' => 0],
 
 ];

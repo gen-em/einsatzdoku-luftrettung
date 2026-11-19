@@ -88,7 +88,7 @@ function anfrage(s, art, passwort) {
     const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: kurve }, true, ['sign']);
     const r = crypto.getRandomValues(new Uint8Array(160));
     const k = { oeffentlich: b64(await crypto.subtle.exportKey('spki', kp.publicKey)),
-                privat: 'edk1:' + b64(r.buffer) };
+                privat: 'edk2:' + b64(r.buffer) };   // Form, kein echter Inhalt — der Server prüft nur sie
     if (art === 'richtig' || art === 'fremdeKurve' || art === 'ersetzen') {
       k.token = (await EdCrypto.deriveKeys(passwort, KDF_SALT, KDF_ITER)).authToken;
     } else if (art === 'falsch') {
