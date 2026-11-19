@@ -14,6 +14,28 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 27.0.0] — unveröffentlicht
+
+Schritt 28 (KA), KA-07: Pakete KA-24 bis KA-30.
+
+### Entfernt
+
+- **Web — das alte Format wird nicht mehr gelesen.** Seit Web 26 nahm es kein
+  Schreibweg mehr an, gelesen wurde es aber weiter, und wer die Datenbank
+  beschreibt, konnte einem Konto so noch Daten ohne Bindung unterschieben.
+  Jetzt öffnen Server und Browser nur noch die gebundene Form, und mit dem
+  Lesen gehen der Anhebelauf und die Übernahme alter Gerätedaten. Vorher war
+  auf Produktiv nachgezählt, dass nichts mehr im alten Format liegt.
+
+### Geändert
+
+- **Web — Konto-Backups der Verwaltung gelten erst ab Web 27.** Ein Paket
+  trägt, was die Anlage gespeichert hatte, und unter Web 26 konnten das noch
+  Daten im alten Format von Konten sein, die sich nicht angemeldet hatten.
+  Wert für Wert verworfen käme ein halbes Konto heraus; deshalb weisen
+  Einspielen und Freigabe ein älteres Paket ganz ab, und der nächste Lauf
+  legt ein neues an.
+
 ## [Web 26.0.0] — unveröffentlicht
 
 Schritt 28 (KA), 06e: Pakete KA-16 bis KA-23.
