@@ -19,6 +19,10 @@
  * Geraeteschluessel (Base64, aus der Kopplung) oeffnet fassung2.py jede
  * Huelle mit der Referenz; dazu muss jedes Stueck den Kopf tragen, das
  * letzte den Merker SCHLUSS, und die Einsatzhuelle Fassung 2 mit Zaehler.
+ * SEIT KA-28 NUR NOCH FASSUNG 2: Bis dahin oeffnete diese Datei ohne `2`
+ * Fassung 1 selbst (`gh_probe_oeffnen()`, entfallen mit KA-26); die Uhr
+ * sendet sie seit 6.0.0 nicht mehr, und kein Leser oeffnet sie. Ohne `2`
+ * und Geraeteschluessel bricht sie ab, statt etwas anderes zu messen.
  * Ausgabe: je Pruefung eine Zeile, am Ende "N Pruefungen, M Fehlschlaege".
  */
 declare(strict_types=1);
@@ -27,10 +31,12 @@ $wurzel = dirname(__DIR__, 3);
 chdir($wurzel . '/server');
 require 'db.php';
 require_once 'demo_lib.php';
-require_once $wurzel . '/tools/proben/huelle/geraet.php';
 
-[$_, $einsatzRef, $ruheRef, $fassungArg, $spkB64] = $argv + [null, '', '', '1', ''];
-$fassung = (int)$fassungArg === 2 ? 2 : 1;
+[$_, $einsatzRef, $ruheRef, $fassungArg, $spkB64] = $argv + [null, '', '', '', ''];
+if ((int)$fassungArg !== 2 || $spkB64 === '') {
+    fwrite(STDERR, "Aufruf: pruefen.php <einsatz-ref> <ruhe-ref> 2 <spk> — Fassung 1 gibt es nicht mehr.\n");
+    exit(2);
+}
 $n = 0; $fehl = 0;
 function pruefe(bool $ok, string $was): void
 {
@@ -71,40 +77,25 @@ $pdo = db();
 $demo = demo_id();
 if ($demo === null) { fwrite(STDERR, "Kein Demo-Konto.\n"); exit(2); }
 $konto = $pdo->query('SELECT * FROM users WHERE id = ' . (int)$demo)->fetch(PDO::FETCH_ASSOC);
-/* SEIT DER FIXTURE IN FASSUNG 2 (KA-13) liegen Schluesselhuelle und
- * privater Teil des Kontopaars als `edk2:` (Zaehler ‖ Laenge ‖ Nutzlast ‖
- * Polster, gebunden an Zweck und Bezug). demo_inhaltsschluessel() liest nur
- * `edk1:` und wirft seither; dieser Lauf oeffnete deshalb nichts mehr
- * (gemessen am 17.11.2026, KA-22). Hier dieselbe Rechnung wie
- * demo_frischer_schluessel(); `edk1:` bleibt als Rueckfall. */
-function edk2_nutzlast(?string $innen): ?string
-{
-    if ($innen === null || strlen($innen) < 8) { return null; }
-    $len = unpack('N', substr($innen, 4, 4))[1];
-    return strlen($innen) >= 8 + $len ? substr($innen, 8, $len) : null;
-}
-if (str_starts_with((string)$konto['pat_wrap_pw'], 'edk2:')) {
-    $haelfte = kdf_haelfte(DEMO_PASSWORT, (string)hex2bin((string)$konto['kdf_salt']), (int)$konto['kdf_iter']);
-    $ckHex = edk2_nutzlast(demo_edk2_innen($haelfte, (string)$konto['pat_wrap_pw'], 'wrap', 'pw'));
-    if ($ckHex === null || !preg_match('/^[0-9a-f]{64}\z/', $ckHex)) {
-        fwrite(STDERR, "Das Demo-Passwort oeffnet die Schluesselhuelle nicht.\n"); exit(2);
-    }
-    $ck = (string)hex2bin($ckHex);
-    $pkcs8 = edk2_nutzlast(demo_edk2_innen($ck, (string)$konto['kp_privat'], 'kp', ''));
-} else {
+/* Schluesselhuelle und privater Teil des Kontopaars liegen als `edk2:`
+ * (Zaehler ‖ Laenge ‖ Nutzlast ‖ Polster, gebunden an Zweck und Bezug, seit
+ * der Fixture in Fassung 2, KA-13). demo_inhaltsschluessel() oeffnet die
+ * Huelle mit dem Demo-Passwort (seit KA-24 nur noch `edk2:`); bis KA-28
+ * stand hier dieselbe Rechnung von Hand, mit `edk1:` als Rueckfall. */
+try {
     $ck = demo_inhaltsschluessel($konto);
-    $pkcs8 = demo_edk1_oeffnen($ck, (string)$konto['kp_privat']);
+} catch (RuntimeException $e) {
+    fwrite(STDERR, $e->getMessage() . "\n"); exit(2);
 }
-if ($pkcs8 === null) { fwrite(STDERR, "Privater Schluessel des Demo-Kontos geht nicht auf.\n"); exit(2); }
-$privat = openssl_pkey_get_private("-----BEGIN PRIVATE KEY-----\n" . chunk_split($pkcs8, 64, "\n")
-                                   . "-----END PRIVATE KEY-----\n");
+$innen = demo_edk2_innen($ck, (string)$konto['kp_privat'], 'kp', '');
+$pkcs8 = $innen === null ? '' : demo_edk2_nutzlast($innen);
+if ($pkcs8 === '') { fwrite(STDERR, "Privater Schluessel des Demo-Kontos geht nicht auf.\n"); exit(2); }
 
-/** Eine Huelle oeffnen: Fassung 1 hier (geraet.php), Fassung 2 ueber die
- *  Referenz (fassung2.py). */
+/** Eine Huelle oeffnen — Fassung 2 ueber die Referenz (fassung2.py), mit dem
+ *  Geraeteschluessel aus der Kopplung als einzigem bekannten Absender. */
 function oeffne(string $h, string $art, string $ref, string $platz = ''): string
 {
-    global $fassung, $privat, $pkcs8, $spkB64;
-    if ($fassung !== 2) { return gh_probe_oeffnen($h, $privat, $art, $ref, $platz); }
+    global $pkcs8, $spkB64;
     $p = proc_open(['python3', '-I', __DIR__ . '/fassung2.py', 'oeffnen'],
                    [0 => ['pipe', 'r'], 1 => ['pipe', 'w']], $rohr);
     fwrite($rohr[0], json_encode(['priv' => $pkcs8, 'spk' => $spkB64, 'huelle' => base64_encode($h),
@@ -117,12 +108,10 @@ function oeffne(string $h, string $art, string $ref, string $platz = ''): string
     return (string)base64_decode($aus['klar']);
 }
 
-/** Ein Spurstueck innen: Fassung 2 traegt vor den Punkten 12 Byte Kopf
- *  (ts_von absolut, Merker). Gibt [punkte, merker|null] zurueck. */
+/** Ein Spurstueck innen: vor den Punkten 12 Byte Kopf (ts_von absolut,
+ *  Merker). Gibt [punkte, merker] zurueck. */
 function spur_lesen(string $roh, int $tsVon): array
 {
-    global $fassung;
-    if ($fassung !== 2) { return [innen_lesen($roh, $tsVon), null]; }
     $kopfTs = unpack('J', substr($roh, 0, 8))[1];
     $merker = ord($roh[8] ?? "\xff");
     if ($kopfTs !== $tsVon) { throw new RuntimeException("kopf-ts $kopfTs statt $tsVon"); }
@@ -152,14 +141,12 @@ if ($m !== false) {
 
     try {
         $innen = json_decode(oeffne((string)$m['ort_huelle'], 'einsatz', $einsatzRef), true);
-        pruefe(is_array($innen) && ($innen['fassung'] ?? 0) === $fassung, "Einsatzhuelle geht auf, Fassung $fassung");
-        if ($fassung === 2) {
-            /* Zaehler: Unix-Sekunde des Verschliessens (E-KA-64), also
-             * nicht kleiner als der Beginn dieses Laufs. */
-            pruefe(is_int($innen['z'] ?? null) && $innen['z'] >= (int)getenv('RUNDLAUF_LAUF')
-                   && ($innen['schluss'] ?? null) === true,
-                   'Einsatzhuelle Fassung 2: Zaehler ' . json_encode($innen['z'] ?? null) . ' ab Laufbeginn, schluss');
-        }
+        pruefe(is_array($innen) && ($innen['fassung'] ?? 0) === 2, 'Einsatzhuelle geht auf, Fassung 2');
+        /* Zaehler: die Sekunde der letzten Aenderung am Inhalt (E-KA-69),
+         * also nicht kleiner als der Beginn dieses Laufs. */
+        pruefe(is_int($innen['z'] ?? null) && $innen['z'] >= (int)getenv('RUNDLAUF_LAUF')
+               && ($innen['schluss'] ?? null) === true,
+               'Einsatzhuelle Fassung 2: Zaehler ' . json_encode($innen['z'] ?? null) . ' ab Laufbeginn, schluss');
         $sollPh = [[2, 0, -33.4489, -70.6693], [3, 300, null, null], [4, 1200, -33.4389, -70.6493]];
         $gut = count($innen['phasen'] ?? []) === 3;
         foreach ($sollPh as $k => [$nr, $t, $la, $lo]) {
@@ -212,9 +199,7 @@ if ($m !== false) {
            'Hoehe: 4500,5 m -> 4501 (ueber 3276 m, F-S11-64), -12,5 -> -13, keine -> -32768');
     pruefe(isset($stuecke[0]) && (int)$stuecke[0]['ts_von'] === T0 && (int)$stuecke[1]['ts_bis'] === T0 + 599 * 5,
            'Zeitraum im Klartext: ts_von und ts_bis der Stuecke');
-    if ($fassung === 2) {
-        pruefe($merker === [0, 1], 'Merker: SCHLUSS nur am letzten Stueck ' . json_encode($merker));
-    }
+    pruefe($merker === [0, 1], 'Merker: SCHLUSS nur am letzten Stueck ' . json_encode($merker));
 }
 
 // ---- Das Ruhesegment -------------------------------------------------------
@@ -232,7 +217,7 @@ if ($r !== false) {
         pruefe($p === [[471000000, 112000000, 600, T0 - 600], [471001000, 112001000, null, T0 - 300],
                        [471002000, 112002000, 601, T0 - 10]],
                'Ruhestueck (Art "ruhe") geht auf, 3 Punkte gleich');
-        if ($fassung === 2) { pruefe($mk === 1, 'Ruhestueck: Merker SCHLUSS ' . json_encode($mk)); }
+        pruefe($mk === 1, 'Ruhestueck: Merker SCHLUSS ' . json_encode($mk));
     } catch (Throwable $e) {
         pruefe(false, 'Ruhestueck geht auf: ' . $e->getMessage());
     }

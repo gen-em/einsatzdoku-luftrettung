@@ -14,9 +14,11 @@ module Const {
      * weder Huellen der Fassung 1 noch ein `start` ohne Geraeteschluessel an.
      * Eine Uhr ohne `huelle: 2` aus der Kopplung sendet nichts mehr und sagt
      * "Neu koppeln"; ohne Geraetepaar beginnt sie keine Kopplung. Bis 5.1.0
-     * fiel sie in beiden Faellen auf Fassung 1 zurueck.
+     * fiel sie in beiden Faellen auf Fassung 1 zurueck. 6.0.1 traegt den
+     * Code der Fassung 1 auch nicht mehr mit (KA-28): Der Selbsttest misst
+     * die Byteordnung an einem Fall der Fassung 2.
      */
-    const APP_VERSION = "6.0.0";
+    const APP_VERSION = "6.0.1";
 
     /* Wie lange ein geparktes (dauerhaft abgewiesenes) Paket auf der Uhr
      * liegen bleibt, bevor ein Sendelauf es raeumt (wie auf dem Handy):

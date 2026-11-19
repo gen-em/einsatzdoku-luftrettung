@@ -59,6 +59,19 @@ Schritt 28 (KA), 06e: Pakete KA-16 bis KA-23.
 - **Web — ein zurückgenommener Schnitt ließ seine Punkte verborgen.** Der
   Vermerk des Schnitts blieb stehen; jetzt geht er mit der Rücknahme.
 
+## [Uhr 6.0.1] — unveröffentlicht
+
+Schritt 28 (KA), KA-07: Paket KA-28.
+
+### Entfernt
+
+- **Uhr — der Code der ersten Hüllenfassung ist fort.** Seit 6.0.0 sendete
+  die Uhr sie nicht mehr, trug aber ihr Verschließen weiter mit, und der
+  Selbsttest vor dem ersten Senden maß die Byteordnung an einem Fall dieser
+  Fassung. Er rechnet jetzt einen Fall der zweiten Fassung nach, sodass
+  nichts mehr an einem Format hängt, das kein Leser mehr öffnet. Was die Uhr
+  sendet, ändert sich nicht.
+
 ## [Uhr 6.0.0] — unveröffentlicht
 
 Schritt 28 (KA), 06e: Paket KA-22.
