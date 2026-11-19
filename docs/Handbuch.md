@@ -1762,11 +1762,14 @@ Gerät, und hält jeden neuen dagegen:
 - **„Diese Ortsdaten tragen keinen Herkunftsnachweis"** (rot): Der Stand
   kam ohne Geräteschlüssel, wo dein Browser schon einen kennt. Koppele das
   Gerät neu.
-- **„Vom Browser übernommen am …"** (blau, Karte darunter) *(seit Web
-  26.0.0)*: Diese Ortsdaten hat ein Gerät mit einer älteren App geschickt,
-  das seine Herkunft noch nicht belegen konnte. Dein Browser hat sie nach
-  der Anmeldung geprüft und neu verschlossen; dass sie wirklich von deinem
-  Gerät stammen, ist damit nicht belegt. Zu tun ist nichts.
+- **„Vom Browser übernommen am …"** (blau, Karte darunter) *(Web 26)*:
+  Diese Ortsdaten hat ein Gerät mit einer älteren App geschickt, das seine
+  Herkunft noch nicht belegen konnte. Dein Browser hat sie unter Web 26
+  nach der Anmeldung geprüft und neu verschlossen; dass sie wirklich von
+  deinem Gerät stammen, ist damit nicht belegt. Zu tun ist nichts. *Seit
+  Web 27.0.0 entsteht keine solche Übernahme mehr* — Daten im alten Format
+  liest die Anwendung nicht mehr; die schon übernommenen behalten ihr
+  Kennzeichen.
 
 **Sechs Kennzeichen seit Web 14.0.0, vorher drei.** Ein Einsatz vom Handy und
 einer von der Wear-OS-Uhr standen bis dahin beide als „Uhr" da, ein
@@ -4549,6 +4552,10 @@ Wort, das immer dasselbe sagt, sagt nichts.
 - **Einspielen** bringt ein Paket zurück in **dieses** Konto. Zur Bestätigung
   ist die E-Mail-Adresse des Kontos abzutippen. Eingespielt wird
   **ergänzend**: Vorhandenes bleibt stehen, es wird nichts überschrieben.
+  **Seit Web 27.0.0 nur ein Paket, das mit Web 27 oder später angelegt
+  wurde** — ältere können Daten im alten Format tragen, die die Anwendung
+  nicht mehr liest; die Seite sagt das, und es wird nichts geändert. Ein
+  neues Paket legt der nächste Lauf an. Dasselbe gilt für die Freigabe.
 - **Paket löschen** steht im **„⋯"** der Zeile — es ist endgültig, und
   endgültige Handlungen liegen eine Ebene tiefer. Ist es das **letzte** Paket
   des Kontos, ist zusätzlich die E-Mail-Adresse abzutippen.
