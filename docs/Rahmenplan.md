@@ -1,6 +1,6 @@
 # Rahmenplan — Programm „Gen-EM NAdoku" bis v1.0
 
-**Fassung 250 (19.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
+**Fassung 251 (19.11.2026)** · Steuerung: Reihenfolge, Status, programmweite
 Entscheidungen. Verlauf: `Rahmenplan-Verlauf.md`. Fassungen 1–15:
 `Rahmenplan-Archiv.md`; Fassungen 16–124: `Rahmenplan-Archiv-2.md`.
 
@@ -9,7 +9,7 @@ Uhr 6.0.0 · Android 0.27.0; auf Staging; Produktiv Web 26.0.0 · Android 0.27.0
 **Läuft:** 28 — KA abgeschlossen mit KA-07 (Web 27.0.0, Android 0.27.1, Uhr 6.0.1; im PR, Merge nach P-KA-25); offen der Garmin-Teil KG (Gerätetests).
 **Als Nächstes:** P-KA-25, Merge von KA-07, R91, Tags `web-v27.0.0`, `android-v0.27.1`, `uhr-v6.0.1` (Betreiberin); danach 13 (P7).
 **Offene PRs:** KA-07 (Zweig `claude/amazing-keller-i2f04f`).
-**Fällig bei der Betreiberin:** 45 Posten (Abschnitt 6.1). **`update.php`:** auf Staging nichts offen (Betreiberin, 12.11.2026, nach KA-06b-2); auf Produktiv seit dem Tag `web-v24.11.0` fällig, falls noch nicht aufgerufen (Migration `2026_11_07_darstellung`).
+**Fällig bei der Betreiberin:** 46 Posten (Abschnitt 6.1). **`update.php`:** auf Staging nichts offen (Betreiberin, 12.11.2026, nach KA-06b-2); auf Produktiv seit dem Tag `web-v24.11.0` fällig, falls noch nicht aufgerufen (Migration `2026_11_07_darstellung`).
 
 Kennungen sind Namen, keine Reihenfolge.
 
@@ -166,6 +166,7 @@ gestrichen, 6a abgehakt; was steht, ist bestätigt offen.
 | Was | Wofür | seit | Bedienweg |
 |---|---|---|---|
 | **KA-M2, Rest — seit KA-01 fällig:** die SHA-Pflicht für Aktionen einschalten (das geprüfte FTPS-Zertifikat ist auf Staging, Lauf 191, und Produktiv, Lauf 193, belegt) | 28 (KA) | 10.11.2026 | `Pruefliste.md` 1, P-KA-02; Konzept KA 6 |
+| **Prüfkonto der Kette auf Staging zurücksetzen** — Verwaltung → das Konto aus `STAGING_KONTO` → Passwort-Link, im Browser neu setzen (wie `STAGING_PASS`); danach den Lauf auf `main` neu starten. Bis dahin ist Stufe 2 rot (Lauf 229) | 28 (KA) | 19.11.2026 | `Pruefliste.md` 1, P-KA-25 |
 | **KA-07:** P-KA-25 (Zählabfrage, Staging vor dem Merge, Produktiv vor dem Tag `web-v27.0.0`), -26 und -27 (Lesen, Sichern, Konto-Backups ab Web 27; nach dem Tag „Alle sichern“), -28 (Apps am Gerät) | 28 (KA) | 19.11.2026 | `Pruefliste.md` 1, 6, 10 |
 | **P-KA-05 — vor dem Tag von KA-03:** auf Produktiv jedes SFTP-Backup-Ziel mit gespeichertem Hostschlüssel (sonst „Verbindung prüfen"), denn ab Web 24.12.0 sendet der Job ohne Abdruck nicht | 28 (KA) | 10.11.2026 | `Pruefliste.md` 6, P-KA-05 |
 | **P-PK-37:** `STAGING_PASS` einmal falsch, einmal leer setzen — Stufe 2 rot mit Grund im ersten Messschritt; P-PK-18 (zwei Merges in einer Minute) bei Gelegenheit. P-PK-19, -21, -38 und PK-M2 sind seit Lauf 101 erledigt | PK | 29.09.2026 | `Pruefliste.md` 1, 5s |

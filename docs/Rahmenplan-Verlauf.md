@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 251 | 19.11.2026 | 28 | Zuarbeit neu: Prüfkonto der Kette auf Staging zurücksetzen — seine Hülle lag im alten Format, Stufe 2 nach dem Merge von KA-07 rot (Lauf 229). |
 | 250 | 19.11.2026 | 28 | KA-07 gebaut (Web 27.0.0, Android 0.27.1, Uhr 6.0.1), Konzept KA abgeschlossen und mit dem Audit-Bericht gelöscht; Zuarbeiten P-KA-25 bis -28 in 6.1. Kopf: Stand `dec3b37`, Produktiv nach den Tags vom 19.11.2026. |
 | 249 | 19.11.2026 | 28 | 06e erledigt (PR #192, Web 26.0.0, Android 0.27.0, Uhr 6.0.0); R91 auf Staging ohne Befund. Kopf: Stand `bbed45e`, Produktiv nach den Tags vom 17.11.2026; „offen 06e“ war überholt. |
 | 248 | 16.11.2026 | 28 | KA-06c, -06d, -06f und die Weiche erledigt (PR #179 bis #190, Web 25.0.0, Android 0.26.0), Uhr 5.1.0 mit KG-09/10 (PR #189); P-PU-05, P-PR-01, -02 bestanden. Kopf: Stand `cae436c`.
