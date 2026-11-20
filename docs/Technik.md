@@ -5391,9 +5391,15 @@ Am Messbestand: 5 000 Einsätze, **1 121 802 Zeilen** in 34 Tabellen.
 | Einspielen | 784 Anweisungen in 6,0 s |
 | Rundlauf | **34 von 34** Schemata zeichengleich, **34 von 34** Prüfsummen gleich (`CHECKSUM TABLE EXTENDED`) |
 
-`tools/proben/komplett/` fährt den ganzen Zyklus: **72 Erwartungen mit allen
-Schaltern** (`--pruefdb` und `--ziel`; ohne sie sind es 64, weil die Teile 7
-und 10 dann mit `[ -- ]` ausfallen), einschliesslich Versand auf eine echte
+`tools/proben/komplett/` fährt den ganzen Zyklus — die Zahl der Erwartungen
+nennt der Lauf selbst; ohne `--pruefdb` und `--ziel` fallen die Teile 7 und
+10 mit `[ -- ]` aus, und so fährt sie der Prüfstand. Teil 7, das Einspielen
+in eine leere Datenbank, ist deshalb eine Handprobe; sie lief zwischen dem
+Protokoll der Sicherung und Web 27.0.1 rot, ohne dass es jemand sah (Nr. 597).
+**Seit Web 27.0.1 läuft sie auch gegen MySQL 8.4** (Plattform-Container,
+`tools/sandbox/plattform.sh mysql84`, Port aus der DSN): Bis dahin war das
+Backup dort leer, weil MySQL die Spalten der Schemaauskunft in Versalien
+nennt. Der Zyklus umfasst Versand auf eine echte
 FTPS-Gegenstelle, „halbe Datei liegt dort", abgeschnitten an einer
 Blockgrenze, veränderter Dateikopf, beide Wiederanlauf-Zweige und seit S10
 Teil 11: **Server-Anteil und Serverschlüssel stehen 0× im Dump, die Kennung

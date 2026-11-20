@@ -138,7 +138,8 @@ pruef('Es gibt keinen Fremdschlüssel-Ring', $r['ring'] === [],
 /* Steht jede Tabelle hinter denen, auf die sie verweist? */
 $platz = array_flip($r['reihenfolge']);
 $verletzt = [];
-$q = $pdo->query('SELECT DISTINCT table_name, referenced_table_name
+$q = $pdo->query('SELECT DISTINCT table_name AS table_name,
+                                  referenced_table_name AS referenced_table_name
                     FROM information_schema.key_column_usage
                    WHERE table_schema = DATABASE() AND referenced_table_name IS NOT NULL');
 foreach ($q->fetchAll(PDO::FETCH_ASSOC) as $f) {
@@ -436,6 +437,10 @@ if ($pruefdb === '') {
         : (isset($args['nutzer']) ? '' : (string)($kopieCfg['db']['pass'] ?? ''));
     $wirt = 'localhost';
     if (preg_match('/host=([^;]+)/', (string)($kopieCfg['db']['dsn'] ?? ''), $t)) { $wirt = $t[1]; }
+    /* DER PORT GEHT MIT. Ohne ihn spielte eine Probe gegen einen zweiten
+     * Datenbankdienst (MySQL 8.4 im Plattform-Container, Port 3308) still in
+     * die MariaDB auf 3306 zurueck und verglich zwei Dienste miteinander. */
+    if (preg_match('/port=(\d+)/', (string)($kopieCfg['db']['dsn'] ?? ''), $t)) { $wirt .= ';port=' . $t[1]; }
     try {
         $adm = new PDO("mysql:host={$wirt};charset=utf8mb4", $nutzer, $passwort,
                        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
@@ -480,6 +485,15 @@ if ($pruefPdo !== null) {
     pruef('Die Prüfdatenbank hat dieselben Tabellen', $a === $b,
           count($a) . ' gegen ' . count($b));
 
+    /* SCHEMA OHNE ZWEI ZUFAELLE. `AUTO_INCREMENT=n` sagt, welche Nummer als
+     * naechste kaeme — nach dem Protokolleintrag des Backups (unten) steht
+     * sie im Original eins hoeher. Und MySQL 8 schreibt in der eingespielten
+     * Datenbank `CHARACTER SET utf8mb4 COLLATE utf8mb4_…`, wo das Original
+     * nur `COLLATE utf8mb4_…` traegt; die Kollation nennt den Zeichensatz
+     * schon. Beides ist Schreibweise, kein Unterschied (Nr. 597). */
+    $schema = static fn(PDO $p, string $q): string => preg_replace(
+        ['/ AUTO_INCREMENT=\d+/', '/ CHARACTER SET (\w+) COLLATE (\1_)/'], ['', ' COLLATE $2'],
+        (string)($p->query("SHOW CREATE TABLE $q")->fetch(PDO::FETCH_NUM)[1] ?? ''));
     $schemaGleich = 0; $summeGleich = 0; $zeilenGleich = 0; $abweichung = [];
     $gesamtZeilen = 0;
     $ohneLeer = 0;
@@ -488,18 +502,39 @@ if ($pruefPdo !== null) {
         if (isset(KOMP_OHNE_ZEILEN[$t])) {
             /* Schema ja, Zeilen nein — hier leer, drüben nicht. */
             $ohneLeer += (int)$pruefPdo->query("SELECT COUNT(*) FROM $q")->fetchColumn() === 0 ? 1 : 0;
-            $cA = (string)($pdo->query("SHOW CREATE TABLE $q")->fetch(PDO::FETCH_NUM)[1] ?? '');
-            $cB = (string)($pruefPdo->query("SHOW CREATE TABLE $q")->fetch(PDO::FETCH_NUM)[1] ?? '');
-            if ($cA === $cB) { $schemaGleich++; }
+            if ($schema($pdo, $q) === $schema($pruefPdo, $q)) { $schemaGleich++; }
             continue;
         }
         $nA = (int)$pdo->query("SELECT COUNT(*) FROM $q")->fetchColumn();
         $nB = (int)$pruefPdo->query("SELECT COUNT(*) FROM $q")->fetchColumn();
         $gesamtZeilen += $nA;
+        if ($t === 'protokoll_ereignisse') {
+            /* DIE ZWEITE ERWARTETE ABWEICHUNG: Das Backup protokolliert
+             * „Komplett-Backup … erzeugt", NACHDEM der Dump steht — der
+             * Eintrag kann nicht in sich selbst stehen. Durchgewinkt wird er
+             * nicht: Was das Original mehr hat, muss genau dieser Eintrag
+             * sein, und alles bis zur letzten gesicherten Nummer muss Zeile
+             * fuer Zeile gleich sein (Nr. 597; bis dahin lief Teil 7 seit
+             * dem Protokoll rot, unbemerkt, weil der Pruefstand ihn ohne
+             * --pruefdb faehrt). */
+            $bisB = (int)$pruefPdo->query("SELECT COALESCE(MAX(id), 0) FROM $q")->fetchColumn();
+            $mehr = $pdo->query("SELECT art FROM $q WHERE id > $bisB")->fetchAll(PDO::FETCH_COLUMN);
+            $nurErzeugt = $mehr !== [] && array_unique($mehr) === ['komplett_erzeugt'];
+            $spalten = implode(', ', array_map(
+                static fn(string $c): string => "COALESCE(HEX(`" . str_replace('`', '``', $c) . "`), 'N')",
+                array_keys($tabellen[$t]['spalten'])));
+            $summe = "SELECT COUNT(*), BIT_XOR(CRC32(CONCAT_WS('|', $spalten))) FROM $q WHERE id <= $bisB";
+            $gleichBis = $pdo->query($summe)->fetch(PDO::FETCH_NUM) == $pruefPdo->query($summe)->fetch(PDO::FETCH_NUM);
+            if ($nA - $nB === count($mehr) && $nurErzeugt) { $zeilenGleich++; }
+            if ($schema($pdo, $q) === $schema($pruefPdo, $q)) { $schemaGleich++; }
+            if ($gleichBis && $nurErzeugt) { $summeGleich++; } else { $abweichung[] = $t; }
+            pruef('Das Protokoll hat nur den Eintrag „erzeugt" mehr', $nurErzeugt && $gleichBis,
+                  count($mehr) . ' mehr (' . implode(', ', array_unique($mehr)) . '), bis Nr. '
+                  . $bisB . ($gleichBis ? ' zeilengleich' : ' ABWEICHEND'));
+            continue;
+        }
         if ($nA === $nB) { $zeilenGleich++; }
-        $cA = (string)($pdo->query("SHOW CREATE TABLE $q")->fetch(PDO::FETCH_NUM)[1] ?? '');
-        $cB = (string)($pruefPdo->query("SHOW CREATE TABLE $q")->fetch(PDO::FETCH_NUM)[1] ?? '');
-        if ($cA === $cB) { $schemaGleich++; }
+        if ($schema($pdo, $q) === $schema($pruefPdo, $q)) { $schemaGleich++; }
         $sA = (string)($pdo->query("CHECKSUM TABLE $q EXTENDED")->fetch(PDO::FETCH_NUM)[1] ?? 'a');
         $sB = (string)($pruefPdo->query("CHECKSUM TABLE $q EXTENDED")->fetch(PDO::FETCH_NUM)[1] ?? 'b');
         if ($sA === $sB) { $summeGleich++; } else { $abweichung[] = $t; }

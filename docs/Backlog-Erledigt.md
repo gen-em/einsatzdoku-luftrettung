@@ -11480,3 +11480,21 @@ zutreffen.
      Erledigt mit Web 27.0.0 (KA-07, E-KA-104): Der SQL-Nachweis vom
      19.11.2026 zeigte auf Produktiv keine Zeile mehr mit `edk1:`; die
      Anhebung beim Entsperren war damit nicht mehr nötig.
+
+597. **Das Komplett-Backup ist auf MySQL 8 leer.** · gehört zu: 28 · Stand: erledigt · seit 20.11.2026
+     *Aufgenommen 20.11.2026 auf Staging.* Ein Komplett-Backup von Staging
+     (MySQL 8.4.10) ließ sich nicht einspielen: Jede Zeile stand als
+     ``INSERT INTO `t` (``) VALUES (NULL)`` im Dump. `komp_tabellen()` und
+     `komp_reihenfolge()` lasen `$c['column_name']`, und MySQL 8 liefert
+     die Spalten von information_schema als `COLUMN_NAME`. Produktiv
+     (MariaDB 10.11) liefert sie klein und ist nicht betroffen. Die
+     Komplettprobe fing es nicht, weil der Prüfstand sie gegen MariaDB und
+     ohne `--pruefdb` fährt. *Weg:* feste Aliase in den Abfragen, Probe
+     gegen MySQL 8.4 mit Rückspielung. *Abnahme:* Komplettprobe mit
+     `--pruefdb` auf MySQL 8.4 und MariaDB ohne offene Erwartung,
+     Gegenprobe ohne Berichtigung rot.
+     Erledigt mit Web 27.0.1: Aliase gesetzt; Komplettprobe mit
+     Rückspielung auf MySQL 8.4.0 und MariaDB 10.11 je 89 von 89, ohne
+     Berichtigung auf MySQL 8.4 rot bei Anweisung 7 (`Unknown column ''`).
+     Die Probe lief in Teil 7 seit dem Protokolleintrag der Sicherung auch
+     auf MariaDB rot und ist mitberichtigt.
