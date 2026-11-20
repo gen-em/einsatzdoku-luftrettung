@@ -14,6 +14,18 @@ Update nur die tatsächlich geänderten Dateien neu geladen werden. Die
 Uhr-Version steht auf der Sync-Seite. Die Stände 1.0 bis 1.2 unten sind die
 frühen Spezifikations-Stände des Gesamtprojekts, vor der getrennten Zählung.
 
+## [Web 27.0.1] — unveröffentlicht
+
+### Behoben
+
+- **Web — das Komplett-Backup war auf MySQL 8 leer.** MySQL nennt die
+  Spalten seiner Schemaauskunft in Versalien, MariaDB klein, und die
+  Bibliothek fragte nur nach der kleinen Schreibweise. Auf MySQL ging deshalb
+  jede Zeile ohne Spaltennamen in den Dump, und kein Stand ließ sich
+  einspielen; aufgefallen ist es erst auf Staging, als einer gebraucht wurde.
+  Die Abfragen nennen ihre Spalten jetzt selbst, Produktiv läuft auf MariaDB
+  und war nicht betroffen.
+
 ## [Web 27.0.0] — unveröffentlicht
 
 Schritt 28 (KA), KA-07: Pakete KA-24 bis KA-30.

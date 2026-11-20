@@ -316,7 +316,13 @@ function komp_tabellen(PDO $pdo): array
         $namen[] = (string)$r[0];
     }
 
-    $st = $pdo->prepare('SELECT column_name, data_type, column_type
+    /* DIE ALIASE SIND NOETIG, nicht Zierde: MySQL 8 liefert die Spalten von
+     * information_schema in Versalien (`COLUMN_NAME`), MariaDB klein. Ohne
+     * festen Namen fand `$c['column_name']` auf MySQL nichts, und jede Zeile
+     * ging als `INSERT INTO t (``) VALUES (NULL)` in den Dump — auf Staging
+     * (MySQL 8.4) bis Web 27.0.0 jeder Komplett-Stand, unbemerkt. */
+    $st = $pdo->prepare('SELECT column_name AS column_name, data_type AS data_type,
+                                column_type AS column_type
                            FROM information_schema.columns
                           WHERE table_schema = DATABASE() AND table_name = ?
                           ORDER BY ordinal_position');
@@ -390,7 +396,10 @@ function komp_reihenfolge(PDO $pdo, array $tabellen): array
     $namen = array_keys($tabellen);
     sort($namen);
     $braucht = array_fill_keys($namen, []);
-    $q = $pdo->query('SELECT DISTINCT table_name, referenced_table_name
+    /* Aliase aus demselben Grund wie in komp_tabellen(): MySQL 8 nennt die
+     * Spalten in Versalien. */
+    $q = $pdo->query('SELECT DISTINCT table_name AS table_name,
+                                      referenced_table_name AS referenced_table_name
                         FROM information_schema.key_column_usage
                        WHERE table_schema = DATABASE()
                          AND referenced_table_name IS NOT NULL');

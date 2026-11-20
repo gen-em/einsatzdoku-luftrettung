@@ -9020,4 +9020,11 @@ declare(strict_types=1);
  *   per SQL am 19.11.2026 (E-KA-104). Hauptnummer, weil Daten im alten
  *   Format danach unlesbar sind. KEIN SCHEMA; nach dem Tag gleich ein neues
  *   Konto-Backup je Konto anlegen lassen, aeltere Pakete gelten nicht mehr. */
-const WEB_VERSION = '27.0.0';
+/* 27.0.1 BERICHTIGT DAS KOMPLETT-BACKUP AUF MYSQL 8 (Nr. 597). MySQL nennt
+ *   die Spalten von information_schema in Versalien, MariaDB klein; die
+ *   Bibliothek fragte nach `column_name` und fand auf MySQL nichts. Jede
+ *   Zeile ging ohne Spaltennamen in den Dump, und der Stand liess sich nicht
+ *   einspielen — auf Staging (MySQL 8.4) jeder Stand bis hierher, bemerkt
+ *   erst, als einer gebraucht wurde. Produktiv laeuft auf MariaDB und war
+ *   nicht betroffen. Die Abfragen tragen jetzt feste Namen. KEIN SCHEMA. */
+const WEB_VERSION = '27.0.1';
