@@ -9,6 +9,7 @@ Verlauf bis zum Schnitt). Die Fassungszählung läuft fortlaufend weiter.
 
 | Fassung | Datum | Anlass | Was |
 |---|---|---|---|
+| 253 | 20.11.2026 | 28 | Zuarbeit erledigt: Komplett-Backup von Produktiv vollständig (P-KA-29); auf Staging nach Web 27.0.1 ebenso (P-KA-30). |
 | 252 | 20.11.2026 | 28 | Zuarbeit neu: ein Komplett-Backup von Produktiv auf Vollständigkeit ansehen — auf Staging (MySQL 8.4) war jeder Stand leer (Nr. 597, Web 27.0.1). |
 | 251 | 19.11.2026 | 28 | Zuarbeit neu: Prüfkonto der Kette auf Staging zurücksetzen — seine Hülle lag im alten Format, Stufe 2 nach dem Merge von KA-07 rot (Lauf 229). |
 | 250 | 19.11.2026 | 28 | KA-07 gebaut (Web 27.0.0, Android 0.27.1, Uhr 6.0.1), Konzept KA abgeschlossen und mit dem Audit-Bericht gelöscht; Zuarbeiten P-KA-25 bis -28 in 6.1. Kopf: Stand `dec3b37`, Produktiv nach den Tags vom 19.11.2026. |
