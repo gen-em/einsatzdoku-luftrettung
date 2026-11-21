@@ -11498,3 +11498,16 @@ zutreffen.
      Berichtigung auf MySQL 8.4 rot bei Anweisung 7 (`Unknown column ''`).
      Die Probe lief in Teil 7 seit dem Protokolleintrag der Sicherung auch
      auf MariaDB rot und ist mitberichtigt.
+
+598. **START wirkt im Menü der Garmin-Uhr nicht.** · gehört zu: 28 · Stand: erledigt · seit 21.11.2026
+     *Aufgenommen 21.11.2026 von der Betreiberin.* Auf der Fenix 6 mit Uhr
+     6.0.1 tat START im Schnellmenü nichts: keine Phase, kein „Einsatz
+     beenden“, kein „Einsatztag beenden“; außerhalb des Menüs ging START.
+     Das Menü wartete auf das `onSelect` des Systems und verwarf es, solange
+     der Merker des öffnenden Drucks stand (`auswahlVerwerfen()`, seit Uhr
+     4.6.0); die Reihenfolge der Ereignisse war am Gerät nie gemessen.
+     *Weg:* Merker mit Verfall, Wahl beim Loslassen, wenn kein `onSelect`
+     angenommen wurde. *Abnahme:* Fenix 6, Menü über langes START, jeder
+     Eintrag wählt mit einem Druck, keiner doppelt.
+     Erledigt mit Uhr 6.0.2: Merker verfällt nach 5 s, Loslassen als
+     Rückfall; Rundlauf grün, Abnahme am Gerät offen (P-KA-31).

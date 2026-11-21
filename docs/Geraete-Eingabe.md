@@ -253,6 +253,19 @@ Seite stattdessen auf das Loslassen (`langNachLoslassen()`); auf einer
 echten FR 945 fiel das als „Menü erst beim Loslassen" auf (F-KG-18). Am
 Gerät nicht gemessen (Prüfdokument KG).
 
+**Auf der Fenix 6 wählte START im Menü danach gar nichts mehr** (Uhr 6.0.1,
+21.11.2026, Nr. 598): weder Phase noch „Einsatz beenden“ noch „Einsatztag
+beenden“, während START auf den Hauptseiten wirkte. Welcher Merker hing,
+ist nicht gemessen. **Seit Uhr 6.0.2 hat `TastenDelegate` zwei
+Rückfallwege:** Der Merker des öffnenden Drucks verfällt nach 5 s, und das
+Loslassen eines START-Drucks wählt, wenn für ihn kein `onSelect`
+angenommen wurde. Gewählt wird weiter über `onSelect`. **`true` aus
+`onKeyPressed` unterdrückt `onSelect` in einem `TastenDelegate` im
+Simulator nicht** (anders als oben für `ActionDelegate` gemessen): Ein
+erster Versuch, der so unterdrücken wollte, stellte auf der
+Kopplungsseite zwei Rückfragen, und der Rundlauf wurde rot. Belegt ist die
+Behebung erst am Gerät.
+
 **Ein zweiter Fall derselben Art** (10.11.2026, Abschnitt 2): Kurz UP/DOWN
 auf der Reanimationsseite bucht nach dem Seitenwechsel ein Ereignis, weil
 der Halte-Timer der verlassenen Seite weiterläuft. Belegt ist er nur am

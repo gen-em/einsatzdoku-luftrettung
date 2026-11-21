@@ -455,6 +455,7 @@ class ResusOverviewDelegate extends TastenDelegate {
 
     function onSelect() as Lang.Boolean {
         if (Input.beruehrungVerwerfen()) { return true; }
+        if (auswahlVerwerfen()) { return true; }          // keine doppelte Auswahl (Nr. 598)
         var id = _v.items[_v.index][2];
         if (id == :resume) {
             WatchUi.popView(WatchUi.SLIDE_RIGHT);
