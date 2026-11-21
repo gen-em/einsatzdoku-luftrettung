@@ -263,8 +263,10 @@ angenommen wurde. Gewählt wird weiter über `onSelect`. **`true` aus
 `onKeyPressed` unterdrückt `onSelect` in einem `TastenDelegate` im
 Simulator nicht** (anders als oben für `ActionDelegate` gemessen): Ein
 erster Versuch, der so unterdrücken wollte, stellte auf der
-Kopplungsseite zwei Rückfragen, und der Rundlauf wurde rot. Belegt ist die
-Behebung erst am Gerät.
+Kopplungsseite zwei Rückfragen, und der Rundlauf wurde rot. **Am Gerät
+belegt:** Auf der Fenix 6 wählt START im Menü mit Uhr 6.0.2 wieder
+(Betreiberin, 21.11.2026); welcher der beiden Rückfallwege dort greift, ist
+nicht gemessen.
 
 **Ein zweiter Fall derselben Art** (10.11.2026, Abschnitt 2): Kurz UP/DOWN
 auf der Reanimationsseite bucht nach dem Seitenwechsel ein Ereignis, weil
