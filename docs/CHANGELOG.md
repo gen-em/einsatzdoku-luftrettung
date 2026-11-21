@@ -93,6 +93,20 @@ Schritt 28 (KA), 06e: Pakete KA-16 bis KA-23.
 - **Web — ein zurückgenommener Schnitt ließ seine Punkte verborgen.** Der
   Vermerk des Schnitts blieb stehen; jetzt geht er mit der Rücknahme.
 
+## [Uhr 6.0.2] — unveröffentlicht
+
+### Behoben
+
+- **Uhr — START wirkt im Menü wieder.** Auf der Fenix 6 tat START im
+  Schnellmenü nichts, sodass sich weder eine Phase setzen noch ein Einsatz
+  oder der Einsatztag beenden ließ. Das Menü verließ sich auf die Auswahl
+  des Systems und verwarf sie, solange es den Druck, der es geöffnet hatte,
+  noch für unten hielt; in welcher Reihenfolge die Uhr Auswahl und Taste
+  meldet, war am Gerät nie gemessen. Jetzt verfällt dieser Merker nach
+  fünf Sekunden, und kommt für einen Druck keine Auswahl an, wählt sein
+  Loslassen; doppelt gewählt wird nicht. Das gilt für alle Menüs der Uhr,
+  auch für das der Reanimation.
+
 ## [Uhr 6.0.1] — unveröffentlicht
 
 Schritt 28 (KA), KA-07: Paket KA-28.

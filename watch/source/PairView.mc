@@ -208,6 +208,7 @@ class PairDelegate extends TastenDelegate {
      * (M-KG-01, C). Solange nur der Code steht, ohne Wirkung. */
     function onSelect() as Lang.Boolean {
         if (Input.beruehrungVerwerfen()) { return true; }
+        if (auswahlVerwerfen()) { return true; }          // vermerkt die Auswahl (Nr. 598)
         Pair.wertFragen();
         return true;
     }

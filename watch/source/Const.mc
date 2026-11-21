@@ -16,9 +16,12 @@ module Const {
      * "Neu koppeln"; ohne Geraetepaar beginnt sie keine Kopplung. Bis 5.1.0
      * fiel sie in beiden Faellen auf Fassung 1 zurueck. 6.0.1 traegt den
      * Code der Fassung 1 auch nicht mehr mit (KA-28): Der Selbsttest misst
-     * die Byteordnung an einem Fall der Fassung 2.
+     * die Byteordnung an einem Fall der Fassung 2. 6.0.2 laesst START in
+     * den Menues wieder waehlen (Nr. 598): Auf der Fenix 6 tat es dort
+     * nichts; der Merker des oeffnenden Drucks verfaellt jetzt, und ohne
+     * onSelect waehlt das Loslassen.
      */
-    const APP_VERSION = "6.0.1";
+    const APP_VERSION = "6.0.2";
 
     /* Wie lange ein geparktes (dauerhaft abgewiesenes) Paket auf der Uhr
      * liegen bleibt, bevor ein Sendelauf es raeumt (wie auf dem Handy):

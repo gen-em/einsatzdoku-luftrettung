@@ -331,24 +331,58 @@ class ActionDelegate extends WatchUi.BehaviorDelegate {
 // diesen Seiten fuer eine Beruehrung. `false` laesst die Taste beim System,
 // genau wie ohne diese Methoden.
 class TastenDelegate extends WatchUi.BehaviorDelegate {
-    /* START ist noch unten, weil das Menue waehrend des Haltens geoeffnet
-     * wurde (ActionDelegate.startUnten). Das Loslassen gehoert zu dem Druck,
-     * der das Menue geoeffnet hat, und waehlt nichts. Ein neuer Druck auf
-     * START hebt den Merker auf -- kommt das Loslassen auf einem Geraet
-     * also nicht hier an, kostet es hoechstens nichts. */
+    /* EIN DRUCK AUF START WAEHLT -- AUCH OHNE onSelect (seit Uhr 6.0.2,
+     * Nr. 598). Auf einer Fenix 6 tat START im Schnellmenue gar nichts mehr
+     * (21.11.2026), waehrend es auf den Hauptseiten wirkte; die Reihenfolge
+     * von `onSelect` und den Tastenereignissen ist am Geraet nie gemessen
+     * (Geraete-Eingabe.md 6). Gewaehlt wird weiter ueber das `onSelect` des
+     * Systems. Zwei Rueckfallwege kommen dazu:
+     *
+     *   1. Der Merker des oeffnenden Drucks verfaellt nach START_HAENGT_MS.
+     *      Kommt dessen Loslassen nie hier an, sperrte er das Menue sonst
+     *      fuer immer.
+     *   2. Das Loslassen eines START-Drucks waehlt, wenn fuer diesen Druck
+     *      kein `onSelect` angenommen wurde -- weil keines kam oder weil es
+     *      verworfen wurde. Kam eines, vor oder nach dem Druck, waehlt das
+     *      Loslassen nicht.
+     *
+     * NICHT `true` aus onKeyPressed, um `onSelect` zu unterdruecken: Im
+     * Simulator kam es trotzdem, und die Kopplungsseite stellte zwei
+     * Rueckfragen (Rundlauf rot, im selben Paket gemessen). Jede Unterklasse,
+     * die `onSelect` belegt, fragt deshalb `auswahlVerwerfen()` -- dort wird
+     * die Annahme vermerkt.
+     *
+     * START ist noch unten, weil das Menue waehrend des Haltens geoeffnet
+     * wurde (ActionDelegate.startUnten): Das Loslassen gehoert zu dem Druck,
+     * der das Menue geoeffnet hat, und waehlt nichts. */
+    const START_HAENGT_MS = 5000;
     private var _startUnten as Lang.Boolean = false;
+    private var _offenMs as Lang.Number = 0;
     private var _geschlucktMs as Lang.Number = -100000;
+    private var _neuUnten as Lang.Boolean = false;    // ein START-Druck in dieser Ansicht
+    private var _druckMs as Lang.Number = 0;
+    private var _gewaehltMs as Lang.Number = -100000; // zuletzt angenommenes onSelect
+    private var _ausTaste as Lang.Boolean = false;    // Auswahl kommt vom Loslassen
 
     function initialize() { BehaviorDelegate.initialize(); }
 
-    function startGehalten() as Void { _startUnten = true; }
+    function startGehalten() as Void {
+        _startUnten = true;
+        _offenMs = System.getTimer();
+    }
 
-    /* Fuer onSelect der Menues: Gehoert diese Auswahl zum Loslassen des
-     * oeffnenden Drucks? Beide Reihenfolgen sind abgedeckt -- kommt onSelect
-     * vor onKeyReleased, steht der Merker noch; kommt es danach, liegt das
-     * Schlucken weniger als 300 ms zurueck. */
+    /* Fuer onSelect: Gehoert diese Auswahl zum Loslassen des oeffnenden
+     * Drucks? Beide Reihenfolgen sind abgedeckt -- kommt onSelect vor
+     * onKeyReleased, steht der Merker noch; kommt es danach, liegt das
+     * Schlucken weniger als 300 ms zurueck. Gilt die Auswahl, wird sie
+     * vermerkt (Rueckfallweg 2). */
     function auswahlVerwerfen() as Lang.Boolean {
-        return _startUnten || System.getTimer() - _geschlucktMs < 300;
+        var jetzt = System.getTimer();
+        if (_ausTaste) { _gewaehltMs = jetzt; return false; }
+        if (_startUnten && jetzt - _offenMs > START_HAENGT_MS) { _startUnten = false; }
+        if (_startUnten || jetzt - _geschlucktMs < 300) { return true; }
+        _gewaehltMs = jetzt;
+        return false;
     }
 
     function onKeyPressed(evt as WatchUi.KeyEvent) as Lang.Boolean {
@@ -356,16 +390,32 @@ class TastenDelegate extends WatchUi.BehaviorDelegate {
         if (evt.getKey() == WatchUi.KEY_ENTER) {
             _startUnten = false;
             _geschlucktMs = -100000;
+            _neuUnten = true;
+            _druckMs = System.getTimer();
         }
         return false;
     }
 
     function onKeyReleased(evt as WatchUi.KeyEvent) as Lang.Boolean {
         Input.tasteGesehen(false);
-        if (evt.getKey() == WatchUi.KEY_ENTER && _startUnten) {
+        if (evt.getKey() != WatchUi.KEY_ENTER) { return false; }
+        if (_startUnten) {
             _startUnten = false;
+            _neuUnten = false;
             _geschlucktMs = System.getTimer();
             return true;
+        }
+        if (_neuUnten) {
+            _neuUnten = false;
+            /* 200 ms Spiel: Ein onSelect, das kurz VOR dem Druck gemeldet
+             * wurde, gehoert zu ihm. */
+            if (_gewaehltMs < _druckMs - 200) {
+                _ausTaste = true;
+                try { onSelect(); } finally { _ausTaste = false; }
+                // Ein spaetes onSelect desselben Drucks waehlt nicht noch einmal.
+                _geschlucktMs = System.getTimer();
+                return true;
+            }
         }
         return false;
     }
